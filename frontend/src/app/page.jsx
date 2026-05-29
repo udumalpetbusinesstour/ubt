@@ -1,0 +1,1144 @@
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { 
+  Search, MapPin, Grid, Shield, Heart, Phone, Users, Star, ArrowRight, Check, ShieldCheck,
+  ChevronLeft, ChevronRight, HelpCircle, Eye, MessageSquare, Play, Sparkles, X,
+  Hotel, Store, Wrench, HeartPulse, GraduationCap, Home as HouseIcon, Car, LayoutGrid,
+  FileEdit, PhoneCall, Smile, Users2, Tv, Utensils, Building, ShoppingBag, Factory, 
+  Briefcase, Compass, Sprout, CreditCard, Dumbbell
+} from 'lucide-react';
+
+const mockFeatured = [
+  {
+    _id: 'featured_1',
+    name: 'Sri Murugan Stores',
+    category: 'Departmental Stores',
+    locality: 'Gandhi Nagar, Udumalpet',
+    googleRating: 4.6,
+    googleReviewsCount: 128,
+    isPremium: true,
+    isAddressVerified: true,
+    coverImageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80',
+    phone: '+91 94430 12345',
+    whatsapp: '+91 94430 12345',
+    highlights: ['Quality Products', 'Good Service', 'Fair Prices'],
+  },
+  {
+    _id: 'featured_2',
+    name: 'Green Valley Hotel',
+    category: 'Hotels & Restaurants',
+    locality: 'Pollachi Road, Udumalpet',
+    googleRating: 4.8,
+    googleReviewsCount: 98,
+    isPremium: true,
+    isAddressVerified: true,
+    coverImageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&q=80',
+    phone: '+91 98945 99999',
+    whatsapp: '+91 98945 99999',
+    highlights: ['Pure Veg', 'Family Restaurant', 'AC Rooms'],
+  },
+  {
+    _id: 'featured_3',
+    name: 'R.K. Electricals',
+    category: 'Electrical Services',
+    locality: 'Pollachi Road, Udumalpet',
+    googleRating: 4.7,
+    googleReviewsCount: 84,
+    isPremium: true,
+    isAddressVerified: true,
+    coverImageUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80',
+    phone: '+91 98945 43100',
+    whatsapp: '+91 98945 43100',
+    highlights: ['On-time Service', 'Expert Technicians', 'Quality Materials'],
+  },
+  {
+    _id: 'featured_4',
+    name: 'City Hospital',
+    category: 'Hospitals',
+    locality: 'Udumalpet',
+    googleRating: 4.5,
+    googleReviewsCount: 206,
+    isPremium: true,
+    isAddressVerified: true,
+    coverImageUrl: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=500&q=80',
+    phone: '+91 4252 223456',
+    whatsapp: '+91 98425 22345',
+    highlights: ['24x7 Service', 'Experienced Doctors', 'Pharmacy'],
+  },
+];
+
+export default function Home() {
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [locationTerm, setLocationTerm] = useState('');
+  const [categoryTerm, setCategoryTerm] = useState('All Categories');
+  const [featuredBusinesses, setFeaturedBusinesses] = useState(mockFeatured);
+
+  // Testimonials state
+  const fallbackTestimonials = [
+    {
+      _id: 'mock_t_1',
+      authorName: 'Karthik S.',
+      role: 'Business Owner',
+      rating: 5,
+      text: 'Udumalpet Business Tour helped me get more local customers. The enquiries and calls have increased significantly. Highly recommended for all local businesses!'
+    },
+    {
+      _id: 'mock_t_2',
+      authorName: 'Aravind Swamy',
+      role: 'Event Manager',
+      rating: 5,
+      text: 'Promoting local temple events and trade expos has never been this seamless. The user reach in Udumalpet and surrounding suburbs is absolutely incredible.'
+    },
+    {
+      _id: 'mock_t_3',
+      authorName: 'Deepa Ramakrishnan',
+      role: 'Blog Writer',
+      rating: 5,
+      text: 'Writing about local hidden gems and historic places near Udumalpet has finally found the perfect audience. A beautifully optimized directory app!'
+    }
+  ];
+
+  const [testimonials, setTestimonials] = useState(fallbackTestimonials);
+  const [testimonialIdx, setTestimonialIdx] = useState(0);
+
+  // Modal and submission state
+  const [isTestimonialModalOpen, setIsTestimonialModalOpen] = useState(false);
+  const [newTestimonial, setNewTestimonial] = useState({
+    authorName: '',
+    role: 'Business Owner',
+    text: '',
+    rating: 5
+  });
+  const [submitSuccess, setSubmitSuccess] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const [categoriesList, setCategoriesList] = useState([
+    { 
+      name: 'Hotels', 
+      icon: (
+        <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="2" width="16" height="20" rx="2" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+          <rect x="7" y="5" width="3" height="3" rx="0.5" fill="#001c41" />
+          <rect x="14" y="5" width="3" height="3" rx="0.5" fill="#001c41" />
+          <rect x="7" y="10" width="3" height="3" rx="0.5" fill="#001c41" />
+          <rect x="14" y="10" width="3" height="3" rx="0.5" fill="#001c41" />
+          <path d="M9 16h6v6H9v-6z" fill="#027244" />
+        </svg>
+      ), 
+      path: '/businesses?category=Hotels' 
+    },
+    { 
+      name: 'Shops', 
+      icon: (
+        <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 9l1-5h16l1 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+          <path d="M3 9h18L20 4H4L3 9z" fill="#027244" />
+          <path d="M6 9v2m4-2v2m4-2v2m4-2v2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+          <rect x="8" y="14" width="8" height="8" fill="#001c41" rx="1" />
+        </svg>
+      ), 
+      path: '/businesses?category=Shops' 
+    },
+    { 
+      name: 'Services', 
+      icon: (
+        <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19.7 4.3a3 3 0 00-4.2 0L12 7.8 7.8 3.6a3 3 0 00-4.2 4.2L7.8 12l-4.2 4.2a3 3 0 104.2 4.2L12 16.2l4.2 4.2a3 3 0 004.2-4.2L16.2 12l4.2-4.2a3 3 0 000-4.2z" fill="#E6F2ED" />
+          <path d="M19.7 4.3a3 3 0 00-4.2 0L12 7.8 7.8 3.6a3 3 0 00-4.2 4.2l3.5 3.5-6.4 6.4a2 2 0 102.8 2.8l6.4-6.4 3.5 3.5a3 3 0 004.2-4.2L16.2 12l3.5-3.5a3 3 0 000-4.2z" stroke="#027244" strokeWidth="1.5" strokeLinejoin="round" />
+          <circle cx="12" cy="12" r="3" fill="#001c41" />
+        </svg>
+      ), 
+      path: '/businesses?category=Services' 
+    },
+    { 
+      name: 'Health', 
+      icon: (
+        <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+          <path d="M12 6v10M7 11h10" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      ), 
+      path: '/businesses?category=Health' 
+    },
+    { 
+      name: 'Education', 
+      icon: (
+        <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 3L1 9l11 6 11-6-11-6z" fill="#027244" />
+          <path d="M5 12.5V17c0 1.66 3.13 3 7 3s7-1.34 7-3v-4.5" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+          <path d="M17 11.5v5.5M12 15v5" stroke="#001c41" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      ), 
+      path: '/businesses?category=Education' 
+    },
+    { 
+      name: 'Real Estate', 
+      icon: (
+        <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 10.5V20a2 2 0 002 2h14a2 2 0 002-2v-9.5" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+          <path d="M12 3L2 12h3v8h14v-8h3L12 3z" fill="#027244" />
+          <rect x="9" y="13" width="6" height="7" fill="#001c41" />
+        </svg>
+      ), 
+      path: '/businesses?category=Real%20Estate' 
+    },
+    { 
+      name: 'Automotive', 
+      icon: (
+        <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 8h-1V5a2 2 0 00-2-2H8a2 2 0 00-2 2v3H5a3 3 0 00-3 3v6a2 2 0 002 2h1v2a2 2 0 002 2h1a2 2 0 002-2v-2h8v2a2 2 0 002 2h1a2 2 0 002-2v-2h1a2 2 0 002-2v-6a3 3 0 00-3-3z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+          <rect x="5" y="10" width="14" height="4" fill="#001c41" rx="1" />
+          <circle cx="6.5" cy="16.5" r="1.5" fill="#fff" />
+          <circle cx="17.5" cy="16.5" r="1.5" fill="#fff" />
+        </svg>
+      ), 
+      path: '/businesses?category=Automotive' 
+    },
+    { 
+      name: 'More', 
+      icon: (
+        <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="3" width="7" height="7" rx="1.5" fill="#027244" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" fill="#001c41" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" fill="#001c41" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" fill="#027244" />
+        </svg>
+      ), 
+      path: '/businesses?focus=categories' 
+    }
+  ]);
+
+  useEffect(() => {
+    const fetchFeaturedAndCounts = async () => {
+      // 1. Fetch featured premium businesses
+      try {
+        const res = await fetch('http://localhost:5000/api/businesses?type=Premium');
+        const data = await res.json();
+        if (data.success && data.data.length > 0) {
+          setFeaturedBusinesses(data.data.slice(0, 4));
+        }
+      } catch (err) {
+        console.warn('Backend server offline, running fallback featured businesses sync.');
+      }
+
+      // 2. Fetch all businesses to calculate category counts dynamically
+      try {
+        const res = await fetch('http://localhost:5000/api/businesses');
+        const data = await res.json();
+        if (data.success) {
+          const counts = {};
+          const availableCategories = [
+            'Automotive', 'Beauty & Wellness', 'Education', 'Electronics', 'Food & Restaurants',
+            'Health & Medical', 'Home Services', 'Real Estate', 'Shopping', 'Manufacturing',
+            'Professional Services', 'Travel & Hospitality', 'Construction', 'Agriculture',
+            'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness', 'Others'
+          ];
+          availableCategories.forEach(c => {
+            counts[c] = 0;
+          });
+          data.data.forEach(biz => {
+            if (counts[biz.category] !== undefined) {
+              counts[biz.category]++;
+            } else {
+              counts[biz.category] = 1;
+            }
+          });
+          updateDynamicCategories(counts);
+        }
+      } catch (err) {
+        console.warn('API error, using standard fallback category counts.');
+        const mockCounts = {
+          'Automotive': 125,
+          'Beauty & Wellness': 98,
+          'Education': 87,
+          'Electronics': 112,
+          'Food & Restaurants': 156,
+          'Health & Medical': 84,
+          'Home Services': 142,
+          'Real Estate': 76,
+          'Shopping': 138,
+          'Manufacturing': 64,
+          'Professional Services': 118,
+          'Travel & Hospitality': 61,
+          'Construction': 92,
+          'Agriculture': 53,
+          'Finance & Insurance': 49,
+          'Events & Entertainment': 57,
+          'Sports & Fitness': 41,
+          'Others': 38
+        };
+        updateDynamicCategories(mockCounts);
+      }
+    };
+
+    const updateDynamicCategories = (counts) => {
+      const availableCategories = [
+        'Automotive', 'Beauty & Wellness', 'Education', 'Electronics', 'Food & Restaurants',
+        'Health & Medical', 'Home Services', 'Real Estate', 'Shopping', 'Manufacturing',
+        'Professional Services', 'Travel & Hospitality', 'Construction', 'Agriculture',
+        'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness', 'Others'
+      ];
+
+      const iconMap = {
+        'Automotive': (
+          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 8h-1V5a2 2 0 00-2-2H8a2 2 0 00-2 2v3H5a3 3 0 00-3 3v6a2 2 0 002 2h1v2a2 2 0 002 2h1a2 2 0 002-2v-2h8v2a2 2 0 002 2h1a2 2 0 002-2v-2h1a2 2 0 002-2v-6a3 3 0 00-3-3z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+            <rect x="5" y="10" width="14" height="4" fill="#001c41" rx="1" />
+            <circle cx="6.5" cy="16.5" r="1.5" fill="#fff" />
+            <circle cx="17.5" cy="16.5" r="1.5" fill="#fff" />
+          </svg>
+        ),
+        'Beauty & Wellness': <Sparkles className="h-7 w-7 text-pink-500" />,
+        'Education': (
+          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3L1 9l11 6 11-6-11-6z" fill="#027244" />
+            <path d="M5 12.5V17c0 1.66 3.13 3 7 3s7-1.34 7-3v-4.5" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+            <path d="M17 11.5v5.5M12 15v5" stroke="#001c41" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        ),
+        'Electronics': <Tv className="h-7 w-7 text-emerald-500" />,
+        'Food & Restaurants': (
+          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="2" width="16" height="20" rx="2" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+            <rect x="7" y="5" width="3" height="3" rx="0.5" fill="#001c41" />
+            <rect x="14" y="5" width="3" height="3" rx="0.5" fill="#001c41" />
+            <rect x="7" y="10" width="3" height="3" rx="0.5" fill="#001c41" />
+            <rect x="14" y="10" width="3" height="3" rx="0.5" fill="#001c41" />
+            <path d="M9 16h6v6H9v-6z" fill="#027244" />
+          </svg>
+        ),
+        'Health & Medical': (
+          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+            <path d="M12 6v10M7 11h10" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        ),
+        'Home Services': <HouseIcon className="h-7 w-7 text-teal-600" />,
+        'Real Estate': (
+          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 10.5V20a2 2 0 002 2h14a2 2 0 002-2v-9.5" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+            <path d="M12 3L2 12h3v8h14v-8h3L12 3z" fill="#027244" />
+            <rect x="9" y="13" width="6" height="7" fill="#001c41" />
+          </svg>
+        ),
+        'Shopping': (
+          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 9l1-5h16l1 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+            <path d="M3 9h18L20 4H4L3 9z" fill="#027244" />
+            <path d="M6 9v2m4-2v2m4-2v2m4-2v2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+            <rect x="8" y="14" width="8" height="8" fill="#001c41" rx="1" />
+          </svg>
+        ),
+        'Manufacturing': <Factory className="h-7 w-7 text-slate-600" />,
+        'Professional Services': <Briefcase className="h-7 w-7 text-emerald-600" />,
+        'Travel & Hospitality': <Compass className="h-7 w-7 text-purple-600" />,
+        'Construction': <Wrench className="h-7 w-7 text-orange-600" />,
+        'Agriculture': <Sprout className="h-7 w-7 text-green-600" />,
+        'Finance & Insurance': <CreditCard className="h-7 w-7 text-blue-600" />,
+        'Events & Entertainment': <Sparkles className="h-7 w-7 text-pink-500" />,
+        'Sports & Fitness': <Dumbbell className="h-7 w-7 text-emerald-600" />,
+        'Others': <LayoutGrid className="h-7 w-7 text-slate-500" />
+      };
+
+      const sorted = availableCategories
+        .map(name => ({
+          name,
+          count: counts[name] || 0,
+          icon: iconMap[name] || <LayoutGrid className="h-7 w-7 text-slate-500" />,
+          path: `/businesses?focus=categories&category=${encodeURIComponent(name)}`
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 7);
+
+      // 8th item is More pointing to Explore Categories
+      sorted.push({
+        name: 'More',
+        icon: (
+          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="7" height="7" rx="1.5" fill="#027244" />
+            <rect x="14" y="3" width="7" height="7" rx="1.5" fill="#001c41" />
+            <rect x="3" y="14" width="7" height="7" rx="1.5" fill="#001c41" />
+            <rect x="14" y="14" width="7" height="7" rx="1.5" fill="#027244" />
+          </svg>
+        ),
+        path: '/businesses?focus=categories'
+      });
+
+      setCategoriesList(sorted);
+    };
+
+    const fetchTestimonials = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/testimonials');
+        const data = await res.json();
+        if (data.success && data.data.length > 0) {
+          setTestimonials(data.data);
+        }
+      } catch (err) {
+        console.warn('Backend server offline, using fallback testimonials.');
+      }
+    };
+
+    fetchFeaturedAndCounts();
+    fetchTestimonials();
+  }, []);
+
+  const handlePrevTestimonial = () => {
+    if (testimonials.length === 0) return;
+    setTestimonialIdx(prev => (prev === 0 ? testimonials.length - 1 : prev - 1));
+  };
+
+  const handleNextTestimonial = () => {
+    if (testimonials.length === 0) return;
+    setTestimonialIdx(prev => (prev === testimonials.length - 1 ? 0 : prev + 1));
+  };
+
+  const handleTestimonialSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitSuccess('');
+    setSubmitError('');
+    setSubmitting(true);
+
+    if (!newTestimonial.authorName.trim() || !newTestimonial.text.trim()) {
+      setSubmitError('Please enter your name and thoughts.');
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('http://localhost:5000/api/testimonials', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newTestimonial),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setSubmitSuccess('Thank you! Your testimonial has been submitted and is pending administrator verification.');
+        setNewTestimonial({
+          authorName: '',
+          role: 'Business Owner',
+          text: '',
+          rating: 5,
+        });
+        setTimeout(() => {
+          setIsTestimonialModalOpen(false);
+          setSubmitSuccess('');
+        }, 3500);
+      } else {
+        setSubmitError(data.message || 'Failed to submit testimonial.');
+      }
+    } catch (err) {
+      // Mock local queue submission for offline demo
+      setSubmitSuccess('Offline Demo Mode: Review sent to Admin approval desk queue!');
+      setNewTestimonial({
+        authorName: '',
+        role: 'Business Owner',
+        text: '',
+        rating: 5,
+      });
+      setTimeout(() => {
+        setIsTestimonialModalOpen(false);
+        setSubmitSuccess('');
+      }, 3500);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    let url = `/businesses?q=${encodeURIComponent(searchTerm)}`;
+    if (locationTerm) url += `&locality=${encodeURIComponent(locationTerm)}`;
+    if (categoryTerm && categoryTerm !== 'All Categories') url += `&category=${encodeURIComponent(categoryTerm)}`;
+    navigate(url);
+  };
+
+  const handleCall = (phone, name) => {
+    window.open(`tel:${phone}`);
+  };
+
+  const handleWhatsApp = (whatsapp, name) => {
+    const cleanNum = whatsapp.replace(/[^0-9]/g, '');
+    window.open(`https://wa.me/${cleanNum}?text=Hello%20${encodeURIComponent(name)},%20I%20saw%20your%20listing%20on%20Udumalpet%20Business%20Tour.`);
+  };
+
+  // Categories list is now dynamically defined and updated inside the Home component based on business counts.
+
+  return (
+    <div className="w-full flex flex-col items-center bg-[#F8FAFC]">
+      
+      {/* 1. Hero Section (Pixel Perfect Layout with User Uploaded Thirumoorthy Hills BG) */}
+      <section className="w-full relative min-h-[620px] bg-[#F8FAFC] flex items-center justify-center pt-24 pb-28 px-4 md:px-8 overflow-hidden z-0">
+        
+        {/* Background Image rendered at its native 1024x576 size to prevent any scaling blur */}
+        <img 
+          src="/thirumoorthy_dam.png" 
+          alt="Thirumoorthy Hills Background"
+          className="absolute right-0 top-0 h-full w-auto object-contain lg:h-auto lg:w-[1024px] lg:max-h-[576px] lg:top-1/2 lg:-translate-y-1/2 pointer-events-none select-none z-0"
+        />
+
+        {/* Dynamic Gradient Overlay that smoothly blends image to transparent without washing details */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#F8FAFC] via-[#F8FAFC] to-[#F8FAFC]/0 z-10 pointer-events-none select-none" style={{ background: "linear-gradient(to right, rgba(248, 250, 252, 1) 15%, rgba(248, 250, 252, 0.7) 25%, rgba(248, 250, 252, 0) 35%)" }} />
+
+        {/* Hero main body */}
+        <div className="relative max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center z-20">
+          
+          {/* Left panel: text & search */}
+          <div className="lg:col-span-8 flex flex-col items-start text-left">
+            
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#001c41] tracking-tight leading-tight max-w-2xl font-sans">
+              Discover Trusted <br />
+              Businesses in <br />
+              <span className="text-[#027244]">Udumalpet</span>
+            </h1>
+            
+            <p className="mt-5 text-sm md:text-base text-slate-500 font-semibold max-w-xl leading-relaxed">
+              A trusted local platform to discover, connect and grow with verified businesses in and around Udumalpet.
+            </p>
+
+            {/* Rich horizontal search bar */}
+            <form onSubmit={handleSearchSubmit} className="mt-8 w-full bg-white border border-slate-200/80 rounded-2xl shadow-xl p-2 flex flex-col md:flex-row gap-2 max-w-3xl">
+              <div className="flex-1 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
+                <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="What are you looking for?"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none"
+                />
+              </div>
+
+              <div className="md:w-48 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
+                <MapPin className="h-4.5 w-4.5 text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Location"
+                  value={locationTerm}
+                  onChange={(e) => setLocationTerm(e.target.value)}
+                  className="w-full bg-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none"
+                />
+              </div>
+
+              <div className="md:w-48 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100 relative">
+                <Grid className="h-4.5 w-4.5 text-slate-400 shrink-0" />
+                <select
+                  value={categoryTerm}
+                  onChange={(e) => setCategoryTerm(e.target.value)}
+                  className="w-full bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer"
+                >
+                  <option>All Categories</option>
+                  <option>Automotive</option>
+                  <option>Beauty & Wellness</option>
+                  <option>Education</option>
+                  <option>Electronics</option>
+                  <option>Food & Restaurants</option>
+                  <option>Health & Medical</option>
+                  <option>Home Services</option>
+                  <option>Real Estate</option>
+                  <option>Shopping</option>
+                  <option>Manufacturing</option>
+                  <option>Professional Services</option>
+                  <option>Travel & Hospitality</option>
+                  <option>Construction</option>
+                  <option>Agriculture</option>
+                  <option>Finance & Insurance</option>
+                  <option>Events & Entertainment</option>
+                  <option>Sports & Fitness</option>
+                  <option>Others</option>
+                </select>
+              </div>
+
+              <button type="submit" className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-8 rounded-xl transition-all shadow-md shrink-0 cursor-pointer">
+                Search
+              </button>
+            </form>
+
+            {/* Popular searches chips */}
+            <div className="mt-6 flex flex-wrap items-center gap-3.5 text-xs font-bold">
+              <span className="text-[#001c41]">Popular Searches:</span>
+              {['Hotels', 'Shops', 'Services', 'Hospitals', 'Schools'].map((chip) => (
+                <Link 
+                  key={chip} 
+                  to={`/businesses?category=${chip === 'Hospitals' ? 'Health' : chip === 'Schools' ? 'Education' : chip}`}
+                  className="bg-white hover:bg-slate-50 border border-slate-200 py-1.5 px-3.5 rounded-lg transition-colors font-bold text-slate-600 shadow-sm hover:border-[#027244]"
+                >
+                  {chip}
+                </Link>
+              ))}
+            </div>
+
+          </div>
+
+          {/* Right panel space to keep the layout grid balanced on desktop */}
+          <div className="lg:col-span-4 hidden lg:block" />
+
+        </div>
+
+        {/* Wavy bottom divider curves */}
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none z-20">
+          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[60px]">
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C26.9,8.75,57.05,18.3,90.41,27.35,163.81,47.28,243.68,67.23,321.39,56.44Z" fill="#F8FAFC"></path>
+          </svg>
+        </div>
+      </section>
+
+      {/* 2. Four Trust Indicators Cards (Row as a single unified bar matching mockup) */}
+      <section className="max-w-7xl w-full px-4 md:px-8 z-10 -mt-8">
+        <div className="bg-white border border-slate-200/60 rounded-[20px] shadow-lg py-5 px-6 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-0 lg:divide-x lg:divide-slate-100">
+          {[
+            { icon: <ShieldCheck className="h-5.5 w-5.5 text-[#027244]" />, title: 'Verified Businesses', desc: 'All businesses are manually verified' },
+            { icon: <HeartPulse className="h-5.5 w-5.5 text-[#027244]" />, title: 'Quality Service', desc: 'Top quality local businesses' },
+            { icon: <Phone className="h-5.5 w-5.5 text-[#027244]" />, title: 'Easy to Connect', desc: 'Call, WhatsApp or Get Directions' },
+            { icon: <Users2 className="h-5.5 w-5.5 text-[#027244]" />, title: 'Support Local', desc: 'Grow together with local businesses' }
+          ].map((indicator, idx) => (
+            <div 
+              key={idx} 
+              className={`flex items-center gap-4 hover:-translate-y-0.5 transition-all duration-300 ${
+                idx === 0 
+                  ? 'lg:pr-6' 
+                  : idx === 3 
+                    ? 'lg:pl-6' 
+                    : 'lg:px-6'
+              }`}
+            >
+              <div className="h-11 w-11 rounded-full bg-[#E6F4EA] text-[#027244] flex items-center justify-center shrink-0 select-none">
+                {indicator.icon}
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="font-extrabold text-[#001c41] text-xs md:text-sm leading-tight">{indicator.title}</span>
+                <span className="text-[10px] md:text-[11px] text-slate-400 font-semibold leading-normal mt-0.5">{indicator.desc}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 3. Top Categories Section (Using premium vector icons) */}
+      <section className="max-w-7xl w-full px-4 md:px-8 py-10 flex flex-col gap-8">
+        <div className="flex justify-between items-end border-b border-slate-200/80 pb-3">
+          <div>
+            <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Top Categories</h2>
+            <p className="text-xs text-slate-400 font-semibold mt-1">Explore local businesses by specific industry</p>
+          </div>
+          <Link to="/businesses?focus=categories" className="text-xs font-bold text-[#027244] hover:text-[#005934] flex items-center gap-1">
+            View All Categories <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-5">
+          {categoriesList.map((cat) => (
+            <Link 
+              key={cat.name} 
+              to={cat.path}
+              className="card-premium group rounded-2xl py-6 px-4 flex flex-col items-center justify-center gap-4 text-center cursor-pointer"
+            >
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center text-2xl select-none transition-transform duration-500 ease-out-expo group-hover:scale-110">
+                {cat.icon}
+              </div>
+              <span className="text-xs font-extrabold text-slate-700 transition-colors duration-300 group-hover:text-[#027244]">{cat.name}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. Featured Businesses Section (With side chevrons!) */}
+      <section className="max-w-7xl w-full px-4 md:px-8 py-12 flex flex-col gap-8 relative">
+        <div className="flex justify-between items-end border-b border-slate-200/80 pb-3">
+          <div>
+            <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Featured Businesses</h2>
+            <p className="text-xs text-slate-400 font-semibold mt-1">Direct from our premium verified sponsors</p>
+          </div>
+          <Link to="/businesses?type=Premium" className="text-xs font-bold text-[#027244] hover:text-[#005934] flex items-center gap-1">
+            View All Businesses <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        {/* Carousel buttons */}
+        <button className="h-8 w-8 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute left-1 top-1/2 -translate-y-1/2 shadow text-slate-400 z-10 hover:text-[#027244] cursor-pointer hidden xl:flex">
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <button className="h-8 w-8 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute right-1 top-1/2 -translate-y-1/2 shadow text-slate-400 z-10 hover:text-[#027244] cursor-pointer hidden xl:flex">
+          <ChevronRight className="h-4 w-4" />
+        </button>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {featuredBusinesses.map((biz) => {
+            const isSubscribed = biz.subscriptionStatus === 'active';
+            return (
+              <div 
+                key={biz._id} 
+                className="card-premium group rounded-2xl overflow-hidden flex flex-col cursor-pointer relative"
+                onClick={() => navigate(`/businesses/${biz._id}`)}
+              >
+                <div className="h-44 w-full overflow-hidden relative">
+                  <div 
+                    className="h-full w-full bg-cover bg-center transition-transform duration-700 ease-out-expo group-hover:scale-106"
+                    style={{ 
+                      backgroundImage: `url('${biz.coverImageUrl}')`,
+                      filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
+                    }}
+                  />
+                </div>
+                <div 
+                  className="p-5 flex-grow flex flex-col justify-between gap-3.5 bg-white"
+                  style={{
+                    filter: !isSubscribed ? 'blur-[3.5px] select-none pointer-events-none' : 'none'
+                  }}
+                >
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <h4 className="font-extrabold text-sm text-[#001c41] leading-tight transition-colors duration-300 group-hover:text-[#027244]">{biz.name}</h4>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{biz.category}</span>
+                    <div className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold mt-1">
+                      <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                      <span>{biz.locality}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center border-t border-slate-100 pt-3 text-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1">
+                        <Star className="h-3.5 w-3.5 text-amber-400 fill-current" />
+                        <span className="font-bold text-slate-700">{biz.googleRating.toFixed(1)}</span>
+                        <span className="text-[10px] font-bold text-slate-400">({biz.googleReviewsCount})</span>
+                      </div>
+
+                      {/* Quick call and map location symbols */}
+                      <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3">
+                        <a 
+                          href={`tel:${biz.phone}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-6 w-6 rounded-full bg-emerald-50 text-[#027244] border border-emerald-100/50 flex items-center justify-center hover:bg-emerald-100 transition-colors cursor-pointer"
+                          title={`Call ${biz.name}`}
+                        >
+                          <Phone className="h-3.5 w-3.5" />
+                        </a>
+                        <a 
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(biz.name + ' ' + (biz.locality || '') + ' Udumalpet')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-6 w-6 rounded-full bg-blue-50 text-blue-600 border border-blue-100/50 flex items-center justify-center hover:bg-blue-100 transition-colors cursor-pointer"
+                          title="View on Google Maps"
+                        >
+                          <MapPin className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
+                    </div>
+                    <Link 
+                      to={`/businesses/${biz._id}`}
+                      className="text-[10px] font-bold text-[#027244] hover:underline flex items-center gap-0.5"
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Glassmorphism Lock Overlay for Inactive Subscriptions */}
+                {!isSubscribed && (
+                  <div 
+                    onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz._id}`); }}
+                    className="absolute inset-0 bg-slate-900/10 backdrop-blur-xs flex items-center justify-center p-4 z-20 transition-all duration-300 hover:bg-slate-900/15 cursor-pointer"
+                  >
+                    <div className="bg-white/85 backdrop-blur-md border border-white/40 shadow-lg rounded-2xl p-4 max-w-[240px] flex flex-col items-center text-center gap-2 transform transition-transform duration-305 hover:scale-102">
+                      <div className="h-9 w-9 rounded-full bg-emerald-50 border border-emerald-100 text-[#027244] flex items-center justify-center shadow-inner">
+                        <svg className="h-4.5 w-4.5 animate-pulse text-[#027244] fill-none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-extrabold text-[11px] text-[#001c41] tracking-tight">{biz.name}</span>
+                        <span className="text-[8.5px] text-slate-550 font-black leading-normal uppercase tracking-wider">
+                          Pending Subscription
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 5. Statistics Sections Band (Exact theme color match) */}
+      <section className="w-full bg-[#001c41] text-white py-14 px-4 border-y border-[#001430]">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-10 text-center">
+          {[
+            { value: '500+', label: 'Businesses Listed', icon: <Users2 className="h-5 w-5 text-emerald-400" /> },
+            { value: '50+', label: 'Categories Covered', icon: <LayoutGrid className="h-5 w-5 text-emerald-400" /> },
+            { value: '10K+', label: 'Happy Customers', icon: <Smile className="h-5 w-5 text-emerald-400" /> },
+            { value: '100%', label: 'Local Support & Trust', icon: <Heart className="h-5 w-5 text-emerald-400" fill="currentColor" /> }
+          ].map((stat, idx) => (
+            <div key={idx} className="flex flex-col items-center gap-1">
+              <div className="h-9 w-9 rounded-full bg-slate-900/60 flex items-center justify-center mb-1 border border-slate-800 shadow">
+                {stat.icon}
+              </div>
+              <span className="text-3xl font-extrabold text-white tracking-tight">{stat.value}</span>
+              <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{stat.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 6. How It Works Section (Connected with dashed lines) */}
+      <section className="max-w-7xl w-full px-4 md:px-8 py-16 flex flex-col items-center gap-12">
+        <div className="text-center max-w-md">
+          <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">How It Works</h2>
+          <p className="text-xs text-slate-400 font-semibold mt-2">Connecting local buyers with verified businesses in four easy steps</p>
+        </div>
+
+        <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+          {[
+            { 
+              num: 1, 
+              title: 'Search', 
+              desc: 'Find the best businesses in Udumalpet', 
+              icon: (
+                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
+                  <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M14 15l3 3m-2.5-4a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" stroke="#001c41" strokeWidth="2" />
+                </svg>
+              ) 
+            },
+            { 
+              num: 2, 
+              title: 'Explore', 
+              desc: 'View details, reviews and compare options', 
+              icon: (
+                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="10" cy="10" r="6" stroke="currentColor" strokeWidth="2.5" fill="#E6F2ED" />
+                  <path d="M15 15l5 5" stroke="#001c41" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M8 10h4M10 8v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              ) 
+            },
+            { 
+              num: 3, 
+              title: 'Connect', 
+              desc: 'Call, WhatsApp or send enquiry easily', 
+              icon: (
+                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
+                  <path d="M14 2a5 5 0 015 5M13 5a2 2 0 012 2" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              ) 
+            },
+            { 
+              num: 4, 
+              title: 'Grow Together', 
+              desc: 'Support local businesses and grow together', 
+              icon: (
+                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
+                  <circle cx="8.5" cy="7" r="4" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
+                  <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#001c41" strokeWidth="2" />
+                </svg>
+              ) 
+            }
+          ].map((step, idx) => (
+            <div key={step.num} className={`bg-white border border-slate-200/80 p-6 rounded-3xl shadow-sm hover:shadow-md transition-all relative flex flex-col items-center text-center gap-4 ${idx < 3 ? 'step-connector' : ''}`}>
+              {/* Number Badge */}
+              <div className="h-8 w-8 rounded-full bg-[#027244] text-white font-extrabold flex items-center justify-center text-xs shadow z-10 border border-[#027244]">
+                {step.num}
+              </div>
+              {/* Vector line icon */}
+              <div className="h-14 w-14 rounded-2xl bg-emerald-50/50 border border-emerald-100/50 flex items-center justify-center shadow-sm mt-1 z-10">
+                {step.icon}
+              </div>
+              <h4 className="font-extrabold text-[#001c41] text-sm leading-none mt-1 z-10">{step.title}</h4>
+              <p className="text-[11px] text-slate-400 leading-relaxed font-semibold max-w-[200px] z-10">{step.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 7. Business Owner callout banner */}
+      <section className="max-w-7xl w-full px-4 md:px-8 py-6 mb-12">
+        <div className="w-full bg-gradient-to-r from-[#027244] to-[#005934] rounded-[32px] p-8 md:p-12 text-white grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative overflow-hidden shadow-2xl">
+          
+          {/* Left Column: Owner Callout Text */}
+          <div className="lg:col-span-5 flex flex-col gap-3 z-10 text-center lg:text-left">
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Are you a Business Owner?</h2>
+            <p className="text-xs text-emerald-100 font-semibold leading-relaxed">
+              List your business and grow with Udumalpet Business Tour
+            </p>
+            
+            <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 text-xs text-emerald-100 font-bold mt-4">
+              <div className="flex items-center gap-2">
+                <Check className="h-4.5 w-4.5 bg-white/10 rounded-full p-1" />
+                <span>Get Discovered</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4.5 w-4.5 bg-white/10 rounded-full p-1" />
+                <span>Build Trust</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4.5 w-4.5 bg-white/10 rounded-full p-1" />
+                <span>Grow Your Business</span>
+              </div>
+            </div>
+            
+            {/* List Your Business Now Button */}
+            <div className="mt-6 flex justify-center lg:justify-start">
+              <Link 
+                to="/add-business" 
+                className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-extrabold text-xs py-3.5 px-8 rounded-xl transition-all shadow shadow-amber-500/10 cursor-pointer"
+              >
+                List Your Business Now
+              </Link>
+            </div>
+          </div>
+
+          {/* Right Column: Comparative Features Table Card */}
+          <div className="lg:col-span-7 z-10">
+            <div className="w-full bg-white border border-slate-200/80 shadow-lg rounded-2xl p-5 flex flex-col gap-4 text-left">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-800 tracking-tight font-sans">Why Choose UBT Over Free Listings?</h3>
+                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">See how the UBT Business Network compares to standard free listing sites</p>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-[11px] font-semibold text-slate-600">
+                  <thead>
+                    <tr className="border-b border-slate-100">
+                      <th className="py-2 px-2 text-left font-extrabold text-slate-800">Features</th>
+                      <th className="py-2 px-2 text-center font-extrabold text-slate-400">Free Listing Sites</th>
+                      <th className="py-2 px-2 text-center font-black text-[#027244] bg-emerald-50/20 rounded-t-lg">UBT Business Network</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {[
+                      { feature: 'Verified Business', free: false, ubt: true },
+                      { feature: 'Dedicated Landing Page', free: false, ubt: true },
+                      { feature: 'Event Posting', free: false, ubt: true },
+                      { feature: 'Blog Publishing', free: false, ubt: true },
+                      { feature: 'Google Review Integration', free: false, ubt: true },
+                      { feature: 'Local Business Focus', free: false, ubt: true },
+                      { feature: 'Priority Support', free: false, ubt: true }
+                    ].map((row, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-2 px-2 font-bold text-slate-700">{row.feature}</td>
+                        <td className="py-2 px-2 text-center">
+                          <X className="h-4 w-4 text-red-500 mx-auto" />
+                        </td>
+                        <td className="py-2 px-2 text-center bg-emerald-50/20 font-black text-emerald-600">
+                          <Check className="h-4 w-4 text-emerald-600 mx-auto" />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 8. What People Say Section */}
+      <section className="w-full bg-white py-16 px-4 border-t border-slate-200/50">
+        <div className="max-w-4xl mx-auto flex flex-col items-center gap-10">
+          <div className="text-center max-w-md">
+            <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">What People Say</h2>
+            <p className="text-xs text-slate-400 font-semibold mt-1">Real experiences shared by our core community member creators</p>
+          </div>
+
+          {testimonials.length > 0 && (
+            <div className="w-full card-premium group rounded-3xl p-8 flex flex-col items-center text-center gap-5 relative bg-slate-50">
+              
+              {/* Review stars */}
+              <div className="flex items-center text-amber-400">
+                {[...Array(testimonials[testimonialIdx].rating || 5)].map((_, i) => (
+                  <Star key={i} className="h-4.5 w-4.5 fill-current" />
+                ))}
+                {[...Array(5 - (testimonials[testimonialIdx].rating || 5))].map((_, i) => (
+                  <Star key={i + 10} className="h-4.5 w-4.5 text-slate-200" />
+                ))}
+              </div>
+              
+              <p className="text-slate-600 font-semibold italic text-sm md:text-base leading-relaxed max-w-xl">
+                "{testimonials[testimonialIdx].text}"
+              </p>
+
+              <div className="flex items-center gap-3 mt-1">
+                <div className="h-10 w-10 rounded-full border border-slate-200 bg-[#E6F2ED] text-[#027244] font-black text-xs flex items-center justify-center select-none shadow-xs uppercase">
+                  {testimonials[testimonialIdx].authorName.slice(0, 2)}
+                </div>
+                <div className="text-left flex flex-col gap-0.5">
+                  <span className="font-extrabold text-xs text-slate-800 leading-none">{testimonials[testimonialIdx].authorName}</span>
+                  <span className="text-[9px] font-bold text-[#027244] uppercase tracking-widest mt-1 bg-emerald-50 border border-emerald-100 rounded-sm px-1.5 py-0.5 leading-none inline-block">
+                    {testimonials[testimonialIdx].role}
+                  </span>
+                </div>
+              </div>
+
+              {/* Slider arrows */}
+              <button 
+                onClick={handlePrevTestimonial}
+                aria-label="Previous testimonial"
+                className="h-8 w-8 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute left-3 top-1/2 -translate-y-1/2 shadow text-slate-400 z-10 hover:text-[#027244] cursor-pointer transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button 
+                onClick={handleNextTestimonial}
+                aria-label="Next testimonial"
+                className="h-8 w-8 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute right-3 top-1/2 -translate-y-1/2 shadow text-slate-400 z-10 hover:text-[#027244] cursor-pointer transition-colors"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+          
+          {/* Slider Pagination dots */}
+          <div className="flex justify-center gap-1.5 mt-2 select-none">
+            {testimonials.map((_, idx) => (
+              <span 
+                key={idx}
+                onClick={() => setTestimonialIdx(idx)}
+                className={`h-2 w-2 rounded-full cursor-pointer transition-all ${idx === testimonialIdx ? 'bg-[#027244] w-4' : 'bg-slate-200 hover:bg-slate-300'}`} 
+              />
+            ))}
+          </div>
+
+          {/* Ask business owners, event managers, blog writers to share their thoughts */}
+          <div className="flex flex-col items-center gap-3.5 mt-4">
+            <span className="text-xs text-slate-500 font-bold">Are you a Business Owner, Event Manager, or Blog Writer using UBT?</span>
+            <button
+              onClick={() => setIsTestimonialModalOpen(true)}
+              className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-8 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-1.5 cursor-pointer"
+            >
+              Share Your Thoughts About UBT
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Submission Modal */}
+      {isTestimonialModalOpen && (
+        <div className="fixed inset-0 bg-[#001c41]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-opacity animate-fadeIn text-left">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl relative border border-slate-100 flex flex-col gap-5 animate-scaleUp">
+            
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setIsTestimonialModalOpen(false);
+                setSubmitSuccess('');
+                setSubmitError('');
+              }}
+              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 h-8 w-8 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center cursor-pointer transition-colors"
+            >
+              <X className="h-4.5 w-4.5" />
+            </button>
+
+            <div className="flex flex-col gap-1 text-left">
+              <span className="text-[10px] font-black uppercase text-[#027244] tracking-wider">Community Voice</span>
+              <h3 className="text-xl font-extrabold text-slate-800 tracking-tight">Share Your Experience</h3>
+              <p className="text-xs text-slate-400 font-semibold font-sans">Tell the community how Udumalpet Business Tour (UBT) has helped you!</p>
+            </div>
+
+            {submitSuccess && (
+              <div className="bg-emerald-50 border border-emerald-250 text-emerald-800 text-xs font-semibold p-4 rounded-2xl flex items-center gap-2 shadow-xs">
+                <Check className="h-5 w-5 text-emerald-600 shrink-0" />
+                <span>{submitSuccess}</span>
+              </div>
+            )}
+
+            {submitError && (
+              <div className="bg-red-50 border border-red-200 text-red-650 text-xs font-semibold p-4 rounded-2xl flex items-center gap-2 shadow-xs">
+                <span className="h-2 w-2 rounded-full bg-red-650 shrink-0" />
+                <span>{submitError}</span>
+              </div>
+            )}
+
+            {!submitSuccess && (
+              <form onSubmit={handleTestimonialSubmit} className="flex flex-col gap-4 text-left">
+                {/* Name */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-extrabold text-slate-700">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter your name"
+                    value={newTestimonial.authorName}
+                    onChange={(e) => setNewTestimonial(prev => ({ ...prev, authorName: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4.5 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:bg-white transition-all shadow-xs"
+                  />
+                </div>
+
+                {/* Role dropdown */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-extrabold text-slate-700">Your Role</label>
+                  <select
+                    value={newTestimonial.role}
+                    onChange={(e) => setNewTestimonial(prev => ({ ...prev, role: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#027244] focus:bg-white transition-all shadow-xs cursor-pointer"
+                  >
+                    <option value="Business Owner">Business Owner</option>
+                    <option value="Event Manager">Event Manager</option>
+                    <option value="Blog Writer">Blog Writer</option>
+                    <option value="Other">Other Community Member</option>
+                  </select>
+                </div>
+
+                {/* Rating selection (Stars) */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-extrabold text-slate-700">Rating</label>
+                  <div className="flex items-center gap-1.5 select-none">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setNewTestimonial(prev => ({ ...prev, rating: star }))}
+                        className="focus:outline-none"
+                      >
+                        <Star 
+                          className={`h-6.5 w-6.5 transition-colors cursor-pointer ${
+                            star <= newTestimonial.rating
+                              ? 'text-amber-400 fill-current hover:scale-106'
+                              : 'text-slate-200 hover:text-amber-300'
+                          }`} 
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Thoughts Textarea */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-extrabold text-slate-700">Your Thoughts / Feedback</label>
+                  <textarea
+                    required
+                    rows={4}
+                    placeholder="Share how this platform has helped your business or improved your experience..."
+                    value={newTestimonial.text}
+                    onChange={(e) => setNewTestimonial(prev => ({ ...prev, text: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4.5 py-3 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:bg-white transition-all shadow-xs resize-none leading-relaxed"
+                  />
+                </div>
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-8 rounded-xl transition-all shadow-md shadow-emerald-900/10 cursor-pointer disabled:opacity-50 mt-2"
+                >
+                  {submitting ? 'Submitting Review...' : 'Submit Review'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}

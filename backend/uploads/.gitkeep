@@ -1,0 +1,4 @@
+# Ignore everything in this upload fallback directory
+*
+# Except this gitkeep file to ensure folder exists
+!.gitkeep

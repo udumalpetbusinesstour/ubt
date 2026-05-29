@@ -1,0 +1,4301 @@
+import { useState, useEffect, Suspense } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { 
+  ShieldCheck, Sparkles, AlertTriangle, AlertCircle, Edit3, Image as ImageIcon, 
+  RefreshCw, Star, CreditCard, ChevronRight, ChevronLeft, ArrowLeft, Activity, PhoneCall, 
+  MessageSquare, Plus, CheckCircle, Info, Bell, ExternalLink, Globe,
+  Copy, Check, Upload, HelpCircle, Briefcase, Mail, Settings, Menu, X, Trash2, Search,
+  FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin
+} from 'lucide-react';
+
+function DashboardContent() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(null);
+  const [business, setBusiness] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  // Dashboard states
+  const [profileCompletion, setProfileCompletion] = useState(85);
+  const [showRenewModal, setShowRenewModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('Monthly');
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  
+  const [paymentPlans, setPaymentPlans] = useState([
+    { type: 'Monthly', price: '₹500', duration: '28 days', details: 'Perfect for standard listing updates.' },
+    { type: 'Yearly', price: '₹4999', duration: '365 days (Save 15%)', details: 'Maximize search priority and customer reach.' }
+  ]);
+
+  const fetchPaymentPlans = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/plans');
+      const data = await res.json();
+      if (data.success && data.data.length > 0) {
+        const mapped = data.data.map(p => ({
+          type: p.type,
+          price: `₹${p.price}`,
+          duration: `${p.durationDays} days${p.isOffer ? ` (${p.offerText || 'Offer'})` : ''}`,
+          details: p.description || (p.type === 'Monthly' ? 'Perfect for standard listing updates.' : 'Maximize search priority and customer reach.')
+        }));
+        setPaymentPlans(mapped);
+      }
+    } catch (err) {
+      console.warn('API error fetching dynamic plans for checkout, using defaults.', err);
+    }
+  };
+  
+  // Blogs Dashboard states
+  const [userBlogs, setUserBlogs] = useState([]);
+  const [blogsLoading, setBlogsLoading] = useState(false);
+  const [activeBlogComments, setActiveBlogComments] = useState(null); // stores blog ID currently viewing comments for
+  const [showWriteBlogModal, setShowWriteBlogModal] = useState(false);
+  const [blogTitle, setBlogTitle] = useState('');
+  const [blogCover, setBlogCover] = useState('');
+  const [blogContent, setBlogContent] = useState('');
+  const [blogWriteLoading, setBlogWriteLoading] = useState(false);
+  const [blogSuccess, setBlogSuccess] = useState('');
+  const [blogError, setBlogError] = useState('');
+  const [blogImageUploading, setBlogImageUploading] = useState(false);
+  const [blogImageError, setBlogImageError] = useState('');
+ 
+  // Events Dashboard States
+  const [userEvents, setUserEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [showCreateEventModal, setShowCreateEventModal] = useState(false);
+  
+  // Create Event Form States
+  const [eventTitle, setEventTitle] = useState('');
+  const [eventCategory, setEventCategory] = useState('Sports');
+  const [eventDescription, setEventDescription] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventEndDate, setEventEndDate] = useState('');
+  const [eventTime, setEventTime] = useState('');
+  const [eventVenue, setEventVenue] = useState('');
+  const [eventOrganizer, setEventOrganizer] = useState('');
+  const [eventPhone, setEventPhone] = useState('');
+  const [eventCoverUrl, setEventCoverUrl] = useState('');
+  const [eventPaymentLink, setEventPaymentLink] = useState('');
+  const [eventDuration, setEventDuration] = useState('');
+  
+  const [eventSubmitLoading, setEventSubmitLoading] = useState(false);
+  const [eventSuccess, setEventSuccess] = useState('');
+  const [eventError, setEventError] = useState('');
+
+  // Navigation Sidebar States
+  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Quick Photo upload states
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadedPhotosCount, setUploadedPhotosCount] = useState(4);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [photoGallery, setPhotoGallery] = useState([
+    'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&q=80',
+    'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=300&q=80',
+    'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=300&q=80',
+    'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=300&q=80',
+  ]);
+
+  // Quick Edit states
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editTab, setEditTab] = useState('general'); // general | contact | specs | services
+  const [editFields, setEditFields] = useState({
+    name: '',
+    category: 'Services',
+    type: '',
+    description: '',
+    phone: '',
+    whatsapp: '',
+    email: '',
+    website: '',
+    address: '',
+    locality: '',
+    pincode: '',
+    yearEstablished: '',
+    employeeCount: '',
+    gstNumber: '',
+    serviceArea: '',
+    languagesKnown: '',
+    services: '',
+    brands: '',
+    coverImageUrl: '',
+    galleryUrls: '',
+    timingsMon: '9:00 AM - 8:00 PM',
+    timingsTue: '9:00 AM - 8:00 PM',
+    timingsWed: '9:00 AM - 8:00 PM',
+    timingsThu: '9:00 AM - 8:00 PM',
+    timingsFri: '9:00 AM - 8:00 PM',
+    timingsSat: '9:00 AM - 8:00 PM',
+    timingsSun: '9:00 AM - 1:00 PM',
+  });
+
+  // Profile settings state
+  const [profileFields, setProfileFields] = useState({
+    fullName: '',
+    email: ''
+  });
+  const [profileFieldsLoading, setProfileFieldsLoading] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState('');
+  const [profileError, setProfileError] = useState('');
+
+  // Password change state
+  const [pwdFields, setPwdFields] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [pwdFieldsLoading, setPwdFieldsLoading] = useState(false);
+  const [pwdSuccess, setPwdSuccess] = useState('');
+  const [pwdError, setPwdError] = useState('');
+
+  // Sub-settings navigation states
+  const [activeSettingsSubTab, setActiveSettingsSubTab] = useState(null);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+
+  // Banner notification on return from Add Business
+  const [successBanner, setSuccessBanner] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  // Dynamic States for completed tabs (Reviews, Leads, and promotions)
+  const [selectedLeadIdx, setSelectedLeadIdx] = useState(0);
+  const [leadReplyText, setLeadReplyText] = useState('');
+  const [leadFilter, setLeadFilter] = useState('All');
+  const [leadsList, setLeadsList] = useState([
+    { name: 'Suresh Kumar', category: 'Electrical Wiring', phone: '+91 97865 43210', time: '2 mins ago', initial: 'S', color: 'bg-blue-100 text-blue-600' },
+    { name: 'Ramesh Babu', category: 'Switch Board Repair', phone: '+91 94423 56789', time: '15 mins ago', initial: 'R', color: 'bg-green-100 text-green-600' },
+    { name: 'Kavin Prakash', category: 'Inverter Installation', phone: '+91 91500 67890', time: '1 hour ago', initial: 'K', color: 'bg-purple-100 text-purple-600' },
+    { name: 'Vijay Anand', category: 'Fan Installation', phone: '+91 95678 12345', time: '2 hours ago', initial: 'V', color: 'bg-amber-100 text-amber-600' },
+    { name: 'Meena Devi', category: 'General Service', phone: '+91 99945 67890', time: '3 hours ago', initial: 'M', color: 'bg-slate-100 text-slate-600' }
+  ]);
+  
+  const [reviewFilter, setReviewFilter] = useState('All');
+  const [reviewSourceFilter, setReviewSourceFilter] = useState('All');
+  const [reviewSearch, setReviewSearch] = useState('');
+  const [replyingReviewId, setReplyingReviewId] = useState(null);
+  const [reviewReplyText, setReviewReplyText] = useState('');
+  const [reviewResponses, setReviewResponses] = useState({});
+  const [localReviews, setLocalReviews] = useState([
+    { id: '1', authorName: 'Karthik M', rating: 5, time: '2 days ago', text: 'Excellent service and very professional team. Highly recommended in Udumalpet!', source: 'local', status: 'approved' },
+    { id: '2', authorName: 'Priya S', rating: 5, time: '5 days ago', text: 'Quick response and quality work. Solved the problem on the same day.', source: 'local', status: 'approved' },
+    { id: '3', authorName: 'Suresh Kumar', rating: 4, time: '1 week ago', text: 'Good service but pricing was a little bit high. Highly satisfied with overall support.', source: 'local', status: 'approved' },
+    { id: '4', authorName: 'Subramanian K', rating: 5, time: '2 weeks ago', text: 'Excellent quick service in the center of Udumalpet. Staff was polite.', source: 'google', status: 'approved' },
+    { id: '5', authorName: 'Manoj Kumar', rating: 4, time: '3 weeks ago', text: 'Cooperative staff and wide range of items. Highly helpful in emergency wiring issues.', source: 'google', status: 'approved' },
+  ]);
+
+  const [offersList, setOffersList] = useState([
+    { id: '1', title: 'Festival Special Ghee Roast', description: 'Buy 2 Get 1 Free on all special ghee roast items. Valid on dining.', rate: 'Buy 2 Get 1', expiry: '2026-06-30', active: true, banner: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80' },
+    { id: '2', title: 'Monsoon Discount Campaign', description: 'Flat 10% Off on all electrical installation services. Safe & verified engineers.', rate: '10% OFF', expiry: '2026-07-15', active: true, banner: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80' },
+  ]);
+  const [showAddOffer, setShowAddOffer] = useState(false);
+  const [newOfferFields, setNewOfferFields] = useState({ title: '', description: '', rate: '', expiry: '', banner: '' });
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem('ubt_token');
+    const storedUser = localStorage.getItem('ubt_user');
+    
+    if (!storedToken || !storedUser) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const parsedUser = JSON.parse(storedUser);
+      // Allow merchant, owner, admin, superadmin, and visitor roles
+      if (
+        parsedUser.role !== 'merchant' &&
+        parsedUser.role !== 'owner' &&
+        parsedUser.role !== 'admin' &&
+        parsedUser.role !== 'superadmin' &&
+        parsedUser.role !== 'visitor'
+      ) {
+        // Access Denied: Redirect non-registered users to login with an error code
+        navigate('/login?error=unauthorized');
+        return;
+      }
+      setToken(storedToken);
+      setUser(parsedUser);
+      setProfileFields({
+        fullName: parsedUser.fullName || '',
+        email: parsedUser.email || ''
+      });
+      fetchUserBusiness(storedToken);
+      fetchPaymentPlans();
+    } catch (err) {
+      navigate('/login');
+    }
+
+    if (searchParams.get('message') === 'listing_created') {
+      setSuccessBanner('Your business has been successfully submitted and is currently "Pending Verification". Upgrade to Premium below to activate instantly!');
+    } else if (searchParams.get('message') === 'profile_updated') {
+      setSuccessBanner('Your business profile details have been successfully updated and saved!');
+    }
+  }, [searchParams]);
+
+  const fetchUserBusiness = async (authToken) => {
+    setLoading(true);
+    try {
+      // Find businesses owned by the current logged-in user
+      const res = await fetch('http://localhost:5000/api/businesses/my-business', {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        if (data.data) {
+          const userBiz = data.data;
+          setBusiness(userBiz);
+          setEditFields({
+            name: userBiz.name || '',
+            category: userBiz.category || 'Services',
+            type: userBiz.type || '',
+            description: userBiz.description || '',
+            phone: userBiz.phone || '',
+            whatsapp: userBiz.whatsapp || '',
+            email: userBiz.email || '',
+            website: userBiz.website || '',
+            address: userBiz.address || '',
+            locality: userBiz.locality || '',
+            pincode: userBiz.pincode || '',
+            yearEstablished: userBiz.yearEstablished || '',
+            employeeCount: userBiz.employeeCount || '',
+            gstNumber: userBiz.gstNumber || '',
+            serviceArea: userBiz.serviceArea || '',
+            languagesKnown: userBiz.languagesKnown || '',
+            services: userBiz.services ? userBiz.services.join(', ') : '',
+            brands: userBiz.brands ? userBiz.brands.join(', ') : '',
+            coverImageUrl: userBiz.coverImageUrl || '',
+            galleryUrls: userBiz.galleryUrls ? userBiz.galleryUrls.join(', ') : '',
+            timingsMon: userBiz.timings?.Monday || '9:00 AM - 8:00 PM',
+            timingsTue: userBiz.timings?.Tuesday || '9:00 AM - 8:00 PM',
+            timingsWed: userBiz.timings?.Wednesday || '9:00 AM - 8:00 PM',
+            timingsThu: userBiz.timings?.Thursday || '9:00 AM - 8:00 PM',
+            timingsFri: userBiz.timings?.Friday || '9:00 AM - 8:00 PM',
+            timingsSat: userBiz.timings?.Saturday || '9:00 AM - 8:00 PM',
+            timingsSun: userBiz.timings?.Sunday || '9:00 AM - 1:00 PM',
+          });
+          
+          // Calculate completeness percentage based on filled fields
+          let score = 30; // base score for basic details
+          if (userBiz.yearEstablished) score += 10;
+          if (userBiz.gstNumber) score += 10;
+          if (userBiz.services.length > 0) score += 15;
+          if (userBiz.brands.length > 0) score += 10;
+          if (userBiz.logoUrl) score += 10;
+          if (userBiz.coverImageUrl) score += 10;
+          if (userBiz.galleryUrls.length > 2) score += 5;
+          setProfileCompletion(Math.min(score, 100));
+        } else {
+          setBusiness(null);
+          setActiveTab('My Blogs');
+        }
+      } else {
+        throw new Error('Fallback required');
+      }
+    } catch (err) {
+      console.warn('Backend server offline, falling back to offline simulation.');
+      
+      // Gorgeous mock fallback: match Sri Murugan Stores from reference design exactly!
+      const mockBiz = {
+        _id: 'UBT-10024',
+        name: 'Sri Murugan Stores',
+        category: 'Shops',
+        type: 'Departmental Stores',
+        description: 'Sri Murugan Stores is a premium departmental store in Gandhi Nagar, Udumalpet offering fresh organic grocery items, dry fruits, fresh pulses and household commodities.',
+        phone: '+91 94430 12345',
+        whatsapp: '+91 94430 12345',
+        locality: 'Gandhi Nagar',
+        pincode: '642126',
+        googleRating: 4.7,
+        googleReviewsCount: 68,
+        status: 'Approved',
+        subscriptionStatus: 'active', 
+        subscriptionExpiry: new Date(new Date().getTime() + 23 * 24 * 60 * 60 * 1000), // 23 days remaining
+        isPremium: true,
+        logoUrl: '',
+      };
+      setBusiness(mockBiz);
+      setEditFields({
+        name: mockBiz.name || '',
+        category: mockBiz.category || 'Services',
+        type: mockBiz.type || '',
+        description: mockBiz.description || '',
+        phone: mockBiz.phone || '',
+        whatsapp: mockBiz.whatsapp || '',
+        email: mockBiz.email || '',
+        website: mockBiz.website || '',
+        address: mockBiz.address || '',
+        locality: mockBiz.locality || '',
+        pincode: mockBiz.pincode || '',
+        yearEstablished: mockBiz.yearEstablished || '',
+        employeeCount: mockBiz.employeeCount || '',
+        gstNumber: mockBiz.gstNumber || '',
+        serviceArea: mockBiz.serviceArea || '',
+        languagesKnown: mockBiz.languagesKnown || '',
+        services: mockBiz.services ? mockBiz.services.join(', ') : '',
+        brands: mockBiz.brands ? mockBiz.brands.join(', ') : '',
+        coverImageUrl: mockBiz.coverImageUrl || '',
+        galleryUrls: mockBiz.galleryUrls ? mockBiz.galleryUrls.join(', ') : '',
+        timingsMon: mockBiz.timings?.Monday || '9:00 AM - 8:00 PM',
+        timingsTue: mockBiz.timings?.Tuesday || '9:00 AM - 8:00 PM',
+        timingsWed: mockBiz.timings?.Wednesday || '9:00 AM - 8:00 PM',
+        timingsThu: mockBiz.timings?.Thursday || '9:00 AM - 8:00 PM',
+        timingsFri: mockBiz.timings?.Friday || '9:00 AM - 8:00 PM',
+        timingsSat: mockBiz.timings?.Saturday || '9:00 AM - 8:00 PM',
+        timingsSun: mockBiz.timings?.Sunday || '9:00 AM - 1:00 PM',
+      });
+      setProfileCompletion(90);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserBlogs = async () => {
+    if (!token) return;
+    setBlogsLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/blogs/my-blogs', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUserBlogs(data.data);
+      } else {
+        throw new Error('Backend failed');
+      }
+    } catch (err) {
+      console.warn('Backend server offline, loading mock blogs for dashboard.');
+      // Generate realistic user mock blogs carrying user ID
+      const userMockList = [
+        {
+          _id: 'blog_1',
+          title: 'A Local’s Ultimate Guide to Thirumoorthy Hills & Dam',
+          content: 'Thirumoorthy Hills, located about 20 km from Udumalpet, is a pristine tourism spot...',
+          coverImage: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&q=80',
+          authorName: user?.fullName || 'Ananth Sundar',
+          status: 'Approved',
+          showLikes: true,
+          showComments: true,
+          likes: ['u1', 'u2', 'u3'],
+          comments: [
+            { _id: 'c1', user: 'u1', userName: 'Karthik S.', text: 'This is my favorite spot in Udumalpet! Panchalinga falls trek is amazing.', createdAt: new Date() },
+            { _id: 'c2', user: 'u2', userName: 'Meena Devi', text: 'Very detailed guide! Planning to visit next Sunday.', createdAt: new Date() }
+          ],
+          createdAt: new Date(new Date().getTime() - 2 * 24 * 60 * 60 * 1000)
+        }
+      ];
+      setUserBlogs(userMockList);
+    } finally {
+      setBlogsLoading(false);
+    }
+  };
+
+  const handleToggleBlogOption = async (blogId, option, currentValue) => {
+    const targetValue = !currentValue;
+    try {
+      const res = await fetch(`http://localhost:5000/api/blogs/${blogId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ [option]: targetValue })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUserBlogs(prev => prev.map(b => b._id === blogId ? data.data : b));
+      }
+    } catch (err) {
+      // Mock toggle on offline fallback
+      setUserBlogs(prev => prev.map(b => b._id === blogId ? { ...b, [option]: targetValue } : b));
+    }
+  };
+
+  const handleCommentDeleteDashboard = async (blogId, commentId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/blogs/${blogId}/comment/${commentId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUserBlogs(prev => prev.map(b => b._id === blogId ? { ...b, comments: data.data } : b));
+      }
+    } catch (err) {
+      // Mock delete on offline fallback
+      setUserBlogs(prev => prev.map(b => {
+        if (b._id === blogId) {
+          return { ...b, comments: b.comments.filter(c => c._id !== commentId) };
+        }
+        return b;
+      }));
+    }
+  };
+
+  const handleBlogImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setBlogImageError('Image file size must be less than 5MB.');
+      return;
+    }
+
+    setBlogImageUploading(true);
+    setBlogImageError('');
+    setBlogError('');
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setBlogCover(data.url);
+      } else {
+        setBlogImageError(data.message || 'Failed to upload image.');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      setBlogImageError('Network error uploading image. Using fallback URL.');
+      setBlogCover(URL.createObjectURL(file));
+    } finally {
+      setBlogImageUploading(false);
+    }
+  };
+
+  const handleWriteBlogDashboard = async (e) => {
+    e.preventDefault();
+    setBlogWriteLoading(true);
+    setBlogSuccess('');
+    setBlogError('');
+
+    if (!blogTitle.trim() || !blogContent.trim()) {
+      setBlogError('Please enter both title and content.');
+      setBlogWriteLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('http://localhost:5000/api/blogs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: blogTitle,
+          content: blogContent,
+          coverImage: blogCover || undefined
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBlogSuccess('Your blog post has been submitted and is pending review by administrators!');
+        setBlogTitle('');
+        setBlogCover('');
+        setBlogContent('');
+        fetchUserBlogs();
+        setTimeout(() => {
+          setShowWriteBlogModal(false);
+          setBlogSuccess('');
+        }, 5000);
+      } else {
+        setBlogError(data.message || 'Failed to submit blog post.');
+      }
+    } catch (err) {
+      // Mock submit locally
+      const mockPost = {
+        _id: 'mock_dashboard_' + Math.random().toString(36).substr(2, 9),
+        title: blogTitle,
+        content: blogContent,
+        coverImage: blogCover || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80',
+        authorName: user?.fullName || 'UBT Writer',
+        status: 'Pending Approval',
+        showLikes: true,
+        showComments: true,
+        likes: [],
+        comments: [],
+        createdAt: new Date()
+      };
+      setUserBlogs(prev => [mockPost, ...prev]);
+      setBlogSuccess('Mock Mode: Blog post successfully submitted to the pending approval review queue!');
+      setBlogTitle('');
+      setBlogCover('');
+      setBlogContent('');
+      setTimeout(() => {
+        setShowWriteBlogModal(false);
+        setBlogSuccess('');
+      }, 5000);
+    } finally {
+      setBlogWriteLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token && activeTab === 'My Blogs') {
+      fetchUserBlogs();
+    }
+  }, [token, activeTab]);
+
+  const fetchUserEvents = async () => {
+    if (!token) return;
+    setEventsLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/events/my-events', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUserEvents(data.data);
+      } else {
+        throw new Error('Backend failed');
+      }
+    } catch (err) {
+      console.warn('Backend server offline, loading mock events for dashboard.');
+      const mockList = [
+        {
+          _id: 'evt_1',
+          title: 'Sri Murugan Stores Mega Expo 2026',
+          category: 'Business',
+          description: 'A grand exhibition showcase highlighting fresh organic products, dry fruits, and household goods at Sri Murugan Stores.',
+          date: new Date(new Date().getTime() + 15 * 24 * 60 * 60 * 1000),
+          time: 'Saturday, 10:00 AM',
+          venue: 'Gandhi Nagar, Udumalpet',
+          organizer: 'Sri Murugan Stores',
+          phone: '+91 94430 12345',
+          price: 0,
+          coverImageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80',
+          duration: '1 Day'
+        }
+      ];
+      setUserEvents(mockList);
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
+  const handleCreateEventDashboard = async (e) => {
+    e.preventDefault();
+    setEventSubmitLoading(true);
+    setEventSuccess('');
+    setEventError('');
+
+    if (!eventTitle.trim() || !eventDescription.trim() || !eventDate || !eventTime || !eventVenue || !eventOrganizer || !eventPhone) {
+      setEventError('Please enter all required fields.');
+      setEventSubmitLoading(false);
+      return;
+    }
+
+    try {
+      const price = business && business.subscriptionStatus === 'active' ? 0 : 20;
+
+      const res = await fetch('http://localhost:5000/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: eventTitle,
+          category: eventCategory,
+          description: eventDescription,
+          date: eventDate,
+          endDate: eventEndDate || undefined,
+          time: eventTime,
+          venue: eventVenue,
+          organizer: eventOrganizer,
+          phone: eventPhone,
+          coverImageUrl: eventCoverUrl || undefined,
+          paymentLink: eventPaymentLink || undefined,
+          duration: eventDuration || undefined,
+          price: price
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEventSuccess(`Event successfully listed! ${price === 0 ? 'Free Listing applied (Active Premium Subscription detected).' : 'Standard charge of ₹20 listed.'}`);
+        setEventTitle('');
+        setEventDescription('');
+        setEventDate('');
+        setEventEndDate('');
+        setEventTime('');
+        setEventVenue('');
+        setEventOrganizer('');
+        setEventPhone('');
+        setEventCoverUrl('');
+        setEventPaymentLink('');
+        setEventDuration('');
+        fetchUserEvents();
+        setTimeout(() => {
+          setShowCreateEventModal(false);
+          setEventSuccess('');
+        }, 3000);
+      } else {
+        setEventError(data.message || 'Failed to submit event.');
+      }
+    } catch (err) {
+      const price = business && business.subscriptionStatus === 'active' ? 0 : 20;
+      const mockEvt = {
+        _id: 'mock_evt_' + Math.random().toString(36).substr(2, 9),
+        title: eventTitle,
+        category: eventCategory,
+        description: eventDescription,
+        date: new Date(eventDate),
+        endDate: eventEndDate ? new Date(eventEndDate) : undefined,
+        time: eventTime,
+        venue: eventVenue,
+        organizer: eventOrganizer,
+        phone: eventPhone,
+        coverImageUrl: eventCoverUrl || 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500&q=80',
+        paymentLink: eventPaymentLink,
+        duration: eventDuration,
+        price: price
+      };
+      setUserEvents(prev => [mockEvt, ...prev]);
+      setEventSuccess(`Mock Mode: Event successfully listed! ${price === 0 ? 'Free Listing applied (Active Premium Subscription detected).' : 'Standard charge of ₹20 listed.'}`);
+      
+      setEventTitle('');
+      setEventDescription('');
+      setEventDate('');
+      setEventEndDate('');
+      setEventTime('');
+      setEventVenue('');
+      setEventOrganizer('');
+      setEventPhone('');
+      setEventCoverUrl('');
+      setEventPaymentLink('');
+      setEventDuration('');
+
+      setTimeout(() => {
+        setShowCreateEventModal(false);
+        setEventSuccess('');
+      }, 3000);
+    } finally {
+      setEventSubmitLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token && activeTab === 'Events') {
+      fetchUserEvents();
+    }
+  }, [token, activeTab]);
+
+  useEffect(() => {
+    if (token && activeTab === 'Settings') {
+      fetchUserBlogs();
+      fetchUserEvents();
+    }
+  }, [token, activeTab]);
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setProfileFieldsLoading(true);
+    setProfileSuccess('');
+    setProfileError('');
+
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          fullName: profileFields.fullName,
+          email: profileFields.email
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setProfileSuccess('Profile details successfully updated!');
+        const resUser = data.user || data.data;
+        const updatedUser = { ...user, fullName: resUser.fullName || resUser.name, email: resUser.email };
+        setUser(updatedUser);
+        localStorage.setItem('ubt_user', JSON.stringify(updatedUser));
+      } else {
+        setProfileError(data.message || 'Failed to update profile.');
+      }
+    } catch (err) {
+      setProfileSuccess('Mock Mode: Profile credentials updated successfully!');
+      const updatedUser = { ...user, fullName: profileFields.fullName, email: profileFields.email };
+      setUser(updatedUser);
+      localStorage.setItem('ubt_user', JSON.stringify(updatedUser));
+    } finally {
+      setProfileFieldsLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPwdSuccess('');
+    setPwdError('');
+
+    if (pwdFields.newPassword !== pwdFields.confirmPassword) {
+      setPwdError('New passwords do not match.');
+      return;
+    }
+
+    setPwdFieldsLoading(true);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: pwdFields.currentPassword,
+          newPassword: pwdFields.newPassword
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setPwdSuccess('Password changed successfully!');
+        setPwdFields({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        setPwdError(data.message || 'Failed to change password.');
+      }
+    } catch (err) {
+      setPwdSuccess('Mock Mode: Password changed successfully!');
+      setPwdFields({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } finally {
+      setPwdFieldsLoading(false);
+    }
+  };
+
+  const handleBlogDelete = async (blogId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this blog post? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/blogs/${blogId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUserBlogs(prev => prev.filter(b => b._id !== blogId));
+        alert('Blog post removed successfully.');
+      }
+    } catch (err) {
+      setUserBlogs(prev => prev.filter(b => b._id !== blogId));
+      alert('Mock Mode: Blog post deleted.');
+    }
+  };
+
+  const handleEventDelete = async (eventId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this event listing? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/events/${eventId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUserEvents(prev => prev.filter(e => e._id !== eventId));
+        alert('Event successfully removed.');
+      }
+    } catch (err) {
+      setUserEvents(prev => prev.filter(e => e._id !== eventId));
+      alert('Mock Mode: Event listing deleted.');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmationText !== 'DELETE') {
+      alert('Please type DELETE to confirm your registration removal.');
+      return;
+    }
+
+    if (!window.confirm('WARNING: Are you absolutely sure you want to permanently deregister and delete your UBT account? This will permanently delete your profile, business listings, events, and blogs. This action is irreversible.')) {
+      return;
+    }
+    if (!window.confirm('CONFIRM ACCOUNT DELETION: Click OK to proceed with permanent registration removal.')) {
+      return;
+    }
+
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/delete', {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message);
+        localStorage.removeItem('ubt_token');
+        localStorage.removeItem('ubt_user');
+        navigate('/register');
+      }
+    } catch (err) {
+      alert('Mock Mode: Account successfully de-registered. Purging local storage session.');
+      localStorage.removeItem('ubt_token');
+      localStorage.removeItem('ubt_user');
+      navigate('/register');
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!business) return;
+ 
+    setLoading(true);
+
+    const postData = {
+      name: editFields.name,
+      category: editFields.category,
+      type: editFields.type,
+      description: editFields.description,
+      phone: editFields.phone,
+      whatsapp: editFields.whatsapp,
+      email: editFields.email,
+      website: editFields.website,
+      address: editFields.address,
+      locality: editFields.locality,
+      pincode: editFields.pincode,
+      yearEstablished: editFields.yearEstablished ? Number(editFields.yearEstablished) : undefined,
+      employeeCount: editFields.employeeCount,
+      gstNumber: editFields.gstNumber,
+      serviceArea: editFields.serviceArea,
+      languagesKnown: editFields.languagesKnown,
+      services: editFields.services ? editFields.services.split(',').map(s => s.trim()).filter(Boolean) : [],
+      brands: editFields.brands ? editFields.brands.split(',').map(b => b.trim()).filter(Boolean) : [],
+      coverImageUrl: editFields.coverImageUrl,
+      galleryUrls: editFields.galleryUrls ? editFields.galleryUrls.split(',').map(g => g.trim()).filter(Boolean) : [],
+      isAddressVerified: true,
+      timings: {
+        Monday: editFields.timingsMon,
+        Tuesday: editFields.timingsTue,
+        Wednesday: editFields.timingsWed,
+        Thursday: editFields.timingsThu,
+        Friday: editFields.timingsFri,
+        Saturday: editFields.timingsSat,
+        Sunday: editFields.timingsSun,
+      }
+    };
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/businesses/${business._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(postData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBusiness(data.data);
+        setShowEditModal(false);
+      } else {
+        throw new Error('Fallback required');
+      }
+    } catch (err) {
+      // Mock update locally on fallback
+      setBusiness(prev => ({
+        ...prev,
+        ...postData,
+        _id: prev._id
+      }));
+      setShowEditModal(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePhotoUpload = (e) => {
+    e.preventDefault();
+    setUploadLoading(true);
+    setTimeout(() => {
+      setUploadedPhotosCount(prev => prev + 1);
+      setUploadLoading(false);
+      setShowUploadModal(false);
+    }, 1500);
+  };
+
+  const handlePaymentCheckout = async (planOverride) => {
+    if (!business) return;
+
+    const planToUse = planOverride || selectedPlan;
+
+    try {
+      // 1. Create order on backend
+      const orderRes = await fetch('http://localhost:5000/api/payments/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          businessId: business._id,
+          planType: planToUse,
+        }),
+      });
+      const orderData = await orderRes.json();
+      
+      if (!orderData.success) {
+        setError('Failed to initialize Razorpay checkout.');
+        return;
+      }
+
+      // Check if Razorpay Script is loaded
+      const isRazorpayScriptLoaded = () => {
+        return new Promise((resolve) => {
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.body.appendChild(script);
+        });
+      };
+
+      await isRazorpayScriptLoaded();
+
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'Udumalpet Business Tour',
+        description: `${planToUse} Premium Subscription`,
+        order_id: orderData.orderId,
+        handler: async function (response) {
+          // 2. Verify payment on backend
+          const verifyRes = await fetch('http://localhost:5000/api/payments/verify-payment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              businessId: business._id,
+              planType: planToUse,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            }),
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.success) {
+            setBusiness(verifyData.business);
+            setPaymentSuccess(true);
+            setShowRenewModal(false);
+            setTimeout(() => setPaymentSuccess(false), 4000);
+          } else {
+            setError('Payment verification failed.');
+          }
+        },
+        prefill: {
+          name: user.fullName,
+          email: user.email,
+          contact: user.mobileNumber,
+        },
+        theme: {
+          color: '#027244', 
+        },
+      };
+
+      const rzp1 = new window.Razorpay(options);
+      rzp1.open();
+    } catch (err) {
+      console.warn('Razorpay popup blocked/failed, finalizing database via local Sandbox payment verification...', err);
+      try {
+        const mockOrderId = 'order_mock_' + Math.random().toString(36).substr(2, 9);
+        const mockPaymentId = 'pay_mock_' + Math.random().toString(36).substr(2, 9);
+        
+        const verifyRes = await fetch('http://localhost:5000/api/payments/verify-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            businessId: business._id,
+            planType: planToUse,
+            razorpayOrderId: mockOrderId,
+            razorpayPaymentId: mockPaymentId,
+            razorpaySignature: '',
+          }),
+        });
+        const verifyData = await verifyRes.json();
+        if (verifyData.success) {
+          setBusiness(verifyData.business);
+          setPaymentSuccess(true);
+          setShowRenewModal(false);
+          setTimeout(() => setPaymentSuccess(false), 4000);
+        } else {
+          setError(verifyData.message || 'Sandbox payment verification failed.');
+        }
+      } catch (innerErr) {
+        setError('Sandbox payment verification connection failed.');
+      }
+    }
+  };
+
+  const getDaysRemaining = (expiryDate) => {
+    if (!expiryDate) return 0;
+    const diff = new Date(expiryDate).getTime() - new Date().getTime();
+    return Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 0);
+  };
+
+  const copyReviewLink = () => {
+    navigator.clipboard.writeText('https://g.page/r/CfLKj12345ABC/review');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (loading) {
+    return (
+      <div className="py-32 flex flex-col items-center justify-center gap-3 text-slate-400 min-h-screen bg-slate-50">
+        <RefreshCw className="h-8 w-8 text-emerald-600 animate-spin" />
+        <span className="text-xs font-extrabold tracking-wide">Syncing your dashboard dashboard...</span>
+      </div>
+    );
+  }
+
+  // Safe defaults if business is null (standard user has no listing)
+  const isExpired = business ? business.subscriptionStatus === 'expired' : false;
+  const daysLeft = business ? getDaysRemaining(business.subscriptionExpiry) : 0;
+  const isMandatorySubscription = business && business.status === 'Approved' && business.subscriptionStatus !== 'active';
+
+  // Mock items aligned with the exact design mockup!
+  const mockLeads = [
+    { name: 'Suresh Kumar', category: 'Electrical Wiring', phone: '+91 97865 43210', time: '2 mins ago', initial: 'S', color: 'bg-blue-100 text-blue-600' },
+    { name: 'Ramesh Babu', category: 'Switch Board Repair', phone: '+91 94423 56789', time: '15 mins ago', initial: 'R', color: 'bg-green-100 text-green-600' },
+    { name: 'Kavin Prakash', category: 'Inverter Installation', phone: '+91 91500 67890', time: '1 hour ago', initial: 'K', color: 'bg-purple-100 text-purple-600' },
+    { name: 'Vijay Anand', category: 'Fan Installation', phone: '+91 95678 12345', time: '2 hours ago', initial: 'V', color: 'bg-amber-100 text-amber-600' },
+    { name: 'Meena Devi', category: 'General Service', phone: '+91 99945 67890', time: '3 hours ago', initial: 'M', color: 'bg-slate-100 text-slate-600' }
+  ];
+
+  // Dynamic sidebarLinks based on whether they have registered a business listing
+  const sidebarLinks = [
+    ...(business ? [
+      { label: 'Dashboard', icon: <Briefcase className="h-4 w-4" /> },
+      { label: 'Business Details', icon: <Edit3 className="h-4 w-4" />, onClick: () => setShowEditModal(true) },
+      { label: 'Photos & Media', icon: <ImageIcon className="h-4 w-4" />, onClick: () => setShowUploadModal(true) },
+      { label: 'Reviews & Reputation', icon: <Star className="h-4 w-4" /> },
+      { label: 'Leads & Enquiries', icon: <Mail className="h-4 w-4" />, badge: 18 },
+      { label: 'Subscription & Billing', icon: <CreditCard className="h-4 w-4" />, onClick: () => setShowRenewModal(true) },
+      { label: 'Offers & Promotions', icon: <Sparkles className="h-4 w-4" /> }
+    ] : [
+      { label: 'Dashboard', icon: <Briefcase className="h-4 w-4" /> }
+    ]),
+    { label: 'Events', icon: <Calendar className="h-4 w-4" /> },
+    { label: 'My Blogs', icon: <FileEdit className="h-4 w-4" /> },
+    { label: 'Settings', icon: <Settings className="h-4 w-4" /> },
+    { label: 'Help & Support', icon: <HelpCircle className="h-4 w-4" /> },
+  ];
+
+  return (
+    <div className="w-full min-h-screen bg-[#F8FAFC] flex font-sans leading-relaxed selection:bg-emerald-500 selection:text-white">
+      
+      {/* 1. LEFT NAVIGATION SIDEBAR */}
+      <aside className={`w-[270px] bg-[#001c41] text-slate-300 flex flex-col shrink-0 border-r border-slate-800 transition-transform duration-300 z-50 fixed lg:static inset-y-0 left-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-0 hidden lg:flex'}`}>
+        
+        {/* Logo block */}
+        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+          <Link to="/" className="flex items-center select-none py-1 overflow-hidden shrink-0">
+            <img src="/logo-dark.png" alt="Udumalpet Business Tour" className="h-10.5 w-auto object-contain" />
+          </Link>
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white p-1 rounded-lg">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Business Identity Card */}
+        {business && (
+          <div className="p-4.5 bg-slate-900/40 border border-slate-800/60 rounded-2xl m-4.5 flex items-center gap-3">
+            <div className="h-10 w-10 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center font-extrabold text-[#001c41] text-sm shadow-inner uppercase select-none shrink-0">
+              {business.name.charAt(0)}
+            </div>
+            <div className="flex flex-col overflow-hidden">
+              <h4 className="font-extrabold text-white text-xs leading-snug truncate">{business.name}</h4>
+              <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                {business.status === 'Approved' ? (
+                  <span className="bg-emerald-950/80 text-emerald-400 border border-emerald-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
+                    <ShieldCheck className="h-2.5 w-2.5 fill-current" /> UDT Verified
+                  </span>
+                ) : business.status === 'Under Review' ? (
+                  <span className="bg-blue-950/80 text-blue-400 border border-blue-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0 animate-pulse">
+                    <AlertCircle className="h-2.5 w-2.5" /> Under Review
+                  </span>
+                ) : business.status === 'Suspended' ? (
+                  <span className="bg-red-950/80 text-red-400 border border-red-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
+                    <AlertCircle className="h-2.5 w-2.5" /> Suspended
+                  </span>
+                ) : business.status === 'Rejected' ? (
+                  <span className="bg-rose-950/80 text-rose-455 border border-rose-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
+                    <AlertCircle className="h-2.5 w-2.5" /> Rejected
+                  </span>
+                ) : (
+                  <span className="bg-amber-950/80 text-amber-400 border border-amber-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
+                    <AlertCircle className="h-2.5 w-2.5" /> Pending Vetting
+                  </span>
+                )}
+                <span className="text-[9px] text-slate-500 font-semibold uppercase">ID: {business._id}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation list */}
+        <nav className="flex-1 px-3 py-2 flex flex-col gap-0.5 overflow-y-auto">
+          {sidebarLinks.map((link, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                if (link.onClick) {
+                  link.onClick();
+                } else {
+                  setActiveTab(link.label);
+                }
+                setSidebarOpen(false);
+              }}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[11.5px] font-extrabold transition-all hover:bg-slate-800/40 hover:text-white cursor-pointer ${
+                activeTab === link.label && !link.onClick
+                  ? 'bg-[#027244] text-white shadow-md shadow-emerald-900/20' 
+                  : 'text-slate-400 hover:bg-slate-800/30'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className={activeTab === link.label && !link.onClick ? 'text-emerald-300' : 'text-slate-500 group-hover:text-slate-300'}>
+                  {link.icon}
+                </span>
+                <span>{link.label}</span>
+              </div>
+              {link.badge && (
+                <span className="bg-red-500 text-white font-extrabold text-[9px] px-1.5 py-0.5 rounded-full select-none">
+                  {link.badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        {/* Upgrade Plan Callout Widget */}
+        <div className="m-4.5 p-4 bg-slate-900/40 border border-slate-850 rounded-2xl flex flex-col gap-2 relative overflow-hidden shadow-sm">
+          <div className="absolute -right-8 -top-8 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
+          <h5 className="text-[11px] font-extrabold text-amber-400 flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 fill-current" /> Upgrade Your Plan
+          </h5>
+          <p className="text-[10px] text-slate-400 font-bold leading-normal">
+            Get more visibility, leads and grow your business faster.
+          </p>
+          <button 
+            onClick={() => setShowRenewModal(true)}
+            className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-extrabold rounded-xl transition-all shadow-md shadow-emerald-950/20 cursor-pointer mt-1"
+          >
+            Upgrade Now
+          </button>
+        </div>
+
+        {/* Need Help Helpline Card */}
+        <div className="px-4.5 pb-6 border-t border-slate-800 pt-4 flex flex-col gap-1.5 shrink-0 bg-slate-950/20">
+          <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+            <PhoneCall className="h-3 w-3" /> Need Help?
+          </span>
+          <p className="text-[10px] text-slate-400 font-semibold leading-normal">
+            Our support team is here to help you.
+          </p>
+          <a href="tel:+911234567890" className="text-xs text-emerald-400 hover:text-emerald-300 font-extrabold flex items-center gap-1 transition-colors mt-0.5">
+            +91 12345 67890
+          </a>
+        </div>
+      </aside>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)} className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-40 lg:hidden" />
+      )}
+
+      {/* 2. MAIN LAYOUT CONTAINER */}
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        
+        {/* Top Header bar */}
+        <header className="bg-white border-b border-slate-200/80 px-6 py-4 flex items-center justify-between sticky top-0 z-40 shadow-xs">
+          
+          {/* Breadcrumb Left Header block */}
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-1.5 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-600 cursor-pointer">
+              <Menu className="h-4.5 w-4.5" />
+            </button>
+            <div className="flex flex-col text-left">
+              <h2 className="text-[#001c41] text-base md:text-lg font-extrabold tracking-tight">Dashboard</h2>
+              <span className="text-slate-400 text-[10px] md:text-xs font-semibold tracking-wide mt-0.5">
+                Welcome back! Here's what's happening with your business.
+              </span>
+            </div>
+          </div>
+
+          {/* Right Header tools */}
+          <div className="flex items-center gap-3 md:gap-4 shrink-0">
+            {business && (
+              <Link 
+                to={`/businesses/${business._id}`}
+                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-extrabold text-emerald-600 hover:text-emerald-700 flex items-center gap-2 transition-all shadow-xs cursor-pointer"
+              >
+                <Globe className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">View Business Profile</span>
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+            )}
+
+            {/* Notification bell */}
+            <button className="relative p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-xl text-slate-500 transition-colors cursor-pointer group">
+              <Bell className="h-4 w-4 group-hover:scale-105 transition-transform" />
+              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white text-[9px] font-extrabold text-white flex items-center justify-center select-none">
+                3
+              </span>
+            </button>
+
+            {/* User Profile Avatar dropdown summary */}
+            <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200">
+              <img 
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80" 
+                alt="Karthik S." 
+                className="h-8.5 w-8.5 rounded-full border border-slate-200 object-cover bg-slate-50"
+              />
+              <div className="flex flex-col text-left hidden sm:flex">
+                <span className="text-xs font-extrabold text-slate-800 leading-none">{user?.fullName}</span>
+                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+                  {user?.role === 'admin' ? 'Administrator' : (business ? 'Business Owner' : 'Writer / Member')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </header>
+
+        {/* Scrollable Workspace Panels */}
+        <main className="flex-grow overflow-y-auto px-6 py-6 max-w-7xl w-full mx-auto flex flex-col gap-6">
+          
+          {/* Banner notification updates */}
+          {successBanner && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-3xl p-5 shadow-sm flex items-start gap-4 animate-fadeIn">
+              <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="flex-1 flex flex-col gap-1 text-left">
+                <span className="font-extrabold text-xs text-slate-800">Registration Details Synced!</span>
+                <p className="text-xs text-slate-600 leading-relaxed font-semibold">{successBanner}</p>
+                <button onClick={() => setSuccessBanner('')} className="text-[10px] font-bold text-emerald-600 hover:underline mt-2 self-start cursor-pointer">
+                  Dismiss alert
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Business Verification Status Alert Banners */}
+          {business && !isExpired && (
+            <>
+              {business.status === 'Pending Verification' && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-805 rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn text-left">
+                  <div className="flex items-start gap-3.5">
+                    <AlertTriangle className="h-5.5 w-5.5 text-amber-500 shrink-0 mt-0.5" />
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-extrabold text-xs text-slate-800">Verification Pending</span>
+                      <p className="text-[11px] text-slate-600 font-semibold leading-relaxed">
+                        Your listing is successfully submitted. It will become live globally in the directory as soon as the administrators verify your business details.
+                      </p>
+                      {business.googlePlaceId && (
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <span className="bg-blue-100 text-blue-700 border border-blue-200 text-[8.5px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-0.5 shadow-2xs">
+                            ⚡ Google Connected — Faster Approval Active
+                          </span>
+                          <span className="text-[9.5px] font-extrabold text-slate-450">High-trust priority queue active!</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {business.status === 'Under Review' && (
+                <div className="bg-blue-50 border border-blue-200 text-blue-805 rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn text-left">
+                  <div className="flex items-start gap-3.5">
+                    <RefreshCw className="h-5.5 w-5.5 text-blue-500 shrink-0 mt-0.5 animate-spin" />
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-extrabold text-xs text-slate-800">Profile Under Review</span>
+                      <p className="text-[11px] text-slate-600 font-semibold leading-relaxed">
+                        An auditor is currently reviewing your registration documents, locality, and contact details. Vetting usually completes within 2-4 hours.
+                      </p>
+                      {business.googlePlaceId && (
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <span className="bg-blue-100 text-blue-700 border border-blue-200 text-[8.5px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-0.5 shadow-2xs">
+                            ⚡ Google Connected — Faster Approval Active
+                          </span>
+                          <span className="text-[9.5px] font-extrabold text-slate-450">Vetting priority enabled.</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {business.status === 'Suspended' && (
+                <div className="bg-red-50 border border-red-200 text-red-800 rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-shake text-left">
+                  <div className="flex items-start gap-3.5">
+                    <AlertCircle className="h-5.5 w-5.5 text-red-500 shrink-0 mt-0.5" />
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-extrabold text-xs text-slate-800">Listing Suspended</span>
+                      <p className="text-[11px] text-slate-600 font-semibold leading-relaxed">
+                        This profile has been suspended by the administrators due to auditing terms or unresolved complaints. Please reach out to customer support to resolve.
+                      </p>
+                    </div>
+                  </div>
+                  <a href="tel:+911234567890" className="bg-red-650 hover:bg-red-700 text-white font-extrabold text-[10.5px] py-2 px-5 rounded-xl transition-all shadow-sm shrink-0 uppercase tracking-wide">
+                    Helpline Support
+                  </a>
+                </div>
+              )}
+
+              {business.status === 'Rejected' && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn text-left">
+                  <div className="flex items-start gap-3.5">
+                    <AlertCircle className="h-5.5 w-5.5 text-rose-500 shrink-0 mt-0.5" />
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-extrabold text-xs text-slate-800">Audit Rejected</span>
+                      <p className="text-[11px] text-slate-600 font-semibold leading-relaxed">
+                        Your registration has been rejected because of mismatched parameters, incorrect locality inputs, or invalid GST formats. Edit details below and resubmit.
+                      </p>
+                    </div>
+                  </div>
+                  <button onClick={() => setShowEditModal(true)} className="bg-slate-100 hover:bg-slate-200 border border-slate-350 text-slate-700 font-extrabold text-[10.5px] py-2 px-5 rounded-xl transition-all shadow-sm shrink-0 uppercase tracking-wide">
+                    Edit Profile
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {isExpired && (
+            <div className="bg-red-650 text-white border-none rounded-3xl p-5 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse text-left">
+              <div className="flex items-start gap-3.5">
+                <AlertTriangle className="h-5.5 w-5.5 shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-extrabold text-xs">Profile Visibility Locked!</span>
+                  <p className="text-[11px] text-red-100 font-bold leading-relaxed">
+                    Subscription expired. Store images are blurred, rank is reduced, and WhatsApp contact buttons are hidden. Renew today!
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowRenewModal(true)} 
+                className="bg-white text-red-700 font-extrabold text-[10.5px] py-2 px-5 rounded-xl hover:bg-slate-100 transition-colors uppercase shrink-0 cursor-pointer shadow-sm"
+              >
+                Renew Subscription
+              </button>
+            </div>
+          )}
+
+          {paymentSuccess && (
+            <div className="bg-emerald-600 text-white border-none rounded-3xl p-4 shadow flex items-center gap-3.5 animate-fadeIn text-left">
+              <CheckCircle className="h-5.5 w-5.5 shrink-0" />
+              <div className="flex flex-col">
+                <span className="font-extrabold text-xs">Payment Verified!</span>
+                <span className="text-[11px] text-emerald-100 font-bold">Your premium subscription is activated immediately. Visibility fully restored!</span>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB: BUSINESS OWNER DASHBOARD (KPI CARDS, LEADS, AND AUDITS) */}
+          {/* ========================================================================= */}
+          {activeTab === 'Dashboard' && business && (
+            <>
+              {/* 3. KPI CARDS ROW (6 Horizontal premium aligned widgets) */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                
+                {/* Total Leads */}
+                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                  <div className="h-10.5 w-10.5 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <Plus className="h-5 w-5" />
+                  </div>
+                  <div className="flex flex-col text-left overflow-hidden min-w-0">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Total Leads</span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">128</span>
+                    <span className="text-[9px] font-extrabold text-emerald-600 flex items-center gap-0.5 mt-1.5">
+                      ↑ 18% this month
+                    </span>
+                  </div>
+                </div>
+
+                {/* Call Clicks */}
+                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                  <div className="h-10.5 w-10.5 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <PhoneCall className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="flex flex-col text-left overflow-hidden min-w-0">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Call Clicks</span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">46</span>
+                    <span className="text-[9px] font-extrabold text-emerald-600 flex items-center gap-0.5 mt-1.5">
+                      ↑ 12% this month
+                    </span>
+                  </div>
+                </div>
+
+                {/* WhatsApp Clicks */}
+                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                  <div className="h-10.5 w-10.5 rounded-xl bg-emerald-55/15 text-emerald-600 flex items-center justify-center shrink-0">
+                    <MessageSquare className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="flex flex-col text-left overflow-hidden min-w-0">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">WhatsApp Clicks</span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">82</span>
+                    <span className="text-[9px] font-extrabold text-emerald-600 flex items-center gap-0.5 mt-1.5">
+                      ↑ 22% this month
+                    </span>
+                  </div>
+                </div>
+
+                {/* Average Rating */}
+                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                  <div className="h-10.5 w-10.5 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
+                    <Star className="h-4.5 w-4.5 fill-current" />
+                  </div>
+                  <div className="flex flex-col text-left overflow-hidden min-w-0">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Average Rating</span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">4.7</span>
+                    <span className="text-[9px] font-bold text-slate-400 mt-1.5 truncate">
+                      (68 Reviews)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Listing Status */}
+                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                  <div className={`h-10.5 w-10.5 rounded-xl flex items-center justify-center shrink-0 ${
+                    business.status === 'Approved' ? 'bg-emerald-50 text-emerald-600' :
+                    business.status === 'Under Review' ? 'bg-blue-50 text-blue-600 animate-pulse' :
+                    business.status === 'Suspended' ? 'bg-red-50 text-red-650' :
+                    business.status === 'Rejected' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-500'
+                  }`}>
+                    <ShieldCheck className="h-5 w-5 fill-current" />
+                  </div>
+                  <div className="flex flex-col text-left overflow-hidden min-w-0">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Listing Status</span>
+                    <span className={`text-[15px] font-extrabold leading-none mt-1.5 truncate ${
+                      business.status === 'Approved' ? 'text-[#027244]' :
+                      business.status === 'Under Review' ? 'text-blue-650' :
+                      business.status === 'Suspended' ? 'text-red-650' :
+                      business.status === 'Rejected' ? 'text-rose-600' : 'text-amber-550'
+                    }`}>
+                      {business.status === 'Approved' ? 'Verified' : 
+                       business.status === 'Under Review' ? 'In Review' : 
+                       business.status === 'Suspended' ? 'Suspended' : 
+                       business.status === 'Rejected' ? 'Rejected' : 'Pending'}
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400 mt-1.5 truncate">
+                      {business.status === 'Approved' ? 'Your business is live' :
+                       business.status === 'Under Review' ? 'Auditing in progress' :
+                       business.status === 'Suspended' ? 'Profile locked' :
+                       business.status === 'Rejected' ? 'Needs modifications' : 'Awaiting verification'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Plan Renewal */}
+                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                  <div className="h-10.5 w-10.5 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                    <CreditCard className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="flex flex-col text-left overflow-hidden min-w-0">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Plan Renewal</span>
+                    <span className={`text-sm md:text-[13px] font-extrabold mt-1 leading-none truncate ${isExpired ? 'text-red-600' : 'text-slate-800'}`}>
+                      {isExpired ? 'Expired' : `${daysLeft} Days left`}
+                    </span>
+                    <span className="text-[8.5px] font-bold text-slate-400 mt-1.5 truncate">
+                      {business.subscriptionExpiry ? new Date(business.subscriptionExpiry).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}) : 'N/A'}
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* 4. MAIN WIDGETS COLUMN LAYOUT GRID (3-Column Desktop Grid) */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                
+                {/* LEFT & CENTER 2-COLUMNS: Leads widget & reviews subgrid */}
+                <div className="lg:col-span-2 flex flex-col gap-6">
+                  
+                  {/* Card A: Recent Leads detailed panel */}
+                  <div className="bg-white border border-slate-200/80 shadow-xs rounded-3xl p-6 flex flex-col">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                      <div className="flex flex-col text-left">
+                        <h3 className="font-extrabold text-sm text-[#001c41]">Recent Leads</h3>
+                        <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Enquiries submitted by customers recently</span>
+                      </div>
+                      <button className="text-[10px] font-extrabold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer uppercase">
+                        View All
+                      </button>
+                    </div>
+
+                    {/* Leads list stream */}
+                    <div className="flex flex-col divide-y divide-slate-100">
+                      {mockLeads.map((lead, idx) => (
+                        <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 first:pt-0 last:pb-0 gap-3">
+                          <div className="flex items-center gap-3.5">
+                            <div className={`h-9 w-9 rounded-full ${lead.color} flex items-center justify-center font-extrabold text-xs shadow-inner shrink-0 select-none`}>
+                              {lead.initial}
+                            </div>
+                            <div className="flex flex-col text-left min-w-0">
+                              <span className="font-extrabold text-slate-800 text-xs truncate leading-snug">{lead.name}</span>
+                              <span className="text-[10px] text-slate-400 font-semibold mt-0.5 leading-none">{lead.category}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between sm:justify-end gap-6 self-stretch sm:self-auto shrink-0 pl-12 sm:pl-0">
+                            <a 
+                              href={`tel:${lead.phone}`}
+                              className="text-[10.5px] font-bold text-slate-600 hover:text-emerald-600 flex items-center gap-1.5 transition-colors cursor-pointer group bg-slate-50 hover:bg-emerald-50 px-3 py-1.5 rounded-lg border border-slate-200/60"
+                            >
+                              <PhoneCall className="h-3 w-3 text-slate-400 group-hover:text-emerald-600" />
+                              <span>{lead.phone}</span>
+                            </a>
+                            <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-wide">
+                              {lead.time}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Wide View All Leads CTA Button */}
+                    <button 
+                      onClick={() => setActiveTab('Leads & Enquiries')}
+                      className="w-full mt-4 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-extrabold text-xs rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1"
+                    >
+                      View All Active Leads <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Secondary Subgrid (Reviews & Google Sync) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    {/* Card B.1: Reviews & Reputation */}
+                    <div className="bg-white border border-slate-200/80 shadow-xs rounded-3xl p-6 flex flex-col">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                        <div className="flex flex-col text-left">
+                          <h3 className="font-extrabold text-sm text-[#001c41]">Reviews & Reputation</h3>
+                          <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Rating scores aggregate summary</span>
+                        </div>
+                        <button 
+                          onClick={() => setActiveTab('Reviews & Reputation')}
+                          className="text-[10px] font-extrabold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer uppercase"
+                        >
+                          View All
+                        </button>
+                      </div>
+
+                      {/* Ratings layout comparison */}
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-[#F8FAFC] border border-slate-200/60 p-3 rounded-xl flex flex-col items-center justify-center text-center gap-1">
+                          <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-wider">Your Rating</span>
+                          <span className="text-xl font-extrabold text-slate-800 mt-0.5">4.7</span>
+                          <div className="flex items-center text-amber-400 mt-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className="h-2.5 w-2.5 fill-current" />
+                            ))}
+                          </div>
+                          <span className="text-[8.5px] text-slate-400 font-semibold mt-0.5">Based on 68 reviews</span>
+                        </div>
+
+                        <div className="bg-[#F8FAFC] border border-slate-200/60 p-3 rounded-xl flex flex-col items-center justify-center text-center gap-1">
+                          <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-wider font-sans flex items-center gap-1">
+                            <span className="text-blue-500">G</span>oogle Rating
+                          </span>
+                          <span className="text-xl font-extrabold text-slate-800 mt-0.5">4.6</span>
+                          <div className="flex items-center text-amber-400 mt-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`h-2.5 w-2.5 fill-current ${i === 4 ? 'text-slate-200' : ''}`} />
+                            ))}
+                          </div>
+                          <span className="text-[8.5px] text-slate-400 font-semibold mt-0.5">Based on 128 reviews</span>
+                        </div>
+                      </div>
+
+                      {/* Recent reviews stream block */}
+                      <div className="flex flex-col gap-3.5 border-t border-slate-100 pt-4 text-left">
+                        <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mb-1">Recent Reviews</span>
+                        
+                        {[
+                          { author: 'Karthik M', r: 5, time: '2 days ago', body: 'Excellent service and very professional team.' },
+                          { author: 'Priya S', r: 5, time: '5 days ago', body: 'Quick response and quality work. Highly recommended!' }
+                        ].map((rev, idx) => (
+                          <div key={idx} className="flex flex-col gap-1 first:pt-0 last:pb-0">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="font-extrabold text-slate-700">{rev.author}</span>
+                              <span className="text-[9px] font-semibold text-slate-400">{rev.time}</span>
+                            </div>
+                            <div className="flex items-center text-amber-400 gap-0.5">
+                              {[...Array(rev.r)].map((_, i) => (
+                                <Star key={i} className="h-2.5 w-2.5 fill-current" />
+                              ))}
+                            </div>
+                            <p className="text-[10.5px] text-slate-500 leading-normal font-semibold mt-0.5">
+                              "{rev.body}"
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <button 
+                        onClick={() => setActiveTab('Reviews & Reputation')}
+                        className="w-full mt-4 py-2.5 border border-slate-200 text-slate-600 font-extrabold text-[10.5px] rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+                      >
+                        Manage Reviews
+                      </button>
+                    </div>
+
+                    {/* Card B.2: Google Reviews Connected */}
+                    <div className="bg-white border border-slate-200/80 shadow-xs rounded-3xl p-6 flex flex-col text-left justify-between gap-4">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-2">
+                          <h3 className="font-extrabold text-sm text-[#001c41]">Google Reviews</h3>
+                          <span className="bg-emerald-50 text-[#027244] border border-emerald-100 px-2 py-0.5 rounded-full text-[8.5px] font-extrabold inline-flex items-center gap-1 shrink-0 select-none">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Connected
+                          </span>
+                        </div>
+                        <p className="text-slate-500 text-[10.5px] font-semibold leading-relaxed">
+                          Your Google Business Profile is connected. We are showing your latest Google reviews.
+                        </p>
+                        <span className="text-[9.5px] text-slate-400 font-bold block mt-1.5">
+                          Last synced: 29 May 2025, 10:30 AM
+                        </span>
+                      </div>
+
+                      {/* Actions Links with logo labels */}
+                      <div className="flex flex-col gap-2.5">
+                        <a 
+                          href="https://google.com" 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 hover:border-emerald-500 rounded-xl text-slate-700 hover:text-[#001c41] text-[10.5px] font-extrabold flex items-center justify-between transition-all"
+                        >
+                          <span className="flex items-center gap-2">
+                            <span className="h-5 w-5 bg-white shadow-xs border border-slate-200 rounded flex items-center justify-center font-bold text-blue-500 text-[11px]">G</span>
+                            View on Google
+                          </span>
+                          <ExternalLink className="h-3 w-3 text-slate-450" />
+                        </a>
+
+                        <button 
+                          onClick={() => setShowUploadModal(true)}
+                          className="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 hover:border-emerald-500 rounded-xl text-slate-700 hover:text-[#001c41] text-[10.5px] font-extrabold flex items-center justify-between transition-all cursor-pointer text-left"
+                        >
+                          <span className="flex items-center gap-2">
+                            <span className="h-5 w-5 bg-white shadow-xs border border-slate-200 rounded flex items-center justify-center text-amber-500 text-[11px]">★</span>
+                            Get More Reviews
+                          </span>
+                          <ExternalLink className="h-3 w-3 text-slate-450" />
+                        </button>
+                      </div>
+
+                      {/* Review Link Sync input and copy clip */}
+                      <div className="flex flex-col gap-1 pt-1">
+                        <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Review Link</span>
+                        <div className="flex items-center gap-2 border border-slate-200/70 rounded-xl p-1 bg-slate-50 mt-1">
+                          <input 
+                            type="text" 
+                            readOnly
+                            value="https://g.page/r/CfLKj12345ABC/review"
+                            className="w-full bg-transparent text-[11px] font-semibold text-slate-600 px-2 focus:outline-none"
+                          />
+                          <button 
+                            onClick={copyReviewLink}
+                            className="h-7 w-7 rounded-lg bg-[#027244] hover:bg-[#005934] text-white flex items-center justify-center shrink-0 cursor-pointer shadow-xs transition-colors"
+                          >
+                            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* RIGHT COLUMN (1/3 WIDTH): Quick actions panel & Subscription checklist */}
+                <div className="lg:col-span-1 flex flex-col gap-6 text-left">
+                  
+                  {/* Card C: Quick Actions Widget */}
+                  <div className="bg-white border border-slate-200/80 shadow-xs rounded-3xl p-6 flex flex-col gap-4">
+                    <div className="flex flex-col">
+                      <h3 className="font-extrabold text-sm text-[#001c41]">Quick Actions</h3>
+                      <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Instantly manage and update your profile</span>
+                    </div>
+
+                    <div className="flex flex-col gap-2.5">
+                      {[
+                        { label: 'Edit Business Details', icon: <Edit3 className="h-4 w-4 text-emerald-600" />, desc: 'Update your business information', action: () => setShowEditModal(true) },
+                        { label: 'Upload Photos', icon: <ImageIcon className="h-4 w-4 text-blue-600" />, desc: 'Add or update photos & videos', action: () => setShowUploadModal(true) },
+                        { label: 'Add Offer / Promotion', icon: <Sparkles className="h-4 w-4 text-amber-500" />, desc: 'Create new offers for customers', action: () => setShowEditModal(true) },
+                        { label: 'Share Your Profile', icon: <Globe className="h-4 w-4 text-purple-600" />, desc: 'Share your profile with customers', action: copyReviewLink },
+                        { label: 'Get Google Reviews', icon: <Star className="h-4 w-4 text-red-500 animate-pulse fill-current" />, desc: 'Request reviews from customers', action: copyReviewLink }
+                      ].map((act, idx) => (
+                        <button 
+                          key={idx}
+                          onClick={act.action}
+                          className="card-premium group rounded-2xl flex items-center justify-between cursor-pointer w-full p-3 bg-slate-50/50 hover:bg-slate-100/50 border border-slate-200/80 shadow-2xs text-left"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-8.5 w-8.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center justify-center shrink-0">
+                              {act.icon}
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-extrabold text-slate-800 text-xs truncate leading-snug group-hover:text-emerald-700 transition-colors">{act.label}</span>
+                              <span className="text-[9.5px] text-slate-400 font-semibold leading-none mt-1 truncate">{act.desc}</span>
+                            </div>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Card D: Subscription & Plan Widget */}
+                  <div className="bg-white border border-slate-200/80 shadow-xs rounded-3xl p-6 flex flex-col gap-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                      <div className="flex flex-col">
+                        <h3 className="font-extrabold text-sm text-[#001c41]">Subscription & Plan</h3>
+                        <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Review plan limits and visibilities</span>
+                      </div>
+                      <button className="text-[10px] font-extrabold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer uppercase">
+                        View Details
+                      </button>
+                    </div>
+
+                    <div className="flex flex-col gap-2.5">
+                      <div className="flex justify-between items-center bg-[#F8FAFC] border border-slate-200/60 p-3 rounded-xl">
+                        <span className="text-[10.5px] font-bold text-slate-500">Current Plan</span>
+                        <span className={`px-2 py-0.5 rounded text-[9.5px] font-extrabold select-none uppercase tracking-wide border ${
+                          business.subscriptionStatus === 'active' 
+                            ? 'bg-emerald-50 text-[#027244] border-emerald-100' 
+                            : 'bg-amber-50 text-amber-700 border-amber-200/60'
+                        }`}>
+                          {business.subscriptionStatus === 'active' ? 'Pro Plan' : 'Inactive Plan'}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center bg-[#F8FAFC] border border-slate-200/60 p-3 rounded-xl">
+                        <span className="text-[10.5px] font-bold text-slate-500">Renewal Date</span>
+                        <span className="text-xs font-extrabold text-slate-700">
+                          {business.subscriptionExpiry ? new Date(business.subscriptionExpiry).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}) : 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Plan Checklist Benefits */}
+                    <div className="flex flex-col gap-1 border-t border-slate-100 pt-3">
+                      <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Benefits Included</span>
+                      {[
+                        { label: 'Business Visibility', val: 'Featured' },
+                        { label: 'Leads Per Month', val: 'Unlimited' },
+                        { label: 'Photos Allowed', val: 'Up to 50' },
+                        { label: 'Support', val: 'Priority Support' }
+                      ].map((benefit, idx) => (
+                        <div key={idx} className="flex items-center justify-between py-1.5 text-xs font-semibold text-slate-600">
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-4.5 w-4.5 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-[10px] font-extrabold shrink-0 select-none">
+                              ✓
+                            </div>
+                            <span>{benefit.label}</span>
+                          </div>
+                          <span className="font-extrabold text-slate-800 text-[11px]">{benefit.val}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button 
+                      onClick={() => setShowRenewModal(true)}
+                      className="w-full mt-2 py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all shadow-emerald-700/10 cursor-pointer"
+                    >
+                      Manage Subscription
+                    </button>
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* 5. GROW YOUR BUSINESS FOOTER BANNER */}
+              <div className="w-full bg-[#EBF5FF] border border-blue-100 rounded-3xl p-5 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4 text-left">
+                <div className="flex items-center gap-3.5">
+                  <div className="h-10 w-10 bg-blue-500 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/10">
+                    <Sparkles className="h-5 w-5 fill-current text-blue-100" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-extrabold text-xs text-[#001c41]">Grow Your Business</span>
+                    <p className="text-[11px] text-slate-550 font-bold leading-relaxed">
+                      Keep your profile updated, respond to leads quickly and collect more reviews to rank higher in search results.
+                    </p>
+                  </div>
+                </div>
+                <button className="bg-white hover:bg-slate-55 border border-slate-200 text-slate-700 font-extrabold text-[10.5px] py-2.5 px-5 rounded-xl transition-all shadow-2xs shrink-0 cursor-pointer">
+                  View Tips & Guide
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB: DASHBOARD NOT LISTED YET (INLINE BUSINESS OWNER CTA) */}
+          {/* ========================================================================= */}
+          {activeTab === 'Dashboard' && !business && (
+            <div className="max-w-md w-full bg-white border border-slate-200 shadow-xl rounded-[28px] p-8 text-center flex flex-col items-center gap-6 mx-auto my-12 animate-fadeIn">
+              <div className="h-15 w-15 bg-emerald-50 text-[#027244] rounded-2xl flex items-center justify-center border border-emerald-100 animate-pulse">
+                <Plus className="h-7 w-7" />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <h3 className="font-extrabold text-slate-800 text-base leading-tight">No Business Profile Registered</h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                  Hello, {user?.fullName}! You have not registered any business listing on Udumalpet Business Tour (UBT) yet. Add your business today to get discovered!
+                </p>
+              </div>
+              <button 
+                onClick={() => navigate('/add-business')}
+                className="w-full py-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all shadow-emerald-700/10 cursor-pointer"
+              >
+                List Your Business Now
+              </button>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB: EVENTS MANAGEMENT DASHBOARD */}
+          {/* ========================================================================= */}
+          {activeTab === 'Events' && (
+            <div className="flex flex-col gap-6 text-left animate-fadeIn">
+              
+              {/* Header card */}
+              <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col">
+                  <h3 className="font-extrabold text-[#001c41] text-base">Events Management Desk</h3>
+                  <span className="text-[10px] text-slate-450 font-semibold mt-0.5">List and announce matches, storefront expos, and community summits in Udumalpet</span>
+                </div>
+                <button 
+                  onClick={() => setShowCreateEventModal(true)}
+                  className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-6 rounded-xl transition-all shadow-md shrink-0 flex items-center gap-2 cursor-pointer border border-emerald-700/10"
+                >
+                  <Plus className="h-4.5 w-4.5" /> List New Event
+                </button>
+              </div>
+
+              {/* Events Content Stream */}
+              {eventsLoading ? (
+                <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-450 flex flex-col items-center gap-2.5 shadow-sm">
+                  <RefreshCw className="h-7 w-7 text-emerald-600 animate-spin" />
+                  <span className="text-xs font-bold">Retrieving your listed events...</span>
+                </div>
+              ) : userEvents.length === 0 ? (
+                <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-450 flex flex-col items-center gap-4 shadow-sm max-w-md mx-auto my-6">
+                  <div className="h-12 w-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
+                    <Calendar className="h-6 w-6" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <h4 className="font-extrabold text-slate-755 text-sm">No Events Listed</h4>
+                    <p className="text-xs text-slate-400 font-semibold leading-relaxed">
+                      Announce local business expos, match events, seasonal discounts, or training meets to gather customers!
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => setShowCreateEventModal(true)}
+                    className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] text-white font-bold text-xs rounded-xl shadow transition-all cursor-pointer"
+                  >
+                    List Your First Event
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {userEvents.map((evt) => (
+                    <div key={evt._id} className="card-premium rounded-3xl overflow-hidden bg-white flex flex-col border border-slate-200 shadow-sm">
+                      <div 
+                        className="h-36 bg-cover bg-center shrink-0 relative"
+                        style={{ backgroundImage: `url('${evt.coverImageUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500&q=80"}')` }}
+                      >
+                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs border border-slate-100 px-2 py-0.5 rounded text-[8px] font-black uppercase text-slate-700 shadow-2xs">
+                          {evt.category}
+                        </div>
+                        <div className="absolute top-3 right-3 bg-[#027244] text-white px-2 py-0.5 rounded text-[8.5px] font-black uppercase shadow-2xs">
+                          {evt.price === 0 ? 'FREE' : `Listed`}
+                        </div>
+                      </div>
+                      <div className="p-5 flex-1 flex flex-col justify-between text-left gap-4">
+                        <div className="flex flex-col gap-2">
+                          <h4 className="font-extrabold text-slate-800 text-sm leading-tight line-clamp-1">{evt.title}</h4>
+                          <p className="text-slate-550 text-[10.5px] font-semibold line-clamp-2 leading-relaxed">{evt.description}</p>
+                        </div>
+                        
+                        <div className="flex justify-between items-center border-t border-slate-100 pt-3">
+                          <div className="flex flex-col gap-1 text-[10px] text-slate-450 font-semibold">
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                              <span>{evt.time}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                              <span className="truncate max-w-[100px]">{evt.venue}</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleEventDelete(evt._id)}
+                            className="py-1.5 px-2.5 bg-red-50 hover:bg-red-100 text-red-650 hover:text-red-700 font-extrabold text-[9.5px] rounded-lg cursor-pointer transition-colors flex items-center gap-1 shrink-0 shadow-2xs"
+                          >
+                            <Trash2 className="h-3 w-3" /> Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+            </div>
+          )}
+
+             {/* ========================================================================= */}
+          {/* TAB: REVIEWS & REPUTATION DASHBOARD */}
+          {/* ========================================================================= */}
+          {activeTab === 'Reviews & Reputation' && (
+            <div className="flex flex-col gap-6 text-left animate-fadeIn">
+              
+              {/* Header card with subtle gradient background */}
+              <div className="bg-gradient-to-r from-white via-white to-emerald-50/15 border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col">
+                  <h3 className="font-extrabold text-[#001c41] text-base md:text-lg tracking-tight font-sans">Reviews & Reputation Management</h3>
+                  <span className="text-[11px] text-slate-450 font-semibold mt-1">Audit local platform feedback, monitor rating metrics, sync Google Reviews, and reply to customers</span>
+                </div>
+                <button 
+                  onClick={copyReviewLink}
+                  className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-6 rounded-xl transition-all shadow-md hover:shadow-emerald-700/10 shrink-0 flex items-center gap-2 cursor-pointer border border-emerald-700/10 btn-active-press"
+                >
+                  <Star className="h-4.5 w-4.5 fill-current" /> Get More Reviews
+                </button>
+              </div>
+
+              {/* Stats overview cards grid using card-premium class */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* Aggregate rating card */}
+                <div className="card-premium p-6 rounded-3xl flex items-center gap-4.5 bg-white">
+                  <div className="h-14 w-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center font-extrabold text-[#001c41] text-2xl shadow-inner uppercase shrink-0">
+                    4.8
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Overall Rating</span>
+                    <div className="flex items-center text-amber-400 gap-0.5 mt-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="h-3.5 w-3.5 fill-current" />
+                      ))}
+                    </div>
+                    <span className="text-[10.5px] text-slate-450 font-bold mt-1">Based on 68 local & Google reviews</span>
+                  </div>
+                </div>
+
+                {/* Local vs Google rating card */}
+                <div className="card-premium p-6 rounded-3xl flex flex-col justify-center text-left gap-1 bg-white">
+                  <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-500">
+                    <span>Local platform reviews</span>
+                    <span className="text-slate-800">4.7 / 5.0 (24 reviews)</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full mt-1.5 overflow-hidden">
+                    <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: '94%' }} />
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-500 mt-2.5">
+                    <span className="flex items-center gap-1">
+                      <span className="text-blue-500 font-bold">G</span>oogle synced reviews
+                    </span>
+                    <span className="text-slate-800">4.8 / 5.0 (44 reviews)</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full mt-1.5 overflow-hidden">
+                    <div className="bg-blue-500 h-full rounded-full transition-all duration-500" style={{ width: '96%' }} />
+                  </div>
+                </div>
+
+                {/* Rating breakdown metrics */}
+                <div className="card-premium p-6 rounded-3xl flex flex-col justify-center gap-1.5 bg-white text-left">
+                  <div className="flex items-center justify-between text-[10px] font-extrabold text-slate-400">
+                    <span className="uppercase tracking-wider">Reputation Level</span>
+                    <span className="bg-emerald-55/15 text-[#027244] border border-emerald-100 px-2.5 py-0.5 rounded-full text-[8.5px] font-black uppercase">
+                      Excellent (Top 5%)
+                    </span>
+                  </div>
+                  <p className="text-slate-550 text-[10.5px] font-semibold leading-relaxed mt-1">
+                    Your response rate is <strong>98%</strong> with an average response time of <strong>12 mins</strong>. Maintaining this boosts search ranking placement!
+                  </p>
+                </div>
+              </div>
+
+              {/* Reviews Table/Feed List with filters */}
+              <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden flex flex-col">
+                
+                {/* Header Filter Actions */}
+                <div className="p-5 border-b border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-55/40">
+                  <div className="flex flex-wrap items-center gap-2">
+                    
+                    {/* Rating filters */}
+                    <select 
+                      value={reviewFilter} 
+                      onChange={(e) => setReviewFilter(e.target.value)}
+                      className="border border-slate-200 bg-white rounded-xl py-2 px-3 text-xs font-bold text-slate-600 focus:outline-emerald-600 focus:ring-1 focus:ring-emerald-100 cursor-pointer"
+                    >
+                      <option value="All">All Ratings</option>
+                      <option value="5">5 Stars only</option>
+                      <option value="4">4 Stars & Above</option>
+                      <option value="3">3 Stars & Below</option>
+                    </select>
+
+                    {/* Source filters */}
+                    <select 
+                      value={reviewSourceFilter} 
+                      onChange={(e) => setReviewSourceFilter(e.target.value)}
+                      className="border border-slate-200 bg-white rounded-xl py-2 px-3 text-xs font-bold text-slate-600 focus:outline-emerald-600 focus:ring-1 focus:ring-emerald-100 cursor-pointer"
+                    >
+                      <option value="All">All Sources</option>
+                      <option value="local">Local Platform</option>
+                      <option value="google">Google Reviews</option>
+                    </select>
+                  </div>
+
+                  {/* Search reviews bar */}
+                  <div className="w-full md:w-68 relative">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <input 
+                      type="text"
+                      placeholder="Search review text..."
+                      value={reviewSearch}
+                      onChange={(e) => setReviewSearch(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-xs bg-white focus:outline-emerald-600 font-semibold"
+                    />
+                  </div>
+                </div>
+
+                {/* Reviews Stream Container */}
+                <div className="flex flex-col divide-y divide-slate-100 p-6">
+                  {localReviews
+                    .filter(r => {
+                      if (reviewFilter !== 'All') {
+                        const stars = Number(reviewFilter);
+                        if (stars === 5 && r.rating !== 5) return false;
+                        if (stars === 4 && r.rating < 4) return false;
+                        if (stars === 3 && r.rating > 3) return false;
+                      }
+                      if (reviewSourceFilter !== 'All' && r.source !== reviewSourceFilter) return false;
+                      if (reviewSearch && !r.text.toLowerCase().includes(reviewSearch.toLowerCase()) && !r.authorName.toLowerCase().includes(reviewSearch.toLowerCase())) return false;
+                      return true;
+                    })
+                    .map((rev) => (
+                      <div key={rev.id} className="py-5.5 first:pt-0 last:pb-0 flex flex-col md:flex-row gap-4 justify-between items-start text-left hover:bg-slate-50/20 px-2 rounded-2xl transition-colors">
+                        <div className="flex-1 flex gap-3.5">
+                          <div className="h-10.5 w-10.5 rounded-full bg-emerald-50 border border-emerald-150/60 flex items-center justify-center text-emerald-800 font-extrabold text-sm shadow-xs uppercase select-none shrink-0">
+                            {rev.authorName.charAt(0)}
+                          </div>
+                          
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-extrabold text-slate-800 text-sm leading-tight">{rev.authorName}</span>
+                              <span className="text-[10px] font-semibold text-slate-400">{rev.time}</span>
+                              
+                              {/* Source badge */}
+                              {rev.source === 'google' ? (
+                                <span className="bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded text-[8px] font-black uppercase flex items-center gap-0.5 select-none leading-none">
+                                  Google Sync
+                                </span>
+                              ) : (
+                                <span className="bg-emerald-50 text-[#027244] border border-emerald-100 px-1.5 py-0.5 rounded text-[8px] font-black uppercase flex items-center gap-0.5 select-none leading-none">
+                                  UBT Local
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Stars rating */}
+                            <div className="flex items-center text-amber-400 gap-0.5">
+                              {[...Array(Math.round(Number(rev.rating) || 5))].map((_, i) => (
+                                <Star key={i} className="h-3 w-3 fill-current" />
+                              ))}
+                              {[...Array(5 - Math.round(Number(rev.rating) || 5))].map((_, i) => (
+                                <Star key={i} className="h-3 w-3 text-slate-150" />
+                              ))}
+                            </div>
+
+                            <p className="text-slate-600 text-xs font-semibold leading-relaxed mt-1">
+                              "{rev.text}"
+                            </p>
+
+                            {/* Show administrative responses if exists */}
+                            {reviewResponses[rev.id] && (
+                              <div className="bg-slate-50 border border-slate-200/50 p-4 rounded-2xl mt-3 ml-2 flex gap-3 animate-fadeIn">
+                                <div className="h-6.5 w-6.5 rounded-full bg-emerald-600 flex items-center justify-center text-white text-[9.5px] font-black shrink-0 shadow-2xs">
+                                  R
+                                </div>
+                                <div className="flex flex-col text-left">
+                                  <span className="text-[10px] font-extrabold text-[#001c41]">Owner Response</span>
+                                  <p className="text-slate-500 text-[11px] font-semibold mt-1 leading-relaxed">
+                                    {reviewResponses[rev.id]}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Response textbox if active */}
+                            {replyingReviewId === rev.id && (
+                              <div className="flex flex-col gap-2.5 mt-3 ml-2 w-full max-w-lg animate-fadeIn">
+                                <textarea
+                                  placeholder="Type your reply to the customer..."
+                                  value={reviewReplyText}
+                                  onChange={(e) => setReviewReplyText(e.target.value)}
+                                  className="w-full border border-slate-200 rounded-xl p-3 text-xs bg-slate-50 focus:outline-emerald-600 font-semibold"
+                                  rows={3}
+                                />
+                                <div className="flex gap-2 justify-start">
+                                  <button
+                                    onClick={() => {
+                                      if (reviewReplyText.trim()) {
+                                        setReviewResponses({ ...reviewResponses, [rev.id]: reviewReplyText });
+                                        setReviewReplyText('');
+                                        setReplyingReviewId(null);
+                                      }
+                                    }}
+                                    className="py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10.5px] rounded-xl shadow-xs cursor-pointer btn-active-press"
+                                  >
+                                    Submit Reply
+                                  </button>
+                                  <button
+                                    onClick={() => setReplyingReviewId(null)}
+                                    className="py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-550 font-extrabold text-[10.5px] rounded-xl cursor-pointer btn-active-press"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Moderation actions */}
+                        <div className="flex flex-row md:flex-col gap-1.5 shrink-0 self-end md:self-start mt-3 md:mt-0 pl-14 md:pl-0">
+                          {!reviewResponses[rev.id] && replyingReviewId !== rev.id && (
+                            <button 
+                              onClick={() => setReplyingReviewId(rev.id)}
+                              className="py-1.5 px-3 border border-slate-200 text-slate-600 font-extrabold text-[10.5px] rounded-lg hover:bg-slate-50 transition-colors cursor-pointer flex items-center gap-1.5 hover:border-emerald-600 hover:text-emerald-700"
+                            >
+                              <MessageSquare className="h-3.5 w-3.5" /> Reply
+                            </button>
+                          )}
+                          
+                          <button 
+                            onClick={() => {
+                              const updated = localReviews.filter(r => r.id !== rev.id);
+                              setLocalReviews(updated);
+                            }}
+                            className="py-1.5 px-3 border border-red-100 text-red-500 font-extrabold text-[10.5px] rounded-lg hover:bg-red-50 transition-colors cursor-pointer flex items-center gap-1.5"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" /> Spam
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+             {/* ========================================================================= */}
+          {/* TAB: LEADS & ENQUIRIES DASHBOARD */}
+          {/* ========================================================================= */}
+          {activeTab === 'Leads & Enquiries' && (
+            <div className="flex flex-col gap-6 text-left animate-fadeIn">
+              
+              {/* Header card with UBT premium soft gradient */}
+              <div className="bg-gradient-to-r from-white via-white to-emerald-50/15 border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col">
+                  <h3 className="font-extrabold text-[#001c41] text-base md:text-lg tracking-tight font-sans">Customer Leads & Enquiries Inbox</h3>
+                  <span className="text-[11px] text-slate-450 font-semibold mt-1">Aggregate direct customer inquiries, receive phone callback requests, and initiate instant WhatsApp replies</span>
+                </div>
+                <div className="bg-emerald-55/15 text-[#027244] border border-emerald-100 px-3.5 py-1.5 rounded-2xl text-[11px] font-black uppercase inline-flex items-center gap-1.5 shrink-0 select-none shadow-xs font-sans">
+                  <Mail className="h-3.5 w-3.5" /> 18 Active Enquiries
+                </div>
+              </div>
+
+              {/* Main List-Detail Inbox Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[500px]">
+                
+                {/* Left Panel: Leads Inbox List (col-span-5) */}
+                <div className="lg:col-span-5 bg-white border border-slate-200 shadow-sm rounded-3xl flex flex-col overflow-hidden max-h-[600px]">
+                  <div className="p-4 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between">
+                    <span className="text-[10.5px] font-extrabold text-slate-550 uppercase tracking-wider">Inbox Stream</span>
+                    
+                    {/* Inbox Filters */}
+                    <div className="flex gap-1.5">
+                      {['All', 'Urgent', 'Responded'].map((filter) => (
+                        <button
+                          key={filter}
+                          onClick={() => setLeadFilter(filter)}
+                          className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer btn-active-press ${leadFilter === filter ? 'bg-slate-800 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}
+                        >
+                          {filter}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Leads stream scrolling list */}
+                  <div className="flex-grow overflow-y-auto divide-y divide-slate-100">
+                    {leadsList
+                      .filter(l => {
+                        if (leadFilter === 'Urgent' && l.name !== 'Suresh Kumar' && l.name !== 'Kavin Prakash') return false;
+                        if (leadFilter === 'Responded' && !l.responded) return false;
+                        return true;
+                      })
+                      .map((lead) => {
+                        const originalIdx = leadsList.findIndex(l => l.name === lead.name);
+                        const isSelected = selectedLeadIdx === originalIdx;
+                        
+                        return (
+                          <button
+                            key={lead.name}
+                            onClick={() => setSelectedLeadIdx(originalIdx)}
+                            className={`w-full p-4 flex items-center gap-3.5 text-left border-l-4 transition-all hover:bg-slate-50/70 border-r-0 border-y-0 cursor-pointer ${isSelected ? 'bg-emerald-55/5 border-l-[#027244] border-r-0 border-y-0 shadow-2xs' : 'border-l-transparent'}`}
+                          >
+                            <div className={`h-10 w-10 rounded-full flex items-center justify-center font-extrabold text-xs shadow-xs shrink-0 select-none uppercase ${lead.color || 'bg-slate-100 text-slate-600'}`}>
+                              {lead.initial}
+                            </div>
+                            
+                            <div className="flex-grow flex flex-col overflow-hidden">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="font-extrabold text-slate-800 truncate leading-snug">{lead.name}</span>
+                                <span className="text-[9px] font-semibold text-slate-400 shrink-0">{lead.time}</span>
+                              </div>
+                              <span className="text-[10px] text-slate-500 font-semibold truncate mt-0.5">{lead.category}</span>
+                              
+                              <div className="flex items-center gap-1.5 mt-1.5">
+                                {lead.name === 'Suresh Kumar' || lead.name === 'Kavin Prakash' ? (
+                                  <span className="bg-rose-50 text-rose-600 border border-rose-100/60 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide leading-none">
+                                    Urgent Callback
+                                  </span>
+                                ) : (
+                                  <span className="bg-blue-50 text-blue-600 border border-blue-100/60 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide leading-none">
+                                    General Query
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                  </div>
+
+                </div>
+
+                {/* Right Panel: Lead Full Detail View (col-span-7) */}
+                <div className="lg:col-span-7 bg-white border border-slate-200 shadow-sm rounded-3xl flex flex-col overflow-hidden min-h-[400px]">
+                  
+                  {selectedLeadIdx !== null && leadsList[selectedLeadIdx] ? (
+                    (() => {
+                      const activeLead = leadsList[selectedLeadIdx];
+                      return (
+                        <div className="flex flex-col h-full divide-y divide-slate-100">
+                          
+                          {/* Lead Profile Header */}
+                          <div className="p-6 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div className="flex items-center gap-4">
+                              <div className={`h-12 w-12 rounded-full flex items-center justify-center font-extrabold text-sm shadow-xs shrink-0 select-none uppercase ${activeLead.color}`}>
+                                {activeLead.initial}
+                              </div>
+                              <div className="flex flex-col text-left font-sans">
+                                <h4 className="font-extrabold text-slate-800 text-sm md:text-base leading-snug">{activeLead.name}</h4>
+                                <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Enquiry Category: {activeLead.category}</span>
+                                <span className="text-[9.5px] text-slate-400 font-bold mt-0.5">Received via Website Link • {activeLead.time}</span>
+                              </div>
+                            </div>
+
+                            {/* Direct Contact WhatsApp with spring Tactile press */}
+                            <a 
+                              href={`https://wa.me/${activeLead.phone.replace(/[^0-9]/g, '')}`} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10.5px] py-2.5 px-4.5 rounded-xl shadow-md hover:shadow-emerald-700/10 transition-all shrink-0 flex items-center gap-1.5 cursor-pointer btn-active-press border border-emerald-700/10"
+                            >
+                              <MessageSquare className="h-3.5 w-3.5 fill-current" /> WhatsApp Contact
+                            </a>
+                          </div>
+
+                          {/* Enquiry Text Details */}
+                          <div className="p-6 flex-grow flex flex-col gap-5 text-left">
+                            <div className="flex flex-col gap-1.5">
+                              <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Customer Message</span>
+                              <div className="bg-[#F8FAFC] border border-slate-200/60 p-4.5 rounded-2xl mt-1.5 relative overflow-hidden shadow-3xs">
+                                <div className="absolute top-0 left-0 w-1 h-full bg-[#027244]" />
+                                <p className="text-slate-600 text-xs font-semibold leading-relaxed">
+                                  "Hello! I saw your shop profile on Udumalpet Business Tour. I am looking to get service support for <strong>{activeLead.category}</strong>. Please reach out to me callback immediately or text back on WhatsApp. My details are verified."
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Callback details grid */}
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="border border-slate-200 p-3.5 rounded-2xl flex flex-col gap-0.5 text-left bg-slate-50/30">
+                                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Mobile Number</span>
+                                <span className="text-xs font-extrabold text-slate-800">{activeLead.phone}</span>
+                              </div>
+                              <div className="border border-slate-200 p-3.5 rounded-2xl flex flex-col gap-0.5 text-left bg-slate-50/30">
+                                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Status Tracker</span>
+                                <span className="text-xs font-extrabold text-rose-500 flex items-center gap-1.5 mt-0.5">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" /> Pending Response
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Show simulated replies if exists */}
+                            {activeLead.reply && (
+                              <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-4 mt-2 animate-fadeIn">
+                                <span className="text-[9.5px] font-extrabold text-[#027244] uppercase tracking-widest leading-none">Your Reply</span>
+                                <div className="bg-emerald-50/30 border border-emerald-100 p-4 rounded-2xl mt-1 flex gap-2.5">
+                                  <div className="h-6 w-6 rounded-full bg-[#027244] text-white flex items-center justify-center text-[9px] font-black shrink-0 shadow-2xs">
+                                    R
+                                  </div>
+                                  <p className="text-slate-600 text-xs font-semibold leading-normal">
+                                    {activeLead.reply}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                          </div>
+
+                          {/* Quick reply action box with premium button tactile feedback */}
+                          {!activeLead.reply && (
+                            <div className="p-6 bg-slate-50/40 flex flex-col gap-3">
+                              <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest leading-none text-left">Quick Response Box</span>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Type your response email or text..."
+                                  value={leadReplyText}
+                                  onChange={(e) => setLeadReplyText(e.target.value)}
+                                  className="flex-grow border border-slate-200 rounded-xl px-4 py-3 text-xs bg-white focus:outline-emerald-600 font-semibold shadow-3xs"
+                                />
+                                <button
+                                  onClick={() => {
+                                    if (leadReplyText.trim()) {
+                                      const updatedList = [...leadsList];
+                                      updatedList[selectedLeadIdx] = {
+                                        ...activeLead,
+                                        reply: leadReplyText,
+                                        responded: true
+                                      };
+                                      setLeadsList(updatedList);
+                                      setLeadReplyText('');
+                                    }
+                                  }}
+                                  className="py-3 px-5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer transition-all border border-slate-800 btn-active-press"
+                                >
+                                  Submit
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <div className="flex-grow flex flex-col items-center justify-center gap-3.5 text-slate-450 p-8 my-12 animate-fadeIn">
+                      <Mail className="h-8 w-8 text-slate-300" />
+                      <span className="text-xs font-extrabold tracking-wide max-w-xs text-center leading-relaxed">Select a customer lead from the inbox to begin instant WhatsApp responses.</span>
+                    </div>
+                  )}
+
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB: OFFERS & PROMOTIONS DASHBOARD */}
+          {/* ========================================================================= */}
+          {activeTab === 'Offers & Promotions' && (
+            <div className="flex flex-col gap-6 text-left animate-fadeIn">
+              
+              {/* Header card with UBT premium soft gradient */}
+              <div className="bg-gradient-to-r from-white via-white to-emerald-50/15 border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col">
+                  <h3 className="font-extrabold text-[#001c41] text-base md:text-lg tracking-tight font-sans">Discount Campaigns & Offers</h3>
+                  <span className="text-[11px] text-slate-450 font-semibold mt-1">Publish live custom discounts, festival campaign flyers, and BOGO deals to drive town engagement</span>
+                </div>
+                <button 
+                  onClick={() => setShowAddOffer(true)}
+                  className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-6 rounded-xl transition-all shadow-md hover:shadow-emerald-700/10 shrink-0 flex items-center gap-2 cursor-pointer border border-emerald-700/10 btn-active-press"
+                >
+                  <Plus className="h-4.5 w-4.5" /> Launch New Offer
+                </button>
+              </div>
+
+              {/* Add offer modal/inline form if active */}
+              {showAddOffer && (
+                <div className="bg-white border border-emerald-100 rounded-3xl p-6 shadow-md border-t-4 border-t-emerald-600 flex flex-col gap-4 animate-slideDown max-w-xl text-left">
+                  <h4 className="font-extrabold text-slate-800 text-sm tracking-tight font-sans">Launch New Deal Flyer</h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10.5px] font-extrabold text-slate-500">Offer Title</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Festival Special discount"
+                        value={newOfferFields.title}
+                        onChange={(e) => setNewOfferFields({ ...newOfferFields, title: e.target.value })}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs bg-slate-50/50 focus:outline-emerald-600 font-semibold"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10.5px] font-extrabold text-slate-500">Rate / Deal Code</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 15% OFF / Buy 1 Get 1"
+                        value={newOfferFields.rate}
+                        onChange={(e) => setNewOfferFields({ ...newOfferFields, rate: e.target.value })}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs bg-slate-50/50 focus:outline-emerald-600 font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10.5px] font-extrabold text-slate-500">Description</label>
+                    <textarea
+                      placeholder="Describe what customers get and how to redeem it..."
+                      value={newOfferFields.description}
+                      onChange={(e) => setNewOfferFields({ ...newOfferFields, description: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl p-3 text-xs bg-slate-50/50 focus:outline-emerald-650 font-semibold resize-none"
+                      rows={2.5}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10.5px] font-extrabold text-slate-500">Campaign Expiry Date</label>
+                      <input
+                        type="date"
+                        value={newOfferFields.expiry}
+                        onChange={(e) => setNewOfferFields({ ...newOfferFields, expiry: e.target.value })}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50/50 focus:outline-emerald-600 font-semibold cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10.5px] font-extrabold text-slate-500">Deal Banner Link</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Image URL (Optional)"
+                        value={newOfferFields.banner}
+                        onChange={(e) => setNewOfferFields({ ...newOfferFields, banner: e.target.value })}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs bg-slate-50/50 focus:outline-emerald-600 font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 justify-start mt-2">
+                    <button
+                      onClick={() => {
+                        if (newOfferFields.title && newOfferFields.description) {
+                          const launched = {
+                            id: Date.now().toString(),
+                            title: newOfferFields.title,
+                            description: newOfferFields.description,
+                            rate: newOfferFields.rate || 'Special Deal',
+                            expiry: newOfferFields.expiry || '2026-06-30',
+                            active: true,
+                            banner: newOfferFields.banner || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'
+                          };
+                          setOffersList([launched, ...offersList]);
+                          setNewOfferFields({ title: '', description: '', rate: '', expiry: '', banner: '' });
+                          setShowAddOffer(false);
+                        }
+                      }}
+                      className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-emerald-700/10 cursor-pointer btn-active-press border border-emerald-700/10"
+                    >
+                      Publish Deal Campaign
+                    </button>
+                    <button
+                      onClick={() => setShowAddOffer(false)}
+                      className="py-2.5 px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-xs rounded-xl cursor-pointer btn-active-press"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Deals campaign grid using card-premium styling */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {offersList.map((campaign) => (
+                  <div key={campaign.id} className="card-premium rounded-3xl overflow-hidden flex flex-col relative bg-white">
+                    <div 
+                      className="h-36 bg-cover bg-center shrink-0 relative smooth-img-container"
+                      style={{ backgroundImage: `url('${campaign.banner}')` }}
+                    >
+                      <div className="absolute inset-0 bg-slate-950/20" />
+                      <div className="absolute top-4 left-4 bg-rose-600 text-white px-3 py-1 rounded-xl text-xs font-black uppercase shadow-md select-none tracking-wide">
+                        {campaign.rate}
+                      </div>
+                    </div>
+
+                    <div className="p-6 flex flex-col gap-2 text-left justify-between flex-1">
+                      <div className="flex flex-col gap-1.5">
+                        <h4 className="font-extrabold text-[#001c41] text-sm md:text-base leading-snug">{campaign.title}</h4>
+                        <p className="text-slate-500 text-xs font-semibold leading-relaxed">
+                          {campaign.description}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-3">
+                        <span className="text-[10px] text-slate-450 font-bold">Campaign Expiry: {campaign.expiry}</span>
+                        
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              const updated = offersList.map(c => c.id === campaign.id ? { ...c, active: !c.active } : c);
+                              setOffersList(updated);
+                            }}
+                            className={`py-1.5 px-3 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer btn-active-press ${campaign.active ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-emerald-50 hover:bg-emerald-100 text-[#027244]'}`}
+                          >
+                            {campaign.active ? 'Pause' : 'Activate'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              const updated = offersList.filter(c => c.id !== campaign.id);
+                              setOffersList(updated);
+                            }}
+                            className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[10px] font-black uppercase cursor-pointer btn-active-press"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB: MY BLOGS DASHBOARD (ANYONE CAN ACCESS WITHOUT PAYMENT) */}
+          {/* ========================================================================= */}
+          {activeTab === 'My Blogs' && (
+            <div className="flex flex-col gap-6 text-left animate-fadeIn">
+              
+              {/* Header card */}
+              <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col">
+                  <h3 className="font-extrabold text-[#001c41] text-base">My Articles Dashboard</h3>
+                  <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Manage your stories, comments, likes, and article visibilities</span>
+                </div>
+                <button 
+                  onClick={() => setShowWriteBlogModal(true)}
+                  className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-6 rounded-xl transition-all shadow-md shrink-0 flex items-center gap-2 cursor-pointer border border-emerald-700/10"
+                >
+                  <Plus className="h-4.5 w-4.5" /> Write New Blog
+                </button>
+              </div>
+
+              {/* Blogs Content Stream */}
+              {blogsLoading ? (
+                <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-450 flex flex-col items-center gap-2.5 shadow-sm">
+                  <RefreshCw className="h-7 w-7 text-emerald-600 animate-spin" />
+                  <span className="text-xs font-bold">Synchronizing your articles dashboard...</span>
+                </div>
+              ) : userBlogs.length === 0 ? (
+                <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-450 flex flex-col items-center gap-4 shadow-sm max-w-md mx-auto my-6">
+                  <div className="h-14 w-14 bg-emerald-50 text-[#027244] rounded-2xl flex items-center justify-center border border-emerald-100 animate-pulse">
+                    <BookOpen className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-slate-800 text-sm">No Articles Registered</h4>
+                    <p className="text-xs text-slate-450 font-semibold leading-relaxed mt-1.5">
+                      You haven’t authored any blog posts on UBT yet. Write and share your first story to get published!
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => setShowWriteBlogModal(true)}
+                    className="w-full py-2.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow cursor-pointer transition-transform hover:-translate-y-0.5 animate-pulse"
+                  >
+                    Write Your First Post
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-6">
+                  
+                  {/* Blogs Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {userBlogs.map((blog) => {
+                      const commentsCount = blog.comments ? blog.comments.length : 0;
+                      const likesCount = blog.likes ? blog.likes.length : 0;
+
+                      return (
+                        <div key={blog._id} className="card-premium rounded-3xl p-5 flex flex-col justify-between gap-4 relative overflow-hidden bg-white">
+                          
+                          {/* Inner core info */}
+                          <div className="flex gap-4">
+                            <div className="h-16 w-16 rounded-2xl overflow-hidden shrink-0 border border-slate-100 select-none">
+                              <img 
+                                src={blog.coverImage || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80'} 
+                                className="w-full h-full object-cover" 
+                                alt={blog.title} 
+                              />
+                            </div>
+                            <div className="flex flex-col min-w-0 text-left">
+                              
+                              {/* Status Badge */}
+                              <div className="flex items-center gap-2">
+                                <span className={`px-2 py-0.5 rounded text-[8.5px] font-extrabold uppercase tracking-wide border ${
+                                  blog.status === 'Approved'
+                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                    : blog.status === 'Rejected'
+                                      ? 'bg-red-50 border-red-200 text-red-650'
+                                      : 'bg-amber-50 border-amber-200 text-amber-600 animate-pulse'
+                                }`}>
+                                  {blog.status}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-bold">
+                                  {new Date(blog.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+
+                              <h4 className="font-extrabold text-sm text-[#001c41] mt-1.5 leading-snug truncate">
+                                {blog.title}
+                              </h4>
+                            </div>
+                          </div>
+
+                          {/* Quick Option Toggles (Likes / Comments visibility switches) */}
+                          <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200/60 flex flex-col gap-2.5 text-xs font-bold text-slate-700">
+                            
+                            {/* Likes toggle */}
+                            <div className="flex justify-between items-center">
+                              <span className="flex items-center gap-1.5">
+                                <Heart className={`h-4 w-4 ${blog.showLikes ? 'fill-current text-rose-500' : 'text-slate-400'}`} />
+                                <span>Show Likes ({likesCount})</span>
+                              </span>
+                              <button 
+                                onClick={() => handleToggleBlogOption(blog._id, 'showLikes', blog.showLikes)}
+                                className={`h-5.5 w-10.5 rounded-full p-0.5 transition-colors duration-250 cursor-pointer ${blog.showLikes ? 'bg-emerald-600' : 'bg-slate-300'}`}
+                              >
+                                <div className={`h-4.5 w-4.5 rounded-full bg-white shadow transform transition-transform duration-250 ${blog.showLikes ? 'translate-x-5' : 'translate-x-0'}`} />
+                              </button>
+                            </div>
+
+                            {/* Comments toggle */}
+                            <div className="flex justify-between items-center">
+                              <span className="flex items-center gap-1.5">
+                                <MessageSquare className={`h-4 w-4 ${blog.showComments ? 'fill-current text-blue-500' : 'text-slate-400'}`} />
+                                <span>Show Comments ({commentsCount})</span>
+                              </span>
+                              <button 
+                                onClick={() => handleToggleBlogOption(blog._id, 'showComments', blog.showComments)}
+                                className={`h-5.5 w-10.5 rounded-full p-0.5 transition-colors duration-250 cursor-pointer ${blog.showComments ? 'bg-emerald-600' : 'bg-slate-300'}`}
+                              >
+                                <div className={`h-4.5 w-4.5 rounded-full bg-white shadow transform transition-transform duration-250 ${blog.showComments ? 'translate-x-5' : 'translate-x-0'}`} />
+                              </button>
+                            </div>
+
+                          </div>
+
+                          {/* Action footer */}
+                          <div className="flex items-center justify-between border-t border-slate-100 pt-3 gap-2">
+                            <Link 
+                              to={`/blogs/${blog._id}`} 
+                              className="text-[10px] font-extrabold text-[#027244] hover:text-[#005934] flex items-center gap-1 leading-none group cursor-pointer"
+                            >
+                              <Eye className="h-3.5 w-3.5 text-slate-400 shrink-0" /> View <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                            </Link>
+
+                            <div className="flex items-center gap-1.5">
+                              <button 
+                                onClick={() => handleBlogDelete(blog._id)}
+                                title="Delete Blog"
+                                className="py-1.5 px-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[9.5px] rounded-lg transition-all cursor-pointer flex items-center gap-0.5 border border-red-100/10 shadow-2xs"
+                              >
+                                <Trash2 className="h-3 w-3" /> Delete
+                              </button>
+                              <button 
+                                onClick={() => setActiveBlogComments(activeBlogComments === blog._id ? null : blog._id)}
+                                className="text-[10px] font-extrabold text-slate-500 hover:text-[#001c41] bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2.5 py-1.5 rounded-lg transition-all cursor-pointer leading-none"
+                              >
+                                {activeBlogComments === blog._id ? 'Hide Comments' : 'Moderate Comments'}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Inline Comments moderation sub-stream */}
+                          {activeBlogComments === blog._id && (
+                            <div className="mt-3 border-t border-slate-200 pt-3 flex flex-col gap-3 max-h-56 overflow-y-auto animate-fadeIn text-left">
+                              <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Comment Moderation Feed</span>
+                              {(!blog.comments || blog.comments.length === 0) ? (
+                                <span className="text-[10.5px] text-slate-400 font-semibold leading-relaxed py-2">No comments left on this article yet.</span>
+                              ) : (
+                                <div className="flex flex-col gap-2">
+                                  {blog.comments.map((comment) => (
+                                    <div key={comment._id} className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl flex justify-between items-start gap-2">
+                                      <div className="flex flex-col text-left text-[11px] leading-snug">
+                                        <span className="font-extrabold text-slate-700">{comment.userName} <span className="text-[9px] text-slate-400 font-medium ml-1.5">{new Date(comment.createdAt).toLocaleDateString()}</span></span>
+                                        <p className="text-slate-550 font-semibold mt-1 leading-normal">{comment.text}</p>
+                                      </div>
+                                      <button 
+                                        onClick={() => handleCommentDeleteDashboard(blog._id, comment._id)}
+                                        title="Delete Comment"
+                                        className="h-6 w-6 rounded bg-red-50 text-red-650 hover:bg-red-100 flex items-center justify-center cursor-pointer transition-colors shadow-2xs shrink-0"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB: SETTINGS PANEL */}
+          {/* ========================================================================= */}
+          {activeTab === 'Settings' && (
+            <div className="w-full flex flex-col gap-6 text-left animate-fadeIn">
+              
+              {activeSettingsSubTab === null ? (
+                /* DIRECTORY MODE: Clean list of settings options */
+                <div className="flex flex-col gap-6 max-w-4xl w-full mx-auto">
+                  {/* Header Card */}
+                  <div className="bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-6 md:p-8 flex flex-col gap-1 text-left">
+                    <h3 className="font-extrabold text-[#001c41] text-xl md:text-2xl tracking-tight font-sans">Settings & Account Control</h3>
+                    <p className="text-xs md:text-sm text-slate-400 font-semibold mt-1">Manage your personal credentials, active blog/event creations, and account registration status.</p>
+                  </div>
+
+                  {/* Directory Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                    
+                    {/* Option 1: Profile Details */}
+                    <button
+                      onClick={() => setActiveSettingsSubTab('profile')}
+                      className="w-full text-left p-6 md:p-8 bg-white border border-slate-200/85 hover:border-emerald-500 rounded-[24px] hover:shadow-lg transition-all duration-300 flex items-center justify-between group cursor-pointer hover:-translate-y-1 relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
+                      <div className="flex items-start gap-4.5">
+                        <div className="p-3.5 rounded-xl bg-emerald-55/15 text-[#027244] group-hover:bg-emerald-100 transition-colors shrink-0">
+                          <Info className="h-6 w-6" />
+                        </div>
+                        <div className="flex flex-col justify-center">
+                          <h4 className="font-extrabold text-sm md:text-base text-[#001c41] font-sans group-hover:text-[#027244] transition-colors leading-snug">Profile Details</h4>
+                          <p className="text-xs text-slate-400 font-semibold mt-1.5 leading-relaxed">Update your full name, email contact address, and personal identifier information.</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-slate-350 group-hover:text-[#027244] group-hover:translate-x-1.5 transition-all shrink-0 ml-4" />
+                    </button>
+
+                    {/* Option 2: Change Password */}
+                    <button
+                      onClick={() => setActiveSettingsSubTab('password')}
+                      className="w-full text-left p-6 md:p-8 bg-white border border-slate-200/85 hover:border-blue-500 rounded-[24px] hover:shadow-lg transition-all duration-300 flex items-center justify-between group cursor-pointer hover:-translate-y-1 relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-xl pointer-events-none" />
+                      <div className="flex items-start gap-4.5">
+                        <div className="p-3.5 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors shrink-0">
+                          <ShieldCheck className="h-6 w-6" />
+                        </div>
+                        <div className="flex flex-col justify-center">
+                          <h4 className="font-extrabold text-sm md:text-base text-[#001c41] font-sans group-hover:text-blue-700 transition-colors leading-snug">Security & Credentials</h4>
+                          <p className="text-xs text-slate-400 font-semibold mt-1.5 leading-relaxed">Update your secure login credentials, password fields, and validation safety.</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-slate-350 group-hover:text-blue-600 group-hover:translate-x-1.5 transition-all shrink-0 ml-4" />
+                    </button>
+
+                    {/* Option 3: Manage Content */}
+                    <button
+                      onClick={() => setActiveSettingsSubTab('content')}
+                      className="w-full text-left p-6 md:p-8 bg-white border border-slate-200/85 hover:border-purple-500 rounded-[24px] hover:shadow-lg transition-all duration-300 flex items-center justify-between group cursor-pointer hover:-translate-y-1 relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-xl pointer-events-none" />
+                      <div className="flex items-start gap-4.5">
+                        <div className="p-3.5 rounded-xl bg-purple-50 text-purple-650 group-hover:bg-purple-100 transition-colors shrink-0">
+                          <BookOpen className="h-6 w-6" />
+                        </div>
+                        <div className="flex flex-col justify-center">
+                          <h4 className="font-extrabold text-sm md:text-base text-[#001c41] font-sans group-hover:text-purple-700 transition-colors leading-snug">Moderate & Manage Content</h4>
+                          <p className="text-xs text-slate-400 font-semibold mt-1.5 leading-relaxed">Moderate your submitted community events, comments feedback, and blog stories.</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-slate-350 group-hover:text-purple-650 group-hover:translate-x-1.5 transition-all shrink-0 ml-4" />
+                    </button>
+
+                    {/* Option 4: Danger Zone */}
+                    <button
+                      onClick={() => setActiveSettingsSubTab('danger')}
+                      className="w-full text-left p-6 md:p-8 bg-white border border-slate-200/85 hover:border-red-500 rounded-[24px] hover:shadow-lg transition-all duration-300 flex items-center justify-between group cursor-pointer hover:-translate-y-1 relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 rounded-full blur-xl pointer-events-none" />
+                      <div className="flex items-start gap-4.5">
+                        <div className="p-3.5 rounded-xl bg-red-55/15 text-red-650 group-hover:bg-red-100 transition-colors shrink-0">
+                          <AlertTriangle className="h-6 w-6" />
+                        </div>
+                        <div className="flex flex-col justify-center">
+                          <h4 className="font-extrabold text-sm md:text-base text-red-750 font-sans group-hover:text-red-700 transition-colors leading-snug">Danger Zone</h4>
+                          <p className="text-xs text-slate-400 font-semibold mt-1.5 leading-relaxed">Deregister and permanently terminate your UBT membership and business listings.</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-slate-350 group-hover:text-red-600 group-hover:translate-x-1.5 transition-all shrink-0 ml-4" />
+                    </button>
+
+                  </div>
+                </div>
+              ) : (
+                /* FOCUSED VIEW: Renders only the clicked setting context cleanly */
+                <div className="w-full max-w-3xl mx-auto flex flex-col gap-4">
+                  
+                  {/* Premium back navigation bar */}
+                  <button
+                    onClick={() => {
+                      setActiveSettingsSubTab(null);
+                      setProfileSuccess('');
+                      setProfileError('');
+                      setPwdSuccess('');
+                      setPwdError('');
+                    }}
+                    className="self-start flex items-center gap-2 text-xs font-extrabold text-slate-500 hover:text-[#027244] transition-all cursor-pointer group py-2"
+                  >
+                    <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+                    <span>Back to settings</span>
+                  </button>
+
+                  {/* Focused Form Card */}
+                  <div className="w-full bg-white border border-slate-200/80 shadow-md rounded-[32px] p-8 md:p-10 relative overflow-hidden">
+                    
+                    {/* SUBTAB 1: Profile Details Form */}
+                    {activeSettingsSubTab === 'profile' && (
+                      <div className="w-full flex flex-col gap-6 animate-fadeIn">
+                        <div className="flex flex-col border-b border-slate-100 pb-4 text-left">
+                          <h4 className="font-extrabold text-lg text-[#001c41] font-sans">Profile Details</h4>
+                          <p className="text-xs text-slate-400 font-semibold mt-1">Update your name and contact email address below</p>
+                        </div>
+
+                        {profileSuccess && (
+                          <div className="bg-emerald-50 border border-emerald-250 text-emerald-800 text-xs font-semibold p-4 rounded-2xl flex items-center gap-2 shadow-xs leading-relaxed">
+                            <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0" />
+                            <span>{profileSuccess}</span>
+                          </div>
+                        )}
+
+                        {profileError && (
+                          <div className="bg-red-50 border border-red-200 text-red-655 text-xs font-semibold p-4 rounded-2xl flex items-center gap-2 shadow-xs leading-relaxed">
+                            <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+                            <span>{profileError}</span>
+                          </div>
+                        )}
+
+                        <form onSubmit={handleProfileUpdate} className="flex flex-col gap-5 text-left">
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Full Name</label>
+                            <input
+                              type="text"
+                              required
+                              value={profileFields.fullName}
+                              onChange={(e) => setProfileFields(prev => ({ ...prev, fullName: e.target.value }))}
+                              className="w-full border border-slate-200/70 px-4.5 py-3.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none bg-slate-50/20 shadow-2xs font-sans"
+                            />
+                          </div>
+
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Email Address</label>
+                            <input
+                              type="email"
+                              required
+                              value={profileFields.email}
+                              onChange={(e) => setProfileFields(prev => ({ ...prev, email: e.target.value }))}
+                              className="w-full border border-slate-200/70 px-4.5 py-3.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none bg-slate-50/20 shadow-2xs font-sans"
+                            />
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={profileFieldsLoading}
+                            className="mt-4 py-3.5 px-8 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-800/10 cursor-pointer disabled:opacity-50 self-start"
+                          >
+                            {profileFieldsLoading ? 'Saving Profile Changes...' : 'Save Profile Changes'}
+                          </button>
+                        </form>
+                      </div>
+                    )}
+
+                    {/* SUBTAB 2: Change Password Form */}
+                    {activeSettingsSubTab === 'password' && (
+                      <div className="w-full flex flex-col gap-6 animate-fadeIn">
+                        <div className="flex flex-col border-b border-slate-100 pb-4 text-left">
+                          <h4 className="font-extrabold text-lg text-[#001c41] font-sans">Change Password</h4>
+                          <p className="text-xs text-slate-400 font-semibold mt-1">Update your secure login credentials below</p>
+                        </div>
+
+                        {pwdSuccess && (
+                          <div className="bg-emerald-50 border border-emerald-250 text-emerald-800 text-xs font-semibold p-4 rounded-2xl flex items-center gap-2 shadow-xs leading-relaxed">
+                            <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0" />
+                            <span>{pwdSuccess}</span>
+                          </div>
+                        )}
+
+                        {pwdError && (
+                          <div className="bg-red-50 border border-red-200 text-red-655 text-xs font-semibold p-4 rounded-2xl flex items-center gap-2 shadow-xs leading-relaxed">
+                            <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+                            <span>{pwdError}</span>
+                          </div>
+                        )}
+
+                        <form onSubmit={handlePasswordChange} className="flex flex-col gap-5 text-left">
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Current Password</label>
+                            <input
+                              type="password"
+                              required
+                              placeholder="Enter current password"
+                              value={pwdFields.currentPassword}
+                              onChange={(e) => setPwdFields(prev => ({ ...prev, currentPassword: e.target.value }))}
+                              className="w-full border border-slate-200/70 px-4.5 py-3.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none bg-slate-50/20 shadow-2xs font-sans"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">New Password</label>
+                              <input
+                                type="password"
+                                required
+                                placeholder="Enter new password"
+                                value={pwdFields.newPassword}
+                                onChange={(e) => setPwdFields(prev => ({ ...prev, newPassword: e.target.value }))}
+                                className="w-full border border-slate-200/70 px-4.5 py-3.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none bg-slate-50/20 shadow-2xs font-sans"
+                              />
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Confirm New Password</label>
+                              <input
+                                type="password"
+                                required
+                                placeholder="Confirm new password"
+                                value={pwdFields.confirmPassword}
+                                onChange={(e) => setPwdFields(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                className="w-full border border-slate-200/70 px-4.5 py-3.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none bg-slate-50/20 shadow-2xs font-sans"
+                              />
+                            </div>
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={pwdFieldsLoading}
+                            className="mt-4 py-3.5 px-8 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-800/10 cursor-pointer disabled:opacity-50 self-start"
+                          >
+                            {pwdFieldsLoading ? 'Updating Credentials...' : 'Update Password'}
+                          </button>
+                        </form>
+                      </div>
+                    )}
+
+                    {/* SUBTAB 3: Manage Content Activity List */}
+                    {activeSettingsSubTab === 'content' && (
+                      <div className="w-full flex flex-col gap-6 animate-fadeIn text-left">
+                        <div className="flex flex-col border-b border-slate-100 pb-4">
+                          <h4 className="font-extrabold text-lg text-[#001c41] font-sans">Moderate & Manage Content</h4>
+                          <p className="text-xs text-slate-400 font-semibold mt-1">Moderate or remove your submitted events and articles</p>
+                        </div>
+
+                        {/* Events sub-list */}
+                        <div className="flex flex-col gap-3">
+                          <span className="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider leading-none">Your Listed Events ({userEvents.length})</span>
+                          {userEvents.length === 0 ? (
+                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center text-xs font-semibold text-slate-400 leading-relaxed">
+                              No events listed yet.
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-2.5 max-h-56 overflow-y-auto pr-1">
+                              {userEvents.map(evt => (
+                                <div key={evt._id} className="bg-slate-50/50 hover:bg-slate-50 border border-slate-200/80 p-4 rounded-2xl flex justify-between items-center gap-4 transition-all">
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="font-extrabold text-slate-755 text-xs truncate leading-snug">{evt.title}</span>
+                                    <span className="text-[9.5px] text-slate-405 font-bold mt-1 uppercase tracking-wide">
+                                      {evt.category} • {new Date(evt.date).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  <button
+                                    onClick={() => handleEventDelete(evt._id)}
+                                    className="h-9 w-9 rounded-xl bg-red-50 hover:bg-red-100 text-red-650 flex items-center justify-center cursor-pointer transition-colors shadow-2xs shrink-0"
+                                  >
+                                    <Trash2 className="h-4.5 w-4.5" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Blogs sub-list */}
+                        <div className="flex flex-col gap-3 border-t border-slate-100 pt-5 mt-2">
+                          <span className="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider leading-none">Your Written Blogs ({userBlogs.length})</span>
+                          {userBlogs.length === 0 ? (
+                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center text-xs font-semibold text-slate-400 leading-relaxed">
+                              No articles written yet.
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-2.5 max-h-56 overflow-y-auto pr-1">
+                              {userBlogs.map(blog => (
+                                <div key={blog._id} className="bg-slate-50/50 hover:bg-slate-50 border border-slate-200/80 p-4 rounded-2xl flex justify-between items-center gap-4 transition-all">
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="font-extrabold text-slate-755 text-xs truncate leading-snug">{blog.title}</span>
+                                    <span className="text-[9.5px] text-slate-405 font-bold mt-1 uppercase tracking-wide">
+                                      {blog.status} • {new Date(blog.createdAt).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  <button
+                                    onClick={() => handleBlogDelete(blog._id)}
+                                    className="h-9 w-9 rounded-xl bg-red-50 hover:bg-red-100 text-red-655 flex items-center justify-center cursor-pointer transition-colors shadow-2xs shrink-0"
+                                  >
+                                    <Trash2 className="h-4.5 w-4.5" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SUBTAB 4: Danger Zone - De-register account */}
+                    {activeSettingsSubTab === 'danger' && (
+                      <div className="w-full flex flex-col gap-6 animate-fadeIn text-left">
+                        <div className="flex flex-col border-b border-slate-100 pb-4">
+                          <h4 className="font-extrabold text-lg text-red-700 font-sans">Danger Zone</h4>
+                          <p className="text-xs text-slate-400 font-semibold mt-1">Deregister and permanently terminate your UBT membership</p>
+                        </div>
+
+                        <div className="bg-rose-50 border border-rose-200 rounded-[20px] p-5 md:p-6 flex items-start gap-4">
+                          <AlertTriangle className="h-6 w-6 text-red-650 shrink-0 mt-0.5" />
+                          <div className="flex flex-col gap-1.5 text-left leading-normal">
+                            <span className="font-extrabold text-red-900 text-xs tracking-tight">Warning: Deletion is Permanent!</span>
+                            <p className="text-red-750 text-[11px] leading-relaxed font-semibold">
+                              Deleting your account will permanently wipe your UBT registration, delete your business profile, remove all uploaded photos/media, erase listed community events, and purge all your authored blogs. There is no recovery option.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2 mt-2">
+                          <span className="text-xs text-slate-550 font-bold">To confirm profile termination, type "DELETE" below:</span>
+                          <input
+                            type="text"
+                            placeholder="Type DELETE"
+                            value={deleteConfirmationText}
+                            onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                            className="w-full max-w-md border border-slate-200/70 px-4.5 py-3.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none bg-slate-50/20 shadow-2xs font-sans uppercase"
+                          />
+                        </div>
+
+                        <button
+                          onClick={handleDeleteAccount}
+                          disabled={deleteConfirmationText !== 'DELETE'}
+                          className="self-start py-3.5 px-8 bg-red-650 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all shadow-red-700/10 cursor-pointer disabled:opacity-50"
+                        >
+                          Delete Account & Clear Registrations
+                        </button>
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+              )}
+
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB: HELP & SUPPORT PANEL */}
+          {/* ========================================================================= */}
+          {activeTab === 'Help & Support' && (
+            <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 text-center flex flex-col items-center gap-5 max-w-md mx-auto my-12 animate-fadeIn text-left">
+              <div className="h-14 w-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center border border-blue-150">
+                <Info className="h-6 w-6" />
+              </div>
+              <div className="text-center">
+                <h3 className="font-extrabold text-slate-800 text-base">Help & Support Panel</h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed mt-2">
+                  Configure your email alerts, manage subscription cycles, or contact the UBT helpdesk for dedicated assistance.
+                </p>
+              </div>
+              <a 
+                href="mailto:info@udumalpet.co.in"
+                className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md text-center transition-transform hover:-translate-y-0.5"
+              >
+                Contact Administrator via Mail
+              </a>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* INTERACTIVE MODALS */}
+      {/* ========================================================================= */}
+
+      {/* MODAL 1: Subscription Renewal with Razorpay */}
+      {(showRenewModal || isMandatorySubscription) && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="max-w-4xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-6 animate-scaleUp text-left max-h-[90vh] overflow-y-auto scrollbar-none relative">
+            
+            {/* Close button */}
+            {!isMandatorySubscription && (
+              <button 
+                onClick={() => setShowRenewModal(false)} 
+                className="absolute right-6 top-6 text-slate-400 hover:text-slate-600 h-8 w-8 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center cursor-pointer transition-colors z-10"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            )}
+
+            {isMandatorySubscription && (
+              <div className="bg-emerald-50 border border-emerald-250 rounded-2xl p-4.5 text-xs text-[#027244] font-semibold flex items-start gap-2.5 shadow-sm animate-fadeIn">
+                <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="flex-grow flex flex-col gap-1">
+                  <span className="font-extrabold text-slate-800 text-xs">Congratulations! Verified by Admin</span>
+                  <p className="text-slate-600 text-[10.5px] leading-relaxed">
+                    Your business <strong>"{business?.name}"</strong> has been successfully vetted, approved, and verified by the administrators!
+                  </p>
+                  <p className="text-slate-500 text-[9.5px] leading-relaxed mt-1">
+                    To list your business live in the public directory, capture customer calls, and activate your WhatsApp lead button, please select a subscription plan below.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="text-center flex flex-col items-center gap-1">
+              <span className="text-[10px] font-black uppercase text-[#027244] tracking-wider">Premium Access</span>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-[#001c41] tracking-tight">Choose Your Plan</h2>
+              <p className="text-xs text-slate-400 font-semibold max-w-md mt-1">Select the subscription package that best fits your business goals</p>
+            </div>
+
+            {business && business.status !== 'Approved' ? (
+              <div className="flex flex-col items-center justify-center p-8 bg-slate-50 border border-slate-200/80 rounded-3xl text-center gap-6 mt-4 select-none w-full">
+                <div className="h-16 w-16 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-3xl flex items-center justify-center shadow-inner animate-bounce">
+                  <svg className="h-8 w-8 text-amber-500 fill-none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-xl font-extrabold text-slate-800 tracking-tight">Pricing Plans Locked</h3>
+                  <p className="text-xs font-semibold text-slate-400 max-w-md leading-relaxed">
+                    Subscription plans and checkout options will become visible and selectable once your listing has been reviewed and <span className="text-[#027244] font-black uppercase">Approved</span> by our administrators.
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-center bg-white border border-slate-200/60 p-4.5 rounded-2xl max-w-sm w-full gap-3 shadow-2xs">
+                  <div className="flex items-center justify-between w-full border-b border-slate-100 pb-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Current Listing Status</span>
+                    <span className="bg-amber-100 border border-amber-200/60 text-amber-700 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                      {business.status || 'Pending Vetting'}
+                    </span>
+                  </div>
+                  <p className="text-[10.5px] font-medium text-slate-500 leading-normal text-left">
+                    We are currently vetting your business details. You will receive an instant notification and full access to payment plans as soon as the review process is complete!
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Toggle selector */}
+                <div className="flex justify-center mt-2">
+              <div className="bg-slate-100 border border-slate-200 p-1 rounded-full flex items-center gap-1 w-fit shadow-inner">
+                <button
+                  type="button"
+                  onClick={() => setSelectedPlan('Monthly')}
+                  className={`py-2 px-6 rounded-full text-xs font-black transition-all cursor-pointer ${
+                    selectedPlan === 'Monthly'
+                      ? 'bg-[#027244] text-white shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPlan('Yearly')}
+                  className={`py-2 px-6 rounded-full text-xs font-black transition-all cursor-pointer ${
+                    selectedPlan === 'Yearly'
+                      ? 'bg-[#027244] text-white shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Yearly (Save 2 Months)
+                </button>
+              </div>
+            </div>
+
+            {/* Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 w-full">
+              
+              {/* CARD 1: Monthly Membership */}
+              <div 
+                onClick={() => setSelectedPlan('Monthly')}
+                className={`bg-white border rounded-[24px] p-6 flex flex-col justify-between items-center text-center shadow-sm relative transition-all duration-300 cursor-pointer ${
+                  selectedPlan === 'Monthly'
+                    ? 'border-[#027244] ring-2 ring-emerald-100 bg-emerald-50/5'
+                    : 'border-slate-200 hover:border-slate-350'
+                }`}
+              >
+                <div className="flex flex-col items-center gap-4 w-full">
+                  {/* Icon */}
+                  <div className="h-12 w-12 rounded-full bg-emerald-50 border border-emerald-100 text-[#027244] flex items-center justify-center shadow-inner">
+                    <Calendar className="h-5.5 w-5.5" />
+                  </div>
+                  
+                  <div className="flex flex-col gap-1">
+                    <h3 className="font-extrabold text-slate-800 text-base">Monthly Membership</h3>
+                    <div className="flex items-baseline justify-center gap-1.5 mt-1">
+                      <span className="text-3xl font-extrabold text-[#001c41]">₹69</span>
+                      <span className="text-xs text-slate-400 font-semibold">/ Month</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 font-semibold mt-1">Perfect for trying the platform.</p>
+                  </div>
+                  
+                  <div className="w-full border-t border-dashed border-slate-200 my-2" />
+                  
+                  {/* Features */}
+                  <div className="flex flex-col gap-3.5 items-start w-full px-2 text-xs text-slate-600 font-semibold">
+                    {[
+                      'Digital Visiting Card',
+                      'Dedicated Landing Page',
+                      'Event Posting',
+                      'Business Blog Publishing'
+                    ].map((feature, fIdx) => (
+                      <div key={fIdx} className="flex items-center gap-2.5 text-left">
+                        <CheckCircle className="h-4.5 w-4.5 text-[#027244] shrink-0" />
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePaymentCheckout('Monthly');
+                  }}
+                  className="mt-8 py-3 bg-white hover:bg-emerald-50 border border-[#027244] text-[#027244] hover:text-[#005934] transition-all w-full rounded-xl font-extrabold text-xs cursor-pointer shadow-sm active:scale-98"
+                >
+                  Start Monthly Plan
+                </button>
+              </div>
+
+              {/* CARD 2: Annual Membership */}
+              <div 
+                onClick={() => setSelectedPlan('Yearly')}
+                className={`bg-white border-2 rounded-[24px] p-6 flex flex-col justify-between items-center text-center shadow-md relative transition-all duration-300 cursor-pointer ${
+                  selectedPlan === 'Yearly'
+                    ? 'border-[#027244] ring-2 ring-emerald-100 bg-emerald-50/5'
+                    : 'border-slate-300 hover:border-[#027244]/50'
+                }`}
+              >
+                {/* Popular Badge */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#027244] text-white text-[9px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider shadow">
+                  Most Popular
+                </div>
+
+                {/* Save 2 Months Ribbon */}
+                <div className="absolute top-0 right-0 overflow-hidden w-24 h-24 pointer-events-none rounded-tr-3xl">
+                  <div className="absolute top-4 -right-8 w-28 bg-amber-400 text-slate-900 font-extrabold text-[8px] tracking-wider py-1.5 uppercase text-center rotate-45 shadow-sm">
+                    Save 2 Months
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center gap-4 w-full">
+                  {/* Icon */}
+                  <div className="h-12 w-12 rounded-full bg-emerald-50 border border-emerald-100 text-[#027244] flex items-center justify-center shadow-inner">
+                    <Calendar className="h-5.5 w-5.5" />
+                  </div>
+                  
+                  <div className="flex flex-col gap-1">
+                    <h3 className="font-extrabold text-slate-800 text-base">Annual Membership</h3>
+                    <div className="flex items-baseline justify-center gap-1.5 mt-1">
+                      <span className="text-3xl font-extrabold text-[#001c41]">₹690</span>
+                      <span className="text-xs text-slate-400 font-semibold">/ Year</span>
+                    </div>
+                    {/* strike-through original & save text */}
+                    <div className="flex items-center justify-center gap-2 text-[10px] font-black mt-0.5">
+                      <span className="text-slate-400 line-through">₹828</span>
+                      <span className="text-[#027244] bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5">Save ₹138</span>
+                    </div>
+                    {/* Get 12 Months access oval badge */}
+                    <div className="border border-dashed border-slate-200 rounded-full px-3.5 py-1.5 text-[9.5px] font-extrabold text-slate-550 bg-slate-50/50 mt-2 tracking-wide leading-none">
+                      Get 12 Months Access for the Price of 10
+                    </div>
+                  </div>
+                  
+                  <div className="w-full border-t border-dashed border-slate-200 my-1" />
+                  
+                  {/* Features */}
+                  <div className="flex flex-col gap-3.5 items-start w-full px-2 text-xs text-slate-600 font-semibold">
+                    {[
+                      'Digital Visiting Card',
+                      'Dedicated Landing Page',
+                      'Event Posting',
+                      'Business Blog Publishing'
+                    ].map((feature, fIdx) => (
+                      <div key={fIdx} className="flex items-center gap-2.5 text-left">
+                        <CheckCircle className="h-4.5 w-4.5 text-[#027244] shrink-0" />
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePaymentCheckout('Yearly');
+                  }}
+                  className="mt-8 py-3 bg-[#027244] hover:bg-[#005934] text-white transition-all w-full rounded-xl font-extrabold text-xs cursor-pointer shadow-md active:scale-98"
+                >
+                  Start Annual Plan
+                </button>
+              </div>
+
+            </div>
+
+            {/* Everything You Get Bottom Section */}
+            <div className="w-full border-t border-slate-100 pt-6 mt-4 flex flex-col gap-4 text-center">
+              <h3 className="font-extrabold text-[#001c41] text-sm md:text-base tracking-tight">Everything You Get</h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                {[
+                  {
+                    icon: <CreditCard className="h-5 w-5 text-[#027244]" />,
+                    title: 'Digital Visiting Card',
+                    desc: 'Professional digital profile with all your business information and contact details.'
+                  },
+                  {
+                    icon: <Globe className="h-5 w-5 text-[#027244]" />,
+                    title: 'Dedicated Landing Page',
+                    desc: 'Your own business page with a unique link to share with customers.'
+                  },
+                  {
+                    icon: <Calendar className="h-5 w-5 text-[#027244]" />,
+                    title: 'Event Posting',
+                    desc: 'Promote your events, offers, workshops and get more visibility.'
+                  },
+                  {
+                    icon: <BookOpen className="h-5 w-5 text-[#027244]" />,
+                    title: 'Business Blog Publishing',
+                    desc: 'Write blogs about your business, share knowledge and build trust.'
+                  }
+                ].map((item, idx) => (
+                  <div key={idx} className="bg-slate-50/50 border border-slate-200/60 rounded-2xl p-4 flex flex-col items-center text-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-white border border-slate-200 text-[#027244] flex items-center justify-center shadow-xs">
+                      {item.icon}
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-extrabold text-slate-800 text-xs leading-snug">{item.title}</span>
+                      <span className="text-[10px] text-slate-500 font-semibold leading-relaxed mt-0.5">{item.desc}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: Edit Profile Details Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="max-w-2xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-5 animate-scaleUp text-left max-h-[85vh] overflow-y-auto scrollbar-none font-sans">
+            <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-extrabold text-slate-800 text-base">Edit Business Details</h3>
+                <p className="text-slate-400 text-[10px] font-semibold mt-1">Keep your entire business profile up-to-date.</p>
+              </div>
+              <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-600 font-extrabold text-xs cursor-pointer p-1">
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {/* Nested Subtabs inside the modal */}
+            <div className="flex border-b border-slate-200 gap-2 overflow-x-auto">
+              {[
+                { id: 'general', label: 'General Info' },
+                { id: 'contact', label: 'Contact & Location' },
+                { id: 'specs', label: 'Specifications & Hours' },
+                { id: 'services', label: 'Services & Media' }
+              ].map(subTab => (
+                <button
+                  type="button"
+                  key={subTab.id}
+                  onClick={() => setEditTab(subTab.id)}
+                  className={`py-2 px-3 text-[10.5px] font-black uppercase tracking-wider border-b-2 shrink-0 cursor-pointer transition-all ${
+                    editTab === subTab.id ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {subTab.label}
+                </button>
+              ))}
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="flex flex-col gap-5 mt-2">
+              
+              {/* TAB: GENERAL */}
+              {editTab === 'general' && (
+                <div className="flex flex-col gap-4 animate-fadeIn">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Business Name</label>
+                    <input 
+                      type="text" 
+                      value={editFields.name}
+                      onChange={(e) => setEditFields({ ...editFields, name: e.target.value })}
+                      placeholder="e.g. Sri Murugan Stores"
+                      required
+                      className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Primary Category</label>
+                      <select 
+                        value={editFields.category}
+                        onChange={(e) => setEditFields({ ...editFields, category: e.target.value })}
+                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20 cursor-pointer"
+                      >
+                        <option value="Services">Services</option>
+                        <option value="Shops">Shops</option>
+                        <option value="Food & Drinks">Food & Drinks</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Education">Education</option>
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Subcategory / Business Type</label>
+                      <input 
+                        type="text" 
+                        value={editFields.type}
+                        onChange={(e) => setEditFields({ ...editFields, type: e.target.value })}
+                        placeholder="e.g. Electrical Services"
+                        required
+                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Business Description</label>
+                    <textarea 
+                      rows={4}
+                      value={editFields.description}
+                      onChange={(e) => setEditFields({ ...editFields, description: e.target.value })}
+                      placeholder="Describe your business, services, highlights..."
+                      required
+                      className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20 resize-none leading-relaxed"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: CONTACT & LOCATION */}
+              {editTab === 'contact' && (
+                <div className="flex flex-col gap-4 animate-fadeIn">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Phone Number</label>
+                      <input 
+                        type="text" 
+                        value={editFields.phone}
+                        onChange={(e) => setEditFields({ ...editFields, phone: e.target.value })}
+                        placeholder="e.g. +91 94430 12345"
+                        required
+                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">WhatsApp Number</label>
+                      <input 
+                        type="text" 
+                        value={editFields.whatsapp}
+                        onChange={(e) => setEditFields({ ...editFields, whatsapp: e.target.value })}
+                        placeholder="e.g. +91 94430 12345"
+                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Email Address</label>
+                      <input 
+                        type="email" 
+                        value={editFields.email}
+                        onChange={(e) => setEditFields({ ...editFields, email: e.target.value })}
+                        placeholder="e.g. store@gmail.com"
+                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Website Address</label>
+                      <input 
+                        type="text" 
+                        value={editFields.website}
+                        onChange={(e) => setEditFields({ ...editFields, website: e.target.value })}
+                        placeholder="e.g. www.store.in"
+                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Street / Block / Address</label>
+                    <input 
+                      type="text" 
+                      value={editFields.address}
+                      onChange={(e) => setEditFields({ ...editFields, address: e.target.value })}
+                      placeholder="e.g. Gandhi Nagar Main Road, Udumalpet"
+                      required
+                      className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Locality</label>
+                      <input 
+                        type="text" 
+                        value={editFields.locality}
+                        onChange={(e) => setEditFields({ ...editFields, locality: e.target.value })}
+                        placeholder="e.g. Gandhi Nagar"
+                        required
+                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Pincode</label>
+                      <input 
+                        type="text" 
+                        value={editFields.pincode}
+                        onChange={(e) => setEditFields({ ...editFields, pincode: e.target.value })}
+                        placeholder="e.g. 642126"
+                        required
+                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: SPECIFICATIONS & HOURS */}
+              {editTab === 'specs' && (
+                <div className="flex flex-col gap-4 animate-fadeIn">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Year of Establishment</label>
+                      <input 
+                        type="number" 
+                        value={editFields.yearEstablished}
+                        onChange={(e) => setEditFields({ ...editFields, yearEstablished: e.target.value })}
+                        placeholder="e.g. 2012"
+                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Employee Count</label>
+                      <input 
+                        type="text" 
+                        value={editFields.employeeCount}
+                        onChange={(e) => setEditFields({ ...editFields, employeeCount: e.target.value })}
+                        placeholder="e.g. 10 - 20"
+                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Languages Known</label>
+                      <input 
+                        type="text" 
+                        value={editFields.languagesKnown}
+                        onChange={(e) => setEditFields({ ...editFields, languagesKnown: e.target.value })}
+                        placeholder="e.g. Tamil, English"
+                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">GST Number</label>
+                      <input 
+                        type="text" 
+                        value={editFields.gstNumber}
+                        onChange={(e) => setEditFields({ ...editFields, gstNumber: e.target.value })}
+                        placeholder="e.g. 33ABCDE1234F1Z5"
+                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Service Area Limits</label>
+                    <input 
+                      type="text" 
+                      value={editFields.serviceArea}
+                      onChange={(e) => setEditFields({ ...editFields, serviceArea: e.target.value })}
+                      placeholder="e.g. Udumalpet, Pollachi, Palladam, Madathukulam"
+                      className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                    />
+                  </div>
+
+                  {/* Business Hours Timing inputs */}
+                  <div className="flex flex-col gap-2.5 mt-2 border-t border-slate-100 pt-4">
+                    <span className="text-[10px] font-extrabold text-slate-450 uppercase tracking-widest">Daily Operating Timings</span>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5">
+                      {[
+                        { day: 'Mon', key: 'timingsMon' },
+                        { day: 'Tue', key: 'timingsTue' },
+                        { day: 'Wed', key: 'timingsWed' },
+                        { day: 'Thu', key: 'timingsThu' },
+                        { day: 'Fri', key: 'timingsFri' },
+                        { day: 'Sat', key: 'timingsSat' },
+                        { day: 'Sun', key: 'timingsSun' }
+                      ].map(dayObj => (
+                        <div key={dayObj.key} className="flex flex-col gap-1.5">
+                          <label className="text-[9px] font-black text-slate-450 uppercase">{dayObj.day}</label>
+                          <input
+                            type="text"
+                            value={editFields[dayObj.key]}
+                            onChange={(e) => setEditFields({ ...editFields, [dayObj.key]: e.target.value })}
+                            placeholder="e.g. 9:00 AM - 8:00 PM"
+                            className="w-full border border-slate-200 px-3 py-2 rounded-xl text-[11px] font-bold text-slate-700 focus:outline-none bg-slate-50/50"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: SERVICES & MEDIA */}
+              {editTab === 'services' && (
+                <div className="flex flex-col gap-4 animate-fadeIn">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Services Offered (Comma Separated)</label>
+                    <textarea 
+                      rows={3}
+                      value={editFields.services}
+                      onChange={(e) => setEditFields({ ...editFields, services: e.target.value })}
+                      placeholder="e.g. Home Wiring, Electrical Repairs, CCTV Setup"
+                      className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20 resize-none leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Brands Authorized (Comma Separated)</label>
+                    <input 
+                      type="text" 
+                      value={editFields.brands}
+                      onChange={(e) => setEditFields({ ...editFields, brands: e.target.value })}
+                      placeholder="e.g. Havells, Finolex, Legrand, Syska"
+                      className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Cover Image URL</label>
+                    <input 
+                      type="text" 
+                      value={editFields.coverImageUrl}
+                      onChange={(e) => setEditFields({ ...editFields, coverImageUrl: e.target.value })}
+                      placeholder="e.g. https://images.unsplash.com/..."
+                      className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Gallery Image URLs (Comma Separated)</label>
+                    <textarea 
+                      rows={3}
+                      value={editFields.galleryUrls}
+                      onChange={(e) => setEditFields({ ...editFields, galleryUrls: e.target.value })}
+                      placeholder="e.g. https://image1.com, https://image2.com"
+                      className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20 resize-none leading-relaxed"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 mt-4 border-t border-slate-100 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-[11px] rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="py-3 px-7 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl cursor-pointer shadow-md shadow-emerald-800/10"
+                >
+                  Save Business Details
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: Photos Gallery & Upload Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="max-w-lg w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 flex flex-col gap-5 animate-scaleUp text-left">
+            <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-extrabold text-slate-800 text-base">Upload Photos & Media</h3>
+                <p className="text-slate-400 text-[10px] font-semibold mt-1">Upload photos to show off your products and store environment.</p>
+              </div>
+              <button onClick={() => setShowUploadModal(false)} className="text-slate-400 hover:text-slate-600 font-extrabold text-xs cursor-pointer p-1">
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {/* Drag and Drop Zone */}
+            <form onSubmit={handlePhotoUpload} className="flex flex-col gap-4">
+              <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 bg-slate-50/50 hover:bg-slate-50 transition-colors group">
+                <div className="h-10 w-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform shrink-0 shadow-2xs">
+                  <Upload className="h-5 w-5" />
+                </div>
+                <div className="text-center">
+                  <span className="text-xs font-extrabold text-slate-800 block">Drag and drop your photos here</span>
+                  <span className="text-[10px] text-slate-400 font-bold block mt-1">Or click to select files from your computer (PNG, JPG, max 5MB)</span>
+                </div>
+                <input 
+                  type="file" 
+                  multiple
+                  className="hidden" 
+                  id="file-selector"
+                  onChange={() => setUploadedPhotosCount(prev => prev + 1)}
+                />
+                <label 
+                  htmlFor="file-selector"
+                  className="mt-1 py-1.5 px-4 border border-slate-200 rounded-lg text-[10.5px] font-extrabold text-slate-600 hover:bg-white transition-colors shadow-2xs cursor-pointer select-none"
+                >
+                  Choose Files
+                </label>
+              </div>
+
+              {/* Photos Gallery Listing */}
+              <div className="flex flex-col gap-2.5">
+                <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest leading-none">
+                  Currently Uploaded ({uploadedPhotosCount} Photos)
+                </span>
+                
+                <div className="grid grid-cols-4 gap-2.5">
+                  {photoGallery.map((img, i) => (
+                    <div key={i} className="h-16 rounded-xl overflow-hidden border border-slate-200 relative group select-none">
+                      <img src={img} alt="Store" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setPhotoGallery(photoGallery.filter((_, idx) => idx !== i));
+                            setUploadedPhotosCount(prev => Math.max(prev - 1, 0));
+                          }}
+                          className="h-6 w-6 rounded bg-red-650 hover:bg-red-700 text-white flex items-center justify-center shadow-xs cursor-pointer transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {photoGallery.length < 4 && (
+                    <label 
+                      htmlFor="file-selector"
+                      className="h-16 border-2 border-dashed border-slate-200 rounded-xl hover:border-slate-350 transition-colors flex items-center justify-center text-slate-400 hover:text-slate-600 bg-slate-50/50 cursor-pointer shadow-2xs"
+                    >
+                      <Plus className="h-5 w-5" />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-2 border-t border-slate-100 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setShowUploadModal(false)}
+                  className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                >
+                  Close
+                </button>
+                <button 
+                  type="submit"
+                  disabled={uploadLoading}
+                  className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow-md shadow-emerald-800/10 flex items-center gap-1.5 disabled:opacity-60"
+                >
+                  {uploadLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                  <span>Save Media Gallery</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: Dashboard Write Blog Post Modal */}
+      {showWriteBlogModal && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="max-w-xl w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 flex flex-col gap-5 animate-scaleUp text-left max-h-[90vh] overflow-y-auto">
+            
+            <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-extrabold text-slate-800 text-base">Write a Blog Post</h3>
+                <p className="text-slate-450 text-[10px] font-semibold mt-1">Publish local insights, travel tips, culinary reviews, or farming advice.</p>
+              </div>
+              <button 
+                onClick={() => setShowWriteBlogModal(false)} 
+                className="text-slate-400 hover:text-slate-600 font-extrabold p-1 cursor-pointer"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {blogSuccess ? (
+              <div className="bg-emerald-50 border border-emerald-250 rounded-2xl p-5 flex flex-col items-center gap-4 text-center py-8">
+                <CheckCircle className="h-12 w-12 text-emerald-600 animate-bounce" />
+                <div className="flex flex-col gap-1">
+                  <span className="font-extrabold text-slate-800 text-sm">Blog Successfully Submitted!</span>
+                  <p className="text-xs text-slate-600 leading-relaxed font-semibold">{blogSuccess}</p>
+                </div>
+                <button 
+                  onClick={() => setShowWriteBlogModal(false)}
+                  className="mt-2 py-2 px-6 bg-emerald-600 text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer"
+                >
+                  Close Wizard
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleWriteBlogDashboard} className="flex flex-col gap-4">
+                
+                {blogError && (
+                  <div className="bg-red-50 border border-red-200 text-red-650 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
+                    <AlertCircle className="h-4.5 w-4.5 text-red-500 shrink-0" />
+                    <span>{blogError}</span>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Blog Title</label>
+                  <input 
+                    type="text" 
+                    value={blogTitle}
+                    onChange={(e) => setBlogTitle(e.target.value)}
+                    placeholder="e.g. Traditional Food Messes in Udumalpet"
+                    required
+                    maxLength={100}
+                    className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Cover Image</label>
+                  
+                  {blogCover ? (
+                    <div className="relative border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 p-2 flex items-center justify-between gap-3 group">
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={blogCover} 
+                          alt="Cover preview" 
+                          className="h-14 w-20 object-cover rounded-lg border border-slate-200/60 shadow-2xs"
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-slate-700">Cover Image Selected</span>
+                          <span className="text-[10px] text-slate-400 font-semibold truncate max-w-[200px]">{blogCover}</span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setBlogCover('')}
+                        className="p-2 hover:bg-red-50 text-slate-450 hover:text-red-650 rounded-xl transition-colors cursor-pointer border-none flex items-center justify-center shrink-0"
+                        title="Remove Image"
+                      >
+                        <Trash2 className="h-4.5 w-4.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={`border-2 border-dashed rounded-2xl p-5 flex flex-col items-center justify-center gap-2.5 transition-colors bg-slate-50/20 ${blogImageUploading ? 'border-emerald-300 bg-emerald-50/5' : 'border-slate-200 hover:bg-slate-50/40'}`}>
+                      {blogImageUploading ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <RefreshCw className="h-7 w-7 text-[#027244] animate-spin" />
+                          <span className="text-[11px] font-bold text-slate-500">Uploading image to secure storage...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="h-9 w-9 bg-slate-50 text-slate-500 border border-slate-100 rounded-xl flex items-center justify-center shadow-3xs">
+                            <Upload className="h-4.5 w-4.5" />
+                          </div>
+                          <div className="text-center flex flex-col items-center">
+                            <span className="text-xs font-extrabold text-slate-700">Choose a cover image</span>
+                            <span className="text-[10px] text-slate-455 font-bold mt-0.5">PNG, JPG, JPEG, WEBP (Max 5MB)</span>
+                          </div>
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            id="dashboard-blog-image-upload"
+                            onChange={handleBlogImageUpload}
+                            className="hidden"
+                          />
+                          <label 
+                            htmlFor="dashboard-blog-image-upload"
+                            className="py-1.5 px-4 border border-slate-200 hover:border-slate-300 rounded-xl text-[10.5px] font-extrabold text-slate-600 hover:bg-white transition-all cursor-pointer shadow-3xs hover:shadow-2xs select-none"
+                          >
+                            Select File
+                          </label>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {blogImageError && (
+                    <span className="text-[10px] text-red-500 font-semibold mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      {blogImageError}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Blog Content</label>
+                  <textarea 
+                    rows={6}
+                    value={blogContent}
+                    onChange={(e) => setBlogContent(e.target.value)}
+                    placeholder="Describe your article insights in rich detail..."
+                    required
+                    className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 resize-none leading-relaxed"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 mt-1 border-t border-slate-100 pt-4">
+                  <button 
+                    type="button"
+                    onClick={() => setShowWriteBlogModal(false)}
+                    className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-755 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={blogWriteLoading || blogImageUploading}
+                    className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow-md shadow-emerald-800/10 flex items-center gap-2 disabled:opacity-60"
+                  >
+                    {(blogWriteLoading || blogImageUploading) && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                    <span>Submit Blog Post</span>
+                  </button>
+                </div>
+
+              </form>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: List New Event Modal */}
+      {showCreateEventModal && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="max-w-lg w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 flex flex-col gap-4 animate-scaleUp text-left max-h-[90vh] overflow-y-auto">
+            
+            <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-extrabold text-slate-800 text-base">List a New Event</h3>
+                <p className="text-slate-400 text-[10px] font-semibold mt-1">Announce match updates, summits, expos, or training camps.</p>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowCreateEventModal(false);
+                  setEventError('');
+                  setEventSuccess('');
+                }} 
+                className="text-slate-400 hover:text-slate-600 font-extrabold text-xs cursor-pointer p-1"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {business && business.subscriptionStatus === 'active' ? (
+              <div className="bg-emerald-50 border border-emerald-250 rounded-2xl p-4 text-[10.5px] text-[#027244] font-semibold flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                <span>Active Premium Subscription detected! You can list this event for 100% Free (no standard ₹20 charge).</span>
+              </div>
+            ) : (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-[10.5px] text-amber-800 font-semibold flex items-center gap-2 animate-pulse">
+                <Info className="h-4 w-4 text-amber-600 shrink-0" />
+                <span>No active premium subscription detected. A standard ₹20 publishing fee applies to launch this event.</span>
+              </div>
+            )}
+
+            {eventSuccess && (
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2 shadow-sm animate-fadeIn">
+                <CheckCircle className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
+                <span>{eventSuccess}</span>
+              </div>
+            )}
+
+            {eventError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2 shadow-sm animate-shake">
+                <AlertCircle className="h-4.5 w-4.5 text-red-500 shrink-0" />
+                <span>{eventError}</span>
+              </div>
+            )}
+
+            {!eventSuccess && (
+              <form onSubmit={handleCreateEventDashboard} className="flex flex-col gap-4">
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Event Title *</label>
+                    <input 
+                      type="text" 
+                      value={eventTitle}
+                      onChange={(e) => setEventTitle(e.target.value)}
+                      placeholder="e.g. Udumalpet Marathon 2026"
+                      required
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Category *</label>
+                    <select 
+                      value={eventCategory}
+                      onChange={(e) => setEventCategory(e.target.value)}
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 cursor-pointer"
+                    >
+                      {['Sports', 'Festival', 'Business', 'Music', 'Education', 'Health', 'Others'].map(c => (
+                        <option key={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Start Date *</label>
+                    <input 
+                      type="date" 
+                      value={eventDate}
+                      onChange={(e) => setEventDate(e.target.value)}
+                      required
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">End Date (Optional)</label>
+                    <input 
+                      type="date" 
+                      value={eventEndDate}
+                      onChange={(e) => setEventEndDate(e.target.value)}
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Duration *</label>
+                    <input 
+                      type="text" 
+                      value={eventDuration}
+                      onChange={(e) => setEventDuration(e.target.value)}
+                      placeholder="e.g. 1 Day, 3 Hours"
+                      required
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Event Timing *</label>
+                    <input 
+                      type="text" 
+                      value={eventTime}
+                      onChange={(e) => setEventTime(e.target.value)}
+                      placeholder="e.g. Sunday, 6:00 AM"
+                      required
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Venue / Location *</label>
+                    <input 
+                      type="text" 
+                      value={eventVenue}
+                      onChange={(e) => setEventVenue(e.target.value)}
+                      placeholder="e.g. Sri Krishna Mahal, Udumalpet"
+                      required
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Organizer Name *</label>
+                    <input 
+                      type="text" 
+                      value={eventOrganizer}
+                      onChange={(e) => setEventOrganizer(e.target.value)}
+                      placeholder="e.g. Sports Club"
+                      required
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Helpline Phone *</label>
+                    <input 
+                      type="tel" 
+                      value={eventPhone}
+                      onChange={(e) => setEventPhone(e.target.value)}
+                      placeholder="e.g. +91 98765 43210"
+                      required
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Cover Image URL</label>
+                    <input 
+                      type="url" 
+                      value={eventCoverUrl}
+                      onChange={(e) => setEventCoverUrl(e.target.value)}
+                      placeholder="e.g. https://images.unsplash.com/photo-..."
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Booking / Registration Link</label>
+                    <input 
+                      type="url" 
+                      value={eventPaymentLink}
+                      onChange={(e) => setEventPaymentLink(e.target.value)}
+                      placeholder="e.g. https://tickets.expo.in"
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Event Description *</label>
+                  <textarea 
+                    rows={4}
+                    value={eventDescription}
+                    onChange={(e) => setEventDescription(e.target.value)}
+                    placeholder="Provide full schedule details, highlights, guidelines, and benefits..."
+                    required
+                    className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-755 focus:outline-none focus:border-[#027244] bg-slate-50/20 resize-none leading-relaxed"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 mt-1 border-t border-slate-100 pt-4">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setShowCreateEventModal(false);
+                      setEventError('');
+                    }}
+                    className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-755 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={eventSubmitLoading}
+                    className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow-md shadow-emerald-800/10 flex items-center gap-2 disabled:opacity-60"
+                  >
+                    {eventSubmitLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                    <span>{business && business.subscriptionStatus === 'active' ? 'Publish Event for Free' : 'Publish & Pay ₹20'}</span>
+                  </button>
+                </div>
+
+              </form>
+            )}
+
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={
+      <div className="py-32 flex flex-col items-center justify-center gap-3 text-slate-400 animate-pulse min-h-screen bg-slate-50">
+        <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" />
+        <span className="text-xs font-bold">Loading your workspace...</span>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
+  );
+}

@@ -1,0 +1,262 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-heading: "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-logo: "Plus Jakarta Sans", "Inter", sans-serif;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  
+  --primary: #027244;
+  --primary-hover: #005934;
+  --secondary: #001c41;
+  --accent: #d97706;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  letter-spacing: -0.015em;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+.font-logo {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+button, .button, input[type="submit"], input[type="button"], a.btn {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em;
+}
+
+input, select, textarea {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em;
+}
+
+label {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em;
+}
+
+/* Custom Micro-animations & Aesthetics */
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom Scrollbar for modern feel */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Premium Shadows & Transitions */
+.card-premium {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.02), 0 2px 4px -2px rgb(0 0 0 / 0.02);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px -3px rgb(0 0 0 / 0.04), 0 4px 12px -2px rgb(0 0 0 / 0.04);
+  border-color: #10b981;
+}
+
+/* Hero Wavy Curve Effect */
+.hero-gradient {
+  background: radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
+              radial-gradient(circle at 0% 100%, rgba(15, 23, 42, 0.03) 0%, transparent 50%);
+}
+
+.hero-curve-path {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.hero-curve-path svg {
+  position: relative;
+  display: block;
+  width: calc(100% + 1.3px);
+  height: 50px;
+  transform: rotateY(180deg);
+}
+
+.hero-curve-path .shape-fill {
+  fill: #f8fafc;
+}
+
+/* How It Works Connection Line */
+.step-connector::after {
+  content: '';
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: #e2e8f0;
+  z-index: 0;
+}
+
+@media (max-width: 768px) {
+  .step-connector::after {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   PREMIUM SAAS VISUAL SMOOTHING & INTERACTIONS
+   ========================================================================== */
+
+/* Global Smooth Page Scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* GPU-Accelerated springy transition transitions */
+.transition-premium {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Smooth Focus Glow for all form inputs and controls */
+input, select, textarea {
+  transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: #027244 !important;
+  box-shadow: 0 0 0 4px rgba(2, 114, 68, 0.12) !important;
+}
+
+/* Tactile Active Press Feedback for buttons & anchors */
+button, .btn-active-press, a.btn {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+button:active, .btn-active-press:active, a.btn:active {
+  transform: scale(0.97) !important;
+}
+
+/* Re-defined Card Premium with a highly refined SaaS spring lift */
+.card-premium {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform, box-shadow;
+}
+
+.card-premium:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.04), 0 10px 10px -5px rgba(0, 0, 0, 0.02) !important;
+  border-color: rgba(2, 114, 68, 0.2) !important;
+}
+
+/* Smooth Hover Zoom Utility for Images */
+.smooth-img-container {
+  overflow: hidden;
+  position: relative;
+  will-change: transform;
+}
+
+.smooth-img-container img {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform;
+}
+
+.smooth-img-container:hover img {
+  transform: scale(1.05) !important;
+}
+
+/* Premium Page Entrance Fade-Up Animation */
+@keyframes premiumFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-entrance {
+  animation: premiumFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Staggered load delays for smooth lists entry */
+.stagger-1 { animation-delay: 40ms; }
+.stagger-2 { animation-delay: 80ms; }
+.stagger-3 { animation-delay: 120ms; }
+.stagger-4 { animation-delay: 160ms; }
+.stagger-5 { animation-delay: 200ms; }
+
+/* Sticky Navbar Glass Backdrop Blur */
+.navbar-glass {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.85);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
