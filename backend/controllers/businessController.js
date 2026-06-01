@@ -217,8 +217,11 @@ const getBusinessById = async (req, res, next) => {
       .populate('userId', 'name email profileImage')
       .sort({ createdAt: -1 });
 
+    const businessObj = business.toObject();
+    businessObj.mapsApiKey = process.env.GOOGLE_MAPS_API_KEY || '';
+
     return sendSuccess(res, 200, 'Business details retrieved', {
-      business,
+      business: businessObj,
       reviews
     });
   } catch (err) {

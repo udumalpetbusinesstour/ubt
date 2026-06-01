@@ -23,6 +23,20 @@ router.post('/', async (req, res) => {
     }
 
     const query = await Query.create({ name, email, subject, message });
+
+    // Notify SuperAdmin via Email about new query
+    try {
+      const { sendEmail } = require('../utils/emailHelper');
+      await sendEmail({
+        to: 'udumalpetbusinesstour@gmail.com', // Central SuperAdmin email
+        subject: `New Inquiry received: "${subject}" from ${name}`,
+        text: `Hello Admin,\n\nA new user inquiry has been submitted on Udumalpet Business Tour.\n\nFrom: ${name} (${email})\nSubject: ${subject}\n\nMessage:\n"${message}"\n\nPlease log in to the admin panel to reply.\n\nBest regards,\nUBT Platform Automation`
+      });
+      console.log(`[SMTP] New user query email notification dispatched to SuperAdmin.`);
+    } catch (mailErr) {
+      console.error('[SMTP] Failed to send query email to admin:', mailErr.message);
+    }
+
     res.status(201).json({ success: true, message: 'Query submitted successfully', data: query });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -61,11 +75,42 @@ router.post('/:id/reply', protect, authorizeAdmin, async (req, res) => {
     query.repliedAt = new Date();
     await query.save();
 
-    console.log(`[SIMULATION] Email dispatched successfully to: ${query.email}`);
-    console.log(`[SUBJECT] Re: ${query.subject}`);
-    console.log(`[BODY] ${replyMessage}`);
+    try {
+      const { sendEmail } = require('../utils/emailHelper');
+      await sendEmail({
+        to: query.email,
+        subject: `Re: ${query.subject} - Udumalpet Business Tour`,
+        text: `Hello ${query.name},\n\nWe have reviewed your query: "${query.message}"\n\nAdmin Response:\n${replyMessage}\n\nBest regards,\nUdumalpet Business Tour Team`,
+        html: `
+          <div style="font-family: sans-serif; padding: 25px; color: #333; max-width: 600px; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+            <h2 style="color: #027244; font-size: 20px; font-weight: 800; border-bottom: 2px solid #e6f7f0; padding-bottom: 10px; margin-top: 0;">Udumalpet Business Tour</h2>
+            <p style="font-size: 14px; line-height: 1.5;">Hello <strong>${query.name}</strong>,</p>
+            <p style="font-size: 14px; line-height: 1.5; color: #4a5568;">Thank you for getting in touch. The administration panel has reviewed your query:</p>
+            
+            <div style="background-color: #f7fafc; padding: 15px; border-left: 4px solid #718096; border-radius: 4px; margin: 15px 0;">
+              <p style="margin: 0; font-size: 13px; font-style: italic; color: #4a5568;">"${query.message}"</p>
+            </div>
+            
+            <p style="font-size: 14px; line-height: 1.5; font-weight: bold; margin-top: 20px;">Admin Response:</p>
+            <div style="background-color: #e6f7f0; padding: 18px; border-radius: 12px; border: 1px solid #c3e6cb; margin: 15px 0; color: #155724;">
+              <p style="margin: 0; font-size: 14px; line-height: 1.6;">${replyMessage}</p>
+            </div>
+            
+            <p style="font-size: 13px; line-height: 1.5; color: #4a5568; margin-top: 25px;">If you have any further questions, please feel free to raise another inquiry.</p>
+            
+            <hr style="border: 0; border-top: 1px solid #edf2f7; margin: 25px 0;" />
+            <p style="font-size: 10.5px; color: #a0aec0; text-align: center; margin: 0;">
+              This is a system notification from Udumalpet Business Tour. Please do not reply directly to this email.
+            </p>
+          </div>
+        `
+      });
+      console.log(`[SMTP] Email successfully dispatched to query email: ${query.email}`);
+    } catch (mailErr) {
+      console.error('[SMTP] Failed to send query reply email:', mailErr.message);
+    }
 
-    res.json({ success: true, message: 'Reply recorded and email dispatch simulated.', data: query });
+    res.json({ success: true, message: 'Reply recorded and email dispatch completed.', data: query });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

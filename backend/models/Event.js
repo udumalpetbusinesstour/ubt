@@ -24,7 +24,6 @@ const EventSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: [true, 'Event description is required'],
   },
   date: {
     type: Date,
@@ -35,6 +34,7 @@ const EventSchema = new mongoose.Schema({
   },
   endDate: {
     type: Date,
+    required: [true, 'Event end date is required'],
   },
   time: {
     type: String,
@@ -42,7 +42,6 @@ const EventSchema = new mongoose.Schema({
   },
   venue: {
     type: String,
-    required: [true, 'Event venue is required'],
   },
   location: {
     type: String,
@@ -53,7 +52,6 @@ const EventSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: [true, 'Event contact number is required'],
   },
   price: {
     type: Number,
@@ -78,7 +76,46 @@ const EventSchema = new mongoose.Schema({
     type: String,
     enum: ['Pending Review', 'Approved', 'Rejected', 'pending', 'approved', 'rejected'],
     default: 'Pending Review',
-  }
+  },
+  isCompleted: {
+    type: Boolean,
+    default: false,
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['Pending', 'Paid', 'Free'],
+    default: 'Pending',
+  },
+  likes: [
+    {
+      type: String
+    }
+  ],
+  comments: [
+    {
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: () => new mongoose.Types.ObjectId()
+      },
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false
+      },
+      userName: {
+        type: String,
+        required: true
+      },
+      text: {
+        type: String,
+        required: true
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }
+  ]
 }, {
   timestamps: true
 });
@@ -93,6 +130,7 @@ EventSchema.pre('save', async function() {
   
   if (this.date && !this.eventDate) this.eventDate = this.date;
   if (this.eventDate && !this.date) this.date = this.eventDate;
+  if (this.date && !this.endDate) this.endDate = this.date;
   
   if (this.venue && !this.location) this.location = this.venue;
   if (this.location && !this.venue) this.venue = this.location;

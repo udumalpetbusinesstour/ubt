@@ -13,6 +13,7 @@ const Notification = require('../models/Notification');
 const AdminAction = require('../models/AdminAction');
 const SystemSetting = require('../models/SystemSetting');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
+const { sendEmail } = require('../utils/emailHelper');
 
 /**
  * Register administrative sub-desk staff
@@ -246,7 +247,7 @@ const getBusinesses = async (req, res, next) => {
 const updateBusinessStatus = async (req, res, next) => {
   try {
     const { status, remarks } = req.body;
-    const business = await Business.findById(req.params.id);
+    const business = await Business.findById(req.params.id).populate('ownerId');
     if (!business) {
       return sendError(res, 404, 'Business directory listing not found');
     }
@@ -269,7 +270,7 @@ const updateBusinessStatus = async (req, res, next) => {
 
     business.status = status;
     business.verificationStatus = verification;
-    await business.save();
+    await business.save({ validateBeforeSave: false });
 
     // Log admin action
     await AdminAction.create({
@@ -281,12 +282,26 @@ const updateBusinessStatus = async (req, res, next) => {
 
     // Notify Merchant
     await Notification.create({
-      userId: business.ownerId,
+      userId: business.ownerId ? (business.ownerId._id || business.ownerId) : null,
       businessId: business._id,
       title: `Listing Moderation Update`,
       message: `Your business listing "${business.name}" has been modified to ${status}. Remarks: ${remarks || 'None'}`,
       type: 'approval_status'
     });
+
+    // Send email alert to owner
+    if (business.ownerId && business.ownerId.email) {
+      const ownerName = business.ownerId.fullName || business.ownerId.name || 'Merchant';
+      try {
+        await sendEmail({
+          to: business.ownerId.email,
+          subject: `Listing Moderation Update: "${business.name}"`,
+          text: `Hello ${ownerName},\n\nYour business directory listing "${business.name}" has been updated by the super administrator.\n\nStatus: ${status}\nRemarks: ${remarks || 'None'}\n\nPlease log in to your dashboard for details.\n\nBest regards,\nUBT Moderation Team`
+        });
+      } catch (err) {
+        console.error('[SMTP] Failed to send business status email:', err.message);
+      }
+    }
 
     return sendSuccess(res, 200, `Listing successfully marked as ${status}`, business);
   } catch (err) {
@@ -520,7 +535,7 @@ const getBlogs = async (req, res, next) => {
 const updateBlog = async (req, res, next) => {
   try {
     const { title, content, status, featured, suggestions } = req.body;
-    const blog = await Blog.findById(req.params.id);
+    const blog = await Blog.findById(req.params.id).populate('author');
     if (!blog) {
       return sendError(res, 404, 'Blog article not found');
     }
@@ -539,7 +554,7 @@ const updateBlog = async (req, res, next) => {
       });
     }
 
-    await blog.save();
+    await blog.save({ validateBeforeSave: false });
 
     // Log admin action
     await AdminAction.create({
@@ -548,16 +563,44 @@ const updateBlog = async (req, res, next) => {
       remarks: `Moderated blog post "${blog.title}" - Set Status: ${status}`
     });
 
-    // Notify Author
+    // Notify Author in-app
     if (blog.author) {
       await Notification.create({
-        userId: blog.author,
+        userId: blog.author._id || blog.author,
         title: `Blog Moderation Update`,
         message: status === 'Needs Revision'
           ? `Your blog post "${blog.title}" requires revisions: "${suggestions}"`
           : `Your blog post "${blog.title}" has been moderated. Status: ${status}`,
         type: 'approval_status'
       });
+    }
+
+    // Notify author via Email
+    if (blog.author && blog.author.email) {
+      const authorName = blog.author.fullName || blog.author.name || 'Writer';
+      let emailSubject = `Blog Moderation Update: "${blog.title}"`;
+      let emailText = `Hello ${authorName},\n\nYour blog post "${blog.title}" has been reviewed by the super administrator.\n\nStatus: ${status}\n\n`;
+
+      if (status === 'Needs Revision') {
+        emailSubject = `Action Required: Revisions requested for your blog post "${blog.title}"`;
+        emailText = `Hello ${authorName},\n\nThe super administrator has reviewed your blog post "${blog.title}" and requested some revisions.\n\nSuggestions/Comments:\n"${suggestions}"\n\nPlease log in to the portal, update your blog post, and re-submit it for review.`;
+      } else if (status === 'Approved') {
+        emailText += `Congratulations! Your article is now live and published on the platform.`;
+      } else if (status === 'Rejected') {
+        emailText += `Unfortunately, your article was rejected and will not be published.`;
+      }
+
+      emailText += `\n\nThank you,\nUBT Moderation Team`;
+
+      try {
+        await sendEmail({
+          to: blog.author.email,
+          subject: emailSubject,
+          text: emailText
+        });
+      } catch (err) {
+        console.error('[SMTP] Failed to send blog status email:', err.message);
+      }
     }
 
     return sendSuccess(res, 200, 'Blog article updated successfully', blog);
@@ -616,7 +659,7 @@ const getEvents = async (req, res, next) => {
 const updateEvent = async (req, res, next) => {
   try {
     const { title, category, venue, date, time, organizer, phone, status, featured } = req.body;
-    const event = await Event.findById(req.params.id);
+    const event = await Event.findById(req.params.id).populate('ownerId');
     if (!event) {
       return sendError(res, 404, 'Event listing not found');
     }
@@ -631,7 +674,7 @@ const updateEvent = async (req, res, next) => {
     if (status) event.status = status;
     if (featured !== undefined) event.featured = !!featured;
 
-    await event.save();
+    await event.save({ validateBeforeSave: false });
 
     // Log admin action
     await AdminAction.create({
@@ -643,11 +686,24 @@ const updateEvent = async (req, res, next) => {
     // Notify owner
     if (event.ownerId) {
       await Notification.create({
-        userId: event.ownerId,
+        userId: event.ownerId._id || event.ownerId,
         title: `Event Moderation Update`,
         message: `Your event flyer list "${event.title}" status has been changed to ${status}.`,
         type: 'approval_status'
       });
+
+      if (event.ownerId.email) {
+        const organizerName = event.ownerId.fullName || event.ownerId.name || 'Organizer';
+        try {
+          await sendEmail({
+            to: event.ownerId.email,
+            subject: `Event Moderation Update: "${event.title}"`,
+            text: `Hello ${organizerName},\n\nYour event listing "${event.title}" has been reviewed by the super administrator.\n\nStatus: ${status}\n\nPlease log in to your dashboard to view comments or details.\n\nBest regards,\nUBT Moderation Team`
+          });
+        } catch (err) {
+          console.error('[SMTP] Failed to send event moderation email:', err.message);
+        }
+      }
     }
 
     return sendSuccess(res, 200, 'Event updated successfully', event);
@@ -932,7 +988,7 @@ const replySupportTicket = async (req, res, next) => {
       return sendError(res, 400, 'Reply message body is required');
     }
 
-    const ticket = await SupportTicket.findById(req.params.id);
+    const ticket = await SupportTicket.findById(req.params.id).populate('userId', 'fullName name email');
     if (!ticket) {
       return sendError(res, 404, 'Support ticket not found');
     }
@@ -952,11 +1008,53 @@ const replySupportTicket = async (req, res, next) => {
     // Notify User
     if (ticket.userId) {
       await Notification.create({
-        userId: ticket.userId,
+        userId: ticket.userId._id || ticket.userId,
         title: `Support Ticket Resolved`,
         message: `Your issue ticket "${ticket.subject}" has been resolved: "${replyText.substring(0, 30)}..."`,
         type: 'support'
       });
+    }
+
+    try {
+      if (ticket.userId && ticket.userId.email) {
+        const merchantName = ticket.userId.fullName || ticket.userId.name || 'Merchant';
+        await sendEmail({
+          to: ticket.userId.email,
+          subject: `Resolved: Support Ticket #${ticket._id} - ${ticket.subject}`,
+          text: `Hello ${merchantName},\n\nYour support ticket "${ticket.subject}" has been reviewed and resolved by the super administrator.\n\nTicket Details:\n"${ticket.description}"\n\nSuper Admin Response:\n${replyText}\n\nTicket Status: ${ticket.status}\n\nBest regards,\nUdumalpet Business Tour Support Team`,
+          html: `
+            <div style="font-family: sans-serif; padding: 25px; color: #333; max-width: 600px; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+              <h2 style="color: #027244; font-size: 20px; font-weight: 800; border-bottom: 2px solid #e6f7f0; padding-bottom: 10px; margin-top: 0;">UBT Support Desk</h2>
+              <p style="font-size: 14px; line-height: 1.5;">Hello <strong>${merchantName}</strong>,</p>
+              <p style="font-size: 14px; line-height: 1.5; color: #4a5568;">Your support ticket <strong>#${ticket._id}</strong> has been resolved by our super administrator.</p>
+              
+              <div style="background-color: #f7fafc; padding: 15px; border-left: 4px solid #718096; border-radius: 4px; margin: 15px 0;">
+                <p style="margin: 0; font-size: 12px; font-weight: bold; color: #718096; text-transform: uppercase; tracking-wider;">Original Issue [${ticket.subject}]:</p>
+                <p style="margin: 5px 0 0 0; font-size: 13px; color: #4a5568;">"${ticket.description || ticket.message}"</p>
+              </div>
+              
+              <p style="font-size: 14px; line-height: 1.5; font-weight: bold; margin-top: 20px;">Super Admin Resolution Response:</p>
+              <div style="background-color: #e6f7f0; padding: 18px; border-radius: 12px; border: 1px solid #c3e6cb; margin: 15px 0; color: #155724;">
+                <p style="margin: 0; font-size: 14px; line-height: 1.6;">${replyText}</p>
+              </div>
+              
+              <div style="margin-top: 20px; font-size: 13px; color: #4a5568;">
+                <strong>Ticket Status:</strong> <span style="background-color: #c3e6cb; color: #155724; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase;">${ticket.status}</span>
+              </div>
+              
+              <p style="font-size: 13px; line-height: 1.5; color: #4a5568; margin-top: 25px;">If you require further assistance, you can log in to your dashboard to open a new support ticket.</p>
+              
+              <hr style="border: 0; border-top: 1px solid #edf2f7; margin: 25px 0;" />
+              <p style="font-size: 10.5px; color: #a0aec0; text-align: center; margin: 0;">
+                This is a system notification from Udumalpet Business Tour. Please do not reply directly to this email.
+              </p>
+            </div>
+          `
+        });
+        console.log(`[SMTP] Support ticket resolution email successfully sent to: ${ticket.userId.email}`);
+      }
+    } catch (mailErr) {
+      console.error('[SMTP] Failed to send support ticket reply email:', mailErr.message);
     }
 
     return sendSuccess(res, 200, 'Reply sent and support ticket resolved/closed');
@@ -987,6 +1085,18 @@ const broadcastAnnouncement = async (req, res, next) => {
 
     if (notices.length > 0) {
       await Notification.insertMany(notices);
+    }
+
+    // Send broadcast emails in background
+    for (const merchant of merchants) {
+      if (merchant.email) {
+        const merchantName = merchant.fullName || merchant.name || 'Merchant';
+        sendEmail({
+          to: merchant.email,
+          subject: `Platform Announcement: ${title}`,
+          text: `Hello ${merchantName},\n\nWe have posted a new announcement for all registered merchants on the Udumalpet Business Tour platform:\n\n"${message}"\n\nPlease check your merchant console for more details.\n\nBest regards,\nUBT Administration Desk`
+        }).catch(err => console.error('[SMTP] Broadcast failed for:', merchant.email, err.message));
+      }
     }
 
     // Log admin action
@@ -1020,6 +1130,20 @@ const sendMerchantNotice = async (req, res, next) => {
       message: message,
       type: 'support'
     });
+
+    // Send email alert to merchant
+    if (merchant.email) {
+      const merchantName = merchant.fullName || merchant.name || 'Merchant';
+      try {
+        await sendEmail({
+          to: merchant.email,
+          subject: `Urgent: Regulatory Notice from UBT SuperAdmin`,
+          text: `Hello ${merchantName},\n\nThe super administrator has issued a warning notice regarding your UBT directory account:\n\n"${message}"\n\nPlease log in to your dashboard to resolve this notice.\n\nBest regards,\nUBT Compliance Desk`
+        });
+      } catch (err) {
+        console.error('[SMTP] Failed to send merchant notice email:', err.message);
+      }
+    }
 
     // Log admin action
     await AdminAction.create({

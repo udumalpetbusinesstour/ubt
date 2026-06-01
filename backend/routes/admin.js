@@ -83,7 +83,7 @@ router.post('/businesses/moderate', moderateBusiness);
 router.put('/businesses/:id/status', async (req, res, next) => {
   try {
     const { status } = req.body;
-    const business = await Business.findById(req.params.id);
+    const business = await Business.findById(req.params.id).populate('ownerId');
     if (!business) {
       return res.status(404).json({ success: false, message: 'Business not found' });
     }
@@ -100,15 +100,29 @@ router.put('/businesses/:id/status', async (req, res, next) => {
       business.isPremium = false;
     }
     
-    await business.save();
+    await business.save({ validateBeforeSave: false });
 
     await Notification.create({
-      userId: business.ownerId,
+      userId: business.ownerId ? (business.ownerId._id || business.ownerId) : null,
       businessId: business._id,
       title: 'Listing Moderation Update',
       message: `Your business "${business.name}" has been ${status.toLowerCase()} by the administrator.`,
       type: 'approval_status',
     });
+
+    if (business.ownerId && business.ownerId.email) {
+      const ownerName = business.ownerId.fullName || business.ownerId.name || 'Merchant';
+      const { sendEmail } = require('../utils/emailHelper');
+      try {
+        await sendEmail({
+          to: business.ownerId.email,
+          subject: `Listing Moderation Update: "${business.name}"`,
+          text: `Hello ${ownerName},\n\nYour business directory listing "${business.name}" has been updated by the administrator.\n\nStatus: ${status}\n\nPlease log in to your dashboard for details.\n\nBest regards,\nUBT Moderation Team`
+        });
+      } catch (err) {
+        console.error('[SMTP] Failed to send business status email:', err.message);
+      }
+    }
 
     res.json({ success: true, message: `Business successfully ${status}`, data: business });
   } catch (error) {

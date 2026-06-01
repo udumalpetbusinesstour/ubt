@@ -11,12 +11,30 @@ import {
 export default function AdminDashboard() {
   const navigate = useNavigate();
 
+  const formatEventDateRange = (startDate, endDate) => {
+    if (!startDate) return 'N/A';
+    const startStr = new Date(startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    if (!endDate) return startStr;
+    const endStr = new Date(endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    if (startStr === endStr) return startStr;
+    return `${startStr} - ${endStr}`;
+  };
+
   const getStatusWeight = (status) => {
-    if (status === 'Pending Approval') return 0;
+    if (status === 'Pending Approval' || status === 'Pending Review' || status === 'Pending Verification' || status === 'Under Review') return 0;
     if (status === 'Needs Revision') return 1;
     if (status === 'Approved') return 2;
     if (status === 'Rejected') return 3;
     return 4;
+  };
+
+  const getEventSortWeight = (e) => {
+    const isExpired = new Date(e.endDate || e.date) < new Date();
+    if (isExpired) return 3; // Expired goes to bottom
+    const statusLower = e.status?.toLowerCase();
+    if (statusLower === 'pending review' || statusLower === 'pending approval' || statusLower === 'pending') return 0; // Top pending
+    if (statusLower === 'approved') return 1; // Middle approved
+    return 2; // Bottom rejected/other non-expired
   };
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
@@ -24,6 +42,7 @@ export default function AdminDashboard() {
   // Tab navigation state
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [auditSubTab, setAuditSubTab] = useState('Businesses'); // Businesses | Blogs | Testimonials
+  const [pendingSubTab, setPendingSubTab] = useState('Businesses'); // Businesses | Blogs | Events
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -454,6 +473,30 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleEventDelete = async (eventId) => {
+    if (!window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5000/api/events/${eventId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Event successfully deleted!');
+        loadPlatformRealData();
+      } else {
+        alert(data.message || 'Failed to delete event.');
+      }
+    } catch (err) {
+      // Fallback local mock delete
+      setEvents(prev => prev.filter(e => e._id !== eventId));
+    }
+  };
+
   const handleReviewAction = (revId, action) => {
     if (action === 'delete') {
       setReviews(prev => prev.filter(r => r._id !== revId));
@@ -612,7 +655,9 @@ export default function AdminDashboard() {
                       <div className="flex flex-col gap-1 text-left">
                         <span className="text-[10px] text-amber-600 font-black uppercase tracking-wider">Pending Approvals</span>
                         <span className="text-3xl font-black text-amber-700 mt-2 leading-none">
-                          {businesses.filter(b => b.status === 'Pending Verification' || b.status === 'Under Review').length}
+                          {businesses.filter(b => b.status === 'Pending Verification' || b.status === 'Under Review').length +
+                           blogs.filter(b => b.status === 'Pending Approval').length +
+                           events.filter(e => e.status === 'Pending Review').length}
                         </span>
                       </div>
                       <div className="h-10 w-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 border border-amber-100/50">
@@ -895,49 +940,68 @@ export default function AdminDashboard() {
 
                     {auditSubTab === 'Events' && (
                       <div className="flex flex-col gap-4">
-                        {events.map(e => (
-                          <div key={e._id} className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-5 flex flex-col gap-4">
-                            <div className="flex justify-between items-start gap-4">
-                              <div className="flex flex-col text-left font-sans">
-                                <span className="font-extrabold text-[#001c41] text-xs sm:text-[13px] leading-snug">{e.title}</span>
-                                <span className="text-[9.5px] text-slate-450 font-bold mt-1 block">
-                                  Organizer: {e.organizer} • Date: {e.date} • Venue: {e.venue}
-                                </span>
-                                <a
-                                  href="/events"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[#027244] hover:text-[#005934] hover:underline font-black text-[10.5px] mt-1.5 flex items-center gap-1 w-fit cursor-pointer leading-none"
-                                >
-                                  View Details →
-                                </a>
+                        {[...events]
+                          .filter(e => e.status === 'Pending Review')
+                          .sort((a, b) => getEventSortWeight(a) - getEventSortWeight(b) || new Date(a.date) - new Date(b.date))
+                          .map(e => {
+                            const isExpired = new Date(e.endDate || e.date) < new Date();
+                            return (
+                              <div key={e._id} className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-5 flex flex-col gap-4">
+                                <div className="flex justify-between items-start gap-4">
+                                  <div className="flex flex-col text-left font-sans">
+                                    <span className="font-extrabold text-[#001c41] text-xs sm:text-[13px] leading-snug">{e.title}</span>
+                                    <span className="text-[9.5px] text-slate-455 font-bold mt-1 block">
+                                      Organizer: {e.organizer} • Date: {formatEventDateRange(e.date, e.endDate)} • Venue: {e.venue || 'To Be Declared'}
+                                    </span>
+                                    <a
+                                      href="/events"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[#027244] hover:text-[#005934] hover:underline font-black text-[10.5px] mt-1.5 flex items-center gap-1 w-fit cursor-pointer leading-none"
+                                    >
+                                      View Details →
+                                    </a>
+                                  </div>
+                                  <div className="flex gap-1.5 shrink-0 items-center">
+                                    {isExpired && (
+                                      <span className="px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide bg-red-50 border border-red-250 text-red-700">
+                                        Expired
+                                      </span>
+                                    )}
+                                    <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
+                                      e.status === 'Approved' ? 'bg-emerald-50 border-emerald-250 text-emerald-700' : 'bg-amber-50 border-amber-250 text-amber-600 animate-pulse'
+                                    }`}>
+                                      {e.status}
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex justify-end gap-2 border-t border-slate-200/50 pt-3">
+                                  <button 
+                                    onClick={() => handleEventDelete(e._id)}
+                                    className="mr-auto px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow-2xs"
+                                  >
+                                    Delete
+                                  </button>
+                                  <button 
+                                    onClick={() => handleEventAction(e._id, 'Rejected')}
+                                    disabled={e.status === 'Rejected'}
+                                    className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-2xs"
+                                  >
+                                    Reject
+                                  </button>
+                                  <button 
+                                    onClick={() => handleEventAction(e._id, 'Approved')}
+                                    disabled={e.status === 'Approved'}
+                                    className="px-4 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-sm"
+                                  >
+                                    Approve & Publish
+                                  </button>
+                                </div>
                               </div>
-                              <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
-                                e.status === 'Approved' ? 'bg-emerald-50 border-emerald-250 text-emerald-700' : 'bg-amber-50 border-amber-250 text-amber-600 animate-pulse'
-                              }`}>
-                                {e.status}
-                              </span>
-                            </div>
-                            
-                            <div className="flex justify-end gap-2 border-t border-slate-200/50 pt-3">
-                              <button 
-                                onClick={() => handleEventAction(e._id, 'Rejected')}
-                                disabled={e.status === 'Rejected'}
-                                className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-2xs"
-                              >
-                                Reject
-                              </button>
-                              <button 
-                                onClick={() => handleEventAction(e._id, 'Approved')}
-                                disabled={e.status === 'Approved'}
-                                className="px-4 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-sm"
-                              >
-                                Approve & Publish
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                        {events.length === 0 && (
+                            );
+                          })}
+                        {events.filter(e => e.status === 'Pending Review').length === 0 && (
                           <div className="p-8 text-center text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl">
                             No events waiting for verification.
                           </div>
@@ -1087,79 +1151,236 @@ export default function AdminDashboard() {
               {/* TAB: PENDING APPROVALS LIST */}
               {activeTab === 'Pending Approvals' && (
                 <div className="flex flex-col gap-6 text-left">
-                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
-                    <h3 className="font-extrabold text-[#001c41] text-base">Pending Approvals Desk</h3>
-                    <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Showcasing registrations waiting to be approved or under review</span>
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                    <div className="flex flex-col">
+                      <h3 className="font-extrabold text-[#001c41] text-base">Pending Approvals Desk</h3>
+                      <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Showcasing listings, community blogs, and events waiting for administrative approval</span>
+                    </div>
+
+                    {/* Pill tabs container */}
+                    <div className="bg-slate-100/60 p-1 rounded-xl flex items-center self-start md:self-center overflow-x-auto shrink-0 border border-slate-200/30">
+                      <button
+                        onClick={() => setPendingSubTab('Businesses')}
+                        className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                          pendingSubTab === 'Businesses'
+                            ? 'bg-[#027244] text-white shadow-sm shadow-emerald-950/15'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        Businesses ({businesses.filter(b => b.status === 'Pending Verification' || b.status === 'Under Review').length})
+                      </button>
+                      <button
+                        onClick={() => setPendingSubTab('Blogs')}
+                        className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                          pendingSubTab === 'Blogs'
+                            ? 'bg-[#027244] text-white shadow-sm shadow-emerald-950/15'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        Blogs ({blogs.filter(b => b.status === 'Pending Approval').length})
+                      </button>
+                      <button
+                        onClick={() => setPendingSubTab('Events')}
+                        className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                          pendingSubTab === 'Events'
+                            ? 'bg-[#027244] text-white shadow-sm shadow-emerald-950/15'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        Events ({events.filter(e => e.status === 'Pending Review').length})
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {businesses.filter(b => b.status === 'Pending Verification' || b.status === 'Under Review').map(b => (
-                      <div key={b._id} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col justify-between gap-5 hover:shadow-md transition-shadow">
-                        <div className="flex gap-4">
-                          <div className="h-16 w-16 bg-slate-100 rounded-2xl overflow-hidden shrink-0 border border-slate-200">
-                            <img src={b.coverImageUrl} className="h-full w-full object-cover" alt={b.name} />
-                          </div>
-                          <div className="flex flex-col gap-1 text-left min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-extrabold text-sm text-[#001c41] truncate leading-none">{b.name}</h4>
-                              {b.googlePlaceId && <span className="bg-blue-50 border border-blue-150 text-blue-600 text-[8px] font-black px-1.5 py-0.5 rounded uppercase shrink-0">Google</span>}
+                  {/* Sub-tab view: Businesses */}
+                  {pendingSubTab === 'Businesses' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {businesses.filter(b => b.status === 'Pending Verification' || b.status === 'Under Review').map(b => (
+                        <div key={b._id} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col justify-between gap-5 hover:shadow-md transition-shadow">
+                          <div className="flex gap-4">
+                            <div className="h-16 w-16 bg-slate-100 rounded-2xl overflow-hidden shrink-0 border border-slate-200">
+                              <img src={b.coverImageUrl} className="h-full w-full object-cover" alt={b.name} />
                             </div>
-                            <span className="text-xs text-emerald-650 font-bold mt-1 leading-none">{b.type}</span>
-                            <span className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 font-semibold">
-                              <MapPin className="h-3 w-3 text-slate-400 shrink-0" /> {b.address}
-                            </span>
+                            <div className="flex flex-col gap-1 text-left min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-extrabold text-sm text-[#001c41] truncate leading-none">{b.name}</h4>
+                                {b.googlePlaceId && <span className="bg-blue-50 border border-blue-150 text-blue-600 text-[8px] font-black px-1.5 py-0.5 rounded uppercase shrink-0">Google</span>}
+                              </div>
+                              <span className="text-xs text-emerald-650 font-bold mt-1 leading-none">{b.type}</span>
+                              <span className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 font-semibold">
+                                <MapPin className="h-3 w-3 text-slate-400 shrink-0" /> {b.address}
+                              </span>
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Specs quick cards row */}
-                        <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-bold text-slate-600 bg-slate-50 border border-slate-200 p-2.5 rounded-2xl">
-                          <div className="flex flex-col gap-0.5 border-r border-slate-200">
-                            <span className="text-[8px] text-slate-400 font-extrabold uppercase">Pincode</span>
-                            <span className="font-extrabold text-slate-800">{b.pincode}</span>
+                          {/* Specs quick cards row */}
+                          <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-bold text-slate-600 bg-slate-50 border border-slate-200 p-2.5 rounded-2xl">
+                            <div className="flex flex-col gap-0.5 border-r border-slate-200">
+                              <span className="text-[8px] text-slate-400 font-extrabold uppercase">Pincode</span>
+                              <span className="font-extrabold text-slate-800">{b.pincode}</span>
+                            </div>
+                            <div className="flex flex-col gap-0.5 border-r border-slate-200">
+                              <span className="text-[8px] text-slate-400 font-extrabold uppercase">G-Rating</span>
+                              <span className="font-extrabold text-slate-800">{b.googleRating || 'N/A'}</span>
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[8px] text-slate-400 font-extrabold uppercase">Timings</span>
+                              <span className="font-extrabold text-slate-800 truncate">9AM - 8PM</span>
+                            </div>
                           </div>
-                          <div className="flex flex-col gap-0.5 border-r border-slate-200">
-                            <span className="text-[8px] text-slate-400 font-extrabold uppercase">G-Rating</span>
-                            <span className="font-extrabold text-slate-800">{b.googleRating || 'N/A'}</span>
-                          </div>
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[8px] text-slate-400 font-extrabold uppercase">Timings</span>
-                            <span className="font-extrabold text-slate-800 truncate">9AM - 8PM</span>
-                          </div>
-                        </div>
 
-                        <div className="flex justify-between items-center border-t border-slate-100 pt-3.5 gap-2">
-                          <button 
-                            onClick={() => { setSelectedBiz(b); setShowBizModal(true); }}
-                            className="text-xs font-bold text-slate-550 hover:text-slate-800 flex items-center gap-0.5 cursor-pointer"
-                          >
-                            <Eye className="h-4 w-4 text-slate-400" /> View details
-                          </button>
-                          
-                          <div className="flex gap-2">
+                          <div className="flex justify-between items-center border-t border-slate-100 pt-3.5 gap-2">
                             <button 
-                              onClick={() => handleAction(b._id, 'reject')}
-                              className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                              onClick={() => { setSelectedBiz(b); setShowBizModal(true); }}
+                              className="text-xs font-bold text-slate-550 hover:text-slate-800 flex items-center gap-0.5 cursor-pointer"
                             >
-                              Reject
+                              <Eye className="h-4 w-4 text-slate-400" /> View details
                             </button>
-                            <button 
-                              onClick={() => handleAction(b._id, 'approve')}
-                              className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow shadow-emerald-800/10"
-                            >
-                              Approve listing
-                            </button>
+                            
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => handleAction(b._id, 'reject')}
+                                className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                              >
+                                Reject
+                              </button>
+                              <button 
+                                onClick={() => handleAction(b._id, 'approve')}
+                                className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow shadow-emerald-800/10"
+                              >
+                                Approve listing
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                    {businesses.filter(b => b.status === 'Pending Verification' || b.status === 'Under Review').length === 0 && (
-                      <div className="col-span-2 bg-white border border-slate-200 rounded-3xl p-16 text-center text-slate-400 flex flex-col items-center gap-3">
-                        <CheckCircle2 className="h-10 w-10 text-emerald-600 animate-bounce" />
-                        <span className="text-sm font-bold text-slate-800 font-sans">Queue Empty!</span>
-                        <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-xs">There are no pending business listings waiting for administrative approval today.</p>
-                      </div>
-                    )}
-                  </div>
+                      ))}
+                      {businesses.filter(b => b.status === 'Pending Verification' || b.status === 'Under Review').length === 0 && (
+                        <div className="col-span-2 bg-white border border-slate-200 rounded-3xl p-16 text-center text-slate-400 flex flex-col items-center gap-3">
+                          <CheckCircle2 className="h-10 w-10 text-emerald-600 animate-bounce" />
+                          <span className="text-sm font-bold text-slate-800 font-sans">Queue Empty!</span>
+                          <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-xs">There are no pending business listings waiting for administrative approval today.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Sub-tab view: Blogs */}
+                  {pendingSubTab === 'Blogs' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {blogs.filter(b => b.status === 'Pending Approval').map(b => (
+                        <div key={b._id} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col justify-between gap-5 hover:shadow-md transition-shadow">
+                          <div className="flex gap-4">
+                            {b.coverImage && (
+                              <div className="h-16 w-20 rounded-2xl overflow-hidden border border-slate-200 shrink-0">
+                                <img src={b.coverImage} className="w-full h-full object-cover" alt="Blog Cover" />
+                              </div>
+                            )}
+                            <div className="flex flex-col gap-1 text-left min-w-0 flex-1">
+                              <h4 className="font-extrabold text-sm text-[#001c41] truncate leading-none">{b.title}</h4>
+                              <span className="text-xs text-emerald-650 font-bold mt-1 leading-none">Author: {b.authorName}</span>
+                              <span className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 font-semibold">
+                                <Calendar className="h-3 w-3 text-slate-400 shrink-0" /> {new Date(b.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+
+                          <p className="text-xs text-slate-550 font-semibold leading-relaxed line-clamp-3 text-justify">{b.content}</p>
+
+                          <div className="flex justify-between items-center border-t border-slate-100 pt-3.5 gap-2">
+                            <button 
+                              onClick={() => { setSelectedBlogModal(b); setSuggestionText(b.revisionSuggestions || ''); }}
+                              className="text-xs font-bold text-slate-550 hover:text-slate-800 flex items-center gap-0.5 cursor-pointer"
+                            >
+                              <Eye className="h-4 w-4 text-slate-400" /> View details
+                            </button>
+                            
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => handleBlogAction(b._id, 'Rejected')}
+                                className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                              >
+                                Reject
+                              </button>
+                              <button 
+                                onClick={() => handleBlogAction(b._id, 'Approved')}
+                                className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow shadow-emerald-800/10"
+                              >
+                                Approve
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {blogs.filter(b => b.status === 'Pending Approval').length === 0 && (
+                        <div className="col-span-2 bg-white border border-slate-200 rounded-3xl p-16 text-center text-slate-400 flex flex-col items-center gap-3">
+                          <BookOpen className="h-10 w-10 text-emerald-600 animate-bounce" />
+                          <span className="text-sm font-bold text-slate-800 font-sans">Queue Empty!</span>
+                          <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-xs">There are no pending blog article submissions waiting for review today.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Sub-tab view: Events */}
+                  {pendingSubTab === 'Events' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {[...events]
+                        .filter(e => e.status === 'Pending Review')
+                        .sort((a, b) => getEventSortWeight(a) - getEventSortWeight(b) || new Date(a.date) - new Date(b.date))
+                        .map(e => {
+                          const isExpired = new Date(e.endDate || e.date) < new Date();
+                          return (
+                            <div key={e._id} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col justify-between gap-5 hover:shadow-md transition-shadow">
+                              <div className="flex flex-col gap-1 text-left min-w-0">
+                                <div className="flex justify-between items-start gap-4">
+                                  <h4 className="font-extrabold text-sm text-[#001c41] truncate leading-none">{e.title}</h4>
+                                  {isExpired && (
+                                    <span className="px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide bg-red-50 border border-red-250 text-red-700 shrink-0">
+                                      Expired
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-xs text-emerald-650 font-bold mt-1.5 leading-none">Organizer: {e.organizer}</span>
+                              </div>
+
+                              <div className="bg-slate-50 border border-slate-200 p-3 rounded-2xl text-[10.5px] font-bold text-slate-600 flex flex-col gap-1.5">
+                                <div>📅 Date: <span className="text-slate-800">{formatEventDateRange(e.date, e.endDate)}</span></div>
+                                <div>📍 Venue: <span className="text-slate-800">{e.venue || 'To Be Declared'}</span></div>
+                                <div>🎭 Category: <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider">{e.category}</span></div>
+                              </div>
+
+                              <div className="flex justify-end gap-2 border-t border-slate-100 pt-3.5">
+                                <button 
+                                  onClick={() => handleEventDelete(e._id)}
+                                  className="mr-auto px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                                >
+                                  Delete
+                                </button>
+                                <button 
+                                  onClick={() => handleEventAction(e._id, 'Rejected')}
+                                  className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                                >
+                                  Reject
+                                </button>
+                                <button 
+                                  onClick={() => handleEventAction(e._id, 'Approved')}
+                                  className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow shadow-emerald-800/10"
+                                >
+                                  Approve
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      {events.filter(e => e.status === 'Pending Review').length === 0 && (
+                        <div className="col-span-2 bg-white border border-slate-200 rounded-3xl p-16 text-center text-slate-400 flex flex-col items-center gap-3">
+                          <Calendar className="h-10 w-10 text-emerald-600 animate-bounce" />
+                          <span className="text-sm font-bold text-slate-800 font-sans">Queue Empty!</span>
+                          <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-xs">There are no pending community events waiting for review today.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
               {/* TAB: BLOGS MODERATION */}
@@ -1220,53 +1441,70 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              {/* TAB: EVENTS MODERATION */}
               {activeTab === 'Events' && (
                 <div className="flex flex-col gap-6 text-left">
                   <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
                     <h3 className="font-extrabold text-[#001c41] text-base">Community Events Moderation</h3>
-                    <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Moderate event list sub-streams to maintain community relevance</span>
+                    <span className="text-[10px] text-slate-455 font-semibold mt-0.5">Moderate event list sub-streams to maintain community relevance</span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {events.map(e => (
-                      <div key={e._id} className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-2xs flex flex-col gap-4 justify-between">
-                        <div className="flex justify-between items-start gap-4">
-                          <div className="flex flex-col text-left">
-                            <h4 className="font-extrabold text-sm text-[#001c41] leading-none">{e.title}</h4>
-                            <span className="text-[9.5px] text-slate-400 font-bold mt-1.5 leading-none">Organizer: {e.organizer}</span>
+                    {[...events]
+                      .sort((a, b) => getEventSortWeight(a) - getEventSortWeight(b) || new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
+                      .map(e => {
+                        const isExpired = new Date(e.endDate || e.date) < new Date();
+                        return (
+                          <div key={e._id} className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-2xs flex flex-col gap-4 justify-between">
+                            <div className="flex justify-between items-start gap-4">
+                              <div className="flex flex-col text-left">
+                                <h4 className="font-extrabold text-sm text-[#001c41] leading-none">{e.title}</h4>
+                                <span className="text-[9.5px] text-slate-400 font-bold mt-1.5 leading-none">Organizer: {e.organizer}</span>
+                              </div>
+                              <div className="flex gap-1.5 shrink-0 items-center">
+                                {isExpired && (
+                                  <span className="px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide bg-red-50 border border-red-250 text-red-700">
+                                    Expired
+                                  </span>
+                                )}
+                                <span className={`px-2 py-0.5 rounded text-[8.5px] font-black border ${
+                                  e.status === 'Approved' ? 'bg-emerald-50 border-emerald-250 text-emerald-700' : 'bg-amber-50 border-amber-250 text-amber-600'
+                                }`}>
+                                  {e.status}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="bg-slate-50 border border-slate-200 p-3 rounded-2xl text-[10.5px] font-bold text-slate-600 flex flex-col gap-1.5">
+                              <div>📅 Date: <span className="text-slate-800">{formatEventDateRange(e.date, e.endDate)}</span></div>
+                              <div>📍 Venue: <span className="text-slate-800">{e.venue || 'To Be Declared'}</span></div>
+                              <div>🎭 Category: <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider">{e.category}</span></div>
+                            </div>
+
+                            <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
+                              <button 
+                                onClick={() => handleEventDelete(e._id)}
+                                className="mr-auto px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                              >
+                                Delete
+                              </button>
+                              <button 
+                                onClick={() => handleEventAction(e._id, 'Rejected')}
+                                disabled={e.status === 'Rejected'}
+                                className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40"
+                              >
+                                Reject
+                              </button>
+                              <button 
+                                onClick={() => handleEventAction(e._id, 'Approved')}
+                                disabled={e.status === 'Approved'}
+                                className="px-4 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-sm"
+                              >
+                                Approve
+                              </button>
+                            </div>
                           </div>
-                          <span className={`px-2 py-0.5 rounded text-[8.5px] font-black border ${
-                            e.status === 'Approved' ? 'bg-emerald-50 border-emerald-250 text-emerald-700' : 'bg-amber-50 border-amber-250 text-amber-600'
-                          }`}>
-                            {e.status}
-                          </span>
-                        </div>
-
-                        <div className="bg-slate-50 border border-slate-200 p-3 rounded-2xl text-[10.5px] font-bold text-slate-600 flex flex-col gap-1.5">
-                          <div>📅 Date: <span className="text-slate-800">{e.date}</span></div>
-                          <div>📍 Venue: <span className="text-slate-800">{e.venue}</span></div>
-                          <div>🎭 Category: <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider">{e.category}</span></div>
-                        </div>
-
-                        <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
-                          <button 
-                            onClick={() => handleEventAction(e._id, 'Rejected')}
-                            disabled={e.status === 'Rejected'}
-                            className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40"
-                          >
-                            Reject
-                          </button>
-                          <button 
-                            onClick={() => handleEventAction(e._id, 'Approved')}
-                            disabled={e.status === 'Approved'}
-                            className="px-4 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-sm"
-                          >
-                            Approve
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                        );
+                      })}
                   </div>
                 </div>
               )}

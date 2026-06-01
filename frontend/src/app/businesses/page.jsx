@@ -1065,7 +1065,7 @@ function BusinessesList() {
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[10px] font-extrabold text-slate-500 uppercase leading-none">Email Us</span>
-                  <a href="mailto:support@udumalpetbusinesstour.in" className="text-xs text-slate-800 font-extrabold hover:underline mt-1 leading-normal">support@udumalpetbusinesstour.in</a>
+                  <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-xs text-slate-800 font-extrabold hover:underline mt-1 leading-normal">udumalpetbusinesstour@gmail.com</a>
                 </div>
               </div>
 

@@ -341,13 +341,13 @@ router.put('/:id/status', protect, admin, async (req, res) => {
 // @access  Private
 router.post('/:id/revision-comment', protect, async (req, res) => {
   try {
-    const blog = await Blog.findById(req.params.id);
+    const blog = await Blog.findById(req.params.id).populate('author', 'fullName name email');
     if (!blog) {
       return res.status(404).json({ success: false, message: 'Blog post not found' });
     }
 
     // Must be the author or an admin/superadmin
-    const isAuthor = blog.author.toString() === req.user._id.toString();
+    const isAuthor = blog.author && blog.author._id.toString() === req.user._id.toString();
     const isAdmin = ['admin', 'superadmin'].includes(req.user.role);
 
     if (!isAuthor && !isAdmin) {
@@ -369,6 +369,57 @@ router.post('/:id/revision-comment', protect, async (req, res) => {
     // Also update revisionSuggestions to show the latest comment
     blog.revisionSuggestions = message;
     await blog.save();
+
+    if (isAdmin) {
+      try {
+        if (blog.author && blog.author.email) {
+          const { sendEmail } = require('../utils/emailHelper');
+          const authorName = blog.author.fullName || blog.author.name || 'Writer';
+          const senderName = req.user.fullName || req.user.name || 'Administrator';
+          await sendEmail({
+            to: blog.author.email,
+            subject: `Action Required: New revision suggestions for your blog post "${blog.title}"`,
+            text: `Hello ${authorName},\n\nThe ${req.user.role} "${senderName}" has posted a new comment/suggestion on your blog's revision chat:\n\nMessage:\n"${message}"\n\nPlease log in to the portal, review the suggestions, update your blog post, and re-submit it for review.\n\nThank you,\nUBT Moderation Team`,
+            html: `
+              <div style="font-family: sans-serif; padding: 25px; color: #333; max-width: 600px; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                <h2 style="color: #027244; font-size: 20px; font-weight: 800; border-bottom: 2px solid #e6f7f0; padding-bottom: 10px; margin-top: 0;">UBT Editorial Desk</h2>
+                <p style="font-size: 14px; line-height: 1.5;">Hello <strong>${authorName}</strong>,</p>
+                <p style="font-size: 14px; line-height: 1.5; color: #4a5568;">The ${req.user.role} <strong>${senderName}</strong> has posted a revision suggestion for your blog post "<strong>${blog.title}</strong>".</p>
+                
+                <p style="font-size: 14px; line-height: 1.5; font-weight: bold; margin-top: 20px;">Suggestions & Comments:</p>
+                <div style="background-color: #f7fafc; padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0; margin: 15px 0; color: #2d3748;">
+                  <p style="margin: 0; font-size: 13.5px; line-height: 1.6; font-style: italic;">"${message}"</p>
+                </div>
+                
+                <p style="font-size: 13.5px; line-height: 1.5; color: #4a5568; margin-top: 25px;">Please log in to your merchant console, update your article according to these comments, and re-submit it for public auditing.</p>
+                
+                <hr style="border: 0; border-top: 1px solid #edf2f7; margin: 25px 0;" />
+                <p style="font-size: 10.5px; color: #a0aec0; text-align: center; margin: 0;">
+                  This is a system notification from Udumalpet Business Tour. Please do not reply directly to this email.
+                </p>
+              </div>
+            `
+          });
+          console.log(`[SMTP] Blog revision suggestion email successfully sent to: ${blog.author.email}`);
+        }
+      } catch (mailErr) {
+        console.error('[SMTP] Failed to send blog revision comment email:', mailErr.message);
+      }
+    } else if (isAuthor) {
+      // If the author comments on their revision thread, notify the superadmin / moderators
+      try {
+        const { sendEmail } = require('../utils/emailHelper');
+        const authorName = blog.author.fullName || blog.author.name || 'Writer';
+        await sendEmail({
+          to: 'udumalpetbusinesstour@gmail.com', // SuperAdmin central desk
+          subject: `New Revision Response: "${blog.title}" by ${authorName}`,
+          text: `Hello Admin,\n\nThe blog author "${authorName}" has responded to the revision thread for their article "${blog.title}".\n\nComment Message:\n"${message}"\n\nPlease log in to the admin console to moderate the blog.\n\nBest regards,\nUBT Platform Automation`
+        });
+        console.log(`[SMTP] Blog author reply notification email sent to SuperAdmin.`);
+      } catch (mailErr) {
+        console.error('[SMTP] Failed to send author revision reply email to admin:', mailErr.message);
+      }
+    }
 
     res.json({ success: true, message: 'Comment added to revision chat', data: blog });
   } catch (error) {

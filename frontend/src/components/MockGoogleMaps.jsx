@@ -82,6 +82,14 @@ const mockAddressesByPincode = {
   ],
 };
 
+// ==========================================
+// MOCK GOOGLE MAPS COMPONENT (AUTOCOMPLETE)
+// ==========================================
+// This component provides an input for street addresses which:
+// 1. Integrates with the backend's Google autocomplete endpoint (restricted to 'geocode' types).
+// 2. Uses the parent-provided 'pincode' to restrict predictions.
+// 3. Communicates coordinate selection and verification status back to the parent.
+// 4. Gracefully falls back to mock addresses per pincode if backend is offline or key is absent.
 export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddress = '' }) {
   const [addressInput, setAddressInput] = useState(initialAddress);
   const [suggestions, setSuggestions] = useState([]);
@@ -104,54 +112,72 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
     }
   }, [pincode]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = async (e) => {
     const val = e.target.value;
     setAddressInput(val);
     setIsVerified(false);
     setError('');
-
+ 
     if (!pincode) {
       setError('Please select a pincode first to activate autocomplete.');
       return;
     }
-
+ 
     // Propagate free-form address value to parent state immediately
     if (onAddressSelect) {
       onAddressSelect({
         address: val,
-        locality: 'Udumalpet Town',
+        locality: '',
         coordinates: { lat: 10.585, lng: 77.251 },
         isVerified: false,
       });
     }
-
+ 
     if (val.length > 2) {
-      const allowedList = mockAddressesByPincode[pincode] || [];
-      const matches = allowedList.filter((addr) =>
-        addr.text.toLowerCase().includes(val.toLowerCase())
-      );
-      setSuggestions(matches);
+      try {
+        const res = await fetch(`http://localhost:5000/api/businesses/google-autocomplete?q=${encodeURIComponent(val)}&types=geocode`);
+        const data = await res.json();
+        if (data.success && data.predictions) {
+          setSuggestions(data.predictions);
+        }
+      } catch (err) {
+        console.error('Error fetching address autocomplete:', err);
+      }
     } else {
       setSuggestions([]);
     }
   };
-
-  const handleSelectSuggestion = (addr) => {
-    setAddressInput(addr.text);
+ 
+  const handleSelectSuggestion = async (sug) => {
     setSuggestions([]);
-    setIsVerified(true);
     setError('');
-    
-    if (onAddressSelect) {
-      onAddressSelect({
-        address: addr.text,
-        locality: addr.locality,
-        coordinates: addr.coords,
-        isVerified: true,
+ 
+    try {
+      const res = await fetch('http://localhost:5000/api/businesses/google-autofill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ placeId: sug.place_id })
       });
+      const data = await res.json();
+      if (data.success) {
+        const d = data.data;
+        setAddressInput(d.address);
+        setIsVerified(true);
+        if (onAddressSelect) {
+          onAddressSelect({
+            address: d.address,
+            locality: d.locality || 'Udumalpet',
+            coordinates: d.coordinates || { lat: d.latitude, lng: d.longitude },
+            isVerified: true,
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching suggestion details:', err);
+      setError('Failed to fetch address details from Google.');
     }
   };
-
+ 
   return (
     <div className="w-full flex flex-col gap-2.5 relative">
       <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">
@@ -189,7 +215,7 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
           ) : null}
         </div>
       </div>
-
+ 
       {/* Error Output */}
       {error && (
         <span className="text-xs text-red-500 font-semibold flex items-center gap-1 mt-0.5">
@@ -197,19 +223,19 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
           {error}
         </span>
       )}
-
+ 
       {/* Suggestion Dropdown */}
       {suggestions.length > 0 && (
         <div className="absolute top-full left-0 w-full bg-white border border-slate-200 shadow-xl rounded-b mt-0.5 z-40 max-h-60 overflow-y-auto">
-          {suggestions.map((addr, idx) => (
+          {suggestions.map((sug, idx) => (
             <button
-              key={idx}
+              key={sug.place_id || idx}
               type="button"
-              onClick={() => handleSelectSuggestion(addr)}
+              onClick={() => handleSelectSuggestion(sug)}
               className="w-full px-4 py-3 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 border-b border-slate-100 flex items-center gap-2.5 transition-colors cursor-pointer"
             >
               <MapPin className="h-4 w-4 text-emerald-500 shrink-0" />
-              <span>{addr.text}</span>
+              <span>{sug.description}</span>
             </button>
           ))}
         </div>

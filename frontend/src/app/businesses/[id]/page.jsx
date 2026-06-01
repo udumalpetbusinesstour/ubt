@@ -478,6 +478,19 @@ export default function BusinessDetail() {
       ];
   const remainingCount = Math.max(0, galleryCount - 4);
 
+  const allReviews = [
+    ...(reviews || []).map(r => ({ ...r, isGoogle: false })),
+    ...(business?.googleReviews || []).map(g => ({
+      _id: g._id || g.id || `google-${g.authorName}-${g.createdAt}`,
+      authorName: g.authorName,
+      rating: g.rating,
+      text: g.text,
+      createdAt: g.createdAt,
+      isGoogle: true
+    }))
+  ];
+  allReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
   return (
     <div className="w-full flex flex-col items-center font-sans bg-[#F8FAFC]">
       {/* Pending Vetting Banner */}
@@ -585,10 +598,10 @@ export default function BusinessDetail() {
 
                 {/* Map/Location Action */}
                 <a 
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.name + ', ' + business.address)}`}
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  title="Google Maps Location"
+                  title="Open Directions in Google Maps"
                   className="h-10 w-10 bg-rose-500/10 border border-rose-500/25 hover:bg-rose-500/25 text-rose-400 hover:scale-105 active:scale-95 transition-all cursor-pointer rounded-xl flex items-center justify-center shadow-sm"
                 >
                   <MapPin className="h-4.5 w-4.5" />
@@ -646,7 +659,7 @@ export default function BusinessDetail() {
             { id: 'overview', label: 'Overview' },
             { id: 'services', label: 'Services' },
             { id: 'photos', label: `Photos (${galleryCount})` },
-            { id: 'reviews', label: `Reviews (${reviews.length})` },
+            { id: 'reviews', label: `Reviews (${allReviews.length})` },
             { id: 'offers', label: 'Offers (3)' },
             { id: 'about', label: 'About' },
             { id: 'map', label: 'Map & Location' }
@@ -857,7 +870,7 @@ export default function BusinessDetail() {
               {/* Customer Reviews Quick View */}
               <div className="flex flex-col gap-6 border-t border-slate-100 pt-8">
                 <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                  <h3 className="text-lg font-extrabold text-slate-800 font-sans">Customer Reviews ({reviews.length})</h3>
+                  <h3 className="text-lg font-extrabold text-slate-800 font-sans">Customer Reviews ({allReviews.length})</h3>
                   <button 
                     onClick={() => setActiveTab('reviews')}
                     className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer flex items-center gap-0.5"
@@ -878,10 +891,10 @@ export default function BusinessDetail() {
                     </div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Out of 5 Stars</span>
                   </div>
-
+ 
                   {/* Right reviews stream (2 items preview) */}
                   <div className="md:col-span-2 flex flex-col gap-4">
-                    {reviews.slice(0, 2).map((rev, idx) => (
+                    {allReviews.slice(0, 2).map((rev, idx) => (
                       <div key={idx} className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-2.5 shadow-2xs text-left">
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
@@ -890,7 +903,9 @@ export default function BusinessDetail() {
                             </div>
                             <div className="flex flex-col">
                               <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName}</span>
-                              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">Verified Customer</span>
+                              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">
+                                {rev.isGoogle ? 'Google Review' : 'Verified Customer'}
+                              </span>
                             </div>
                           </div>
                           <div className="flex items-center text-amber-400 gap-0.5">
@@ -1056,8 +1071,8 @@ export default function BusinessDetail() {
 
               {/* Reviews List */}
               <div className="flex flex-col gap-4.5 mt-4">
-                <span className="font-black text-sm text-slate-800 border-b border-slate-100 pb-2">Customer Feedback Stream ({reviews.length})</span>
-                {reviews.map((rev, idx) => (
+                <span className="font-black text-sm text-slate-800 border-b border-slate-100 pb-2">Customer Feedback Stream ({allReviews.length})</span>
+                {allReviews.map((rev, idx) => (
                   <div key={idx} className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-xs flex flex-col gap-3">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-3">
@@ -1066,7 +1081,9 @@ export default function BusinessDetail() {
                         </div>
                         <div className="flex flex-col">
                           <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName}</span>
-                          <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">Verified Customer</span>
+                          <span className={`text-[8.5px] font-bold uppercase tracking-widest mt-1 block ${rev.isGoogle ? 'text-amber-600' : 'text-slate-400'}`}>
+                            {rev.isGoogle ? 'Google Review' : 'Verified Customer'}
+                          </span>
                         </div>
                       </div>
                       <div className="flex items-center text-amber-400 gap-0.5">
@@ -1167,19 +1184,39 @@ export default function BusinessDetail() {
           {activeTab === 'map' && (
             <div className="flex flex-col gap-4 animate-fadeIn text-left">
               <h3 className="text-xl font-extrabold text-slate-800 font-sans border-b border-slate-100 pb-3">Map & Directions</h3>
-              <div className="h-96 w-full rounded-[28px] border border-slate-200 bg-slate-100 flex items-center justify-center text-xs text-slate-400 relative overflow-hidden shadow-sm select-none">
-                {/* Embedded Map Thumbnail */}
-                <div 
-                  className="absolute inset-0 bg-cover bg-center opacity-80"
-                  style={{ backgroundImage: `url('https://maps.googleapis.com/maps/api/staticmap?center=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}&zoom=15&size=800x400&markers=color:red%7C${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}&key=')` }}
+              <div className="h-96 w-full rounded-[28px] border border-slate-200 bg-slate-100 relative overflow-hidden shadow-sm">
+                {/* Embed Map: Official Google Maps Embed API with key or fallback */}
+                <iframe
+                  title="Interactive Business Map"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src={business.mapsApiKey 
+                    ? `https://www.google.com/maps/embed/v1/place?key=${business.mapsApiKey}&q=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}`
+                    : `https://maps.google.com/maps?q=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}&z=16&output=embed`}
+                  className="absolute inset-0 w-full h-full opacity-95 border-0"
                 />
-                <div className="absolute inset-0 bg-slate-950/10" />
-                <div className="absolute z-10 bottom-6 left-6 bg-white/95 border border-slate-200 shadow-xl rounded-2xl p-5 max-w-sm text-left text-slate-800 flex items-start gap-3.5 animate-fadeIn">
-                  <MapPin className="h-5.5 w-5.5 text-red-500 shrink-0 mt-0.5" />
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-black text-sm text-[#001c41]">{business.name}</span>
-                    <span className="text-xs text-slate-500 font-semibold leading-relaxed mt-1.5">{business.address}</span>
+                
+                {/* Floating Location Details Card */}
+                <div className="absolute z-10 bottom-6 left-6 bg-white/95 border border-slate-200 shadow-xl rounded-2xl p-5 max-w-sm text-left text-slate-800 flex flex-col gap-3 animate-fadeIn backdrop-blur-xs">
+                  <div className="flex items-start gap-3.5">
+                    <MapPin className="h-5.5 w-5.5 text-red-500 shrink-0 mt-0.5" />
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-black text-sm text-[#001c41]">{business.name}</span>
+                      <span className="text-xs text-slate-500 font-semibold leading-relaxed mt-1.5">{business.address}</span>
+                    </div>
                   </div>
+                  <a 
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 py-2 px-4 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl text-center uppercase tracking-wider transition-colors shadow-sm self-start"
+                  >
+                    Get Directions
+                  </a>
                 </div>
               </div>
             </div>

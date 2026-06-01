@@ -82,7 +82,7 @@ export default function Footer() {
             </li>
             <li className="flex items-center gap-2.5">
               <Mail className="h-4.5 w-4.5 text-emerald-500 shrink-0" />
-              <a href="mailto:info@udumalpet.co.in" className="hover:text-emerald-500 transition-colors">info@udumalpet.co.in</a>
+              <a href="mailto:udumalpetbusinesstour@gmail.com" className="hover:text-emerald-500 transition-colors">udumalpetbusinesstour@gmail.com</a>
             </li>
             <li className="flex items-start gap-2.5">
               <Clock className="h-4.5 w-4.5 text-emerald-500 shrink-0 mt-0.5" />

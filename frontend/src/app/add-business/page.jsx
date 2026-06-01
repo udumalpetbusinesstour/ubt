@@ -95,6 +95,18 @@ export default function AddBusiness() {
   const [googleQuery, setGoogleQuery] = useState('');
   const [autofillLoading, setAutofillLoading] = useState(false);
   const [autofillSuccess, setAutofillSuccess] = useState(false);
+  const [googleSuggestions, setGoogleSuggestions] = useState([]);
+  const [showGoogleDropdown, setShowGoogleDropdown] = useState(false);
+  const [selectedPlaceId, setSelectedPlaceId] = useState(null);
+  const [toastMessage, setToastMessage] = useState('');
+
+  // Address validation state
+  const [addressValidation, setAddressValidation] = useState({
+    checked: false,
+    isAddressValid: false,
+    isWithinBoundary: false,
+    message: ''
+  });
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -378,11 +390,34 @@ export default function AddBusiness() {
     setCategoryWarning('');
   };
 
-  // Google Places API auto-fill simulator
-  const handleGoogleAutofill = async (e) => {
-    e.preventDefault();
-    if (!googleQuery) return;
+  const handleGoogleInputChange = async (val) => {
+    setGoogleQuery(val);
+    setSelectedPlaceId(null); // Reset when user types new query
+    if (!val.trim()) {
+      setGoogleSuggestions([]);
+      setShowGoogleDropdown(false);
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5000/api/businesses/google-autocomplete?q=${encodeURIComponent(val)}`);
+      const data = await res.json();
+      if (data.success && data.predictions) {
+        setGoogleSuggestions(data.predictions);
+        setShowGoogleDropdown(true);
+      }
+    } catch (err) {
+      console.error('Error fetching autocomplete:', err);
+    }
+  };
 
+  const handleSelectSuggestion = (sug) => {
+    setGoogleQuery(sug.structured_formatting?.main_text || sug.description);
+    setSelectedPlaceId(sug.place_id);
+    setShowGoogleDropdown(false);
+  };
+
+  const selectGooglePlace = async (placeId) => {
+    setShowGoogleDropdown(false);
     setAutofillLoading(true);
     setError('');
     setAutofillSuccess(false);
@@ -394,53 +429,89 @@ export default function AddBusiness() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ nameOrUrl: googleQuery }),
+        body: JSON.stringify({ placeId }),
       });
       const data = await res.json();
       if (data.success) {
         const d = data.data;
         const updated = {
           ...formData,
-          name: d.name,
-          address: d.address,
-          phone: d.phone,
-          whatsapp: d.whatsapp,
+          name: d.name || formData.name,
+          address: d.address || formData.address,
+          phone: d.phone || formData.phone,
+          whatsapp: d.phone || formData.whatsapp,
           email: d.email || formData.email,
-          locality: d.locality,
-          pincode: d.pincode,
-          isAddressVerified: d.isAddressVerified,
-          yearEstablished: d.yearEstablished,
-          employeeCount: d.employeeCount,
-          services: d.services.join(', '),
-          brands: d.brands.join(', '),
-          googlePlaceId: d.googlePlaceId,
-          googleRating: d.googleRating,
-          googleReviewsCount: d.googleReviewsCount,
-          googleReviews: d.googleReviews,
-          coordinates: d.coordinates,
-          timings: d.timings,
-          logoUrl: `https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150&q=80`, // default abstract logo
-          coverImageUrl: `https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80`, // default shop cover
-          galleryUrls: [
-            'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80',
-            'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&q=80',
-            'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80',
-          ],
+          website: d.website || formData.website || '',
+          locality: d.locality || formData.locality,
+          pincode: d.pincode || formData.pincode,
+          isAddressVerified: true,
+          googlePlaceId: d.googlePlaceId || placeId,
+          googleRating: d.googleRating || 0,
+          googleReviewsCount: d.googleReviewsCount || 0,
+          googleReviews: d.googleReviews || [],
+          coordinates: {
+            lat: d.latitude || d.coordinates?.lat || 10.585,
+            lng: d.longitude || d.coordinates?.lng || 77.251
+          },
+          timings: d.timings || d.openingHours || formData.timings,
         };
+
+        if (d.name) {
+          setGoogleQuery(d.name);
+        }
+
         setFormData(updated);
         
-        // Mock files list to satisfy photos validation
+        if (d.pincode) {
+          setIsPincodeVerified(true);
+        }
+
         setLogoFile('google_autofill_logo.png');
         setCoverFile('google_autofill_cover.png');
         setGalleryFiles(['gallery1.png', 'gallery2.png', 'gallery3.png']);
 
+        setToastMessage("Business information imported successfully.");
+        setTimeout(() => {
+          setToastMessage('');
+        }, 4000);
+
         setAutofillSuccess(true);
         saveDraft(updated);
+      } else {
+        setError("Business not found. Please enter details manually.");
       }
     } catch (err) {
-      setError('Google Business lookup failed. Try manual entry.');
+      console.error(err);
+      setError("Business not found. Please enter details manually.");
     } finally {
       setAutofillLoading(false);
+    }
+  };
+
+  const handleGoogleAutofill = async (e) => {
+    e.preventDefault();
+    if (!googleQuery) return;
+    setError('');
+    setAutofillSuccess(false);
+
+    if (selectedPlaceId) {
+      await selectGooglePlace(selectedPlaceId);
+    } else {
+      try {
+        setAutofillLoading(true);
+        const res = await fetch(`http://localhost:5000/api/businesses/google-autocomplete?q=${encodeURIComponent(googleQuery)}`);
+        const data = await res.json();
+        if (data.success && data.predictions && data.predictions.length > 0) {
+          const firstSug = data.predictions[0];
+          await selectGooglePlace(firstSug.place_id);
+        } else {
+          setError("Business not found. Please enter details manually.");
+          setAutofillLoading(false);
+        }
+      } catch (err) {
+        setError("Business not found. Please enter details manually.");
+        setAutofillLoading(false);
+      }
     }
   };
 
@@ -455,6 +526,45 @@ export default function AddBusiness() {
     setFormData(updated);
     saveDraft(updated);
   };
+
+  // Debounced address and boundary validation via Geocoding API
+  useEffect(() => {
+    if (currentStep !== 3 || !formData.pincode) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/businesses/validate-address', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            address: formData.address,
+            locality: formData.locality,
+            pincode: formData.pincode,
+            latitude: formData.coordinates?.lat,
+            longitude: formData.coordinates?.lng
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setAddressValidation({
+            checked: true,
+            isAddressValid: data.isAddressValid,
+            isWithinBoundary: data.isWithinBoundary,
+            message: data.message
+          });
+          
+          setFormData(prev => ({
+            ...prev,
+            isAddressVerified: data.isAddressValid && data.isWithinBoundary
+          }));
+        }
+      } catch (err) {
+        console.error('Error during address validation:', err);
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [formData.address, formData.locality, formData.pincode, formData.coordinates?.lat, formData.coordinates?.lng, currentStep]);
 
   const handleLogoUpload = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -552,6 +662,8 @@ export default function AddBusiness() {
         ...formData,
         services: servicesList,
         brands: brandsList,
+        latitude: formData.coordinates?.lat,
+        longitude: formData.coordinates?.lng,
       };
 
       const url = isEditing
@@ -781,19 +893,40 @@ export default function AddBusiness() {
                       <p className="text-slate-400 text-xs font-semibold">Enter your business name or Google Maps URL to auto-populate the form instantly.</p>
                     </div>
                     <div className="flex items-center gap-2.5 w-full md:w-auto relative">
-                      <input
-                        type="text"
-                        placeholder="Enter Business Name..."
-                        value={googleQuery}
-                        onChange={(e) => setGoogleQuery(e.target.value)}
-                        className="py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-xs font-semibold w-full md:w-60 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                      />
+                      <div className="relative w-full md:w-60">
+                        <input
+                          type="text"
+                          placeholder="Search Business on Google..."
+                          value={googleQuery}
+                          onFocus={() => { if (googleSuggestions.length > 0) setShowGoogleDropdown(true); }}
+                          onChange={(e) => handleGoogleInputChange(e.target.value)}
+                          className="py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-xs font-semibold w-full focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                        />
+                        {showGoogleDropdown && (
+                          <>
+                            <div className="fixed inset-0 z-20 cursor-default" onClick={() => setShowGoogleDropdown(false)} />
+                            <div className="absolute top-[100%] left-0 w-full bg-white border border-slate-200 rounded-xl shadow-xl mt-1 overflow-hidden z-30 flex flex-col max-h-60 overflow-y-auto animate-scaleUp">
+                              {googleSuggestions.map((sug) => (
+                                <button
+                                  key={sug.place_id}
+                                  type="button"
+                                  onClick={() => handleSelectSuggestion(sug)}
+                                  className="w-full text-left py-2.5 px-4 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex flex-col border-b border-slate-50 last:border-b-0 cursor-pointer"
+                                >
+                                  <span className="font-extrabold text-slate-805">{sug.structured_formatting?.main_text || sug.description}</span>
+                                  <span className="text-[10px] text-slate-450 mt-0.5 font-medium">{sug.structured_formatting?.secondary_text || sug.description}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
                       <button 
                         onClick={handleGoogleAutofill}
                         disabled={autofillLoading}
                         className="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm shrink-0 cursor-pointer disabled:opacity-70 flex items-center gap-1.5"
                       >
-                        {autofillLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : 'Auto-Fill'}
+                        {autofillLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : 'Import / Auto-Fill'}
                       </button>
                     </div>
                   </div>
@@ -1563,6 +1696,13 @@ export default function AddBusiness() {
           </div>
         </div>
       </div>
+
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 bg-slate-905/90 text-white border border-slate-700 backdrop-blur-md rounded-2xl py-3.5 px-5 shadow-2xl flex items-center gap-2.5 z-50 animate-slideUp text-xs font-bold font-sans">
+          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }

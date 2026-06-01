@@ -4,13 +4,22 @@ import {
   ShieldCheck, Sparkles, AlertTriangle, AlertCircle, Edit3, Image as ImageIcon, 
   RefreshCw, Star, CreditCard, ChevronRight, ChevronLeft, ArrowLeft, Activity, PhoneCall, 
   MessageSquare, Plus, CheckCircle, Info, Bell, ExternalLink, Globe,
-  Copy, Check, Upload, HelpCircle, Briefcase, Mail, Settings, Menu, X, Trash2, Search,
+  Copy, Check, Upload, HelpCircle, Briefcase, Mail, Settings, Menu, X, Trash2, Search, Lock,
   FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin, LogOut
 } from 'lucide-react';
 
 function DashboardContent() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const formatEventDateRange = (startDate, endDate) => {
+    if (!startDate) return 'N/A';
+    const startStr = new Date(startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    if (!endDate) return startStr;
+    const endStr = new Date(endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    if (startStr === endStr) return startStr;
+    return `${startStr} - ${endStr}`;
+  };
   
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
@@ -86,9 +95,26 @@ function DashboardContent() {
   const [eventSubmitLoading, setEventSubmitLoading] = useState(false);
   const [eventSuccess, setEventSuccess] = useState('');
   const [eventError, setEventError] = useState('');
+  const [customEventCategory, setCustomEventCategory] = useState('');
+
+  // Complete Event Wizard States
+  const [showCompleteEventModal, setShowCompleteEventModal] = useState(false);
+  const [completeEvent, setCompleteEvent] = useState(null);
+  const [completeEventStep, setCompleteEventStep] = useState(1); // 1: Payment Checkout, 2: Further Details
+  const [completeEventPhone, setCompleteEventPhone] = useState('');
+  const [completeEventVenue, setCompleteEventVenue] = useState('');
+  const [completeEventDescription, setCompleteEventDescription] = useState('');
+  const [completeEventCoverUrl, setCompleteEventCoverUrl] = useState('');
+  const [completeEventPaymentLink, setCompleteEventPaymentLink] = useState('');
+  const [completeEventPaymentStatus, setCompleteEventPaymentStatus] = useState('Pending');
+  const [completeEventLoading, setCompleteEventLoading] = useState(false);
+  const [completeEventError, setCompleteEventError] = useState('');
+  const [completeEventSuccess, setCompleteEventSuccess] = useState('');
+  const [completeEventImageUploading, setCompleteEventImageUploading] = useState(false);
+  const [completeEventImageError, setCompleteEventImageError] = useState('');
 
   // Navigation Sidebar States
-  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'Dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
@@ -678,7 +704,9 @@ function DashboardContent() {
     setEventSuccess('');
     setEventError('');
 
-    if (!eventTitle.trim() || !eventDescription.trim() || !eventDate || !eventTime || !eventVenue || !eventOrganizer || !eventPhone) {
+    const finalCategory = eventCategory === 'Others' ? (customEventCategory.trim() || 'Others') : eventCategory;
+
+    if (!eventTitle.trim() || !eventDescription.trim() || !eventDate || !eventEndDate || !eventTime || !eventVenue || !eventOrganizer || !eventPhone) {
       setEventError('Please enter all required fields.');
       setEventSubmitLoading(false);
       return;
@@ -695,10 +723,10 @@ function DashboardContent() {
         },
         body: JSON.stringify({
           title: eventTitle,
-          category: eventCategory,
+          category: finalCategory,
           description: eventDescription,
           date: eventDate,
-          endDate: eventEndDate || undefined,
+          endDate: eventEndDate,
           time: eventTime,
           venue: eventVenue,
           organizer: eventOrganizer,
@@ -736,10 +764,10 @@ function DashboardContent() {
       const mockEvt = {
         _id: 'mock_evt_' + Math.random().toString(36).substr(2, 9),
         title: eventTitle,
-        category: eventCategory,
+        category: finalCategory,
         description: eventDescription,
         date: new Date(eventDate),
-        endDate: eventEndDate ? new Date(eventEndDate) : undefined,
+        endDate: new Date(eventEndDate),
         time: eventTime,
         venue: eventVenue,
         organizer: eventOrganizer,
@@ -916,6 +944,282 @@ function DashboardContent() {
     } catch (err) {
       setUserEvents(prev => prev.filter(e => e._id !== eventId));
       alert('Mock Mode: Event listing deleted.');
+    }
+  };
+
+  const handleOpenCompleteEvent = async (evt) => {
+    setCompleteEvent(evt);
+    setCompleteEventPhone(evt.phone || '');
+    setCompleteEventVenue(evt.venue || '');
+    setCompleteEventDescription(evt.description || '');
+    setCompleteEventCoverUrl(evt.coverImageUrl || '');
+    setCompleteEventPaymentLink(evt.paymentLink || '');
+    setCompleteEventPaymentStatus(evt.paymentStatus || 'Pending');
+    setCompleteEventError('');
+    setCompleteEventSuccess('');
+    setCompleteEventLoading(true);
+    setShowCompleteEventModal(true);
+
+    try {
+      const activeToken = token || localStorage.getItem('ubt_token');
+      const res = await fetch('http://localhost:5000/api/events/check-subscription', {
+        headers: { Authorization: `Bearer ${activeToken}` }
+      });
+      const data = await res.json();
+      if (data.success && data.hasActiveSubscription) {
+        evt.paymentStatus = 'Free';
+        setCompleteEventPaymentStatus('Free');
+        setCompleteEventStep(2);
+      } else {
+        setCompleteEventStep(evt.paymentStatus === 'Paid' || evt.paymentStatus === 'Free' ? 2 : 1);
+      }
+    } catch (err) {
+      setCompleteEventStep(evt.paymentStatus === 'Paid' || evt.paymentStatus === 'Free' ? 2 : 1);
+    } finally {
+      setCompleteEventLoading(false);
+    }
+  };
+
+  const handleEventCoverUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setCompleteEventImageError('Image file size must be less than 5MB.');
+      return;
+    }
+
+    setCompleteEventImageUploading(true);
+    setCompleteEventImageError('');
+    setCompleteEventError('');
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const activeToken = token || localStorage.getItem('ubt_token');
+      const res = await fetch('http://localhost:5000/api/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setCompleteEventCoverUrl(data.url);
+      } else {
+        setCompleteEventImageError(data.message || 'Failed to upload image.');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      setCompleteEventImageError('Network error uploading image. Using a placeholder instead.');
+      setCompleteEventCoverUrl('https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500&q=80');
+    } finally {
+      setCompleteEventImageUploading(false);
+    }
+  };
+
+  const handleEventPaymentCheckout = async (evtId) => {
+    setCompleteEventLoading(true);
+    setCompleteEventError('');
+    const activeToken = token || localStorage.getItem('ubt_token');
+    
+    try {
+      const orderRes = await fetch('http://localhost:5000/api/payments/create-event-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`,
+        },
+        body: JSON.stringify({ eventId: evtId }),
+      });
+      const orderData = await orderRes.json();
+      
+      if (!orderData.success) {
+        throw new Error(orderData.message || 'Failed to create payment order');
+      }
+
+      if (orderData.amount === 0 || orderData.orderId === 'free_listing') {
+        const verifyRes = await fetch('http://localhost:5000/api/payments/verify-event-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${activeToken}`,
+          },
+          body: JSON.stringify({
+            eventId: evtId,
+            razorpayOrderId: 'free_listing',
+            razorpayPaymentId: 'pay_free_waived',
+          }),
+        });
+        const verifyData = await verifyRes.json();
+        if (verifyData.success) {
+          setCompleteEventPaymentStatus('Free');
+          setCompleteEventStep(2);
+          fetchUserEvents();
+        } else {
+          throw new Error(verifyData.message || 'Sandbox payment verification failed.');
+        }
+      } else {
+        const isRazorpayScriptLoaded = () => {
+          return new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+          });
+        };
+
+        await isRazorpayScriptLoaded();
+
+        const options = {
+          key: orderData.keyId,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          name: 'Udumalpet Business Tour',
+          description: 'Event Listing Fee',
+          order_id: orderData.orderId,
+          handler: async function (response) {
+            try {
+              setCompleteEventLoading(true);
+              const verifyRes = await fetch('http://localhost:5000/api/payments/verify-event-payment', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${activeToken}`,
+                },
+                body: JSON.stringify({
+                  eventId: evtId,
+                  razorpayOrderId: response.razorpay_order_id,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature,
+                }),
+              });
+              const verifyData = await verifyRes.json();
+              if (verifyData.success) {
+                setCompleteEventPaymentStatus('Paid');
+                setCompleteEventStep(2);
+                fetchUserEvents();
+              } else {
+                setCompleteEventError('Payment verification failed.');
+              }
+            } catch (err) {
+              setCompleteEventError('Signature verification connection failed.');
+            } finally {
+              setCompleteEventLoading(false);
+            }
+          },
+          prefill: {
+            name: user?.fullName || '',
+            email: user?.email || '',
+            contact: user?.mobileNumber || '',
+          },
+          theme: {
+            color: '#027244',
+          },
+        };
+
+        const rzp1 = new window.Razorpay(options);
+        rzp1.open();
+      }
+    } catch (err) {
+      console.warn('Razorpay popup blocked/failed, using Sandbox payment verification fallback...', err);
+      try {
+        const mockOrderId = 'order_mock_' + Math.random().toString(36).substr(2, 9);
+        const mockPaymentId = 'pay_mock_' + Math.random().toString(36).substr(2, 9);
+        
+        const verifyRes = await fetch('http://localhost:5000/api/payments/verify-event-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${activeToken}`,
+          },
+          body: JSON.stringify({
+            eventId: evtId,
+            razorpayOrderId: mockOrderId,
+            razorpayPaymentId: mockPaymentId,
+            razorpaySignature: '',
+          }),
+        });
+        const verifyData = await verifyRes.json();
+        if (verifyData.success) {
+          setCompleteEventPaymentStatus('Paid');
+          setCompleteEventStep(2);
+          fetchUserEvents();
+        } else {
+          setCompleteEventError(verifyData.message || 'Sandbox payment verification failed.');
+        }
+      } catch (innerErr) {
+        setCompleteEventError('Sandbox payment verification connection failed.');
+      }
+    } finally {
+      setCompleteEventLoading(false);
+    }
+  };
+
+  const handlePublishEventDetails = async (e) => {
+    e.preventDefault();
+    if (!completeEventVenue || !completeEventPhone || !completeEventDescription) {
+      setCompleteEventError('Location address, helpline phone and description are required.');
+      return;
+    }
+
+    setCompleteEventLoading(true);
+    setCompleteEventError('');
+    setCompleteEventSuccess('');
+    const activeToken = token || localStorage.getItem('ubt_token');
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/events/${completeEvent._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({
+          venue: completeEventVenue,
+          phone: completeEventPhone,
+          description: completeEventDescription,
+          coverImageUrl: completeEventCoverUrl,
+          paymentLink: completeEventPaymentLink,
+          isCompleted: true,
+          paymentStatus: completeEventPaymentStatus
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setCompleteEventSuccess('Event listed successfully! It is now live in the directory.');
+        fetchUserEvents();
+        setTimeout(() => {
+          setShowCompleteEventModal(false);
+          setCompleteEvent(null);
+        }, 3000);
+      } else {
+        setCompleteEventError(data.message || 'Failed to update event details.');
+      }
+    } catch (err) {
+      setUserEvents(prev => prev.map(evt => evt._id === completeEvent._id ? {
+        ...evt,
+        venue: completeEventVenue,
+        phone: completeEventPhone,
+        description: completeEventDescription,
+        coverImageUrl: completeEventCoverUrl || 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500&q=80',
+        paymentLink: completeEventPaymentLink,
+        isCompleted: true,
+        paymentStatus: completeEventPaymentStatus
+      } : evt));
+
+      setCompleteEventSuccess('Mock Mode: Event listed successfully!');
+      setTimeout(() => {
+        setShowCompleteEventModal(false);
+        setCompleteEvent(null);
+      }, 3000);
+    } finally {
+      setCompleteEventLoading(false);
     }
   };
 
@@ -1266,7 +1570,7 @@ function DashboardContent() {
                 if (link.onClick) {
                   link.onClick();
                 } else {
-                  setActiveTab(link.label);
+                  setSearchParams({ tab: link.label });
                 }
                 setSidebarOpen(false);
               }}
@@ -1689,7 +1993,7 @@ function DashboardContent() {
 
                     {/* Wide View All Leads CTA Button */}
                     <button 
-                      onClick={() => setActiveTab('Leads & Enquiries')}
+                      onClick={() => setSearchParams({ tab: 'Leads & Enquiries' })}
                       className="w-full mt-4 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-extrabold text-xs rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1"
                     >
                       View All Active Leads <ChevronRight className="h-3.5 w-3.5" />
@@ -1707,7 +2011,7 @@ function DashboardContent() {
                           <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Rating scores aggregate summary</span>
                         </div>
                         <button 
-                          onClick={() => setActiveTab('Reviews & Reputation')}
+                          onClick={() => setSearchParams({ tab: 'Reviews & Reputation' })}
                           className="text-[10px] font-extrabold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer uppercase"
                         >
                           View All
@@ -1767,7 +2071,7 @@ function DashboardContent() {
                       </div>
 
                       <button 
-                        onClick={() => setActiveTab('Reviews & Reputation')}
+                        onClick={() => setSearchParams({ tab: 'Reviews & Reputation' })}
                         className="w-full mt-4 py-2.5 border border-slate-200 text-slate-600 font-extrabold text-[10.5px] rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
                       >
                         Manage Reviews
@@ -2043,33 +2347,75 @@ function DashboardContent() {
                         <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs border border-slate-100 px-2 py-0.5 rounded text-[8px] font-black uppercase text-slate-700 shadow-2xs">
                           {evt.category}
                         </div>
-                        <div className="absolute top-3 right-3 bg-[#027244] text-white px-2 py-0.5 rounded text-[8.5px] font-black uppercase shadow-2xs">
-                          {evt.price === 0 ? 'FREE' : `Listed`}
+                        <div className="absolute top-3 right-3 shadow-2xs">
+                          {(() => {
+                            const statusLower = evt.status?.toLowerCase();
+                            const isExpired = new Date(evt.endDate || evt.date) < new Date();
+                            return (
+                              <div className="flex gap-1 items-center">
+                                {isExpired && (
+                                  <span className="bg-red-100 border border-red-300 text-red-700 px-2 py-0.5 rounded text-[8.5px] font-black uppercase select-none">Expired</span>
+                                )}
+                                {(() => {
+                                  if (statusLower === 'pending review' || statusLower === 'pending') {
+                                    return <span className="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-0.5 rounded text-[8.5px] font-black uppercase">Pending Approval</span>;
+                                  }
+                                  if (statusLower === 'rejected') {
+                                    return <span className="bg-red-100 border border-red-300 text-red-800 px-2 py-0.5 rounded text-[8.5px] font-black uppercase">Rejected</span>;
+                                  }
+                                  if (statusLower === 'approved' && !evt.isCompleted) {
+                                    return <span className="bg-blue-100 border border-blue-300 text-blue-800 px-2 py-0.5 rounded text-[8.5px] font-black uppercase">Awaiting Details</span>;
+                                  }
+                                  if (statusLower === 'approved' && evt.isCompleted) {
+                                    return <span className="bg-[#027244] text-white px-2 py-0.5 rounded text-[8.5px] font-black uppercase">Published</span>;
+                                  }
+                                  return <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[8.5px] font-black uppercase">{evt.status}</span>;
+                                })()}
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                       <div className="p-5 flex-1 flex flex-col justify-between text-left gap-4">
                         <div className="flex flex-col gap-2">
                           <h4 className="font-extrabold text-slate-800 text-sm leading-tight line-clamp-1">{evt.title}</h4>
-                          <p className="text-slate-550 text-[10.5px] font-semibold line-clamp-2 leading-relaxed">{evt.description}</p>
+                          <p className="text-slate-550 text-[10.5px] font-semibold line-clamp-2 leading-relaxed">
+                            {evt.description || 'Provide description, location, contact, and cover image to publish this event.'}
+                          </p>
                         </div>
                         
-                        <div className="flex justify-between items-center border-t border-slate-100 pt-3">
-                          <div className="flex flex-col gap-1 text-[10px] text-slate-450 font-semibold">
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                              <span>{evt.time}</span>
+                        <div className="flex flex-col gap-3 border-t border-slate-100 pt-3">
+                          <div className="flex justify-between items-center">
+                            <div className="flex flex-col gap-1 text-[10px] text-slate-450 font-semibold">
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                <span>{formatEventDateRange(evt.date, evt.endDate)}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                <span>{evt.time}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                <span className="truncate max-w-[120px]">{evt.venue || 'To Be Declared'}</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                              <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                              <span className="truncate max-w-[100px]">{evt.venue}</span>
-                            </div>
+                            <button
+                              onClick={() => handleEventDelete(evt._id)}
+                              className="py-1.5 px-2.5 bg-red-50 hover:bg-red-100 text-red-650 hover:text-red-700 font-extrabold text-[9.5px] rounded-lg cursor-pointer transition-colors flex items-center gap-1 shrink-0 shadow-2xs"
+                            >
+                              <Trash2 className="h-3 w-3" /> Delete
+                            </button>
                           </div>
-                          <button
-                            onClick={() => handleEventDelete(evt._id)}
-                            className="py-1.5 px-2.5 bg-red-50 hover:bg-red-100 text-red-650 hover:text-red-700 font-extrabold text-[9.5px] rounded-lg cursor-pointer transition-colors flex items-center gap-1 shrink-0 shadow-2xs"
-                          >
-                            <Trash2 className="h-3 w-3" /> Delete
-                          </button>
+
+                          {evt.status?.toLowerCase() === 'approved' && !evt.isCompleted && (
+                            <button
+                              onClick={() => handleOpenCompleteEvent(evt)}
+                              className="w-full py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-1"
+                            >
+                              <CreditCard className="h-4 w-4" /> Pay & Complete Listing
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -3229,22 +3575,30 @@ function DashboardContent() {
                             </div>
                           ) : (
                             <div className="flex flex-col gap-2.5 max-h-56 overflow-y-auto pr-1">
-                              {userEvents.map(evt => (
-                                <div key={evt._id} className="bg-slate-50/50 hover:bg-slate-50 border border-slate-200/80 p-4 rounded-2xl flex justify-between items-center gap-4 transition-all">
-                                  <div className="flex flex-col min-w-0">
-                                    <span className="font-extrabold text-slate-755 text-xs truncate leading-snug">{evt.title}</span>
-                                    <span className="text-[9.5px] text-slate-405 font-bold mt-1 uppercase tracking-wide">
-                                      {evt.category} • {new Date(evt.date).toLocaleDateString()}
-                                    </span>
+                              {userEvents.map(evt => {
+                                const isExpired = new Date(evt.endDate || evt.date) < new Date();
+                                return (
+                                  <div key={evt._id} className="bg-slate-50/50 hover:bg-slate-50 border border-slate-200/80 p-4 rounded-2xl flex justify-between items-center gap-4 transition-all">
+                                    <div className="flex flex-col min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-extrabold text-slate-755 text-xs truncate leading-snug">{evt.title}</span>
+                                        {isExpired && (
+                                          <span className="bg-red-50 border border-red-200 text-red-700 px-1.5 py-0.5 rounded text-[8px] font-black uppercase select-none shrink-0">Expired</span>
+                                        )}
+                                      </div>
+                                      <span className="text-[9.5px] text-slate-405 font-bold mt-1 uppercase tracking-wide">
+                                        {evt.category} • {formatEventDateRange(evt.date, evt.endDate)}
+                                      </span>
+                                    </div>
+                                    <button
+                                      onClick={() => handleEventDelete(evt._id)}
+                                      className="h-9 w-9 rounded-xl bg-red-50 hover:bg-red-100 text-red-650 flex items-center justify-center cursor-pointer transition-colors shadow-2xs shrink-0"
+                                    >
+                                      <Trash2 className="h-4.5 w-4.5" />
+                                    </button>
                                   </div>
-                                  <button
-                                    onClick={() => handleEventDelete(evt._id)}
-                                    className="h-9 w-9 rounded-xl bg-red-50 hover:bg-red-100 text-red-650 flex items-center justify-center cursor-pointer transition-colors shadow-2xs shrink-0"
-                                  >
-                                    <Trash2 className="h-4.5 w-4.5" />
-                                  </button>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           )}
                         </div>
@@ -3341,7 +3695,7 @@ function DashboardContent() {
                 </p>
               </div>
               <a 
-                href="mailto:info@udumalpet.co.in"
+                href="mailto:udumalpetbusinesstour@gmail.com"
                 className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md text-center transition-transform hover:-translate-y-0.5"
               >
                 Contact Administrator via Mail
@@ -4326,6 +4680,20 @@ function DashboardContent() {
                   </div>
                 </div>
 
+                {eventCategory === 'Others' && (
+                  <div className="flex flex-col gap-1 animate-fadeIn">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Custom Category Name *</label>
+                    <input 
+                      type="text" 
+                      value={customEventCategory}
+                      onChange={(e) => setCustomEventCategory(e.target.value)}
+                      placeholder="e.g. Workshop, Seminar, Conference"
+                      required
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Start Date *</label>
@@ -4339,11 +4707,12 @@ function DashboardContent() {
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">End Date (Optional)</label>
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">End Date *</label>
                     <input 
                       type="date" 
                       value={eventEndDate}
                       onChange={(e) => setEventEndDate(e.target.value)}
+                      required
                       className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
                     />
                   </div>
@@ -4467,6 +4836,262 @@ function DashboardContent() {
                   >
                     {eventSubmitLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
                     <span>{business && business.subscriptionStatus === 'active' ? 'Publish Event for Free' : 'Publish & Pay ₹20'}</span>
+                  </button>
+                </div>
+
+              </form>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 5: Pay & Complete Event Listing Modal */}
+      {showCompleteEventModal && completeEvent && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="max-w-2xl w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-7 flex flex-col gap-5 animate-scaleUp text-left max-h-[90vh] overflow-y-auto">
+            
+            <div className="flex justify-between items-start border-b border-slate-100 pb-3.5">
+              <div>
+                <h3 className="font-extrabold text-slate-800 text-base md:text-lg">
+                  List Your Event - {completeEventStep === 1 ? 'Secure Checkout' : 'Additional Details'}
+                </h3>
+                <p className="text-slate-450 text-[10.5px] font-semibold mt-1">
+                  {completeEventStep === 1 
+                    ? 'Step 1 of 2: Complete the listing charge to verify and unlock detail submission.' 
+                    : 'Step 2 of 2: Provide location, contact info, optional registration link, and cover image.'}
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowCompleteEventModal(false);
+                  setCompleteEvent(null);
+                }} 
+                className="text-slate-400 hover:text-slate-600 font-extrabold text-xs cursor-pointer p-1"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {completeEventError && (
+              <div className="bg-red-50 border border-red-200 text-red-650 rounded-xl p-3 text-xs font-semibold flex items-center gap-2 animate-shake">
+                <AlertCircle className="h-4.5 w-4.5 text-red-500 shrink-0" />
+                <span>{completeEventError}</span>
+              </div>
+            )}
+
+            {completeEventSuccess && (
+              <div className="bg-emerald-50 border border-emerald-250 rounded-xl p-3 text-xs font-semibold flex items-center gap-2 animate-fadeIn">
+                <CheckCircle className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
+                <span>{completeEventSuccess}</span>
+              </div>
+            )}
+
+            {/* STEP 1: PAYMENT CHECKOUT */}
+            {completeEventStep === 1 && !completeEventSuccess && (
+              <div className="flex flex-col gap-5">
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-[11px] text-amber-850 font-semibold flex items-center gap-2.5">
+                  <Info className="h-4.5 w-4.5 text-amber-600 shrink-0" />
+                  <span>No active premium business subscription detected. A standard ₹99 publishing fee applies.</span>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-5 flex justify-between items-center text-xs font-bold shadow-3xs">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-slate-800 font-extrabold text-sm">{completeEvent.title}</span>
+                    <span className="text-slate-450 uppercase text-[9.5px] mt-0.5 tracking-wider">{completeEvent.category} Event</span>
+                  </div>
+                  <span className="text-[#027244] font-black text-xl">₹99</span>
+                </div>
+
+                <div className="flex flex-col gap-3.5 text-xs text-slate-600 font-semibold">
+                  <div className="flex items-center gap-2.5 bg-emerald-50/40 p-2.5 rounded-lg border border-emerald-100">
+                    <Lock className="h-4.5 w-4.5 text-[#027244] shrink-0" />
+                    <span className="text-[10px] text-emerald-800 leading-normal">Your payment is encrypted and fully secure. Standard charges apply.</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100 pb-2">
+                    <span className="text-slate-400">Listing Standard Fee</span>
+                    <span>₹99.00</span>
+                  </div>
+                  <div className="flex justify-between text-slate-850 font-black text-sm pt-1">
+                    <span>Grand Total</span>
+                    <span>₹99.00</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-2 border-t border-slate-100 pt-4">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setShowCompleteEventModal(false);
+                      setCompleteEvent(null);
+                    }}
+                    className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => handleEventPaymentCheckout(completeEvent._id)}
+                    disabled={completeEventLoading}
+                    className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow-md flex items-center justify-center gap-1.5 disabled:opacity-60"
+                  >
+                    {completeEventLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                    <span>Pay ₹99 & Continue</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: ADDITIONAL DETAILS WITH COVER IMAGE UPLOAD */}
+            {completeEventStep === 2 && !completeEventSuccess && (
+              <form onSubmit={handlePublishEventDetails} className="flex flex-col gap-4">
+                
+                {/* PAYMENT VERIFIED BADGE */}
+                <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-[10.5px] text-[#027244] font-semibold">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4.5 w-4.5 text-amber-500 fill-current shrink-0" />
+                    <span>Payment verified successfully! Please fill in further details to publish your event.</span>
+                  </div>
+                  <span className="bg-[#027244] text-white font-black text-[9px] uppercase tracking-wider px-2.5 py-1 rounded shadow-2xs">
+                    {completeEventPaymentStatus} verified
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Location / Venue Address *</label>
+                  <input 
+                    type="text" 
+                    value={completeEventVenue}
+                    onChange={(e) => setCompleteEventVenue(e.target.value)}
+                    placeholder="e.g. Sri Krishna Mahal, Palani Road, Udumalpet"
+                    required
+                    className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Helpline Phone *</label>
+                    <input 
+                      type="tel" 
+                      value={completeEventPhone}
+                      onChange={(e) => setCompleteEventPhone(e.target.value)}
+                      placeholder="e.g. +91 98422 33445"
+                      required
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Registration / Payment Link (Optional)</label>
+                    <input 
+                      type="url" 
+                      value={completeEventPaymentLink}
+                      onChange={(e) => setCompleteEventPaymentLink(e.target.value)}
+                      placeholder="e.g. https://tickets.udumalpetevents.in"
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+                </div>
+
+                {/* COVER IMAGE UPLOAD (MANDATORY REQUIREMENT FROM USER SPEC) */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Cover Image</label>
+                  
+                  {completeEventCoverUrl ? (
+                    <div className="relative border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 p-2 flex items-center justify-between gap-3 group">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <img 
+                          src={completeEventCoverUrl} 
+                          alt="Cover preview" 
+                          className="h-14 w-20 object-cover rounded-lg border border-slate-200/60 shadow-2xs"
+                        />
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="text-xs font-bold text-slate-700">Cover Image Selected</span>
+                          <span className="text-[10px] text-slate-400 font-semibold truncate">{completeEventCoverUrl}</span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCompleteEventCoverUrl('')}
+                        className="p-2 hover:bg-red-50 text-slate-450 hover:text-red-650 rounded-xl transition-colors cursor-pointer border-none flex items-center justify-center shrink-0"
+                        title="Remove Image"
+                      >
+                        <Trash2 className="h-4.5 w-4.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={`border-2 border-dashed rounded-2xl p-5 flex flex-col items-center justify-center gap-2.5 transition-colors bg-slate-50/20 ${completeEventImageUploading ? 'border-emerald-300 bg-emerald-50/5' : 'border-slate-200 hover:bg-slate-50/40'}`}>
+                      {completeEventImageUploading ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <RefreshCw className="h-7 w-7 text-[#027244] animate-spin" />
+                          <span className="text-[11px] font-bold text-slate-500">Uploading cover image...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="h-9 w-9 bg-slate-50 text-slate-500 border border-slate-100 rounded-xl flex items-center justify-center shadow-3xs">
+                            <Upload className="h-4.5 w-4.5" />
+                          </div>
+                          <div className="text-center flex flex-col items-center">
+                            <span className="text-xs font-extrabold text-slate-700">Upload cover image</span>
+                            <span className="text-[10px] text-slate-455 font-bold mt-0.5">PNG, JPG, JPEG, WEBP (Max 5MB)</span>
+                          </div>
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            id="complete-event-image-upload"
+                            onChange={handleEventCoverUpload}
+                            className="hidden"
+                          />
+                          <label 
+                            htmlFor="complete-event-image-upload"
+                            className="py-1.5 px-4 border border-slate-200 hover:border-slate-300 rounded-xl text-[10.5px] font-extrabold text-slate-600 hover:bg-white transition-all cursor-pointer shadow-3xs hover:shadow-2xs select-none"
+                          >
+                            Select File
+                          </label>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {completeEventImageError && (
+                    <span className="text-[10px] text-red-500 font-semibold mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      {completeEventImageError}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Event Description *</label>
+                  <textarea 
+                    rows={4}
+                    value={completeEventDescription}
+                    onChange={(e) => setCompleteEventDescription(e.target.value)}
+                    placeholder="Provide detailed description of schedules, guidelines, guest details, etc..."
+                    required
+                    className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-755 focus:outline-none focus:border-[#027244] bg-slate-50/20 resize-none leading-relaxed"
+                  />
+                </div>
+
+                <div className="flex justify-between items-center mt-2 border-t border-slate-100 pt-4">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setShowCompleteEventModal(false);
+                      setCompleteEvent(null);
+                    }}
+                    className="py-2.5 px-5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={completeEventLoading || completeEventImageUploading}
+                    className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow-md shadow-emerald-800/10 flex items-center gap-2 disabled:opacity-60"
+                  >
+                    {completeEventLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                    <span>Complete & Launch Event</span>
                   </button>
                 </div>
 

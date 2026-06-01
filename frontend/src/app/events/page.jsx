@@ -3,7 +3,8 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { 
   Search, Calendar, MapPin, User, Phone, ShieldCheck, Bookmark, Sparkles, 
   Clock, Grid, ChevronRight, AlertCircle, ArrowLeft, CheckCircle2, MessageSquare, 
-  Plus, Lock, PlusCircle, Check, DollarSign, ExternalLink, Tag
+  Plus, Lock, PlusCircle, Check, DollarSign, ExternalLink, Tag, Heart, Trash2, Send, X,
+  RefreshCw
 } from 'lucide-react';
 
 const availableCategories = [
@@ -80,6 +81,15 @@ const mockEvents = [
   }
 ];
 
+export const formatEventDateRange = (startDate, endDate) => {
+  if (!startDate) return 'N/A';
+  const startStr = new Date(startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  if (!endDate) return startStr;
+  const endStr = new Date(endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  if (startStr === endStr) return startStr;
+  return `${startStr} - ${endStr}`;
+};
+
 export default function EventsPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -93,6 +103,7 @@ export default function EventsPage() {
   // Listing Form Stage 1: Basic details
   const [evtTitle, setEvtTitle] = useState('');
   const [evtCategory, setEvtCategory] = useState('Sports');
+  const [customCategory, setCustomCategory] = useState('');
   const [evtDate, setEvtDate] = useState('');
   const [evtEndDate, setEvtEndDate] = useState('');
   const [evtDuration, setEvtDuration] = useState('');
@@ -137,6 +148,13 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(false);
   const [categoryCounts, setCategoryCounts] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
+
+  // Comments and Likes state variables
+  const [guestName, setGuestName] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [activeCommentsEvent, setActiveCommentsEvent] = useState(null);
 
   useEffect(() => {
     // Check local storage for auth
@@ -198,6 +216,156 @@ export default function EventsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleToggleLike = async (eventId) => {
+    try {
+      const token = localStorage.getItem('ubt_token');
+      const guestId = localStorage.getItem('ubt_guest_id') || 'guest_' + Math.random().toString(36).substr(2, 9);
+      if (!localStorage.getItem('ubt_guest_id')) {
+        localStorage.setItem('ubt_guest_id', guestId);
+      }
+      
+      const res = await fetch(`http://localhost:5000/api/events/${eventId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify({ guestId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEvents(prev => prev.map(e => e._id === eventId ? { ...e, likes: data.data } : e));
+        if (activeCommentsEvent && activeCommentsEvent._id === eventId) {
+          setActiveCommentsEvent(prev => ({ ...prev, likes: data.data }));
+        }
+      }
+    } catch (err) {
+      // Offline fallback toggle
+      const identifier = currentUser ? currentUser._id : (localStorage.getItem('ubt_guest_id') || 'guest_unknown');
+      setEvents(prev => prev.map(e => {
+        if (e._id !== eventId) return e;
+        const currentLikes = e.likes || [];
+        const index = currentLikes.indexOf(identifier);
+        const nextLikes = index === -1 ? [...currentLikes, identifier] : currentLikes.filter(l => l !== identifier);
+        return { ...e, likes: nextLikes };
+      }));
+      if (activeCommentsEvent && activeCommentsEvent._id === eventId) {
+        setActiveCommentsEvent(prev => {
+          const currentLikes = prev.likes || [];
+          const index = currentLikes.indexOf(identifier);
+          const nextLikes = index === -1 ? [...currentLikes, identifier] : currentLikes.filter(l => l !== identifier);
+          return { ...prev, likes: nextLikes };
+        });
+      }
+    }
+  };
+
+  const isLikedByUser = (evt) => {
+    if (!evt.likes) return false;
+    const identifier = currentUser ? currentUser._id : localStorage.getItem('ubt_guest_id');
+    return evt.likes.includes(identifier);
+  };
+
+  const openEventCommentsModal = (evt) => {
+    setActiveCommentsEvent(evt);
+    setCommentText('');
+    setGuestName('');
+    setShowCommentsModal(true);
+  };
+
+  const handleAddComment = async (e, eventId) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    setCommentLoading(true);
+
+    try {
+      const token = localStorage.getItem('ubt_token');
+      const finalUserName = currentUser ? (currentUser.fullName || currentUser.name) : (guestName.trim() || 'Anonymous Visitor');
+      
+      const res = await fetch(`http://localhost:5000/api/events/${eventId}/comment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify({
+          text: commentText,
+          userName: finalUserName
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEvents(prev => prev.map(evt => evt._id === eventId ? { ...evt, comments: data.data } : evt));
+        // Update active comments event detail state
+        setActiveCommentsEvent(prev => ({ ...prev, comments: data.data }));
+        setCommentText('');
+      } else {
+        alert(data.message || 'Failed to add comment.');
+      }
+    } catch (err) {
+      // Offline fallback
+      const mockComment = {
+        _id: 'comment_' + Math.random().toString(36).substr(2, 9),
+        userName: currentUser ? (currentUser.fullName || currentUser.name) : (guestName.trim() || 'Anonymous Visitor'),
+        text: commentText,
+        user: currentUser ? currentUser._id : undefined,
+        createdAt: new Date()
+      };
+      setEvents(prev => prev.map(evt => {
+        if (evt._id !== eventId) return evt;
+        const nextComments = [...(evt.comments || []), mockComment];
+        return { ...evt, comments: nextComments };
+      }));
+      setActiveCommentsEvent(prev => {
+        const nextComments = [...(prev.comments || []), mockComment];
+        return { ...prev, comments: nextComments };
+      });
+      setCommentText('');
+    } finally {
+      setCommentLoading(false);
+    }
+  };
+
+  const handleCommentDelete = async (eventId, commentId) => {
+    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+    
+    try {
+      const token = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/events/${eventId}/comment/${commentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEvents(prev => prev.map(evt => evt._id === eventId ? { ...evt, comments: data.data } : evt));
+        setActiveCommentsEvent(prev => ({ ...prev, comments: data.data }));
+      } else {
+        alert(data.message || 'Failed to delete comment.');
+      }
+    } catch (err) {
+      // Offline fallback
+      setEvents(prev => prev.map(evt => {
+        if (evt._id !== eventId) return evt;
+        const nextComments = (evt.comments || []).filter(c => c._id !== commentId);
+        return { ...evt, comments: nextComments };
+      }));
+      setActiveCommentsEvent(prev => {
+        const nextComments = (prev.comments || []).filter(c => c._id !== commentId);
+        return { ...prev, comments: nextComments };
+      });
+    }
+  };
+
+  const canDeleteComment = (comment, evt) => {
+    if (!currentUser) return false;
+    if (['admin', 'superadmin'].includes(currentUser.role)) return true;
+    if (comment.user && comment.user.toString() === currentUser._id.toString()) return true;
+    if (evt.ownerId && evt.ownerId.toString() === currentUser._id.toString()) return true;
+    return false;
   };
 
   const calculateCounts = (evtList) => {
@@ -293,14 +461,45 @@ export default function EventsPage() {
   };
 
   // Stage 1 collection: validate basic details, then trigger payment
-  const handleStage1Submit = (e) => {
+  const handleStage1Submit = async (e) => {
     e.preventDefault();
-    if (!evtTitle || !evtCategory || !evtDate || !evtTime || !evtOrganizer) {
+    const finalCategory = evtCategory === 'Others' ? (customCategory.trim() || 'Others') : evtCategory;
+    if (!evtTitle || !finalCategory || !evtDate || !evtEndDate || !evtTime || !evtOrganizer) {
       setErrorMsg('Please fill in all mandatory fields');
       return;
     }
     setErrorMsg('');
-    setWizardStep('payment');
+    setSubmitLoading(true);
+
+    try {
+      const token = localStorage.getItem('ubt_token');
+      const res = await fetch('http://localhost:5000/api/events', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: evtTitle,
+          category: finalCategory,
+          date: evtDate,
+          endDate: evtEndDate,
+          duration: evtDuration || undefined,
+          time: evtTime,
+          organizer: evtOrganizer,
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setWizardStep('pending_approval_success');
+      } else {
+        throw new Error(data.message || 'Failed to submit event');
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'An error occurred during submission');
+    } finally {
+      setSubmitLoading(false);
+    }
   };
 
   // Successful payment transitions only to Stage 2 information!
@@ -327,7 +526,7 @@ export default function EventsPage() {
           category: evtCategory,
           description: evtDescription,
           date: evtDate,
-          endDate: evtEndDate || undefined,
+          endDate: evtEndDate,
           duration: evtDuration || undefined,
           time: evtTime,
           venue: evtVenue,
@@ -769,6 +968,20 @@ export default function EventsPage() {
                   </div>
                 </div>
 
+                {evtCategory === 'Others' && (
+                  <div className="flex flex-col gap-1 mt-1 animate-fadeIn">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Custom Category Name *</span>
+                    <input
+                      type="text"
+                      placeholder="e.g. Workshop, Seminar, Expo"
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      required
+                      className="h-10 px-3 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
+                    />
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="flex flex-col gap-1">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Event Start Date *</span>
@@ -781,11 +994,12 @@ export default function EventsPage() {
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">End Date (Optional)</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Event End Date *</span>
                     <input
                       type="date"
                       value={evtEndDate}
                       onChange={(e) => setEvtEndDate(e.target.value)}
+                      required
                       className="h-10 px-3 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
                     />
                   </div>
@@ -823,13 +1037,53 @@ export default function EventsPage() {
                   </button>
                   <button 
                     type="submit"
-                    className="h-11 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center cursor-pointer gap-1.5 flex-grow"
+                    disabled={submitLoading}
+                    className="h-11 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center cursor-pointer gap-1.5 flex-grow disabled:opacity-60"
                   >
-                    <span>Proceed to Payment</span>
+                    <span>{submitLoading ? 'Submitting...' : 'Submit for Administrative Approval'}</span>
                     <ChevronRight className="h-4.5 w-4.5" />
                   </button>
                 </div>
               </form>
+            </div>
+          )}
+
+          {/* STEP: PENDING REVIEW SUCCESS MESSAGE */}
+          {wizardStep === 'pending_approval_success' && (
+            <div className="max-w-md w-full mx-auto bg-white border border-slate-200/80 shadow-2xl rounded-3xl p-8 text-center mt-6 flex flex-col items-center gap-5 animate-fadeIn">
+              <div className="h-16 w-16 bg-[#FFF9E6] border border-amber-250 rounded-full flex items-center justify-center text-amber-600">
+                <Clock className="h-10 w-10 animate-pulse" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <h3 className="text-xl font-black text-[#001c41]">Submitted for Approval!</h3>
+                <p className="text-slate-500 text-xs font-semibold leading-relaxed text-left">
+                  Your event <strong>"{evtTitle}"</strong> has been successfully submitted to the admin queue.
+                </p>
+                <p className="text-slate-400 text-[11px] leading-relaxed text-left mt-1.5 font-sans">
+                  Once the administrator reviews and approves the event, you will see it in your dashboard under the **Events** tab. From there, you can complete the checkout process (waived to ₹0 if you are a premium business subscriber) and fill in final details like location address, contact phone, cover picture, and description to publish it live!
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setShowListingWizard(false);
+                  setWizardStep('auth');
+                  setEvtTitle('');
+                  setEvtDescription('');
+                  setEvtDate('');
+                  setEvtEndDate('');
+                  setEvtDuration('');
+                  setEvtTime('');
+                  setEvtVenue('');
+                  setEvtOrganizer('');
+                  setEvtPhone('');
+                  setEvtCoverUrl('');
+                  setEvtPaymentLink('');
+                }}
+                className="py-3.5 w-full bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow cursor-pointer uppercase tracking-wider mt-2.5"
+              >
+                Go to Events directory
+              </button>
             </div>
           )}
 
@@ -1211,7 +1465,7 @@ export default function EventsPage() {
                         
                         {/* Category tag */}
                         <div className="flex items-center justify-between">
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 items-center">
                             <span className={`text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 border rounded-md ${getBadgeStyles(evt.category)}`}>
                               {getBadgeStyles(evt.category) ? getCategoryIcon(evt.category) : ''} {evt.category}
                             </span>
@@ -1219,6 +1473,12 @@ export default function EventsPage() {
                             {evt.duration && (
                               <span className="text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 bg-slate-50 border border-slate-200 rounded-md text-slate-550">
                                 ⏱ {evt.duration}
+                              </span>
+                            )}
+                            {/* Expired Badge */}
+                            {new Date(evt.endDate || evt.date) < new Date() && (
+                              <span className="text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 bg-red-50 border border-red-200 rounded-md text-red-700">
+                                Expired
                               </span>
                             )}
                           </div>
@@ -1290,6 +1550,40 @@ export default function EventsPage() {
                             <span className="text-[9.5px] text-slate-400 leading-normal mt-0.5">Call for queries</span>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Likes & Comments Interactive Bar */}
+                      <div className="flex gap-4 border-t border-slate-100 pt-3 mt-1 text-xs font-black text-slate-500">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleToggleLike(evt._id); }}
+                          className={`flex items-center gap-1 bg-transparent border-none cursor-pointer hover:text-red-550 transition-colors ${
+                            isLikedByUser(evt) ? 'text-red-550' : 'text-slate-450'
+                          }`}
+                        >
+                          <Heart className={`h-4 w-4 ${isLikedByUser(evt) ? 'fill-current text-red-550' : ''}`} />
+                          <span>{evt.likes ? evt.likes.length : 0} Likes</span>
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); openEventCommentsModal(evt); }}
+                          className="flex items-center gap-1 bg-transparent border-none cursor-pointer hover:text-[#027244] text-slate-450 transition-colors"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          <span>{evt.comments ? evt.comments.length : 0} Comments</span>
+                        </button>
+                        
+                        {/* Host Profile Link */}
+                        {evt.businessId && (
+                          <div className="ml-auto">
+                            <Link 
+                              to={`/businesses/${evt.businessId._id || evt.businessId}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-[#027244] hover:text-[#005934] hover:underline flex items-center gap-1 leading-none"
+                            >
+                              <User className="h-3.5 w-3.5" />
+                              <span>View Profile</span>
+                            </Link>
+                          </div>
+                        )}
                       </div>
 
                     </div>
@@ -1437,7 +1731,7 @@ export default function EventsPage() {
             </div>
 
             <a 
-              href="mailto:support@udumalpetevents.in"
+              href="mailto:udumalpetbusinesstour@gmail.com"
               className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow transition-all cursor-pointer text-center z-10 uppercase tracking-wider"
             >
               Contact Support
@@ -1447,6 +1741,118 @@ export default function EventsPage() {
         </aside>
 
       </section>
+
+      {/* Event Details & Comments Modal */}
+      {showCommentsModal && activeCommentsEvent && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="max-w-2xl w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-7 flex flex-col gap-5 animate-scaleUp text-left max-h-[90vh] overflow-y-auto">
+            
+            <div className="flex justify-between items-start border-b border-slate-100 pb-3.5">
+              <div>
+                <h3 className="font-extrabold text-slate-800 text-base md:text-lg">
+                  Event Comments - {activeCommentsEvent.title}
+                </h3>
+                <p className="text-slate-450 text-[10.5px] font-semibold mt-1">
+                  Organizer: {activeCommentsEvent.organizer} • Date: {formatEventDateRange(activeCommentsEvent.date, activeCommentsEvent.endDate)}
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowCommentsModal(false);
+                  setActiveCommentsEvent(null);
+                }} 
+                className="text-slate-400 hover:text-slate-600 font-extrabold text-xs cursor-pointer p-1"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {/* Comments List */}
+            <div className="flex flex-col gap-4 max-h-60 overflow-y-auto pr-1">
+              {!activeCommentsEvent.comments || activeCommentsEvent.comments.length === 0 ? (
+                <p className="text-slate-455 text-xs font-bold text-center py-6 bg-slate-50 rounded-2xl">
+                  No comments yet. Be the first to start the conversation!
+                </p>
+              ) : (
+                activeCommentsEvent.comments.map(comment => (
+                  <div key={comment._id} className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 flex justify-between items-start gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="h-8 w-8 bg-emerald-50 text-[#027244] border border-emerald-150 rounded-full flex items-center justify-center font-black text-xs shrink-0 select-none">
+                        {comment.userName.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <div className="flex items-center gap-2">
+                          <span className="font-extrabold text-xs text-slate-800">{comment.userName}</span>
+                          <span className="text-[9px] text-slate-400 font-semibold">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-xs text-slate-600 font-medium mt-1 leading-relaxed">{comment.text}</p>
+                      </div>
+                    </div>
+
+                    {/* Trash Delete comment action button (Shown to comment creator or event owner or admin) */}
+                    {canDeleteComment(comment, activeCommentsEvent) && (
+                      <button
+                        onClick={() => handleCommentDelete(activeCommentsEvent._id, comment._id)}
+                        className="p-1.5 hover:bg-red-50 text-slate-450 hover:text-red-650 rounded-xl transition-colors cursor-pointer border-none flex items-center justify-center"
+                        title="Delete comment"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Add Comment Form */}
+            <form onSubmit={(e) => handleAddComment(e, activeCommentsEvent._id)} className="flex flex-col gap-3.5 border-t border-slate-100 pt-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Your Name (for guests)</label>
+                <input 
+                  type="text" 
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  placeholder={currentUser ? currentUser.fullName : "Enter your name"}
+                  disabled={!!currentUser}
+                  className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 disabled:opacity-70"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Comment *</label>
+                <textarea 
+                  rows={3}
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Share your thoughts about this event..."
+                  required
+                  className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 resize-none"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-1.5">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setShowCommentsModal(false);
+                    setActiveCommentsEvent(null);
+                  }}
+                  className="py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={commentLoading || !commentText.trim()}
+                  className="py-2 px-5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer flex items-center gap-1.5 disabled:opacity-60"
+                >
+                  {commentLoading && <RefreshCw className="h-3 animate-spin" />}
+                  <span>Post Comment</span>
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      )}
       
     </div>
   );

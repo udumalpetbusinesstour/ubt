@@ -12,6 +12,16 @@ import {
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
+
+  const formatEventDateRange = (startDate, endDate) => {
+    if (!startDate) return 'N/A';
+    const startStr = new Date(startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    if (!endDate) return startStr;
+    const endStr = new Date(endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    if (startStr === endStr) return startStr;
+    return `${startStr} - ${endStr}`;
+  };
+
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   
@@ -23,6 +33,11 @@ export default function SuperAdminDashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Date filtering state hooks
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // User Profile details modal state
   const [selectedUser, setSelectedUser] = useState(null);
@@ -65,6 +80,12 @@ export default function SuperAdminDashboard() {
 
   // Reviews moderation states
   const [suspendedUsers, setSuspendedUsers] = useState([]);
+  const [selectedReview, setSelectedReview] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+
+  // Transactions detailed modal state
+  const [selectedTx, setSelectedTx] = useState(null);
+  const [showTxModal, setShowTxModal] = useState(false);
 
   // Custom states for forms
   const [newNotice, setNewNotice] = useState({ title: '', message: '', type: 'announcement' });
@@ -1079,9 +1100,64 @@ export default function SuperAdminDashboard() {
     }
   };
 
+  const removeCommentLocally = (commentId) => {
+    setEditingEvent(prev => ({
+      ...prev,
+      comments: prev.comments.filter(c => c._id !== commentId)
+    }));
+  };
+
+
+  // Date range picker helper and filters
+  const matchesDateFilter = (dateVal) => {
+    if (!dateVal) return true;
+    const d = new Date(dateVal);
+    const dTime = d.getTime();
+    if (isNaN(dTime)) return true;
+    
+    if (fromDate && toDate) {
+      const from = new Date(fromDate);
+      from.setHours(0, 0, 0, 0);
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999);
+      return dTime >= from.getTime() && dTime <= to.getTime();
+    }
+    if (fromDate) {
+      const from = new Date(fromDate);
+      from.setHours(0, 0, 0, 0);
+      return dTime >= from.getTime();
+    }
+    if (toDate) {
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999);
+      return dTime <= to.getTime();
+    }
+    return true;
+  };
+
+  const getDateRangeLabel = () => {
+    if (!fromDate && !toDate) return 'All Time';
+    if (fromDate && !toDate) {
+      return `From: ${new Date(fromDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    }
+    if (!fromDate && toDate) {
+      return `To: ${new Date(toDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    }
+    return `${new Date(fromDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} - ${new Date(toDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  };
+
+  const dateFilteredBusinesses = businesses.filter(b => matchesDateFilter(b.createdAt));
+  const dateFilteredBlogs = blogs.filter(b => matchesDateFilter(b.createdAt));
+  const dateFilteredEvents = events.filter(e => matchesDateFilter(e.createdAt || e.date));
+  const dateFilteredReviews = reviews.filter(r => matchesDateFilter(r.createdAt));
+  const dateFilteredSubscriptions = subscriptions.filter(s => matchesDateFilter(s.createdAt));
+  const dateFilteredMerchants = merchants.filter(m => matchesDateFilter(m.createdAt));
+  const dateFilteredRegularUsers = regularUsers.filter(r => matchesDateFilter(r.createdAt));
+  const dateFilteredSupportTickets = supportTickets.filter(t => matchesDateFilter(t.createdAt));
+  const dateFilteredQueries = queries.filter(q => matchesDateFilter(q.createdAt));
 
   // Filtered resource search
-  const filteredBusinesses = businesses.filter(b => {
+  const filteredBusinesses = dateFilteredBusinesses.filter(b => {
     const matchesSearch = b.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           b.ownerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           b.ownerEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1097,7 +1173,7 @@ export default function SuperAdminDashboard() {
     return true;
   });
 
-  const filteredMerchants = merchants.filter(m => {
+  const filteredMerchants = dateFilteredMerchants.filter(m => {
     const matchesSearch = m.fullName.toLowerCase().includes(searchQuery.toLowerCase()) || m.email.toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesSearch) return false;
     if (merchantStatusFilter === 'Active') return m.status === 'Active';
@@ -1113,7 +1189,7 @@ export default function SuperAdminDashboard() {
     return 4;
   };
 
-  const filteredBlogs = blogs.filter(b => {
+  const filteredBlogs = dateFilteredBlogs.filter(b => {
     const matchesSearch = b.title.toLowerCase().includes(searchQuery.toLowerCase()) || b.authorName?.toLowerCase().includes(searchQuery.toLowerCase()) || b.author?.toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesSearch) return false;
     if (blogStatusFilter === 'Approved') return b.status === 'Approved';
@@ -1121,7 +1197,7 @@ export default function SuperAdminDashboard() {
     return true;
   }).sort((a, b) => getBlogStatusWeight(a.status) - getBlogStatusWeight(b.status) || new Date(b.createdAt) - new Date(a.createdAt));
 
-  const filteredEvents = events.filter(e => {
+  const filteredEvents = dateFilteredEvents.filter(e => {
     const matchesSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase()) || e.organizer.toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesSearch) return false;
     if (eventStatusFilter === 'Approved') return e.status === 'Approved';
@@ -1169,8 +1245,8 @@ export default function SuperAdminDashboard() {
     {
       group: 'CONFIGURATION',
       items: [
-        { id: 'Platform Settings', label: 'Settings', icon: <Settings className="h-4.5 w-4.5" /> },
-        { id: 'Platform Settings', label: 'Pages & Content', icon: <Layers className="h-4.5 w-4.5" /> },
+        { id: 'Platform Settings', subtab: 'plans', label: 'Settings', icon: <Settings className="h-4.5 w-4.5" /> },
+        { id: 'Platform Settings', subtab: 'banners', label: 'Pages & Content', icon: <Layers className="h-4.5 w-4.5" /> },
         { id: 'System Logs', label: 'System Logs', icon: <Terminal className="h-4.5 w-4.5" /> }
       ]
     },
@@ -1231,10 +1307,13 @@ export default function SuperAdminDashboard() {
                         handleLogout();
                       } else {
                         setActiveTab(item.id);
+                        if (item.subtab) {
+                          setPlatformSubTab(item.subtab);
+                        }
                       }
                     }}
                     className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer group hover:shadow-[0_0_15px_rgba(2,114,68,0.15)] relative w-full ${
-                      activeTab === item.id
+                      (item.subtab ? (activeTab === item.id && platformSubTab === item.subtab) : (activeTab === item.id))
                         ? 'bg-[#027244] text-white shadow-md shadow-[#013520]/15' 
                         : item.id === 'Logout'
                           ? 'text-rose-400 hover:bg-rose-950/20 hover:text-rose-350'
@@ -1242,7 +1321,7 @@ export default function SuperAdminDashboard() {
                     }`}
                   >
                     <div className={`transition-transform duration-300 group-hover:scale-110 ${
-                      activeTab === item.id
+                      (item.subtab ? (activeTab === item.id && platformSubTab === item.subtab) : (activeTab === item.id))
                         ? 'text-white' 
                         : item.id === 'Logout'
                           ? 'text-rose-455 group-hover:text-rose-350'
@@ -1328,10 +1407,13 @@ export default function SuperAdminDashboard() {
                             handleLogout();
                           } else {
                             setActiveTab(item.id);
+                            if (item.subtab) {
+                              setPlatformSubTab(item.subtab);
+                            }
                           }
                         }}
                         className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer text-left w-full ${
-                          activeTab === item.id
+                          (item.subtab ? (activeTab === item.id && platformSubTab === item.subtab) : (activeTab === item.id))
                             ? 'bg-[#027244] text-white shadow-md shadow-[#013520]/15'
                             : item.id === 'Logout'
                               ? 'text-rose-400 hover:bg-rose-950/20'
@@ -1527,24 +1609,88 @@ export default function SuperAdminDashboard() {
                       </div>
                       <p className="text-xs text-slate-400 font-semibold mt-1">Welcome back! Here's what's happening with your platform.</p>
                     </div>
+                    {/* Interactive Datepicker Dropdown */}
+                    <div className="relative">
+                      <button 
+                        onClick={() => setShowDatePicker(!showDatePicker)}
+                        className={`flex items-center gap-2 rounded-xl px-3 py-1.5 shadow-sm text-xs font-bold w-fit shrink-0 cursor-pointer border hover:opacity-90 transition-all ${
+                          themeMode === 'dark' ? 'bg-slate-900/60 border-slate-800 text-slate-350 hover:bg-slate-800/40' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        <Calendar className="h-4 w-4 text-slate-400" />
+                        <span>{getDateRangeLabel()}</span>
+                      </button>
 
-                    {/* Datepicker Picker Mockup */}
-                    <div className={`flex items-center gap-2 rounded-xl px-3 py-1.5 shadow-sm text-xs font-bold w-fit shrink-0 cursor-pointer border ${themeMode === 'dark' ? 'bg-slate-900/60 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
+                      {showDatePicker && (
+                        <div className={`absolute right-0 mt-2 z-30 shadow-xl rounded-2xl p-4 w-72 text-left animate-fadeIn border ${
+                          themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                        }`}>
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="font-extrabold text-[10px] uppercase tracking-wider text-slate-400">Date Filters</span>
+                            <button 
+                              onClick={() => { setFromDate(''); setToDate(''); setShowDatePicker(false); }}
+                              className="text-[10px] font-black text-emerald-600 hover:text-emerald-500 transition-colors uppercase tracking-widest cursor-pointer"
+                            >
+                              All Time
+                            </button>
+                          </div>
 
-                      <Calendar className="h-4 w-4 text-slate-400" />
-                      <span>May 29, 2025 - Jun 29, 2025</span>
+                          <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">From Date</label>
+                              <input 
+                                type="date"
+                                value={fromDate}
+                                onChange={(e) => setFromDate(e.target.value)}
+                                className={`border rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-emerald-500 ${
+                                  themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-700'
+                                }`}
+                              />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">To Date</label>
+                              <input 
+                                type="date"
+                                value={toDate}
+                                onChange={(e) => setToDate(e.target.value)}
+                                className={`border rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-emerald-500 ${
+                                  themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-700'
+                                }`}
+                              />
+                            </div>
+
+                            <div className="flex gap-2 mt-2 pt-2 border-t border-slate-850/20">
+                              <button 
+                                onClick={() => setShowDatePicker(false)}
+                                className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-650 text-white font-extrabold text-[10px] rounded-lg transition-colors cursor-pointer text-center uppercase tracking-widest shadow-xs"
+                              >
+                                Apply Filter
+                              </button>
+                              <button 
+                                onClick={() => { setFromDate(''); setToDate(''); setShowDatePicker(false); }}
+                                className={`flex-1 py-2 border font-extrabold text-[10px] rounded-lg transition-colors cursor-pointer text-center uppercase tracking-widest ${
+                                  themeMode === 'dark' ? 'border-slate-800 hover:bg-slate-800/40 text-slate-400' : 'border-slate-200 hover:bg-slate-100 text-slate-550'
+                                }`}
+                              >
+                                Clear
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* 6 HUD Summary Metric Cards Row */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                     {[
-                      { title: 'Total Businesses', val: businesses.length || '1,248', desc: '+196 this month', pct: '+ 18.6%', icon: <Store className="h-5 w-5" />, color: 'from-purple-500/10 border-purple-500/20 text-purple-500', tabId: 'Businesses' },
-                      { title: 'Active Businesses', val: businesses.filter(b => b.status === 'Approved').length || '1,082', desc: '86.7% of total', pct: '+ 16.3%', icon: <CheckCircle2 className="h-5 w-5" />, color: 'from-emerald-500/10 border-emerald-500/20 text-emerald-500', tabId: 'Businesses' },
-                      { title: 'Total Users', val: (merchants.length + regularUsers.length) || '2,653', desc: '+487 this month', pct: '+ 22.5%', icon: <User className="h-5 w-5" />, color: 'from-amber-500/10 border-amber-500/20 text-amber-500', tabId: 'Merchants' },
-                      { title: 'Events Listed', val: events.length || '246', desc: '+54 this month', pct: '+ 28.4%', icon: <Calendar className="h-5 w-5" />, color: 'from-pink-500/10 border-pink-500/20 text-pink-500', tabId: 'Events Moderation' },
-                      { title: 'Blog Posts', val: blogs.length || '156', desc: '+37 this month', pct: '+ 31.2%', icon: <BookOpen className="h-5 w-5" />, color: 'from-blue-500/10 border-blue-500/20 text-blue-500', tabId: 'Blogs Moderation' },
-                      { title: 'Total Revenue', val: subscriptions.length > 0 ? ('₹' + subscriptions.reduce((sum, s) => sum + (s.amount || 0), 0).toLocaleString('en-IN')) : '₹2,34,560', desc: '+₹38,720 this month', pct: '+ 19.8%', icon: <Coins className="h-5 w-5" />, color: 'from-cyan-500/10 border-cyan-500/20 text-cyan-500', tabId: 'Subscriptions' }
+                      { title: 'Total Businesses', val: dateFilteredBusinesses.length || 0, desc: '+196 this month', pct: '+ 18.6%', icon: <Store className="h-5 w-5" />, color: 'from-purple-500/10 border-purple-500/20 text-purple-500', tabId: 'Businesses' },
+                      { title: 'Active Businesses', val: dateFilteredBusinesses.filter(b => b.status === 'Approved').length || 0, desc: '86.7% of total', pct: '+ 16.3%', icon: <CheckCircle2 className="h-5 w-5" />, color: 'from-emerald-500/10 border-emerald-500/20 text-emerald-500', tabId: 'Businesses' },
+                      { title: 'Total Users', val: (dateFilteredMerchants.length + dateFilteredRegularUsers.length) || 0, desc: '+487 this month', pct: '+ 22.5%', icon: <User className="h-5 w-5" />, color: 'from-amber-500/10 border-amber-500/20 text-amber-500', tabId: 'Merchants' },
+                      { title: 'Events Listed', val: dateFilteredEvents.length || 0, desc: '+54 this month', pct: '+ 28.4%', icon: <Calendar className="h-5 w-5" />, color: 'from-pink-500/10 border-pink-500/20 text-pink-500', tabId: 'Events Moderation' },
+                      { title: 'Blog Posts', val: dateFilteredBlogs.length || 0, desc: '+37 this month', pct: '+ 31.2%', icon: <BookOpen className="h-5 w-5" />, color: 'from-blue-500/10 border-blue-500/20 text-blue-500', tabId: 'Blogs Moderation' },
+                      { title: 'Total Revenue', val: '₹' + dateFilteredSubscriptions.reduce((sum, s) => sum + (s.amount || 0), 0).toLocaleString('en-IN'), desc: '+₹38,720 this month', pct: '+ 19.8%', icon: <Coins className="h-5 w-5" />, color: 'from-cyan-500/10 border-cyan-500/20 text-cyan-500', tabId: 'Subscriptions' }
                     ].map((card, idx) => (
                       <div 
                         key={idx} 
@@ -1648,7 +1794,7 @@ export default function SuperAdminDashboard() {
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
 
                         <span className="text-xs font-black uppercase tracking-widest text-slate-400">Businesses by Category</span>
-                        <span className="text-[9px] font-black text-[#027244] cursor-pointer hover:underline uppercase tracking-widest">View All</span>
+                        <span onClick={() => setActiveTab('Businesses')} className="text-[9px] font-black text-[#027244] cursor-pointer hover:underline uppercase tracking-widest">View All</span>
                       </div>
                       
                       <div className="flex-1 flex flex-col sm:flex-row items-center justify-around gap-4 py-2">
@@ -1698,7 +1844,7 @@ export default function SuperAdminDashboard() {
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
 
                         <span className="text-xs font-black uppercase tracking-widest text-slate-400">Pending Approvals</span>
-                        <span className="text-[9px] font-black text-[#027244] cursor-pointer hover:underline uppercase tracking-widest">View All</span>
+                        <span onClick={() => setActiveTab('Pending Verifications')} className="text-[9px] font-black text-[#027244] cursor-pointer hover:underline uppercase tracking-widest">View All</span>
                       </div>
                       
                       <div className="flex-1 flex flex-col gap-2.5 py-4">
@@ -1770,8 +1916,7 @@ export default function SuperAdminDashboard() {
                       
                       <button 
                         onClick={() => {
-                          setActiveTab('Businesses');
-                          setBizStatusFilter('Pending');
+                          setActiveTab('Pending Verifications');
                           setSearchQuery('');
                         }}
                         className="w-full py-2.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer transition-colors shadow shadow-emerald-950/15 uppercase tracking-wider text-center"
@@ -1791,7 +1936,22 @@ export default function SuperAdminDashboard() {
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
 
                         <span className="text-xs font-black uppercase tracking-widest text-slate-400">Recent Registrations</span>
-                        <span className="text-[9px] font-black text-[#027244] cursor-pointer hover:underline uppercase tracking-widest">View All</span>
+                        <span 
+                          onClick={() => {
+                            if (recentRegTab === 'Businesses') {
+                              setActiveTab('Businesses');
+                            } else if (recentRegTab === 'Users') {
+                              setActiveTab('Merchants');
+                            } else if (recentRegTab === 'Events') {
+                              setActiveTab('Events Moderation');
+                            } else if (recentRegTab === 'Blog Posts') {
+                              setActiveTab('Blogs Moderation');
+                            }
+                          }}
+                          className="text-[9px] font-black text-[#027244] cursor-pointer hover:underline uppercase tracking-widest"
+                        >
+                          View All
+                        </span>
                       </div>
                       
                       {/* Tabs inside Registrations */}
@@ -1819,7 +1979,7 @@ export default function SuperAdminDashboard() {
                               if (cat.includes('beauty') || cat.includes('parlour') || cat.includes('salon')) return '💇';
                               return '🏢';
                             };
-                            const bizList = businesses.length > 0 ? businesses : [
+                            const bizList = dateFilteredBusinesses.length > 0 ? dateFilteredBusinesses : [
                               { _id: 'mock_biz_1', name: 'Sri Lakshmi Electricals', category: 'Home Services', locality: 'Udumalpet', createdAt: new Date(), status: 'Pending Verification', ownerName: 'Muthuvel S.', gstNumber: '33ABCDE1234F1Z5', yearEstablished: '2015', email: 'srilakshmi@gmail.com', phone: '+91 94435 99999', website: 'srilakshmielectricals.com', pincode: '642126' },
                               { _id: 'mock_biz_2', name: 'Green Leaf Restaurant', category: 'Food & Restaurants', locality: 'Udumalpet', createdAt: new Date(Date.now() - 15*60*1000), status: 'Approved', ownerName: 'Rajesh Kumar', gstNumber: '33ABCDE1234F1Z5', yearEstablished: '2018', email: 'greenleaf@gmail.com', phone: '+91 98425 22345', website: 'greenleafrestaurant.com', pincode: '642126' },
                               { _id: 'mock_biz_3', name: 'Royal Car Care', category: 'Automotive', locality: 'Udumalpet', createdAt: new Date(Date.now() - 32*60*1000), status: 'Pending Verification', ownerName: 'Senthil Nathan', gstNumber: '33ABCDE1234F1Z5', yearEstablished: '2020', email: 'royalcarcare@gmail.com', phone: '+91 97895 43210', website: 'royalcarcare.com', pincode: '642126' },
@@ -1861,7 +2021,7 @@ export default function SuperAdminDashboard() {
 
                          {recentRegTab === 'Users' && (
                            (() => {
-                             const combinedUsers = [...merchants, ...regularUsers].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+                             const combinedUsers = [...dateFilteredMerchants, ...dateFilteredRegularUsers].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
                              const list = combinedUsers.length > 0 ? combinedUsers : [
                                { _id: 'usr_m1', fullName: 'Muthuvel S.', role: 'merchant', email: 'muthuvel@gmail.com', status: 'Active', createdAt: new Date() },
                                { _id: 'usr_m2', fullName: 'Arun Kumar', role: 'user', email: 'arun@gmail.com', status: 'Active', createdAt: new Date(Date.now() - 15*60*1000) },
@@ -1872,9 +2032,8 @@ export default function SuperAdminDashboard() {
                                return (
                                  <div key={idx} 
                                    onClick={() => {
-                                     setActiveTab('Merchants');
-                                     setSearchQuery(u.email);
-                                     setMerchantUserFilter(u.role === 'visitor' || u.role === 'user' ? 'regularUsers' : 'merchants');
+                                     setSelectedUser(u);
+                                     setShowUserModal(true);
                                    }}
                                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
                                    <div className="flex items-center gap-3 text-left">
@@ -1906,7 +2065,7 @@ export default function SuperAdminDashboard() {
 
                          {recentRegTab === 'Events' && (
                            (() => {
-                             const eventList = events.length > 0 ? events : [
+                             const eventList = dateFilteredEvents.length > 0 ? dateFilteredEvents : [
                                { _id: 'e1', title: 'Temple Car Festival 2025', category: 'Cultural', organizer: 'Mariamman Kovil', status: 'Pending Review', createdAt: new Date() },
                                { _id: 'e2', title: 'Wind Farms Expo 2025', category: 'Business', organizer: 'Coimbatore Chamber', status: 'Approved', createdAt: new Date(Date.now() - 3600000) }
                              ];
@@ -1915,8 +2074,8 @@ export default function SuperAdminDashboard() {
                                return (
                                  <div key={idx} 
                                    onClick={() => {
-                                     setActiveTab('Events Moderation');
-                                     setSearchQuery(reg.title);
+                                     setEditingEvent(reg);
+                                     setShowEditEventModal(true);
                                    }}
                                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
                                    <div className="flex items-center gap-3 text-left">
@@ -1948,7 +2107,7 @@ export default function SuperAdminDashboard() {
 
                          {recentRegTab === 'Blog Posts' && (
                            (() => {
-                             const blogList = blogs.length > 0 ? blogs : [
+                             const blogList = dateFilteredBlogs.length > 0 ? dateFilteredBlogs : [
                                { _id: 'b1', title: 'Top 10 Tourist Places in Udumalpet', authorName: 'Co-Founder Haris', status: 'Approved', createdAt: new Date() },
                                { _id: 'b2', title: 'Guide to Thirumoorthi Dam Waterfalls', authorName: 'Ananth S.', status: 'Pending Review', createdAt: new Date(Date.now() - 7200000) }
                              ];
@@ -1957,8 +2116,7 @@ export default function SuperAdminDashboard() {
                                return (
                                  <div key={idx} 
                                    onClick={() => {
-                                     setActiveTab('Blogs Moderation');
-                                     setSearchQuery(reg.title);
+                                     setSelectedBlogModal(reg);
                                    }}
                                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
                                    <div className="flex items-center gap-3 text-left">
@@ -1992,9 +2150,13 @@ export default function SuperAdminDashboard() {
                     <div className={`lg:col-span-4 rounded-3xl border p-5 flex flex-col h-[26rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
 
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
-
                         <span className="text-xs font-black uppercase tracking-widest text-slate-400">Recent Transactions</span>
-                        <span className="text-[9px] font-black text-[#027244] cursor-pointer hover:underline uppercase tracking-widest">View All</span>
+                        <span 
+                          onClick={() => setActiveTab('Subscriptions')}
+                          className="text-[9px] font-black text-[#027244] cursor-pointer hover:underline uppercase tracking-widest"
+                        >
+                          View All
+                        </span>
                       </div>
                       
                       <div className="flex-1 overflow-x-auto py-3">
@@ -2011,14 +2173,26 @@ export default function SuperAdminDashboard() {
                             </tr>
                           </thead>
                           <tbody>
-                            {[
-                              { id: 'TXN12548', name: 'Sri Lakshmi Electricals', amt: '₹49', status: 'Success', time: '2 mins ago' },
-                              { id: 'TXN12547', name: 'Green Leaf Restaurant', amt: '₹49', status: 'Success', time: '15 mins ago' },
-                              { id: 'TXN12546', name: 'Vetri Catering Service', amt: '₹99', status: 'Success', time: '32 mins ago' },
-                              { id: 'TXN12545', name: 'Tech Solutions', amt: '₹49', status: 'Failed', time: '1 hour ago' },
-                              { id: 'TXN12544', name: 'Anu Beauty Parlour', amt: '₹49', status: 'Success', time: '2 hours ago' }
-                            ].map((txn, idx) => (
-                              <tr key={idx} className={`border-b last:border-0 text-left ${themeMode === 'dark' ? 'border-slate-850 hover:bg-slate-950/20' : 'border-slate-100 hover:bg-slate-50'}`}>
+                            {(dateFilteredSubscriptions.length > 0
+                              ? dateFilteredSubscriptions.map(s => ({
+                                  id: s._id.toString().slice(-8).toUpperCase(),
+                                  name: s.businessName || 'Premium Plan',
+                                  amt: '₹' + s.amount,
+                                  status: s.paymentStatus === 'Paid' ? 'Success' : s.paymentStatus,
+                                  time: new Date(s.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+                                  raw: s
+                                }))
+                              : [
+                                  { id: 'TXN12548', name: 'Sri Lakshmi Electricals', amt: '₹49', status: 'Success', time: '2 mins ago' },
+                                  { id: 'TXN12547', name: 'Green Leaf Restaurant', amt: '₹49', status: 'Success', time: '15 mins ago' },
+                                  { id: 'TXN12546', name: 'Vetri Catering Service', amt: '₹99', status: 'Success', time: '32 mins ago' },
+                                  { id: 'TXN12545', name: 'Tech Solutions', amt: '₹49', status: 'Failed', time: '1 hour ago' },
+                                  { id: 'TXN12544', name: 'Anu Beauty Parlour', amt: '₹49', status: 'Success', time: '2 hours ago' }
+                                ]
+                            ).slice(0, 5).map((txn, idx) => (
+                              <tr key={idx} 
+                                onClick={() => { setSelectedTx(txn.raw || txn); setShowTxModal(true); }}
+                                className={`border-b last:border-0 text-left cursor-pointer ${themeMode === 'dark' ? 'border-slate-850 hover:bg-slate-950/20' : 'border-slate-100 hover:bg-slate-50'}`}>
 
                                 <td className={`py-2.5 font-mono text-[9.5px] font-bold ${themeMode === 'dark' ? 'text-emerald-450' : 'text-[#001c41]'}`}>{txn.id}</td>
 
@@ -2071,7 +2245,6 @@ export default function SuperAdminDashboard() {
                             <span className="text-emerald-400 font-extrabold">99.9%</span>
                           </div>
                           <div className={`h-2 w-full rounded-full overflow-hidden border ${themeMode === 'dark' ? 'bg-slate-850 border-slate-800/50' : 'bg-slate-100 border-slate-200'}`}>
-
                             <div className="h-full bg-emerald-500 rounded-full animate-pulse" style={{ width: '99.9%' }} />
                           </div>
                           <span className="text-[8.5px] text-slate-500 font-bold self-end">Nodes fully operational</span>
@@ -2081,9 +2254,13 @@ export default function SuperAdminDashboard() {
                         <div className="flex items-center justify-between text-xs font-bold text-slate-400 border-t border-slate-850 pt-4">
                           <span>Active Admins</span>
                           <div className={`flex items-center gap-1.5 ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>
-
                             <span className="font-extrabold">4</span>
-                            <span className="text-[8.5px] text-[#027244] hover:underline cursor-pointer font-black">View Online</span>
+                            <span 
+                              onClick={() => setActiveTab('Admin Management')}
+                              className="text-[8.5px] text-[#027244] hover:underline cursor-pointer font-black"
+                            >
+                              View Online
+                            </span>
                           </div>
                         </div>
 
@@ -2108,9 +2285,13 @@ export default function SuperAdminDashboard() {
                     <div className={`lg:col-span-4 rounded-3xl border p-5 flex flex-col h-[24rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
 
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
-
                         <span className="text-xs font-black uppercase tracking-widest text-slate-400">Top Performing Businesses</span>
-                        <span className="text-[9px] font-black text-[#027244] cursor-pointer hover:underline uppercase tracking-widest">View All</span>
+                        <span 
+                          onClick={() => setActiveTab('Businesses')}
+                          className="text-[9px] font-black text-[#027244] cursor-pointer hover:underline uppercase tracking-widest"
+                        >
+                          View All
+                        </span>
                       </div>
                       
                       <div className="flex-1 flex flex-col gap-3 py-3 overflow-y-auto pr-1">
@@ -2119,7 +2300,26 @@ export default function SuperAdminDashboard() {
                           { rank: 2, name: 'Sri Lakshmi Electricals', views: '3,782', rate: '4.6', leads: '98', sector: 'Electrical Services', icon: '⚡' },
                           { rank: 3, name: 'Royal Car Care', views: '3,421', rate: '4.7', leads: '87', sector: 'Automotive', icon: '🔵' }
                         ].map((top, idx) => (
-                          <div key={idx} className={`flex items-center gap-3 p-2.5 rounded-2xl border ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
+                          <div key={idx} 
+                            onClick={() => {
+                              const biz = businesses.find(b => b.name.toLowerCase() === top.name.toLowerCase());
+                              setSelectedBiz(biz || {
+                                name: top.name,
+                                category: top.sector,
+                                rating: top.rate,
+                                googleRating: top.rate,
+                                views: top.views,
+                                leads: top.leads,
+                                status: 'Approved',
+                                ownerName: 'Muthuvel S.',
+                                email: 'muthuvel@gmail.com',
+                                phone: '+91 94435 99999',
+                                locality: 'Udumalpet',
+                                createdAt: new Date()
+                              });
+                              setShowBizModal(true);
+                            }}
+                            className={`flex items-center gap-3 p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
                             <span className="text-sm font-black text-[#001c41] w-4 text-left">{top.rank}</span>
                             <span className={`h-8 w-8 rounded-xl border flex items-center justify-center text-sm shrink-0 shadow-inner ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
                               {top.icon}
@@ -2557,9 +2757,12 @@ export default function SuperAdminDashboard() {
                           </div>
                         </div>
 
-                        <div className={`flex justify-between items-center border-t pt-3.5 gap-2 ${
-                          themeMode === 'dark' ? 'border-slate-800' : 'border-slate-100'
-                        }`}>
+                        <div 
+                          onClick={(e) => e.stopPropagation()}
+                          className={`flex justify-between items-center border-t pt-3.5 gap-2 ${
+                            themeMode === 'dark' ? 'border-slate-800' : 'border-slate-100'
+                          }`}
+                        >
                           <button 
                             onClick={() => { setSelectedBiz(b); setShowBizModal(true); }}
                             className="text-xs font-bold text-slate-450 hover:text-emerald-500 flex items-center gap-0.5 cursor-pointer transition-colors"
@@ -3488,7 +3691,8 @@ export default function SuperAdminDashboard() {
                     {filteredEvents.map(e => (
                       <div 
                         key={e._id} 
-                        className={`border rounded-[28px] p-5 flex flex-col gap-4 font-sans ${
+                        onClick={() => { setEditingEvent(e); setShowEditEventModal(true); }}
+                        className={`border rounded-[28px] p-5 flex flex-col gap-4 font-sans cursor-pointer hover:shadow-lg hover:border-[#027244] transition-all ${
                           themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                         }`}
                       >
@@ -3503,19 +3707,29 @@ export default function SuperAdminDashboard() {
                               )}
                             </div>
                             <span className="text-[9.5px] text-slate-400 font-bold mt-1 block">
-                              Organizer: {e.organizer} • Date: {e.date} • Venue: {e.venue}
+                              Organizer: {e.organizer} • Date: {formatEventDateRange(e.date, e.endDate)} • Venue: {e.venue || 'To Be Declared'}
                             </span>
                           </div>
-                          <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
-                            e.status === 'Approved' ? 'bg-[#027244]/10 border-[#027244]/20 text-[#027244]' : 'bg-amber-550/10 border-amber-550/20 text-amber-550 animate-pulse'
-                          }`}>
-                            {e.status}
-                          </span>
+                          <div className="flex gap-1.5 items-center">
+                            {new Date(e.endDate || e.date) < new Date() && (
+                              <span className="px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide bg-red-500 text-white border border-red-600 select-none shrink-0">
+                                Expired
+                              </span>
+                            )}
+                            <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
+                              e.status === 'Approved' ? 'bg-[#027244]/10 border-[#027244]/20 text-[#027244]' : 'bg-amber-550/10 border-amber-550/20 text-amber-550 animate-pulse'
+                            }`}>
+                              {e.status}
+                            </span>
+                          </div>
                         </div>
                         
-                        <div className={`flex justify-between items-center border-t pt-3.5 gap-2 ${
-                          themeMode === 'dark' ? 'border-slate-800' : 'border-slate-100'
-                        }`}>
+                        <div 
+                          onClick={(event) => event.stopPropagation()}
+                          className={`flex justify-between items-center border-t pt-3.5 gap-2 ${
+                            themeMode === 'dark' ? 'border-slate-800' : 'border-slate-100'
+                          }`}
+                        >
                           <div className="flex gap-2">
                             <button 
                               onClick={() => {
@@ -3584,14 +3798,15 @@ export default function SuperAdminDashboard() {
                   </div>
 
                   <div className="flex flex-col gap-4 font-sans">
-                    {reviews.map(r => {
+                    {dateFilteredReviews.map(r => {
                       const isHidden = r.status === 'hidden';
                       const isSpam = r.status === 'flagged' || r.status === 'spam';
                       
                       return (
                         <div 
                           key={r._id} 
-                          className={`border rounded-[28px] p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 transition-all ${
+                          onClick={() => { setSelectedReview(r); setShowReviewModal(true); }}
+                          className={`border rounded-[28px] p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 cursor-pointer hover:shadow-lg hover:border-[#027244] transition-all ${
                             themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                           }`}
                         >
@@ -3633,7 +3848,10 @@ export default function SuperAdminDashboard() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 mt-4 md:mt-0 shrink-0 w-full md:w-auto justify-end">
+                          <div 
+                            onClick={(event) => event.stopPropagation()}
+                            className="flex items-center gap-2 mt-4 md:mt-0 shrink-0 w-full md:w-auto justify-end"
+                          >
                             <button 
                               onClick={() => {
                                 setReviews(prev => prev.map(item => item._id === r._id ? { ...item, status: isHidden ? 'approved' : 'hidden' } : item));
@@ -3720,8 +3938,10 @@ export default function SuperAdminDashboard() {
                         </tr>
                       </thead>
                       <tbody className={`divide-y font-medium ${themeMode === 'dark' ? 'divide-slate-800' : 'divide-slate-100'}`}>
-                        {subscriptions.map(s => (
-                          <tr key={s._id} className={`transition-colors ${themeMode === 'dark' ? 'hover:bg-slate-900/30' : 'hover:bg-slate-50/50'}`}>
+                        {dateFilteredSubscriptions.map(s => (
+                          <tr key={s._id} 
+                            onClick={() => { setSelectedTx(s); setShowTxModal(true); }}
+                            className={`transition-colors cursor-pointer ${themeMode === 'dark' ? 'hover:bg-slate-900/30' : 'hover:bg-slate-50/50'}`}>
                             <td className={`p-4.5 font-extrabold text-xs sm:text-[13px] ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{s.businessName}</td>
                             <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{s.planType} Plan</td>
                             <td className={`p-4.5 font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>₹{s.amount}</td>
@@ -3735,7 +3955,7 @@ export default function SuperAdminDashboard() {
                                 {s.paymentStatus}
                               </span>
                             </td>
-                            <td className="p-4.5 text-right">
+                            <td className="p-4.5 text-right" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center justify-end gap-2">
                                 {s.paymentStatus !== 'Paid' ? (
                                   <button
@@ -3888,7 +4108,7 @@ export default function SuperAdminDashboard() {
                     }`}>
                       <div className="flex justify-between items-center">
                         <span className="font-extrabold text-xs uppercase tracking-wider text-slate-400">Subscription Registrations (Plan ratio)</span>
-                        <span className="text-sm font-black text-blue-500">Active Premium: {subscriptions.length}</span>
+                        <span className="text-sm font-black text-blue-500">Active Premium: {dateFilteredSubscriptions.length}</span>
                       </div>
 
                       <div className="w-full h-64 shrink-0 relative flex items-end justify-around pb-6 pt-4">
@@ -4991,7 +5211,7 @@ export default function SuperAdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className={`divide-y font-medium ${themeMode === 'dark' ? 'divide-slate-800' : 'divide-slate-100'}`}>
-                          {supportTickets.map(t => (
+                          {dateFilteredSupportTickets.map(t => (
                             <tr key={t._id} className={`transition-colors ${themeMode === 'dark' ? 'hover:bg-slate-900/30' : 'hover:bg-slate-50/50'}`}>
                               <td className={`p-4.5 font-extrabold text-xs sm:text-[13px] ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{t._id}</td>
                               <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-350' : 'text-slate-600'}`}>{t.user}</td>
@@ -5064,7 +5284,7 @@ export default function SuperAdminDashboard() {
 
                       {/* Query cards list */}
                       <div className="flex flex-col gap-5">
-                        {queries
+                        {dateFilteredQueries
                           .filter(q => {
                             if (queryFilter === 'Pending') return q.status === 'Pending';
                             if (queryFilter === 'Replied') return q.status === 'Replied';
@@ -5150,6 +5370,75 @@ export default function SuperAdminDashboard() {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* TAB 20: REFUNDS */}
+              {activeTab === 'Refunds' && (
+                <div className="flex flex-col gap-6 text-left animate-fadeIn">
+                  <div className={`border shadow-xs rounded-[28px] p-6 ${
+                    themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                  }`}>
+                    <h3 className="font-extrabold text-base leading-tight font-sans">Payment Refunds & Reversals</h3>
+                    <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Audit payment disputes, manage cancellation requests, and dispatch mock refunds.</span>
+                  </div>
+
+                  <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-5 ${
+                    themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                  }`}>
+                    <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400">Refund Requests Queue</h4>
+                    <div className="overflow-x-auto w-full">
+                      <table className="w-full text-left font-sans text-xs border-collapse">
+                        <thead>
+                          <tr className={`border-b ${themeMode === 'dark' ? 'border-slate-800 text-slate-400' : 'border-slate-250 text-slate-500'}`}>
+                            <th className="pb-3.5 font-bold uppercase tracking-wider">Merchant</th>
+                            <th className="pb-3.5 font-bold uppercase tracking-wider">Payment ID</th>
+                            <th className="pb-3.5 font-bold uppercase tracking-wider">Amount</th>
+                            <th className="pb-3.5 font-bold uppercase tracking-wider">Reason</th>
+                            <th className="pb-3.5 font-bold uppercase tracking-wider">Status</th>
+                            <th className="pb-3.5 font-bold uppercase tracking-wider text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            { id: 'ref_1', merchant: 'Selvam Windfarms Ltd', pId: 'pay_9A12Jd8s7', amt: '₹4,999.00', reason: 'Accidental double payment during yearly subscription checkout', status: 'Pending Approval' },
+                            { id: 'ref_2', merchant: 'Thirumoorthy Resort & Spa', pId: 'pay_2G71Ks9f2', amt: '₹500.00', reason: 'Business listing discontinued by the owner', status: 'Refunded' },
+                            { id: 'ref_3', merchant: 'Udumalpet IT Park Cafeteria', pId: 'pay_6B22Md4a1', amt: '₹99.00', reason: 'Duplicate event listing standard charge', status: 'Refunded' }
+                          ].map(ref => (
+                            <tr key={ref.id} className={`border-b last:border-0 ${themeMode === 'dark' ? 'border-slate-850 hover:bg-slate-900/10' : 'border-slate-100 hover:bg-slate-50/50'}`}>
+                              <td className="py-4 font-extrabold">{ref.merchant}</td>
+                              <td className="py-4 text-slate-400 font-bold font-mono">{ref.pId}</td>
+                              <td className="py-4 font-extrabold text-[#027244]">{ref.amt}</td>
+                              <td className="py-4 text-slate-450 pr-4 leading-normal">{ref.reason}</td>
+                              <td className="py-4">
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                                  ref.status === 'Refunded' 
+                                    ? 'bg-emerald-50 dark:bg-emerald-950/20 text-[#027244]' 
+                                    : 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 animate-pulse'
+                                }`}>
+                                  {ref.status}
+                                </span>
+                              </td>
+                              <td className="py-4 text-right">
+                                {ref.status === 'Pending Approval' ? (
+                                  <div className="flex gap-2 justify-end">
+                                    <button 
+                                      onClick={() => alert('Refund approved successfully! Funds will be credited to the merchant within 5-7 business days.')}
+                                      className="px-3 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-lg transition-colors cursor-pointer"
+                                    >
+                                      Approve Refund
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span className="text-[10px] text-slate-400 font-bold select-none">-</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -6180,72 +6469,337 @@ export default function SuperAdminDashboard() {
       {/* EDIT EVENT MODAL */}
       {showEditEventModal && editingEvent && (
         <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fadeIn text-[#001c41]">
-          <div className="w-full max-w-lg bg-white border border-slate-200 shadow-2xl rounded-[24px] p-6 flex flex-col gap-5 text-left font-sans">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <h3 className="font-extrabold text-sm uppercase tracking-wider">Edit Event Details</h3>
-              <button onClick={() => { setShowEditEventModal(false); setEditingEvent(null); }} className="text-slate-400 hover:text-slate-600">
+          <div className={`w-full max-w-4xl border shadow-2xl rounded-[28px] overflow-hidden flex flex-col max-h-[90vh] ${
+            themeMode === 'dark' ? 'bg-[#090D1C] border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+          }`}>
+            
+            {/* Modal Header */}
+            <div className={`p-6 border-b flex items-center justify-between shrink-0 ${
+              themeMode === 'dark' ? 'border-slate-800 bg-slate-900/40' : 'border-slate-100 bg-slate-55'
+            }`}>
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Event Vetting Hub</span>
+                <h3 className="font-extrabold text-base leading-tight mt-1 font-sans">Event Details & Vetting Workspace</h3>
+              </div>
+              <button onClick={() => { setShowEditEventModal(false); setEditingEvent(null); }} className={`h-8 w-8 rounded-full border flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+                themeMode === 'dark' ? 'border-slate-800 text-slate-400 hover:bg-slate-850' : 'border-slate-200 text-slate-550 hover:bg-slate-100'
+              }`}>
                 <X className="h-4.5 w-4.5" />
               </button>
             </div>
-            <form onSubmit={handleSaveEvent} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Event Title *</label>
-                <input 
-                  type="text" 
-                  required
-                  value={editingEvent.title}
-                  onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
-                  className="w-full border border-slate-200 p-3 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50/20 focus:outline-none focus:border-[#027244]"
-                />
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-6 text-left font-sans">
+              
+              {/* LEFT COLUMN: GORGEOUS DETAIL VIEW */}
+              <div className="md:col-span-6 flex flex-col gap-5">
+                {/* Event Cover Image */}
+                <div className="w-full h-44 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shrink-0 select-none shadow-3xs relative bg-slate-100">
+                  <img src={editingEvent.coverImageUrl || editingEvent.bannerImage || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&q=80'} className="w-full h-full object-cover" alt="Event Cover" />
+                  <span className={`absolute top-3 right-3 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wide border shadow-sm ${
+                    editingEvent.status === 'Approved' ? 'bg-emerald-500 border-emerald-600 text-white' : 'bg-amber-500 border-amber-600 text-white animate-pulse'
+                  }`}>
+                    {editingEvent.status}
+                  </span>
+                </div>
+
+                {/* Info Block */}
+                <div className="flex flex-col gap-1 text-left font-sans">
+                  <span className="text-[9px] font-black text-slate-405 uppercase tracking-widest leading-none">
+                    Category: {editingEvent.category || 'General'}
+                  </span>
+                  <h4 className={`font-extrabold text-base leading-snug mt-1 ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>
+                    {editingEvent.title}
+                  </h4>
+                  <p className={`text-xs font-semibold leading-relaxed mt-2 text-justify ${themeMode === 'dark' ? 'text-slate-350' : 'text-slate-550'}`}>
+                    {editingEvent.description || 'Join this exciting local gathering at Udumalpet. Reach out to the organizers using the verified contact coordinates for ticketing options and event details.'}
+                  </p>
+                </div>
+
+                {/* Additional Stats */}
+                <div className="grid grid-cols-2 gap-3 text-xs font-semibold text-slate-500">
+                  <div className="flex flex-col gap-0.5 border p-2.5 rounded-2xl dark:border-slate-805">
+                    <span>Pricing Ticket Tier</span>
+                    <span className={`text-sm font-black ${themeMode === 'dark' ? 'text-emerald-450' : 'text-[#027244]'}`}>
+                      {editingEvent.price === 0 ? 'Free Entry' : `₹${editingEvent.price || 99}`}
+                      <span className="text-[10px] text-slate-450 font-bold ml-1.5">({editingEvent.paymentStatus || 'Paid'})</span>
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-0.5 border p-2.5 rounded-2xl dark:border-slate-805">
+                    <span>Likes Count</span>
+                    <span className={`text-sm font-extrabold ${themeMode === 'dark' ? 'text-white' : 'text-slate-805'}`}>
+                      ❤️ {editingEvent.likes?.length || 0} Likes
+                    </span>
+                  </div>
+                </div>
+
+                {/* Date range details & venue coordinates */}
+                <div className="flex flex-col gap-2 text-xs font-bold text-slate-550 dark:text-slate-400 border-t dark:border-slate-800 pt-4">
+                  <div className="flex justify-between">
+                    <span>Organizer / Host</span>
+                    <span className={themeMode === 'dark' ? 'text-slate-200' : 'text-slate-700'}>{editingEvent.organizer}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Contact Line</span>
+                    <a href={`tel:${editingEvent.phone}`} className="text-blue-500 font-extrabold hover:underline">{editingEvent.phone || '+91 99999 99999'}</a>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Event Date</span>
+                    <span className={themeMode === 'dark' ? 'text-slate-200' : 'text-slate-700'}>{formatEventDateRange(editingEvent.date, editingEvent.endDate)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Time Duration</span>
+                    <span className={themeMode === 'dark' ? 'text-slate-200' : 'text-slate-700'}>{editingEvent.time || '10:00 AM onwards'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Venue Location</span>
+                    <span className={`text-right max-w-[200px] leading-tight ${themeMode === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>{editingEvent.venue || editingEvent.location || 'Udumalpet'}</span>
+                  </div>
+                </div>
+
+                {/* Event Comments Feed */}
+                <div className="flex flex-col gap-2.5 border-t dark:border-slate-800 pt-4">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                    Event Comments moderation ({editingEvent.comments?.length || 0})
+                  </span>
+                  <div className={`flex flex-col gap-2 max-h-36 overflow-y-auto border rounded-2xl p-3 text-xs ${
+                    themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-150'
+                  }`}>
+                    {editingEvent.comments && editingEvent.comments.length > 0 ? (
+                      editingEvent.comments.map((comment) => (
+                        <div key={comment._id} className="flex justify-between items-start gap-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 p-2 rounded-xl text-left">
+                          <div className="flex flex-col flex-1 min-w-0 font-sans">
+                            <div className="flex items-center gap-2">
+                              <span className="font-extrabold text-[9px] text-[#027244] truncate">{comment.userName}</span>
+                              <span className="text-[8px] text-slate-450 font-bold">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-[10.5px] font-semibold mt-0.5 text-slate-600 dark:text-slate-350 leading-snug">{comment.text}</p>
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={() => removeCommentLocally(comment._id)}
+                            className="text-rose-500 hover:text-rose-700 text-[8.5px] font-black uppercase px-1.5 py-0.5 hover:bg-rose-500/10 rounded transition-colors shrink-0"
+                            title="Remove Comment from event"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-[10.5px] text-slate-500 italic text-center py-2">No comments written yet on this event.</span>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Organizer / Venue *</label>
-                <input 
-                  type="text" 
-                  required
-                  value={editingEvent.organizer}
-                  onChange={(e) => setEditingEvent({ ...editingEvent, organizer: e.target.value })}
-                  className="w-full border border-slate-200 p-3 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50/20 focus:outline-none focus:border-[#027244]"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+
+              {/* RIGHT COLUMN: COMPLETE EDIT CONTROLS FORM */}
+              <form onSubmit={handleSaveEvent} className="md:col-span-6 flex flex-col gap-4 border-l border-dashed border-slate-200 dark:border-slate-800 pl-0 md:pl-6">
+                <span className="text-[10.5px] font-black text-slate-400 uppercase tracking-widest leading-none border-b dark:border-slate-800 pb-1 mb-1">Edit Event Parameters</span>
+                
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Date *</label>
+                  <label className="text-[9px] font-black text-slate-505 uppercase tracking-widest leading-none">Event Title *</label>
                   <input 
                     type="text" 
                     required
-                    value={editingEvent.date}
-                    onChange={(e) => setEditingEvent({ ...editingEvent, date: e.target.value })}
-                    className="w-full border border-slate-200 p-3 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50/20 focus:outline-none focus:border-[#027244]"
+                    value={editingEvent.title}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
+                    className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
+                      themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-[#027244]'
+                    }`}
                   />
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[9px] font-black text-slate-505 uppercase tracking-widest leading-none">Category *</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={editingEvent.category}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, category: e.target.value })}
+                      className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
+                        themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-[#027244]'
+                      }`}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[9px] font-black text-slate-505 uppercase tracking-widest leading-none">Organizer / Host *</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={editingEvent.organizer}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, organizer: e.target.value })}
+                      className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
+                        themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-[#027244]'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[9px] font-black text-slate-505 uppercase tracking-widest leading-none">From Date *</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="YYYY-MM-DD"
+                      value={editingEvent.date}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, date: e.target.value })}
+                      className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
+                        themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-[#027244]'
+                      }`}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[9px] font-black text-slate-505 uppercase tracking-widest leading-none">To Date *</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="YYYY-MM-DD"
+                      value={editingEvent.endDate || ''}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, endDate: e.target.value })}
+                      className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
+                        themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-[#027244]'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[9px] font-black text-slate-505 uppercase tracking-widest leading-none">Time Slot *</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="10:00 AM"
+                      value={editingEvent.time || ''}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, time: e.target.value })}
+                      className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
+                        themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-[#027244]'
+                      }`}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[9px] font-black text-slate-505 uppercase tracking-widest leading-none">Venue location *</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={editingEvent.venue || editingEvent.location || ''}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, venue: e.target.value, location: e.target.value })}
+                      className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
+                        themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-[#027244]'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[9px] font-black text-slate-555 uppercase tracking-widest leading-none">Price (₹) *</label>
+                    <input 
+                      type="number" 
+                      required
+                      value={editingEvent.price === undefined ? 99 : editingEvent.price}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, price: Number(e.target.value) })}
+                      className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
+                        themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-[#027244]'
+                      }`}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[9px] font-black text-slate-555 uppercase tracking-widest leading-none">Contact Phone *</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={editingEvent.phone || ''}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, phone: e.target.value })}
+                      className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
+                        themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-[#027244]'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[9px] font-black text-slate-555 uppercase tracking-widest leading-none">Payment Status *</label>
+                    <select
+                      value={editingEvent.paymentStatus || 'Pending'}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, paymentStatus: e.target.value })}
+                      className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
+                        themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-[#027244]'
+                      }`}
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Paid">Paid</option>
+                      <option value="Free">Free</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[9px] font-black text-slate-555 uppercase tracking-widest leading-none">Cover Image URL</label>
+                    <input 
+                      type="text" 
+                      value={editingEvent.coverImageUrl || ''}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, coverImageUrl: e.target.value, bannerImage: e.target.value })}
+                      className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
+                        themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-[#027244]'
+                      }`}
+                    />
+                  </div>
+                </div>
+
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Venue location *</label>
-                  <input 
-                    type="text" 
-                    required
-                    value={editingEvent.venue}
-                    onChange={(e) => setEditingEvent({ ...editingEvent, venue: e.target.value })}
-                    className="w-full border border-slate-200 p-3 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50/20 focus:outline-none focus:border-[#027244]"
+                  <label className="text-[9px] font-black text-slate-555 uppercase tracking-widest leading-none">Event Description</label>
+                  <textarea 
+                    rows={3}
+                    value={editingEvent.description || ''}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })}
+                    className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none resize-none leading-relaxed ${
+                      themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-[#027244]'
+                    }`}
                   />
                 </div>
-              </div>
-              <div className="flex gap-2 justify-end">
-                <button 
-                  type="button"
-                  onClick={() => { setShowEditEventModal(false); setEditingEvent(null); }}
-                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-extrabold rounded-xl"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  className="px-5 py-2 bg-[#027244] hover:bg-[#005934] text-white text-xs font-extrabold rounded-xl shadow-md cursor-pointer"
-                >
-                  Save Event
-                </button>
-              </div>
-            </form>
+
+                <div className="flex gap-2 justify-end border-t dark:border-slate-800 pt-3">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm("Permanently delete this event flyer?")) {
+                        setEvents(prev => prev.filter(item => item._id !== editingEvent._id));
+                        setShowEditEventModal(false);
+                        setEditingEvent(null);
+                        alert("Event deleted.");
+                      }
+                    }}
+                    className="px-4 py-2 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-500 text-xs font-extrabold rounded-xl mr-auto cursor-pointer"
+                  >
+                    Delete Event
+                  </button>
+
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      handleEventAction(editingEvent._id, editingEvent.status === 'Approved' ? 'Rejected' : 'Approved');
+                      setEditingEvent(prev => ({ ...prev, status: prev.status === 'Approved' ? 'Rejected' : 'Approved' }));
+                    }}
+                    className={`px-4 py-2 border text-xs font-extrabold rounded-xl cursor-pointer ${
+                      editingEvent.status === 'Approved' 
+                        ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' 
+                        : 'bg-[#027244]/15 border-[#027244]/25 text-[#027244]'
+                    }`}
+                  >
+                    {editingEvent.status === 'Approved' ? 'Reject' : 'Approve & Publish'}
+                  </button>
+
+                  <button 
+                    type="submit"
+                    className="px-5 py-2 bg-[#027244] hover:bg-[#005934] text-white text-xs font-extrabold rounded-xl shadow-md cursor-pointer"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
@@ -6452,6 +7006,290 @@ export default function SuperAdminDashboard() {
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* 14. REVIEWS DETAILED POPUP MODAL */}
+      {showReviewModal && selectedReview && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fadeIn text-[#001c41]">
+          <div className={`w-full max-w-xl border shadow-2xl rounded-[28px] overflow-hidden flex flex-col max-h-[90vh] ${
+            themeMode === 'dark' ? 'bg-[#090D1C] border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+          }`}>
+            {/* Modal Header */}
+            <div className={`p-6 border-b flex items-center justify-between shrink-0 ${
+              themeMode === 'dark' ? 'border-slate-800 bg-slate-900/40' : 'border-slate-100 bg-slate-50'
+            }`}>
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Feedback Desk</span>
+                <h3 className="font-extrabold text-base leading-tight mt-1 font-sans">Review Detailed View</h3>
+              </div>
+              <button 
+                onClick={() => { setSelectedReview(null); setShowReviewModal(false); }} 
+                className={`h-8 w-8 rounded-full border flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+                  themeMode === 'dark' ? 'border-slate-800 text-slate-400 hover:bg-slate-850' : 'border-slate-200 text-slate-550 hover:bg-slate-100'
+                }`}
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto flex flex-col gap-5 text-left font-sans">
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex items-center gap-3">
+                  <div className={`h-11 w-11 rounded-full border flex items-center justify-center font-black text-sm shrink-0 ${
+                    themeMode === 'dark' ? 'bg-slate-850 border-slate-800 text-slate-250' : 'bg-emerald-50 border-emerald-100 text-[#027244]'
+                  }`}>
+                    {selectedReview.authorName?.charAt(0).toUpperCase() || 'R'}
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className={`font-extrabold text-sm leading-tight ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                      {selectedReview.authorName}
+                    </span>
+                    <span className="text-[10px] text-slate-450 font-bold mt-1">Written on {selectedReview.businessName}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <div className="flex text-amber-400 gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`h-3.5 w-3.5 ${i < selectedReview.rating ? 'fill-current' : 'text-slate-200'}`} />
+                    ))}
+                  </div>
+                  <span className="text-[9.5px] text-slate-450 font-bold">
+                    {selectedReview.createdAt ? new Date(selectedReview.createdAt).toLocaleString() : 'Just now'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Star details & status block */}
+              <div className="grid grid-cols-2 gap-3 text-xs font-semibold text-slate-500">
+                <div className="flex flex-col gap-0.5 border p-3 rounded-2xl border-dashed dark:border-slate-800">
+                  <span>Rating Score</span>
+                  <span className={`text-sm font-extrabold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{selectedReview.rating} out of 5 stars</span>
+                </div>
+                <div className="flex flex-col gap-0.5 border p-3 rounded-2xl border-dashed dark:border-slate-800">
+                  <span>Moderation Status</span>
+                  <span className={`text-[10px] font-black uppercase w-fit px-2 py-0.5 rounded border leading-none mt-1 ${
+                    selectedReview.status === 'hidden'
+                      ? 'bg-slate-500/10 border-slate-500/20 text-slate-500'
+                      : selectedReview.status === 'spam' || selectedReview.status === 'flagged'
+                        ? 'bg-rose-500/10 border-rose-500/20 text-rose-500'
+                        : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                  }`}>
+                    {selectedReview.status || 'Approved'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Review Text */}
+              <div className="flex flex-col gap-2 border-t dark:border-slate-800 pt-4">
+                <span className="text-[10.5px] font-black text-slate-400 uppercase tracking-widest leading-none">Review text message</span>
+                <p className={`text-xs leading-relaxed font-semibold border p-4.5 rounded-2xl whitespace-pre-wrap text-justify ${
+                  themeMode === 'dark' ? 'bg-slate-950/20 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-100 text-slate-700'
+                }`}>
+                  "{selectedReview.text}"
+                </p>
+              </div>
+
+              {/* Mock System Audit Log for review */}
+              <div className="flex flex-col gap-2 border-t dark:border-slate-800 pt-4 text-xs font-bold text-slate-400">
+                <span className="text-[10.5px] font-black text-slate-400 uppercase tracking-widest leading-none">System Vetting Log</span>
+                <div className="flex flex-col gap-1.5 mt-1">
+                  <div className="flex justify-between">
+                    <span>IP Address</span>
+                    <span className="font-mono">192.168.1.155 (Tamil Nadu)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Account Trust Status</span>
+                    <span className="text-emerald-500 font-extrabold">Verified Local Resident</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Profanity Vetting</span>
+                    <span className="text-emerald-500">Passed Automated Scan</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className={`p-6 border-t flex justify-between gap-3 shrink-0 ${
+              themeMode === 'dark' ? 'border-slate-800 bg-slate-900/50' : 'border-slate-100 bg-slate-50'
+            }`}>
+              <button 
+                onClick={() => {
+                  if (window.confirm("Permanently delete this review?")) {
+                    handleReviewAction(selectedReview._id, 'delete');
+                    setSelectedReview(null);
+                    setShowReviewModal(false);
+                  }
+                }}
+                className="px-4 py-2 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-500 rounded-xl font-extrabold text-xs cursor-pointer transition-colors"
+              >
+                Delete Review
+              </button>
+
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => { setSelectedReview(null); setShowReviewModal(false); }}
+                  className={`px-4 py-2 border rounded-xl font-extrabold text-xs cursor-pointer transition-colors ${
+                    themeMode === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-slate-355' : 'border-slate-200 hover:bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  Close
+                </button>
+                <button 
+                  onClick={() => {
+                    const isSpam = selectedReview.status === 'flagged' || selectedReview.status === 'spam';
+                    setReviews(prev => prev.map(item => item._id === selectedReview._id ? { ...item, status: isSpam ? 'approved' : 'spam' } : item));
+                    setSelectedReview(prev => ({ ...prev, status: isSpam ? 'approved' : 'spam' }));
+                  }}
+                  className={`px-4 py-2 border rounded-xl font-extrabold text-xs cursor-pointer transition-colors ${
+                    selectedReview.status === 'flagged' || selectedReview.status === 'spam'
+                      ? 'bg-rose-500/10 border-rose-500/20 text-rose-500'
+                      : themeMode === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  {selectedReview.status === 'flagged' || selectedReview.status === 'spam' ? 'Remove Spam Tag' : 'Mark Spam'}
+                </button>
+                <button 
+                  onClick={() => {
+                    const isHidden = selectedReview.status === 'hidden';
+                    setReviews(prev => prev.map(item => item._id === selectedReview._id ? { ...item, status: isHidden ? 'approved' : 'hidden' } : item));
+                    setSelectedReview(prev => ({ ...prev, status: isHidden ? 'approved' : 'hidden' }));
+                  }}
+                  className="px-4 py-2 bg-[#027244] hover:bg-[#005934] text-white rounded-xl font-extrabold text-xs cursor-pointer transition-colors"
+                >
+                  {selectedReview.status === 'hidden' ? 'Un-Hide' : 'Hide Review'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 15. TRANSACTION DETAILED POPUP MODAL */}
+      {showTxModal && selectedTx && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fadeIn text-[#001c41]">
+          <div className={`w-full max-w-xl border shadow-2xl rounded-[28px] overflow-hidden flex flex-col max-h-[90vh] ${
+            themeMode === 'dark' ? 'bg-[#090D1C] border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+          }`}>
+            {/* Modal Header */}
+            <div className={`p-6 border-b flex items-center justify-between shrink-0 ${
+              themeMode === 'dark' ? 'border-slate-800 bg-slate-900/40' : 'border-slate-100 bg-slate-50'
+            }`}>
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] font-black text-slate-405 uppercase tracking-widest">Gateway Settlement Workspace</span>
+                <h3 className="font-extrabold text-base leading-tight mt-1 font-sans">Transaction detailed parameters</h3>
+              </div>
+              <button 
+                onClick={() => { setSelectedTx(null); setShowTxModal(false); }} 
+                className={`h-8 w-8 rounded-full border flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+                  themeMode === 'dark' ? 'border-slate-800 text-slate-400 hover:bg-slate-850' : 'border-slate-200 text-slate-550 hover:bg-slate-100'
+                }`}
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto flex flex-col gap-6 text-left font-sans">
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Transaction Identification</span>
+                  <span className={`text-sm font-mono font-bold uppercase ${themeMode === 'dark' ? 'text-emerald-450' : 'text-slate-800'}`}>
+                    {selectedTx.id || selectedTx._id || 'TXN12548'}
+                  </span>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <span className="text-[9px] font-black uppercase text-slate-400">Amount Cleared</span>
+                  <span className="text-xl font-black text-[#027244]">
+                    {selectedTx.amt || (selectedTx.amount ? `₹${selectedTx.amount}` : '') || '₹49'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Details table grid */}
+              <div className="grid grid-cols-2 gap-4 text-xs font-semibold text-slate-500">
+                <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
+                  <span>Merchant/Business</span>
+                  <span className={`text-sm font-extrabold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                    {selectedTx.name || selectedTx.businessName || 'Sri Lakshmi Electricals'}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
+                  <span>Subscription Plan</span>
+                  <span className={`text-sm font-extrabold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                    {selectedTx.planType ? `${selectedTx.planType} Plan` : 'Premium Listing'}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
+                  <span>Clearing Gateway</span>
+                  <span className="text-xs font-bold text-blue-500">Razorpay API Hub</span>
+                </div>
+                <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
+                  <span>Settlement status</span>
+                  <span className={`text-[9.5px] font-black uppercase w-fit px-2 py-0.5 rounded border leading-none mt-1 ${
+                    (selectedTx.status === 'Success' || selectedTx.paymentStatus === 'Paid')
+                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                      : 'bg-rose-500/10 border-rose-500/20 text-rose-500'
+                  }`}>
+                    {selectedTx.status || selectedTx.paymentStatus || 'Success'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Invoice Breakdown */}
+              <div className="flex flex-col gap-2.5 border-t dark:border-slate-800 pt-4">
+                <span className="text-[10.5px] font-black text-slate-405 uppercase tracking-widest leading-none">Billing breakdown</span>
+                <div className="flex flex-col gap-2 text-xs font-semibold text-slate-550 dark:text-slate-400">
+                  <div className="flex justify-between">
+                    <span>Base Amount listing fees</span>
+                    <span>{selectedTx.amt || (selectedTx.amount ? `₹${selectedTx.amount}` : '') || '₹49'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>GST Tax (18% inclusive)</span>
+                    <span>{selectedTx.amt ? '₹7.47' : `₹${((selectedTx.amount || 0) * 0.18).toFixed(2)}`}</span>
+                  </div>
+                  <div className="flex justify-between border-t dark:border-slate-800 pt-2 font-extrabold text-slate-800 dark:text-white">
+                    <span>Gross Settlement Amount</span>
+                    <span className="text-[#027244]">{selectedTx.amt || (selectedTx.amount ? `₹${selectedTx.amount}` : '') || '₹49'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mock Settlement Clearing logs */}
+              <div className="flex flex-col gap-2 border-t dark:border-slate-800 pt-4">
+                <span className="text-[10.5px] font-black text-slate-405 uppercase tracking-widest leading-none">Secure Payment Gateway Clearance Logs</span>
+                <div className="bg-slate-955 text-slate-300 font-mono text-[9px] p-4.5 rounded-2xl leading-relaxed flex flex-col gap-1 border border-slate-850 max-h-36 overflow-y-auto">
+                  <span className="text-slate-550">[2026-06-01T12:00:01] INITIATING RAZORPAY BILLING HANDSHAKE...</span>
+                  <span className="text-slate-550">[2026-06-01T12:00:02] VALIDATING SIGNATURE HMAC KEY PARAMS...</span>
+                  <span className="text-slate-550">[2026-06-01T12:00:03] GATEWAY RESPONSE: SETTLEMENT CAPTURED (code: 200)</span>
+                  <span className="text-emerald-450 font-bold">[2026-06-01T12:00:03] TRANSACTION RECORD SUCCESSFUL. PROFILES UPGRADED.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className={`p-6 border-t flex justify-between gap-3 shrink-0 ${
+              themeMode === 'dark' ? 'border-slate-800 bg-slate-900/50' : 'border-slate-100 bg-slate-50'
+            }`}>
+              <button 
+                onClick={() => {
+                  alert(`Invoice receipt for ${selectedTx.id || selectedTx._id || 'TXN12548'} has been generated and queued for email delivery to merchant.`);
+                }}
+                className="px-4 py-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-[#027244] rounded-xl font-extrabold text-xs cursor-pointer transition-colors border border-emerald-500/20"
+              >
+                Send Invoice Email
+              </button>
+
+              <button 
+                onClick={() => { setSelectedTx(null); setShowTxModal(false); }}
+                className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white rounded-xl font-extrabold text-xs cursor-pointer transition-colors"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}

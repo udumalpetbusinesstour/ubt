@@ -203,7 +203,7 @@ export default function Login() {
             <div className="flex flex-col gap-0.5">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Need Help?</span>
               <span className="text-xs text-[#001c41] font-extrabold mt-1 leading-normal">Our editor assistance team is here to help.</span>
-              <a href="mailto:support@ubtblogs.in" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Email: support@ubtblogs.in</a>
+              <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Email: udumalpetbusinesstour@gmail.com</a>
             </div>
           </div>
         </div>

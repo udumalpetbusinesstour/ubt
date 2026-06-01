@@ -6,6 +6,7 @@ const User = require('../models/User');
 const Notification = require('../models/Notification');
 const AdminAction = require('../models/AdminAction');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
+const { sendEmail } = require('../utils/emailHelper');
 
 /**
  * Moderate business listings (approve, reject, suspend)
@@ -14,7 +15,7 @@ const moderateBusiness = async (req, res, next) => {
   try {
     const { businessId, action, remarks } = req.body;
 
-    const business = await Business.findById(businessId);
+    const business = await Business.findById(businessId).populate('ownerId');
     if (!business) {
       return sendError(res, 404, 'Business listing not found');
     }
@@ -42,7 +43,7 @@ const moderateBusiness = async (req, res, next) => {
       business.subscriptionStatus = 'none';
       business.isPremium = false;
     }
-    await business.save();
+    await business.save({ validateBeforeSave: false });
 
     // Log the administrative action audit trail
     await AdminAction.create({
@@ -52,14 +53,19 @@ const moderateBusiness = async (req, res, next) => {
       remarks: remarks || `Administrative status change to ${nextStatus}`
     });
 
-    // Notify owner
-    await Notification.create({
-      userId: business.ownerId,
-      businessId: business._id,
-      title: `Listing Moderation Update`,
-      message: `Your business directory "${business.name}" has been ${action}d. Remarks: ${remarks || 'None'}`,
-      type: 'approval_status'
-    });
+    // Notify owner via Email
+    if (business.ownerId && business.ownerId.email) {
+      const ownerName = business.ownerId.fullName || business.ownerId.name || 'Merchant';
+      try {
+        await sendEmail({
+          to: business.ownerId.email,
+          subject: `Listing Moderation Update: "${business.name}"`,
+          text: `Hello ${ownerName},\n\nYour business directory listing "${business.name}" has been ${action}d by the moderation team.\n\nRemarks:\n"${remarks || 'None'}"\n\nBest regards,\nUBT Moderation Team`
+        });
+      } catch (err) {
+        console.error('[SMTP] Failed to send business status email:', err.message);
+      }
+    }
 
     return sendSuccess(res, 200, `Business successfully ${action}d`, business);
   } catch (err) {
@@ -74,7 +80,7 @@ const moderateBlog = async (req, res, next) => {
   try {
     const { blogId, status, suggestions } = req.body;
 
-    const blog = await Blog.findById(blogId);
+    const blog = await Blog.findById(blogId).populate('author');
     if (!blog) {
       return sendError(res, 404, 'Blog post not found');
     }
@@ -89,17 +95,45 @@ const moderateBlog = async (req, res, next) => {
         message: suggestions || ''
       });
     }
-    await blog.save();
+    await blog.save({ validateBeforeSave: false });
 
-    // Notify author
+    // Notify author in-app
     await Notification.create({
-      userId: blog.author,
+      userId: blog.author ? (blog.author._id || blog.author) : null,
       title: `Blog Moderation Update`,
       message: status === 'Needs Revision'
         ? `Your blog post "${blog.title}" requires revisions: "${suggestions}"`
         : `Your blog post "${blog.title}" has been reviewed and ${status.toLowerCase()} by moderation team.`,
       type: 'approval_status'
     });
+
+    // Notify author via Email
+    if (blog.author && blog.author.email) {
+      const authorName = blog.author.fullName || blog.author.name || 'Writer';
+      let emailSubject = `Blog Moderation Update: "${blog.title}"`;
+      let emailText = `Hello ${authorName},\n\nYour blog post "${blog.title}" has been reviewed by the UBT moderation team.\n\nStatus: ${status}\n\n`;
+
+      if (status === 'Needs Revision') {
+        emailSubject = `Action Required: Revisions requested for your blog post "${blog.title}"`;
+        emailText = `Hello ${authorName},\n\nThe administrator has reviewed your blog post "${blog.title}" and requested some revisions.\n\nSuggestions/Comments:\n"${suggestions}"\n\nPlease log in to the portal, update your blog post, and re-submit it for review.`;
+      } else if (status === 'Approved') {
+        emailText += `Congratulations! Your article is now live and published on the platform.`;
+      } else if (status === 'Rejected') {
+        emailText += `Unfortunately, your article was rejected and will not be published.`;
+      }
+
+      emailText += `\n\nThank you,\nUBT Moderation Team`;
+
+      try {
+        await sendEmail({
+          to: blog.author.email,
+          subject: emailSubject,
+          text: emailText
+        });
+      } catch (err) {
+        console.error('[SMTP] Failed to send blog status email:', err.message);
+      }
+    }
 
     return sendSuccess(res, 200, `Blog article successfully updated to ${status}`, blog);
   } catch (err) {
@@ -114,22 +148,35 @@ const moderateEvent = async (req, res, next) => {
   try {
     const { eventId, status } = req.body;
 
-    const event = await Event.findById(eventId);
+    const event = await Event.findById(eventId).populate('ownerId');
     if (!event) {
       return sendError(res, 404, 'Event listing not found');
     }
 
     event.status = status; // 'Approved', 'Rejected', 'Pending Review'
-    await event.save();
+    await event.save({ validateBeforeSave: false });
 
     // Notify organizer
     if (event.ownerId) {
       await Notification.create({
-        userId: event.ownerId,
+        userId: event.ownerId._id || event.ownerId,
         title: `Event Moderation Update`,
         message: `Your event flyer "${event.title}" has been reviewed and ${status.toLowerCase()} by moderation team.`,
         type: 'approval_status'
       });
+
+      if (event.ownerId.email) {
+        const organizerName = event.ownerId.fullName || event.ownerId.name || 'Organizer';
+        try {
+          await sendEmail({
+            to: event.ownerId.email,
+            subject: `Event Moderation Update: "${event.title}"`,
+            text: `Hello ${organizerName},\n\nYour event listing "${event.title}" has been reviewed by the moderation team.\n\nStatus: ${status}\n\nPlease log in to your dashboard to view comments or details.\n\nBest regards,\nUBT Moderation Team`
+          });
+        } catch (err) {
+          console.error('[SMTP] Failed to send event moderation email:', err.message);
+        }
+      }
     }
 
     return sendSuccess(res, 200, `Event flyer successfully ${status.toLowerCase()}`, event);

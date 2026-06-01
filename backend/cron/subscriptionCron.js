@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 const Business = require('../models/Business');
 const Notification = require('../models/Notification');
+const { sendEmail } = require('../utils/emailHelper');
 
 /**
  * Automate Business Expiry Telemetry Checks
@@ -15,7 +16,7 @@ const runExpiryAudit = async () => {
     const activePremiumBiz = await Business.find({
       subscriptionStatus: 'active',
       subscriptionExpiry: { $exists: true, $ne: null }
-    });
+    }).populate('ownerId');
 
     console.log(`Auditing ${activePremiumBiz.length} active premium business directories for expirations...`);
 
@@ -41,12 +42,25 @@ const runExpiryAudit = async () => {
 
         // Send expired notification alert
         await Notification.create({
-          userId: biz.ownerId,
+          userId: biz.ownerId ? (biz.ownerId._id || biz.ownerId) : null,
           businessId: biz._id,
           title: 'Subscription Package Expired',
           message: `Your premium UBT listing "${biz.name}" has expired. WhatsApp links are disabled and your profile is de-boosted. Please renew today to restore.`,
           type: 'expired'
         });
+
+        if (biz.ownerId && biz.ownerId.email) {
+          const ownerName = biz.ownerId.fullName || biz.ownerId.name || 'Merchant';
+          try {
+            await sendEmail({
+              to: biz.ownerId.email,
+              subject: `UBT Premium Subscription Expired: "${biz.name}"`,
+              text: `Hello ${ownerName},\n\nYour premium UBT listing "${biz.name}" has expired. WhatsApp contact buttons have been disabled and your profile has been de-boosted.\n\nPlease log in to your dashboard and renew your subscription today to restore full search placement and contact visibility.\n\nBest regards,\nUBT Billing Desk`
+            });
+          } catch (err) {
+            console.error('[SMTP] Failed to send subscription expired email:', err.message);
+          }
+        }
 
         console.log(`[Cron Expired] Business directory listing "${biz.name}" has been marked as expired.`);
       } else if (diffDays <= 5) {
@@ -63,12 +77,25 @@ const runExpiryAudit = async () => {
           const daysRemaining = Math.ceil(diffDays);
 
           await Notification.create({
-            userId: biz.ownerId,
+            userId: biz.ownerId ? (biz.ownerId._id || biz.ownerId) : null,
             businessId: biz._id,
             title: 'UBT Subscription Expiring Soon',
             message: `Your premium UBT subscription for "${biz.name}" will expire in ${daysRemaining} days. Renew today to maintain visibility!`,
             type: 'expiry_warning'
           });
+
+          if (biz.ownerId && biz.ownerId.email) {
+            const ownerName = biz.ownerId.fullName || biz.ownerId.name || 'Merchant';
+            try {
+              await sendEmail({
+                to: biz.ownerId.email,
+                subject: `Renew Today: Your UBT Subscription for "${biz.name}" expires in ${daysRemaining} days`,
+                text: `Hello ${ownerName},\n\nYour premium UBT subscription for "${biz.name}" will expire in ${daysRemaining} days.\n\nRenew today to maintain your premium search placement, contact options, and page analytics.\n\nBest regards,\nUBT Billing Desk`
+              });
+            } catch (err) {
+              console.error('[SMTP] Failed to send subscription warning email:', err.message);
+            }
+          }
 
           console.log(`[Cron Warning] dispatched warning notification to "${biz.name}". ${daysRemaining} days left.`);
         }
