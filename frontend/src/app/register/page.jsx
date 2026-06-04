@@ -10,6 +10,7 @@ export default function Register() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const fromParam = searchParams.get('from') || 'business';
+  const flowParam = searchParams.get('flow') || 'general';
   
   // Registration form states
   const [fullName, setFullName] = useState('');
@@ -85,7 +86,7 @@ export default function Register() {
           if (redirect) {
             navigate(redirect);
           } else {
-            navigate('/add-business');
+            navigate(`/choose-plan?flow=${flowParam}`);
           }
         }, 1200);
       } else {
@@ -444,7 +445,7 @@ export default function Register() {
   };
 
   return (
-    <div className="w-full flex flex-col items-center bg-[#F8FAFC] py-12 px-4 md:px-8 font-sans">
+    <div className="w-full flex flex-col items-center bg-[#F8FAFC] pt-6 pb-12 px-4 md:px-8 font-sans">
       
       {/* Back to Home Link */}
       <div className="max-w-5xl w-full flex justify-start mb-6">

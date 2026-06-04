@@ -465,7 +465,7 @@ export default function Login() {
   };
 
   return (
-    <div className="w-full flex flex-col items-center bg-[#F8FAFC] py-12 px-4 md:px-8 font-sans">
+    <div className="w-full flex flex-col items-center bg-[#F8FAFC] pt-6 pb-12 px-4 md:px-8 font-sans">
       
       {/* Back to Home Link */}
       <div className="max-w-5xl w-full flex justify-start mb-6">

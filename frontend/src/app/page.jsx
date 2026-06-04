@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Search, MapPin, Grid, Shield, Heart, Phone, Users, Star, ArrowRight, Check, ShieldCheck,
-  ChevronLeft, ChevronRight, HelpCircle, Eye, MessageSquare, Play, Sparkles, X, Gift,
+  ChevronLeft, ChevronRight, HelpCircle, Eye, MessageSquare, Play, Sparkles, X, Gift, Rocket,
   Hotel, Store, Wrench, HeartPulse, GraduationCap, Home as HouseIcon, Car, LayoutGrid,
   FileEdit, PhoneCall, Smile, Users2, Tv, Utensils, Building, ShoppingBag, Factory, 
   Briefcase, Compass, Sprout, CreditCard, Dumbbell
@@ -553,7 +553,7 @@ export default function Home() {
     <div className="w-full flex flex-col items-center bg-[#F8FAFC]">
       
       {/* 1. Hero Section (Pixel Perfect Layout with User Uploaded Thirumoorthy Hills BG) */}
-      <section className="w-full relative min-h-[620px] bg-[#F8FAFC] flex items-center justify-center pt-24 pb-28 px-4 md:px-8 overflow-hidden z-0">
+      <section className="w-full relative min-h-[620px] bg-[#F8FAFC] flex items-center justify-center pt-6 pb-28 px-4 md:px-8 overflow-hidden z-0">
         
         {/* Background Image rendered at its native 1024x576 size to prevent any scaling blur */}
         <img 
@@ -581,11 +581,31 @@ export default function Home() {
               A trusted local platform to discover, connect and grow with verified businesses in and around Udumalpet.
             </p>
 
+            {/* Onboarding CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 mt-6 w-full sm:w-auto">
+              <Link 
+                to="/register?flow=early_access"
+                id="join-early-access-btn"
+                className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3.5 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Rocket className="h-4.5 w-4.5 animate-pulse" />
+                <span>Join Early Access</span>
+              </Link>
+              <Link 
+                to="/register?flow=general"
+                id="register-business-btn"
+                className="bg-white hover:bg-slate-50 border-2 border-[#027244] text-[#027244] font-extrabold text-xs py-3.5 px-6 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Store className="h-4.5 w-4.5" />
+                <span>Register Your Business</span>
+              </Link>
+            </div>
+
             {/* Shaking Referral Tag */}
             <button 
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent('open-referral-modal'))}
-              className="mt-5 bg-amber-400 hover:bg-amber-500 text-slate-900 text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-full shadow-md animate-shake border border-amber-500/20 flex items-center gap-2 cursor-pointer transition-all"
+              className="mt-6 bg-amber-400 hover:bg-amber-500 text-slate-900 text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-full shadow-md animate-shake border border-amber-500/20 flex items-center gap-2 cursor-pointer transition-all"
             >
               <Gift className="h-4 w-4 text-[#027244] shrink-0 animate-bounce" />
               Refer other business & earn rewards!
@@ -935,88 +955,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. Business Owner callout banner */}
-      <section className="max-w-7xl w-full px-4 md:px-8 py-6 mb-12">
-        <div className="w-full bg-gradient-to-r from-[#027244] to-[#005934] rounded-[32px] p-8 md:p-12 text-white grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative overflow-hidden shadow-2xl">
-          
-          {/* Left Column: Owner Callout Text */}
-          <div className="lg:col-span-5 flex flex-col gap-3 z-10 text-center lg:text-left">
-            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Are you a Business Owner?</h2>
-            <p className="text-xs text-emerald-100 font-semibold leading-relaxed">
-              List your business and grow with Udumalpet Business Tour
-            </p>
-            
-            <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 text-xs text-emerald-100 font-bold mt-4">
-              <div className="flex items-center gap-2">
-                <Check className="h-4.5 w-4.5 bg-white/10 rounded-full p-1" />
-                <span>Get Discovered</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="h-4.5 w-4.5 bg-white/10 rounded-full p-1" />
-                <span>Build Trust</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="h-4.5 w-4.5 bg-white/10 rounded-full p-1" />
-                <span>Grow Your Business</span>
-              </div>
-            </div>
-            
-            {/* List Your Business Now Button */}
-            <div className="mt-6 flex justify-center lg:justify-start">
-              <Link 
-                to="/add-business" 
-                className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-extrabold text-xs py-3.5 px-8 rounded-xl transition-all shadow shadow-amber-500/10 cursor-pointer"
-              >
-                List Your Business Now
-              </Link>
-            </div>
-          </div>
 
-          {/* Right Column: Comparative Features Table Card */}
-          <div className="lg:col-span-7 z-10">
-            <div className="w-full bg-white border border-slate-200/80 shadow-lg rounded-2xl p-5 flex flex-col gap-4 text-left">
-              <div>
-                <h3 className="text-base font-extrabold text-slate-800 tracking-tight font-sans">Why Choose UBT Over Free Listings?</h3>
-                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">See how the UBT Business Network compares to standard free listing sites</p>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-[11px] font-semibold text-slate-600">
-                  <thead>
-                    <tr className="border-b border-slate-100">
-                      <th className="py-2 px-2 text-left font-extrabold text-slate-800">Features</th>
-                      <th className="py-2 px-2 text-center font-extrabold text-slate-400">Free Listing Sites</th>
-                      <th className="py-2 px-2 text-center font-black text-[#027244] bg-emerald-50/20 rounded-t-lg">UBT Business Network</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {[
-                      { feature: 'Verified Business', free: false, ubt: true },
-                      { feature: 'Dedicated Landing Page', free: false, ubt: true },
-                      { feature: 'Event Posting', free: false, ubt: true },
-                      { feature: 'Blog Publishing', free: false, ubt: true },
-                      { feature: 'Google Review Integration', free: false, ubt: true },
-                      { feature: 'Local Business Focus', free: false, ubt: true },
-                      { feature: 'Priority Support', free: false, ubt: true }
-                    ].map((row, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="py-2 px-2 font-bold text-slate-700">{row.feature}</td>
-                        <td className="py-2 px-2 text-center">
-                          <X className="h-4 w-4 text-red-500 mx-auto" />
-                        </td>
-                        <td className="py-2 px-2 text-center bg-emerald-50/20 font-black text-emerald-600">
-                          <Check className="h-4 w-4 text-emerald-600 mx-auto" />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
 
       {/* 8. What People Say Section */}
       <section className="w-full bg-white py-16 px-4 border-t border-slate-200/50">
@@ -1094,6 +1033,80 @@ export default function Home() {
               Share Your Thoughts About UBT
             </button>
           </div>
+        </div>
+      </section>
+
+      {/* How It Works for Businesses Section (Connected with dashed lines) */}
+      <section id="how-it-works-business" className="max-w-7xl w-full px-4 md:px-8 py-16 flex flex-col items-center gap-12 border-t border-slate-200/50">
+        <div className="text-center max-w-md">
+          <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Steps to Register</h2>
+          <p className="text-xs text-slate-400 font-semibold mt-2">Follow these simple steps to list and verify your business on Udumalpet Business Tour</p>
+        </div>
+
+        <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+          {[
+            { 
+              num: 1, 
+              title: 'Create Account', 
+              desc: 'Sign up as a business owner in seconds with your basic contact info', 
+              icon: (
+                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
+                  <circle cx="12" cy="10" r="3" stroke="#001c41" strokeWidth="2" />
+                  <path d="M6 17c0-2 2-3 6-3s6 1 6 3" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M19 8h2m-1-1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              ) 
+            },
+            { 
+              num: 2, 
+              title: 'Choose Plan', 
+              desc: 'Select a highly affordable Monthly or Annual subscription plan', 
+              icon: (
+                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" strokeWidth="2.5" fill="#E6F2ED" />
+                  <path d="M3 10h18" stroke="#001c41" strokeWidth="2.5" />
+                  <rect x="7" y="14" width="4" height="2" rx="0.5" fill="#001c41" />
+                  <circle cx="16" cy="14" r="1.5" fill="currentColor" />
+                </svg>
+              ) 
+            },
+            { 
+              num: 3, 
+              title: 'Add Business Info', 
+              desc: 'Provide your location, business category, working hours, and contact details', 
+              icon: (
+                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
+                  <path d="M12 11h4m-8 4h8M8 7h4" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              ) 
+            },
+            { 
+              num: 4, 
+              title: 'Get Verified & Go Live', 
+              desc: 'Submit your details for coordinator vetting to receive your verified badge and live status', 
+              icon: (
+                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
+                  <path d="M9 11l2 2 4-4" stroke="#001c41" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) 
+            }
+          ].map((step, idx) => (
+            <div key={step.num} className={`bg-white border border-slate-200/80 p-6 rounded-3xl shadow-sm hover:shadow-md transition-all relative flex flex-col items-center text-center gap-4 ${idx < 3 ? 'step-connector' : ''}`}>
+              {/* Number Badge */}
+              <div className="h-8 w-8 rounded-full bg-[#027244] text-white font-extrabold flex items-center justify-center text-xs shadow z-10 border border-[#027244]">
+                {step.num}
+              </div>
+              {/* Vector line icon */}
+              <div className="h-14 w-14 rounded-2xl bg-emerald-50/50 border border-emerald-100/50 flex items-center justify-center shadow-sm mt-1 z-10">
+                {step.icon}
+              </div>
+              <h4 className="font-extrabold text-[#001c41] text-sm leading-none mt-1 z-10">{step.title}</h4>
+              <p className="text-[11px] text-slate-400 leading-relaxed font-semibold max-w-[200px] z-10">{step.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 

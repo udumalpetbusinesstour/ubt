@@ -11,6 +11,7 @@ import SuperAdminDashboard from './app/superadmin/page';
 import Dashboard from './app/dashboard/page';
 import Login from './app/login/page';
 import Register from './app/register/page';
+import ChoosePlan from './app/choose-plan/page';
 import EventsPage from './app/events/page';
 import BlogsPage from './app/blogs/page';
 import BlogDetail from './app/blogs/[id]/page';
@@ -61,6 +62,7 @@ function AppContent() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/choose-plan" element={<ChoosePlan />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/blogs" element={<BlogsPage />} />
           <Route path="/blogs/:id" element={<BlogDetail />} />

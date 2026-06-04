@@ -50,6 +50,7 @@ export default function Footer() {
           <ul className="flex flex-col gap-2.5 text-xs font-semibold text-slate-400">
             <li><Link to="/add-business" className="hover:text-emerald-500 transition-colors">List Your Business</Link></li>
             <li><Link to="/login?from=business" className="hover:text-emerald-500 transition-colors">Business Login</Link></li>
+            <li><Link to="/choose-plan" className="hover:text-emerald-500 transition-colors">Subscription Plans</Link></li>
             <li>
               <button 
                 onClick={() => window.dispatchEvent(new CustomEvent('open-referral-modal'))} 
