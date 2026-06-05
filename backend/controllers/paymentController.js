@@ -25,7 +25,7 @@ const createOrder = async (req, res, next) => {
     }
 
     // Dynamic price lookup
-    let activePrice = 69; // Default Monthly price ₹69 as per spec
+    let activePrice = 99; // Default Monthly price ₹99 as per spec
     let activeDays = 28;  // 28 days monthly cycle as per spec
     let resolvedPlanType = planType || 'Monthly';
 
@@ -39,7 +39,7 @@ const createOrder = async (req, res, next) => {
     } else {
       // Standard pricing defaults
       if (resolvedPlanType.toLowerCase() === 'yearly') {
-        activePrice = 690; // Default Yearly price ₹690 as per spec
+        activePrice = 999; // Default Yearly price ₹999 as per spec
         activeDays = 365;
       }
     }
@@ -78,7 +78,7 @@ const createOrder = async (req, res, next) => {
     console.error('Error generating Razorpay checkout order:', err);
     // Simulate offline order fallback for sandbox environments
     const offlineOrderId = `order_offline_${Math.floor(Math.random() * 900000 + 100000)}`;
-    const offlinePrice = req.body.planType?.toLowerCase() === 'yearly' ? 690 : 69;
+    const offlinePrice = req.body.planType?.toLowerCase() === 'yearly' ? 999 : 99;
     const offlineDays = req.body.planType?.toLowerCase() === 'yearly' ? 365 : 28;
 
     await Subscription.create({

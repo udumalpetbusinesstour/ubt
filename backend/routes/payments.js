@@ -42,9 +42,9 @@ router.post('/create-order', protect, async (req, res) => {
     } else {
       // Fallback
       if (planType === 'Monthly') {
-        amount = 69 * 100; // ₹69 in paise
+        amount = 99 * 100; // ₹99 in paise
       } else if (planType === 'Yearly') {
-        amount = 690 * 100; // ₹690 in paise
+        amount = 999 * 100; // ₹999 in paise
       } else {
         return res.status(400).json({ success: false, message: 'Invalid plan type' });
       }
@@ -182,7 +182,7 @@ router.post('/verify-payment', protect, async (req, res) => {
     const durationDays = dbPlan ? dbPlan.durationDays : (planType === 'Monthly' ? 28 : 365);
     endDate.setDate(startDate.getDate() + durationDays);
 
-    const baseAmount = dbPlan ? dbPlan.price : (planType === 'Monthly' ? 69 : 690);
+    const baseAmount = dbPlan ? dbPlan.price : (planType === 'Monthly' ? 99 : 999);
     let finalAmount = baseAmount;
     let pointsUsed = 0;
 

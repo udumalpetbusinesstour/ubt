@@ -13,7 +13,7 @@ const seedDefaultPlans = async () => {
         {
           name: 'Monthly Premium Plan',
           type: 'Monthly',
-          price: 69,
+          price: 99,
           durationDays: 28,
           description: 'Perfect for standard listing updates and regular local traffic.',
           isOffer: false,
@@ -24,7 +24,7 @@ const seedDefaultPlans = async () => {
         {
           name: 'Yearly Premium Plan',
           type: 'Yearly',
-          price: 690,
+          price: 999,
           durationDays: 365,
           description: 'Maximize search priority, customer reviews visibility, and reach.',
           isOffer: true,
@@ -34,6 +34,20 @@ const seedDefaultPlans = async () => {
         }
       ]);
       console.log('Successfully seeded Monthly (28 days) & Yearly subscription plans in database.');
+    } else {
+      // Migrate old defaults to new default values if present
+      const monthly = await Plan.findOne({ type: 'Monthly' });
+      if (monthly && monthly.price === 69) {
+        monthly.price = 99;
+        await monthly.save();
+        console.log('Migrated existing Monthly Premium Plan price to ₹99.');
+      }
+      const yearly = await Plan.findOne({ type: 'Yearly' });
+      if (yearly && yearly.price === 690) {
+        yearly.price = 999;
+        await yearly.save();
+        console.log('Migrated existing Yearly Premium Plan price to ₹999.');
+      }
     }
   } catch (error) {
     console.error('Error auto-seeding subscription plans:', error.message);

@@ -28,6 +28,8 @@ export default function ChoosePlan() {
   // Plan Selection states
   const [selectedPlan, setSelectedPlan] = useState('Yearly'); // default to Yearly
   const [activeFaq, setActiveFaq] = useState(null);
+  const [monthlyPrice, setMonthlyPrice] = useState(99);
+  const [yearlyPrice, setYearlyPrice] = useState(999);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('ubt_token');
@@ -98,6 +100,20 @@ export default function ChoosePlan() {
       if (refData.success && refData.data) {
         setReferralStats(refData.data);
       }
+
+      // 4. Fetch subscription plans to get dynamic pricing
+      try {
+        const plansRes = await fetch('http://localhost:5000/api/plans');
+        const plansData = await plansRes.json();
+        if (plansData.success && plansData.data) {
+          const monthlyPlan = plansData.data.find(p => p.type === 'Monthly');
+          const yearlyPlan = plansData.data.find(p => p.type === 'Yearly');
+          if (monthlyPlan) setMonthlyPrice(monthlyPlan.price);
+          if (yearlyPlan) setYearlyPrice(yearlyPlan.price);
+        }
+      } catch (err) {
+        console.warn('Could not fetch active plan prices, using default values (₹99 / ₹999).', err);
+      }
     } catch (err) {
       console.error('Failed initialization:', err);
       setError('Connection to server failed. Please try again.');
@@ -116,7 +132,7 @@ export default function ChoosePlan() {
       // Default to max possible points redeemable
       const maxRedeem = Math.min(
         referralStats.referralPoints,
-        selectedPlan === 'Monthly' ? 690 : 6900
+        selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10
       );
       setRedeemPointsAmount(maxRedeem);
     } else {
@@ -129,7 +145,7 @@ export default function ChoosePlan() {
     if (referralStats) {
       const maxRedeem = Math.min(
         referralStats.referralPoints,
-        selectedPlan === 'Monthly' ? 690 : 6900
+        selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10
       );
       if (val > maxRedeem) {
         setRedeemPointsAmount(maxRedeem);
@@ -420,7 +436,7 @@ export default function ChoosePlan() {
                     <input
                       type="number"
                       min="0"
-                      max={Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? 690 : 6900)}
+                      max={Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10)}
                       value={redeemPointsAmount}
                       onChange={handleRedeemPointsChange}
                       className="w-full bg-white border border-slate-200 rounded-xl py-2 px-3.5 text-xs font-extrabold text-slate-800 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-500/30 transition-all shadow-inner"
@@ -428,10 +444,10 @@ export default function ChoosePlan() {
                     <button
                       type="button"
                       onClick={() => {
-                        const maxRed = Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? 690 : 6900);
+                        const maxRed = Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10);
                         setRedeemPointsAmount(maxRed);
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250/40 text-[#027244] text-[9.5px] font-black px-2 py-1 rounded-lg uppercase tracking-wide transition-colors cursor-pointer"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-5 hover:bg-emerald-100 border border-emerald-250/40 text-[#027244] text-[9.5px] font-black px-2 py-1 rounded-lg uppercase tracking-wide transition-colors cursor-pointer"
                     >
                       Max
                     </button>
@@ -439,7 +455,7 @@ export default function ChoosePlan() {
                 </div>
 
                 <span className="text-[9.5px] text-slate-400 font-semibold leading-relaxed text-left block">
-                  You can redeem up to {Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? 690 : 6900)} points. (1 point = ₹0.10)
+                  You can redeem up to {Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10)} points. (1 point = ₹0.10)
                 </span>
               </div>
             )}
@@ -499,7 +515,7 @@ export default function ChoosePlan() {
                   <h3 className="font-extrabold text-slate-800 text-base">Monthly Membership</h3>
                   <div className="flex items-baseline justify-center gap-1.5 mt-1">
                     <span className="text-3xl font-extrabold text-[#001c41]">
-                      ₹{getDiscountedPrice(69)}
+                      ₹{getDiscountedPrice(monthlyPrice)}
                     </span>
                     <span className="text-xs text-slate-400 font-semibold">/ Month</span>
                   </div>
@@ -568,14 +584,14 @@ export default function ChoosePlan() {
                 <h3 className="font-extrabold text-slate-800 text-base">Annual Membership</h3>
                 <div className="flex items-baseline justify-center gap-1.5 mt-1">
                   <span className="text-3xl font-extrabold text-[#001c41]">
-                    ₹{getDiscountedPrice(690)}
+                    ₹{getDiscountedPrice(yearlyPrice)}
                   </span>
                   <span className="text-xs text-slate-400 font-semibold">/ Year</span>
                 </div>
                 {/* strike-through original & save text */}
                 <div className="flex items-center justify-center gap-2 text-[10px] font-black mt-0.5">
-                  <span className="text-slate-400 line-through">₹828</span>
-                  <span className="text-[#027244] bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5 font-sans">Save ₹138</span>
+                  <span className="text-slate-400 line-through">₹{monthlyPrice * 12}</span>
+                  <span className="text-[#027244] bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5 font-sans">Save ₹{(monthlyPrice * 12) - yearlyPrice}</span>
                 </div>
                 {/* Get 12 Months access oval badge */}
                 <div className="border border-dashed border-slate-200 rounded-full px-3.5 py-1.5 text-[9.5px] font-extrabold text-slate-550 bg-slate-50/50 mt-2 tracking-wide leading-none">

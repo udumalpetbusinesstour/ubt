@@ -91,7 +91,7 @@ export default function SuperAdminDashboard() {
   const [newNotice, setNewNotice] = useState({ title: '', message: '', type: 'announcement' });
   const [noticeSuccess, setNoticeSuccess] = useState(false);
   const [newAdmin, setNewAdmin] = useState({ fullName: '', email: '', permissions: 'Full' });
-  const [newPlanPrice, setNewPlanPrice] = useState({ monthly: 499, yearly: 4999 });
+  const [newPlanPrice, setNewPlanPrice] = useState({ monthly: 99, yearly: 999 });
 
   // Banner Image Management State
   const [banners, setBanners] = useState([
@@ -168,8 +168,8 @@ export default function SuperAdminDashboard() {
 
   // Platform pricing & settings
   const [plans, setPlans] = useState([
-    { id: 'monthly', name: 'Monthly Premium Plan', price: 500, duration: '28 Days' },
-    { id: 'yearly', name: 'Yearly Premium Plan', price: 4999, duration: '365 Days' }
+    { id: 'monthly', name: 'Monthly Premium Plan', price: 99, duration: '28 Days' },
+    { id: 'yearly', name: 'Yearly Premium Plan', price: 999, duration: '365 Days' }
   ]);
 
   // System status metrics

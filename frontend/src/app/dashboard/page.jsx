@@ -37,6 +37,8 @@ function DashboardContent() {
   const [showRenewModal, setShowRenewModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('Monthly');
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [monthlyPrice, setMonthlyPrice] = useState(99);
+  const [yearlyPrice, setYearlyPrice] = useState(999);
   
   // Referral states
   const [referralStats, setReferralStats] = useState(null);
@@ -50,7 +52,7 @@ function DashboardContent() {
     if (checked) {
       const maxRed = referralStats ? Math.min(
         referralStats.referralPoints || 0,
-        selectedPlan === 'Monthly' ? 690 : 6900
+        selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10
       ) : 0;
       setRedeemPointsAmount(maxRed);
     } else {
@@ -63,7 +65,7 @@ function DashboardContent() {
     if (applyReferralPoints) {
       const maxRed = referralStats ? Math.min(
         referralStats.referralPoints || 0,
-        plan === 'Monthly' ? 690 : 6900
+        plan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10
       ) : 0;
       setRedeemPointsAmount(prev => Math.min(prev, maxRed));
     }
@@ -73,7 +75,7 @@ function DashboardContent() {
     const val = e.target.value === '' ? '' : parseInt(e.target.value, 10);
     const maxRed = referralStats ? Math.min(
       referralStats.referralPoints || 0,
-      selectedPlan === 'Monthly' ? 690 : 6900
+      selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10
     ) : 0;
     
     if (e.target.value === '') {
@@ -98,8 +100,8 @@ function DashboardContent() {
   };
   
   const [paymentPlans, setPaymentPlans] = useState([
-    { type: 'Monthly', price: '₹500', duration: '28 days', details: 'Perfect for standard listing updates.' },
-    { type: 'Yearly', price: '₹4999', duration: '365 days (Save 15%)', details: 'Maximize search priority and customer reach.' }
+    { type: 'Monthly', price: '₹99', duration: '28 days', details: 'Perfect for standard listing updates.' },
+    { type: 'Yearly', price: '₹999', duration: '365 days (Save 15%)', details: 'Maximize search priority and customer reach.' }
   ]);
 
   const fetchPaymentPlans = async () => {
@@ -107,6 +109,11 @@ function DashboardContent() {
       const res = await fetch('http://localhost:5000/api/plans');
       const data = await res.json();
       if (data.success && data.data.length > 0) {
+        const monthly = data.data.find(p => p.type === 'Monthly');
+        const yearly = data.data.find(p => p.type === 'Yearly');
+        if (monthly) setMonthlyPrice(monthly.price);
+        if (yearly) setYearlyPrice(yearly.price);
+
         const mapped = data.data.map(p => ({
           type: p.type,
           price: `₹${p.price}`,
@@ -4726,7 +4733,7 @@ function DashboardContent() {
                         <input
                           type="number"
                           min="0"
-                          max={referralStats ? Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? 690 : 6900) : 0}
+                          max={referralStats ? Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10) : 0}
                           value={redeemPointsAmount}
                           onChange={handleRedeemPointsChange}
                           className="w-full bg-white border border-slate-200 rounded-xl py-2 px-3.5 text-xs font-extrabold text-slate-800 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-500/30 transition-all shadow-inner"
@@ -4734,7 +4741,7 @@ function DashboardContent() {
                         <button
                           type="button"
                           onClick={() => {
-                            const maxRed = referralStats ? Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? 690 : 6900) : 0;
+                            const maxRed = referralStats ? Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10) : 0;
                             setRedeemPointsAmount(maxRed);
                           }}
                           className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250/40 text-[#027244] text-[9.5px] font-black px-2 py-1 rounded-lg uppercase tracking-wide transition-colors cursor-pointer"
@@ -4745,7 +4752,7 @@ function DashboardContent() {
                     </div>
 
                     <span className="text-[9.5px] text-slate-400 font-semibold leading-relaxed text-left block">
-                      You can redeem up to {referralStats ? Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? 690 : 6900) : 0} points for this plan. (1 point = ₹0.10)
+                      You can redeem up to {referralStats ? Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10) : 0} points for this plan. (1 point = ₹0.10)
                     </span>
                   </div>
                 )}
@@ -4802,7 +4809,7 @@ function DashboardContent() {
                     <h3 className="font-extrabold text-slate-800 text-base">Monthly Membership</h3>
                     <div className="flex items-baseline justify-center gap-1.5 mt-1">
                       <span className="text-3xl font-extrabold text-[#001c41]">
-                        ₹{getDiscountedPrice(69)}
+                        ₹{getDiscountedPrice(monthlyPrice)}
                       </span>
                       <span className="text-xs text-slate-400 font-semibold">/ Month</span>
                     </div>
@@ -4869,14 +4876,14 @@ function DashboardContent() {
                     <h3 className="font-extrabold text-slate-800 text-base">Annual Membership</h3>
                     <div className="flex items-baseline justify-center gap-1.5 mt-1">
                       <span className="text-3xl font-extrabold text-[#001c41]">
-                        ₹{getDiscountedPrice(690)}
+                        ₹{getDiscountedPrice(yearlyPrice)}
                       </span>
                       <span className="text-xs text-slate-400 font-semibold">/ Year</span>
                     </div>
                     {/* strike-through original & save text */}
                     <div className="flex items-center justify-center gap-2 text-[10px] font-black mt-0.5">
-                      <span className="text-slate-400 line-through">₹828</span>
-                      <span className="text-[#027244] bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5">Save ₹138</span>
+                      <span className="text-slate-400 line-through">₹{monthlyPrice * 12}</span>
+                      <span className="text-[#027244] bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5">Save ₹{(monthlyPrice * 12) - yearlyPrice}</span>
                     </div>
                     {/* Get 12 Months access oval badge */}
                     <div className="border border-dashed border-slate-200 rounded-full px-3.5 py-1.5 text-[9.5px] font-extrabold text-slate-550 bg-slate-50/50 mt-2 tracking-wide leading-none">

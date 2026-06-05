@@ -8,6 +8,7 @@ import {
 export default function ReferralModal({ isOpen, onClose }) {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [yearlyPrice, setYearlyPrice] = useState(999);
   const [topReferrers, setTopReferrers] = useState([
     { name: 'Lakshmi Textiles', referralsCount: 32 },
     { name: 'Sri Electricals', referralsCount: 27 },
@@ -37,6 +38,20 @@ export default function ReferralModal({ isOpen, onClose }) {
     };
 
     fetchTopReferrers();
+
+    const fetchPlanPrice = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/plans');
+        const data = await res.json();
+        if (data.success && data.data) {
+          const yearly = data.data.find(p => p.type === 'Yearly');
+          if (yearly) setYearlyPrice(yearly.price);
+        }
+      } catch (err) {
+        console.warn('Error fetching plan price inside ReferralModal:', err);
+      }
+    };
+    fetchPlanPrice();
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -269,7 +284,7 @@ export default function ReferralModal({ isOpen, onClose }) {
             <div className="flex flex-col gap-3 font-semibold text-xs border border-slate-200/80 rounded-xl p-4 bg-slate-50/30">
               <div className="flex justify-between border-b border-slate-100 pb-2 text-slate-500">
                 <span>Annual Plan Price</span>
-                <span className="font-extrabold text-slate-850">₹690</span>
+                <span className="font-extrabold text-slate-850">₹{yearlyPrice}</span>
               </div>
               <div className="flex justify-between border-b border-slate-100 pb-2 text-slate-500">
                 <span>Available Credit (from 15 Referrals)</span>
@@ -277,7 +292,7 @@ export default function ReferralModal({ isOpen, onClose }) {
               </div>
               <div className="flex justify-between pt-1.5 text-xs">
                 <span className="font-extrabold text-slate-800">You Pay</span>
-                <span className="font-black text-[#027244] text-sm">₹540</span>
+                <span className="font-black text-[#027244] text-sm">₹{yearlyPrice - 150}</span>
               </div>
             </div>
 
