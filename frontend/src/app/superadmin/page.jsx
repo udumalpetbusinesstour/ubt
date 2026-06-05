@@ -92,6 +92,7 @@ export default function SuperAdminDashboard() {
   const [noticeSuccess, setNoticeSuccess] = useState(false);
   const [newAdmin, setNewAdmin] = useState({ fullName: '', email: '', permissions: 'Full' });
   const [newPlanPrice, setNewPlanPrice] = useState({ monthly: 99, yearly: 999 });
+  const [editedPrices, setEditedPrices] = useState({});
 
   // Banner Image Management State
   const [banners, setBanners] = useState([
@@ -4492,12 +4493,44 @@ export default function SuperAdminDashboard() {
                               </div>
                               <div className="flex flex-col gap-1.5 mt-1">
                                 <label className="text-[9.5px] text-slate-400 font-bold uppercase tracking-wide">Plan Price (₹)</label>
-                                <input 
-                                  type="number"
-                                  value={p.price}
-                                  onChange={(e) => handlePriceUpdate(p.id, e.target.value)}
-                                  className="border border-slate-200 dark:border-slate-800 p-2 rounded-lg text-xs bg-white dark:bg-slate-900 focus:outline-none focus:border-[#027244] text-slate-805 dark:text-slate-205 font-black"
-                                />
+                                <div className="flex items-center gap-2">
+                                  <input 
+                                    type="number"
+                                    value={editedPrices[p.id] !== undefined ? editedPrices[p.id] : p.price}
+                                    onChange={(e) => setEditedPrices(prev => ({ ...prev, [p.id]: e.target.value }))}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        const val = editedPrices[p.id];
+                                        if (val !== undefined && Number(val) !== p.price) {
+                                          handlePriceUpdate(p.id, val);
+                                          setEditedPrices(prev => {
+                                            const copy = { ...prev };
+                                            delete copy[p.id];
+                                            return copy;
+                                          });
+                                        }
+                                      }
+                                    }}
+                                    className="border border-slate-200 dark:border-slate-800 p-2 rounded-lg text-xs bg-white dark:bg-slate-900 focus:outline-none focus:border-[#027244] text-slate-805 dark:text-slate-205 font-black flex-grow"
+                                  />
+                                  {editedPrices[p.id] !== undefined && Number(editedPrices[p.id]) !== p.price && (
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        await handlePriceUpdate(p.id, editedPrices[p.id]);
+                                        setEditedPrices(prev => {
+                                          const copy = { ...prev };
+                                          delete copy[p.id];
+                                          return copy;
+                                        });
+                                      }}
+                                      className="bg-[#027244] hover:bg-[#005934] text-white text-[10px] font-black px-3 py-2 rounded-lg uppercase tracking-wide cursor-pointer transition-colors shrink-0 shadow-xs"
+                                    >
+                                      Save
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                               <button
                                 type="button"
