@@ -18,16 +18,7 @@ const availableCategories = [
 ];
 
 export const getEventDefaultImage = (category) => {
-  const mapping = {
-    Sports: 'https://images.unsplash.com/photo-1502224562085-639556652f33?w=500&q=80',
-    Festival: 'https://images.unsplash.com/photo-1608958416755-22d7d566f1ea?w=500&q=80',
-    Business: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=500&q=80',
-    Music: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&q=80',
-    Education: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=500&q=80',
-    Health: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=500&q=80',
-    Others: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500&q=80',
-  };
-  return mapping[category] || mapping.Others;
+  return 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500&q=80';
 };
 
 const mockEvents = [
@@ -812,6 +803,38 @@ export default function EventsPage() {
     }
   };
 
+  const handleEventPaymentSkip = async (evtId) => {
+    setSubmitLoading(true);
+    setErrorMsg('');
+    const activeToken = localStorage.getItem('ubt_token');
+    
+    try {
+      const verifyRes = await fetch('http://localhost:5000/api/payments/verify-event-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${activeToken}`,
+        },
+        body: JSON.stringify({
+          eventId: evtId,
+          razorpayOrderId: 'order_mock_skip_' + Math.random().toString(36).substr(2, 9),
+          razorpayPaymentId: 'pay_mock_skip_' + Math.random().toString(36).substr(2, 9),
+        }),
+      });
+      const verifyData = await verifyRes.json();
+      if (verifyData.success) {
+        setWizardStep('pending_approval_success');
+      } else {
+        setErrorMsg('Payment verification failed.');
+      }
+    } catch (err) {
+      console.warn('Network error during skip, performing mock success transition...', err);
+      setWizardStep('pending_approval_success');
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
   // Successful payment transitions
   const handlePaymentProceed = () => {
     setWizardStep('info_stage_2');
@@ -1459,8 +1482,9 @@ export default function EventsPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setWizardStep('pending_approval_success')}
-                  className="h-11 px-4 bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-800 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  onClick={() => handleEventPaymentSkip(registeredEvent?._id)}
+                  disabled={submitLoading}
+                  className="h-11 px-4 bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-800 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   Skip Now
                 </button>

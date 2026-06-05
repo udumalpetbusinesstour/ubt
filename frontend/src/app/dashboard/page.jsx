@@ -10,16 +10,7 @@ import {
 } from 'lucide-react';
 
 const getEventDefaultImage = (category) => {
-  const mapping = {
-    Sports: 'https://images.unsplash.com/photo-1502224562085-639556652f33?w=500&q=80',
-    Festival: 'https://images.unsplash.com/photo-1608958416755-22d7d566f1ea?w=500&q=80',
-    Business: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=500&q=80',
-    Music: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&q=80',
-    Education: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=500&q=80',
-    Health: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=500&q=80',
-    Others: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500&q=80',
-  };
-  return mapping[category] || mapping.Others;
+  return 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500&q=80';
 };
 
 function DashboardContent() {
@@ -1455,7 +1446,7 @@ function DashboardContent() {
       if (!orderData.success) {
         throw new Error(orderData.message || 'Failed to create payment order');
       }
-
+ 
       if (orderData.amount === 0 || orderData.orderId === 'free_listing') {
         const verifyRes = await fetch('http://localhost:5000/api/payments/verify-event-payment', {
           method: 'POST',
@@ -1472,13 +1463,17 @@ function DashboardContent() {
         const verifyData = await verifyRes.json();
         if (verifyData.success) {
           setCompleteEventPaymentStatus('Free');
-          setCompleteEventSuccess('Free listing applied! Your event has been submitted for admin approval.');
           fetchUserEvents();
-          setTimeout(() => {
-            setShowCompleteEventModal(false);
-            setCompleteEvent(null);
-            setCompleteEventSuccess('');
-          }, 3000);
+          if (completeEvent && completeEvent.status === 'Approved') {
+            setCompleteEventStep(2);
+          } else {
+            setCompleteEventSuccess('Free listing applied! Your event has been submitted for admin approval.');
+            setTimeout(() => {
+              setShowCompleteEventModal(false);
+              setCompleteEvent(null);
+              setCompleteEventSuccess('');
+            }, 3000);
+          }
         } else {
           throw new Error(verifyData.message || 'Sandbox payment verification failed.');
         }
@@ -1492,9 +1487,9 @@ function DashboardContent() {
             document.body.appendChild(script);
           });
         };
-
+ 
         await isRazorpayScriptLoaded();
-
+ 
         const options = {
           key: orderData.keyId,
           amount: orderData.amount,
@@ -1521,13 +1516,17 @@ function DashboardContent() {
               const verifyData = await verifyRes.json();
               if (verifyData.success) {
                 setCompleteEventPaymentStatus('Paid');
-                setCompleteEventSuccess('Payment verified successfully! Your event has been submitted for admin review.');
                 fetchUserEvents();
-                setTimeout(() => {
-                  setShowCompleteEventModal(false);
-                  setCompleteEvent(null);
-                  setCompleteEventSuccess('');
-                }, 3000);
+                if (completeEvent && completeEvent.status === 'Approved') {
+                  setCompleteEventStep(2);
+                } else {
+                  setCompleteEventSuccess('Payment verified successfully! Your event has been submitted for admin review.');
+                  setTimeout(() => {
+                    setShowCompleteEventModal(false);
+                    setCompleteEvent(null);
+                    setCompleteEventSuccess('');
+                  }, 3000);
+                }
               } else {
                 setCompleteEventError('Payment verification failed.');
               }
@@ -1546,7 +1545,7 @@ function DashboardContent() {
             color: '#027244',
           },
         };
-
+ 
         const rzp1 = new window.Razorpay(options);
         rzp1.open();
       }
@@ -1572,18 +1571,76 @@ function DashboardContent() {
         const verifyData = await verifyRes.json();
         if (verifyData.success) {
           setCompleteEventPaymentStatus('Paid');
-          setCompleteEventSuccess('Sandbox Payment verified! Your event has been submitted for admin review.');
           fetchUserEvents();
-          setTimeout(() => {
-            setShowCompleteEventModal(false);
-            setCompleteEvent(null);
-            setCompleteEventSuccess('');
-          }, 3000);
+          if (completeEvent && completeEvent.status === 'Approved') {
+            setCompleteEventStep(2);
+          } else {
+            setCompleteEventSuccess('Sandbox Payment verified! Your event has been submitted for admin review.');
+            setTimeout(() => {
+              setShowCompleteEventModal(false);
+              setCompleteEvent(null);
+              setCompleteEventSuccess('');
+            }, 3000);
+          }
         } else {
           setCompleteEventError(verifyData.message || 'Sandbox payment verification failed.');
         }
       } catch (innerErr) {
         setCompleteEventError('Sandbox payment verification connection failed.');
+      }
+    } finally {
+      setCompleteEventLoading(false);
+    }
+  };
+
+  const handleEventPaymentSkip = async (evtId) => {
+    setCompleteEventLoading(true);
+    setCompleteEventError('');
+    const activeToken = token || localStorage.getItem('ubt_token');
+    
+    try {
+      const verifyRes = await fetch('http://localhost:5000/api/payments/verify-event-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`,
+        },
+        body: JSON.stringify({
+          eventId: evtId,
+          razorpayOrderId: 'order_mock_skip_' + Math.random().toString(36).substr(2, 9),
+          razorpayPaymentId: 'pay_mock_skip_' + Math.random().toString(36).substr(2, 9),
+        }),
+      });
+      const verifyData = await verifyRes.json();
+      if (verifyData.success) {
+        setCompleteEventPaymentStatus('Paid');
+        fetchUserEvents();
+        
+        if (completeEvent && completeEvent.status === 'Approved') {
+          setCompleteEventStep(2);
+        } else {
+          setCompleteEventSuccess('Payment skipped! Your event has been submitted for admin review.');
+          setTimeout(() => {
+            setShowCompleteEventModal(false);
+            setCompleteEvent(null);
+            setCompleteEventSuccess('');
+          }, 3000);
+        }
+      } else {
+        setCompleteEventError(verifyData.message || 'Payment skip verification failed.');
+      }
+    } catch (err) {
+      console.warn('Skip payment fallback local verification...', err);
+      setCompleteEventPaymentStatus('Paid');
+      if (completeEvent && completeEvent.status === 'Approved') {
+        setCompleteEventStep(2);
+      } else {
+        setCompleteEventSuccess('Mock Mode: Payment skipped! Submitted for admin review.');
+        setTimeout(() => {
+          setShowCompleteEventModal(false);
+          setCompleteEvent(null);
+          setCompleteEventSuccess('');
+        }, 3000);
       }
     } finally {
       setCompleteEventLoading(false);
@@ -5934,7 +5991,7 @@ function DashboardContent() {
                     className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow-md shadow-emerald-800/10 flex items-center gap-2 disabled:opacity-60"
                   >
                     {eventSubmitLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                    <span>{business && business.subscriptionStatus === 'active' ? 'Publish Event for Free' : 'Publish & Pay ₹20'}</span>
+                    <span>{business && business.subscriptionStatus === 'active' ? 'Publish Event for Free' : 'Publish & Pay ₹99'}</span>
                   </button>
                 </div>
 
@@ -6028,18 +6085,11 @@ function DashboardContent() {
                   >
                     Cancel
                   </button>
-                  <button 
+                   <button 
                     type="button"
-                    onClick={() => {
-                      setCompleteEventSuccess('Payment skipped! Your event has been submitted for admin review.');
-                      fetchUserEvents();
-                      setTimeout(() => {
-                        setShowCompleteEventModal(false);
-                        setCompleteEvent(null);
-                        setCompleteEventSuccess('');
-                      }, 2500);
-                    }}
-                    className="py-2.5 px-4 bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-800 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors"
+                    onClick={() => handleEventPaymentSkip(completeEvent._id)}
+                    disabled={completeEventLoading}
+                    className="py-2.5 px-4 bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-800 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors disabled:opacity-50"
                   >
                     Skip Now
                   </button>
