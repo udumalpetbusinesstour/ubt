@@ -8,6 +8,7 @@ const { seedDefaultPlans } = require('./routes/plans');
 // Routes Mounts
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/businesses', require('./routes/businesses'));
+app.use('/api/branches', require('./routes/branches'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/admin', require('./routes/admin'));

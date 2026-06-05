@@ -63,6 +63,10 @@ export default function AdminDashboard() {
   // Blog Moderation Modal State
   const [selectedBlogModal, setSelectedBlogModal] = useState(null);
   const [suggestionText, setSuggestionText] = useState('');
+
+  // Selected business branches for moderation
+  const [selectedBizBranches, setSelectedBizBranches] = useState([]);
+  const [selectedBizBranchesLoading, setSelectedBizBranchesLoading] = useState(false);
   
   // Custom states for forms
   const [newNotice, setNewNotice] = useState({ title: '', message: '', type: 'announcement' });
@@ -358,6 +362,106 @@ export default function AdminDashboard() {
       fetchReferrals();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    const fetchSelectedBizBranches = async () => {
+      if (!selectedBiz) {
+        setSelectedBizBranches([]);
+        return;
+      }
+      setSelectedBizBranchesLoading(true);
+      try {
+        const token = localStorage.getItem('ubt_token');
+        if (!token || selectedBiz._id === 'UBT-10024') {
+          // Fallback mock branches for Sri Murugan Stores or if offline
+          const mockBranches = [
+            {
+              _id: 'mock-branch-1',
+              businessId: 'UBT-10024',
+              name: 'Sri Murugan Stores - Eripalayam Branch',
+              address: 'Eripalayam Main Road, Udumalpet Main Town, Tamil Nadu - 642126',
+              phone: '+91 94430 12345',
+              googleMapsLocation: 'https://maps.google.com/?q=10.5912,77.2515',
+              workingHours: '9:00 AM - 9:00 PM',
+              branchManagerName: 'Murugan Jr.',
+              status: 'Approved',
+            },
+            {
+              _id: 'mock-branch-2',
+              businessId: 'UBT-10024',
+              name: 'Sri Murugan Stores - Dharapuram Road Branch',
+              address: 'Dharapuram Road, Udumalpet Main Town, Tamil Nadu - 642126',
+              phone: '+91 94430 54321',
+              googleMapsLocation: 'https://maps.google.com/?q=10.584,77.252',
+              workingHours: '9:00 AM - 8:30 PM',
+              branchManagerName: 'Suresh Babu',
+              status: 'Pending Verification',
+            }
+          ];
+          setSelectedBizBranches(mockBranches);
+          return;
+        }
+
+        const res = await fetch(`http://localhost:5000/api/branches/business/${selectedBiz._id}?all=true`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+          setSelectedBizBranches(data.data);
+        }
+      } catch (err) {
+        console.error('Error fetching branches for selected business:', err);
+      } finally {
+        setSelectedBizBranchesLoading(false);
+      }
+    };
+
+    fetchSelectedBizBranches();
+  }, [selectedBiz]);
+
+  const handleBranchStatusChange = async (branchId, newStatus) => {
+    try {
+      const token = localStorage.getItem('ubt_token');
+      if (selectedBiz._id === 'UBT-10024') {
+        // Mock branch status update
+        setSelectedBizBranches(prev => prev.map(b => b._id === branchId ? { ...b, status: newStatus } : b));
+        return;
+      }
+
+      const res = await fetch(`http://localhost:5000/api/admin/branches/${branchId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSelectedBizBranches(prev => prev.map(b => b._id === branchId ? { ...b, status: newStatus } : b));
+        
+        // Also update the main business branch count in UI if status changed to/from Approved
+        setBusinesses(prev => prev.map(b => {
+          if (b._id === selectedBiz._id) {
+            const oldBranch = selectedBizBranches.find(br => br._id === branchId);
+            let diff = 0;
+            if (oldBranch && oldBranch.status !== 'Approved' && newStatus === 'Approved') {
+              diff = 1;
+            } else if (oldBranch && oldBranch.status === 'Approved' && newStatus !== 'Approved') {
+              diff = -1;
+            }
+            return { ...b, branchCount: (b.branchCount || 0) + diff };
+          }
+          return b;
+        }));
+      } else {
+        alert(data.message || 'Failed to update branch status');
+      }
+    } catch (err) {
+      console.error('Error changing branch status:', err);
+      alert('Network error updating branch status');
+    }
+  };
 
   const loadPlatformRealData = async () => {
     setLoading(true);
@@ -873,6 +977,7 @@ export default function AdminDashboard() {
                             <tr>
                               <th className="p-4.5">Business Profile</th>
                               <th className="p-4.5">Category / Locality</th>
+                              <th className="p-4.5">Branches</th>
                               <th className="p-4.5">Status</th>
                               <th className="p-4.5">Sub Expiry</th>
                               <th className="p-4.5">Premium Boost</th>
@@ -909,6 +1014,9 @@ export default function AdminDashboard() {
                                     <span className="font-bold text-slate-700 text-xs">{b.type}</span>
                                     <span className="text-[10px] text-slate-400 mt-1 font-semibold">{b.locality}</span>
                                   </div>
+                                </td>
+                                <td className="p-4.5 font-bold text-slate-700 text-xs">
+                                  {b.branchCount || 0} Branches
                                 </td>
                                 <td className="p-4.5">
                                   <span className={`px-2.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
@@ -1207,6 +1315,7 @@ export default function AdminDashboard() {
                             <th className="p-4.5">Business / Owner</th>
                             <th className="p-4.5">Category / Locality</th>
                             <th className="p-4.5">Pincode</th>
+                            <th className="p-4.5">Branches</th>
                             <th className="p-4.5">Verification</th>
                             <th className="p-4.5">Subscription</th>
                             <th className="p-4.5 text-right">Actions</th>
@@ -1231,6 +1340,9 @@ export default function AdminDashboard() {
                                 </div>
                               </td>
                               <td className="p-4.5 font-bold text-slate-800">{b.pincode}</td>
+                              <td className="p-4.5 font-bold text-slate-700 text-xs">
+                                {b.branchCount || 0} Branches
+                              </td>
                               <td className="p-4.5">
                                 <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
                                   b.status === 'Approved'
@@ -2525,6 +2637,87 @@ export default function AdminDashboard() {
                     <span className="font-bold text-blue-650 truncate max-w-[150px]">{selectedBiz.googlePlaceId || 'Not connected'}</span>
                   </div>
                 </div>
+              </div>
+
+              {/* Branches Sub-Section */}
+              <div className="flex flex-col gap-3.5">
+                <span className="font-extrabold text-xs text-slate-800 border-b border-slate-100 pb-1.5 uppercase tracking-wider">Registered Branches ({selectedBizBranches.length})</span>
+                
+                {selectedBizBranchesLoading ? (
+                  <div className="flex items-center justify-center py-4 gap-2 text-xs text-slate-450 font-semibold">
+                    <RefreshCw className="h-4 w-4 animate-spin text-emerald-600" />
+                    <span>Loading branches...</span>
+                  </div>
+                ) : selectedBizBranches.length === 0 ? (
+                  <span className="text-xs text-slate-400 font-bold italic py-1">No additional branches registered for this business.</span>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {selectedBizBranches.map((br) => (
+                      <div key={br._id} className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4 flex flex-col gap-2.5 text-xs text-slate-600">
+                        <div className="flex justify-between items-start gap-2">
+                          <span className="font-extrabold text-slate-850 text-xs leading-tight">{br.name}</span>
+                          <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase shrink-0 border ${
+                            br.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-250' :
+                            br.status === 'Pending Verification' ? 'bg-amber-50 text-amber-700 border-amber-250 animate-pulse' :
+                            br.status === 'Rejected' ? 'bg-rose-50 text-rose-700 border-rose-250' :
+                            'bg-red-50 text-red-700 border border-red-250'
+                          }`}>
+                            {br.status}
+                          </span>
+                        </div>
+                        
+                        <div className="flex flex-col gap-1.5 font-semibold text-slate-500">
+                          {br.branchManagerName && (
+                            <div>
+                              <span className="text-slate-400 text-[10px] uppercase font-bold mr-1">Manager:</span>
+                              <span className="text-slate-700 font-bold">{br.branchManagerName}</span>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-slate-400 text-[10px] uppercase font-bold mr-1">Address:</span>
+                            <span className="text-slate-700 font-bold">{br.address}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 text-[10px] uppercase font-bold mr-1">Phone:</span>
+                            <span className="text-slate-750 font-bold">{br.phone}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 text-[10px] uppercase font-bold mr-1">Hours:</span>
+                            <span className="text-slate-700 font-bold">{br.workingHours || '9:00 AM - 8:00 PM'}</span>
+                          </div>
+                        </div>
+
+                        {/* Direct moderation actions for this branch */}
+                        <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-2.5 mt-1">
+                          {br.status !== 'Approved' && (
+                            <button
+                              onClick={() => handleBranchStatusChange(br._id, 'Approved')}
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-black uppercase cursor-pointer transition-colors shadow-2xs"
+                            >
+                              Approve
+                            </button>
+                          )}
+                          {(br.status === 'Pending Verification' || br.status === 'Under Review') && (
+                            <button
+                              onClick={() => handleBranchStatusChange(br._id, 'Rejected')}
+                              className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-black uppercase cursor-pointer transition-colors shadow-2xs"
+                            >
+                              Reject
+                            </button>
+                          )}
+                          {br.status === 'Approved' && (
+                            <button
+                              onClick={() => handleBranchStatusChange(br._id, 'Suspended')}
+                              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-black uppercase cursor-pointer transition-colors shadow-2xs"
+                            >
+                              Deactivate
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
             </div>

@@ -60,13 +60,16 @@ router.get('/stats', async (req, res, next) => {
   }
 });
 
-// @desc    Get all businesses for admin audit
-// @route   GET /api/admin/businesses
-// @access  Private/Admin
 router.get('/businesses', async (req, res, next) => {
   try {
+    const Branch = require('../models/Branch');
     const businesses = await Business.find().sort({ createdAt: -1 });
-    res.json({ success: true, count: businesses.length, data: businesses });
+    const data = await Promise.all(businesses.map(async (b) => {
+      const bObj = b.toObject();
+      bObj.branchCount = await Branch.countDocuments({ businessId: b._id });
+      return bObj;
+    }));
+    res.json({ success: true, count: data.length, data });
   } catch (error) {
     next(error);
   }
@@ -206,6 +209,27 @@ router.post('/notifications/send', async (req, res, next) => {
     });
 
     res.status(201).json({ success: true, message: 'Notification dispatched successfully', data: notification });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Approve/Reject/Deactivate a business branch
+// @route   PUT /api/admin/branches/:id/status
+// @access  Private/Admin
+router.put('/branches/:id/status', async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    const Branch = require('../models/Branch');
+    const branch = await Branch.findById(req.params.id);
+    if (!branch) {
+      return res.status(404).json({ success: false, message: 'Branch not found' });
+    }
+
+    branch.status = status;
+    await branch.save();
+
+    res.json({ success: true, message: `Branch successfully marked as ${status}`, data: branch });
   } catch (error) {
     next(error);
   }

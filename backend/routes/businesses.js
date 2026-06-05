@@ -397,15 +397,18 @@ router.get('/', async (req, res) => {
       businesses = businesses.filter(b => b.googleRating >= minRating);
     }
 
-    // Update active vs expired subscriptions on the fly based on dates
+    // Update active vs expired subscriptions on the fly and attach branchCount
     const now = new Date();
-    businesses = businesses.map(b => {
+    const Branch = require('../models/Branch');
+    const businessesWithCounts = await Promise.all(businesses.map(async (b) => {
       let bObj = b.toObject();
       if (bObj.subscriptionExpiry && new Date(bObj.subscriptionExpiry) < now) {
         bObj.subscriptionStatus = 'expired';
       }
+      bObj.branchCount = await Branch.countDocuments({ businessId: b._id, status: 'Approved' });
       return bObj;
-    });
+    }));
+    businesses = businessesWithCounts;
 
     // Custom Sorting: 
     // 1. Premium + Active first
@@ -826,6 +829,12 @@ router.get('/:id', async (req, res) => {
     // Get reviews for this business
     const reviews = await Review.find({ businessId: business._id });
     bObj.reviews = reviews;
+
+    // Get approved branches for this business
+    const Branch = require('../models/Branch');
+    const branches = await Branch.find({ businessId: business._id, status: 'Approved' });
+    bObj.branches = branches;
+    bObj.branchesCount = branches.length;
 
     // Apply restriction if expired
     if (bObj.subscriptionStatus === 'expired') {

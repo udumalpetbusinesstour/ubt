@@ -39,9 +39,52 @@ export default function BusinessDetail() {
   const [enquiryMessage, setEnquiryMessage] = useState('Hello, I am interested in your services and would like to receive details.');
   const [enquirySuccess, setEnquirySuccess] = useState(false);
 
+  const [branches, setBranches] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState(null);
+
   useEffect(() => {
     fetchBusinessDetails();
   }, [params.id]);
+
+  const fetchBranches = async (businessId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/branches/business/${businessId}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setBranches(data.data);
+      }
+    } catch (err) {
+      console.warn('Failed to load branches from server. Using mock branches if mock business.');
+      if (businessId === 'biz_4' || businessId === 'UBT-10024') {
+        setBranches([
+          {
+            _id: 'mock_branch_1',
+            name: 'Sri Murugan Stores - Eripalayam Branch',
+            address: 'Eripalayam Main Road, Udumalpet Main Town, Tamil Nadu - 642126',
+            phone: '+91 94430 55555',
+            googleMapsLocation: 'https://maps.google.com/?q=Eripalayam+Udumalpet',
+            workingHours: '9:00 AM - 9:00 PM',
+            branchManagerName: 'Murugan Jr.',
+            latitude: 10.5912,
+            longitude: 77.2515,
+            status: 'Approved'
+          },
+          {
+            _id: 'mock_branch_2',
+            name: 'Sri Murugan Stores - Dharapuram Road Branch',
+            address: 'Dharapuram Road, Udumalpet Main Town, Tamil Nadu - 642126',
+            phone: '+91 94430 66666',
+            googleMapsLocation: 'https://maps.google.com/?q=Dharapuram+Road+Udumalpet',
+            workingHours: '9:00 AM - 9:00 PM',
+            branchManagerName: 'Senthil Kumar',
+            latitude: 10.584,
+            longitude: 77.252,
+            status: 'Approved'
+          }
+        ]);
+      }
+    }
+  };
 
   const fetchBusinessDetails = async () => {
     setLoading(true);
@@ -51,6 +94,7 @@ export default function BusinessDetail() {
       if (data.success) {
         setBusiness(data.data);
         setReviews(data.data.reviews || []);
+        fetchBranches(data.data._id);
       } else {
         throw new Error('Business details not found.');
       }
@@ -556,6 +600,11 @@ export default function BusinessDetail() {
                   <ShieldCheck className="h-3.5 w-3.5" /> Verified Business
                 </span>
               )}
+              {branches.length > 0 && (
+                <span className="bg-blue-500/10 text-blue-400 border border-blue-400/25 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm shrink-0">
+                  {branches.length + 1} Branches
+                </span>
+              )}
             </div>
 
             {/* Premium Rating and Specs Pills */}
@@ -662,6 +711,7 @@ export default function BusinessDetail() {
             { id: 'reviews', label: `Reviews (${allReviews.length})` },
             { id: 'offers', label: 'Offers (3)' },
             { id: 'about', label: 'About' },
+            ...(branches.length > 0 ? [{ id: 'branches', label: `Branches (${branches.length + 1})` }] : []),
             { id: 'map', label: 'Map & Location' }
           ].map((tab) => (
             <button
@@ -1177,6 +1227,143 @@ export default function BusinessDetail() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* TAB: BRANCHES */}
+          {activeTab === 'branches' && (
+            <div className="flex flex-col gap-6 animate-fadeIn text-left font-sans">
+              <h3 className="text-xl font-extrabold text-slate-800 font-sans border-b border-slate-100 pb-3">Our Branches</h3>
+              <p className="text-xs text-slate-400 font-semibold mt-1">Select a branch below to view its specific location and contact information.</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                {/* Left Side: Branch Selector List */}
+                <div className="md:col-span-1 flex flex-col gap-2.5">
+                  {/* Primary Branch Option */}
+                  <button
+                    onClick={() => setSelectedBranch(null)}
+                    className={`w-full p-4 rounded-2xl border text-left font-bold text-xs flex flex-col gap-1.5 transition-all cursor-pointer ${
+                      selectedBranch === null
+                        ? 'bg-emerald-50/40 border-emerald-600 text-emerald-850 shadow-sm'
+                        : 'bg-white border-slate-200 hover:border-slate-350 text-slate-500'
+                    }`}
+                  >
+                    <span className="font-extrabold text-xs uppercase tracking-wide">Primary Branch</span>
+                    <span className="text-[11px] leading-tight font-medium text-slate-400">{business.locality || 'Main Location'}</span>
+                  </button>
+
+                  {/* Additional Branches Options */}
+                  {branches.map((branch) => (
+                    <button
+                      key={branch._id}
+                      onClick={() => setSelectedBranch(branch)}
+                      className={`w-full p-4 rounded-2xl border text-left font-bold text-xs flex flex-col gap-1.5 transition-all cursor-pointer ${
+                        selectedBranch?._id === branch._id
+                          ? 'bg-emerald-50/40 border-emerald-600 text-emerald-850 shadow-sm'
+                          : 'bg-white border-slate-200 hover:border-slate-350 text-slate-500'
+                      }`}
+                    >
+                      <span className="font-extrabold text-xs leading-snug">{branch.name}</span>
+                      <span className="text-[11px] leading-tight font-medium text-slate-400">{branch.address.split(',')[0]}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Right Side: Selected Branch Details Card */}
+                <div className="md:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 flex flex-col gap-5 shadow-xs">
+                  <div className="border-b border-slate-100 pb-3">
+                    <h4 className="font-black text-slate-800 text-base leading-snug">
+                      {selectedBranch === null ? `${business.name} (Primary)` : selectedBranch.name}
+                    </h4>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">
+                      {selectedBranch === null ? 'Main Head Office' : 'Branch Office'}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-4 text-xs font-bold text-slate-700">
+                    {/* Address */}
+                    <div className="flex items-start gap-3">
+                      <MapPin className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Branch Address</span>
+                        <span className="text-slate-600 font-medium leading-relaxed mt-1">
+                          {selectedBranch === null ? business.address : selectedBranch.address}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Phone */}
+                    <div className="flex items-start gap-3 border-t border-slate-100 pt-4">
+                      <Phone className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Contact Number</span>
+                        <span className="text-slate-800 font-extrabold mt-1">
+                          {selectedBranch === null ? business.phone : selectedBranch.phone}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Timings / Working Hours */}
+                    <div className="flex items-start gap-3 border-t border-slate-100 pt-4">
+                      <Clock className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Working Hours</span>
+                        <span className="text-slate-600 font-medium leading-relaxed mt-1">
+                          {selectedBranch === null
+                            ? `Mon - Sat: ${business.timings?.Monday || '9:00 AM - 8:00 PM'}${business.timings?.Sunday ? ` | Sun: ${business.timings.Sunday}` : ''}`
+                            : selectedBranch.workingHours || '9:00 AM - 8:00 PM'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Branch Manager Name */}
+                    {((selectedBranch === null && business.branchManagerName) || (selectedBranch !== null && selectedBranch.branchManagerName)) && (
+                      <div className="flex items-start gap-3 border-t border-slate-100 pt-4">
+                        <Users className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Branch Manager</span>
+                          <span className="text-slate-800 font-extrabold mt-1">
+                            {selectedBranch === null ? business.branchManagerName : selectedBranch.branchManagerName}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Google Business Profile Link */}
+                    {selectedBranch !== null && selectedBranch.googleBusinessLink && (
+                      <div className="flex items-start gap-3 border-t border-slate-100 pt-4">
+                        <Globe className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Google Business Link</span>
+                          <a 
+                            href={selectedBranch.googleBusinessLink} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-emerald-700 hover:text-emerald-850 font-extrabold hover:underline mt-1 break-all flex items-center gap-1"
+                          >
+                            Visit Google Profile <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Get Directions Link (Opening Google Maps directly) */}
+                  <a
+                    href={
+                      selectedBranch === null
+                        ? `https://www.google.com/maps/dir/?api=1&destination=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}`
+                        : selectedBranch.googleMapsLocation || `https://www.google.com/maps/dir/?api=1&destination=${selectedBranch.latitude},${selectedBranch.longitude}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-800/10 cursor-pointer text-center uppercase tracking-wider mt-2"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    <span>Get Directions</span>
+                  </a>
+                </div>
+              </div>
             </div>
           )}
 

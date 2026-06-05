@@ -1,5 +1,6 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import MockGoogleMaps from '@/components/MockGoogleMaps';
 import { 
   ShieldCheck, Sparkles, AlertTriangle, AlertCircle, Edit3, Image as ImageIcon, 
   RefreshCw, Star, CreditCard, ChevronRight, ChevronLeft, ArrowLeft, Activity, PhoneCall, 
@@ -7,6 +8,19 @@ import {
   Copy, Check, Gift, Upload, HelpCircle, Briefcase, Mail, Settings, Menu, X, Trash2, Search, Lock,
   FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin, LogOut
 } from 'lucide-react';
+
+const getEventDefaultImage = (category) => {
+  const mapping = {
+    Sports: 'https://images.unsplash.com/photo-1502224562085-639556652f33?w=500&q=80',
+    Festival: 'https://images.unsplash.com/photo-1608958416755-22d7d566f1ea?w=500&q=80',
+    Business: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=500&q=80',
+    Music: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&q=80',
+    Education: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=500&q=80',
+    Health: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=500&q=80',
+    Others: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500&q=80',
+  };
+  return mapping[category] || mapping.Others;
+};
 
 function DashboardContent() {
   const navigate = useNavigate();
@@ -228,6 +242,29 @@ function DashboardContent() {
     timingsSun: '9:00 AM - 1:00 PM',
   });
 
+  // Branch management states
+  const [branches, setBranches] = useState([]);
+  const [branchesLoading, setBranchesLoading] = useState(false);
+  const [branchesError, setBranchesError] = useState('');
+  const [showBranchModal, setShowBranchModal] = useState(false);
+  const [editingBranch, setEditingBranch] = useState(null);
+  
+  const initialBranchForm = {
+    name: '',
+    address: '',
+    phone: '',
+    googleMapsLocation: '',
+    googleBusinessLink: '',
+    workingHours: '9:00 AM - 8:00 PM',
+    branchManagerName: '',
+    latitude: 10.5891,
+    longitude: 77.2412,
+    isPrimary: false
+  };
+  const [branchForm, setBranchForm] = useState(initialBranchForm);
+  const [branchFormError, setBranchFormError] = useState('');
+  const [branchSubmitLoading, setBranchSubmitLoading] = useState(false);
+
   // Profile settings state
   const [profileFields, setProfileFields] = useState({
     fullName: '',
@@ -348,6 +385,7 @@ function DashboardContent() {
         if (data.data) {
           const userBiz = data.data;
           setBusiness(userBiz);
+          fetchBranches(authToken, userBiz._id);
           setEditFields({
             name: userBiz.name || '',
             category: userBiz.category || 'Services',
@@ -420,6 +458,7 @@ function DashboardContent() {
         logoUrl: '',
       };
       setBusiness(mockBiz);
+      fetchBranches(authToken, mockBiz._id);
       setEditFields({
         name: mockBiz.name || '',
         category: mockBiz.category || 'Services',
@@ -452,6 +491,221 @@ function DashboardContent() {
       setProfileCompletion(90);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchBranches = async (authToken, businessId) => {
+    setBranchesLoading(true);
+    setBranchesError('');
+    try {
+      if (!authToken || businessId === 'UBT-10024') {
+        throw new Error('Offline mock mode');
+      }
+      const res = await fetch(`http://localhost:5000/api/branches/business/${businessId}?all=true`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBranches(data.data);
+      } else {
+        setBranchesError(data.message || 'Failed to fetch branches');
+        throw new Error(data.message || 'Failed to fetch branches');
+      }
+    } catch (err) {
+      console.warn('Using fallback mock branches due to error or mock business id:', err.message);
+      // Gorgeous mock fallback branches
+      const mockBranches = [
+        {
+          _id: 'mock-branch-1',
+          businessId: 'UBT-10024',
+          name: 'Sri Murugan Stores - Eripalayam Branch',
+          address: 'Eripalayam Main Road, Udumalpet Main Town, Tamil Nadu - 642126',
+          phone: '+91 94430 12345',
+          googleMapsLocation: 'https://maps.google.com/?q=10.5912,77.2515',
+          googleBusinessLink: 'https://business.google.com',
+          workingHours: '9:00 AM - 9:00 PM',
+          branchManagerName: 'Murugan Jr.',
+          latitude: 10.5912,
+          longitude: 77.2515,
+          status: 'Approved',
+          isPrimary: false
+        },
+        {
+          _id: 'mock-branch-2',
+          businessId: 'UBT-10024',
+          name: 'Sri Murugan Stores - Dharapuram Road Branch',
+          address: 'Dharapuram Road, Udumalpet Main Town, Tamil Nadu - 642126',
+          phone: '+91 94430 54321',
+          googleMapsLocation: 'https://maps.google.com/?q=10.584,77.252',
+          googleBusinessLink: '',
+          workingHours: '9:00 AM - 8:30 PM',
+          branchManagerName: 'Suresh Babu',
+          latitude: 10.584,
+          longitude: 77.252,
+          status: 'Pending Verification',
+          isPrimary: false
+        }
+      ];
+      setBranches(mockBranches);
+    } finally {
+      setBranchesLoading(false);
+    }
+  };
+
+  const handleOpenBranchModal = (branch = null) => {
+    setBranchFormError('');
+    if (branch) {
+      setEditingBranch(branch);
+      setBranchForm({
+        name: branch.name || '',
+        address: branch.address || '',
+        phone: branch.phone || '',
+        googleMapsLocation: branch.googleMapsLocation || '',
+        googleBusinessLink: branch.googleBusinessLink || '',
+        workingHours: branch.workingHours || '9:00 AM - 8:00 PM',
+        branchManagerName: branch.branchManagerName || '',
+        latitude: branch.latitude || 10.5891,
+        longitude: branch.longitude || 77.2412,
+        isPrimary: branch.isPrimary || false
+      });
+    } else {
+      setEditingBranch(null);
+      setBranchForm({
+        name: '',
+        address: '',
+        phone: '',
+        googleMapsLocation: '',
+        googleBusinessLink: '',
+        workingHours: '9:00 AM - 8:00 PM',
+        branchManagerName: '',
+        latitude: 10.5891,
+        longitude: 77.2412,
+        isPrimary: false
+      });
+    }
+    setShowBranchModal(true);
+  };
+
+  const handleBranchFormChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setBranchForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleBranchAddressSelect = (selectedData) => {
+    setBranchForm(prev => ({
+      ...prev,
+      address: selectedData.address,
+      latitude: selectedData.coordinates.lat,
+      longitude: selectedData.coordinates.lng
+    }));
+  };
+
+  const handleBranchSubmit = async (e) => {
+    e.preventDefault();
+    if (!branchForm.name || !branchForm.address || !branchForm.phone) {
+      setBranchFormError('Name, Address, and Phone are required.');
+      return;
+    }
+    setBranchSubmitLoading(true);
+    setBranchFormError('');
+
+    try {
+      if (business._id === 'UBT-10024') {
+        // Mock branch creation/updating
+        const updatedBranch = {
+          _id: editingBranch ? editingBranch._id : `mock-branch-${Date.now()}`,
+          businessId: business._id,
+          name: branchForm.name,
+          address: branchForm.address,
+          phone: branchForm.phone,
+          googleMapsLocation: branchForm.googleMapsLocation || `https://maps.google.com/?q=${branchForm.latitude},${branchForm.longitude}`,
+          googleBusinessLink: branchForm.googleBusinessLink,
+          workingHours: branchForm.workingHours,
+          branchManagerName: branchForm.branchManagerName,
+          latitude: Number(branchForm.latitude) || 10.5891,
+          longitude: Number(branchForm.longitude) || 77.2412,
+          status: editingBranch ? editingBranch.status : 'Pending Verification',
+          isPrimary: branchForm.isPrimary
+        };
+
+        if (editingBranch) {
+          setBranches(prev => prev.map(b => b._id === editingBranch._id ? updatedBranch : b));
+        } else {
+          setBranches(prev => [updatedBranch, ...prev]);
+        }
+        setShowBranchModal(false);
+        setBranchSubmitLoading(false);
+        return;
+      }
+
+      // Real branch API call
+      const url = editingBranch 
+        ? `http://localhost:5000/api/branches/${editingBranch._id}` 
+        : 'http://localhost:5000/api/branches';
+      const method = editingBranch ? 'PUT' : 'POST';
+
+      const bodyData = {
+        ...branchForm,
+        businessId: business._id,
+        latitude: Number(branchForm.latitude),
+        longitude: Number(branchForm.longitude)
+      };
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(bodyData)
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        if (editingBranch) {
+          setBranches(prev => prev.map(b => b._id === editingBranch._id ? data.data : b));
+        } else {
+          setBranches(prev => [data.data, ...prev]);
+        }
+        setShowBranchModal(false);
+      } else {
+        setBranchFormError(data.message || 'Failed to submit branch');
+      }
+    } catch (err) {
+      console.error('Error submitting branch:', err);
+      setBranchFormError('Network error. Failed to submit branch.');
+    } finally {
+      setBranchSubmitLoading(false);
+    }
+  };
+
+  const handleBranchDelete = async (branchId) => {
+    if (!window.confirm('Are you sure you want to delete this branch?')) return;
+
+    try {
+      if (business._id === 'UBT-10024') {
+        // Mock branch deletion
+        setBranches(prev => prev.filter(b => b._id !== branchId));
+        return;
+      }
+
+      // Real branch deletion
+      const res = await fetch(`http://localhost:5000/api/branches/${branchId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBranches(prev => prev.filter(b => b._id !== branchId));
+      } else {
+        alert(data.message || 'Failed to delete branch');
+      }
+    } catch (err) {
+      console.error('Error deleting branch:', err);
+      alert('Network error. Failed to delete branch.');
     }
   };
 
@@ -810,7 +1064,8 @@ function DashboardContent() {
 
     const finalCategory = eventCategory === 'Others' ? (customEventCategory.trim() || 'Others') : eventCategory;
 
-    if (!eventTitle.trim() || !eventDescription.trim() || !eventDate || !eventEndDate || !eventTime || !eventVenue || !eventOrganizer || !eventPhone) {
+    // Validate only basic details
+    if (!eventTitle.trim() || !eventDate || !eventEndDate || !eventTime || !eventOrganizer || !eventDuration) {
       setEventError('Please enter all required fields.');
       setEventSubmitLoading(false);
       return;
@@ -828,22 +1083,19 @@ function DashboardContent() {
         body: JSON.stringify({
           title: eventTitle,
           category: finalCategory,
-          description: eventDescription,
           date: eventDate,
           endDate: eventEndDate,
           time: eventTime,
-          venue: eventVenue,
           organizer: eventOrganizer,
-          phone: eventPhone,
-          coverImageUrl: eventCoverUrl || undefined,
-          paymentLink: eventPaymentLink || undefined,
-          duration: eventDuration || undefined,
+          duration: eventDuration,
           price: price
         })
       });
       const data = await res.json();
       if (data.success) {
-        setEventSuccess(`Event successfully listed! ${price === 0 ? 'Free Listing applied (Active Premium Subscription detected).' : 'Standard charge of ₹99 listed.'}`);
+        const createdEvent = data.data;
+        
+        // Reset basic fields
         setEventTitle('');
         setEventDescription('');
         setEventDate('');
@@ -856,10 +1108,30 @@ function DashboardContent() {
         setEventPaymentLink('');
         setEventDuration('');
         fetchUserEvents();
-        setTimeout(() => {
-          setShowCreateEventModal(false);
-          setEventSuccess('');
-        }, 3000);
+
+        // Close first modal
+        setShowCreateEventModal(false);
+
+        // Initiate payment gateway or free waiver
+        setCompleteEvent(createdEvent);
+        setCompleteEventPhone(createdEvent.phone || '');
+        setCompleteEventVenue(createdEvent.venue || '');
+        setCompleteEventDescription(createdEvent.description || '');
+        setCompleteEventCoverUrl(createdEvent.coverImageUrl || '');
+        setCompleteEventPaymentLink(createdEvent.paymentLink || '');
+        setCompleteEventPaymentStatus(createdEvent.paymentStatus || 'Pending');
+        setCompleteEventError('');
+        setCompleteEventSuccess('');
+        setCompleteEventLoading(false);
+
+        if (price === 0) {
+          // Premium users don't need checkout screen, notify and submit for review
+          alert('Premium active! Event successfully registered and submitted for admin review.');
+        } else {
+          // Standard charge checkout
+          setCompleteEventStep(1);
+          setShowCompleteEventModal(true);
+        }
       } else {
         setEventError(data.message || 'Failed to submit event.');
       }
@@ -869,21 +1141,19 @@ function DashboardContent() {
         _id: 'mock_evt_' + Math.random().toString(36).substr(2, 9),
         title: eventTitle,
         category: finalCategory,
-        description: eventDescription,
         date: new Date(eventDate),
         endDate: new Date(eventEndDate),
         time: eventTime,
-        venue: eventVenue,
         organizer: eventOrganizer,
-        phone: eventPhone,
-        coverImageUrl: eventCoverUrl || 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500&q=80',
-        paymentLink: eventPaymentLink,
         duration: eventDuration,
-        price: price
+        price: price,
+        status: 'Pending Review',
+        paymentStatus: 'Pending',
+        isCompleted: false
       };
-      setUserEvents(prev => [mockEvt, ...prev]);
-      setEventSuccess(`Mock Mode: Event successfully listed! ${price === 0 ? 'Free Listing applied (Active Premium Subscription detected).' : 'Standard charge of ₹99 listed.'}`);
       
+      setUserEvents(prev => [mockEvt, ...prev]);
+
       setEventTitle('');
       setEventDescription('');
       setEventDate('');
@@ -895,11 +1165,26 @@ function DashboardContent() {
       setEventCoverUrl('');
       setEventPaymentLink('');
       setEventDuration('');
+      
+      setShowCreateEventModal(false);
 
-      setTimeout(() => {
-        setShowCreateEventModal(false);
-        setEventSuccess('');
-      }, 3000);
+      setCompleteEvent(mockEvt);
+      setCompleteEventPhone(mockEvt.phone || '');
+      setCompleteEventVenue(mockEvt.venue || '');
+      setCompleteEventDescription(mockEvt.description || '');
+      setCompleteEventCoverUrl(mockEvt.coverImageUrl || '');
+      setCompleteEventPaymentLink(mockEvt.paymentLink || '');
+      setCompleteEventPaymentStatus(mockEvt.paymentStatus || 'Pending');
+      setCompleteEventError('');
+      setCompleteEventSuccess('');
+      setCompleteEventLoading(false);
+
+      if (price === 0) {
+        alert('Mock Mode: Premium active! Event registered and submitted for review.');
+      } else {
+        setCompleteEventStep(1);
+        setShowCompleteEventModal(true);
+      }
     } finally {
       setEventSubmitLoading(false);
     }
@@ -1145,7 +1430,7 @@ function DashboardContent() {
     } catch (err) {
       console.error('Upload error:', err);
       setCompleteEventImageError('Network error uploading image. Using a placeholder instead.');
-      setCompleteEventCoverUrl('https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500&q=80');
+      setCompleteEventCoverUrl(getEventDefaultImage(completeEvent?.category));
     } finally {
       setCompleteEventImageUploading(false);
     }
@@ -1187,8 +1472,13 @@ function DashboardContent() {
         const verifyData = await verifyRes.json();
         if (verifyData.success) {
           setCompleteEventPaymentStatus('Free');
-          setCompleteEventStep(2);
+          setCompleteEventSuccess('Free listing applied! Your event has been submitted for admin approval.');
           fetchUserEvents();
+          setTimeout(() => {
+            setShowCompleteEventModal(false);
+            setCompleteEvent(null);
+            setCompleteEventSuccess('');
+          }, 3000);
         } else {
           throw new Error(verifyData.message || 'Sandbox payment verification failed.');
         }
@@ -1231,8 +1521,13 @@ function DashboardContent() {
               const verifyData = await verifyRes.json();
               if (verifyData.success) {
                 setCompleteEventPaymentStatus('Paid');
-                setCompleteEventStep(2);
+                setCompleteEventSuccess('Payment verified successfully! Your event has been submitted for admin review.');
                 fetchUserEvents();
+                setTimeout(() => {
+                  setShowCompleteEventModal(false);
+                  setCompleteEvent(null);
+                  setCompleteEventSuccess('');
+                }, 3000);
               } else {
                 setCompleteEventError('Payment verification failed.');
               }
@@ -1277,8 +1572,13 @@ function DashboardContent() {
         const verifyData = await verifyRes.json();
         if (verifyData.success) {
           setCompleteEventPaymentStatus('Paid');
-          setCompleteEventStep(2);
+          setCompleteEventSuccess('Sandbox Payment verified! Your event has been submitted for admin review.');
           fetchUserEvents();
+          setTimeout(() => {
+            setShowCompleteEventModal(false);
+            setCompleteEvent(null);
+            setCompleteEventSuccess('');
+          }, 3000);
         } else {
           setCompleteEventError(verifyData.message || 'Sandbox payment verification failed.');
         }
@@ -1337,7 +1637,7 @@ function DashboardContent() {
         venue: completeEventVenue,
         phone: completeEventPhone,
         description: completeEventDescription,
-        coverImageUrl: completeEventCoverUrl || 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500&q=80',
+        coverImageUrl: completeEventCoverUrl || getEventDefaultImage(completeEvent?.category),
         paymentLink: completeEventPaymentLink,
         isCompleted: true,
         paymentStatus: completeEventPaymentStatus
@@ -1663,6 +1963,7 @@ function DashboardContent() {
     ...(business ? [
       { label: 'Dashboard', icon: <Briefcase className="h-4 w-4" /> },
       { label: 'Business Details', icon: <Edit3 className="h-4 w-4" />, onClick: () => setShowEditModal(true) },
+      { label: 'Branches', icon: <MapPin className="h-4 w-4" /> },
       { label: 'Photos & Media', icon: <ImageIcon className="h-4 w-4" />, onClick: () => setShowUploadModal(true) },
       { label: 'Reviews & Reputation', icon: <Star className="h-4 w-4" /> },
       { label: 'Leads & Enquiries', icon: <Mail className="h-4 w-4" />, badge: 18 },
@@ -2512,7 +2813,7 @@ function DashboardContent() {
                     <div key={evt._id} className="card-premium rounded-3xl overflow-hidden bg-white flex flex-col border border-slate-200 shadow-sm">
                       <div 
                         className="h-36 bg-cover bg-center shrink-0 relative"
-                        style={{ backgroundImage: `url('${evt.coverImageUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500&q=80"}')` }}
+                        style={{ backgroundImage: `url('${evt.coverImageUrl || getEventDefaultImage(evt.category)}')` }}
                       >
                         <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs border border-slate-100 px-2 py-0.5 rounded text-[8px] font-black uppercase text-slate-700 shadow-2xs">
                           {evt.category}
@@ -2583,7 +2884,15 @@ function DashboardContent() {
                               onClick={() => handleOpenCompleteEvent(evt)}
                               className="w-full py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-1"
                             >
-                              <CreditCard className="h-4 w-4" /> Pay & Complete Listing
+                              {evt.paymentStatus === 'Paid' || evt.paymentStatus === 'Free' ? (
+                                <>
+                                  <Edit3 className="h-4 w-4" /> Complete Event Details
+                                </>
+                              ) : (
+                                <>
+                                  <CreditCard className="h-4 w-4" /> Pay & Complete Listing
+                                </>
+                              )}
                             </button>
                           )}
                         </div>
@@ -3220,6 +3529,115 @@ function DashboardContent() {
                 ))}
               </div>
 
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB: BRANCHES DASHBOARD */}
+          {/* ========================================================================= */}
+          {activeTab === 'Branches' && (
+            <div className="flex flex-col gap-6 text-left animate-fadeIn font-sans">
+              
+              {/* Header card */}
+              <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col">
+                  <h3 className="font-extrabold text-[#001c41] text-base">Branches Management Desk</h3>
+                  <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Add or manage multiple branches under your business profile. Single branches default to your main profile details.</span>
+                </div>
+                <button 
+                  onClick={() => handleOpenBranchModal(null)}
+                  className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-6 rounded-xl transition-all shadow-md shrink-0 flex items-center gap-2 cursor-pointer border border-emerald-700/10"
+                >
+                  <Plus className="h-4.5 w-4.5" /> Add New Branch
+                </button>
+              </div>
+
+              {/* Branches Content Stream */}
+              {branchesLoading ? (
+                <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-450 flex flex-col items-center gap-2.5 shadow-sm">
+                  <RefreshCw className="h-7 w-7 text-emerald-600 animate-spin" />
+                  <span className="text-xs font-bold">Retrieving your listed branches...</span>
+                </div>
+              ) : branches.length === 0 ? (
+                <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-450 flex flex-col items-center gap-4 shadow-sm max-w-md mx-auto my-6 animate-fadeIn">
+                  <div className="h-15 w-15 bg-emerald-50 text-[#027244] rounded-2xl flex items-center justify-center border border-emerald-100 animate-pulse">
+                    <MapPin className="h-7 w-7" />
+                  </div>
+                  <div className="flex flex-col gap-1.5 text-center items-center">
+                    <h4 className="font-extrabold text-slate-800 text-base leading-tight">No branches added yet</h4>
+                    <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                      By default, UBT uses your primary business details. If you have additional retail outlets, warehouses, or service centers, register them as branches to show them on your public profile!
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => handleOpenBranchModal(null)}
+                    className="w-full py-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all shadow-emerald-700/10 cursor-pointer"
+                  >
+                    Add Branch Now
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {branches.map((branch) => (
+                    <div key={branch._id} className="card-premium rounded-3xl bg-white border border-slate-200 shadow-sm p-6 flex flex-col justify-between text-left gap-4">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex justify-between items-start gap-2">
+                          <h4 className="font-extrabold text-slate-800 text-sm">{branch.name}</h4>
+                          <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase shrink-0 ${
+                            branch.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                            branch.status === 'Pending Verification' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                            branch.status === 'Under Review' ? 'bg-blue-50 text-blue-755 border border-blue-200' :
+                            branch.status === 'Rejected' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                            'bg-red-50 text-red-700 border border-red-200'
+                          }`}>
+                            {branch.status}
+                          </span>
+                        </div>
+                        {branch.branchManagerName && (
+                          <div className="text-[10px] text-slate-500 font-bold flex items-center gap-1.5 mt-0.5">
+                            <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[9px]">Manager</span>
+                            <span>{branch.branchManagerName}</span>
+                          </div>
+                        )}
+                        <hr className="border-slate-100 my-2" />
+                        <div className="flex flex-col gap-2 text-xs text-slate-600">
+                          <div className="flex items-start gap-2">
+                            <MapPin className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
+                            <span>{branch.address}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <PhoneCall className="h-4 w-4 text-slate-400 shrink-0" />
+                            <span>{branch.phone}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-slate-400 shrink-0" />
+                            <span>{branch.workingHours || '9:00 AM - 8:00 PM'}</span>
+                          </div>
+                          <div className="flex items-center gap-4 text-[10px] text-slate-450 mt-1">
+                            <span>Lat: {branch.latitude?.toFixed(4) || '10.5891'}</span>
+                            <span>Lng: {branch.longitude?.toFixed(4) || '77.2412'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2.5 mt-2 border-t border-slate-100 pt-4">
+                        <button
+                          onClick={() => handleOpenBranchModal(branch)}
+                          className="flex-1 py-2 border border-slate-200 hover:border-slate-350 text-slate-700 hover:bg-slate-50 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <Edit3 className="h-3.5 w-3.5" /> Edit Branch
+                        </button>
+                        <button
+                          onClick={() => handleBranchDelete(branch._id)}
+                          className="flex-1 py-2 border border-rose-200 hover:border-rose-350 text-rose-600 hover:bg-rose-50/30 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Delete Branch
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -4812,6 +5230,181 @@ function DashboardContent() {
         </div>
       )}
 
+      {/* MODAL: Add / Edit Branch Modal */}
+      {showBranchModal && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="max-w-2xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-5 animate-scaleUp text-left max-h-[85vh] overflow-y-auto scrollbar-none font-sans">
+            <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-extrabold text-slate-800 text-base">{editingBranch ? 'Edit Branch' : 'Add New Branch'}</h3>
+                <p className="text-slate-400 text-[10px] font-semibold mt-1">Provide branch details below. Edited or new branches will require admin approval.</p>
+              </div>
+              <button onClick={() => setShowBranchModal(false)} className="text-slate-400 hover:text-slate-600 font-extrabold text-xs cursor-pointer p-1">
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {branchFormError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-4 py-3 rounded-xl font-semibold flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{branchFormError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleBranchSubmit} className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Branch Name</label>
+                  <input 
+                    type="text" 
+                    name="name"
+                    value={branchForm.name}
+                    onChange={handleBranchFormChange}
+                    placeholder="e.g. Sri Murugan Stores - Eripalayam"
+                    required
+                    className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Contact Number</label>
+                  <input 
+                    type="text" 
+                    name="phone"
+                    value={branchForm.phone}
+                    onChange={handleBranchFormChange}
+                    placeholder="e.g. +91 94430 12345"
+                    required
+                    className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Branch Manager Name (Optional)</label>
+                  <input 
+                    type="text" 
+                    name="branchManagerName"
+                    value={branchForm.branchManagerName}
+                    onChange={handleBranchFormChange}
+                    placeholder="e.g. John Doe"
+                    className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Working Hours</label>
+                  <input 
+                    type="text" 
+                    name="workingHours"
+                    value={branchForm.workingHours}
+                    onChange={handleBranchFormChange}
+                    placeholder="e.g. 9:00 AM - 8:00 PM"
+                    className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                  />
+                </div>
+              </div>
+
+              {/* Use MockGoogleMaps component for address search & autocomplete */}
+              <div className="bg-slate-50/50 p-4.5 rounded-2xl border border-slate-100 flex flex-col gap-4">
+                <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Location & Coordinates</span>
+                
+                <MockGoogleMaps 
+                  pincode={business?.pincode || '642126'}
+                  initialAddress={branchForm.address}
+                  onAddressSelect={handleBranchAddressSelect}
+                />
+
+                <div className="flex flex-col gap-1 mt-1">
+                  <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Full Address (Fallback / Display)</label>
+                  <textarea 
+                    name="address"
+                    value={branchForm.address}
+                    onChange={handleBranchFormChange}
+                    placeholder="Type branch address..."
+                    required
+                    rows={2}
+                    className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20 resize-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Latitude</label>
+                    <input 
+                      type="number" 
+                      step="any"
+                      name="latitude"
+                      value={branchForm.latitude}
+                      onChange={handleBranchFormChange}
+                      required
+                      className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Longitude</label>
+                    <input 
+                      type="number" 
+                      step="any"
+                      name="longitude"
+                      value={branchForm.longitude}
+                      onChange={handleBranchFormChange}
+                      required
+                      className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Google Maps Location Link (Optional)</label>
+                  <input 
+                    type="url" 
+                    name="googleMapsLocation"
+                    value={branchForm.googleMapsLocation}
+                    onChange={handleBranchFormChange}
+                    placeholder="e.g. https://maps.google.com/?q=..."
+                    className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Google Business Profile Link (Optional)</label>
+                  <input 
+                    type="url" 
+                    name="googleBusinessLink"
+                    value={branchForm.googleBusinessLink}
+                    onChange={handleBranchFormChange}
+                    placeholder="e.g. https://business.google.com/r/..."
+                    className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end border-t border-slate-100 pt-4 mt-2">
+                <button 
+                  type="button" 
+                  onClick={() => setShowBranchModal(false)}
+                  className="px-6 py-3 border border-slate-250 hover:bg-slate-50 text-slate-500 font-extrabold text-xs rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={branchSubmitLoading}
+                  className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-8 rounded-xl transition-all shadow-md cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {branchSubmitLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                  <span>{editingBranch ? 'Save Changes' : 'Register Branch'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* MODAL 3: Photos Gallery & Upload Modal */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
@@ -5312,20 +5905,6 @@ function DashboardContent() {
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Venue / Location *</label>
-                    <input 
-                      type="text" 
-                      value={eventVenue}
-                      onChange={(e) => setEventVenue(e.target.value)}
-                      placeholder="e.g. Sri Krishna Mahal, Udumalpet"
-                      required
-                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
                     <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Organizer Name *</label>
                     <input 
                       type="text" 
@@ -5336,54 +5915,6 @@ function DashboardContent() {
                       className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
                     />
                   </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Helpline Phone *</label>
-                    <input 
-                      type="tel" 
-                      value={eventPhone}
-                      onChange={(e) => setEventPhone(e.target.value)}
-                      placeholder="e.g. +91 98765 43210"
-                      required
-                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Cover Image URL</label>
-                    <input 
-                      type="url" 
-                      value={eventCoverUrl}
-                      onChange={(e) => setEventCoverUrl(e.target.value)}
-                      placeholder="e.g. https://images.unsplash.com/photo-..."
-                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Booking / Registration Link</label>
-                    <input 
-                      type="url" 
-                      value={eventPaymentLink}
-                      onChange={(e) => setEventPaymentLink(e.target.value)}
-                      placeholder="e.g. https://tickets.expo.in"
-                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Event Description *</label>
-                  <textarea 
-                    rows={4}
-                    value={eventDescription}
-                    onChange={(e) => setEventDescription(e.target.value)}
-                    placeholder="Provide full schedule details, highlights, guidelines, and benefits..."
-                    required
-                    className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-755 focus:outline-none focus:border-[#027244] bg-slate-50/20 resize-none leading-relaxed"
-                  />
                 </div>
 
                 <div className="flex justify-end gap-3 mt-1 border-t border-slate-100 pt-4">
@@ -5496,6 +6027,21 @@ function DashboardContent() {
                     className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
                   >
                     Cancel
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setCompleteEventSuccess('Payment skipped! Your event has been submitted for admin review.');
+                      fetchUserEvents();
+                      setTimeout(() => {
+                        setShowCompleteEventModal(false);
+                        setCompleteEvent(null);
+                        setCompleteEventSuccess('');
+                      }, 2500);
+                    }}
+                    className="py-2.5 px-4 bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-800 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors"
+                  >
+                    Skip Now
                   </button>
                   <button 
                     type="button"
