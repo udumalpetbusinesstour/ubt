@@ -35,16 +35,13 @@ export default function ChoosePlan() {
     const storedToken = localStorage.getItem('ubt_token');
     const storedUser = localStorage.getItem('ubt_user');
 
-    if (!storedToken || !storedUser) {
-      navigate('/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
-      return;
-    }
-
-    setToken(storedToken);
-    try {
-      setUser(JSON.parse(storedUser));
-    } catch (e) {
-      console.error('Error parsing user storage:', e);
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error('Error parsing user storage:', e);
+      }
     }
 
     initializeBusinessAndReferrals(storedToken);
@@ -55,50 +52,52 @@ export default function ChoosePlan() {
       setLoading(true);
       setError('');
 
-      // 1. Fetch user's business listing
-      const res = await fetch('http://localhost:5000/api/businesses/my-business', {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-      const data = await res.json();
-      
-      let currentBiz = null;
-      if (data.success && data.data) {
-        currentBiz = data.data;
-        setBusiness(currentBiz);
-      } else {
-        // 2. Create a default business draft if one does not exist
-        const draftRes = await fetch('http://localhost:5000/api/businesses/draft', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: JSON.stringify({
-            name: '',
-            city: 'Udumalpet',
-            state: 'Tamil Nadu',
-            description: '',
-            phone: '',
-            whatsapp: '',
-            pincode: '',
-          }),
+      if (authToken) {
+        // 1. Fetch user's business listing
+        const res = await fetch('http://localhost:5000/api/businesses/my-business', {
+          headers: { Authorization: `Bearer ${authToken}` },
         });
-        const draftData = await draftRes.json();
-        if (draftData.success && draftData.data) {
-          currentBiz = draftData.data;
+        const data = await res.json();
+        
+        let currentBiz = null;
+        if (data.success && data.data) {
+          currentBiz = data.data;
           setBusiness(currentBiz);
         } else {
-          setError('Could not initialize business registration draft.');
+          // 2. Create a default business draft if one does not exist
+          const draftRes = await fetch('http://localhost:5000/api/businesses/draft', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({
+              name: '',
+              city: 'Udumalpet',
+              state: 'Tamil Nadu',
+              description: '',
+              phone: '',
+              whatsapp: '',
+              pincode: '',
+            }),
+          });
+          const draftData = await draftRes.json();
+          if (draftData.success && draftData.data) {
+            currentBiz = draftData.data;
+            setBusiness(currentBiz);
+          } else {
+            setError('Could not initialize business registration draft.');
+          }
         }
-      }
 
-      // 3. Fetch referrals stats
-      const refRes = await fetch('http://localhost:5000/api/referrals/my-stats', {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-      const refData = await refRes.json();
-      if (refData.success && refData.data) {
-        setReferralStats(refData.data);
+        // 3. Fetch referrals stats
+        const refRes = await fetch('http://localhost:5000/api/referrals/my-stats', {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        const refData = await refRes.json();
+        if (refData.success && refData.data) {
+          setReferralStats(refData.data);
+        }
       }
 
       // 4. Fetch subscription plans to get dynamic pricing
@@ -165,12 +164,18 @@ export default function ChoosePlan() {
   };
 
   const handlePaymentCheckout = async (planOverride) => {
-    if (!business) {
-      setError('Business draft not loaded.');
+    const planToUse = planOverride || selectedPlan;
+
+    if (!token) {
+      navigate('/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
       return;
     }
 
-    const planToUse = planOverride || selectedPlan;
+    if (!business) {
+      setError('Business draft not loaded. Please log in or register your business.');
+      return;
+    }
+
     setPaymentLoading(true);
     setError('');
 
