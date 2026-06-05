@@ -1363,7 +1363,7 @@ export default function EventsPage() {
                     disabled={submitLoading}
                     className="h-11 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center cursor-pointer gap-1.5 flex-grow disabled:opacity-60"
                   >
-                    <span>{submitLoading ? 'Submitting...' : 'Submit for Administrative Approval'}</span>
+                    <span>{submitLoading ? 'Submitting...' : 'Proceed to Payment'}</span>
                     <ChevronRight className="h-4.5 w-4.5" />
                   </button>
                 </div>
@@ -1383,7 +1383,7 @@ export default function EventsPage() {
                   Your event <strong>"{evtTitle}"</strong> has been successfully submitted to the admin queue.
                 </p>
                 <p className="text-slate-400 text-[11px] leading-relaxed text-left mt-1.5 font-sans">
-                  Once the administrator reviews and approves the event, you will see it in your dashboard under the **Events** tab. From there, you can complete the checkout process (waived to ₹0 if you are a premium business subscriber) and fill in final details like location address, contact phone, cover picture, and description to publish it live!
+                  Your payment has been received and verified successfully! Your event is now submitted to the admin queue for review. Once the administrator approves it, you will see it in your dashboard under the **Events** tab. From there, you can complete the final details like location address, contact phone, cover picture, and description to publish it live!
                 </p>
               </div>
 
