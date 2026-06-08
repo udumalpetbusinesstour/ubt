@@ -34,7 +34,13 @@ router.post('/create-order', protect, async (req, res) => {
     }
 
     const Plan = require('../models/Plan');
-    const dbPlan = await Plan.findOne({ type: planType, isActive: true });
+    const dbPlan = await Plan.findOne({
+      $or: [
+        { type: planType },
+        { name: planType }
+      ],
+      isActive: true
+    });
 
     let amount = 0;
     if (dbPlan) {
@@ -177,7 +183,13 @@ router.post('/verify-payment', protect, async (req, res) => {
     let endDate = new Date();
 
     const Plan = require('../models/Plan');
-    const dbPlan = await Plan.findOne({ type: planType, isActive: true });
+    const dbPlan = await Plan.findOne({
+      $or: [
+        { type: planType },
+        { name: planType }
+      ],
+      isActive: true
+    });
 
     const durationDays = dbPlan ? dbPlan.durationDays : (planType === 'Monthly' ? 28 : 365);
     endDate.setDate(startDate.getDate() + durationDays);
@@ -229,12 +241,7 @@ router.post('/verify-payment', protect, async (req, res) => {
     business.subscriptionStatus = 'active';
     business.subscriptionExpiry = endDate;
     business.isPremium = true; // Premium features enabled upon payment
-    
-    // If the business was approved or pending, keep/approve
-    if (['Pending Verification', 'Under Review'].includes(business.status)) {
-      business.status = 'Approved';
-    }
-    
+    // Keep status as Pending Verification (or Under Review) for admin approval after payment
     await business.save();
 
     // Trigger referral point award check for the owner of the referral code

@@ -24,7 +24,7 @@ const registerUser = async (req, res, next) => {
       return sendError(res, 400, error.details[0].message);
     }
 
-    const { name, fullName, email, phone, mobileNumber, password, role, referralCode } = value;
+    const { name, fullName, email, phone, mobileNumber, password, role, referralCode, website, instagram, facebook } = value;
     const resolvedName = name || fullName;
     const resolvedPhone = phone || mobileNumber;
 
@@ -88,7 +88,10 @@ const registerUser = async (req, res, next) => {
       mobileNumber: resolvedPhone,
       password,
       role: role || 'owner', // Defaults to owner onboarding
-      referredBy: referrer ? referrer._id : undefined
+      referredBy: referrer ? referrer._id : undefined,
+      website: website || '',
+      instagram: instagram || '',
+      facebook: facebook || '',
     });
 
     // Create pending Referral record
@@ -117,6 +120,9 @@ const registerUser = async (req, res, next) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        website: user.website,
+        instagram: user.instagram,
+        facebook: user.facebook,
       }
     });
   } catch (err) {
@@ -170,6 +176,9 @@ const loginUser = async (req, res, next) => {
           email: user.email,
           phone: user.phone,
           role: user.role,
+          website: user.website,
+          instagram: user.instagram,
+          facebook: user.facebook,
         },
         draftBusiness
       });
@@ -226,6 +235,18 @@ const updateProfile = async (req, res, next) => {
       user.profileImage = req.body.profileImage;
     }
 
+    if (req.body.website !== undefined) {
+      user.website = req.body.website;
+    }
+
+    if (req.body.instagram !== undefined) {
+      user.instagram = req.body.instagram;
+    }
+
+    if (req.body.facebook !== undefined) {
+      user.facebook = req.body.facebook;
+    }
+
     // Handle password update securely
     if (req.body.newPassword) {
       if (!req.body.currentPassword) {
@@ -247,7 +268,10 @@ const updateProfile = async (req, res, next) => {
       email: user.email,
       phone: user.phone,
       role: user.role,
-      profileImage: user.profileImage
+      profileImage: user.profileImage,
+      website: user.website,
+      instagram: user.instagram,
+      facebook: user.facebook
     });
   } catch (err) {
     next(err);

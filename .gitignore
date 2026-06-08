@@ -57,3 +57,25 @@ desktop.ini
 **/.nyc_output/
 tmp/
 temp/
+
+# Backend uploaded user media files (runtime data, not source code)
+backend/uploads/
+
+# Temporary backend database utility/debug scripts (not source code)
+backend/analyze_db.js
+backend/check_db.js
+backend/check_events.js
+backend/db_dump.json
+backend/dump_businesses.js
+backend/fix_events.js
+backend/read_direct_mongodb.js
+backend/update_all_businesses.js
+backend/update_db_socials.js
+
+# Frontend production build output (do not commit dist)
+frontend/dist/
+
+# Temporary frontend debug scripts
+frontend/src/app/dashboard/search_dashboard.cjs
+frontend/src/app/dashboard/search_dashboard.js
+frontend/src/app/dashboard/search-dashboard-view.cjs

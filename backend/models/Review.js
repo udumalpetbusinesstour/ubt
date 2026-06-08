@@ -37,6 +37,13 @@ const ReviewSchema = new mongoose.Schema({
     enum: ['local', 'google'],
     default: 'local',
   },
+  replyText: {
+    type: String,
+    trim: true,
+  },
+  replyDate: {
+    type: Date,
+  },
 }, {
   timestamps: true
 });

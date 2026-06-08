@@ -103,6 +103,16 @@ router.put('/businesses/:id/status', async (req, res, next) => {
       business.isPremium = false;
     }
     
+    // Sync status of all branches of this business
+    try {
+      const Branch = require('../models/Branch');
+      const branchStatus = status === 'Approved' ? 'Approved' : (status === 'Suspended' ? 'Suspended' : (status === 'Rejected' ? 'Rejected' : 'Pending Verification'));
+      await Branch.updateMany({ businessId: business._id }, { status: branchStatus });
+      console.log(`[BRANCHES MODERATION] Marked branches for business ${business._id} as ${branchStatus}`);
+    } catch (branchModErr) {
+      console.error('Error updating branch statuses during business moderation:', branchModErr);
+    }
+    
     await business.save({ validateBeforeSave: false });
 
     if (status === 'Approved') {

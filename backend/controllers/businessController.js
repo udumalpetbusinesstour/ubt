@@ -24,6 +24,8 @@ const registerBusiness = async (req, res, next) => {
       whatsapp,
       email,
       website,
+      instagram,
+      facebook,
       address,
       locality,
       city,
@@ -37,7 +39,8 @@ const registerBusiness = async (req, res, next) => {
       galleryImages,
       openingHours,
       customCategoryName,
-      categoryStatus
+      categoryStatus,
+      highlights
     } = value;
 
     const resolvedName = businessName || name;
@@ -77,6 +80,8 @@ const registerBusiness = async (req, res, next) => {
       whatsapp: whatsapp || phone,
       email,
       website,
+      instagram,
+      facebook,
       address,
       locality,
       city: city || 'Udumalpet',
@@ -88,6 +93,7 @@ const registerBusiness = async (req, res, next) => {
       googlePlaceId,
       googleLinked,
       tags: tags || [],
+      highlights: highlights || [],
       galleryUrls: galleryImages || [],
       galleryImages: galleryImages || [],
       timings: openingHours || {

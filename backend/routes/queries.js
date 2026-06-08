@@ -12,6 +12,55 @@ const authorizeAdmin = (req, res, next) => {
   }
 };
 
+// @desc    Get logged-in user's queries
+// @route   GET /api/queries/my-queries
+// @access  Private
+router.get('/my-queries', protect, async (req, res) => {
+  try {
+    const queries = await Query.find({ userId: req.user._id }).sort({ createdAt: 1 });
+    res.json({ success: true, count: queries.length, data: queries });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @desc    Submit a user query from merchant dashboard (authenticated)
+// @route   POST /api/queries/merchant-query
+// @access  Private
+router.post('/merchant-query', protect, async (req, res) => {
+  try {
+    const { message } = req.body;
+    if (!message) {
+      return res.status(400).json({ success: false, message: 'Message body is required' });
+    }
+
+    const query = await Query.create({
+      userId: req.user._id,
+      name: req.user.fullName || 'Merchant Support Request',
+      email: req.user.email,
+      subject: 'Dashboard Support Query',
+      message
+    });
+
+    // Notify SuperAdmin via Email about new query
+    try {
+      const { sendEmail } = require('../utils/emailHelper');
+      await sendEmail({
+        to: 'udumalpetbusinesstour@gmail.com', // Central SuperAdmin email
+        subject: `New Merchant Inquiry from ${req.user.fullName || 'Merchant'}`,
+        text: `Hello Admin,\n\nA new merchant support message has been submitted from the dashboard.\n\nFrom: ${req.user.fullName || 'Merchant'} (${req.user.email})\n\nMessage:\n"${message}"\n\nPlease log in to the admin panel to reply.\n\nBest regards,\nUBT Platform Automation`
+      });
+      console.log(`[SMTP] New merchant support query email notification dispatched to SuperAdmin.`);
+    } catch (mailErr) {
+      console.error('[SMTP] Failed to send query email to admin:', mailErr.message);
+    }
+
+    res.status(201).json({ success: true, message: 'Support query submitted successfully', data: query });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // @desc    Submit a user query (public endpoint)
 // @route   POST /api/queries
 // @access  Public

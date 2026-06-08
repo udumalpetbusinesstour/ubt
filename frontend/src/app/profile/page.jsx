@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, User, Store, BookOpen, Calendar, Clock, MapPin, Star, Phone, ShieldCheck, Heart, Eye, ArrowRight, RefreshCw, AlertCircle
+  ArrowLeft, User, Store, BookOpen, Calendar, Clock, MapPin, Star, Phone, ShieldCheck, Heart, Eye, ArrowRight, RefreshCw, AlertCircle,
+  Globe, Facebook, Instagram
 } from 'lucide-react';
 
 const mockBlogs = [
@@ -197,7 +198,7 @@ export default function UserProfile() {
             
             {/* Avatar Circle */}
             <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-500/25 flex items-center justify-center font-black text-slate-700 text-3xl shadow-md uppercase select-none shrink-0">
-              {profile.fullName.charAt(0)}
+              {(profile.fullName || 'P').charAt(0)}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -211,11 +212,35 @@ export default function UserProfile() {
                 </span>
               </div>
               
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs font-bold text-slate-400">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs font-bold text-slate-400 mt-1">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-3.5 w-3.5" />
                   Member since {new Date(profile.createdAt).toLocaleDateString(undefined, {month: 'long', year: 'numeric'})}
                 </span>
+                {profile.website && (
+                  <>
+                    <span className="text-slate-300">•</span>
+                    <a href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-[#027244] text-slate-500 transition-colors">
+                      <Globe className="h-3.5 w-3.5" /> {profile.website.replace(/^https?:\/\/(www\.)?/, '')}
+                    </a>
+                  </>
+                )}
+                {profile.facebook && (
+                  <>
+                    <span className="text-slate-300">•</span>
+                    <a href={profile.facebook.startsWith('http') ? profile.facebook : `https://facebook.com/${profile.facebook}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-blue-650 text-slate-500 transition-colors">
+                      <Facebook className="h-3.5 w-3.5" /> Facebook
+                    </a>
+                  </>
+                )}
+                {profile.instagram && (
+                  <>
+                    <span className="text-slate-300">•</span>
+                    <a href={profile.instagram.startsWith('http') ? profile.instagram : `https://instagram.com/${profile.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-pink-600 text-slate-500 transition-colors">
+                      <Instagram className="h-3.5 w-3.5" /> {profile.instagram.startsWith('@') ? profile.instagram : `@${profile.instagram}`}
+                    </a>
+                  </>
+                )}
               </div>
             </div>
           </div>

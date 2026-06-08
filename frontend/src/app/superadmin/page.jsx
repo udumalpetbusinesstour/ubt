@@ -93,6 +93,7 @@ export default function SuperAdminDashboard() {
   const [newAdmin, setNewAdmin] = useState({ fullName: '', email: '', permissions: 'Full' });
   const [newPlanPrice, setNewPlanPrice] = useState({ monthly: 99, yearly: 999 });
   const [editedPrices, setEditedPrices] = useState({});
+  const [editingPlan, setEditingPlan] = useState(null);
 
   // Banner Image Management State
   const [banners, setBanners] = useState([
@@ -793,6 +794,46 @@ export default function SuperAdminDashboard() {
     }
   };
 
+  const handleEditPlanSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        name: editingPlan.name,
+        price: Number(editingPlan.price),
+        durationDays: Number(editingPlan.durationDays),
+        description: editingPlan.description,
+        isOffer: !!editingPlan.isOffer,
+        offerText: editingPlan.offerText,
+        isActive: true,
+        features: typeof editingPlan.features === 'string'
+          ? editingPlan.features.split(',').map(f => f.trim()).filter(Boolean)
+          : Array.isArray(editingPlan.features) ? editingPlan.features : []
+      };
+
+      const planId = editingPlan._id || editingPlan.id;
+      const res = await fetch(`http://localhost:5000/api/plans/${planId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Plan configurations updated successfully!');
+        setEditingPlan(null);
+        fetchPlans();
+        loadPlatformRealData();
+      } else {
+        alert(data.message || 'Failed to update plan.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error updating plan details.');
+    }
+  };
+
   const handleAction = async (bizId, type) => {
     let nextStatus = 'Pending Verification';
     if (type === 'approve') nextStatus = 'Approved';
@@ -1332,7 +1373,6 @@ export default function SuperAdminDashboard() {
       group: 'CONFIGURATION',
       items: [
         { id: 'Platform Settings', subtab: 'plans', label: 'Settings', icon: <Settings className="h-4.5 w-4.5" /> },
-        { id: 'Platform Settings', subtab: 'banners', label: 'Pages & Content', icon: <Layers className="h-4.5 w-4.5" /> },
         { id: 'System Logs', label: 'System Logs', icon: <Terminal className="h-4.5 w-4.5" /> }
       ]
     },
@@ -4439,99 +4479,84 @@ export default function SuperAdminDashboard() {
                   }`}>
                     <div className="flex flex-col text-left">
                       <h3 className="font-extrabold text-base leading-tight font-sans">UBT Platform Customizer</h3>
-                      <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Adjust banners, customize directory layouts, manage fields requirements, and pricing models.</span>
-                    </div>
-
-                    {/* Sub tabs list */}
-                    <div className="bg-slate-950/25 backdrop-blur-xs p-1 rounded-xl flex items-center border border-slate-800/30 font-sans overflow-x-auto max-w-full">
-                      {[
-                        { id: 'plans', label: 'Subscription Plans' },
-                        { id: 'banners', label: 'Home Banners' },
-                        { id: 'layouts', label: 'Page Layouts' },
-                        { id: 'fields', label: 'Submission Fields' }
-                      ].map(tab => (
-                        <button
-                          key={tab.id}
-                          onClick={() => setPlatformSubTab(tab.id)}
-                          className={`px-3.5 py-2 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
-                            platformSubTab === tab.id
-                              ? 'bg-[#027244] text-white shadow-sm shadow-emerald-950/15'
-                              : 'text-slate-450 hover:text-slate-200'
-                          }`}
-                        >
-                          {tab.label}
-                        </button>
-                      ))}
+                      <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Customize pricing structures, benefits tiers, and active promotional campaigns.</span>
                     </div>
                   </div>
 
-                  {/* Sub-tab 1: Plans */}
-                  {platformSubTab === 'plans' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans animate-fadeIn">
-                      
-                      {/* Subscription Pricing Adjustment */}
-                      <div className={`lg:col-span-2 border rounded-[28px] p-6 shadow-sm flex flex-col gap-5 ${
-                        themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                      }`}>
-                        <div>
-                          <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-3">Active Subscription Plans & Special Offers</h4>
-                          <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Directly customize pricing structures, benefits tiers, and active promotional campaigns.</span>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {plans.map(p => (
-                            <div key={p.id} className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4.5 bg-slate-50/30 dark:bg-slate-950/20 text-left flex flex-col justify-between gap-3 relative overflow-hidden">
-                              {p.isOffer && (
-                                <div className="absolute top-0 right-0 bg-amber-500 text-[8px] font-black text-slate-950 px-2 py-0.5 rounded-bl-lg uppercase tracking-wider select-none">
-                                  {p.offerText || 'Special Offer'}
-                                </div>
-                              )}
-                              <div className="flex flex-col gap-1">
-                                <div className="flex justify-between items-center pr-12">
-                                  <span className={`font-black text-sm ${themeMode === 'dark' ? 'text-white' : 'text-slate-855'}`}>{p.name}</span>
-                                </div>
-                                <span className="text-[8.5px] uppercase font-black tracking-widest text-[#027244] bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-lg select-none self-start mt-1">{p.duration}</span>
+                  {/* Plans */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans animate-fadeIn">
+                    
+                    {/* Subscription Pricing Adjustment */}
+                    <div className={`lg:col-span-2 border rounded-[28px] p-6 shadow-sm flex flex-col gap-5 ${
+                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                    }`}>
+                      <div>
+                        <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-3">Active Subscription Plans & Special Offers</h4>
+                        <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Directly customize pricing structures, benefits tiers, and active promotional campaigns.</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {plans.map(p => (
+                          <div key={p.id} className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4.5 bg-slate-50/30 dark:bg-slate-950/20 text-left flex flex-col justify-between gap-3 relative overflow-hidden">
+                            {p.isOffer && (
+                              <div className="absolute top-0 right-0 bg-amber-500 text-[8px] font-black text-slate-950 px-2 py-0.5 rounded-bl-lg uppercase tracking-wider select-none">
+                                {p.offerText || 'Special Offer'}
                               </div>
-                              <div className="flex flex-col gap-1.5 mt-1">
-                                <label className="text-[9.5px] text-slate-400 font-bold uppercase tracking-wide">Plan Price (₹)</label>
-                                <div className="flex items-center gap-2">
-                                  <input 
-                                    type="number"
-                                    value={editedPrices[p.id] !== undefined ? editedPrices[p.id] : p.price}
-                                    onChange={(e) => setEditedPrices(prev => ({ ...prev, [p.id]: e.target.value }))}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        const val = editedPrices[p.id];
-                                        if (val !== undefined && Number(val) !== p.price) {
-                                          handlePriceUpdate(p.id, val);
-                                          setEditedPrices(prev => {
-                                            const copy = { ...prev };
-                                            delete copy[p.id];
-                                            return copy;
-                                          });
-                                        }
-                                      }
-                                    }}
-                                    className="border border-slate-200 dark:border-slate-800 p-2 rounded-lg text-xs bg-white dark:bg-slate-900 focus:outline-none focus:border-[#027244] text-slate-805 dark:text-slate-205 font-black flex-grow"
-                                  />
-                                  {editedPrices[p.id] !== undefined && Number(editedPrices[p.id]) !== p.price && (
-                                    <button
-                                      type="button"
-                                      onClick={async () => {
-                                        await handlePriceUpdate(p.id, editedPrices[p.id]);
+                            )}
+                            <div className="flex flex-col gap-1">
+                              <div className="flex justify-between items-center pr-12">
+                                <span className={`font-black text-sm ${themeMode === 'dark' ? 'text-white' : 'text-slate-855'}`}>{p.name}</span>
+                              </div>
+                              <span className="text-[8.5px] uppercase font-black tracking-widest text-[#027244] bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-lg select-none self-start mt-1">{p.duration}</span>
+                            </div>
+                            <div className="flex flex-col gap-1.5 mt-1">
+                              <span className="text-[9.5px] text-slate-400 font-bold uppercase tracking-wide">Plan Price (₹)</span>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="number"
+                                  value={editedPrices[p.id] !== undefined ? editedPrices[p.id] : p.price}
+                                  onChange={(e) => setEditedPrices(prev => ({ ...prev, [p.id]: e.target.value }))}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      const val = editedPrices[p.id];
+                                      if (val !== undefined && Number(val) !== p.price) {
+                                        handlePriceUpdate(p.id, val);
                                         setEditedPrices(prev => {
                                           const copy = { ...prev };
                                           delete copy[p.id];
                                           return copy;
                                         });
-                                      }}
-                                      className="bg-[#027244] hover:bg-[#005934] text-white text-[10px] font-black px-3 py-2 rounded-lg uppercase tracking-wide cursor-pointer transition-colors shrink-0 shadow-xs"
-                                    >
-                                      Save
-                                    </button>
-                                  )}
-                                </div>
+                                      }
+                                    }
+                                  }}
+                                  className="border border-slate-200 dark:border-slate-800 p-2 rounded-lg text-xs bg-white dark:bg-slate-900 focus:outline-none focus:border-[#027244] text-slate-805 dark:text-slate-205 font-black flex-grow"
+                                />
+                                {editedPrices[p.id] !== undefined && Number(editedPrices[p.id]) !== p.price && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      await handlePriceUpdate(p.id, editedPrices[p.id]);
+                                      setEditedPrices(prev => {
+                                        const copy = { ...prev };
+                                        delete copy[p.id];
+                                        return copy;
+                                      });
+                                    }}
+                                    className="bg-[#027244] hover:bg-[#005934] text-white text-[10px] font-black px-3 py-2 rounded-lg uppercase tracking-wide cursor-pointer transition-colors shrink-0 shadow-xs"
+                                  >
+                                    Save
+                                  </button>
+                                )}
                               </div>
+                            </div>
+                            <div className="flex justify-between items-center mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 w-full shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setEditingPlan(p)}
+                                className="text-emerald-500 hover:text-emerald-600 font-extrabold text-[9px] uppercase tracking-wider cursor-pointer transition-colors"
+                              >
+                                Edit Plan
+                              </button>
                               <button
                                 type="button"
                                 onClick={async () => {
@@ -4555,570 +4580,175 @@ export default function SuperAdminDashboard() {
                                     setPlans(prev => prev.filter(item => item.id !== p.id));
                                   }
                                 }}
-                                className="text-red-500 hover:text-red-600 font-extrabold text-[9px] uppercase tracking-wider self-end mt-2 cursor-pointer transition-colors"
+                                className="text-red-500 hover:text-red-600 font-extrabold text-[9px] uppercase tracking-wider cursor-pointer transition-colors"
                               >
                                 Deactivate / Remove
                               </button>
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        ))}
                       </div>
+                    </div>
 
-                      {/* Register New Plan Form */}
-                      <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-5 ${
-                        themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                      }`}>
-                        <div>
-                          <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-3">Create Custom Plan / Offer</h4>
-                          <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Deploy new subscription options or specialized offer campaigns for directory listings.</span>
-                        </div>
-                        <form
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            if (!newPlan.name || !newPlan.price) return;
-                            
-                            const durationDays = parseInt(newPlan.duration) || 30;
-                            const payload = {
-                              name: newPlan.name,
-                              type: newPlan.type || 'Custom',
-                              price: Number(newPlan.price),
-                              durationDays,
-                              isOffer: !!newPlan.isOffer,
-                              offerText: newPlan.offerText,
-                              features: ['Premium Placement Badge', 'WhatsApp Button Link Active', 'UDT Verification Priority']
-                            };
+                    {/* Register New Plan Form */}
+                    <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-5 ${
+                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                    }`}>
+                      <div>
+                        <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-3">Create Custom Plan / Offer</h4>
+                        <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Deploy new subscription options or specialized offer campaigns for directory listings.</span>
+                      </div>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (!newPlan.name || !newPlan.price) return;
+                          
+                          const durationDays = parseInt(newPlan.duration) || 30;
+                          const payload = {
+                            name: newPlan.name,
+                            type: newPlan.type || 'Custom',
+                            price: Number(newPlan.price),
+                            durationDays,
+                            isOffer: !!newPlan.isOffer,
+                            offerText: newPlan.offerText,
+                            features: ['Premium Placement Badge', 'WhatsApp Button Link Active', 'UDT Verification Priority']
+                          };
 
-                            const submitPlan = async () => {
-                              try {
-                                const res = await fetch('http://localhost:5000/api/plans', {
-                                  method: 'POST',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
-                                  },
-                                  body: JSON.stringify(payload)
-                                });
-                                const data = await res.json();
-                                if (data.success) {
+                          const submitPlan = async () => {
+                            try {
+                              const res = await fetch('http://localhost:5000/api/plans', {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
+                                },
+                                body: JSON.stringify(payload)
+                              });
+                              const data = await res.json();
+                              if (data.success) {
                                   alert(`Subscription plan "${newPlan.name}" created successfully in database!`);
                                   fetchPlans();
-                                } else {
-                                  throw new Error(data.message);
-                                }
-                              } catch (err) {
-                                console.warn('API error creating plan, adding locally.', err);
-                                const customId = 'plan_' + Date.now();
-                                setPlans(prev => [
-                                  ...prev,
-                                  { 
-                                    id: customId, 
-                                    name: newPlan.name, 
-                                    price: Number(newPlan.price), 
-                                    duration: newPlan.duration,
-                                    type: newPlan.type || 'Custom',
-                                    isOffer: !!newPlan.isOffer,
-                                    offerText: newPlan.offerText,
-                                    isActive: true
-                                  }
-                                ]);
-                                alert(`Offline Simulation: Plan "${newPlan.name}" added successfully.`);
+                              } else {
+                                throw new Error(data.message);
                               }
-                            };
-                            submitPlan();
+                            } catch (err) {
+                              console.warn('API error creating plan, adding locally.', err);
+                              const customId = 'plan_' + Date.now();
+                              setPlans(prev => [
+                                ...prev,
+                                { 
+                                  id: customId, 
+                                  name: newPlan.name, 
+                                  price: Number(newPlan.price), 
+                                  duration: newPlan.duration,
+                                  type: newPlan.type || 'Custom',
+                                  isOffer: !!newPlan.isOffer,
+                                  offerText: newPlan.offerText,
+                                  isActive: true
+                                }
+                              ]);
+                              alert(`Offline Simulation: Plan "${newPlan.name}" added successfully.`);
+                            }
+                          };
+                          submitPlan();
 
-                            setSystemLogs(prev => [
-                              { time: new Date().toLocaleTimeString(), event: `SuperAdmin generated plan: "${newPlan.name}" for ₹${newPlan.price}`, type: 'info' },
-                              ...prev
-                            ]);
-                            setNewPlan({ name: '', price: '', duration: '30 Days', type: 'Custom', isOffer: false, offerText: '' });
-                          }}
-                          className="flex flex-col gap-3.5 text-left"
-                        >
+                          setSystemLogs(prev => [
+                            { time: new Date().toLocaleTimeString(), event: `SuperAdmin generated plan: "${newPlan.name}" for ₹${newPlan.price}`, type: 'info' },
+                            ...prev
+                          ]);
+                          setNewPlan({ name: '', price: '', duration: '30 Days', type: 'Custom', isOffer: false, offerText: '' });
+                        }}
+                        className="flex flex-col gap-3.5 text-left"
+                      >
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">Plan Name *</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Quarterly Pro Boost"
+                            value={newPlan.name}
+                            onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
+                            className="border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs bg-slate-50/50 dark:bg-slate-900/50 focus:outline-none focus:border-[#027244] text-slate-805 dark:text-slate-205 font-bold"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
                           <div className="flex flex-col gap-1">
-                            <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">Plan Name *</label>
+                            <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">Price (₹) *</label>
                             <input
-                              type="text"
+                              type="number"
                               required
-                              placeholder="e.g. Quarterly Pro Boost"
-                              value={newPlan.name}
-                              onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
-                              className="border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs bg-slate-50/50 dark:bg-slate-900/50 focus:outline-none focus:border-[#027244] text-slate-800 dark:text-slate-200 font-semibold"
+                              placeholder="1499"
+                              value={newPlan.price}
+                              onChange={(e) => setNewPlan({ ...newPlan, price: e.target.value })}
+                              className="border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs bg-slate-50/50 dark:bg-slate-900/50 focus:outline-none focus:border-[#027244] text-slate-805 dark:text-slate-205 font-black"
                             />
                           </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="flex flex-col gap-1">
-                              <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">Price (₹) *</label>
-                              <input
-                                type="number"
-                                required
-                                placeholder="1499"
-                                value={newPlan.price}
-                                onChange={(e) => setNewPlan({ ...newPlan, price: e.target.value })}
-                                className="border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs bg-slate-50/50 dark:bg-slate-900/50 focus:outline-none focus:border-[#027244] text-slate-805 dark:text-slate-205 font-black"
-                              />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">Duration *</label>
-                              <select
-                                value={newPlan.duration}
-                                onChange={(e) => setNewPlan({ ...newPlan, duration: e.target.value })}
-                                className="border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs bg-slate-50/50 dark:bg-slate-900/50 focus:outline-none focus:border-[#027244] text-slate-800 dark:text-slate-200 cursor-pointer font-bold"
-                              >
-                                <option value="15 Days">15 Days</option>
-                                <option value="28 Days">28 Days (Monthly cycle)</option>
-                                <option value="30 Days">30 Days</option>
-                                <option value="90 Days">90 Days</option>
-                                <option value="180 Days">180 Days</option>
-                                <option value="365 Days">365 Days</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col gap-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
-                            <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">Plan Access Category</label>
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">Duration *</label>
                             <select
-                              value={newPlan.type || 'Custom'}
-                              onChange={(e) => setNewPlan({ ...newPlan, type: e.target.value })}
+                              value={newPlan.duration}
+                              onChange={(e) => setNewPlan({ ...newPlan, duration: e.target.value })}
                               className="border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs bg-slate-50/50 dark:bg-slate-900/50 focus:outline-none focus:border-[#027244] text-slate-800 dark:text-slate-200 cursor-pointer font-bold"
                             >
-                              <option value="Custom">Custom Option Plan</option>
-                              <option value="Monthly">Monthly Premium Override</option>
-                              <option value="Yearly">Yearly Premium Override</option>
+                              <option value="15 Days">15 Days</option>
+                              <option value="28 Days">28 Days (Monthly cycle)</option>
+                              <option value="30 Days">30 Days</option>
+                              <option value="90 Days">90 Days</option>
+                              <option value="180 Days">180 Days</option>
+                              <option value="365 Days">365 Days</option>
                             </select>
                           </div>
+                        </div>
 
-                          <div className="flex flex-col gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">
-                            <div className="flex justify-between items-center">
-                              <div className="flex flex-col">
-                                <span className="text-[10px] font-black leading-none">Publish as Special Offer</span>
-                                <span className="text-[8.5px] text-slate-400 mt-1">Highlights this plan with a promotional ribbon badge.</span>
-                              </div>
-                              <input 
-                                type="checkbox"
-                                checked={!!newPlan.isOffer}
-                                onChange={(e) => setNewPlan({ ...newPlan, isOffer: e.target.checked })}
-                                className="h-4.5 w-4.5 text-[#027244] border-slate-300 focus:ring-[#027244] rounded-sm cursor-pointer"
+                        <div className="flex flex-col gap-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
+                          <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">Plan Access Category</label>
+                          <select
+                            value={newPlan.type || 'Custom'}
+                            onChange={(e) => setNewPlan({ ...newPlan, type: e.target.value })}
+                            className="border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs bg-slate-50/50 dark:bg-slate-900/50 focus:outline-none focus:border-[#027244] text-slate-800 dark:text-slate-200 cursor-pointer font-bold"
+                          >
+                            <option value="Custom">Custom Option Plan</option>
+                            <option value="Monthly">Monthly Premium Override</option>
+                            <option value="Yearly">Yearly Premium Override</option>
+                          </select>
+                        </div>
+
+                        <div className="flex flex-col gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">
+                          <div className="flex justify-between items-center">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] font-black leading-none">Publish as Special Offer</span>
+                              <span className="text-[8.5px] text-slate-400 mt-1">Highlights this plan with a promotional ribbon badge.</span>
+                            </div>
+                            <input 
+                              type="checkbox"
+                              checked={!!newPlan.isOffer}
+                              onChange={(e) => setNewPlan({ ...newPlan, isOffer: e.target.checked })}
+                              className="h-4.5 w-4.5 text-[#027244] border-slate-300 focus:ring-[#027244] rounded-sm cursor-pointer"
+                            />
+                          </div>
+                          {newPlan.isOffer && (
+                            <div className="flex flex-col gap-1 mt-1 animate-fadeIn">
+                              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Offer Tag/Badge Text</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. Save 20% Today"
+                                value={newPlan.offerText || ''}
+                                onChange={(e) => setNewPlan({ ...newPlan, offerText: e.target.value })}
+                                className="border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs bg-slate-50/50 dark:bg-slate-900/50 focus:outline-none focus:border-[#027244] text-slate-800 dark:text-slate-200 font-semibold"
                               />
                             </div>
-                            {newPlan.isOffer && (
-                              <div className="flex flex-col gap-1 mt-1 animate-fadeIn">
-                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Offer Tag/Badge Text</label>
-                                <input
-                                  type="text"
-                                  placeholder="e.g. Save 20% Today"
-                                  value={newPlan.offerText || ''}
-                                  onChange={(e) => setNewPlan({ ...newPlan, offerText: e.target.value })}
-                                  className="border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs bg-slate-50/50 dark:bg-slate-900/50 focus:outline-none focus:border-[#027244] text-slate-800 dark:text-slate-200 font-semibold"
-                                />
-                              </div>
-                            )}
-                          </div>
-
-                          <button
-                            type="submit"
-                            className="py-2.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl cursor-pointer transition-colors shadow-md mt-1"
-                          >
-                            Deploy Plan / Offer
-                          </button>
-                        </form>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Sub-tab 2: Home Banners */}
-                  {platformSubTab === 'banners' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans animate-fadeIn">
-                      
-                      {/* Banner list layout */}
-                      <div className={`lg:col-span-2 border rounded-[28px] p-6 shadow-sm flex flex-col gap-5 ${
-                        themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                      }`}>
-                        <div>
-                          <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-3">Home Carousel Banner Slides</h4>
-                          <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Toggle banner visibility or delete obsolete sliders.</span>
+                          )}
                         </div>
-                        <div className="flex flex-col gap-4.5">
-                          {banners.map(b => (
-                            <div key={b.id} className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4 bg-slate-50/30 dark:bg-slate-950/20">
-                              <div className="h-20 w-32 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 shrink-0 shadow-2xs">
-                                <img src={b.image} className="h-full w-full object-cover" alt={b.title} />
-                              </div>
-                              <div className="flex-1 flex flex-col text-left">
-                                <div className="flex items-center gap-2">
-                                  <span className={`font-black text-xs ${themeMode === 'dark' ? 'text-white' : 'text-slate-855'}`}>{b.title}</span>
-                                  <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${
-                                    b.active ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-500/20' : 'bg-slate-500/15 text-slate-400 border border-slate-600/20'
-                                  }`}>
-                                    {b.active ? 'Visible' : 'Hidden'}
-                                  </span>
-                                </div>
-                                <span className="text-[10px] text-slate-400 mt-1 leading-normal font-semibold max-w-md truncate">{b.subtitle}</span>
-                                <span className="text-[8.5px] text-blue-505 font-bold mt-1">Link: {b.link}</span>
-                              </div>
-                              <div className="flex gap-2 shrink-0">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setBanners(prev => prev.map(item => item.id === b.id ? { ...item, active: !item.active } : item));
-                                  }}
-                                  className="px-2.5 py-1.5 border border-slate-350 dark:border-slate-800 rounded-xl font-extrabold text-[10px] hover:bg-slate-100 dark:hover:bg-slate-900 cursor-pointer text-slate-500 dark:text-slate-300"
-                                >
-                                  {b.active ? 'Hide' : 'Show'}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setBanners(prev => prev.filter(item => item.id !== b.id));
-                                    setSystemLogs(prev => [
-                                      { time: new Date().toLocaleTimeString(), event: `SuperAdmin deleted banner slide: "${b.title}"`, type: 'warning' },
-                                      ...prev
-                                    ]);
-                                  }}
-                                  className="px-2.5 py-1.5 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-500 rounded-xl font-extrabold text-[10px] cursor-pointer"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
 
-                      {/* Add new slide banner */}
-                      <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-5 ${
-                        themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                      }`}>
-                        <div>
-                          <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-3">Add Banner Slide</h4>
-                          <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Publish dynamic slides onto the home page carousel header.</span>
-                        </div>
-                        <form
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            if (!newBanner.title || !newBanner.image) return;
-                            const nid = 'banner_' + Date.now();
-                            setBanners(prev => [ ...prev, { ...newBanner, id: nid } ]);
-                            setSystemLogs(prev => [
-                              { time: new Date().toLocaleTimeString(), event: `SuperAdmin appended banner slide: "${newBanner.title}"`, type: 'info' },
-                              ...prev
-                            ]);
-                            alert(`Banner slide "${newBanner.title}" added successfully!`);
-                            setNewBanner({ title: '', image: '', subtitle: '', link: '/businesses', active: true });
-                          }}
-                          className="flex flex-col gap-3.5 text-left"
+                        <button
+                          type="submit"
+                          className="py-2.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl cursor-pointer transition-colors shadow-md mt-1"
                         >
-                          <div className="flex flex-col gap-1">
-                            <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">Banner Title *</label>
-                            <input
-                              type="text"
-                              required
-                              placeholder="e.g. Festival Season Offers in Udumalpet"
-                              value={newBanner.title}
-                              onChange={(e) => setNewBanner({ ...newBanner, title: e.target.value })}
-                              className="border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs bg-slate-50/50 dark:bg-slate-900/50 focus:outline-none focus:border-[#027244] text-slate-805 dark:text-slate-205 font-bold"
-                            />
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">Subtitle Overlay Message</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. Shop locally this Maari Amman kovil festival."
-                              value={newBanner.subtitle}
-                              onChange={(e) => setNewBanner({ ...newBanner, subtitle: e.target.value })}
-                              className="border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs bg-slate-50/50 dark:bg-slate-900/50 focus:outline-none focus:border-[#027244] text-slate-805 dark:text-slate-205 font-bold"
-                            />
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">Banner Image URL *</label>
-                            <input
-                              type="text"
-                              required
-                              placeholder="https://images.unsplash.com/..."
-                              value={newBanner.image}
-                              onChange={(e) => setNewBanner({ ...newBanner, image: e.target.value })}
-                              className="border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs bg-slate-50/50 dark:bg-slate-900/50 focus:outline-none focus:border-[#027244] text-slate-805 dark:text-slate-205 font-semibold"
-                            />
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">Action Link URL</label>
-                            <input
-                              type="text"
-                              placeholder="/businesses?category=Shops"
-                              value={newBanner.link}
-                              onChange={(e) => setNewBanner({ ...newBanner, link: e.target.value })}
-                              className="border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs bg-slate-50/50 dark:bg-slate-900/50 focus:outline-none focus:border-[#027244] text-slate-805 dark:text-slate-205 font-semibold"
-                            />
-                          </div>
-                          <button
-                            type="submit"
-                            className="py-2.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl cursor-pointer transition-colors shadow-md mt-1"
-                          >
-                            Publish Banner
-                          </button>
-                        </form>
-                      </div>
-
+                          Deploy Plan / Offer
+                        </button>
+                      </form>
                     </div>
-                  )}
-
-                  {/* Sub-tab 3: Page Layouts Customizer with live preview */}
-                  {platformSubTab === 'layouts' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 font-sans animate-fadeIn text-left">
-                      
-                      {/* Theme Selector options */}
-                      <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-5 ${
-                        themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                      }`}>
-                        <div>
-                          <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-3">Accent Theme & Grid alignments</h4>
-                          <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Toggle platform layout rules and color highlights.</span>
-                        </div>
-
-                        {/* Accent Theme color dots */}
-                        <div className="flex flex-col gap-2">
-                          <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">Brand Accent Theme Highlight</label>
-                          <div className="flex items-center gap-3.5 mt-1">
-                            {[
-                              { color: 'emerald', label: 'Emerald Green', hex: 'bg-emerald-500 ring-emerald-300' },
-                              { color: 'blue', label: 'Cyber Blue', hex: 'bg-blue-500 ring-blue-300' },
-                              { color: 'indigo', label: 'Royal Indigo', hex: 'bg-[#027244] ring-indigo-300' },
-                              { color: 'purple', label: 'Mystic Violet', hex: 'bg-purple-500 ring-purple-300' }
-                            ].map(theme => (
-                              <button
-                                key={theme.color}
-                                type="button"
-                                onClick={() => setPageLayout({ ...pageLayout, themeAccent: theme.color })}
-                                className={`h-8 w-8 rounded-full border cursor-pointer transition-all ${theme.hex} ${
-                                  pageLayout.themeAccent === theme.color
-                                    ? 'ring-4 scale-110 border-white'
-                                    : 'border-transparent opacity-75 hover:opacity-100 hover:scale-105'
-                                }`}
-                                title={theme.label}
-                              />
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Directory list align grid view options */}
-                        <div className="flex flex-col gap-2.5">
-                          <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">Default Directory Layout Mode</label>
-                          <div className="grid grid-cols-3 gap-3">
-                            {[
-                              { id: 'grid', label: 'Masonry Grid' },
-                              { id: 'list', label: 'Segment List' },
-                              { id: 'compact', label: 'Compact Grid' }
-                            ].map(mode => (
-                              <button
-                                key={mode.id}
-                                type="button"
-                                onClick={() => setPageLayout({ ...pageLayout, directoryLayout: mode.id })}
-                                className={`py-2 px-3 border rounded-xl text-xs font-black cursor-pointer transition-colors text-center ${
-                                  pageLayout.directoryLayout === mode.id
-                                    ? 'bg-[#001c41] border-[#001c41] text-white'
-                                    : themeMode === 'dark'
-                                      ? 'border-slate-800 text-slate-400 hover:bg-slate-900/50'
-                                      : 'border-slate-200 text-slate-500 hover:bg-slate-50'
-                                }`}
-                              >
-                                {mode.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Glassmorphism blur options */}
-                        <div className="flex justify-between items-center border-t border-slate-100 dark:border-slate-800 pt-3">
-                          <div className="flex flex-col text-left">
-                            <span className="text-[11px] font-black leading-none">Glassmorphism Overlay Panels</span>
-                            <span className="text-[9px] text-slate-400 mt-1 font-semibold">Enable smooth backdrop blur styling across components.</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setPageLayout({ ...pageLayout, glassmorphism: !pageLayout.glassmorphism })}
-                            className={`px-3 py-1.5 text-[10px] font-black rounded-lg cursor-pointer transition-colors ${
-                              pageLayout.glassmorphism
-                                ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/25'
-                                : 'bg-slate-500/15 text-slate-400 border border-slate-500/10'
-                            }`}
-                          >
-                            {pageLayout.glassmorphism ? 'Enabled' : 'Disabled'}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Live mock card preview matching layouts */}
-                      <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-4.5 items-center justify-center ${
-                        themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                      }`}>
-                        <div className="text-left w-full">
-                          <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-3">Theme Preview (Live HUD)</h4>
-                        </div>
-
-                        {/* Interactive UI Mock Card */}
-                        <div className={`w-full max-w-sm border rounded-3xl p-5 shadow-md flex flex-col gap-4 text-left transition-all ${
-                          themeMode === 'dark' ? 'bg-[#0b111e]/90 border-slate-800/80' : 'bg-white border-slate-200'
-                        } ${pageLayout.glassmorphism ? 'backdrop-blur-xs' : ''}`}>
-                          <div className="h-32 w-full rounded-2xl overflow-hidden relative border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
-                            <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80" className="h-full w-full object-cover" alt="preview" />
-                            <div className="absolute top-2.5 left-2.5">
-                              <span className={`text-[8.5px] font-black uppercase px-2 py-0.5 rounded-lg text-white shadow-xs select-none ${
-                                pageLayout.themeAccent === 'emerald' ? 'bg-emerald-500' :
-                                pageLayout.themeAccent === 'blue' ? 'bg-blue-500' :
-                                pageLayout.themeAccent === 'indigo' ? 'bg-[#027244]' : 'bg-purple-500'
-                              }`}>
-                                Featured Profile
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex flex-col gap-1">
-                            <span className={`text-[10px] font-black uppercase tracking-wider ${
-                              pageLayout.themeAccent === 'emerald' ? 'text-emerald-500' :
-                              pageLayout.themeAccent === 'blue' ? 'text-blue-500' :
-                              pageLayout.themeAccent === 'indigo' ? 'text-indigo-500' : 'text-purple-500'
-                            }`}>
-                              Resort & Hotels
-                            </span>
-                            <span className={`font-black text-sm leading-tight ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>Green Valley Resorts</span>
-                            <span className="text-[10.5px] text-slate-400 mt-0.5">Thirumoorthi Hills, Udumalpet - 642112</span>
-                          </div>
-
-                          <div className="flex justify-between items-center pt-2.5 border-t border-slate-100 dark:border-slate-800">
-                            <div className="flex text-amber-400 gap-0.5 text-xs">
-                              ★ 4.8 <span className="text-[9.5px] text-slate-450">(98 Reviews)</span>
-                            </div>
-                            <button
-                              type="button"
-                              className={`py-1.5 px-3 rounded-lg text-[10px] font-black uppercase text-white cursor-default ${
-                                pageLayout.themeAccent === 'emerald' ? 'bg-emerald-600' :
-                                pageLayout.themeAccent === 'blue' ? 'bg-blue-600' :
-                                pageLayout.themeAccent === 'indigo' ? 'bg-indigo-600' : 'bg-purple-600'
-                              }`}
-                            >
-                              Explore →
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
-                  )}
-
-                  {/* Sub-tab 4: Submission Fields Configuration ("informations getting page") */}
-                  {platformSubTab === 'fields' && (
-                    <div className="flex flex-col gap-6 text-left animate-fadeIn">
-                      
-                      {/* Form submission parameters table */}
-                      <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-5 ${
-                        themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                      }`}>
-                        <div>
-                          <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-3">Directory Registration Fields (Informations Getting page)</h4>
-                          <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Toggle which informational variables are visible or required when merchants request a profile.</span>
-                        </div>
-                        <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl">
-                          <table className="w-full text-left text-xs font-semibold text-slate-600 font-sans">
-                            <thead className={`uppercase text-[9px] font-black tracking-wider border-b ${
-                              themeMode === 'dark' ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'
-                            }`}>
-                              <tr>
-                                <th className="p-4">Submission Parameter</th>
-                                <th className="p-4">Status</th>
-                                <th className="p-4">Required Parameter</th>
-                                <th className="p-4 text-right">Interactive Toggles</th>
-                              </tr>
-                            </thead>
-                            <tbody className={`divide-y font-medium ${themeMode === 'dark' ? 'divide-slate-800' : 'divide-slate-100'}`}>
-                              {Object.entries(submissionFields).map(([key, field]) => (
-                                <tr key={key} className={`transition-colors ${themeMode === 'dark' ? 'hover:bg-slate-900/20' : 'hover:bg-slate-50/50'}`}>
-                                  <td className="p-4 font-bold">{field.label}</td>
-                                  <td className="p-4">
-                                    <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase ${
-                                      field.enabled ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-slate-500/15 text-slate-400 border border-slate-500/10'
-                                    }`}>
-                                      {field.enabled ? 'Enabled' : 'Disabled'}
-                                    </span>
-                                  </td>
-                                  <td className="p-4">
-                                    <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase ${
-                                      field.required ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 animate-pulse' : 'bg-slate-500/15 text-slate-400 border border-slate-500/10'
-                                    }`}>
-                                      {field.required ? 'Required' : 'Optional'}
-                                    </span>
-                                  </td>
-                                  <td className="p-4 text-right">
-                                    <div className="flex justify-end items-center gap-2">
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setSubmissionFields({
-                                            ...submissionFields,
-                                            [key]: { ...field, enabled: !field.enabled }
-                                          });
-                                        }}
-                                        className={`px-3 py-1.5 text-[9.5px] font-black rounded-lg cursor-pointer transition-colors ${
-                                          field.enabled 
-                                            ? 'bg-rose-500/15 text-rose-500 hover:bg-rose-500/25'
-                                            : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                                        }`}
-                                      >
-                                        {field.enabled ? 'Disable' : 'Enable'}
-                                      </button>
-                                      <button
-                                        type="button"
-                                        disabled={!field.enabled}
-                                        onClick={() => {
-                                          setSubmissionFields({
-                                            ...submissionFields,
-                                            [key]: { ...field, required: !field.required }
-                                          });
-                                        }}
-                                        className="px-3 py-1.5 border border-slate-350 dark:border-slate-800 text-[9.5px] font-black rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 disabled:opacity-40"
-                                      >
-                                        Toggle Required
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                      {/* Merchant guidelines information text */}
-                      <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-4.5 ${
-                        themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                      }`}>
-                        <div>
-                          <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-3">Form Guidelines Header Message</h4>
-                          <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Specify instructions displayed on the top page header of the information entry page.</span>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                          <textarea
-                            rows={4}
-                            value={formGuidelines}
-                            onChange={(e) => setFormGuidelines(e.target.value)}
-                            className="w-full border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-50/20 dark:bg-slate-900/50 focus:outline-none focus:border-[#027244] resize-none leading-relaxed"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSystemLogs(prev => [
-                                { time: new Date().toLocaleTimeString(), event: `SuperAdmin adjusted form guideline tags: "${formGuidelines.substring(0, 30)}..."`, type: 'info' },
-                                ...prev
-                              ]);
-                              alert("Information submission form guidelines updated successfully!");
-                            }}
-                            className="py-2.5 px-5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl cursor-pointer self-start transition-colors"
-                          >
-                            Save Guidelines
-                          </button>
-                        </div>
-                      </div>
-
-                    </div>
-                  )}
+                  </div>
 
                 </div>
               )}
@@ -6518,6 +6148,136 @@ export default function SuperAdminDashboard() {
                 Extend Sub
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT SUBSCRIPTION PLAN MODAL */}
+      {editingPlan && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fadeIn text-[#001c41]">
+          <div className="w-full max-w-lg bg-white border border-slate-200 shadow-2xl rounded-[24px] p-6 flex flex-col gap-4 text-left font-sans max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="font-extrabold text-sm uppercase tracking-wider">Edit Subscription Plan</h3>
+              <button onClick={() => setEditingPlan(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+            <form onSubmit={handleEditPlanSubmit} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Plan Name</label>
+                <input 
+                  type="text" 
+                  value={editingPlan.name || ''} 
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditingPlan(prev => ({ ...prev, name: val }));
+                  }}
+                  required
+                  className="w-full border border-slate-200 p-2.5 rounded-xl text-xs bg-slate-50 focus:outline-none focus:border-[#027244] font-bold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Price (₹)</label>
+                  <input 
+                    type="number" 
+                    value={editingPlan.price !== undefined ? editingPlan.price : ''} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEditingPlan(prev => ({ ...prev, price: val }));
+                    }}
+                    required
+                    className="w-full border border-slate-200 p-2.5 rounded-xl text-xs bg-slate-50 focus:outline-none focus:border-[#027244] font-bold"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Duration (Days)</label>
+                  <input 
+                    type="number" 
+                    value={editingPlan.durationDays !== undefined ? editingPlan.durationDays : ''} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEditingPlan(prev => ({ ...prev, durationDays: val }));
+                    }}
+                    required
+                    className="w-full border border-slate-200 p-2.5 rounded-xl text-xs bg-slate-50 focus:outline-none focus:border-[#027244] font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Description</label>
+                <textarea 
+                  value={editingPlan.description || ''} 
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditingPlan(prev => ({ ...prev, description: val }));
+                  }}
+                  className="w-full border border-slate-200 p-2.5 rounded-xl text-xs bg-slate-50 focus:outline-none focus:border-[#027244] font-bold min-h-[60px]"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Features (comma-separated)</label>
+                <input 
+                  type="text" 
+                  value={Array.isArray(editingPlan.features) ? editingPlan.features.join(', ') : editingPlan.features || ''} 
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditingPlan(prev => ({ ...prev, features: val }));
+                  }}
+                  className="w-full border border-slate-200 p-2.5 rounded-xl text-xs bg-slate-50 focus:outline-none focus:border-[#027244] font-bold"
+                  placeholder="e.g. WhatsApp Link, Priority Vetting, Badge Placement"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <input 
+                  type="checkbox" 
+                  id="editIsOffer"
+                  checked={!!editingPlan.isOffer} 
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setEditingPlan(prev => ({ ...prev, isOffer: checked }));
+                  }}
+                  className="h-4.5 w-4.5 border-slate-350 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                />
+                <label htmlFor="editIsOffer" className="text-xs font-bold text-slate-700 cursor-pointer select-none flex-grow">Mark as Promotional Special Offer</label>
+              </div>
+
+              {editingPlan.isOffer && (
+                <div className="flex flex-col gap-1.5 animate-fadeIn">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Offer Ribbon Text</label>
+                  <input 
+                    type="text" 
+                    value={editingPlan.offerText || ''} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEditingPlan(prev => ({ ...prev, offerText: val }));
+                    }}
+                    placeholder="e.g. Save 15% (2 Months Free)"
+                    className="w-full border border-slate-200 p-2.5 rounded-xl text-xs bg-slate-50 focus:outline-none focus:border-[#027244] font-bold"
+                  />
+                </div>
+              )}
+
+              <div className="flex gap-2 justify-end mt-4 border-t border-slate-100 pt-3">
+                <button 
+                  type="button"
+                  onClick={() => setEditingPlan(null)}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-extrabold rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="px-5 py-2 bg-[#027244] hover:bg-[#005934] text-white text-xs font-extrabold rounded-xl shadow-md cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -60,6 +60,21 @@ const UserSchema = new mongoose.Schema({
   referralPoints: {
     type: Number,
     default: 0,
+  },
+  website: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  instagram: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  facebook: {
+    type: String,
+    trim: true,
+    default: '',
   }
 }, {
   timestamps: true

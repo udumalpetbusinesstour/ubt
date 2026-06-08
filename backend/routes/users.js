@@ -17,12 +17,12 @@ router.get('/public/:id', async (req, res, next) => {
     // Support offline mock fallbacks
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       const mockUsers = {
-        'author_fallback_1': { fullName: 'Ananth Sundar', role: 'writer', createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-        'author_fallback_2': { fullName: 'Senthil Kumar', role: 'writer', createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000) },
-        'author_fallback_3': { fullName: 'Priya Ramesh', role: 'writer', createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) }
+        'author_fallback_1': { fullName: 'Ananth Sundar', role: 'writer', createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), website: 'www.ananthsundar.com', instagram: '@ananthsundar', facebook: 'ananthsundar.fb' },
+        'author_fallback_2': { fullName: 'Senthil Kumar', role: 'writer', createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000), website: 'www.senthilkumar.me', instagram: '@senthil_writer', facebook: 'senthil.kumar.fb' },
+        'author_fallback_3': { fullName: 'Priya Ramesh', role: 'writer', createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), website: 'www.priyaramesh.in', instagram: '@priya_photos', facebook: 'priyaramesh.fb' }
       };
       
-      const matchedUser = mockUsers[userId] || { fullName: 'Udumalpet Guide', role: 'visitor', createdAt: new Date() };
+      const matchedUser = mockUsers[userId] || { fullName: 'Udumalpet Guide', role: 'visitor', createdAt: new Date(), website: '', instagram: '', facebook: '' };
       
       return sendSuccess(res, 200, 'Public profile details retrieved (Mock Fallback)', {
         user: {
@@ -30,7 +30,10 @@ router.get('/public/:id', async (req, res, next) => {
           fullName: matchedUser.fullName,
           role: matchedUser.role,
           createdAt: matchedUser.createdAt,
-          status: 'Active'
+          status: 'Active',
+          website: matchedUser.website,
+          instagram: matchedUser.instagram,
+          facebook: matchedUser.facebook,
         },
         blogs: [],
         businesses: [],
@@ -38,7 +41,7 @@ router.get('/public/:id', async (req, res, next) => {
       });
     }
 
-    const user = await User.findById(userId).select('fullName name email mobileNumber phone role profileImage createdAt status');
+    const user = await User.findById(userId).select('fullName name email mobileNumber phone role profileImage createdAt status website instagram facebook');
     if (!user) {
       return sendError(res, 404, 'User account not found');
     }

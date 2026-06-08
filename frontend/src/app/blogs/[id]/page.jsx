@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, Calendar, User, Heart, MessageSquare, Clock, Send, Trash2, RefreshCw, AlertCircle, ShieldCheck, Share2
+  ArrowLeft, Calendar, User, Heart, MessageSquare, Clock, Send, Trash2, RefreshCw, AlertCircle, ShieldCheck, Share2, CheckCircle
 } from 'lucide-react';
 
 const mockBlogs = [
@@ -65,6 +65,7 @@ export default function BlogDetail() {
   const [commentLoading, setCommentLoading] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [commentStatusMsg, setCommentStatusMsg] = useState('');
 
   // Auth Context
   const [user, setUser] = useState(null);
@@ -193,6 +194,8 @@ export default function BlogDetail() {
         }));
         setCommentText('');
         setGuestName('');
+        setCommentStatusMsg(data.message || 'Comment submitted!');
+        setTimeout(() => setCommentStatusMsg(''), 6000);
       }
     } catch (err) {
       // Mock post locally
@@ -272,7 +275,7 @@ export default function BlogDetail() {
     (user && (blog.likes.includes(user._id) || blog.likes.includes(user.id))) ||
     (!user && currentGuestId && blog.likes.includes(currentGuestId))
   );
-  const words = blog.content.split(' ').length;
+  const words = (blog.content || '').split(' ').length;
   const readTime = Math.max(Math.ceil(words / 150), 1);
 
   // Author comment delete permission helper
@@ -341,9 +344,9 @@ export default function BlogDetail() {
               className="flex items-center gap-1.5 text-slate-700 hover:text-[#027244] transition-colors group cursor-pointer"
             >
               <div className="h-6.5 w-6.5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-extrabold text-[9.5px] uppercase select-none border border-blue-100 shadow-2xs group-hover:bg-[#027244]/10 group-hover:text-[#027244] group-hover:border-[#027244]/20 transition-all">
-                {blog.authorName.charAt(0)}
+                {(blog.authorName || 'A').charAt(0)}
               </div>
-              <span className="font-extrabold">Written by {blog.authorName}</span>
+              <span className="font-extrabold">Written by {blog.authorName || 'Anonymous'}</span>
               <span className="text-[9.5px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-md group-hover:bg-[#E6F4EA] group-hover:text-[#027244] transition-all ml-1.5">View Profile</span>
             </Link>
             <span>•</span>
@@ -431,7 +434,7 @@ export default function BlogDetail() {
                   <div key={comment._id} className="flex gap-4 py-4.5 first:pt-0 last:pb-0 group">
                     {/* Circle avatar */}
                     <div className="h-8.5 w-8.5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-extrabold text-[#001c41] text-xs shadow-inner uppercase shrink-0 select-none">
-                      {comment.userName.charAt(0)}
+                      {(comment.userName || 'U').charAt(0)}
                     </div>
 
                     <div className="flex-grow flex flex-col text-left">
@@ -464,6 +467,12 @@ export default function BlogDetail() {
 
             {/* Comment Form */}
             <form onSubmit={handleCommentSubmit} className="flex flex-col gap-3 border-t border-slate-100 pt-5 mt-2">
+              {commentStatusMsg && (
+                <div className="p-3 bg-emerald-50 text-[#027244] border border-emerald-250/20 text-xs font-semibold rounded-xl text-center flex items-center justify-center gap-2 animate-fadeIn">
+                  <CheckCircle className="h-4 w-4 shrink-0" />
+                  <span>{commentStatusMsg}</span>
+                </div>
+              )}
               {!token && (
                 <div className="flex gap-2">
                   <input 

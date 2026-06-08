@@ -6,7 +6,7 @@ import {
   RefreshCw, Star, CreditCard, ChevronRight, ChevronLeft, ArrowLeft, Activity, PhoneCall, 
   MessageSquare, Plus, CheckCircle, Info, Bell, ExternalLink, Globe,
   Copy, Check, Gift, Upload, HelpCircle, Briefcase, Mail, Settings, Menu, X, Trash2, Search, Lock,
-  FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin, LogOut
+  FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin, LogOut, Facebook, Instagram, Phone, Users
 } from 'lucide-react';
 
 const getEventDefaultImage = (category) => {
@@ -218,10 +218,13 @@ function DashboardContent() {
     category: 'Services',
     type: '',
     description: '',
+    highlights: '',
     phone: '',
     whatsapp: '',
     email: '',
     website: '',
+    facebook: '',
+    instagram: '',
     address: '',
     locality: '',
     pincode: '',
@@ -232,6 +235,7 @@ function DashboardContent() {
     languagesKnown: '',
     services: '',
     brands: '',
+    logoUrl: '',
     coverImageUrl: '',
     galleryUrls: '',
     timingsMon: '9:00 AM - 8:00 PM',
@@ -242,6 +246,97 @@ function DashboardContent() {
     timingsSat: '9:00 AM - 8:00 PM',
     timingsSun: '9:00 AM - 1:00 PM',
   });
+
+  // Image upload states & handler
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  const handleDashboardImageUpload = async (e, targetField) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadError('');
+    const activeToken = token || localStorage.getItem('ubt_token');
+
+    if (targetField === 'logoUrl' || targetField === 'coverImageUrl') {
+      const file = files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        setUploadError('Image file size must be less than 5MB.');
+        return;
+      }
+
+      if (targetField === 'logoUrl') setLogoUploading(true);
+      else setCoverUploading(true);
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const res = await fetch('http://localhost:5000/api/upload', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${activeToken}`
+          },
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          setEditFields(prev => ({ ...prev, [targetField]: data.url }));
+        } else {
+          setUploadError(data.message || 'Failed to upload image.');
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        setUploadError('Network error uploading image.');
+      } finally {
+        if (targetField === 'logoUrl') setLogoUploading(false);
+        else setCoverUploading(false);
+      }
+    } else if (targetField === 'galleryUrls') {
+      setGalleryUploading(true);
+      const uploadedUrls = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > 5 * 1024 * 1024) {
+          setUploadError(`File ${file.name} is too large (max 5MB).`);
+          continue;
+        }
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+          const res = await fetch('http://localhost:5000/api/upload', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${activeToken}`
+            },
+            body: formData
+          });
+          const data = await res.json();
+          if (data.success) {
+            uploadedUrls.push(data.url);
+          }
+        } catch (err) {
+          console.error('Gallery upload error for file:', file.name, err);
+        }
+      }
+
+      if (uploadedUrls.length > 0) {
+        setEditFields(prev => {
+          const currentUrls = prev.galleryUrls 
+            ? prev.galleryUrls.split(',').map(s => s.trim()).filter(Boolean)
+            : [];
+          const combined = [...currentUrls, ...uploadedUrls];
+          return { ...prev, galleryUrls: combined.join(', ') };
+        });
+      }
+      setGalleryUploading(false);
+    }
+  };
 
   // Branch management states
   const [branches, setBranches] = useState([]);
@@ -269,7 +364,10 @@ function DashboardContent() {
   // Profile settings state
   const [profileFields, setProfileFields] = useState({
     fullName: '',
-    email: ''
+    email: '',
+    website: '',
+    instagram: '',
+    facebook: ''
   });
   const [profileFieldsLoading, setProfileFieldsLoading] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState('');
@@ -325,6 +423,77 @@ function DashboardContent() {
   ]);
   const [showAddOffer, setShowAddOffer] = useState(false);
   const [newOfferFields, setNewOfferFields] = useState({ title: '', description: '', rate: '', expiry: '', banner: '' });
+  const [previewTab, setPreviewTab] = useState('overview');
+  const [offerImageUploading, setOfferImageUploading] = useState(false);
+  const [offerImageError, setOfferImageError] = useState('');
+
+  const handleOfferBannerUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setOfferImageError('Image file size must be less than 5MB.');
+      return;
+    }
+
+    setOfferImageUploading(true);
+    setOfferImageError('');
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token || localStorage.getItem('ubt_token')}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setNewOfferFields(prev => ({ ...prev, banner: data.url || data.fileUrl }));
+      } else {
+        setOfferImageError(data.message || 'Failed to upload image.');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      setOfferImageError('Network error uploading image.');
+    } finally {
+      setOfferImageUploading(false);
+    }
+  };
+
+  const saveInlineFields = async (fields) => {
+    const activeToken = token || localStorage.getItem('ubt_token');
+    if (!business || !business._id || !activeToken) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/businesses/${business._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`,
+        },
+        body: JSON.stringify(fields),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBusiness(data.data);
+      }
+    } catch (err) {
+      console.warn('Failed to save fields inline, updating locally', err);
+      setBusiness(prev => ({
+        ...prev,
+        ...fields
+      }));
+    }
+  };
+
+  const updateOffers = async (newOffers) => {
+    setOffersList(newOffers);
+    await saveInlineFields({ offers: newOffers });
+  };
 
   useEffect(() => {
     const storedToken = localStorage.getItem('ubt_token');
@@ -353,7 +522,10 @@ function DashboardContent() {
       setUser(parsedUser);
       setProfileFields({
         fullName: parsedUser.fullName || '',
-        email: parsedUser.email || ''
+        email: parsedUser.email || '',
+        website: parsedUser.website || '',
+        instagram: parsedUser.instagram || '',
+        facebook: parsedUser.facebook || ''
       });
       fetchUserBusiness(storedToken);
       fetchPaymentPlans();
@@ -386,16 +558,24 @@ function DashboardContent() {
         if (data.data) {
           const userBiz = data.data;
           setBusiness(userBiz);
+          if (userBiz.offers) {
+            setOffersList(userBiz.offers);
+          } else {
+            setOffersList([]);
+          }
           fetchBranches(authToken, userBiz._id);
           setEditFields({
             name: userBiz.name || '',
             category: userBiz.category || 'Services',
             type: userBiz.type || '',
             description: userBiz.description || '',
+            highlights: Array.isArray(userBiz.highlights) ? userBiz.highlights.join(', ') : '',
             phone: userBiz.phone || '',
             whatsapp: userBiz.whatsapp || '',
             email: userBiz.email || '',
             website: userBiz.website || '',
+            facebook: userBiz.facebook || '',
+            instagram: userBiz.instagram || '',
             address: userBiz.address || '',
             locality: userBiz.locality || '',
             pincode: userBiz.pincode || '',
@@ -404,10 +584,11 @@ function DashboardContent() {
             gstNumber: userBiz.gstNumber || '',
             serviceArea: userBiz.serviceArea || '',
             languagesKnown: userBiz.languagesKnown || '',
-            services: userBiz.services ? userBiz.services.join(', ') : '',
-            brands: userBiz.brands ? userBiz.brands.join(', ') : '',
+             services: Array.isArray(userBiz.services) ? userBiz.services.join(', ') : '',
+            brands: Array.isArray(userBiz.brands) ? userBiz.brands.join(', ') : '',
+            logoUrl: userBiz.logoUrl || '',
             coverImageUrl: userBiz.coverImageUrl || '',
-            galleryUrls: userBiz.galleryUrls ? userBiz.galleryUrls.join(', ') : '',
+            galleryUrls: Array.isArray(userBiz.galleryUrls) ? userBiz.galleryUrls.join(', ') : '',
             timingsMon: userBiz.timings?.Monday || '9:00 AM - 8:00 PM',
             timingsTue: userBiz.timings?.Tuesday || '9:00 AM - 8:00 PM',
             timingsWed: userBiz.timings?.Wednesday || '9:00 AM - 8:00 PM',
@@ -421,11 +602,11 @@ function DashboardContent() {
           let score = 30; // base score for basic details
           if (userBiz.yearEstablished) score += 10;
           if (userBiz.gstNumber) score += 10;
-          if (userBiz.services.length > 0) score += 15;
-          if (userBiz.brands.length > 0) score += 10;
+          if (userBiz.services && userBiz.services.length > 0) score += 15;
+          if (userBiz.brands && userBiz.brands.length > 0) score += 10;
           if (userBiz.logoUrl) score += 10;
           if (userBiz.coverImageUrl) score += 10;
-          if (userBiz.galleryUrls.length > 2) score += 5;
+          if (userBiz.galleryUrls && userBiz.galleryUrls.length > 2) score += 5;
           setProfileCompletion(Math.min(score, 100));
         } else {
           setBusiness(null);
@@ -457,18 +638,26 @@ function DashboardContent() {
         subscriptionExpiry: new Date(new Date().getTime() + 23 * 24 * 60 * 60 * 1000), // 23 days remaining
         isPremium: true,
         logoUrl: '',
+        offers: [
+          { id: '1', title: 'Festival Special Ghee Roast', description: 'Buy 2 Get 1 Free on all special ghee roast items. Valid on dining.', rate: 'Buy 2 Get 1', expiry: '2026-06-30', active: true, banner: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80' },
+          { id: '2', title: 'Monsoon Discount Campaign', description: 'Flat 10% Off on all electrical installation services. Safe & verified engineers.', rate: '10% OFF', expiry: '2026-07-15', active: true, banner: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80' },
+        ]
       };
       setBusiness(mockBiz);
+      setOffersList(mockBiz.offers);
       fetchBranches(authToken, mockBiz._id);
       setEditFields({
         name: mockBiz.name || '',
         category: mockBiz.category || 'Services',
         type: mockBiz.type || '',
         description: mockBiz.description || '',
+        highlights: Array.isArray(mockBiz.highlights) ? mockBiz.highlights.join(', ') : '',
         phone: mockBiz.phone || '',
         whatsapp: mockBiz.whatsapp || '',
         email: mockBiz.email || '',
         website: mockBiz.website || '',
+        facebook: mockBiz.facebook || '',
+        instagram: mockBiz.instagram || '',
         address: mockBiz.address || '',
         locality: mockBiz.locality || '',
         pincode: mockBiz.pincode || '',
@@ -477,10 +666,11 @@ function DashboardContent() {
         gstNumber: mockBiz.gstNumber || '',
         serviceArea: mockBiz.serviceArea || '',
         languagesKnown: mockBiz.languagesKnown || '',
-        services: mockBiz.services ? mockBiz.services.join(', ') : '',
-        brands: mockBiz.brands ? mockBiz.brands.join(', ') : '',
+        services: Array.isArray(mockBiz.services) ? mockBiz.services.join(', ') : '',
+        brands: Array.isArray(mockBiz.brands) ? mockBiz.brands.join(', ') : '',
+        logoUrl: mockBiz.logoUrl || '',
         coverImageUrl: mockBiz.coverImageUrl || '',
-        galleryUrls: mockBiz.galleryUrls ? mockBiz.galleryUrls.join(', ') : '',
+        galleryUrls: Array.isArray(mockBiz.galleryUrls) ? mockBiz.galleryUrls.join(', ') : '',
         timingsMon: mockBiz.timings?.Monday || '9:00 AM - 8:00 PM',
         timingsTue: mockBiz.timings?.Tuesday || '9:00 AM - 8:00 PM',
         timingsWed: mockBiz.timings?.Wednesday || '9:00 AM - 8:00 PM',
@@ -790,6 +980,28 @@ function DashboardContent() {
         }
         return b;
       }));
+    }
+  };
+
+  const handleCommentApproveDashboard = async (blogId, commentId) => {
+    try {
+      const activeToken = token || localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/blogs/${blogId}/comment/${commentId}/approve`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${activeToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUserBlogs(prev => prev.map(b => b._id === blogId ? { ...b, comments: data.data } : b));
+      }
+    } catch (err) {
+      console.error('Error approving comment:', err);
+      setUserBlogs(prev => prev.map(b => b._id === blogId ? {
+        ...b,
+        comments: b.comments.map(c => c._id === commentId ? { ...c, approved: true } : c)
+      } : b));
     }
   };
 
@@ -1155,7 +1367,7 @@ function DashboardContent() {
         price: 0,
         paymentLink: '',
         status: 'Pending Review',
-        paymentStatus: 'Pending',
+        paymentStatus: price === 0 ? 'Free' : 'Pending',
         isCompleted: false
       };
       
@@ -1255,7 +1467,10 @@ function DashboardContent() {
         },
         body: JSON.stringify({
           fullName: profileFields.fullName,
-          email: profileFields.email
+          email: profileFields.email,
+          website: profileFields.website,
+          instagram: profileFields.instagram,
+          facebook: profileFields.facebook
         })
       });
 
@@ -1263,7 +1478,14 @@ function DashboardContent() {
       if (data.success) {
         setProfileSuccess('Profile details successfully updated!');
         const resUser = data.user || data.data;
-        const updatedUser = { ...user, fullName: resUser.fullName || resUser.name, email: resUser.email };
+        const updatedUser = { 
+          ...user, 
+          fullName: resUser.fullName || resUser.name, 
+          email: resUser.email,
+          website: resUser.website,
+          instagram: resUser.instagram,
+          facebook: resUser.facebook
+        };
         setUser(updatedUser);
         localStorage.setItem('ubt_user', JSON.stringify(updatedUser));
       } else {
@@ -1271,7 +1493,14 @@ function DashboardContent() {
       }
     } catch (err) {
       setProfileSuccess('Mock Mode: Profile credentials updated successfully!');
-      const updatedUser = { ...user, fullName: profileFields.fullName, email: profileFields.email };
+      const updatedUser = { 
+        ...user, 
+        fullName: profileFields.fullName, 
+        email: profileFields.email,
+        website: profileFields.website,
+        instagram: profileFields.instagram,
+        facebook: profileFields.facebook
+      };
       setUser(updatedUser);
       localStorage.setItem('ubt_user', JSON.stringify(updatedUser));
     } finally {
@@ -1669,6 +1898,27 @@ function DashboardContent() {
     }
   };
 
+  const handleCancelEventPayment = async (evtId) => {
+    if (!evtId) return;
+    if (String(evtId).startsWith('mock_evt_')) {
+      setUserEvents(prev => prev.filter(evt => evt._id !== evtId));
+      return;
+    }
+    try {
+      const activeToken = token || localStorage.getItem('ubt_token');
+      await fetch(`http://localhost:5000/api/events/${evtId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${activeToken}`
+        }
+      });
+      fetchUserEvents();
+    } catch (err) {
+      console.error('Error deleting unpaid event:', err);
+      setUserEvents(prev => prev.filter(evt => evt._id !== evtId));
+    }
+  };
+
   const handlePublishEventDetails = async (e) => {
     e.preventDefault();
     if (!completeEventVenue || !completeEventPhone || !completeEventDescription) {
@@ -1786,6 +2036,8 @@ function DashboardContent() {
       whatsapp: editFields.whatsapp,
       email: editFields.email,
       website: editFields.website,
+      facebook: editFields.facebook,
+      instagram: editFields.instagram,
       address: editFields.address,
       locality: editFields.locality,
       pincode: editFields.pincode,
@@ -1794,10 +2046,12 @@ function DashboardContent() {
       gstNumber: editFields.gstNumber,
       serviceArea: editFields.serviceArea,
       languagesKnown: editFields.languagesKnown,
-      services: editFields.services ? editFields.services.split(',').map(s => s.trim()).filter(Boolean) : [],
-      brands: editFields.brands ? editFields.brands.split(',').map(b => b.trim()).filter(Boolean) : [],
+      services: typeof editFields.services === 'string' ? editFields.services.split(',').map(s => s.trim()).filter(Boolean) : (editFields.services || []),
+      brands: typeof editFields.brands === 'string' ? editFields.brands.split(',').map(b => b.trim()).filter(Boolean) : (editFields.brands || []),
+      highlights: typeof editFields.highlights === 'string' ? editFields.highlights.split(',').map(h => h.trim()).filter(Boolean) : (editFields.highlights || []),
+      logoUrl: editFields.logoUrl,
       coverImageUrl: editFields.coverImageUrl,
-      galleryUrls: editFields.galleryUrls ? editFields.galleryUrls.split(',').map(g => g.trim()).filter(Boolean) : [],
+      galleryUrls: typeof editFields.galleryUrls === 'string' ? editFields.galleryUrls.split(',').map(g => g.trim()).filter(Boolean) : (editFields.galleryUrls || []),
       isAddressVerified: true,
       timings: {
         Monday: editFields.timingsMon,
@@ -2045,7 +2299,7 @@ function DashboardContent() {
   const sidebarLinks = [
     ...(business ? [
       { label: 'Dashboard', icon: <Briefcase className="h-4 w-4" /> },
-      { label: 'Business Details', icon: <Edit3 className="h-4 w-4" />, onClick: () => setShowEditModal(true) },
+      { label: 'Business Details', icon: <Edit3 className="h-4 w-4" /> },
       { label: 'Branches', icon: <MapPin className="h-4 w-4" /> },
       { label: 'Photos & Media', icon: <ImageIcon className="h-4 w-4" />, onClick: () => setShowUploadModal(true) },
       { label: 'Reviews & Reputation', icon: <Star className="h-4 w-4" /> },
@@ -2062,6 +2316,8 @@ function DashboardContent() {
     { label: 'Help & Support', icon: <HelpCircle className="h-4 w-4" /> },
     { label: 'Logout', icon: <LogOut className="h-4 w-4" />, onClick: handleLogout },
   ];
+
+  const displayEvents = userEvents.filter(evt => evt.paymentStatus !== 'Pending');
 
   return (
     <div className="w-full min-h-screen bg-[#F8FAFC] flex font-sans leading-relaxed selection:bg-emerald-500 selection:text-white">
@@ -2083,7 +2339,7 @@ function DashboardContent() {
         {business && (
           <div className="p-4.5 bg-slate-900/40 border border-slate-800/60 rounded-2xl m-4.5 flex items-center gap-3">
             <div className="h-10 w-10 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center font-extrabold text-[#001c41] text-sm shadow-inner uppercase select-none shrink-0">
-              {business.name.charAt(0)}
+              {(business.name || 'B').charAt(0)}
             </div>
             <div className="flex flex-col overflow-hidden">
               <h4 className="font-extrabold text-white text-xs leading-snug truncate">{business.name}</h4>
@@ -2824,6 +3080,785 @@ function DashboardContent() {
           )}
 
           {/* ========================================================================= */}
+          {/* TAB: INLINE BUSINESS PROFILE PREVIEW WITH QUICK EDIT SHORTCUTS */}
+          {/* ========================================================================= */}
+          {activeTab === 'Business Details' && business && (() => {
+            const galleryCount = business.galleryUrls 
+              ? (typeof business.galleryUrls === 'string' ? business.galleryUrls.split(',').length : business.galleryUrls.length) 
+              : 0;
+            const mainImage = business.coverImageUrl || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80";
+            const displayGallery = business.galleryUrls 
+              ? (typeof business.galleryUrls === 'string' ? business.galleryUrls.split(',').map(s => s.trim()).filter(Boolean) : business.galleryUrls)
+              : [];
+            const finalGallery = displayGallery.length > 0 ? displayGallery : [
+              'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80',
+              'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&q=80',
+              'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=500&q=80',
+              'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=500&q=80',
+            ];
+            const remainingCount = Math.max(0, galleryCount - 4);
+            const isExpired = business.subscriptionStatus === 'expired';
+
+            return (
+              <div className="flex flex-col gap-6 text-left animate-fadeIn font-sans bg-[#F8FAFC]">
+                
+                {/* Expiry Warning Header Banner */}
+                {isExpired && (
+                  <div className="w-full bg-red-655 text-white font-extrabold text-xs py-3.5 px-4 text-center rounded-2xl shadow flex items-center justify-center gap-2 animate-pulse">
+                    <AlertCircle className="h-4.5 w-4.5" />
+                    <span>Your subscription has expired. Please renew it to restore profile visibility.</span>
+                  </div>
+                )}
+
+                {/* Premium Header Banner (Cover Image) */}
+                <section className="w-full relative bg-[#090D1C] text-white py-12 px-6 rounded-3xl overflow-hidden border border-slate-800/20">
+                  {/* Background Image opacity filter */}
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center opacity-[0.08]" 
+                    style={{ backgroundImage: `url('${mainImage}')` }} 
+                  />
+                  {/* Sleek Blue ambient light overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/90 to-transparent" />
+                  
+                  <div className="relative flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10">
+                    <div className="flex flex-col gap-3 text-left">
+                      {/* Breadcrumbs */}
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <span>Dashboard</span>
+                        <span className="text-slate-600">&gt;</span>
+                        <span className="text-emerald-450">My Business Profile</span>
+                        <span className="text-slate-600">&gt;</span>
+                        <span className="text-slate-200">{business.name}</span>
+                      </div>
+                      
+                      {/* Title Block with Verified Badge */}
+                      <div className="flex flex-wrap items-center gap-3.5 mt-2">
+                        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">{business.name}</h1>
+                        {business.isAddressVerified && (
+                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-400/25 text-[9px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm shrink-0">
+                            <ShieldCheck className="h-3 w-3" /> Verified Business
+                          </span>
+                        )}
+                        {branches.length > 0 && (
+                          <span className="bg-blue-500/10 text-blue-400 border border-blue-400/25 text-[9px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm shrink-0">
+                            {branches.length + 1} Branches
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Website URL directly below Business Name */}
+                      {business.website && (
+                        <div className="mt-1 text-xs font-semibold text-slate-350">
+                          <a 
+                            href={business.website.startsWith('http') ? business.website : `https://${business.website}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-emerald-400 hover:text-emerald-300 hover:underline flex items-center gap-1.5"
+                          >
+                            <Globe className="h-3.5 w-3.5" />
+                            <span>{business.website}</span>
+                          </a>
+                        </div>
+                      )}
+
+                      {/* Premium Rating and Specs Pills */}
+                      <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-300 mt-2">
+                        <div className="flex items-center gap-1 bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg">
+                          <div className="flex text-amber-400 shrink-0 gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(business.googleRating ?? 4.5) ? 'fill-current' : 'text-slate-700'}`} />
+                            ))}
+                          </div>
+                          <span className="font-black text-white ml-1">{(business.googleRating ?? 4.5).toFixed(1)}</span>
+                          <span className="text-[10px] text-slate-405">({localReviews.length} Reviews)</span>
+                        </div>
+                        <span className="text-slate-600">•</span>
+                        <span className="text-emerald-450 font-bold bg-emerald-500/5 border border-emerald-500/15 px-2.5 py-1 rounded-lg">{business.type}</span>
+                        <span className="text-slate-600">•</span>
+                        <div className="flex items-center gap-1.5 text-slate-350">
+                          <MapPin className="h-4 w-4 text-emerald-550" />
+                          <span>{business.locality}, Udumalpet, Tamil Nadu - {business.pincode}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0 mt-4 md:mt-0">
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setEditTab('general');
+                          setShowEditModal(true);
+                        }}
+                        className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs py-2.5 px-4 rounded-xl transition-all shadow-md shrink-0 flex items-center gap-1.5 cursor-pointer uppercase tracking-wider hover:scale-[1.02] inline-flex items-center"
+                      >
+                        <Edit3 className="h-3.5 w-3.5 text-slate-950" /> Edit Profile Details
+                      </button>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Subtabs navigation bar */}
+                <div className="w-full bg-white border border-slate-200/85 z-20 shadow-2xs rounded-2xl">
+                  <div className="flex overflow-x-auto gap-8 px-6">
+                    {[
+                      { id: 'overview', label: 'Overview' },
+                      { id: 'services', label: 'Services' },
+                      { id: 'photos', label: `Photos (${galleryCount})` },
+                      { id: 'reviews', label: `Reviews (${localReviews.length})` },
+                      { id: 'offers', label: `Offers (${offersList.length})` },
+                      { id: 'about', label: 'About' },
+                      ...((branches.length > 0) ? [{ id: 'branches', label: `Branches (${branches.length + 1})` }] : []),
+                      { id: 'map', label: 'Map & Location' }
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setPreviewTab(tab.id)}
+                        className={`py-4 text-xs font-black border-b-2 uppercase tracking-wider shrink-0 transition-all cursor-pointer ${
+                          previewTab === tab.id 
+                            ? 'border-emerald-600 text-emerald-600' 
+                            : 'border-transparent text-slate-455 hover:text-slate-605'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Main Grid Content */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full mt-2">
+                  
+                  {/* Left Column (Overview, gallery, details, reviews) */}
+                  <div className="lg:col-span-2 flex flex-col gap-6">
+                    
+                    {/* TAB 1: OVERVIEW */}
+                    {previewTab === 'overview' && (
+                      <div className="flex flex-col gap-6 animate-fadeIn text-left">
+                        
+                        {/* About description */}
+                        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-3.5 relative group">
+                          <div className="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                            <h3 className="text-base font-extrabold text-slate-800 font-sans">About {business.name}</h3>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditTab('about');
+                                setShowEditModal(true);
+                              }}
+                              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-[#027244] transition-colors cursor-pointer border-none flex items-center gap-1 text-[11px] font-bold"
+                              title="Edit About & Highlights"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" /> Edit
+                            </button>
+                          </div>
+                          <p className="text-xs text-slate-500 leading-relaxed text-justify font-medium">{business.description || "No description provided yet."}</p>
+                          
+                          {/* Highlights tags - dynamic from business.highlights */}
+                          <div className="flex flex-wrap gap-2.5 mt-2">
+                            {(Array.isArray(business.highlights) && business.highlights.length > 0
+                              ? business.highlights
+                              : ['On-time Service', 'Expert Technicians', 'Quality Materials', 'Affordable Pricing']
+                            ).map((tag) => (
+                              <span key={tag} className="bg-emerald-50/50 border border-emerald-100 text-emerald-700 text-[10px] font-bold py-1.5 px-3 rounded-xl flex items-center gap-1.5">
+                                <CheckCircle className="h-3.5 w-3.5 text-emerald-600" /> {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Specifications block */}
+                        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4">
+                          <div className="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                            <h3 className="text-base font-extrabold text-slate-800 font-sans">Business Information</h3>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditTab('specs');
+                                setShowEditModal(true);
+                              }}
+                              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-[#027244] transition-colors cursor-pointer border-none flex items-center gap-1 text-[11px] font-bold"
+                              title="Edit Specifications"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" /> Edit
+                            </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-5 gap-x-6 text-slate-700 text-xs">
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 rounded-xl bg-slate-100 text-slate-500 shrink-0">
+                                <Briefcase className="h-4.5 w-4.5" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Business Type</span>
+                                <span className="font-extrabold text-slate-800 mt-1">{business.type}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 rounded-xl bg-slate-100 text-slate-500 shrink-0">
+                                <Clock className="h-4.5 w-4.5" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Working Hours</span>
+                                <span className="font-extrabold text-slate-800 mt-1">Mon - Sat: {business.timings?.Monday || '9:00 AM - 8:00 PM'}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-start gap-3 border-t border-slate-100 pt-3.5 md:border-t-0 md:pt-0">
+                              <div className="p-2 rounded-xl bg-slate-100 text-slate-500 shrink-0">
+                                <Calendar className="h-4.5 w-4.5" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Year Established</span>
+                                <span className="font-extrabold text-slate-800 mt-1">{business.yearEstablished || '2012'}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-start gap-3 border-t border-slate-100 pt-3.5 md:border-t-0 md:pt-0">
+                              <div className="p-2 rounded-xl bg-slate-100 text-slate-500 shrink-0">
+                                <Globe className="h-4.5 w-4.5" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Languages Known</span>
+                                <span className="font-extrabold text-slate-800 mt-1">{business.languagesKnown || 'Tamil, English'}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-start gap-3 border-t border-slate-100 pt-3.5">
+                              <div className="p-2 rounded-xl bg-slate-100 text-slate-500 shrink-0">
+                                <Users className="h-4.5 w-4.5" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Employees</span>
+                                <span className="font-extrabold text-slate-800 mt-1">{business.employeeCount || '10 - 20'}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-start gap-3 border-t border-slate-100 pt-3.5">
+                              <div className="p-2 rounded-xl bg-slate-100 text-slate-500 shrink-0">
+                                <MapPin className="h-4.5 w-4.5" />
+                              </div>
+                              <div className="flex flex-col text-left">
+                                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Service Area</span>
+                                <span className="font-extrabold text-slate-800 mt-1 leading-relaxed">{business.serviceArea || 'Udumalpet limits'}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-start gap-3 border-t border-slate-100 pt-3.5 md:col-span-2">
+                              <div className="p-2 rounded-xl bg-slate-100 text-slate-500 shrink-0">
+                                <ShieldCheck className="h-4.5 w-4.5" />
+                              </div>
+                              <div className="flex flex-col font-sans">
+                                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">GSTIN Number</span>
+                                <span className="font-extrabold text-slate-800 mt-1 tracking-wide">{business.gstNumber || 'N/A'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Collage gallery */}
+                        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4">
+                          <div className="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                            <h3 className="text-base font-extrabold text-slate-800 font-sans">Photos & Gallery</h3>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditTab('services');
+                                setShowEditModal(true);
+                              }}
+                              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-[#027244] transition-colors cursor-pointer border-none flex items-center gap-1 text-[11px] font-bold"
+                              title="Edit Gallery"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" /> Edit
+                            </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-1">
+                            <div 
+                              className="md:col-span-3 h-60 rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden"
+                              style={{ backgroundImage: `url('${mainImage}')` }}
+                            />
+                            
+                            <div className="md:col-span-2 grid grid-cols-2 gap-3 h-60">
+                              {[...Array(4)].map((_, i) => {
+                                const imgUrl = finalGallery[i] || mainImage;
+                                const isLast = i === 3;
+                                return (
+                                  <div 
+                                    key={i}
+                                    className="rounded-[16px] bg-cover bg-center border border-slate-200 shadow-3xs relative overflow-hidden"
+                                    style={{ backgroundImage: `url('${imgUrl}')` }}
+                                  >
+                                    {isLast && remainingCount > 0 && (
+                                      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[1px] flex flex-col items-center justify-center text-white text-center select-none animate-fadeIn">
+                                        <span className="text-base font-black">+{remainingCount}</span>
+                                        <span className="text-[8px] font-black uppercase mt-0.5">More</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    )}
+
+                    {/* TAB 2: SERVICES */}
+                    {previewTab === 'services' && (
+                      <div className="flex flex-col gap-5 animate-fadeIn text-left">
+                        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4">
+                          <div className="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                            <h3 className="text-base font-extrabold text-slate-800 font-sans">Our Complete Services</h3>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditTab('services');
+                                setShowEditModal(true);
+                              }}
+                              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-[#027244] transition-colors cursor-pointer border-none flex items-center gap-1 text-[11px] font-bold"
+                              title="Edit Services"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" /> Edit
+                            </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-2">
+                            {(Array.isArray(business.services) ? business.services : []).map((service, idx) => (
+                              <div key={idx} className="bg-slate-50/55 border border-slate-200 p-4 rounded-2xl flex items-center gap-3 shadow-3xs">
+                                <CheckCircle className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
+                                <span className="text-xs font-bold text-slate-700">{service}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {business.brands && Array.isArray(business.brands) && business.brands.length > 0 && (
+                            <div className="flex flex-col gap-2.5 mt-6 border-t border-slate-100 pt-5 text-left">
+                              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Authorized Brand Partnerships</span>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                {business.brands.map((b, idx) => (
+                                  <span key={idx} className="bg-white border border-slate-200 px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 shadow-3xs">{b}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 3: PHOTOS */}
+                    {previewTab === 'photos' && (
+                      <div className="flex flex-col gap-5 animate-fadeIn text-left">
+                        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4">
+                          <div className="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                            <h3 className="text-base font-extrabold text-slate-800 font-sans">Photo Gallery ({galleryCount})</h3>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditTab('services');
+                                setShowEditModal(true);
+                              }}
+                              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-[#027244] transition-colors cursor-pointer border-none flex items-center gap-1 text-[11px] font-bold"
+                              title="Edit Photos"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" /> Edit
+                            </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                            {finalGallery.map((url, idx) => (
+                              <div 
+                                key={idx} 
+                                className="h-36 rounded-2xl bg-cover bg-center border border-slate-200 shadow-3xs relative overflow-hidden hover:shadow-xs transition-shadow" 
+                                style={{ backgroundImage: `url('${url}')` }} 
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 4: REVIEWS */}
+                    {previewTab === 'reviews' && (
+                      <div className="flex flex-col gap-6 animate-fadeIn text-left">
+                        
+                        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-5">
+                          <h3 className="text-base font-extrabold text-slate-800 font-sans border-b border-slate-100 pb-2.5">Customer Ratings & Synced Feedback</h3>
+                          
+                          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-6 shadow-3xs">
+                            <div className="text-center flex flex-col gap-1 shrink-0 bg-white border border-slate-250 p-4 rounded-xl shadow-3xs min-w-[120px]">
+                              <span className="text-4xl font-black text-slate-800 leading-none">{(business.googleRating ?? 4.5).toFixed(1)}</span>
+                              <div className="flex text-amber-400 gap-0.5 justify-center mt-1.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(business.googleRating ?? 4.5) ? 'fill-current' : 'text-slate-200'}`} />
+                                ))}
+                              </div>
+                              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">Out of 5 Stars</span>
+                            </div>
+                            
+                            <div className="flex-1 flex flex-col gap-2 text-[11px] font-bold text-slate-600 w-full">
+                              {[
+                                { stars: 5, pct: '74%', count: 62 },
+                                { stars: 4, pct: '19%', count: 16 },
+                                { stars: 3, pct: '5%', count: 4 },
+                                { stars: 2, pct: '1%', count: 1 },
+                                { stars: 1, pct: '1%', count: 1 }
+                              ].map((dist) => (
+                                <div key={dist.stars} className="flex items-center gap-3">
+                                  <span className="w-4 text-right text-slate-400">{dist.stars}★</span>
+                                  <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                    <div className="h-full bg-amber-450" style={{ width: dist.pct }} />
+                                  </div>
+                                  <span className="w-12 text-slate-400 text-right font-semibold">{dist.count}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-4 mt-2">
+                            <span className="font-extrabold text-xs text-slate-400 uppercase tracking-widest">Local Customer Feedback Stream ({localReviews.length})</span>
+                            
+                            {localReviews.map((rev, idx) => (
+                              <div key={idx} className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4 flex flex-col gap-2.5 text-left">
+                                <div className="flex justify-between items-center">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="h-7 w-7 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-[10px] font-black text-emerald-700 uppercase">
+                                      {(rev.authorName || 'R').charAt(0)}
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName || 'Anonymous'}</span>
+                                      <span className={`text-[8.5px] font-bold uppercase tracking-widest mt-1 block ${rev.source === 'google' ? 'text-amber-600' : 'text-slate-455'}`}>
+                                        {rev.source === 'google' ? 'Synced Google Review' : 'Verified Customer'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center text-amber-400 gap-0.5">
+                                    {[...Array(5)].map((_, i) => (
+                                      <Star key={i} className={`h-3 w-3 ${i < rev.rating ? 'fill-current' : 'text-slate-200'}`} />
+                                    ))}
+                                  </div>
+                                </div>
+                                <p className="text-[11.5px] text-slate-550 font-medium leading-relaxed mt-0.5 text-justify">{rev.text}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                      </div>
+                    )}
+
+                    {/* TAB 5: OFFERS */}
+                    {previewTab === 'offers' && (
+                      <div className="flex flex-col gap-5 animate-fadeIn text-left font-sans">
+                        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4">
+                          <div className="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                            <h3 className="text-base font-extrabold text-slate-800 font-sans">Active Promotional Offers</h3>
+                            <button
+                              type="button"
+                              onClick={() => setSearchParams({ tab: 'Offers & Promotions' })}
+                              className="text-[#027244] hover:text-[#005934] font-extrabold text-xs flex items-center gap-0.5 transition-colors border-none bg-transparent cursor-pointer"
+                            >
+                              Manage <ChevronRight className="h-4 w-4" />
+                            </button>
+                          </div>
+
+                          <div className="flex flex-col gap-4 mt-2">
+                            {offersList.length > 0 ? (
+                              offersList.map((campaign, oIdx) => {
+                                const gradients = [
+                                  'from-emerald-500 to-teal-600',
+                                  'from-blue-500 to-indigo-600',
+                                  'from-purple-500 to-pink-600',
+                                  'from-amber-500 to-orange-600'
+                                ];
+                                const gradient = gradients[oIdx % gradients.length];
+                                return (
+                                  <div key={campaign.id || oIdx} className={`bg-gradient-to-r ${gradient} border border-emerald-500/20 shadow rounded-2xl p-5 text-white flex justify-between items-center relative overflow-hidden`}>
+                                    <div className="flex flex-col gap-0.5 text-left relative z-10">
+                                      <span className="bg-white/20 text-[8.5px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider self-start">Special Promotion</span>
+                                      <h4 className="text-base font-black mt-2">{campaign.title}</h4>
+                                      <p className="text-[11.5px] text-white/95 font-medium mt-1 leading-relaxed max-w-sm">{campaign.description}</p>
+                                      {campaign.expiry && (
+                                        <span className="text-[9px] text-white/70 font-semibold mt-2">Expires on: {campaign.expiry}</span>
+                                      )}
+                                    </div>
+                                    <div className="bg-white text-slate-800 font-black text-xs py-2 px-4 rounded-xl flex flex-col items-center justify-center shrink-0 shadow relative z-10 border border-slate-100 min-w-[80px]">
+                                      <span className="text-[8.5px] text-slate-400 font-black uppercase tracking-wider leading-none">Deal</span>
+                                      <span className="text-[13px] mt-1 text-slate-800 font-black">{campaign.rate}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div className="py-8 text-center text-slate-400 font-bold text-xs">
+                                No active offers. Launch flyers inside the Offers tab!
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 6: ABOUT */}
+                    {previewTab === 'about' && (
+                      <div className="flex flex-col gap-5 animate-fadeIn text-left font-sans">
+                        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4">
+                          <div className="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                            <h3 className="text-base font-extrabold text-slate-800 font-sans">About {business.name}</h3>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditTab('about');
+                                setShowEditModal(true);
+                              }}
+                              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-[#027244] transition-colors cursor-pointer border-none flex items-center gap-1 text-[11px] font-bold"
+                              title="Edit About & Highlights"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" /> Edit
+                            </button>
+                          </div>
+                          
+                          <div className="flex flex-col gap-3 text-slate-500 font-medium text-xs sm:text-[13px] leading-relaxed text-justify mt-1.5">
+                            <p>
+                              Founded in {business.yearEstablished || '2012'}, {business.name} has grown to become one of the premier departmental stores inside Udumalpet. We provide top-class local solutions to residential housings, retail shopping complexes, and large-scale industrial systems.
+                            </p>
+                            <p>
+                              Our teams hold verified registrations, professional certificates, and are highly vetted by UBT administration to offer maximum safety and quality operations.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB: BRANCHES */}
+                    {previewTab === 'branches' && (
+                      <div className="flex flex-col gap-5 animate-fadeIn text-left font-sans">
+                        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4">
+                          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                            <div>
+                              <h3 className="text-base font-extrabold text-slate-800 font-sans">Our Branches</h3>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setSearchParams({ tab: 'Branches' })}
+                              className="shrink-0 py-2 px-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl flex items-center gap-1.5 transition-all shadow cursor-pointer border-none"
+                            >
+                              <Users className="h-3.5 w-3.5" /> Manage Branches
+                            </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                            {branches.map((branch, index) => (
+                              <div key={branch._id || index} className="bg-slate-50 border border-slate-200 p-4.5 rounded-2xl flex flex-col gap-3 shadow-3xs text-left">
+                                <div className="border-b border-slate-200/60 pb-1.5">
+                                  <h4 className="font-extrabold text-slate-800 text-xs">{branch.name}</h4>
+                                  <span className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider mt-0.5 block">{branch.branchManagerName ? `Manager: ${branch.branchManagerName}` : 'Branch Office'}</span>
+                                </div>
+                                <div className="flex flex-col gap-2 text-[11px] font-semibold text-slate-500">
+                                  <div className="flex items-start gap-2">
+                                    <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                                    <span>{branch.address}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Phone className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                    <span className="text-slate-800 font-bold">{branch.phone}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB: MAP & LOCATION */}
+                    {previewTab === 'map' && (
+                      <div className="flex flex-col gap-5 animate-fadeIn text-left">
+                        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4">
+                          <h3 className="text-base font-extrabold text-slate-800 font-sans border-b border-slate-100 pb-2.5">Map & Directions</h3>
+                          <div className="h-80 w-full rounded-2xl border border-slate-200 bg-slate-100 relative overflow-hidden shadow-3xs">
+                            <iframe
+                              title="Interactive Business Map"
+                              width="100%"
+                              height="100%"
+                              style={{ border: 0 }}
+                              allowFullScreen=""
+                              loading="lazy"
+                              referrerPolicy="no-referrer-when-downgrade"
+                              src={`https://maps.google.com/maps?q=${business.locality || 'Gandhi Nagar'},Udumalpet&z=16&output=embed`}
+                              className="absolute inset-0 w-full h-full opacity-95"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+
+                  {/* Right Column (Sticky Contact and Hours Card) */}
+                  <div className="lg:col-span-1 flex flex-col gap-6">
+                    
+                    {/* Contact Business Card */}
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4 text-left relative group">
+                      <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <span className="font-extrabold text-sm text-[#001c41] uppercase tracking-wider">Contact Details</span>
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setEditTab('contact');
+                            setShowEditModal(true);
+                          }}
+                          className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-[#027244] transition-colors cursor-pointer border-none flex items-center gap-0.5 text-[10px] font-bold"
+                          title="Edit Contact"
+                        >
+                          <Edit3 className="h-3 w-3" /> Edit
+                        </button>
+                      </div>
+
+                      <div className="flex flex-col gap-3.5 text-xs font-bold text-slate-705">
+                        <div className="flex items-start gap-2.5">
+                          <Phone className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[9px] text-slate-450 font-extrabold uppercase tracking-widest">Phone</span>
+                            <span className="text-slate-800 font-extrabold">{business.phone}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-2.5 border-t border-slate-100 pt-3.5">
+                          <Mail className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[9px] text-slate-450 font-extrabold uppercase tracking-widest">Email Address</span>
+                            <span className="text-slate-800 font-extrabold">{business.email || 'N/A'}</span>
+                          </div>
+                        </div>
+
+                        {business.website && (
+                          <div className="flex items-start gap-2.5 border-t border-slate-100 pt-3.5">
+                            <Globe className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[9px] text-slate-450 font-extrabold uppercase tracking-widest">Website</span>
+                              <a 
+                                href={business.website.startsWith('http') ? business.website : `https://${business.website}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-emerald-700 hover:text-emerald-800 font-extrabold hover:underline mt-1 break-all"
+                              >
+                                {business.website}
+                              </a>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-start gap-2.5 border-t border-slate-100 pt-3.5">
+                          <MapPin className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[9px] text-slate-450 font-extrabold uppercase tracking-widest">Location Address</span>
+                            <span className="text-slate-650 font-medium leading-relaxed">{business.address || 'Udumalpet'}</span>
+                          </div>
+                        </div>
+
+                        {/* Facebook and Instagram links directly below Location Address under "Connect with them:" */}
+                        {(business.facebook || business.instagram) && (
+                          <div className="flex flex-col gap-2 border-t border-slate-100 pt-3.5">
+                            <span className="text-[9px] text-slate-455 font-extrabold uppercase tracking-widest">Connect with them:</span>
+                            <div className="flex items-center gap-3 mt-1">
+                              {business.facebook && (
+                                <a 
+                                  href={business.facebook.startsWith('http') ? business.facebook : `https://${business.facebook}`} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="h-8 w-8 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-full flex items-center justify-center transition-colors"
+                                  title="Facebook Profile"
+                                >
+                                  <Facebook className="h-4 w-4" />
+                                </a>
+                              )}
+                              {business.instagram && (
+                                <a 
+                                  href={business.instagram.startsWith('http') ? business.instagram : `https://instagram.com/${business.instagram.replace('@', '')}`} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="h-8 w-8 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-full flex items-center justify-center transition-colors"
+                                  title="Instagram Profile"
+                                >
+                                  <Instagram className="h-4 w-4" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Timings / Business Hours */}
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4 text-left relative group">
+                      <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <span className="font-extrabold text-sm text-[#001c41] flex items-center gap-2">
+                          <Clock className="h-4.5 w-4.5 text-slate-500" /> Business Hours
+                        </span>
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setEditTab('specs');
+                            setShowEditModal(true);
+                          }}
+                          className="p-1.5 hover:bg-slate-100 text-slate-405 hover:text-[#027244] rounded-xl transition-colors cursor-pointer border-none flex items-center justify-center shrink-0"
+                          title="Edit Timings"
+                        >
+                          <Edit3 className="h-4 w-4" /> Edit
+                        </button>
+                      </div>
+
+                      <div className="flex flex-col gap-2.5 text-xs font-bold text-slate-605 text-left">
+                        {business.timings && typeof business.timings === 'object' && !Array.isArray(business.timings) ? (
+                          Object.entries(business.timings).map(([day, time]) => (
+                            <div key={day} className="flex justify-between border-b border-slate-50 pb-2 last:border-b-0">
+                              <span className="text-slate-400 font-semibold">{day}</span>
+                              <span className={`font-black ${String(time || '').toLowerCase().includes('closed') ? 'text-rose-550' : 'text-slate-800'}`}>{String(time || 'Closed')}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-slate-550 font-semibold text-center">
+                            {typeof business.timings === 'string' ? business.timings : 'No timings configured yet.'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Share Circular Icons */}
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-6 flex flex-col gap-3.5 text-left">
+                      <span className="font-extrabold text-sm text-slate-805">Share Profile</span>
+                      <div className="flex items-center gap-3 mt-1.5 justify-start">
+                        <button className="h-8 w-8 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
+                          <Facebook className="h-4 w-4" />
+                        </button>
+                        <button className="h-8 w-8 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
+                          <MessageSquare className="h-4 w-4 text-slate-650" />
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(`http://localhost:3000/businesses/${business._id}`);
+                            alert("Profile link copied!");
+                          }}
+                          className="h-8 w-8 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer font-bold text-xs"
+                        >
+                          <Globe className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+            );
+          })()}
+
+          {/* ========================================================================= */}
           {/* TAB: DASHBOARD NOT LISTED YET (INLINE BUSINESS OWNER CTA) */}
           {/* ========================================================================= */}
           {activeTab === 'My Business' && !business && (
@@ -2872,7 +3907,7 @@ function DashboardContent() {
                   <RefreshCw className="h-7 w-7 text-emerald-600 animate-spin" />
                   <span className="text-xs font-bold">Retrieving your listed events...</span>
                 </div>
-              ) : userEvents.length === 0 ? (
+              ) : displayEvents.length === 0 ? (
                 <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-450 flex flex-col items-center gap-4 shadow-sm max-w-md mx-auto my-6 animate-fadeIn">
                   <div className="h-15 w-15 bg-emerald-50 text-[#027244] rounded-2xl flex items-center justify-center border border-emerald-100 animate-pulse">
                     <Calendar className="h-7 w-7" />
@@ -2892,7 +3927,7 @@ function DashboardContent() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {userEvents.map((evt) => (
+                  {displayEvents.map((evt) => (
                     <div key={evt._id} className="card-premium rounded-3xl overflow-hidden bg-white flex flex-col border border-slate-200 shadow-sm">
                       <div 
                         className="h-36 bg-cover bg-center shrink-0 relative"
@@ -2969,6 +4004,16 @@ function DashboardContent() {
                               className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-1"
                             >
                               <CreditCard className="h-4 w-4" /> Pay Listing Fee (₹99)
+                            </button>
+                          )}
+
+                          {/* If payment is verified/paid, show waiting for admin approval if not yet approved */}
+                          {evt.paymentStatus !== 'Pending' && (evt.status?.toLowerCase() === 'pending review' || evt.status?.toLowerCase() === 'pending') && (
+                            <button
+                              disabled
+                              className="w-full py-2 bg-slate-100 border border-slate-200 text-slate-400 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-not-allowed mt-1"
+                            >
+                              <Clock className="h-4 w-4 text-slate-400" /> Waiting for Admin Approval
                             </button>
                           )}
 
@@ -3126,7 +4171,7 @@ function DashboardContent() {
                       <div key={rev.id} className="py-5.5 first:pt-0 last:pb-0 flex flex-col md:flex-row gap-4 justify-between items-start text-left hover:bg-slate-50/20 px-2 rounded-2xl transition-colors">
                         <div className="flex-1 flex gap-3.5">
                           <div className="h-10.5 w-10.5 rounded-full bg-emerald-50 border border-emerald-150/60 flex items-center justify-center text-emerald-800 font-extrabold text-sm shadow-xs uppercase select-none shrink-0">
-                            {rev.authorName.charAt(0)}
+                            {(rev.authorName || 'R').charAt(0)}
                           </div>
                           
                           <div className="flex flex-col gap-1.5">
@@ -3521,14 +4566,66 @@ function DashboardContent() {
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10.5px] font-extrabold text-slate-500">Deal Banner Link</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Image URL (Optional)"
-                        value={newOfferFields.banner}
-                        onChange={(e) => setNewOfferFields({ ...newOfferFields, banner: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs bg-slate-50/50 focus:outline-emerald-600 font-semibold"
-                      />
+                      <label className="text-[10.5px] font-extrabold text-slate-500">Deal Banner Image</label>
+                      {newOfferFields.banner ? (
+                        <div className="relative border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 p-2 flex items-center justify-between gap-3 group">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <img 
+                              src={newOfferFields.banner} 
+                              alt="Banner preview" 
+                              className="h-14 w-20 object-cover rounded-lg border border-slate-200/60 shadow-2xs"
+                            />
+                            <div className="flex flex-col min-w-0 flex-1 text-left">
+                              <span className="text-[11px] font-bold text-slate-700">Banner Selected</span>
+                              <span className="text-[9px] text-slate-400 font-semibold truncate">{newOfferFields.banner}</span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setNewOfferFields(prev => ({ ...prev, banner: '' }))}
+                            className="p-2 hover:bg-red-50 text-slate-450 hover:text-red-650 rounded-xl transition-colors cursor-pointer border-none flex items-center justify-center shrink-0"
+                            title="Remove Image"
+                          >
+                            <Trash2 className="h-4.5 w-4.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className={`border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-colors bg-slate-50/20 relative ${offerImageUploading ? 'border-emerald-300 bg-emerald-50/5' : 'border-slate-200 hover:bg-slate-50/40'}`}>
+                          {offerImageUploading ? (
+                            <div className="flex flex-col items-center gap-2">
+                              <RefreshCw className="h-6 w-6 text-[#027244] animate-spin" />
+                              <span className="text-[10px] font-bold text-slate-500">Uploading banner...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="h-8 w-8 bg-slate-50 text-slate-500 border border-slate-100 rounded-xl flex items-center justify-center shadow-3xs">
+                                <Upload className="h-4 w-4" />
+                              </div>
+                              <div className="text-center flex flex-col items-center">
+                                <span className="text-[11px] font-extrabold text-slate-700">Click to upload banner</span>
+                                <span className="text-[9px] text-slate-455 font-bold mt-0.5">PNG, JPG up to 5MB</span>
+                              </div>
+                              <input 
+                                type="file" 
+                                accept="image/*"
+                                id="dashboard-offer-banner-upload"
+                                onChange={handleOfferBannerUpload}
+                                className="hidden"
+                              />
+                              <label 
+                                htmlFor="dashboard-offer-banner-upload"
+                                className="absolute inset-0 w-full h-full cursor-pointer"
+                              />
+                            </>
+                          )}
+                        </div>
+                      )}
+                      {offerImageError && (
+                        <span className="text-[9.5px] text-red-500 font-semibold mt-1 flex items-center gap-1">
+                          <AlertCircle className="h-3.5 w-3.5" />
+                          {offerImageError}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -3545,7 +4642,7 @@ function DashboardContent() {
                             active: true,
                             banner: newOfferFields.banner || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'
                           };
-                          setOffersList([launched, ...offersList]);
+                          updateOffers([launched, ...offersList]);
                           setNewOfferFields({ title: '', description: '', rate: '', expiry: '', banner: '' });
                           setShowAddOffer(false);
                         }
@@ -3593,7 +4690,7 @@ function DashboardContent() {
                           <button
                             onClick={() => {
                               const updated = offersList.map(c => c.id === campaign.id ? { ...c, active: !c.active } : c);
-                              setOffersList(updated);
+                              updateOffers(updated);
                             }}
                             className={`py-1.5 px-3 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer btn-active-press ${campaign.active ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-emerald-50 hover:bg-emerald-100 text-[#027244]'}`}
                           >
@@ -3602,7 +4699,7 @@ function DashboardContent() {
                           <button
                             onClick={() => {
                               const updated = offersList.filter(c => c.id !== campaign.id);
-                              setOffersList(updated);
+                              updateOffers(updated);
                             }}
                             className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[10px] font-black uppercase cursor-pointer btn-active-press"
                           >
@@ -3631,7 +4728,7 @@ function DashboardContent() {
                   <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Add or manage multiple branches under your business profile. Single branches default to your main profile details.</span>
                 </div>
                 <button 
-                  onClick={() => handleOpenBranchModal(null)}
+                  onClick={() => navigate('/add-business?mode=branch')}
                   className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-6 rounded-xl transition-all shadow-md shrink-0 flex items-center gap-2 cursor-pointer border border-emerald-700/10"
                 >
                   <Plus className="h-4.5 w-4.5" /> Add New Branch
@@ -3656,7 +4753,7 @@ function DashboardContent() {
                     </p>
                   </div>
                   <button 
-                    onClick={() => handleOpenBranchModal(null)}
+                    onClick={() => navigate('/add-business?mode=branch')}
                     className="w-full py-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all shadow-emerald-700/10 cursor-pointer"
                   >
                     Add Branch Now
@@ -3963,16 +5060,33 @@ function DashboardContent() {
                                   {blog.comments.map((comment) => (
                                     <div key={comment._id} className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl flex justify-between items-start gap-2">
                                       <div className="flex flex-col text-left text-[11px] leading-snug">
-                                        <span className="font-extrabold text-slate-700">{comment.userName} <span className="text-[9px] text-slate-400 font-medium ml-1.5">{new Date(comment.createdAt).toLocaleDateString()}</span></span>
+                                        <span className="font-extrabold text-slate-700">
+                                          {comment.userName} 
+                                          <span className="text-[9px] text-slate-400 font-medium ml-1.5">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                                          <span className={`ml-2 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${comment.approved ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/30' : 'bg-amber-50 text-amber-800 border border-amber-250/30'}`}>
+                                            {comment.approved ? 'Approved' : 'Pending Approval'}
+                                          </span>
+                                        </span>
                                         <p className="text-slate-550 font-semibold mt-1 leading-normal">{comment.text}</p>
                                       </div>
-                                      <button 
-                                        onClick={() => handleCommentDeleteDashboard(blog._id, comment._id)}
-                                        title="Delete Comment"
-                                        className="h-6 w-6 rounded bg-red-50 text-red-650 hover:bg-red-100 flex items-center justify-center cursor-pointer transition-colors shadow-2xs shrink-0"
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </button>
+                                      <div className="flex items-center gap-1.5 shrink-0">
+                                        {!comment.approved && (
+                                          <button 
+                                            onClick={() => handleCommentApproveDashboard(blog._id, comment._id)}
+                                            title="Approve Comment"
+                                            className="h-6 px-2 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 flex items-center justify-center cursor-pointer transition-all border border-emerald-200/50 shadow-2xs text-[9.5px] font-extrabold shrink-0 gap-1"
+                                          >
+                                            <Check className="h-3 w-3" /> Approve
+                                          </button>
+                                        )}
+                                        <button 
+                                          onClick={() => handleCommentDeleteDashboard(blog._id, comment._id)}
+                                          title="Delete Comment"
+                                          className="h-6 w-6 rounded bg-red-50 text-red-650 hover:bg-red-100 flex items-center justify-center cursor-pointer transition-colors shadow-2xs shrink-0 border border-red-100/50"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </button>
+                                      </div>
                                     </div>
                                   ))}
                                 </div>
@@ -4149,6 +5263,39 @@ function DashboardContent() {
                             />
                           </div>
 
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Website URL (Optional)</label>
+                            <input
+                              type="url"
+                              value={profileFields.website || ''}
+                              onChange={(e) => setProfileFields(prev => ({ ...prev, website: e.target.value }))}
+                              placeholder="e.g. www.mybusiness.com"
+                              className="w-full border border-slate-200/70 px-4.5 py-3.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none bg-slate-50/20 shadow-2xs font-sans"
+                            />
+                          </div>
+
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Instagram Handle (Optional)</label>
+                            <input
+                              type="text"
+                              value={profileFields.instagram || ''}
+                              onChange={(e) => setProfileFields(prev => ({ ...prev, instagram: e.target.value }))}
+                              placeholder="e.g. @mybusiness"
+                              className="w-full border border-slate-200/70 px-4.5 py-3.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none bg-slate-50/20 shadow-2xs font-sans"
+                            />
+                          </div>
+
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Facebook Page Link (Optional)</label>
+                            <input
+                              type="text"
+                              value={profileFields.facebook || ''}
+                              onChange={(e) => setProfileFields(prev => ({ ...prev, facebook: e.target.value }))}
+                              placeholder="e.g. facebook.com/mybusiness"
+                              className="w-full border border-slate-200/70 px-4.5 py-3.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none bg-slate-50/20 shadow-2xs font-sans"
+                            />
+                          </div>
+
                           <button
                             type="submit"
                             disabled={profileFieldsLoading}
@@ -4242,14 +5389,14 @@ function DashboardContent() {
 
                         {/* Events sub-list */}
                         <div className="flex flex-col gap-3">
-                          <span className="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider leading-none">Your Listed Events ({userEvents.length})</span>
-                          {userEvents.length === 0 ? (
+                          <span className="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider leading-none">Your Listed Events ({displayEvents.length})</span>
+                          {displayEvents.length === 0 ? (
                             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center text-xs font-semibold text-slate-400 leading-relaxed">
                               No events listed yet.
                             </div>
                           ) : (
                             <div className="flex flex-col gap-2.5 max-h-56 overflow-y-auto pr-1">
-                              {userEvents.map(evt => {
+                              {displayEvents.map(evt => {
                                 const isExpired = new Date(evt.endDate || evt.date) < new Date();
                                 return (
                                   <div key={evt._id} className="bg-slate-50/50 hover:bg-slate-50 border border-slate-200/80 p-4 rounded-2xl flex justify-between items-center gap-4 transition-all">
@@ -4986,6 +6133,7 @@ function DashboardContent() {
             <div className="flex border-b border-slate-200 gap-2 overflow-x-auto">
               {[
                 { id: 'general', label: 'General Info' },
+                { id: 'about', label: 'About & Highlights' },
                 { id: 'contact', label: 'Contact & Location' },
                 { id: 'specs', label: 'Specifications & Hours' },
                 { id: 'services', label: 'Services & Media' }
@@ -5049,17 +6197,47 @@ function DashboardContent() {
                     </div>
                   </div>
 
+                </div>
+              )}
+
+              {/* TAB: ABOUT & HIGHLIGHTS */}
+              {editTab === 'about' && (
+                <div className="flex flex-col gap-5 animate-fadeIn">
                   <div className="flex flex-col gap-1">
                     <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Business Description</label>
                     <textarea 
-                      rows={4}
+                      rows={5}
                       value={editFields.description}
                       onChange={(e) => setEditFields({ ...editFields, description: e.target.value })}
-                      placeholder="Describe your business, services, highlights..."
+                      placeholder="Describe your business, services, and unique value..."
                       required
                       className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20 resize-none leading-relaxed"
                     />
                   </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Verified Highlights (Green Ticks)</label>
+                    <input
+                      type="text"
+                      value={editFields.highlights}
+                      onChange={(e) => setEditFields({ ...editFields, highlights: e.target.value })}
+                      placeholder="e.g. On-time Service, Expert Technicians, Quality Materials, Affordable Pricing"
+                      className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                    />
+                    <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Enter comma-separated highlights shown as green verified badges under your business description.</p>
+                  </div>
+                  {/* Preview */}
+                  {editFields.highlights && (
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Preview</span>
+                      <div className="flex flex-wrap gap-2">
+                        {editFields.highlights.split(',').map(h => h.trim()).filter(Boolean).map((tag, i) => (
+                          <span key={i} className="bg-emerald-50/50 border border-emerald-100 text-emerald-700 text-[10px] font-bold py-1.5 px-3 rounded-xl flex items-center gap-1.5">
+                            <CheckCircle className="h-3.5 w-3.5 text-emerald-600" /> {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -5110,6 +6288,30 @@ function DashboardContent() {
                         value={editFields.website}
                         onChange={(e) => setEditFields({ ...editFields, website: e.target.value })}
                         placeholder="e.g. www.store.in"
+                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Facebook URL</label>
+                      <input 
+                        type="text" 
+                        value={editFields.facebook || ''}
+                        onChange={(e) => setEditFields({ ...editFields, facebook: e.target.value })}
+                        placeholder="e.g. facebook.com/store"
+                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Instagram URL</label>
+                      <input 
+                        type="text" 
+                        value={editFields.instagram || ''}
+                        onChange={(e) => setEditFields({ ...editFields, instagram: e.target.value })}
+                        placeholder="e.g. instagram.com/store"
                         className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
                       />
                     </div>
@@ -5272,26 +6474,127 @@ function DashboardContent() {
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Cover Image URL</label>
-                    <input 
-                      type="text" 
-                      value={editFields.coverImageUrl}
-                      onChange={(e) => setEditFields({ ...editFields, coverImageUrl: e.target.value })}
-                      placeholder="e.g. https://images.unsplash.com/..."
-                      className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
-                    />
+                  {/* Upload Error display */}
+                  {uploadError && (
+                    <div className="p-3 bg-red-50 text-red-700 border border-red-200 text-xs font-bold rounded-xl text-center flex items-center justify-center gap-2 animate-fadeIn">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <span>{uploadError}</span>
+                    </div>
+                  )}
+
+                  {/* Logo Image Direct Upload */}
+                  <div className="flex flex-col gap-2 border-b border-slate-100 pb-4">
+                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Business Logo</label>
+                    <div className="flex items-center gap-4.5">
+                      <div className="h-16 w-16 rounded-2xl border-2 border-slate-200 overflow-hidden shrink-0 bg-slate-55 flex items-center justify-center relative group">
+                        <img 
+                          src={editFields.logoUrl || "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150&q=80"} 
+                          alt="Logo Preview" 
+                          className="h-full w-full object-cover"
+                        />
+                        {logoUploading && (
+                          <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center">
+                            <RefreshCw className="h-5 w-5 text-white animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="bg-white border border-slate-250 hover:bg-slate-50 text-slate-700 font-extrabold text-[10.5px] py-2.5 px-4.5 rounded-xl cursor-pointer shadow-3xs inline-flex items-center gap-1.5">
+                          <Plus className="h-3.5 w-3.5" />
+                          <span>{logoUploading ? 'Uploading...' : 'Choose File'}</span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => handleDashboardImageUpload(e, 'logoUrl')} 
+                            className="hidden" 
+                            disabled={logoUploading}
+                          />
+                        </label>
+                        <span className="text-[9.5px] text-slate-400 font-semibold">Square JPG/PNG (Max 5MB)</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Gallery Image URLs (Comma Separated)</label>
-                    <textarea 
-                      rows={3}
-                      value={editFields.galleryUrls}
-                      onChange={(e) => setEditFields({ ...editFields, galleryUrls: e.target.value })}
-                      placeholder="e.g. https://image1.com, https://image2.com"
-                      className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20 resize-none leading-relaxed"
-                    />
+                  {/* Cover Image Direct Upload */}
+                  <div className="flex flex-col gap-2 border-b border-slate-100 pb-4">
+                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Profile Cover Image</label>
+                    <div className="flex flex-col gap-3">
+                      <div className="h-32 w-full rounded-2xl border border-slate-200 overflow-hidden bg-slate-55 relative flex items-center justify-center">
+                        <img 
+                          src={editFields.coverImageUrl || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80"} 
+                          alt="Cover Preview" 
+                          className="w-full h-full object-cover"
+                        />
+                        {coverUploading && (
+                          <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center">
+                            <RefreshCw className="h-6 w-6 text-white animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="bg-white border border-slate-250 hover:bg-slate-50 text-slate-700 font-extrabold text-[10.5px] py-2.5 px-4.5 rounded-xl cursor-pointer shadow-3xs inline-flex items-center gap-1.5">
+                          <Plus className="h-3.5 w-3.5" />
+                          <span>{coverUploading ? 'Uploading...' : 'Upload Cover File'}</span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => handleDashboardImageUpload(e, 'coverImageUrl')} 
+                            className="hidden" 
+                            disabled={coverUploading}
+                          />
+                        </label>
+                        <span className="text-[9.5px] text-slate-400 font-semibold">Landscape landscape works best (Max 5MB)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Gallery Images Multi-Upload Grid */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Store / Work Photos</label>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-1">
+                      {/* Existing Uploaded Gallery Previews */}
+                      {editFields.galleryUrls 
+                        ? editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean).map((url, idx) => (
+                          <div key={idx} className="h-20 rounded-xl border border-slate-200 overflow-hidden bg-slate-55 relative group">
+                            <img src={url} alt="Gallery item" className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const currentUrls = editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean);
+                                const updated = currentUrls.filter((_, uIdx) => uIdx !== idx);
+                                setEditFields({ ...editFields, galleryUrls: updated.join(', ') });
+                              }}
+                              className="absolute top-1 right-1 h-5 w-5 bg-red-650 hover:bg-red-750 text-white rounded-full flex items-center justify-center shadow transition-colors cursor-pointer border-none"
+                              title="Delete photo"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))
+                        : null
+                      }
+
+                      {/* Add Gallery Photos Dropzone/Selector */}
+                      <label className={`h-20 rounded-xl border-2 border-dashed border-slate-300 hover:border-emerald-550 flex flex-col items-center justify-center text-center cursor-pointer p-2 gap-1 transition-all bg-slate-50/30 ${galleryUploading ? 'opacity-60 pointer-events-none' : ''}`}>
+                        {galleryUploading ? (
+                          <RefreshCw className="h-5 w-5 text-emerald-600 animate-spin" />
+                        ) : (
+                          <>
+                            <Plus className="h-5 w-5 text-slate-400" />
+                            <span className="text-[9.5px] font-black text-slate-450 uppercase tracking-wide">Add Photos</span>
+                          </>
+                        )}
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          multiple 
+                          onChange={(e) => handleDashboardImageUpload(e, 'galleryUrls')} 
+                          className="hidden" 
+                          disabled={galleryUploading}
+                        />
+                      </label>
+                    </div>
+                    <span className="text-[9.5px] text-slate-400 font-semibold mt-1">Select one or more store images to upload directly (Max 5MB per file)</span>
                   </div>
                 </div>
               )}
@@ -6035,6 +7338,9 @@ function DashboardContent() {
               </div>
               <button 
                 onClick={() => {
+                  if (completeEventStep === 1) {
+                    handleCancelEventPayment(completeEvent._id);
+                  }
                   setShowCompleteEventModal(false);
                   setCompleteEvent(null);
                 }} 
@@ -6093,6 +7399,9 @@ function DashboardContent() {
                   <button 
                     type="button"
                     onClick={() => {
+                      if (completeEventStep === 1) {
+                        handleCancelEventPayment(completeEvent._id);
+                      }
                       setShowCompleteEventModal(false);
                       setCompleteEvent(null);
                     }}

@@ -11,7 +11,15 @@ const { protect, admin } = require('../middleware/auth');
 router.get('/', async (req, res) => {
   try {
     const blogs = await Blog.find({ status: 'Approved' }).sort({ createdAt: -1 });
-    res.json({ success: true, count: blogs.length, data: blogs });
+    // Only return approved comments to the public
+    const sanitizedBlogs = blogs.map(blog => {
+      const blogObj = blog.toObject();
+      if (blogObj.comments) {
+        blogObj.comments = blogObj.comments.filter(c => c.approved === true);
+      }
+      return blogObj;
+    });
+    res.json({ success: true, count: sanitizedBlogs.length, data: sanitizedBlogs });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -63,13 +71,13 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Blog post not found' });
     }
 
-    // If it's not approved, we should check if the user is authorized to see it
-    if (blog.status !== 'Approved') {
-      // Return 403 unless requesting user is author or admin (will be verified via custom header or auth token if available, but for simplicity we return details. Let's make it fully permissive or protected based on headers)
-      // Since it's fine for simple profile audits, let's return it directly.
+    const blogObj = blog.toObject();
+    // Only return approved comments to the public
+    if (blogObj.comments) {
+      blogObj.comments = blogObj.comments.filter(c => c.approved === true);
     }
 
-    res.json({ success: true, data: blog });
+    res.json({ success: true, data: blogObj });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -271,10 +279,21 @@ router.post('/:id/comment', async (req, res) => {
       comment.userName = guestUserName || 'Anonymous Visitor';
     }
 
+    const isAuthor = blog.author && loggedInUser && blog.author.toString() === loggedInUser._id.toString();
+    const isAdmin = loggedInUser && ['admin', 'superadmin'].includes(loggedInUser.role);
+    comment.approved = (isAuthor || isAdmin) ? true : false;
+
     blog.comments.push(comment);
     await blog.save();
 
-    res.json({ success: true, message: 'Comment added successfully', data: blog.comments });
+    const sanitizedComments = blog.comments.filter(c => c.approved === true);
+    res.json({ 
+      success: true, 
+      message: comment.approved 
+        ? 'Comment published successfully.' 
+        : 'Comment submitted successfully! It will be visible once approved by the author.', 
+      data: sanitizedComments 
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -310,6 +329,39 @@ router.delete('/:id/comment/:commentId', protect, async (req, res) => {
     await blog.save();
 
     res.json({ success: true, message: 'Comment deleted successfully', data: blog.comments });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @desc    Approve comment on a blog post
+// @route   PUT /api/blogs/:id/comment/:commentId/approve
+// @access  Private
+router.put('/:id/comment/:commentId/approve', protect, async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) {
+      return res.status(404).json({ success: false, message: 'Blog post not found' });
+    }
+
+    // Check authority: user must be the blog author OR an admin/superadmin
+    const isBlogAuthor = blog.author && blog.author.toString() === req.user._id.toString();
+    const isAdmin = req.user && ['admin', 'superadmin'].includes(req.user.role);
+
+    if (!isBlogAuthor && !isAdmin) {
+      return res.status(403).json({ success: false, message: 'Not authorized to approve comments on this blog' });
+    }
+
+    // Find and update comment
+    const comment = blog.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ success: false, message: 'Comment not found' });
+    }
+
+    comment.approved = true;
+    await blog.save();
+
+    res.json({ success: true, message: 'Comment approved successfully', data: blog.comments });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

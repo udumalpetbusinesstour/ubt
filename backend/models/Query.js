@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const QuerySchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false,
+  },
   name: {
     type: String,
     required: [true, 'Sender name is required'],

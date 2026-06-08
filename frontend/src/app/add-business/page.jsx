@@ -2,13 +2,22 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { ShieldCheck, ArrowLeft, ArrowRight, Upload, Sparkles, CheckCircle2, ChevronRight, Eye, RefreshCw, AlertCircle, AlertTriangle, Lock, Briefcase, Lightbulb, Headset, Phone, Mail, Clock, Search } from 'lucide-react';
 import MockGoogleMaps from '@/components/MockGoogleMaps';
+import ChoosePlan from '../choose-plan/page';
 
 const steps = [
   { id: 1, name: 'Basic Info' },
   { id: 2, name: 'Business Details' },
   { id: 3, name: 'Contact & Location' },
   { id: 4, name: 'Photos & Media' },
-  { id: 5, name: 'Review & Submit' },
+  { id: 5, name: 'Choose Plan' },
+  { id: 6, name: 'Review & Submit' },
+];
+
+const branchSteps = [
+  { id: 1, name: 'Basic Info' },
+  { id: 2, name: 'Branch Details' },
+  { id: 3, name: 'Contact & Location' },
+  { id: 4, name: 'Photos & Media' },
 ];
 
 export default function AddBusiness() {
@@ -18,6 +27,51 @@ export default function AddBusiness() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Branches wizard states
+  const [isBranchMode, setIsBranchMode] = useState(false);
+  const [branchStep, setBranchStep] = useState(1);
+  const [editingBranchIndex, setEditingBranchIndex] = useState(null);
+  const [branchLogoFile, setBranchLogoFile] = useState(null);
+  const [branchCoverFile, setBranchCoverFile] = useState(null);
+  const [branchGalleryFiles, setBranchGalleryFiles] = useState([]);
+  const [branchForm, setBranchForm] = useState({
+    name: '',
+    category: 'Grocery Stores',
+    customCategoryName: '',
+    type: 'Individual / Sole Proprietor',
+    description: '',
+    yearEstablished: '',
+    employeeCount: '1 - 5',
+    gstNumber: '',
+    services: '',
+    brands: '',
+    phone: '',
+    whatsapp: '',
+    email: '',
+    website: '',
+    facebook: '',
+    instagram: '',
+    address: '',
+    locality: '',
+    city: 'Udumalpet',
+    state: 'Tamil Nadu',
+    pincode: '',
+    isAddressVerified: false,
+    logoUrl: '',
+    coverImageUrl: '',
+    galleryUrls: [],
+    coordinates: { lat: 10.585, lng: 77.251 },
+    timings: {
+      Monday: '9:00 AM - 8:00 PM',
+      Tuesday: '9:00 AM - 8:00 PM',
+      Wednesday: '9:00 AM - 8:00 PM',
+      Thursday: '9:00 AM - 8:00 PM',
+      Friday: '9:00 AM - 8:00 PM',
+      Saturday: '9:00 AM - 8:00 PM',
+      Sunday: '9:00 AM - 1:00 PM',
+    },
+  });
 
   // Form Fields
   const [formData, setFormData] = useState({
@@ -35,6 +89,9 @@ export default function AddBusiness() {
     phone: '',
     whatsapp: '',
     email: '',
+    website: '',
+    facebook: '',
+    instagram: '',
     address: '',
     locality: '',
     city: 'Udumalpet',
@@ -58,10 +115,21 @@ export default function AddBusiness() {
       Saturday: '9:00 AM - 8:00 PM',
       Sunday: '9:00 AM - 1:00 PM',
     },
+    branches: [],
   });
 
-  // Pincode Verification State (If pincode is empty, show check screen)
   const [isPincodeVerified, setIsPincodeVerified] = useState(false);
+  const [eligibilityMethod, setEligibilityMethod] = useState('google'); // 'google' | 'pincode'
+
+  // Branch eligibility gating states
+  const [isBranchEligibilityVerified, setIsBranchEligibilityVerified] = useState(false);
+  const [branchEligibilityMethod, setBranchEligibilityMethod] = useState('google');
+  const [branchGoogleQuery, setBranchGoogleQuery] = useState('');
+  const [branchGoogleSuggestions, setBranchGoogleSuggestions] = useState([]);
+  const [showBranchGoogleDropdown, setShowBranchGoogleDropdown] = useState(false);
+  const [selectedBranchPlaceId, setSelectedBranchPlaceId] = useState(null);
+  const [branchAutofillLoading, setBranchAutofillLoading] = useState(false);
+  const [branchAutofillSuccess, setBranchAutofillSuccess] = useState(false);
 
   // Sync isPincodeVerified when draft is loaded
   useEffect(() => {
@@ -118,6 +186,20 @@ export default function AddBusiness() {
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
+  const fetchBranches = async (businessId, authToken) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/branches/business/${businessId}?all=true`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setFormData(prev => ({ ...prev, branches: data.data }));
+      }
+    } catch (e) {
+      console.warn('Failed to load branches from server:', e);
+    }
+  };
+
   const fetchUserBusinessFromServer = async (authToken) => {
     try {
       const res = await fetch('http://localhost:5000/api/businesses/my-business', {
@@ -128,6 +210,9 @@ export default function AddBusiness() {
       if (data.success && data.data) {
         const biz = data.data;
         
+        // Fetch branches of this business draft
+        await fetchBranches(biz._id, authToken);
+
         // Check if there are local unsaved edits for this business
         const localEditDraft = localStorage.getItem('ubt_edit_draft');
         if (localEditDraft) {
@@ -178,6 +263,34 @@ export default function AddBusiness() {
     }
   };
 
+  const getPayload = (updatedData) => {
+    const servicesList = updatedData.services && typeof updatedData.services === 'string'
+      ? updatedData.services.split(',').map(s => s.trim()).filter(Boolean)
+      : (updatedData.services || []);
+    const brandsList = updatedData.brands && typeof updatedData.brands === 'string'
+      ? updatedData.brands.split(',').map(b => b.trim()).filter(Boolean)
+      : (updatedData.brands || []);
+
+    const formattedBranches = updatedData.branches
+      ? updatedData.branches.map(b => ({
+          ...b,
+          services: typeof b.services === 'string' ? b.services.split(',').map(s => s.trim()).filter(Boolean) : (b.services || []),
+          brands: typeof b.brands === 'string' ? b.brands.split(',').map(br => br.trim()).filter(Boolean) : (b.brands || []),
+          latitude: b.coordinates?.lat || b.latitude || 10.5891,
+          longitude: b.coordinates?.lng || b.longitude || 77.2412,
+        }))
+      : [];
+
+    return {
+      ...updatedData,
+      services: servicesList,
+      brands: brandsList,
+      branches: formattedBranches,
+      latitude: updatedData.coordinates?.lat,
+      longitude: updatedData.coordinates?.lng,
+    };
+  };
+
   const saveDraft = async (updatedData) => {
     try {
       if (isEditing) {
@@ -190,20 +303,9 @@ export default function AddBusiness() {
       const storedToken = localStorage.getItem('ubt_token') || token;
       if (!storedToken) return;
 
-      const servicesList = updatedData.services && typeof updatedData.services === 'string'
-        ? updatedData.services.split(',').map(s => s.trim())
-        : updatedData.services;
-      const brandsList = updatedData.brands && typeof updatedData.brands === 'string'
-        ? updatedData.brands.split(',').map(b => b.trim())
-        : updatedData.brands;
+      const payload = getPayload(updatedData);
 
-      const payload = {
-        ...updatedData,
-        services: servicesList,
-        brands: brandsList,
-      };
-
-      await fetch('http://localhost:5000/api/businesses/draft', {
+      const res = await fetch('http://localhost:5000/api/businesses/draft', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -211,6 +313,10 @@ export default function AddBusiness() {
         },
         body: JSON.stringify(payload),
       });
+      const data = await res.json();
+      if (res.ok && data.success && data.data && data.data._id) {
+        setFormData(prev => ({ ...prev, _id: data.data._id }));
+      }
     } catch (err) {
       console.warn('Failed to auto-save draft to server:', err);
     }
@@ -232,6 +338,12 @@ export default function AddBusiness() {
         const stepParam = parseInt(searchParams.get('step'));
         if (stepParam >= 1 && stepParam <= 5) {
           setCurrentStep(stepParam);
+        }
+
+        // Detect branch mode
+        const modeParam = searchParams.get('mode');
+        if (modeParam === 'branch') {
+          setIsBranchMode(true);
         }
 
         const storedDraft = localStorage.getItem('ubt_draft_business');
@@ -423,17 +535,35 @@ export default function AddBusiness() {
     setAutofillSuccess(false);
 
     try {
+      const activeToken = localStorage.getItem('ubt_token') || token;
       const res = await fetch('http://localhost:5000/api/businesses/google-autofill', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${activeToken}`,
         },
         body: JSON.stringify({ placeId }),
       });
       const data = await res.json();
       if (data.success) {
         const d = data.data;
+        const allowedPincodes = [
+          '642126', '642207', '642154', '642112', '642205', 
+          '642122', '642204', '642201', '642203', '642102', 
+          '642128', '642113', '642206', '642132', '642111'
+        ];
+
+        let placePincode = d.pincode ? d.pincode.replace(/\s+/g, '').slice(0, 6) : '';
+
+        if (placePincode) {
+          if (!allowedPincodes.includes(placePincode)) {
+            setError(`The selected business is located in pincode ${placePincode}, which is outside the eligible Udumalpet region.`);
+            setAutofillSuccess(false);
+            setAutofillLoading(false);
+            return;
+          }
+        }
+
         const updated = {
           ...formData,
           name: d.name || formData.name,
@@ -443,7 +573,7 @@ export default function AddBusiness() {
           email: d.email || formData.email,
           website: d.website || formData.website || '',
           locality: d.locality || formData.locality,
-          pincode: d.pincode || formData.pincode,
+          pincode: placePincode || formData.pincode,
           isAddressVerified: true,
           googlePlaceId: d.googlePlaceId || placeId,
           googleRating: d.googleRating || 0,
@@ -462,8 +592,10 @@ export default function AddBusiness() {
 
         setFormData(updated);
         
-        if (d.pincode) {
+        if (placePincode) {
           setIsPincodeVerified(true);
+        } else {
+          setError("Business found, but we couldn't automatically retrieve its pincode. Please select the correct pincode manually to verify.");
         }
 
         setLogoFile('google_autofill_logo.png');
@@ -511,6 +643,150 @@ export default function AddBusiness() {
       } catch (err) {
         setError("Business not found. Please enter details manually.");
         setAutofillLoading(false);
+      }
+    }
+  };
+
+  const handleBranchGoogleInputChange = async (val) => {
+    setBranchGoogleQuery(val);
+    setSelectedBranchPlaceId(null);
+    if (!val.trim()) {
+      setBranchGoogleSuggestions([]);
+      setShowBranchGoogleDropdown(false);
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5000/api/businesses/google-autocomplete?q=${encodeURIComponent(val)}`);
+      const data = await res.json();
+      if (data.success && data.predictions) {
+        setBranchGoogleSuggestions(data.predictions);
+        setShowBranchGoogleDropdown(true);
+      }
+    } catch (err) {
+      console.error('Error fetching autocomplete:', err);
+    }
+  };
+
+  const handleSelectBranchSuggestion = (sug) => {
+    setBranchGoogleQuery(sug.structured_formatting?.main_text || sug.description);
+    setSelectedBranchPlaceId(sug.place_id);
+    setShowBranchGoogleDropdown(false);
+  };
+
+  const selectGooglePlaceForBranch = async (placeId) => {
+    setShowBranchGoogleDropdown(false);
+    setBranchAutofillLoading(true);
+    setError('');
+    setBranchAutofillSuccess(false);
+
+    try {
+      const activeToken = localStorage.getItem('ubt_token') || token;
+      const res = await fetch('http://localhost:5000/api/businesses/google-autofill', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`,
+        },
+        body: JSON.stringify({ placeId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const d = data.data;
+        const allowedPincodes = [
+          '642126', '642207', '642154', '642112', '642205', 
+          '642122', '642204', '642201', '642203', '642102', 
+          '642128', '642113', '642206', '642132', '642111'
+        ];
+
+        let placePincode = d.pincode ? d.pincode.replace(/\s+/g, '').slice(0, 6) : '';
+
+        if (placePincode) {
+          if (!allowedPincodes.includes(placePincode)) {
+            setError(`The selected business is located in pincode ${placePincode}, which is outside the eligible Udumalpet region.`);
+            setBranchAutofillSuccess(false);
+            setBranchAutofillLoading(false);
+            return;
+          }
+        }
+
+        const updated = {
+          ...branchForm,
+          name: d.name || branchForm.name,
+          address: d.address || branchForm.address,
+          phone: d.phone || branchForm.phone,
+          whatsapp: d.phone || branchForm.whatsapp,
+          email: d.email || branchForm.email,
+          website: d.website || branchForm.website || '',
+          locality: d.locality || branchForm.locality,
+          pincode: placePincode || branchForm.pincode,
+          isAddressVerified: true,
+          googlePlaceId: d.googlePlaceId || placeId,
+          googleRating: d.googleRating || 0,
+          googleReviewsCount: d.googleReviewsCount || 0,
+          googleReviews: d.googleReviews || [],
+          coordinates: {
+            lat: d.latitude || d.coordinates?.lat || 10.585,
+            lng: d.longitude || d.coordinates?.lng || 77.251
+          },
+          timings: d.timings || d.openingHours || branchForm.timings,
+        };
+
+        if (d.name) {
+          setBranchGoogleQuery(d.name);
+        }
+
+        setBranchForm(updated);
+        
+        if (placePincode) {
+          setIsBranchEligibilityVerified(true);
+        } else {
+          setError("Business found, but we couldn't automatically retrieve its pincode. Please select the correct pincode manually to verify.");
+        }
+
+        setBranchLogoFile('google_autofill_logo.png');
+        setBranchCoverFile('google_autofill_cover.png');
+        setBranchGalleryFiles(['gallery1.png', 'gallery2.png', 'gallery3.png']);
+
+        setToastMessage("Branch information imported successfully.");
+        setTimeout(() => {
+          setToastMessage('');
+        }, 4000);
+
+        setBranchAutofillSuccess(true);
+      } else {
+        setError("Business not found. Please enter details manually.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Business not found. Please enter details manually.");
+    } finally {
+      setBranchAutofillLoading(false);
+    }
+  };
+
+  const handleBranchGoogleAutofill = async (e) => {
+    e.preventDefault();
+    if (!branchGoogleQuery) return;
+    setError('');
+    setBranchAutofillSuccess(false);
+
+    if (selectedBranchPlaceId) {
+      await selectGooglePlaceForBranch(selectedBranchPlaceId);
+    } else {
+      try {
+        setBranchAutofillLoading(true);
+        const res = await fetch(`http://localhost:5000/api/businesses/google-autocomplete?q=${encodeURIComponent(branchGoogleQuery)}`);
+        const data = await res.json();
+        if (data.success && data.predictions && data.predictions.length > 0) {
+          const firstSug = data.predictions[0];
+          await selectGooglePlaceForBranch(firstSug.place_id);
+        } else {
+          setError("Business not found. Please enter details manually.");
+          setBranchAutofillLoading(false);
+        }
+      } catch (err) {
+        setError("Business not found. Please enter details manually.");
+        setBranchAutofillLoading(false);
       }
     }
   };
@@ -601,6 +877,76 @@ export default function AddBusiness() {
     }
   };
 
+  const handleBranchInputChange = (e) => {
+    const { name, value } = e.target;
+    setBranchForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleBranchLogoUpload = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setBranchLogoFile(e.target.files[0].name);
+      setBranchForm(prev => ({ ...prev, logoUrl: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150&q=80' }));
+    }
+  };
+
+  const handleBranchCoverUpload = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setBranchCoverFile(e.target.files[0].name);
+      setBranchForm(prev => ({ ...prev, coverImageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80' }));
+    }
+  };
+
+  const handleBranchGalleryUpload = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const names = Array.from(e.target.files).map(f => f.name);
+      setBranchGalleryFiles(prev => [...prev, ...names]);
+      setBranchForm(prev => ({
+        ...prev,
+        galleryUrls: [
+          'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80',
+          'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&q=80',
+          'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80',
+        ]
+      }));
+    }
+  };
+
+  const handleBranchAddressSelect = (addrDetails) => {
+    setBranchForm(prev => ({
+      ...prev,
+      address: addrDetails.address,
+      locality: addrDetails.locality,
+      coordinates: addrDetails.coordinates,
+      isAddressVerified: addrDetails.isVerified,
+    }));
+  };
+
+  const validateBranchStep = () => {
+    setError('');
+    if (branchStep === 1) {
+      if (!branchForm.name || !branchForm.description) {
+        setError('Branch name and description are mandatory.');
+        return false;
+      }
+      if (!branchForm.pincode) {
+        setError('Please select a branch pincode.');
+        return false;
+      }
+    } else if (branchStep === 3) {
+      if (!branchForm.phone || !branchForm.address || !branchForm.locality) {
+        setError('Phone number, address, and locality are mandatory.');
+        return false;
+      }
+    } else if (branchStep === 4) {
+      const totalPhotos = (branchLogoFile ? 1 : 0) + (branchCoverFile ? 1 : 0) + branchGalleryFiles.length;
+      if (totalPhotos < 1) {
+        setError('Minimum 1 image is required for the branch profile.');
+        return false;
+      }
+    }
+    return true;
+  };
+
   const validateStep = () => {
     setError('');
     if (currentStep === 1) {
@@ -633,16 +979,84 @@ export default function AddBusiness() {
   };
 
   const handleNext = () => {
-    if (validateStep()) {
-      saveDraft(formData);
-      setCurrentStep((prev) => prev + 1);
+    if (isBranchMode) {
+      if (validateBranchStep()) {
+        if (branchStep < 4) {
+          setBranchStep((prev) => prev + 1);
+        } else {
+          // Finished branch step 4 -> save branch!
+          const updatedBranches = [...formData.branches];
+          if (editingBranchIndex !== null) {
+            updatedBranches[editingBranchIndex] = branchForm;
+          } else {
+            updatedBranches.push(branchForm);
+          }
+          const updatedFormData = { ...formData, branches: updatedBranches };
+          setFormData(updatedFormData);
+          
+          setError('');
+          setLoading(true);
+          
+          const saveBranchAsync = async () => {
+            try {
+              const activeToken = localStorage.getItem('ubt_token') || token;
+              const payload = getPayload(updatedFormData);
+              const url = updatedFormData._id 
+                ? `http://localhost:5000/api/businesses/${updatedFormData._id}` 
+                : 'http://localhost:5000/api/businesses';
+              const method = updatedFormData._id ? 'PUT' : 'POST';
+              
+              const res = await fetch(url, {
+                method,
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${activeToken}`,
+                },
+                body: JSON.stringify(payload),
+              });
+              const data = await res.json();
+              if (data.success) {
+                localStorage.removeItem('ubt_draft_business');
+                localStorage.removeItem('ubt_edit_draft');
+                setToastMessage("Branch saved successfully!");
+                setIsBranchMode(false);
+                setEditingBranchIndex(null);
+                setTimeout(() => {
+                  setToastMessage('');
+                  navigate('/dashboard?message=branch_added');
+                }, 1500);
+              } else {
+                setError(data.message || 'Failed to save branch.');
+              }
+            } catch (err) {
+              setError('Connection failed. Server might be offline.');
+            } finally {
+              setLoading(false);
+            }
+          };
+          saveBranchAsync();
+        }
+      }
+    } else {
+      if (validateStep()) {
+        saveDraft(formData);
+        setCurrentStep((prev) => prev + 1);
+      }
     }
   };
 
   const handleBack = () => {
     setError('');
-    saveDraft(formData);
-    setCurrentStep((prev) => prev - 1);
+    if (isBranchMode) {
+      if (branchStep > 1) {
+        setBranchStep((prev) => prev - 1);
+      } else {
+        setIsBranchEligibilityVerified(false);
+      }
+    } else {
+      saveDraft(formData);
+      setCurrentStep((prev) => prev - 1);
+    }
   };
 
   const handleFormSubmit = async () => {
@@ -650,21 +1064,7 @@ export default function AddBusiness() {
     setLoading(true);
 
     try {
-      // Parse list strings to arrays
-      const servicesList = formData.services && typeof formData.services === 'string'
-        ? formData.services.split(',').map(s => s.trim())
-        : (formData.services || []);
-      const brandsList = formData.brands && typeof formData.brands === 'string'
-        ? formData.brands.split(',').map(b => b.trim())
-        : (formData.brands || []);
-
-      const payload = {
-        ...formData,
-        services: servicesList,
-        brands: brandsList,
-        latitude: formData.coordinates?.lat,
-        longitude: formData.coordinates?.lng,
-      };
+      const payload = getPayload(formData);
 
       const url = isEditing
         ? `http://localhost:5000/api/businesses/${formData._id}`
@@ -715,7 +1115,7 @@ export default function AddBusiness() {
     }
   };
 
-  if (!isPincodeVerified) {
+  if (!isPincodeVerified && !isBranchMode) {
     return (
       <div className="w-full min-h-[85vh] bg-slate-50 py-16 px-4 md:px-8 font-sans flex items-center justify-center">
         <div className="max-w-md w-full bg-white border border-slate-200 rounded-3xl p-8 shadow-xl flex flex-col gap-6 animate-fadeIn">
@@ -726,76 +1126,458 @@ export default function AddBusiness() {
             </div>
             <h2 className="text-xl font-extrabold text-slate-800 tracking-tight mt-2">Location Eligibility Check</h2>
             <p className="text-slate-450 text-xs font-semibold leading-relaxed px-2">
-              Udumalpet Business Tour accepts listings situated strictly within the Udumalpet (UDT) region. Please select your pincode to begin.
+              Udumalpet Business Tour accepts listings situated strictly within the Udumalpet (UDT) region.
             </p>
           </div>
 
-          {/* Form */}
+          {/* Switcher Tabs - Google My Business on the LEFT */}
+          <div className="flex bg-slate-100 p-1 rounded-xl shadow-inner select-none">
+            <button
+              type="button"
+              onClick={() => {
+                setError('');
+                setEligibilityMethod('google');
+              }}
+              className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                eligibilityMethod === 'google'
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Google My Business
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setError('');
+                setEligibilityMethod('pincode');
+              }}
+              className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                eligibilityMethod === 'pincode'
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Verify via Pincode
+            </button>
+          </div>
+
+          {/* Form Content */}
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Select Business Pincode <span className="text-red-500">*</span></label>
-              <select
-                name="pincode"
-                value={formData.pincode}
-                onChange={handleInputChange}
-                className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
-              >
-                <option value="">-- Choose Pincode --</option>
-                <option value="642126">642126 - Udumalpet Main Town (Head Post Office, Bazaar, East, South, Eripalayam)</option>
-                <option value="642207">642207 - Pungamuthur (Erisinampatti, Devanurpudur, Vilamarathupatti, Udukkampalayam)</option>
-                <option value="642154">642154 - Bodipatti & Gandhi Nagar (Andiyagoundanur, Kuralkuttai, Thumbalapatti, Elayamuthur)</option>
-                <option value="642112">642112 - Dhali (Thirumoorthi Nagar, Jallipatti, Manupatti, Kurichikottai)</option>
-                <option value="642205">642205 - Pethappampatti (Kongalnagaram, Poosaripatti, Pudupalayam, Dhottampatti, Vadugapalayam)</option>
-                <option value="642122">642122 - Poolankinar (Anthiyur, Ganapathipalayam, Kodingium, Senjellappagoundenpudur)</option>
-                <option value="642204">642204 - Komaralingam & Kolumam (Rudrapalayam, Samarayapatti, Pappankulam, Uralpatti)</option>
-                <option value="642201">642201 - Gudimangalam (Amandakadavoo, Kondampatti, Kottamangalam, Periapatti)</option>
-                <option value="642203">642203 - Kaniyur (Kadathur, Myvadi, Karatholuvu, Thungavi, Metrathi)</option>
-                <option value="642102">642102 - Amaravathi Nagar (Kallapuram, Amaravathi Dam area)</option>
-                <option value="642128">642128 - Venkatesa Mills (S V Puram)</option>
-                <option value="642113">642113 - Madathukulam (Solamadevi, Sarkarkannadipudur)</option>
-                <option value="642206">642206 - Poolavadi (Aathukinathupatti, Munduvelampatti)</option>
-                <option value="642132">642132 - Valavadi (Dheepalapatti, Sundakkampalayam)</option>
-                <option value="642111">642111 - Agrahara Kannadiputhur (Krishnapuram)</option>
-              </select>
-            </div>
+            {eligibilityMethod === 'pincode' ? (
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Select Business Pincode <span className="text-red-500">*</span></label>
+                  <select
+                    name="pincode"
+                    value={formData.pincode}
+                    onChange={handleInputChange}
+                    className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
+                  >
+                    <option value="">-- Choose Pincode --</option>
+                    <option value="642126">642126 - Udumalpet Main Town (Head Post Office, Bazaar, East, South, Eripalayam)</option>
+                    <option value="642207">642207 - Pungamuthur (Erisinampatti, Devanurpudur, Vilamarathupatti, Udukkampalayam)</option>
+                    <option value="642154">642154 - Bodipatti & Gandhi Nagar (Andiyagoundanur, Kuralkuttai, Thumbalapatti, Elayamuthur)</option>
+                    <option value="642112">642112 - Dhali (Thirumoorthi Nagar, Jallipatti, Manupatti, Kurichikottai)</option>
+                    <option value="642205">642205 - Pethappampatti (Kongalnagaram, Poosaripatti, Pudupalayam, Dhottampatti, Vadugapalayam)</option>
+                    <option value="642122">642122 - Poolankinar (Anthiyur, Ganapathipalayam, Kodingium, Senjellappagoundenpudur)</option>
+                    <option value="642204">642204 - Komaralingam & Kolumam (Rudrapalayam, Samarayapatti, Pappankulam, Uralpatti)</option>
+                    <option value="642201">642201 - Gudimangalam (Amandakadavoo, Kondampatti, Kottamangalam, Periapatti)</option>
+                    <option value="642203">642203 - Kaniyur (Kadathur, Myvadi, Karatholuvu, Thungavi, Metrathi)</option>
+                    <option value="642102">642102 - Amaravathi Nagar (Kallapuram, Amaravathi Dam area)</option>
+                    <option value="642128">642128 - Venkatesa Mills (S V Puram)</option>
+                    <option value="642113">642113 - Madathukulam (Solamadevi, Sarkarkannadipudur)</option>
+                    <option value="642206">642206 - Poolavadi (Aathukinathupatti, Munduvelampatti)</option>
+                    <option value="642132">642132 - Valavadi (Dheepalapatti, Sundakkampalayam)</option>
+                    <option value="642111">642111 - Agrahara Kannadiputhur (Krishnapuram)</option>
+                  </select>
+                </div>
+                
+                <div className="bg-amber-50/50 border border-amber-200/60 rounded-2xl p-4.5 text-xs text-amber-800 leading-relaxed font-semibold text-left">
+                  <span className="font-extrabold text-amber-900 block mb-0.5">ℹ️ Only UDT Pincodes Allowed</span>
+                  Businesses registered outside Udumalpet division postal zones are automatically rejected by our administrators during the vetting phase.
+                </div>
 
-            {/* Note */}
-            <div className="bg-amber-50/50 border border-amber-200/60 rounded-2xl p-4.5 text-xs text-amber-800 leading-relaxed font-semibold">
-              <span className="font-extrabold text-amber-900 block mb-0.5">ℹ️ Only UDT Pincodes Allowed</span>
-              Businesses registered outside Udumalpet division postal zones are automatically rejected by our administrators during the vetting phase.
-            </div>
+                {error && (
+                  <div className="text-red-650 text-xs font-semibold bg-red-50 border border-red-200 p-3 rounded-xl flex items-center gap-2 text-left">
+                    <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
 
-            {error && (
-              <div className="text-red-650 text-xs font-semibold bg-red-50 border border-red-200 p-3 rounded-xl flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
-                <span>{error}</span>
+                <div className="flex items-center gap-3 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/dashboard')}
+                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 bg-white"
+                  >
+                    <ArrowLeft className="h-4 w-4" /> Back
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!formData.pincode) {
+                        setError("Please select a pincode to verify eligibility.");
+                        return;
+                      }
+                      setError("");
+                      setIsPincodeVerified(true);
+                      saveDraft({ ...formData });
+                    }}
+                    className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow"
+                  >
+                    Verify Pincode & Proceed
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4 text-left">
+                <div className="flex flex-col gap-1.5 relative">
+                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Search Business on Google <span className="text-red-500">*</span></label>
+                  <div className="flex items-center gap-2 w-full relative">
+                    <div className="relative flex-grow">
+                      <input
+                        type="text"
+                        placeholder="Type your business name..."
+                        value={googleQuery}
+                        onFocus={() => { if (googleSuggestions.length > 0) setShowGoogleDropdown(true); }}
+                        onChange={(e) => handleGoogleInputChange(e.target.value)}
+                        className="py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold w-full focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 animate-none"
+                      />
+                      {showGoogleDropdown && (
+                        <>
+                          <div className="fixed inset-0 z-20 cursor-default" onClick={() => setShowGoogleDropdown(false)} />
+                          <div className="absolute top-[100%] left-0 w-full bg-white border border-slate-200 rounded-xl shadow-xl mt-1 overflow-hidden z-30 flex flex-col max-h-60 overflow-y-auto animate-scaleUp font-sans">
+                            {googleSuggestions.map((sug) => (
+                              <button
+                                key={sug.place_id}
+                                type="button"
+                                onClick={() => handleSelectSuggestion(sug)}
+                                className="w-full text-left py-2.5 px-4 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex flex-col border-b border-slate-50 last:border-b-0 cursor-pointer border-none"
+                              >
+                                <span className="font-extrabold text-slate-800">{sug.structured_formatting?.main_text || sug.description}</span>
+                                <span className="text-[10px] text-slate-400 mt-0.5 font-medium">{sug.structured_formatting?.secondary_text || sug.description}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <button 
+                      onClick={handleGoogleAutofill}
+                      disabled={autofillLoading}
+                      className="py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm shrink-0 cursor-pointer disabled:opacity-70 flex items-center gap-1.5"
+                    >
+                      {autofillLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : 'Import'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4.5 text-xs text-slate-500 leading-relaxed font-semibold">
+                  <span className="font-extrabold text-slate-700 block mb-0.5">ℹ️ Instant Import</span>
+                  Searching and importing your business via Google automatically retrieves details like name, address, phone number, coordinates, and reviews!
+                </div>
+
+                {error && (
+                  <div className="text-red-650 text-xs font-semibold bg-red-50 border border-red-200 p-3 rounded-xl flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {autofillSuccess && (
+                  <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl p-3.5 text-xs font-semibold flex items-center gap-2.5 animate-slideDown">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                    <span>Success! Google Business details loaded beautifully. Click proceed to begin filling.</span>
+                  </div>
+                )}
+
+                {googleQuery && !formData.pincode && autofillSuccess && (
+                  <div className="flex flex-col gap-1.5 animate-fadeIn border-t border-slate-100 pt-3">
+                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Select Eligible Udumalpet Pincode <span className="text-red-500">*</span></label>
+                    <select
+                      name="pincode"
+                      value={formData.pincode}
+                      onChange={handleInputChange}
+                      className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
+                    >
+                      <option value="">-- Choose Pincode --</option>
+                      <option value="642126">642126 - Udumalpet Main Town</option>
+                      <option value="642207">642207 - Pungamuthur</option>
+                      <option value="642154">642154 - Bodipatti & Gandhi Nagar</option>
+                      <option value="642112">642112 - Dhali</option>
+                      <option value="642205">642205 - Pethappampatti</option>
+                      <option value="642122">642122 - Poolankinar</option>
+                      <option value="642204">642204 - Komaralingam & Kolumam</option>
+                      <option value="642201">642201 - Gudimangalam</option>
+                      <option value="642203">642203 - Kaniyur</option>
+                      <option value="642102">642102 - Amaravathi Nagar</option>
+                      <option value="642128">642128 - Venkatesa Mills</option>
+                      <option value="642113">642113 - Madathukulam</option>
+                      <option value="642206">642206 - Poolavadi</option>
+                      <option value="642132">642132 - Valavadi</option>
+                      <option value="642111">642111 - Agrahara Kannadiputhur</option>
+                    </select>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/dashboard')}
+                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 bg-white"
+                  >
+                    <ArrowLeft className="h-4 w-4" /> Back
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!formData.pincode) {
+                        setError("Please select/verify a valid Udumalpet pincode first.");
+                        return;
+                      }
+                      setError("");
+                      setIsPincodeVerified(true);
+                    }}
+                    className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow"
+                  >
+                    Proceed to Form
+                  </button>
+                </div>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-            <div className="flex items-center gap-3 mt-2">
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard')}
-                className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
-              >
-                <ArrowLeft className="h-4 w-4" /> Back
-              </button>
-              <button
-                onClick={() => {
-                  if (!formData.pincode) {
-                    setError("Please select a pincode to verify eligibility.");
-                    return;
-                  }
-                  setError("");
-                  setIsPincodeVerified(true);
-                  // Save draft immediately with verified pincode
-                  saveDraft({ ...formData });
-                }}
-                className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow"
-              >
-                Verify Pincode & Proceed
-              </button>
+  if (isBranchMode && !isBranchEligibilityVerified) {
+    return (
+      <div className="w-full min-h-[85vh] bg-slate-50 py-16 px-4 md:px-8 font-sans flex items-center justify-center animate-fadeIn">
+        <div className="max-w-md w-full bg-white border border-slate-200 rounded-3xl p-8 shadow-xl flex flex-col gap-6">
+          {/* Header */}
+          <div className="flex flex-col gap-2 text-center items-center">
+            <div className="h-12 w-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shadow-inner">
+              <ShieldCheck className="h-6 w-6" />
             </div>
+            <h2 className="text-xl font-extrabold text-slate-800 tracking-tight mt-2">Branch Location Eligibility Check</h2>
+            <p className="text-slate-450 text-xs font-semibold leading-relaxed px-2">
+              Udumalpet Business Tour branches must be situated strictly within the Udumalpet (UDT) region.
+            </p>
+          </div>
+
+          {/* Switcher Tabs */}
+          <div className="flex bg-slate-100 p-1 rounded-xl shadow-inner select-none">
+            <button
+              type="button"
+              onClick={() => {
+                setError('');
+                setBranchEligibilityMethod('google');
+              }}
+              className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                branchEligibilityMethod === 'google'
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Google My Business
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setError('');
+                setBranchEligibilityMethod('pincode');
+              }}
+              className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                branchEligibilityMethod === 'pincode'
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Verify via Pincode
+            </button>
+          </div>
+
+          {/* Form Content */}
+          <div className="flex flex-col gap-4">
+            {branchEligibilityMethod === 'pincode' ? (
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Select Branch Pincode <span className="text-red-500">*</span></label>
+                  <select
+                    name="pincode"
+                    value={branchForm.pincode}
+                    onChange={handleBranchInputChange}
+                    className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
+                  >
+                    <option value="">-- Choose Pincode --</option>
+                    <option value="642126">642126 - Udumalpet Main Town</option>
+                    <option value="642207">642207 - Pungamuthur</option>
+                    <option value="642154">642154 - Bodipatti & Gandhi Nagar</option>
+                    <option value="642112">642112 - Dhali</option>
+                    <option value="642205">642205 - Pethappampatti</option>
+                    <option value="642122">642122 - Poolankinar</option>
+                    <option value="642204">642204 - Komaralingam & Kolumam</option>
+                    <option value="642201">642201 - Gudimangalam</option>
+                    <option value="642203">642203 - Kaniyur</option>
+                    <option value="642102">642102 - Amaravathi Nagar</option>
+                    <option value="642128">642128 - Venkatesa Mills</option>
+                    <option value="642113">642113 - Madathukulam</option>
+                    <option value="642206">642206 - Poolavadi</option>
+                    <option value="642132">642132 - Valavadi</option>
+                    <option value="642111">642111 - Agrahara Kannadiputhur</option>
+                  </select>
+                </div>
+
+                <div className="bg-amber-50/50 border border-amber-200/60 rounded-2xl p-4.5 text-xs text-amber-800 leading-relaxed font-semibold text-left">
+                  <span className="font-extrabold text-amber-900 block mb-0.5">ℹ️ Only UDT Pincodes Allowed</span>
+                  Branches registered outside Udumalpet division postal zones are automatically rejected by our administrators during the vetting phase.
+                </div>
+
+                {error && (
+                  <div className="text-red-650 text-xs font-semibold bg-red-50 border border-red-200 p-3 rounded-xl flex items-center gap-2 text-left">
+                    <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/dashboard')}
+                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 bg-white"
+                  >
+                    <ArrowLeft className="h-4 w-4" /> Back
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!branchForm.pincode) {
+                        setError("Please select a pincode to verify eligibility.");
+                        return;
+                      }
+                      setError("");
+                      setIsBranchEligibilityVerified(true);
+                    }}
+                    className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow"
+                  >
+                    Verify Pincode & Proceed
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4 text-left">
+                <div className="flex flex-col gap-1.5 relative">
+                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Search Branch on Google <span className="text-red-500">*</span></label>
+                  <div className="flex items-center gap-2 w-full relative">
+                    <div className="relative flex-grow">
+                      <input
+                        type="text"
+                        placeholder="Type your branch name..."
+                        value={branchGoogleQuery}
+                        onFocus={() => { if (branchGoogleSuggestions.length > 0) setShowBranchGoogleDropdown(true); }}
+                        onChange={(e) => handleBranchGoogleInputChange(e.target.value)}
+                        className="py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold w-full focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                      />
+                      {showBranchGoogleDropdown && (
+                        <>
+                          <div className="fixed inset-0 z-20 cursor-default" onClick={() => setShowBranchGoogleDropdown(false)} />
+                          <div className="absolute top-[100%] left-0 w-full bg-white border border-slate-200 rounded-xl shadow-xl mt-1 overflow-hidden z-30 flex flex-col max-h-60 overflow-y-auto font-sans border-none">
+                            {branchGoogleSuggestions.map((sug) => (
+                              <button
+                                key={sug.place_id}
+                                type="button"
+                                onClick={() => handleSelectBranchSuggestion(sug)}
+                                className="w-full text-left py-2.5 px-4 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex flex-col border-none cursor-pointer"
+                              >
+                                <span className="font-extrabold text-slate-800">{sug.structured_formatting?.main_text || sug.description}</span>
+                                <span className="text-[10px] text-slate-400 mt-0.5 font-medium">{sug.structured_formatting?.secondary_text || sug.description}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <button 
+                      onClick={handleBranchGoogleAutofill}
+                      disabled={branchAutofillLoading}
+                      className="py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm shrink-0 cursor-pointer disabled:opacity-70 flex items-center gap-1.5"
+                    >
+                      {branchAutofillLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : 'Import'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4.5 text-xs text-slate-505 leading-relaxed font-semibold">
+                  <span className="font-extrabold text-slate-700 block mb-0.5">ℹ️ Instant Import</span>
+                  Searching and importing your branch via Google automatically retrieves details like name, address, phone number, coordinates, and reviews!
+                </div>
+
+                {error && (
+                  <div className="text-red-650 text-xs font-semibold bg-red-50 border border-red-200 p-3 rounded-xl flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {branchAutofillSuccess && (
+                  <div className="bg-emerald-50 border border-emerald-250 text-emerald-700 rounded-xl p-3.5 text-xs font-semibold flex items-center gap-2.5 animate-slideDown">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                    <span>Success! Google Business details loaded beautifully. Click proceed to begin filling.</span>
+                  </div>
+                )}
+
+                {branchGoogleQuery && !branchForm.pincode && branchAutofillSuccess && (
+                  <div className="flex flex-col gap-1.5 animate-fadeIn border-t border-slate-100 pt-3">
+                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Select Eligible Udumalpet Pincode <span className="text-red-500">*</span></label>
+                    <select
+                      name="pincode"
+                      value={branchForm.pincode}
+                      onChange={handleBranchInputChange}
+                      className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
+                    >
+                      <option value="">-- Choose Pincode --</option>
+                      <option value="642126">642126 - Udumalpet Main Town</option>
+                      <option value="642207">642207 - Pungamuthur</option>
+                      <option value="642154">642154 - Bodipatti & Gandhi Nagar</option>
+                      <option value="642112">642112 - Dhali</option>
+                      <option value="642205">642205 - Pethappampatti</option>
+                      <option value="642122">642122 - Poolankinar</option>
+                      <option value="642204">642204 - Komaralingam & Kolumam</option>
+                      <option value="642201">642201 - Gudimangalam</option>
+                      <option value="642203">642203 - Kaniyur</option>
+                      <option value="642102">642102 - Amaravathi Nagar</option>
+                      <option value="642128">642128 - Venkatesa Mills</option>
+                      <option value="642113">642113 - Madathukulam</option>
+                      <option value="642206">642206 - Poolavadi</option>
+                      <option value="642132">642132 - Valavadi</option>
+                      <option value="642111">642111 - Agrahara Kannadiputhur</option>
+                    </select>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/dashboard')}
+                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 bg-white"
+                  >
+                    <ArrowLeft className="h-4 w-4" /> Back
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!branchForm.pincode) {
+                        setError("Please select/verify a valid Udumalpet pincode first.");
+                        return;
+                      }
+                      setError("");
+                      setIsBranchEligibilityVerified(true);
+                    }}
+                    className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow"
+                  >
+                    Proceed to Form
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -834,19 +1616,18 @@ export default function AddBusiness() {
           
           {/* Left Column: Form & Stepper (lg:col-span-2) */}
           <div className="lg:col-span-2 flex flex-col gap-8">
-            
-            {/* Step-by-Step progress indicators */}
+                      {/* Step-by-Step progress indicators */}
             <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
               <div className="flex justify-between items-center relative">
                 <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-100 -translate-y-1/2 z-0" />
                 <div 
                   className="absolute top-1/2 left-0 h-0.5 bg-emerald-500 -translate-y-1/2 z-0 transition-all duration-300"
-                  style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
+                  style={{ width: `${(((isBranchMode ? branchStep : currentStep) - 1) / ((isBranchMode ? branchSteps : steps).length - 1)) * 100}%` }}
                 />
                 
-                {steps.map((step) => {
-                  const isActive = step.id === currentStep;
-                  const isCompleted = step.id < currentStep;
+                {(isBranchMode ? branchSteps : steps).map((step) => {
+                  const isActive = step.id === (isBranchMode ? branchStep : currentStep);
+                  const isCompleted = step.id < (isBranchMode ? branchStep : currentStep);
                   return (
                     <div key={step.id} className="flex flex-col items-center gap-2 relative z-10">
                       <div 
@@ -879,64 +1660,9 @@ export default function AddBusiness() {
 
             {/* Form Body Card */}
             <div className="bg-white border border-slate-200 rounded-3xl p-8 md:p-10 shadow-sm flex flex-col gap-6">
-              
               {/* STEP 1: Basic Info */}
-              {currentStep === 1 && (
+              {currentStep === 1 && !isBranchMode && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
-                  {/* Google Autofill Banner */}
-                  <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-extrabold text-emerald-600 uppercase tracking-widest flex items-center gap-1">
-                        <Sparkles className="h-3.5 w-3.5 fill-current animate-spin-slow" /> Google Place Auto-Fill
-                      </span>
-                      <h4 className="font-extrabold text-slate-800 text-sm">Save time with Google Business!</h4>
-                      <p className="text-slate-400 text-xs font-semibold">Enter your business name or Google Maps URL to auto-populate the form instantly.</p>
-                    </div>
-                    <div className="flex items-center gap-2.5 w-full md:w-auto relative">
-                      <div className="relative w-full md:w-60">
-                        <input
-                          type="text"
-                          placeholder="Search Business on Google..."
-                          value={googleQuery}
-                          onFocus={() => { if (googleSuggestions.length > 0) setShowGoogleDropdown(true); }}
-                          onChange={(e) => handleGoogleInputChange(e.target.value)}
-                          className="py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-xs font-semibold w-full focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                        />
-                        {showGoogleDropdown && (
-                          <>
-                            <div className="fixed inset-0 z-20 cursor-default" onClick={() => setShowGoogleDropdown(false)} />
-                            <div className="absolute top-[100%] left-0 w-full bg-white border border-slate-200 rounded-xl shadow-xl mt-1 overflow-hidden z-30 flex flex-col max-h-60 overflow-y-auto animate-scaleUp">
-                              {googleSuggestions.map((sug) => (
-                                <button
-                                  key={sug.place_id}
-                                  type="button"
-                                  onClick={() => handleSelectSuggestion(sug)}
-                                  className="w-full text-left py-2.5 px-4 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex flex-col border-b border-slate-50 last:border-b-0 cursor-pointer"
-                                >
-                                  <span className="font-extrabold text-slate-805">{sug.structured_formatting?.main_text || sug.description}</span>
-                                  <span className="text-[10px] text-slate-450 mt-0.5 font-medium">{sug.structured_formatting?.secondary_text || sug.description}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                      <button 
-                        onClick={handleGoogleAutofill}
-                        disabled={autofillLoading}
-                        className="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm shrink-0 cursor-pointer disabled:opacity-70 flex items-center gap-1.5"
-                      >
-                        {autofillLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : 'Import / Auto-Fill'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {autofillSuccess && (
-                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl p-3.5 text-xs font-semibold flex items-center gap-2.5 animate-slideDown">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-                      <span>Success! Google Business details loaded beautifully. Verify and click next!</span>
-                    </div>
-                  )}
 
                   <div className="flex flex-col gap-5">
                     <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
@@ -1146,7 +1872,7 @@ export default function AddBusiness() {
               )}
 
               {/* STEP 2: Business Details */}
-              {currentStep === 2 && (
+              {currentStep === 2 && !isBranchMode && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
                   <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
                     <h3 className="text-lg font-extrabold text-slate-800">2. Business Details</h3>
@@ -1221,11 +1947,43 @@ export default function AddBusiness() {
                       className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
                     />
                   </div>
+
+                  <div className="flex flex-col gap-3 mt-4 border-t border-slate-100 pt-5 text-left">
+                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase flex items-center gap-1.5">
+                      <Clock className="h-4 w-4 text-[#027244]" /> Business Hours (Monday - Sunday)
+                    </label>
+                    <span className="text-[10px] text-slate-400 font-bold -mt-2 block">Set opening and closing hours for each day. Use "Closed" if not operating on that day.</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50 p-4.5 rounded-2xl border border-slate-150">
+                      {formData.timings && typeof formData.timings === 'object' && !Array.isArray(formData.timings) ? (
+                        Object.keys(formData.timings).map((day) => (
+                          <div key={day} className="flex items-center justify-between gap-4">
+                            <span className="text-xs font-bold text-slate-600 w-24 shrink-0">{day}</span>
+                            <input
+                              type="text"
+                              value={formData.timings[day] || ''}
+                              onChange={(e) => {
+                                const newTimings = { ...formData.timings, [day]: e.target.value };
+                                const updated = { ...formData, timings: newTimings };
+                                setFormData(updated);
+                                saveDraft(updated);
+                              }}
+                              placeholder="e.g. 9:00 AM - 8:00 PM or Closed"
+                              className="flex-1 py-2 px-3 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                            />
+                          </div>
+                        ))
+                      ) : (
+                        <div className="col-span-2 text-slate-450 font-bold text-center">
+                          Standard timings configuration is unavailable.
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
               {/* STEP 3: Contact & Location */}
-              {currentStep === 3 && (
+              {currentStep === 3 && !isBranchMode && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
                   <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
                     <h3 className="text-lg font-extrabold text-slate-800">3. Contact & Location</h3>
@@ -1265,6 +2023,42 @@ export default function AddBusiness() {
                         value={formData.email}
                         onChange={handleInputChange}
                         placeholder="Enter email address"
+                        className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Website URL</label>
+                      <input
+                        type="text"
+                        name="website"
+                        value={formData.website || ''}
+                        onChange={handleInputChange}
+                        placeholder="e.g. www.store.com"
+                        className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Facebook URL</label>
+                      <input
+                        type="text"
+                        name="facebook"
+                        value={formData.facebook || ''}
+                        onChange={handleInputChange}
+                        placeholder="e.g. facebook.com/store"
+                        className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Instagram URL</label>
+                      <input
+                        type="text"
+                        name="instagram"
+                        value={formData.instagram || ''}
+                        onChange={handleInputChange}
+                        placeholder="e.g. instagram.com/store"
                         className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
                       />
                     </div>
@@ -1369,7 +2163,7 @@ export default function AddBusiness() {
               )}
 
               {/* STEP 4: Photos & Media */}
-              {currentStep === 4 && (
+              {currentStep === 4 && !isBranchMode && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
                   <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
                     <h3 className="text-lg font-extrabold text-slate-800">4. Photos & Brand Media</h3>
@@ -1442,12 +2236,407 @@ export default function AddBusiness() {
                 </div>
               )}
 
-              {/* STEP 5: Review & Submit */}
-              {currentStep === 5 && (
+              {/* BRANCH MODE STEPS */}
+              {isBranchMode && (
+                <div className="flex flex-col gap-6 animate-fadeIn">
+                  {/* Branch Step 1: Basic Info */}
+                  {branchStep === 1 && (
+                    <div className="flex flex-col gap-6">
+                      <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
+                        <h3 className="text-base font-extrabold text-slate-800">Branch Basic Information</h3>
+                        <p className="text-slate-450 text-xs font-semibold">Enter basic info for this branch location.</p>
+                      </div>
+                      
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Branch Name <span className="text-red-500">*</span></label>
+                        <input
+                          type="text"
+                          name="name"
+                          value={branchForm.name}
+                          onChange={handleBranchInputChange}
+                          placeholder="e.g. ABC Traders - Branch 1"
+                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Udumalpet Pincode Badge */}
+                        <div className="flex flex-col gap-1.5 md:col-span-2 text-left">
+                          <div className="flex justify-between items-center bg-emerald-50/30 border border-emerald-200/60 p-4 rounded-2xl select-none">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider">Verified Branch Pincode</span>
+                              <span className="text-xs text-slate-700 font-bold">{branchForm.pincode} - Udumalpet Area Eligible</span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setIsBranchEligibilityVerified(false);
+                                setBranchForm(prev => ({ ...prev, pincode: '' }));
+                              }}
+                              className="py-1.5 px-3.5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-[11px] rounded-xl transition-colors cursor-pointer"
+                            >
+                              Change Pincode
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Business Type</label>
+                          <select
+                            name="type"
+                            value={branchForm.type}
+                            onChange={handleBranchInputChange}
+                            className="w-full py-2.5 px-3 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
+                          >
+                            {['Individual / Sole Proprietor', 'Company / LLP', 'Partnership', 'Other'].map(opt => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Branch Description <span className="text-red-500">*</span></label>
+                        <textarea
+                          name="description"
+                          value={branchForm.description}
+                          onChange={handleBranchInputChange}
+                          rows="3"
+                          placeholder="Short description for this branch..."
+                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 resize-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Branch Step 2: Branch Details */}
+                  {branchStep === 2 && (
+                    <div className="flex flex-col gap-6">
+                      <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
+                        <h3 className="text-base font-extrabold text-slate-800">Branch Details</h3>
+                        <p className="text-slate-450 text-xs font-semibold">Enter services and brand info for this branch.</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Established Year</label>
+                          <input
+                            type="text"
+                            name="yearEstablished"
+                            value={branchForm.yearEstablished}
+                            onChange={handleBranchInputChange}
+                            placeholder="e.g. 2020"
+                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Employee Count</label>
+                          <select
+                            name="employeeCount"
+                            value={branchForm.employeeCount}
+                            onChange={handleBranchInputChange}
+                            className="w-full py-2.5 px-3 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
+                          >
+                            {['1 - 5', '5 - 10', '10 - 20', '20 - 50', '50 - 100', '100+'].map(ec => (
+                              <option key={ec} value={ec}>{ec}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">GST Number (Optional)</label>
+                          <input
+                            type="text"
+                            name="gstNumber"
+                            value={branchForm.gstNumber}
+                            onChange={handleBranchInputChange}
+                            placeholder="GSTIN"
+                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Services / Products Offered <span className="text-red-500">*</span></label>
+                        <input
+                          type="text"
+                          name="services"
+                          value={branchForm.services}
+                          onChange={handleBranchInputChange}
+                          placeholder="e.g. Retail, Wholesale, Home Delivery (Comma Separated)"
+                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Brands Dealt With (Optional)</label>
+                        <input
+                          type="text"
+                          name="brands"
+                          value={branchForm.brands}
+                          onChange={handleBranchInputChange}
+                          placeholder="e.g. Havells, LG, Samsung (Comma Separated)"
+                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-3 mt-4 border-t border-slate-100 pt-5 text-left">
+                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase flex items-center gap-1.5">
+                          <Clock className="h-4 w-4 text-[#027244]" /> Branch Operating Hours (Monday - Sunday)
+                        </label>
+                        <span className="text-[10px] text-slate-400 font-bold -mt-2 block">Set opening and closing hours for each day. Use "Closed" if not operating on that day.</span>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50 p-4.5 rounded-2xl border border-slate-150">
+                          {branchForm.timings && typeof branchForm.timings === 'object' && !Array.isArray(branchForm.timings) ? (
+                            Object.keys(branchForm.timings).map((day) => (
+                              <div key={day} className="flex items-center justify-between gap-4">
+                                <span className="text-xs font-bold text-slate-600 w-24 shrink-0">{day}</span>
+                                <input
+                                  type="text"
+                                  value={branchForm.timings[day] || ''}
+                                  onChange={(e) => {
+                                    const newTimings = { ...branchForm.timings, [day]: e.target.value };
+                                    setBranchForm(prev => ({ ...prev, timings: newTimings }));
+                                  }}
+                                  placeholder="e.g. 9:00 AM - 8:00 PM or Closed"
+                                  className="flex-1 py-2 px-3 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                                />
+                              </div>
+                            ))
+                          ) : (
+                            <div className="col-span-2 text-slate-450 font-bold text-center">
+                              Standard timings configuration is unavailable.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Branch Step 3: Contact & Location */}
+                  {branchStep === 3 && (
+                    <div className="flex flex-col gap-6">
+                      <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
+                        <h3 className="text-base font-extrabold text-slate-805">Branch Contact & Location</h3>
+                        <p className="text-slate-450 text-xs font-semibold">Enter contact number and select location on maps for this branch.</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Phone Number <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            name="phone"
+                            value={branchForm.phone}
+                            onChange={handleBranchInputChange}
+                            placeholder="Phone number"
+                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">WhatsApp Number</label>
+                          <input
+                            type="text"
+                            name="whatsapp"
+                            value={branchForm.whatsapp}
+                            onChange={handleBranchInputChange}
+                            placeholder="WhatsApp number"
+                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Email Address</label>
+                          <input
+                            type="email"
+                            name="email"
+                            value={branchForm.email}
+                            onChange={handleBranchInputChange}
+                            placeholder="Email address"
+                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Website URL</label>
+                          <input
+                            type="text"
+                            name="website"
+                            value={branchForm.website || ''}
+                            onChange={handleBranchInputChange}
+                            placeholder="e.g. www.store.com"
+                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Facebook URL</label>
+                          <input
+                            type="text"
+                            name="facebook"
+                            value={branchForm.facebook || ''}
+                            onChange={handleBranchInputChange}
+                            placeholder="e.g. facebook.com/store"
+                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Instagram URL</label>
+                          <input
+                            type="text"
+                            name="instagram"
+                            value={branchForm.instagram || ''}
+                            onChange={handleBranchInputChange}
+                            placeholder="e.g. instagram.com/store"
+                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Branch Address <span className="text-red-500">*</span></label>
+                        <textarea
+                          name="address"
+                          value={branchForm.address}
+                          onChange={handleBranchInputChange}
+                          rows="2"
+                          placeholder="Complete branch address"
+                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Area / Locality <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            name="locality"
+                            value={branchForm.locality}
+                            onChange={handleBranchInputChange}
+                            placeholder="e.g. Gandhi Nagar"
+                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">City / Town</label>
+                          <input
+                            type="text"
+                            disabled
+                            value="Udumalpet"
+                            className="w-full py-2.5 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 font-bold cursor-not-allowed"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Branch Autocomplete map */}
+                      <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 mt-2 flex flex-col gap-4">
+                        <div className="flex items-start gap-2 text-slate-705 text-left">
+                          <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-xs font-bold text-slate-800">Map & Address Autocomplete Lookup</span>
+                            <span className="text-[10px] text-slate-450 font-bold">Please select matching address from autocomplete suggestions below to verify details.</span>
+                          </div>
+                        </div>
+                        <MockGoogleMaps
+                          pincode={branchForm.pincode}
+                          onAddressSelect={handleBranchAddressSelect}
+                          initialAddress={branchForm.address}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Branch Step 4: Photos & Media */}
+                  {branchStep === 4 && (
+                    <div className="flex flex-col gap-6 animate-fadeIn">
+                      <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
+                        <h3 className="text-base font-extrabold text-slate-800">Branch Photos & Media</h3>
+                        <p className="text-slate-400 text-xs font-semibold">Upload photos of your branch store front or interiors.</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                        {/* Logo & Cover Upload */}
+                        <div className="flex flex-col gap-5 border border-slate-200/80 rounded-2xl p-5">
+                          <h4 className="font-extrabold text-sm text-slate-800">Identity Images</h4>
+                          
+                          {/* Logo */}
+                          <div className="flex flex-col gap-1.5 text-left">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Branch Logo (Optional)</span>
+                            <div className="flex items-center gap-4">
+                              <div className="h-16 w-16 bg-slate-55 border border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 font-bold text-xs select-none">
+                                {branchLogoFile ? '✓ Logo' : 'Logo'}
+                              </div>
+                              <label className="py-2.5 px-4 border border-slate-300 hover:bg-slate-50 font-bold text-xs rounded-xl cursor-pointer transition-colors shadow-sm text-slate-700">
+                                Choose File
+                                <input type="file" onChange={handleBranchLogoUpload} className="hidden" />
+                              </label>
+                            </div>
+                          </div>
+
+                          {/* Cover */}
+                          <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-4 text-left">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Branch Cover Image</span>
+                            <div className="flex items-center gap-4">
+                              <div className="h-16 w-32 bg-slate-55 border border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 font-bold text-xs select-none">
+                                {branchCoverFile ? '✓ Cover Loaded' : 'Cover'}
+                              </div>
+                              <label className="py-2.5 px-4 border border-slate-300 hover:bg-slate-50 font-bold text-xs rounded-xl cursor-pointer transition-colors shadow-sm text-slate-700">
+                                Choose File
+                                <input type="file" onChange={handleBranchCoverUpload} className="hidden" />
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Gallery Images Upload */}
+                        <div className="flex flex-col gap-5 border border-slate-200/80 rounded-2xl p-5 justify-between">
+                          <div>
+                            <h4 className="font-extrabold text-sm text-slate-800">Gallery Photos</h4>
+                            <p className="text-slate-450 text-xs mt-1 leading-normal font-semibold">Upload photos of store front, interiors or products.</p>
+                          </div>
+
+                          <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl transition-colors cursor-pointer bg-slate-50/50">
+                            <Upload className="h-8 w-8 text-slate-400 mb-2" />
+                            <label className="font-bold text-xs text-emerald-600 hover:underline cursor-pointer select-none">
+                              Click to upload branch gallery photos
+                              <input type="file" multiple onChange={handleBranchGalleryUpload} className="hidden" />
+                            </label>
+                          </div>
+
+                          {/* Uploaded files count badge */}
+                          <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs text-slate-600 font-semibold">
+                            <span className="font-bold">Total uploaded photos:</span>
+                            <span className="bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded-full">
+                              {(branchLogoFile ? 1 : 0) + (branchCoverFile ? 1 : 0) + branchGalleryFiles.length}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* STEP 5: Choose Plan Inline */}
+              {currentStep === 5 && !isBranchMode && (
+                <div className="flex flex-col gap-6 animate-fadeIn">
+                  <ChoosePlan
+                    isStep={true}
+                    initialBusiness={formData}
+                    onNext={(updatedBiz) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        subscriptionStatus: updatedBiz?.subscriptionStatus || 'active',
+                        isPremium: updatedBiz?.isPremium !== undefined ? updatedBiz.isPremium : true
+                      }));
+                      setCurrentStep(6);
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* STEP 6: Review & Submit */}
+              {currentStep === 6 && !isBranchMode && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
                   <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
-                    <h3 className="text-lg font-extrabold text-slate-800">5. Review & Submit</h3>
-                    <p className="text-slate-400 text-xs font-semibold">Review your information carefully before submitting.</p>
+                    <h3 className="text-lg font-extrabold text-slate-805">6. Review & Submit</h3>
+                    <p className="text-slate-450 text-xs font-semibold">Review your information carefully before submitting.</p>
                   </div>
                   
                   <div className="bg-amber-50 border border-amber-200/80 text-amber-850 rounded-2xl p-4.5 text-xs font-semibold flex items-start gap-2.5 shadow-sm">
@@ -1457,7 +2646,7 @@ export default function AddBusiness() {
 
                   {/* Beautiful interactive preview layout */}
                   <div className="border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-                    <div className="bg-slate-900 text-white p-6 flex justify-between items-center">
+                    <div className="bg-slate-900 text-white p-6 flex justify-between items-center text-left">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest leading-none">UBT Live Preview</span>
                         <span className="font-extrabold text-lg leading-tight mt-1">{formData.name || 'Your Business Name'}</span>
@@ -1468,10 +2657,10 @@ export default function AddBusiness() {
                       </span>
                     </div>
                     
-                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-600">
+                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-600 text-left">
                       <div className="flex flex-col gap-3">
                         <div className="flex flex-col gap-1">
-                          <span className="font-extrabold text-slate-400 uppercase text-[9px] tracking-wider">Description</span>
+                          <span className="font-extrabold text-slate-400 uppercase text-[9px] tracking-wider font-sans">Description</span>
                           <p className="font-semibold text-slate-700 leading-relaxed text-justify">{formData.description || 'No description provided yet.'}</p>
                         </div>
                         <div className="grid grid-cols-2 gap-4 mt-1.5">
@@ -1511,10 +2700,10 @@ export default function AddBusiness() {
 
               {/* Navigation Buttons */}
               <div className="border-t border-slate-100 pt-6 mt-4 flex justify-between items-center bg-white">
-                {currentStep > 1 ? (
+                {(isBranchMode || currentStep > 1) ? (
                   <button 
                     onClick={handleBack}
-                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer text-slate-700"
+                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer text-slate-700 bg-white"
                   >
                     <ArrowLeft className="h-4 w-4" /> Back
                   </button>
@@ -1524,30 +2713,41 @@ export default function AddBusiness() {
                       setIsPincodeVerified(false);
                       setFormData(prev => ({ ...prev, pincode: '' }));
                     }}
-                    className="py-3.5 px-5 border border-slate-350 hover:bg-slate-50 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer text-slate-700"
+                    className="py-3.5 px-5 border border-slate-350 hover:bg-slate-50 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer text-slate-700 bg-white"
                   >
                     <ArrowLeft className="h-4 w-4" /> Change Pincode
                   </button>
                 )}
 
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      saveDraft(formData);
-                      alert("Progress saved as a draft successfully!");
-                    }}
-                    className="py-3.5 px-5 border border-slate-300 hover:border-slate-400 text-slate-600 hover:text-slate-800 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white"
-                  >
-                    Save & Continue Later
-                  </button>
+                  {!isBranchMode && (
+                    <button
+                      onClick={() => {
+                        saveDraft(formData);
+                        alert("Progress saved as a draft successfully!");
+                      }}
+                      className="py-3.5 px-5 border border-slate-300 hover:border-slate-400 text-slate-655 hover:text-slate-800 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white"
+                    >
+                      Save & Continue Later
+                    </button>
+                  )}
 
-                  {currentStep < steps.length ? (
+                  {isBranchMode ? (
                     <button 
                       onClick={handleNext}
                       className="py-3.5 px-6 bg-[#027244] hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow shadow-emerald-700/20 cursor-pointer"
                     >
-                      Save & Continue <ArrowRight className="h-4 w-4" />
+                      {branchStep < 4 ? 'Save & Continue' : 'Save Branch'} <ArrowRight className="h-4 w-4" />
                     </button>
+                  ) : currentStep < steps.length ? (
+                    currentStep !== 5 && (
+                      <button 
+                        onClick={handleNext}
+                        className="py-3.5 px-6 bg-[#027244] hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow shadow-emerald-700/20 cursor-pointer"
+                      >
+                        Save & Continue <ArrowRight className="h-4 w-4" />
+                      </button>
+                    )
                   ) : (
                     <button 
                       onClick={handleFormSubmit}
@@ -1648,25 +2848,25 @@ export default function AddBusiness() {
               <h4 className="font-extrabold text-[#001c41] text-[15px]">Your Progress</h4>
               <div className="flex flex-col gap-2">
                 <div className="text-xs font-semibold text-slate-500">
-                  Step {currentStep} of 5 Completed
+                  Step {isBranchMode ? branchStep : currentStep} of {isBranchMode ? branchSteps.length : steps.length} Completed
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex-grow h-2 bg-slate-200/70 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-[#137333] transition-all duration-300 rounded-full" 
-                      style={{ width: `${currentStep * 20}%` }}
+                      style={{ width: `${((isBranchMode ? branchStep : currentStep) / (isBranchMode ? branchSteps.length : steps.length)) * 100}%` }}
                     />
                   </div>
                   <span className="text-[#001c41] font-black text-xs min-w-[32px] text-right">
-                    {currentStep * 20}%
+                    {Math.round(((isBranchMode ? branchStep : currentStep) / (isBranchMode ? branchSteps.length : steps.length)) * 100)}%
                   </span>
                 </div>
               </div>
               
               <div className="flex flex-col gap-3.5 mt-2">
-                {steps.map((step) => {
-                  const isActive = step.id === currentStep;
-                  const isCompleted = step.id < currentStep;
+                {(isBranchMode ? branchSteps : steps).map((step) => {
+                  const isActive = step.id === (isBranchMode ? branchStep : currentStep);
+                  const isCompleted = step.id < (isBranchMode ? branchStep : currentStep);
                   return (
                     <div key={step.id} className="flex items-center gap-3">
                       <div 

@@ -52,6 +52,10 @@ const BusinessSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
+  highlights: {
+    type: [String],
+    default: [],
+  },
   phone: {
     type: String,
     trim: true,
@@ -65,6 +69,14 @@ const BusinessSchema = new mongoose.Schema({
     trim: true,
   },
   website: {
+    type: String,
+    trim: true,
+  },
+  instagram: {
+    type: String,
+    trim: true,
+  },
+  facebook: {
     type: String,
     trim: true,
   },
@@ -194,7 +206,18 @@ const BusinessSchema = new mongoose.Schema({
   tags: {
     type: [String],
     default: [],
-  }
+  },
+  offers: [
+    {
+      id: { type: String },
+      title: { type: String },
+      description: { type: String },
+      rate: { type: String },
+      expiry: { type: String },
+      active: { type: Boolean, default: true },
+      banner: { type: String }
+    }
+  ]
 }, {
   timestamps: true
 });

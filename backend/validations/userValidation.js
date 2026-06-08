@@ -24,7 +24,10 @@ const registerSchema = Joi.object({
     'any.required': 'Password is required'
   }),
   role: Joi.string().valid('visitor', 'merchant', 'owner', 'admin', 'superadmin').default('owner'),
-  referralCode: Joi.string().trim().optional()
+  referralCode: Joi.string().trim().optional(),
+  website: Joi.string().trim().allow('').optional(),
+  instagram: Joi.string().trim().allow('').optional(),
+  facebook: Joi.string().trim().allow('').optional()
 }).or('name', 'fullName').or('phone', 'mobileNumber');
 
 const loginSchema = Joi.object({

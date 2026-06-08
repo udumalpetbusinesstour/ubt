@@ -31,7 +31,8 @@ router.post('/', protect, upload.single('image'), (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Image uploaded successfully',
-      url: fileUrl
+      url: fileUrl,
+      fileUrl: fileUrl
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

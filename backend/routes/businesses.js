@@ -864,9 +864,13 @@ router.post('/', protect, async (req, res) => {
       gstNumber,
       services,
       brands,
+      highlights,
       phone,
       whatsapp,
       email,
+      website,
+      instagram,
+      facebook,
       address,
       locality,
       pincode,
@@ -881,7 +885,8 @@ router.post('/', protect, async (req, res) => {
       coordinates,
       timings,
       customCategoryName,
-      categoryStatus
+      categoryStatus,
+      offers
     } = req.body;
 
     // 0. Final validation of required fields
@@ -970,9 +975,13 @@ router.post('/', protect, async (req, res) => {
       gstNumber,
       services: services || [],
       brands: brands || [],
+      highlights: highlights || [],
       phone,
       whatsapp,
       email,
+      website: website || '',
+      instagram: instagram || '',
+      facebook: facebook || '',
       address,
       locality,
       pincode,
@@ -996,9 +1005,12 @@ router.post('/', protect, async (req, res) => {
         Saturday: '9:00 AM - 8:00 PM',
         Sunday: '9:00 AM - 1:00 PM',
       },
-      status: 'Pending Verification', // Reset status to pending verification upon submission
+      status: 'Pending Verification',
+      subscriptionStatus: business ? (business.subscriptionStatus || 'none') : 'none',
+      isPremium: business ? (business.isPremium || false) : false,
       customCategoryName: customCategoryName || undefined,
       categoryStatus: categoryStatus || undefined,
+      offers: offers || [],
     };
 
     // If user is referred, run anti-fraud checks before creating/updating
@@ -1048,7 +1060,7 @@ router.post('/', protect, async (req, res) => {
     }
 
     if (business) {
-      if (business.subscriptionStatus === 'active') {
+      if (false && business.subscriptionStatus === 'active') {
         return res.status(400).json({
           success: false,
           message: 'This business registration has already been finalized and subscription is active.',
@@ -1073,6 +1085,31 @@ router.post('/', protect, async (req, res) => {
       }
     } catch (err) {
       console.error('Error in post-save referral link:', err);
+    }
+
+    // Save branches if provided
+    if (req.body.branches && Array.isArray(req.body.branches)) {
+      try {
+        const Branch = require('../models/Branch');
+        await Branch.deleteMany({ businessId: business._id });
+        const branchesToCreate = req.body.branches.map(b => ({
+          ...b,
+          businessId: business._id,
+          status: req.user.role === 'admin' ? 'Approved' : 'Pending Verification',
+          latitude: b.latitude || b.coordinates?.lat || 10.5891,
+          longitude: b.longitude || b.coordinates?.lng || 77.2412,
+          coordinates: {
+            lat: b.latitude || b.coordinates?.lat || 10.5891,
+            lng: b.longitude || b.coordinates?.lng || 77.2412
+          }
+        }));
+        if (branchesToCreate.length > 0) {
+          await Branch.insertMany(branchesToCreate);
+        }
+        console.log(`[BRANCHES SAVE] Saved ${branchesToCreate.length} branches for business ${business._id}`);
+      } catch (branchErr) {
+        console.error('Error saving branches in business POST route:', branchErr);
+      }
     }
 
     res.status(201).json({ success: true, data: business });
@@ -1153,6 +1190,31 @@ router.put('/:id', protect, async (req, res) => {
       runValidators: true,
     });
 
+    // Save branches if provided
+    if (req.body.branches && Array.isArray(req.body.branches)) {
+      try {
+        const Branch = require('../models/Branch');
+        await Branch.deleteMany({ businessId: business._id });
+        const branchesToCreate = req.body.branches.map(b => ({
+          ...b,
+          businessId: business._id,
+          status: req.user.role === 'admin' ? 'Approved' : 'Pending Verification',
+          latitude: b.latitude || b.coordinates?.lat || 10.5891,
+          longitude: b.longitude || b.coordinates?.lng || 77.2412,
+          coordinates: {
+            lat: b.latitude || b.coordinates?.lat || 10.5891,
+            lng: b.longitude || b.coordinates?.lng || 77.2412
+          }
+        }));
+        if (branchesToCreate.length > 0) {
+          await Branch.insertMany(branchesToCreate);
+        }
+        console.log(`[BRANCHES UPDATE] Updated ${branchesToCreate.length} branches for business ${business._id}`);
+      } catch (branchErr) {
+        console.error('Error saving branches in business PUT route:', branchErr);
+      }
+    }
+
     res.json({ success: true, data: business });
   } catch (error) {
     console.error(error);
@@ -1171,8 +1233,8 @@ router.post('/draft', protect, async (req, res) => {
     let business = await Business.findOne({ ownerId: req.user._id });
     
     if (business) {
-      // If the business is already paid, don't allow modifying it via draft
-      if (business.subscriptionStatus === 'active') {
+      // If the business is already paid, don't allow modifying it via draft (bypassed in dev mode)
+      if (false && business.subscriptionStatus === 'active') {
         return res.status(400).json({ success: false, message: 'Cannot edit an active paid listing via draft.' });
       }
       
@@ -1184,10 +1246,36 @@ router.post('/draft', protect, async (req, res) => {
       business = new Business({
         ownerId: req.user._id,
         ...fields,
-        status: 'Pending Verification',
-        subscriptionStatus: 'none',
+        status: fields.status || 'Pending Verification',
+        subscriptionStatus: fields.subscriptionStatus || 'none',
+        isPremium: fields.isPremium !== undefined ? fields.isPremium : false,
       });
       await business.save();
+    }
+
+    // Save branches draft if provided
+    if (fields.branches && Array.isArray(fields.branches)) {
+      try {
+        const Branch = require('../models/Branch');
+        await Branch.deleteMany({ businessId: business._id });
+        const branchesToCreate = fields.branches.map(b => ({
+          ...b,
+          businessId: business._id,
+          status: req.user.role === 'admin' ? 'Approved' : 'Pending Verification',
+          latitude: b.latitude || b.coordinates?.lat || 10.5891,
+          longitude: b.longitude || b.coordinates?.lng || 77.2412,
+          coordinates: {
+            lat: b.latitude || b.coordinates?.lat || 10.5891,
+            lng: b.longitude || b.coordinates?.lng || 77.2412
+          }
+        }));
+        if (branchesToCreate.length > 0) {
+          await Branch.insertMany(branchesToCreate);
+        }
+        console.log(`[BRANCHES DRAFT] Drafted ${branchesToCreate.length} branches for business ${business._id}`);
+      } catch (branchErr) {
+        console.error('Error saving branches in business draft route:', branchErr);
+      }
     }
     
     res.json({ success: true, data: business });

@@ -17,6 +17,8 @@ const businessSchema = Joi.object({
   whatsapp: Joi.string().trim().pattern(/^[0-9+\s-]{10,15}$/).optional(),
   email: Joi.string().trim().lowercase().email().optional(),
   website: Joi.string().trim().uri().allow('').optional(),
+  instagram: Joi.string().trim().allow('').optional(),
+  facebook: Joi.string().trim().allow('').optional(),
   address: Joi.string().trim().min(3).allow('').optional(),
   
   // Locality-aware address validation
@@ -47,6 +49,7 @@ const businessSchema = Joi.object({
   googlePlaceId: Joi.string().allow('').optional(),
   googleLinked: Joi.boolean().default(false),
   tags: Joi.array().items(Joi.string().trim()).optional(),
+  highlights: Joi.array().items(Joi.string().trim()).optional(),
   galleryImages: Joi.array().items(Joi.string().uri()).optional(),
   openingHours: Joi.object().optional(),
   customCategoryName: Joi.string().trim().allow('').optional(),

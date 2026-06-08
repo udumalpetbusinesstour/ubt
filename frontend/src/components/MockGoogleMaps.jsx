@@ -103,9 +103,9 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
     }
   }, [initialAddress]);
 
-  // Reset verification if pincode changes
+  // Reset verification if pincode changes (only if pincode is actually provided)
   useEffect(() => {
-    if (pincode && addressInput) {
+    if (pincode && addressInput && isVerified) {
       setIsVerified(false);
       setSuggestions([]);
       setError('');
@@ -117,11 +117,6 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
     setAddressInput(val);
     setIsVerified(false);
     setError('');
- 
-    if (!pincode) {
-      setError('Please select a pincode first to activate autocomplete.');
-      return;
-    }
  
     // Propagate free-form address value to parent state immediately
     if (onAddressSelect) {
@@ -135,7 +130,8 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
  
     if (val.length > 2) {
       try {
-        const res = await fetch(`http://localhost:5000/api/businesses/google-autocomplete?q=${encodeURIComponent(val)}&types=geocode`);
+        const query = pincode ? `?q=${encodeURIComponent(val)}&types=geocode&pincode=${pincode}` : `?q=${encodeURIComponent(val)}&types=geocode`;
+        const res = await fetch(`http://localhost:5000/api/businesses/google-autocomplete${query}`);
         const data = await res.json();
         if (data.success && data.predictions) {
           setSuggestions(data.predictions);
@@ -167,6 +163,7 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
           onAddressSelect({
             address: d.address,
             locality: d.locality || 'Udumalpet',
+            pincode: d.pincode || '',
             coordinates: d.coordinates || { lat: d.latitude, lng: d.longitude },
             isVerified: true,
           });
@@ -189,8 +186,7 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
           type="text"
           value={addressInput}
           onChange={handleInputChange}
-          placeholder={pincode ? "Type address manually or select suggestion..." : "Select Pincode first..."}
-          disabled={!pincode}
+          placeholder="Type address manually or search on Google..."
           className={`w-full py-2.5 pl-3 pr-28 text-sm bg-white border rounded shadow-sm focus:outline-none focus:ring-2 transition-all ${
             isVerified 
               ? 'border-emerald-500 focus:ring-emerald-200' 
@@ -207,12 +203,12 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
               <CheckCircle className="h-3 w-3 text-emerald-600" />
               Verified Address
             </span>
-          ) : pincode ? (
+          ) : (
             <span className="text-slate-400 text-[10px] font-medium flex items-center gap-1">
               <Search className="h-3 w-3 text-slate-400" />
               Google Autocomplete
             </span>
-          ) : null}
+          )}
         </div>
       </div>
  

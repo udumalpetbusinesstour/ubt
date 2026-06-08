@@ -212,6 +212,7 @@ router.post('/', protect, async (req, res) => {
  
     // Find user's business listing to link profile
     const userBusiness = await Business.findOne({ ownerId: req.user._id });
+    const isPremium = userBusiness && userBusiness.subscriptionStatus === 'active';
  
     const event = await Event.create({
       ownerId: req.user._id,
@@ -227,7 +228,7 @@ router.post('/', protect, async (req, res) => {
       duration: duration || '',
       status: 'Pending Review',
       isCompleted: false,
-      paymentStatus: 'Pending',
+      paymentStatus: isPremium ? 'Free' : 'Pending',
       likes: [],
       comments: [],
     });

@@ -6,7 +6,7 @@ import {
   CheckCircle, X, Phone, Star, MapPin
 } from 'lucide-react';
 
-export default function ChoosePlan() {
+export default function ChoosePlan({ isStep = false, onNext = null, initialBusiness = null }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const flowParam = searchParams.get('flow') || 'general';
@@ -53,40 +53,45 @@ export default function ChoosePlan() {
       setError('');
 
       if (authToken) {
-        // 1. Fetch user's business listing
-        const res = await fetch('http://localhost:5000/api/businesses/my-business', {
-          headers: { Authorization: `Bearer ${authToken}` },
-        });
-        const data = await res.json();
-        
         let currentBiz = null;
-        if (data.success && data.data) {
-          currentBiz = data.data;
+        if (initialBusiness && initialBusiness._id) {
+          currentBiz = initialBusiness;
           setBusiness(currentBiz);
         } else {
-          // 2. Create a default business draft if one does not exist
-          const draftRes = await fetch('http://localhost:5000/api/businesses/draft', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${authToken}`,
-            },
-            body: JSON.stringify({
-              name: '',
-              city: 'Udumalpet',
-              state: 'Tamil Nadu',
-              description: '',
-              phone: '',
-              whatsapp: '',
-              pincode: '',
-            }),
+          // 1. Fetch user's business listing
+          const res = await fetch('http://localhost:5000/api/businesses/my-business', {
+            headers: { Authorization: `Bearer ${authToken}` },
           });
-          const draftData = await draftRes.json();
-          if (draftData.success && draftData.data) {
-            currentBiz = draftData.data;
+          const data = await res.json();
+          
+          if (data.success && data.data) {
+            currentBiz = data.data;
             setBusiness(currentBiz);
           } else {
-            setError('Could not initialize business registration draft.');
+            // 2. Create a default business draft if one does not exist
+            const draftRes = await fetch('http://localhost:5000/api/businesses/draft', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${authToken}`,
+              },
+              body: JSON.stringify({
+                name: '',
+                city: 'Udumalpet',
+                state: 'Tamil Nadu',
+                description: '',
+                phone: '',
+                whatsapp: '',
+                pincode: '',
+              }),
+            });
+            const draftData = await draftRes.json();
+            if (draftData.success && draftData.data) {
+              currentBiz = draftData.data;
+              setBusiness(currentBiz);
+            } else {
+              setError('Could not initialize business registration draft.');
+            }
           }
         }
 
@@ -223,9 +228,15 @@ export default function ChoosePlan() {
         const verifyData = await verifyRes.json();
         if (verifyData.success) {
           setPaymentSuccess(true);
-          setTimeout(() => {
-            navigate('/add-business');
-          }, 1500);
+          if (isStep && onNext) {
+            setTimeout(() => {
+              onNext(verifyData.business);
+            }, 1500);
+          } else {
+            setTimeout(() => {
+              navigate('/add-business');
+            }, 1500);
+          }
         } else {
           setError(verifyData.message || 'Points redemption failed.');
         }
@@ -275,9 +286,15 @@ export default function ChoosePlan() {
             const verifyData = await verifyRes.json();
             if (verifyData.success) {
               setPaymentSuccess(true);
-              setTimeout(() => {
-                navigate('/add-business');
-              }, 1500);
+              if (isStep && onNext) {
+                setTimeout(() => {
+                  onNext(verifyData.business);
+                }, 1500);
+              } else {
+                setTimeout(() => {
+                  navigate('/add-business');
+                }, 1500);
+              }
             } else {
               setError('Payment verification failed.');
             }
@@ -330,9 +347,15 @@ export default function ChoosePlan() {
         const verifyData = await verifyRes.json();
         if (verifyData.success) {
           setPaymentSuccess(true);
-          setTimeout(() => {
-            navigate('/add-business');
-          }, 1500);
+          if (isStep && onNext) {
+            setTimeout(() => {
+              onNext(verifyData.business);
+            }, 1500);
+          } else {
+            setTimeout(() => {
+              navigate('/add-business');
+            }, 1500);
+          }
         } else {
           setError('Payment verification failed.');
         }
@@ -346,7 +369,11 @@ export default function ChoosePlan() {
   };
 
   const handleSkip = () => {
-    navigate('/add-business');
+    if (isStep && onNext) {
+      onNext(business);
+    } else {
+      navigate('/add-business');
+    }
   };
 
   if (loading) {
@@ -358,28 +385,53 @@ export default function ChoosePlan() {
     );
   }
 
-  return (
-    <div className="w-full min-h-screen bg-[#F8FAFC] pt-6 pb-12 px-4 md:px-8 font-sans flex flex-col items-center">
-      
-      {/* Header and Skip options */}
-      <div className="max-w-5xl w-full flex justify-between items-center mb-6">
-        <Link 
-          to="/" 
-          className="flex items-center gap-2 text-xs font-extrabold text-[#001c41] hover:text-[#027244] transition-all bg-white py-2.5 px-4 rounded-xl border border-slate-200 shadow-sm hover:shadow group"
-        >
-          <ArrowLeft className="h-4 w-4 text-slate-400 group-hover:text-[#027244] transition-colors" />
-          <span>Back to Home</span>
-        </Link>
-        <button 
-          onClick={handleSkip}
-          id="skip-payment-btn"
-          className="text-xs font-extrabold text-slate-650 hover:text-[#027244] transition-all bg-white py-2.5 px-5 rounded-xl border border-slate-250 shadow-sm hover:border-[#027244] cursor-pointer"
-        >
-          Skip for now <span className="font-sans ml-0.5">➔</span>
-        </button>
+  if (business?.subscriptionStatus === 'active') {
+    return (
+      <div className="bg-white border border-slate-200 rounded-[24px] p-8 text-center flex flex-col items-center gap-5 shadow-sm max-w-md mx-auto w-full">
+        <div className="h-16 w-16 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shadow-inner">
+          <CheckCircle className="h-8 w-8" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <h3 className="font-extrabold text-slate-800 text-lg">Active Premium Subscription</h3>
+          <p className="text-slate-500 text-xs font-semibold">Your business listing already has active premium status! All priority features are enabled.</p>
+        </div>
+        {isStep && onNext && (
+          <button
+            type="button"
+            onClick={() => onNext(business)}
+            className="py-3 px-8 bg-[#027244] hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            Continue to Review <ArrowRight className="h-4 w-4" />
+          </button>
+        )}
       </div>
+    );
+  }
 
-      <div className="max-w-5xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-10 flex flex-col gap-6 relative">
+  return (
+    <div className={isStep ? "w-full bg-white flex flex-col gap-6" : "w-full min-h-screen bg-[#F8FAFC] pt-6 pb-12 px-4 md:px-8 font-sans flex flex-col items-center"}>
+      
+      {!isStep && (
+        /* Header and Skip options */
+        <div className="max-w-5xl w-full flex justify-between items-center mb-6">
+          <Link 
+            to="/" 
+            className="flex items-center gap-2 text-xs font-extrabold text-[#001c41] hover:text-[#027244] transition-all bg-white py-2.5 px-4 rounded-xl border border-slate-200 shadow-sm hover:shadow group"
+          >
+            <ArrowLeft className="h-4 w-4 text-slate-400 group-hover:text-[#027244] transition-colors" />
+            <span>Back to Home</span>
+          </Link>
+          <button 
+            onClick={handleSkip}
+            id="skip-payment-btn"
+            className="text-xs font-extrabold text-slate-650 hover:text-[#027244] transition-all bg-white py-2.5 px-5 rounded-xl border border-slate-250 shadow-sm hover:border-[#027244] cursor-pointer"
+          >
+            Skip for now <span className="font-sans ml-0.5">➔</span>
+          </button>
+        </div>
+      )}
+
+      <div className={isStep ? "w-full flex flex-col gap-6 relative" : "max-w-5xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-10 flex flex-col gap-6 relative"}>
         
         {/* Title */}
         <div className="text-center flex flex-col items-center gap-1.5">
@@ -635,6 +687,19 @@ export default function ChoosePlan() {
           </div>
 
         </div>
+
+        {isStep && (
+          <div className="flex justify-center mt-6">
+            <button
+              onClick={handleSkip}
+              id="skip-payment-btn"
+              className="py-3.5 px-8 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 hover:text-slate-800 font-extrabold text-xs rounded-xl transition-all shadow-sm cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
+            >
+              <span>Skip payment for now & proceed to next stage</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* Everything You Get Bottom Section */}
         <div className="w-full border-t border-slate-100 pt-8 mt-6 flex flex-col gap-5 text-center">

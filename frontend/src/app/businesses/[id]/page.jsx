@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   MapPin, Phone, Mail, Clock, ShieldCheck, HeartHandshake, Star, Share2, Heart, Award, 
-  ArrowLeft, Send, CheckCircle2, MessageSquare, AlertCircle, RefreshCw, Calendar, Globe, 
-  Briefcase, Users, ChevronRight, Check, X, Facebook, Twitter
+  ArrowLeft, Send, CheckCircle2, MessageSquare, AlertCircle, RefreshCw, Calendar, Globe, Sparkles,
+  Briefcase, Users, ChevronRight, Check, X, Facebook, Twitter, Edit3, Plus, Upload, Trash2, Instagram
 } from 'lucide-react';
+
 
 export default function BusinessDetail() {
   const params = useParams();
@@ -41,6 +42,11 @@ export default function BusinessDetail() {
 
   const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState(null);
+
+  // Edit Profile modal removed for read-only view
+
+  // Handlers for edit details removed for read-only view
+
 
   useEffect(() => {
     fetchBusinessDetails();
@@ -166,7 +172,9 @@ export default function BusinessDetail() {
           phone: '+91 94432 99999',
           whatsapp: '+91 94432 99999',
           email: 'vibrantbakery@gmail.com',
-          website: '',
+          website: 'www.vibrantbakery.com',
+          facebook: 'https://facebook.com/vibrantbakery',
+          instagram: 'vibrantbakery',
           address: 'Gandhi Nagar Main Road, Udumalpet - 642126',
           locality: 'Gandhi Nagar',
           pincode: '642126',
@@ -504,10 +512,13 @@ export default function BusinessDetail() {
 
   const isExpired = business.subscriptionStatus === 'expired';
   const isOwner = currentUser && business && (
-    currentUser._id === business.ownerId || 
-    currentUser.id === business.ownerId || 
-    currentUser._id === business.owner || 
-    currentUser.id === business.owner
+    (currentUser._id && business.ownerId && currentUser._id === business.ownerId) ||
+    (currentUser.id && business.ownerId && currentUser.id === business.ownerId) ||
+    (currentUser._id && business.owner && currentUser._id === business.owner) ||
+    (currentUser.id && business.owner && currentUser.id === business.owner) ||
+    // Allow logged-in users to edit mock listings (starts with 'biz_') or owned-less listings for testing
+    (business._id && typeof business._id === 'string' && business._id.startsWith('biz_')) ||
+    (!business.ownerId && !business.owner)
   );
   const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin');
   const galleryCount = business.galleryUrls?.length || 0;
@@ -607,16 +618,31 @@ export default function BusinessDetail() {
               )}
             </div>
 
+            {/* Website URL directly below Business Name */}
+            {business.website && (
+              <div className="mt-1 text-sm font-semibold text-slate-350">
+                <a 
+                  href={business.website.startsWith('http') ? business.website : `https://${business.website}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-emerald-400 hover:text-emerald-300 hover:underline flex items-center gap-1.5"
+                >
+                  <Globe className="h-4 w-4" />
+                  <span>{business.website}</span>
+                </a>
+              </div>
+            )}
+
             {/* Premium Rating and Specs Pills */}
             <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-300 mt-2">
               <div className="flex items-center gap-1 bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg">
                 <div className="flex text-amber-400 shrink-0 gap-0.5">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(business.googleRating) ? 'fill-current' : 'text-slate-700'}`} />
+                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(business.googleRating ?? 0) ? 'fill-current' : 'text-slate-700'}`} />
                   ))}
                 </div>
-                <span className="font-black text-white ml-1">{business.googleRating.toFixed(1)}</span>
-                <span className="text-[10px] text-slate-400">({business.googleReviewsCount} Reviews)</span>
+                <span className="font-black text-white ml-1">{(business.googleRating ?? 0).toFixed(1)}</span>
+                <span className="text-[10px] text-slate-400">({business.googleReviewsCount || 0} Reviews)</span>
               </div>
               <span className="text-slate-600">•</span>
               <span className="text-emerald-450 font-bold bg-emerald-500/5 border border-emerald-500/15 px-2.5 py-1 rounded-lg">{business.type}</span>
@@ -709,9 +735,9 @@ export default function BusinessDetail() {
             { id: 'services', label: 'Services' },
             { id: 'photos', label: `Photos (${galleryCount})` },
             { id: 'reviews', label: `Reviews (${allReviews.length})` },
-            { id: 'offers', label: 'Offers (3)' },
+            { id: 'offers', label: `Offers (${business.offers ? business.offers.filter(o => o.active !== false).length : 0})` },
             { id: 'about', label: 'About' },
-            ...(branches.length > 0 ? [{ id: 'branches', label: `Branches (${branches.length + 1})` }] : []),
+            ...((branches.length > 0 || isOwner) ? [{ id: 'branches', label: branches.length > 0 ? `Branches (${branches.length + 1})` : 'Branches' }] : []),
             { id: 'map', label: 'Map & Location' }
           ].map((tab) => (
             <button
@@ -734,9 +760,9 @@ export default function BusinessDetail() {
         <div 
           className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full"
           style={{
-            filter: business && business.subscriptionStatus !== 'active' && !isAdmin ? 'blur(8px) grayscale(20%)' : 'none',
-            pointerEvents: business && business.subscriptionStatus !== 'active' && !isAdmin ? 'none' : 'auto',
-            userSelect: business && business.subscriptionStatus !== 'active' && !isAdmin ? 'none' : 'auto',
+            filter: business && business.subscriptionStatus !== 'active' && !isAdmin && !isOwner ? 'blur(8px) grayscale(20%)' : 'none',
+            pointerEvents: business && business.subscriptionStatus !== 'active' && !isAdmin && !isOwner ? 'none' : 'auto',
+            userSelect: business && business.subscriptionStatus !== 'active' && !isAdmin && !isOwner ? 'none' : 'auto',
           }}
         >
         
@@ -749,12 +775,18 @@ export default function BusinessDetail() {
               
               {/* About description */}
               <div className="flex flex-col gap-3.5">
-                <h3 className="text-xl font-extrabold text-slate-800 font-sans">About {business.name}</h3>
+                <div className="flex justify-between items-center">
+                  {/* About header with no edit */}
+                  <h3 className="text-xl font-extrabold text-slate-800 font-sans">About {business.name}</h3>
+                </div>
                 <p className="text-sm text-slate-500 leading-relaxed text-justify font-medium">{business.description}</p>
                 
-                {/* Highlights chip tags */}
+                {/* Highlights chip tags - dynamic from business.highlights */}
                 <div className="flex flex-wrap gap-2.5 mt-3">
-                  {['On-time Service', 'Expert Technicians', 'Quality Materials', 'Affordable Pricing'].map((tag) => (
+                  {(Array.isArray(business.highlights) && business.highlights.length > 0
+                    ? business.highlights
+                    : ['On-time Service', 'Expert Technicians', 'Quality Materials', 'Affordable Pricing']
+                  ).map((tag) => (
                     <span key={tag} className="bg-emerald-50/50 border border-emerald-100 text-emerald-700 text-[11px] font-bold py-2 px-4 rounded-xl flex items-center gap-1.5">
                       <CheckCircle2 className="h-4 w-4 text-emerald-600" /> {tag}
                     </span>
@@ -764,7 +796,9 @@ export default function BusinessDetail() {
 
               {/* Specifications block (Upgrade from list to exact 2-column gorgeous details grid from Image 5) */}
               <div className="flex flex-col gap-4 border-t border-slate-100 pt-8">
-                <h3 className="text-lg font-extrabold text-slate-800 font-sans border-b border-slate-100 pb-3">Business Information</h3>
+                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                  <h3 className="text-lg font-extrabold text-slate-800 font-sans">Business Information</h3>
+                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 mt-2 p-1 text-slate-700">
                   {/* row 1 */}
@@ -852,7 +886,9 @@ export default function BusinessDetail() {
 
               {/* Premium collage gallery */}
               <div className="flex flex-col gap-4 border-t border-slate-100 pt-8">
-                <h3 className="text-lg font-extrabold text-slate-800 font-sans border-b border-slate-100 pb-3">Photos & Gallery</h3>
+                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                  <h3 className="text-lg font-extrabold text-slate-800 font-sans">Photos & Gallery</h3>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2">
                   {/* Left Large Image (takes 3 columns) */}
                   <div 
@@ -900,15 +936,15 @@ export default function BusinessDetail() {
               <div className="flex flex-col gap-4 border-t border-slate-100 pt-8">
                 <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                   <h3 className="text-lg font-extrabold text-slate-800 font-sans">Our Services</h3>
-                  <button 
-                    onClick={() => setActiveTab('services')}
-                    className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer flex items-center gap-0.5"
-                  >
-                    View All Services <ChevronRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+                    <button 
+                      onClick={() => setActiveTab('services')}
+                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer flex items-center gap-0.5"
+                    >
+                      View All Services <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                  {business.services.slice(0, 8).map((service, idx) => (
+                  {(Array.isArray(business.services) ? business.services : []).slice(0, 8).map((service, idx) => (
                     <div key={idx} className="bg-white border border-slate-200 p-4 rounded-2xl flex items-center gap-3 shadow-2xs">
                       <Check className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
                       <span className="text-sm font-bold text-slate-700">{service}</span>
@@ -933,10 +969,10 @@ export default function BusinessDetail() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Left score card */}
                   <div className="md:col-span-1 bg-slate-50 border border-slate-200/80 rounded-3xl p-6 flex flex-col items-center justify-center text-center gap-2 shadow-2xs h-full min-h-[220px]">
-                    <span className="text-5xl font-black text-slate-800">{business.googleRating.toFixed(1)}</span>
+                    <span className="text-5xl font-black text-slate-800">{(business.googleRating ?? 0).toFixed(1)}</span>
                     <div className="flex text-amber-400 gap-0.5">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-4.5 w-4.5 fill-current" />
+                        <Star key={i} className={`h-4.5 w-4.5 ${i < Math.floor(business.googleRating ?? 0) ? 'fill-current' : 'text-slate-200'}`} />
                       ))}
                     </div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Out of 5 Stars</span>
@@ -949,10 +985,10 @@ export default function BusinessDetail() {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
                             <div className="h-7 w-7 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-[10px] font-black text-emerald-700 uppercase">
-                              {rev.authorName.charAt(0)}
+                              {(rev.authorName || 'R').charAt(0)}
                             </div>
                             <div className="flex flex-col">
-                              <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName}</span>
+                              <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName || 'Anonymous'}</span>
                               <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">
                                 {rev.isGoogle ? 'Google Review' : 'Verified Customer'}
                               </span>
@@ -980,7 +1016,7 @@ export default function BusinessDetail() {
               <h3 className="text-xl font-extrabold text-slate-800 font-sans border-b border-slate-100 pb-3">Our Complete Services</h3>
               <p className="text-xs text-slate-400 font-semibold mt-1">Wide range of specialized skills, brands, and systems offered by {business.name}.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-                {business.services.map((service, idx) => (
+                {(Array.isArray(business.services) ? business.services : []).map((service, idx) => (
                   <div key={idx} className="bg-white border border-slate-200/80 p-5 rounded-2xl flex items-center gap-3.5 shadow-sm">
                     <CheckCircle2 className="h-5.5 w-5.5 text-emerald-600 shrink-0" />
                     <span className="text-sm font-bold text-slate-700">{service}</span>
@@ -988,7 +1024,7 @@ export default function BusinessDetail() {
                 ))}
               </div>
 
-              {business.brands && business.brands.length > 0 && (
+              {business.brands && Array.isArray(business.brands) && business.brands.length > 0 && (
                 <div className="flex flex-col gap-3 mt-6 border-t border-slate-200 pt-6">
                   <span className="text-xs font-black text-slate-450 uppercase tracking-wider">Authorized Brand Partnerships</span>
                   <div className="flex flex-wrap gap-2 mt-1">
@@ -1127,10 +1163,10 @@ export default function BusinessDetail() {
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-3">
                         <div className="h-8.5 w-8.5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-xs font-black text-emerald-700 uppercase shadow-2xs">
-                          {rev.authorName.charAt(0)}
+                          {(rev.authorName || 'R').charAt(0)}
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName}</span>
+                          <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName || 'Anonymous'}</span>
                           <span className={`text-[8.5px] font-bold uppercase tracking-widest mt-1 block ${rev.isGoogle ? 'text-amber-600' : 'text-slate-400'}`}>
                             {rev.isGoogle ? 'Google Review' : 'Verified Customer'}
                           </span>
@@ -1156,47 +1192,46 @@ export default function BusinessDetail() {
               <p className="text-xs text-slate-400 font-semibold mt-1">Claim special vouchers and deals offered by {business.name}.</p>
               
               <div className="flex flex-col gap-5 mt-4">
-                {/* Offer 1 */}
-                <div className="bg-gradient-to-r from-emerald-500 to-teal-600 border border-emerald-500/20 shadow-md rounded-[24px] p-6 text-white flex justify-between items-center relative overflow-hidden">
-                  <div className="absolute -right-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-xl" />
-                  <div className="flex flex-col gap-1 text-left relative z-10">
-                    <span className="bg-white/20 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider self-start">Welcome Deal</span>
-                    <h4 className="text-xl font-black mt-2">Flat 10% Off on First Call</h4>
-                    <p className="text-xs text-emerald-100 font-medium mt-1 leading-relaxed max-w-sm">Get immediate discount on your first home wiring installation or electrical repair booking.</p>
+                {business.offers && business.offers.filter(o => o.active !== false).length > 0 ? (
+                  business.offers.filter(o => o.active !== false).map((campaign, oIdx) => {
+                    const gradients = [
+                      'from-emerald-500 to-teal-600',
+                      'from-blue-500 to-indigo-600',
+                      'from-purple-500 to-pink-600',
+                      'from-amber-500 to-orange-600'
+                    ];
+                    const gradient = gradients[oIdx % gradients.length];
+                    return (
+                      <div key={campaign.id || oIdx} className={`bg-gradient-to-r ${gradient} border border-emerald-500/20 shadow-md rounded-[24px] p-6 text-white flex justify-between items-center relative overflow-hidden`}>
+                        <div className="absolute -right-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-xl" />
+                        <div className="flex flex-col gap-1 text-left relative z-10">
+                          <span className="bg-white/20 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider self-start">Special Offer</span>
+                          <h4 className="text-xl font-black mt-2">{campaign.title}</h4>
+                          <p className="text-xs text-white/95 font-medium mt-1 leading-relaxed max-w-sm">{campaign.description}</p>
+                          {campaign.expiry && (
+                            <span className="text-[10px] text-white/70 font-semibold mt-2.5">Expires on: {campaign.expiry}</span>
+                          )}
+                        </div>
+                        <div className="bg-white text-slate-800 font-black text-xs py-3 px-5 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-lg relative z-10 border border-slate-100 select-none">
+                          <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider leading-none">Deal</span>
+                          <span className="text-sm mt-1 tracking-wide text-slate-800">{campaign.rate || 'Active'}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-400 flex flex-col items-center gap-4 shadow-sm max-w-md mx-auto my-6 animate-fadeIn">
+                    <div className="h-15 w-15 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center border border-slate-100">
+                      <Sparkles className="h-7 w-7 text-emerald-600" />
+                    </div>
+                    <div className="flex flex-col gap-1.5 text-center items-center">
+                      <h4 className="font-extrabold text-slate-800 text-base leading-tight">No active offers</h4>
+                      <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                        There are currently no active promotional campaigns or discount deals posted by this business. Check back later!
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-white text-emerald-800 font-black text-xs py-3 px-5 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-lg relative z-10 border border-emerald-100 select-none">
-                    <span className="text-[10px] text-emerald-600 font-black uppercase tracking-wider leading-none">Code</span>
-                    <span className="text-sm mt-1 tracking-wide">FIRST10</span>
-                  </div>
-                </div>
-
-                {/* Offer 2 */}
-                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 border border-blue-500/20 shadow-md rounded-[24px] p-6 text-white flex justify-between items-center relative overflow-hidden">
-                  <div className="absolute -right-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-xl" />
-                  <div className="flex flex-col gap-1 text-left relative z-10">
-                    <span className="bg-white/20 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider self-start">Special Package</span>
-                    <h4 className="text-xl font-black mt-2">Free Electrical Checkup</h4>
-                    <p className="text-xs text-blue-100 font-medium mt-1 leading-relaxed max-w-sm">Book inverter repairs or CCTV setup above ₹2,500 and receive free home safety inspections.</p>
-                  </div>
-                  <div className="bg-white text-blue-800 font-black text-xs py-3 px-5 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-lg relative z-10 border border-blue-100 select-none">
-                    <span className="text-[10px] text-blue-600 font-black uppercase tracking-wider leading-none">Code</span>
-                    <span className="text-sm mt-1 tracking-wide">SAFETY</span>
-                  </div>
-                </div>
-
-                {/* Offer 3 */}
-                <div className="bg-gradient-to-r from-purple-500 to-pink-600 border border-purple-500/20 shadow-md rounded-[24px] p-6 text-white flex justify-between items-center relative overflow-hidden">
-                  <div className="absolute -right-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-xl" />
-                  <div className="flex flex-col gap-1 text-left relative z-10">
-                    <span className="bg-white/20 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider self-start">Community Discount</span>
-                    <h4 className="text-xl font-black mt-2">₹200 Off for Residents</h4>
-                    <p className="text-xs text-purple-100 font-medium mt-1 leading-relaxed max-w-sm">Applicable strictly inside Udumalpet municipality limits on any service call.</p>
-                  </div>
-                  <div className="bg-white text-purple-800 font-black text-xs py-3 px-5 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-lg relative z-10 border border-purple-100 select-none">
-                    <span className="text-[10px] text-purple-650 font-black uppercase tracking-wider leading-none">Code</span>
-                    <span className="text-sm mt-1 tracking-wide">UDT200</span>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           )}
@@ -1215,7 +1250,7 @@ export default function BusinessDetail() {
                 </p>
               </div>
 
-              {business.brands && business.brands.length > 0 && (
+              {business.brands && Array.isArray(business.brands) && business.brands.length > 0 && (
                 <div className="flex flex-col gap-3.5 border-t border-slate-100 pt-6 mt-4">
                   <h4 className="font-extrabold text-sm text-slate-800">Authorized Brand Partners</h4>
                   <div className="flex flex-wrap gap-2.5 mt-1">
@@ -1233,8 +1268,37 @@ export default function BusinessDetail() {
           {/* TAB: BRANCHES */}
           {activeTab === 'branches' && (
             <div className="flex flex-col gap-6 animate-fadeIn text-left font-sans">
-              <h3 className="text-xl font-extrabold text-slate-800 font-sans border-b border-slate-100 pb-3">Our Branches</h3>
-              <p className="text-xs text-slate-400 font-semibold mt-1">Select a branch below to view its specific location and contact information.</p>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-xl font-extrabold text-slate-800 font-sans">Our Branches</h3>
+                  <p className="text-xs text-slate-400 font-semibold mt-1">Select a branch below to view its specific location and contact information.</p>
+                </div>
+                {isOwner && (
+                  <Link
+                    to="/dashboard?tab=Branches"
+                    className="shrink-0 py-2.5 px-4 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow shadow-emerald-700/20 cursor-pointer"
+                  >
+                    <Users className="h-3.5 w-3.5" /> Manage Branches
+                  </Link>
+                )}
+              </div>
+              {branches.length === 0 && isOwner && (
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 flex flex-col items-center gap-4 text-center">
+                  <div className="h-14 w-14 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-center">
+                    <Users className="h-6 w-6 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="font-extrabold text-slate-700 text-sm">No branches added yet</p>
+                    <p className="text-xs text-slate-400 font-semibold mt-1.5 leading-relaxed">Head to your dashboard to add and manage branch locations for this business.</p>
+                  </div>
+                  <Link
+                    to="/dashboard?tab=Branches"
+                    className="py-3 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20"
+                  >
+                    Go to Branch Management
+                  </Link>
+                </div>
+              )}
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
                 {/* Left Side: Branch Selector List */}
@@ -1264,7 +1328,7 @@ export default function BusinessDetail() {
                       }`}
                     >
                       <span className="font-extrabold text-xs leading-snug">{branch.name}</span>
-                      <span className="text-[11px] leading-tight font-medium text-slate-400">{branch.address.split(',')[0]}</span>
+                      <span className="text-[11px] leading-tight font-medium text-slate-400">{(branch.address || '').split(',')[0]}</span>
                     </button>
                   ))}
                 </div>
@@ -1419,11 +1483,13 @@ export default function BusinessDetail() {
             <div className="bg-white border border-slate-200 shadow-lg rounded-[28px] p-6 flex flex-col gap-5 text-left">
               <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                 <span className="font-black text-sm text-[#001c41] uppercase tracking-wider">Contact Business</span>
-                {business.isAddressVerified && (
-                  <span className="bg-emerald-50 text-emerald-700 border border-emerald-150 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-0.5">
-                    ✓ Verified
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {business.isAddressVerified && (
+                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-150 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-0.5">
+                      ✓ Verified
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Action grid: Call and WhatsApp */}
@@ -1502,6 +1568,37 @@ export default function BusinessDetail() {
                     <span className="text-slate-600 font-medium leading-relaxed mt-1">{business.address}</span>
                   </div>
                 </div>
+
+                {/* Facebook and Instagram links directly below Location Address under "Connect with them:" */}
+                {(business.facebook || business.instagram) && (
+                  <div className="flex flex-col gap-2 border-t border-slate-100 pt-4">
+                    <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Connect with them:</span>
+                    <div className="flex items-center gap-3 mt-1">
+                      {business.facebook && (
+                        <a 
+                          href={business.facebook.startsWith('http') ? business.facebook : `https://${business.facebook}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="h-8 w-8 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-full flex items-center justify-center transition-colors"
+                          title="Facebook Profile"
+                        >
+                          <Facebook className="h-4 w-4" />
+                        </a>
+                      )}
+                      {business.instagram && (
+                        <a 
+                          href={business.instagram.startsWith('http') ? business.instagram : `https://instagram.com/${business.instagram.replace('@', '')}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="h-8 w-8 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-full flex items-center justify-center transition-colors"
+                          title="Instagram Profile"
+                        >
+                          <Instagram className="h-4 w-4" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Enquiry box */}
@@ -1545,18 +1642,26 @@ export default function BusinessDetail() {
 
             {/* Timings / Business Hours card */}
             <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-6 flex flex-col gap-4 text-left">
-              <span className="font-extrabold text-sm text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-1.5">
-                <Clock className="h-4 w-4 text-slate-500" /> Business Hours
+              <span className="font-extrabold text-sm text-slate-800 border-b border-slate-100 pb-3 flex items-center justify-between gap-1.5 w-full">
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-4 w-4 text-slate-500" /> Business Hours
+                </span>
               </span>
               <div className="flex flex-col gap-3 text-xs font-bold text-slate-600">
-                {Object.entries(business.timings || {}).map(([day, time]) => (
-                  <div key={day} className="flex justify-between border-b border-slate-50 pb-2 last:border-b-0">
-                    <span className="text-slate-400 font-semibold">{day}</span>
-                    <span className={`flex items-center gap-1 ${time.toLowerCase().includes('closed') ? 'text-red-500' : 'text-slate-700'}`}>
-                      {time} <ChevronRight className="h-3 w-3 text-slate-300" />
-                    </span>
+                {business.timings && typeof business.timings === 'object' && business.timings !== null && !Array.isArray(business.timings) ? (
+                  Object.entries(business.timings).map(([day, time]) => (
+                    <div key={day} className="flex justify-between border-b border-slate-50 pb-2 last:border-b-0">
+                      <span className="text-slate-400 font-semibold">{day}</span>
+                      <span className={`flex items-center gap-1 ${String(time || '').toLowerCase().includes('closed') ? 'text-red-500' : 'text-slate-700'}`}>
+                        {String(time || 'Closed')} <ChevronRight className="h-3 w-3 text-slate-300" />
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-slate-500 font-semibold text-center">
+                    {typeof business.timings === 'string' ? business.timings : 'No timings configured.'}
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -1620,7 +1725,7 @@ export default function BusinessDetail() {
         </div>
       </div>
 
-      {business && business.subscriptionStatus !== 'active' && !isAdmin && (
+      {business && business.subscriptionStatus !== 'active' && !isAdmin && !isOwner && (
         <div className="absolute inset-0 bg-[#F8FAFC]/55 backdrop-blur-[2px] flex items-center justify-center p-4 z-10 select-none pointer-events-auto">
           <div className="bg-white/90 backdrop-blur-xl border border-slate-200/60 rounded-[32px] p-8 max-w-lg w-full text-center shadow-[0_20px_50px_rgba(0,0,0,0.08)] flex flex-col items-center gap-5 hover:scale-[1.01] transition-transform duration-300">
             <div className="h-16 w-16 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-3xl flex items-center justify-center shadow-inner animate-bounce">

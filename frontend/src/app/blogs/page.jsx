@@ -486,7 +486,7 @@ export default function BlogsPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {featuredBlogs.map(blog => {
-                const words = blog.content.split(' ').length;
+                const words = (blog.content || '').split(' ').length;
                 const readTime = Math.max(Math.ceil(words / 150), 1);
                 
                 return (
@@ -628,7 +628,7 @@ export default function BlogsPage() {
             ) : (
               <div className="flex flex-col gap-6 w-full">
                 {sortedBlogs.slice(0, visibleCount).map((blog) => {
-                  const words = blog.content.split(' ').length;
+                  const words = (blog.content || '').split(' ').length;
                   const readTime = Math.max(Math.ceil(words / 150), 1);
 
                   return (
@@ -678,9 +678,9 @@ export default function BlogsPage() {
                           {/* Author badge */}
                           <div className="flex items-center gap-2">
                             <div className="h-6.5 w-6.5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-extrabold text-[9px] uppercase border border-blue-100 shadow-3xs">
-                              {blog.authorName.charAt(0)}
+                              {(blog.authorName || 'A').charAt(0)}
                             </div>
-                            <span className="font-extrabold text-slate-700 text-xs truncate max-w-[110px]">{blog.authorName}</span>
+                            <span className="font-extrabold text-slate-700 text-xs truncate max-w-[110px]">{blog.authorName || 'Anonymous'}</span>
                           </div>
 
                           <div className="flex items-center gap-4 text-[10.5px] text-slate-400">
