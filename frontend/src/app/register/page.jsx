@@ -3,8 +3,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { 
   ShieldCheck, Mail, Lock, Phone, User, AlertCircle, Loader, 
   Eye, EyeOff, Store, Users, Star, TrendingUp, Headset, MapPin, ThumbsUp,
-  Calendar, Sparkles, Grid, BookOpen, FileEdit, MessageSquare, Activity, ArrowLeft,
-  Globe, Instagram, Facebook
+  Calendar, Sparkles, Grid, BookOpen, FileEdit, MessageSquare, Activity, ArrowLeft
 } from 'lucide-react';
 
 export default function Register() {
@@ -20,9 +19,6 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const [website, setWebsite] = useState('');
-  const [instagram, setInstagram] = useState('');
-  const [facebook, setFacebook] = useState('');
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -62,10 +58,7 @@ export default function Register() {
           mobileNumber, 
           email, 
           password,
-          referralCode: refCode || undefined,
-          website,
-          instagram,
-          facebook
+          referralCode: refCode || undefined
         }),
       });
       const data = await res.json();
@@ -611,48 +604,6 @@ export default function Register() {
                   >
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-700">Website URL (Optional)</label>
-                <div className="relative flex items-center">
-                  <Globe className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
-                  <input
-                    type="url"
-                    placeholder="e.g. www.mybusiness.com"
-                    value={website}
-                    onChange={(e) => setWebsite(e.target.value)}
-                    className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-700">Instagram Handle (Optional)</label>
-                <div className="relative flex items-center">
-                  <Instagram className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
-                  <input
-                    type="text"
-                    placeholder="e.g. @mybusiness"
-                    value={instagram}
-                    onChange={(e) => setInstagram(e.target.value)}
-                    className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-700">Facebook URL (Optional)</label>
-                <div className="relative flex items-center">
-                  <Facebook className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
-                  <input
-                    type="text"
-                    placeholder="e.g. facebook.com/mybusiness"
-                    value={facebook}
-                    onChange={(e) => setFacebook(e.target.value)}
-                    className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
-                  />
                 </div>
               </div>
 

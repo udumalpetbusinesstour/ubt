@@ -6,6 +6,32 @@ const BusinessSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  parentBusinessId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Business',
+    default: null,
+  },
+  businessId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Business',
+    default: null,
+  },
+  branchManagerName: {
+    type: String,
+    trim: true,
+  },
+  googleMapsLocation: {
+    type: String,
+    trim: true,
+  },
+  googleBusinessLink: {
+    type: String,
+    trim: true,
+  },
+  workingHours: {
+    type: String,
+    trim: true,
+  },
   categoryId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
@@ -180,7 +206,7 @@ const BusinessSchema = new mongoose.Schema({
   },
   subscriptionStatus: {
     type: String,
-    enum: ['active', 'expired', 'none'],
+    enum: ['active', 'expired', 'none', 'suspended'],
     default: 'none',
   },
   subscriptionExpiry: {
@@ -206,6 +232,26 @@ const BusinessSchema = new mongoose.Schema({
   tags: {
     type: [String],
     default: [],
+  },
+  callClicks: {
+    type: Number,
+    default: 0,
+  },
+  whatsappClicks: {
+    type: Number,
+    default: 0,
+  },
+  websiteClicks: {
+    type: Number,
+    default: 0,
+  },
+  instagramClicks: {
+    type: Number,
+    default: 0,
+  },
+  facebookClicks: {
+    type: Number,
+    default: 0,
   },
   offers: [
     {

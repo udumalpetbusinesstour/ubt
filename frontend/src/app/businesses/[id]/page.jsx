@@ -37,6 +37,7 @@ export default function BusinessDetail() {
 
   // Send enquiry form states
   const [enquiryName, setEnquiryName] = useState('');
+  const [enquiryPhone, setEnquiryPhone] = useState('');
   const [enquiryMessage, setEnquiryMessage] = useState('Hello, I am interested in your services and would like to receive details.');
   const [enquirySuccess, setEnquirySuccess] = useState(false);
 
@@ -433,21 +434,53 @@ export default function BusinessDetail() {
     }
   };
 
-  const handleSendEnquiry = (e) => {
+  const handleSendEnquiry = async (e) => {
     e.preventDefault();
-    if (!enquiryName) return;
-    setEnquirySuccess(true);
-    setTimeout(() => {
-      setEnquirySuccess(false);
-      setEnquiryName('');
-    }, 3000);
+    if (!enquiryName || !enquiryPhone || !enquiryMessage) return;
+    
+    try {
+      const res = await fetch('http://localhost:5000/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId: business._id,
+          name: enquiryName,
+          phone: enquiryPhone,
+          message: enquiryMessage
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEnquirySuccess(true);
+        setEnquiryName('');
+        setEnquiryPhone('');
+        setEnquiryMessage('Hello, I am interested in your services and would like to receive details.');
+        setTimeout(() => setEnquirySuccess(false), 3000);
+      }
+    } catch (err) {
+      console.error('Failed to submit enquiry:', err);
+    }
+  };
+  const trackClick = async (type) => {
+    if (!business || !business._id) return;
+    try {
+      await fetch(`http://localhost:5000/api/businesses/${business._id}/click`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type })
+      });
+    } catch (err) {
+      console.error(`Failed to track ${type} click:`, err);
+    }
   };
 
   const handleCall = (phone) => {
+    trackClick('call');
     window.open(`tel:${phone}`);
   };
 
   const handleWhatsApp = (whatsapp, name) => {
+    trackClick('whatsapp');
     const cleanNum = whatsapp.replace(/[^0-9]/g, '');
     window.open(`https://wa.me/${cleanNum}?text=Hello%20${encodeURIComponent(name)},%20I%20saw%2520your%20listing%20on%20UBT.`);
   };
@@ -618,18 +651,47 @@ export default function BusinessDetail() {
               )}
             </div>
 
-            {/* Website URL directly below Business Name */}
-            {business.website && (
-              <div className="mt-1 text-sm font-semibold text-slate-350">
-                <a 
-                  href={business.website.startsWith('http') ? business.website : `https://${business.website}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-emerald-400 hover:text-emerald-300 hover:underline flex items-center gap-1.5"
-                >
-                  <Globe className="h-4 w-4" />
-                  <span>{business.website}</span>
-                </a>
+            {/* Website and Social Media links below Business Name */}
+            {(business.website || business.facebook || business.instagram) && (
+              <div className="mt-2.5 flex flex-wrap items-center gap-4 text-xs font-black text-slate-350">
+                {business.website && (
+                  <a 
+                    href={business.website.startsWith('http') ? business.website : `https://${business.website}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    onClick={() => trackClick('website')}
+                    className="text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1.5"
+                  >
+                    <Globe className="h-4 w-4" />
+                    <span>Website</span>
+                  </a>
+                )}
+                {business.facebook && (
+                  <a 
+                    href={business.facebook.startsWith('http') ? business.facebook : `https://${business.facebook}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    onClick={() => trackClick('facebook')}
+                    className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1.5"
+                    title="Facebook Profile"
+                  >
+                    <Facebook className="h-4 w-4" />
+                    <span>Facebook</span>
+                  </a>
+                )}
+                {business.instagram && (
+                  <a 
+                    href={business.instagram.startsWith('http') ? business.instagram : `https://instagram.com/${business.instagram.replace('@', '')}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    onClick={() => trackClick('instagram')}
+                    className="text-pink-400 hover:text-pink-300 transition-colors flex items-center gap-1.5"
+                    title="Instagram Profile"
+                  >
+                    <Instagram className="h-4 w-4" />
+                    <span>Instagram</span>
+                  </a>
+                )}
               </div>
             )}
 
@@ -671,7 +733,7 @@ export default function BusinessDetail() {
                   <Phone className="h-4.5 w-4.5" />
                 </button>
 
-                {/* Map/Location Action */}
+                {/* Map/Location Action - uses Google Maps directions URL (no API key needed) */}
                 <a 
                   href={`https://www.google.com/maps/dir/?api=1&destination=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}`}
                   target="_blank"
@@ -819,8 +881,14 @@ export default function BusinessDetail() {
                     <div className="flex flex-col">
                       <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Working Hours</span>
                       <div className="flex flex-col mt-2 font-extrabold text-slate-800 text-sm leading-snug">
-                        <span>Mon - Sat: {business.timings?.Monday || '9:00 AM - 8:00 PM'}</span>
-                        {business.timings?.Sunday && <span>Sun: {business.timings.Sunday}</span>}
+                        {business.parentBusinessId && business.workingHours ? (
+                          <span>{business.workingHours}</span>
+                        ) : (
+                          <>
+                            <span>Mon - Sat: {business.timings?.Monday || '9:00 AM - 8:00 PM'}</span>
+                            {business.timings?.Sunday && <span>Sun: {business.timings.Sunday}</span>}
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1312,8 +1380,12 @@ export default function BusinessDetail() {
                         : 'bg-white border-slate-200 hover:border-slate-350 text-slate-500'
                     }`}
                   >
-                    <span className="font-extrabold text-xs uppercase tracking-wide">Primary Branch</span>
-                    <span className="text-[11px] leading-tight font-medium text-slate-400">{business.locality || 'Main Location'}</span>
+                    <span className="font-extrabold text-xs uppercase tracking-wide">
+                      {business.parentBusiness ? 'Main Office' : 'Primary Branch'}
+                    </span>
+                    <span className="text-[11px] leading-tight font-medium text-slate-400">
+                      {business.parentBusiness ? business.parentBusiness.locality : (business.locality || 'Main Location')}
+                    </span>
                   </button>
 
                   {/* Additional Branches Options */}
@@ -1335,13 +1407,34 @@ export default function BusinessDetail() {
 
                 {/* Right Side: Selected Branch Details Card */}
                 <div className="md:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 flex flex-col gap-5 shadow-xs">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h4 className="font-black text-slate-800 text-base leading-snug">
-                      {selectedBranch === null ? `${business.name} (Primary)` : selectedBranch.name}
-                    </h4>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">
-                      {selectedBranch === null ? 'Main Head Office' : 'Branch Office'}
-                    </span>
+                  <div className="border-b border-slate-100 pb-3 flex justify-between items-start">
+                    <div>
+                      <h4 className="font-black text-slate-800 text-base leading-snug">
+                        {selectedBranch === null 
+                          ? (business.parentBusiness ? business.parentBusiness.name : `${business.name} (Primary)`) 
+                          : selectedBranch.name}
+                      </h4>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">
+                        {selectedBranch === null ? 'Main Head Office' : 'Branch Office'}
+                      </span>
+                    </div>
+                    {selectedBranch !== null ? (
+                      <Link
+                        to={`/businesses/${selectedBranch._id}`}
+                        className="shrink-0 py-2 px-3.5 bg-emerald-50 hover:bg-emerald-100 text-[#027244] border border-emerald-250 font-extrabold text-[11px] rounded-xl flex items-center gap-1.5 transition-all shadow-3xs cursor-pointer"
+                      >
+                        View Full Profile <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    ) : (
+                      business.parentBusiness && (
+                        <Link
+                          to={`/businesses/${business.parentBusiness._id}`}
+                          className="shrink-0 py-2 px-3.5 bg-emerald-50 hover:bg-emerald-100 text-[#027244] border border-emerald-250 font-extrabold text-[11px] rounded-xl flex items-center gap-1.5 transition-all shadow-3xs cursor-pointer"
+                        >
+                          View Main Profile <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      )
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-4 text-xs font-bold text-slate-700">
@@ -1350,8 +1443,10 @@ export default function BusinessDetail() {
                       <MapPin className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Branch Address</span>
-                        <span className="text-slate-600 font-medium leading-relaxed mt-1">
-                          {selectedBranch === null ? business.address : selectedBranch.address}
+                        <span className="text-slate-605 font-medium leading-relaxed mt-1">
+                          {selectedBranch === null 
+                            ? (business.parentBusiness ? business.parentBusiness.address : business.address) 
+                            : selectedBranch.address}
                         </span>
                       </div>
                     </div>
@@ -1362,7 +1457,9 @@ export default function BusinessDetail() {
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Contact Number</span>
                         <span className="text-slate-800 font-extrabold mt-1">
-                          {selectedBranch === null ? business.phone : selectedBranch.phone}
+                          {selectedBranch === null 
+                            ? (business.parentBusiness ? business.parentBusiness.phone : business.phone) 
+                            : selectedBranch.phone}
                         </span>
                       </div>
                     </div>
@@ -1372,35 +1469,39 @@ export default function BusinessDetail() {
                       <Clock className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Working Hours</span>
-                        <span className="text-slate-600 font-medium leading-relaxed mt-1">
+                        <span className="text-slate-605 font-medium leading-relaxed mt-1">
                           {selectedBranch === null
-                            ? `Mon - Sat: ${business.timings?.Monday || '9:00 AM - 8:00 PM'}${business.timings?.Sunday ? ` | Sun: ${business.timings.Sunday}` : ''}`
-                            : selectedBranch.workingHours || '9:00 AM - 8:00 PM'}
+                            ? (business.parentBusiness 
+                              ? `Mon - Sat: ${business.parentBusiness.timings?.Monday || '9:00 AM - 8:00 PM'}${business.parentBusiness.timings?.Sunday ? ` | Sun: ${business.parentBusiness.timings.Sunday}` : ''}`
+                              : `Mon - Sat: ${business.timings?.Monday || '9:00 AM - 8:00 PM'}${business.timings?.Sunday ? ` | Sun: ${business.timings.Sunday}` : ''}`)
+                            : (selectedBranch.workingHours || '9:00 AM - 8:00 PM')}
                         </span>
                       </div>
                     </div>
 
                     {/* Branch Manager Name */}
-                    {((selectedBranch === null && business.branchManagerName) || (selectedBranch !== null && selectedBranch.branchManagerName)) && (
+                    {((selectedBranch === null && (business.branchManagerName || (business.parentBusiness && business.parentBusiness.branchManagerName))) || (selectedBranch !== null && selectedBranch.branchManagerName)) && (
                       <div className="flex items-start gap-3 border-t border-slate-100 pt-4">
                         <Users className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
                         <div className="flex flex-col gap-0.5">
                           <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Branch Manager</span>
                           <span className="text-slate-800 font-extrabold mt-1">
-                            {selectedBranch === null ? business.branchManagerName : selectedBranch.branchManagerName}
+                            {selectedBranch === null 
+                              ? (business.parentBusiness ? business.parentBusiness.branchManagerName : business.branchManagerName) 
+                              : selectedBranch.branchManagerName}
                           </span>
                         </div>
                       </div>
                     )}
 
                     {/* Google Business Profile Link */}
-                    {selectedBranch !== null && selectedBranch.googleBusinessLink && (
+                    {((selectedBranch !== null && selectedBranch.googleBusinessLink) || (selectedBranch === null && business.parentBusiness && business.parentBusiness.googleBusinessLink)) && (
                       <div className="flex items-start gap-3 border-t border-slate-100 pt-4">
                         <Globe className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
                         <div className="flex flex-col gap-0.5">
                           <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Google Business Link</span>
                           <a 
-                            href={selectedBranch.googleBusinessLink} 
+                            href={selectedBranch === null ? business.parentBusiness.googleBusinessLink : selectedBranch.googleBusinessLink} 
                             target="_blank" 
                             rel="noopener noreferrer" 
                             className="text-emerald-700 hover:text-emerald-850 font-extrabold hover:underline mt-1 break-all flex items-center gap-1"
@@ -1412,11 +1513,13 @@ export default function BusinessDetail() {
                     )}
                   </div>
 
-                  {/* Get Directions Link (Opening Google Maps directly) */}
+                  {/* Get Directions Link (opens Google Maps in browser — no API key required) */}
                   <a
                     href={
                       selectedBranch === null
-                        ? `https://www.google.com/maps/dir/?api=1&destination=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}`
+                        ? (business.parentBusiness 
+                          ? `https://www.google.com/maps/dir/?api=1&destination=${business.parentBusiness.coordinates?.lat || 10.5891},${business.parentBusiness.coordinates?.lng || 77.2412}`
+                          : `https://www.google.com/maps/dir/?api=1&destination=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}`)
                         : selectedBranch.googleMapsLocation || `https://www.google.com/maps/dir/?api=1&destination=${selectedBranch.latitude},${selectedBranch.longitude}`
                     }
                     target="_blank"
@@ -1434,20 +1537,26 @@ export default function BusinessDetail() {
           {/* TAB 7: MAP & LOCATION */}
           {activeTab === 'map' && (
             <div className="flex flex-col gap-4 animate-fadeIn text-left">
-              <h3 className="text-xl font-extrabold text-slate-800 font-sans border-b border-slate-100 pb-3">Map & Directions</h3>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-xl font-extrabold text-slate-800 font-sans">Map & Directions</h3>
+                <a
+                  href={`https://www.openstreetmap.org/directions?from=&to=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-2.5 px-5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-md shadow-emerald-800/10 uppercase tracking-wider"
+                >
+                  <MapPin className="h-4 w-4" /> Get Directions
+                </a>
+              </div>
+              {/* OpenStreetMap embed — free, no API key required (unlike Google Maps Embed API) */}
               <div className="h-96 w-full rounded-[28px] border border-slate-200 bg-slate-100 relative overflow-hidden shadow-sm">
-                {/* Embed Map: Official Google Maps Embed API with key or fallback */}
                 <iframe
                   title="Interactive Business Map"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
-                  allowFullScreen=""
                   loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  src={business.mapsApiKey 
-                    ? `https://www.google.com/maps/embed/v1/place?key=${business.mapsApiKey}&q=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}`
-                    : `https://maps.google.com/maps?q=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}&z=16&output=embed`}
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${(business.coordinates?.lng || 77.2412) - 0.012},${(business.coordinates?.lat || 10.5891) - 0.012},${(business.coordinates?.lng || 77.2412) + 0.012},${(business.coordinates?.lat || 10.5891) + 0.012}&layer=mapnik&marker=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}`}
                   className="absolute inset-0 w-full h-full opacity-95 border-0"
                 />
                 
@@ -1460,6 +1569,7 @@ export default function BusinessDetail() {
                       <span className="text-xs text-slate-500 font-semibold leading-relaxed mt-1.5">{business.address}</span>
                     </div>
                   </div>
+                  {/* Google Maps directions URL — completely free, no API key needed */}
                   <a 
                     href={`https://www.google.com/maps/dir/?api=1&destination=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}`}
                     target="_blank"
@@ -1492,113 +1602,15 @@ export default function BusinessDetail() {
                 </div>
               </div>
 
-              {/* Action grid: Call and WhatsApp */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Action grid: Call only (to track call leads alone) */}
+              <div className="w-full">
                 <button
                   onClick={() => handleCall(business.phone)}
-                  className="py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-800/10 cursor-pointer"
+                  className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-800/10 cursor-pointer"
                 >
                   <Phone className="h-4 w-4" />
                   <span>Call Now</span>
                 </button>
-                
-                {!isExpired ? (
-                  <button
-                    onClick={() => handleWhatsApp(business.whatsapp, business.name)}
-                    className="py-3 border border-[#027244] hover:bg-emerald-50/50 text-[#027244] font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer bg-white"
-                  >
-                    <MessageSquare className="h-4 w-4 fill-current" />
-                    <span>WhatsApp</span>
-                  </button>
-                ) : (
-                  <span className="py-3 bg-slate-100 border border-slate-200 text-slate-400 font-extrabold text-[10px] rounded-xl flex items-center justify-center select-none text-center leading-none">
-                    WhatsApp Hidden
-                  </span>
-                )}
-              </div>
-
-              {/* Add to Phonebook option */}
-              <button
-                onClick={handleAddToPhonebook}
-                className="w-full py-2.5 bg-blue-50 hover:bg-blue-100/70 border border-blue-150 text-blue-700 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-              >
-                <Users className="h-4 w-4 text-blue-700" />
-                <span>Add to Phonebook</span>
-              </button>
-
-              {/* Business Contact Parameters (With Website Included!) */}
-              <div className="flex flex-col gap-4 text-xs font-bold text-slate-700">
-                <div className="flex items-start gap-3">
-                  <Phone className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Phone</span>
-                    <span className="text-slate-800 font-extrabold mt-1">{isExpired ? 'Hidden due to expiry' : business.phone}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 border-t border-slate-100 pt-4">
-                  <Mail className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Email Address</span>
-                    <span className="text-slate-800 font-extrabold mt-1">{isExpired ? 'Hidden due to expiry' : business.email || 'N/A'}</span>
-                  </div>
-                </div>
-
-                {business.website && (
-                  <div className="flex items-start gap-3 border-t border-slate-100 pt-4">
-                    <Globe className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Website</span>
-                      <a 
-                        href={`https://${business.website}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="text-emerald-700 hover:text-emerald-800 font-extrabold hover:underline mt-1 break-all"
-                      >
-                        {business.website}
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-start gap-3 border-t border-slate-100 pt-4">
-                  <MapPin className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
-                  <div className="flex flex-col gap-0.5 text-left">
-                    <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Location Address</span>
-                    <span className="text-slate-600 font-medium leading-relaxed mt-1">{business.address}</span>
-                  </div>
-                </div>
-
-                {/* Facebook and Instagram links directly below Location Address under "Connect with them:" */}
-                {(business.facebook || business.instagram) && (
-                  <div className="flex flex-col gap-2 border-t border-slate-100 pt-4">
-                    <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Connect with them:</span>
-                    <div className="flex items-center gap-3 mt-1">
-                      {business.facebook && (
-                        <a 
-                          href={business.facebook.startsWith('http') ? business.facebook : `https://${business.facebook}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="h-8 w-8 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-full flex items-center justify-center transition-colors"
-                          title="Facebook Profile"
-                        >
-                          <Facebook className="h-4 w-4" />
-                        </a>
-                      )}
-                      {business.instagram && (
-                        <a 
-                          href={business.instagram.startsWith('http') ? business.instagram : `https://instagram.com/${business.instagram.replace('@', '')}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="h-8 w-8 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-full flex items-center justify-center transition-colors"
-                          title="Instagram Profile"
-                        >
-                          <Instagram className="h-4 w-4" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Enquiry box */}
@@ -1620,6 +1632,16 @@ export default function BusinessDetail() {
                   disabled={isExpired}
                   className="py-2.5 px-3 border border-slate-200 rounded-xl shadow-2xs text-xs font-bold text-slate-700 bg-slate-50/20 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 disabled:opacity-50"
                 />
+                
+                <input
+                  type="text"
+                  placeholder="Your Phone Number..."
+                  value={enquiryPhone}
+                  onChange={(e) => setEnquiryPhone(e.target.value)}
+                  disabled={isExpired}
+                  className="py-2.5 px-3 border border-slate-200 rounded-xl shadow-2xs text-xs font-bold text-slate-700 bg-slate-50/20 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 disabled:opacity-50"
+                />
+                
                 <textarea
                   placeholder="Enquiry message..."
                   value={enquiryMessage}
@@ -1631,7 +1653,7 @@ export default function BusinessDetail() {
                 
                 <button
                   type="submit"
-                  disabled={isExpired || !enquiryName}
+                  disabled={isExpired || !enquiryName || !enquiryPhone || !enquiryMessage}
                   className="py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-800/10 cursor-pointer disabled:opacity-50"
                 >
                   <Send className="h-3.5 w-3.5" />
@@ -1648,19 +1670,26 @@ export default function BusinessDetail() {
                 </span>
               </span>
               <div className="flex flex-col gap-3 text-xs font-bold text-slate-600">
-                {business.timings && typeof business.timings === 'object' && business.timings !== null && !Array.isArray(business.timings) ? (
-                  Object.entries(business.timings).map(([day, time]) => (
-                    <div key={day} className="flex justify-between border-b border-slate-50 pb-2 last:border-b-0">
-                      <span className="text-slate-400 font-semibold">{day}</span>
-                      <span className={`flex items-center gap-1 ${String(time || '').toLowerCase().includes('closed') ? 'text-red-500' : 'text-slate-700'}`}>
-                        {String(time || 'Closed')} <ChevronRight className="h-3 w-3 text-slate-300" />
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-slate-500 font-semibold text-center">
-                    {typeof business.timings === 'string' ? business.timings : 'No timings configured.'}
+                {business.parentBusinessId && business.workingHours ? (
+                  <div className="flex justify-between py-2 border-b border-slate-50 last:border-b-0">
+                    <span className="text-slate-400 font-semibold">Working Hours</span>
+                    <span className="text-slate-700 font-bold">{business.workingHours}</span>
                   </div>
+                ) : (
+                  business.timings && typeof business.timings === 'object' && business.timings !== null && !Array.isArray(business.timings) ? (
+                    Object.entries(business.timings).map(([day, time]) => (
+                      <div key={day} className="flex justify-between border-b border-slate-50 pb-2 last:border-b-0">
+                        <span className="text-slate-400 font-semibold">{day}</span>
+                        <span className={`flex items-center gap-1 ${String(time || '').toLowerCase().includes('closed') ? 'text-red-500' : 'text-slate-700'}`}>
+                          {String(time || 'Closed')} <ChevronRight className="h-3 w-3 text-slate-300" />
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-slate-500 font-semibold text-center">
+                      {typeof business.timings === 'string' ? business.timings : 'No timings configured.'}
+                    </div>
+                  )
                 )}
               </div>
             </div>

@@ -53,6 +53,12 @@ export default function SuperAdminDashboard() {
   const [showExtendSubModal, setShowExtendSubModal] = useState(false);
   const [selectedBizForExtend, setSelectedBizForExtend] = useState(null);
   const [extendDays, setExtendDays] = useState(30);
+  const [customExtendDays, setCustomExtendDays] = useState('');
+
+  // Direct Extend Subscription States
+  const [directExtendBizId, setDirectExtendBizId] = useState('');
+  const [directExtendDays, setDirectExtendDays] = useState(30);
+  const [directExtendSubmitting, setDirectExtendSubmitting] = useState(false);
 
   // Support Ticket Modal States
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -890,6 +896,17 @@ export default function SuperAdminDashboard() {
 
   const handleExtendSubscription = async () => {
     if (!selectedBizForExtend) return;
+    let daysToExtendValue = extendDays;
+    if (extendDays === 'custom') {
+      const parsed = parseInt(customExtendDays, 10);
+      if (!customExtendDays || isNaN(parsed) || parsed <= 0) {
+        alert('Please enter a valid positive number of days.');
+        return;
+      }
+      daysToExtendValue = parsed;
+    } else {
+      daysToExtendValue = Number(extendDays);
+    }
     try {
       const res = await fetch(`http://localhost:5000/api/superadmin/businesses/${selectedBizForExtend._id}/extend-subscription`, {
         method: 'POST',
@@ -897,16 +914,49 @@ export default function SuperAdminDashboard() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` 
         },
-        body: JSON.stringify({ days: extendDays })
+        body: JSON.stringify({ days: daysToExtendValue })
       });
       if (res.ok) {
-        alert(`Extended premium access for ${selectedBizForExtend.name} by ${extendDays} days successfully!`);
+        alert(`Extended premium access for ${selectedBizForExtend.name} by ${daysToExtendValue} days successfully!`);
         setShowExtendSubModal(false);
         setSelectedBizForExtend(null);
+        setCustomExtendDays('');
         loadPlatformRealData();
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleDirectExtendSubscription = async (e) => {
+    e.preventDefault();
+    if (!directExtendBizId.trim()) {
+      alert('Please enter a valid Business ID.');
+      return;
+    }
+    setDirectExtendSubmitting(true);
+    try {
+      const res = await fetch(`http://localhost:5000/api/superadmin/businesses/${directExtendBizId.trim()}/extend-subscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
+        },
+        body: JSON.stringify({ days: Number(directExtendDays) })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(`Successfully activated premium subscription for Business ID ${directExtendBizId.trim()} for ${directExtendDays} days!`);
+        setDirectExtendBizId('');
+        loadPlatformRealData();
+      } else {
+        alert(data.message || 'Failed to activate subscription. Please check if the Business ID is correct.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Connection failed. Server might be offline.');
+    } finally {
+      setDirectExtendSubmitting(false);
     }
   };
 
@@ -2973,21 +3023,30 @@ export default function SuperAdminDashboard() {
                                 </div>
                                 
                                 <div className="flex flex-wrap gap-2 items-center">
-                                  <button
-                                    onClick={() => {
-                                      const val = prompt(`Assign existing category for "${biz.customCategoryName}". Options listed in dropdown. Enter name:`);
-                                      if (!val) return;
-                                      const matched = presetCategories.find(c => c.categoryName.toLowerCase() === val.toLowerCase());
-                                      if (!matched) {
-                                        alert("Selected category does not exist in preset list.");
-                                        return;
+                                  <select
+                                    onChange={(e) => {
+                                      const catId = e.target.value;
+                                      if (!catId) return;
+                                      const matched = presetCategories.find(c => c._id === catId);
+                                      if (matched) {
+                                        const confirmed = confirm(`Assign existing category "${matched.categoryName}" for "${biz.customCategoryName}"?`);
+                                        if (confirmed) {
+                                          resolveCategoryRequest(biz._id, 'assign', matched._id);
+                                        }
                                       }
-                                      resolveCategoryRequest(biz._id, 'assign', matched._id);
+                                      e.target.value = "";
                                     }}
-                                    className="py-1.5 px-3 bg-slate-500/10 border border-slate-405/20 hover:bg-slate-500/25 text-slate-700 dark:text-slate-300 text-[10px] font-extrabold rounded-xl transition-colors cursor-pointer"
+                                    className={`py-1.5 px-3 border rounded-xl text-[10px] font-extrabold cursor-pointer transition-colors outline-none ${
+                                      themeMode === 'dark'
+                                        ? 'bg-slate-900 border-slate-800 text-slate-200 hover:bg-slate-850'
+                                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                                    }`}
                                   >
-                                    Assign Existing
-                                  </button>
+                                    <option value="">-- Assign Existing Category --</option>
+                                    {presetCategories.map(c => (
+                                      <option key={c._id} value={c._id}>{c.categoryName}</option>
+                                    ))}
+                                  </select>
                                   <button
                                     onClick={() => {
                                       const isCreate = confirm(`Create genuinely new category "${biz.customCategoryName}"? It will auto-resolve the business mapping.`);
@@ -4045,6 +4104,48 @@ export default function SuperAdminDashboard() {
                   }`}>
                     <h3 className="font-extrabold text-base leading-tight font-sans">Active & Expired Premium Subscriptions</h3>
                     <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Overview of active premium subscription logs, renewal dates, and billing metrics.</span>
+                  </div>
+
+                  {/* Direct Activation Card */}
+                  <div className={`border shadow-xs rounded-[28px] p-6 ${
+                    themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                  }`}>
+                    <h3 className="font-extrabold text-base leading-tight font-sans">Direct Subscription Activation</h3>
+                    <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Activate premium subscription for any listing directly using its database ID.</span>
+                    
+                    <form onSubmit={handleDirectExtendSubscription} className="flex flex-col sm:flex-row gap-4 mt-5 items-end">
+                      <div className="flex-1 flex flex-col gap-1.5 w-full text-left">
+                        <label className="text-[9.5px] font-black text-slate-455 uppercase tracking-widest leading-none">Business Database ID</label>
+                        <input
+                          type="text"
+                          required
+                          value={directExtendBizId}
+                          onChange={(e) => setDirectExtendBizId(e.target.value)}
+                          placeholder="e.g. 65c92d5218abf523c90a1d4b"
+                          className="w-full border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-semibold focus:outline-none bg-slate-50/20"
+                        />
+                      </div>
+                      <div className="w-full sm:w-48 flex flex-col gap-1.5 text-left">
+                        <label className="text-[9.5px] font-black text-slate-455 uppercase tracking-widest leading-none">Duration</label>
+                        <select
+                          value={directExtendDays}
+                          onChange={(e) => setDirectExtendDays(Number(e.target.value))}
+                          className="w-full border border-slate-200 px-3 py-2.5 rounded-xl text-xs bg-slate-50/50 focus:outline-none cursor-pointer font-bold"
+                        >
+                          <option value={7}>7 Days (1 Week)</option>
+                          <option value={30}>30 Days (1 Month)</option>
+                          <option value={90}>90 Days (3 Months)</option>
+                          <option value={365}>365 Days (1 Year)</option>
+                        </select>
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={directExtendSubmitting}
+                        className="px-6 py-2.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl transition-all shadow-md shrink-0 disabled:opacity-75 cursor-pointer w-full sm:w-auto text-center"
+                      >
+                        {directExtendSubmitting ? 'Activating...' : 'Activate Listing'}
+                      </button>
+                    </form>
                   </div>
 
                   <div className={`overflow-x-auto border rounded-[28px] ${
@@ -6114,7 +6215,7 @@ export default function SuperAdminDashboard() {
           <div className="w-full max-w-md bg-white border border-slate-200 shadow-2xl rounded-[24px] p-6 flex flex-col gap-5 text-left font-sans">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <h3 className="font-extrabold text-sm uppercase tracking-wider">Extend Subscription Duration</h3>
-              <button onClick={() => { setShowExtendSubModal(false); setSelectedBizForExtend(null); }} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => { setShowExtendSubModal(false); setSelectedBizForExtend(null); setCustomExtendDays(''); setExtendDays(30); }} className="text-slate-400 hover:text-slate-600">
                 <X className="h-4.5 w-4.5" />
               </button>
             </div>
@@ -6132,11 +6233,25 @@ export default function SuperAdminDashboard() {
                 <option value={30}>30 Days (1 Month Extension)</option>
                 <option value={90}>90 Days (3 Months Extension)</option>
                 <option value={365}>365 Days (1 Year Extension)</option>
+                <option value="custom">Custom (Type number of days)</option>
               </select>
             </div>
+            {extendDays === 'custom' && (
+              <div className="flex flex-col gap-1.5 mt-1 animate-fadeIn">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Number of Days</label>
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="Enter custom days (e.g. 15)"
+                  value={customExtendDays}
+                  onChange={(e) => setCustomExtendDays(e.target.value)}
+                  className="w-full border border-slate-200 p-2.5 rounded-xl text-xs bg-slate-50 focus:outline-none focus:border-[#027244] font-bold text-slate-800"
+                />
+              </div>
+            )}
             <div className="flex gap-2 justify-end mt-2">
               <button 
-                onClick={() => { setShowExtendSubModal(false); setSelectedBizForExtend(null); }}
+                onClick={() => { setShowExtendSubModal(false); setSelectedBizForExtend(null); setCustomExtendDays(''); setExtendDays(30); }}
                 className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-extrabold rounded-xl"
               >
                 Cancel

@@ -46,8 +46,10 @@ const moderateBusiness = async (req, res, next) => {
     
     // Sync status of all branches of this business
     try {
-      const Branch = require('../models/Branch');
-      await Branch.updateMany({ businessId: business._id }, { status: nextStatus });
+      await Business.updateMany(
+        { parentBusinessId: business._id },
+        { status: nextStatus, verificationStatus: nextVerification }
+      );
       console.log(`[BRANCHES MODERATION CONTROLLER] Marked branches for business ${business._id} as ${nextStatus}`);
     } catch (branchModErr) {
       console.error('Error updating branch statuses during business moderation controller:', branchModErr);

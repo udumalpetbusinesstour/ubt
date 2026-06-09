@@ -5,6 +5,63 @@ const Review = require('../models/Review');
 const Category = require('../models/Category');
 const { protect } = require('../middleware/auth');
 
+// Synchronize branches as child Business documents
+async function syncBranches(parentBusiness, branchesData, userRole) {
+  if (!branchesData || !Array.isArray(branchesData)) return;
+
+  const existingBranches = await Business.find({ parentBusinessId: parentBusiness._id });
+  const existingIds = existingBranches.map(b => b._id.toString());
+  const incomingIds = [];
+
+  const status = userRole === 'admin' ? 'Approved' : 'Pending Verification';
+
+  for (const b of branchesData) {
+    const bId = b._id || b.id;
+    const branchFields = {
+      name: b.name,
+      businessName: b.name,
+      address: b.address,
+      phone: b.phone,
+      whatsapp: b.whatsapp || parentBusiness.whatsapp,
+      email: b.email || parentBusiness.email,
+      website: b.website || parentBusiness.website,
+      instagram: b.instagram || parentBusiness.instagram,
+      facebook: b.facebook || parentBusiness.facebook,
+      googleMapsLocation: b.googleMapsLocation,
+      googleBusinessLink: b.googleBusinessLink,
+      workingHours: b.workingHours,
+      branchManagerName: b.branchManagerName,
+      latitude: b.latitude || b.coordinates?.lat || 10.5891,
+      longitude: b.longitude || b.coordinates?.lng || 77.2412,
+      coordinates: {
+        lat: b.latitude || b.coordinates?.lat || 10.5891,
+        lng: b.longitude || b.coordinates?.lng || 77.2412
+      },
+      category: parentBusiness.category,
+      categoryId: parentBusiness.categoryId,
+      type: parentBusiness.type,
+      ownerId: parentBusiness.ownerId,
+      parentBusinessId: parentBusiness._id,
+      businessId: parentBusiness._id,
+      status: b.status || status,
+    };
+
+    if (bId && existingIds.includes(bId.toString())) {
+      incomingIds.push(bId.toString());
+      await Business.findByIdAndUpdate(bId, branchFields, { new: true });
+    } else {
+      const newBranch = await Business.create(branchFields);
+      incomingIds.push(newBranch._id.toString());
+    }
+  }
+
+  // Delete branches that are no longer in the list
+  const toDelete = existingIds.filter(id => !incomingIds.includes(id));
+  if (toDelete.length > 0) {
+    await Business.deleteMany({ _id: { $in: toDelete } });
+  }
+}
+
 // Allowed Udumalpet division pincodes and corresponding valid addresses for fraud verification
 const validAddressesMap = {
   '642126': [
@@ -397,15 +454,25 @@ router.get('/', async (req, res) => {
       businesses = businesses.filter(b => b.googleRating >= minRating);
     }
 
-    // Update active vs expired subscriptions on the fly and attach branchCount
+    // Update active vs expired subscriptions on the fly, inherit parent subscription for branches, and attach branchCount
     const now = new Date();
-    const Branch = require('../models/Branch');
     const businessesWithCounts = await Promise.all(businesses.map(async (b) => {
       let bObj = b.toObject();
+
+      // Inherit subscription details from parent if it is a branch
+      if (bObj.parentBusinessId) {
+        const parent = await Business.findById(bObj.parentBusinessId);
+        if (parent) {
+          bObj.subscriptionStatus = parent.subscriptionStatus;
+          bObj.subscriptionExpiry = parent.subscriptionExpiry;
+          bObj.isPremium = parent.isPremium;
+        }
+      }
+
       if (bObj.subscriptionExpiry && new Date(bObj.subscriptionExpiry) < now) {
         bObj.subscriptionStatus = 'expired';
       }
-      bObj.branchCount = await Branch.countDocuments({ businessId: b._id, status: 'Approved' });
+      bObj.branchCount = await Business.countDocuments({ parentBusinessId: b._id, status: 'Approved' });
       return bObj;
     }));
     businesses = businessesWithCounts;
@@ -492,8 +559,11 @@ router.get('/my-business', protect, async (req, res) => {
       return res.status(403).json({ success: false, message: 'Access denied: Authorized role required' });
     }
 
-    // Merge/Clean duplicate entries for this owner
-    const listings = await Business.find({ ownerId: req.user._id }).sort({ createdAt: -1 });
+    // Merge/Clean duplicate entries for this owner (only for primary listings, not branches)
+    const listings = await Business.find({
+      ownerId: req.user._id,
+      $or: [{ parentBusinessId: null }, { parentBusinessId: { $exists: false } }]
+    }).sort({ createdAt: -1 });
     let business = null;
     
     const isTestUser = 
@@ -820,6 +890,19 @@ router.get('/:id', async (req, res) => {
     // Inject the Google Maps API key from backend environment
     bObj.mapsApiKey = process.env.GOOGLE_MAPS_API_KEY || '';
 
+    // If it's a branch, inherit subscription details from parent and find siblings
+    let parentId = business._id;
+    if (business.parentBusinessId) {
+      const parent = await Business.findById(business.parentBusinessId);
+      if (parent) {
+        bObj.parentBusiness = parent.toObject();
+        bObj.subscriptionStatus = parent.subscriptionStatus;
+        bObj.subscriptionExpiry = parent.subscriptionExpiry;
+        bObj.isPremium = parent.isPremium;
+        parentId = parent._id;
+      }
+    }
+
     // Check expiry
     const now = new Date();
     if (bObj.subscriptionExpiry && new Date(bObj.subscriptionExpiry) < now) {
@@ -830,9 +913,8 @@ router.get('/:id', async (req, res) => {
     const reviews = await Review.find({ businessId: business._id });
     bObj.reviews = reviews;
 
-    // Get approved branches for this business
-    const Branch = require('../models/Branch');
-    const branches = await Branch.find({ businessId: business._id, status: 'Approved' });
+    // Get approved branches/siblings for this business
+    const branches = await Business.find({ parentBusinessId: parentId, status: 'Approved' });
     bObj.branches = branches;
     bObj.branchesCount = branches.length;
 
@@ -1090,23 +1172,8 @@ router.post('/', protect, async (req, res) => {
     // Save branches if provided
     if (req.body.branches && Array.isArray(req.body.branches)) {
       try {
-        const Branch = require('../models/Branch');
-        await Branch.deleteMany({ businessId: business._id });
-        const branchesToCreate = req.body.branches.map(b => ({
-          ...b,
-          businessId: business._id,
-          status: req.user.role === 'admin' ? 'Approved' : 'Pending Verification',
-          latitude: b.latitude || b.coordinates?.lat || 10.5891,
-          longitude: b.longitude || b.coordinates?.lng || 77.2412,
-          coordinates: {
-            lat: b.latitude || b.coordinates?.lat || 10.5891,
-            lng: b.longitude || b.coordinates?.lng || 77.2412
-          }
-        }));
-        if (branchesToCreate.length > 0) {
-          await Branch.insertMany(branchesToCreate);
-        }
-        console.log(`[BRANCHES SAVE] Saved ${branchesToCreate.length} branches for business ${business._id}`);
+        await syncBranches(business, req.body.branches, req.user.role);
+        console.log(`[BRANCHES SAVE] Synchronized branches for business ${business._id}`);
       } catch (branchErr) {
         console.error('Error saving branches in business POST route:', branchErr);
       }
@@ -1193,23 +1260,8 @@ router.put('/:id', protect, async (req, res) => {
     // Save branches if provided
     if (req.body.branches && Array.isArray(req.body.branches)) {
       try {
-        const Branch = require('../models/Branch');
-        await Branch.deleteMany({ businessId: business._id });
-        const branchesToCreate = req.body.branches.map(b => ({
-          ...b,
-          businessId: business._id,
-          status: req.user.role === 'admin' ? 'Approved' : 'Pending Verification',
-          latitude: b.latitude || b.coordinates?.lat || 10.5891,
-          longitude: b.longitude || b.coordinates?.lng || 77.2412,
-          coordinates: {
-            lat: b.latitude || b.coordinates?.lat || 10.5891,
-            lng: b.longitude || b.coordinates?.lng || 77.2412
-          }
-        }));
-        if (branchesToCreate.length > 0) {
-          await Branch.insertMany(branchesToCreate);
-        }
-        console.log(`[BRANCHES UPDATE] Updated ${branchesToCreate.length} branches for business ${business._id}`);
+        await syncBranches(business, req.body.branches, req.user.role);
+        console.log(`[BRANCHES UPDATE] Synchronized branches for business ${business._id}`);
       } catch (branchErr) {
         console.error('Error saving branches in business PUT route:', branchErr);
       }
@@ -1229,8 +1281,11 @@ router.post('/draft', protect, async (req, res) => {
   try {
     const fields = req.body;
     
-    // Find existing business for this user
-    let business = await Business.findOne({ ownerId: req.user._id });
+    // Find existing business for this user (primary listing only)
+    let business = await Business.findOne({
+      ownerId: req.user._id,
+      $or: [{ parentBusinessId: null }, { parentBusinessId: { $exists: false } }]
+    });
     
     if (business) {
       // If the business is already paid, don't allow modifying it via draft (bypassed in dev mode)
@@ -1256,23 +1311,8 @@ router.post('/draft', protect, async (req, res) => {
     // Save branches draft if provided
     if (fields.branches && Array.isArray(fields.branches)) {
       try {
-        const Branch = require('../models/Branch');
-        await Branch.deleteMany({ businessId: business._id });
-        const branchesToCreate = fields.branches.map(b => ({
-          ...b,
-          businessId: business._id,
-          status: req.user.role === 'admin' ? 'Approved' : 'Pending Verification',
-          latitude: b.latitude || b.coordinates?.lat || 10.5891,
-          longitude: b.longitude || b.coordinates?.lng || 77.2412,
-          coordinates: {
-            lat: b.latitude || b.coordinates?.lat || 10.5891,
-            lng: b.longitude || b.coordinates?.lng || 77.2412
-          }
-        }));
-        if (branchesToCreate.length > 0) {
-          await Branch.insertMany(branchesToCreate);
-        }
-        console.log(`[BRANCHES DRAFT] Drafted ${branchesToCreate.length} branches for business ${business._id}`);
+        await syncBranches(business, fields.branches, req.user.role);
+        console.log(`[BRANCHES DRAFT] Drafted branches for business ${business._id}`);
       } catch (branchErr) {
         console.error('Error saving branches in business draft route:', branchErr);
       }
@@ -1290,5 +1330,34 @@ router.post('/draft', protect, async (req, res) => {
 // @access  Private
 const { syncGoogleBusiness } = require('../controllers/businessController');
 router.post('/:id/sync-google', protect, syncGoogleBusiness);
+
+// @desc    Increment click count for a business by action type
+// @route   POST /api/businesses/:id/click
+// @access  Public
+router.post('/:id/click', async (req, res) => {
+  const { type } = req.body;
+  const validTypes = ['call', 'whatsapp', 'website', 'instagram', 'facebook'];
+  if (!validTypes.includes(type)) {
+    return res.status(400).json({ success: false, message: 'Invalid click type' });
+  }
+
+  try {
+    const updateField = `${type}Clicks`;
+    const business = await Business.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { [updateField]: 1 } },
+      { new: true }
+    );
+
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    res.json({ success: true, clicks: business[updateField] });
+  } catch (error) {
+    console.error(`Error incrementing ${type} clicks:`, error);
+    res.status(505).json({ success: false, message: error.message });
+  }
+});
 
 module.exports = router;

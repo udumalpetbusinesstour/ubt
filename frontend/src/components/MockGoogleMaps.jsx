@@ -90,18 +90,18 @@ const mockAddressesByPincode = {
 // 2. Uses the parent-provided 'pincode' to restrict predictions.
 // 3. Communicates coordinate selection and verification status back to the parent.
 // 4. Gracefully falls back to mock addresses per pincode if backend is offline or key is absent.
-export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddress = '' }) {
+export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddress = '', googlePlaceId = '' }) {
   const [addressInput, setAddressInput] = useState(initialAddress);
   const [suggestions, setSuggestions] = useState([]);
-  const [isVerified, setIsVerified] = useState(false);
+  const [isVerified, setIsVerified] = useState(!!googlePlaceId);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (initialAddress) {
       setAddressInput(initialAddress);
-      setIsVerified(true);
+      setIsVerified(!!googlePlaceId);
     }
-  }, [initialAddress]);
+  }, [initialAddress, googlePlaceId]);
 
   // Reset verification if pincode changes (only if pincode is actually provided)
   useEffect(() => {
@@ -109,6 +109,15 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
       setIsVerified(false);
       setSuggestions([]);
       setError('');
+      if (onAddressSelect) {
+        onAddressSelect({
+          address: addressInput,
+          locality: '',
+          coordinates: { lat: 10.585, lng: 77.251 },
+          isVerified: false,
+          googlePlaceId: '',
+        });
+      }
     }
   }, [pincode]);
 
@@ -125,6 +134,7 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
         locality: '',
         coordinates: { lat: 10.585, lng: 77.251 },
         isVerified: false,
+        googlePlaceId: '',
       });
     }
  
@@ -166,6 +176,7 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
             pincode: d.pincode || '',
             coordinates: d.coordinates || { lat: d.latitude, lng: d.longitude },
             isVerified: true,
+            googlePlaceId: sug.place_id,
           });
         }
       }

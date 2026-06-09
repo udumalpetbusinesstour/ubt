@@ -61,6 +61,7 @@ export default function AddBusiness() {
     logoUrl: '',
     coverImageUrl: '',
     galleryUrls: [],
+    googleBusinessLink: '',
     coordinates: { lat: 10.585, lng: 77.251 },
     timings: {
       Monday: '9:00 AM - 8:00 PM',
@@ -105,6 +106,7 @@ export default function AddBusiness() {
     googleRating: 0,
     googleReviewsCount: 0,
     googleReviews: [],
+    googleBusinessLink: '',
     coordinates: { lat: 10.585, lng: 77.251 },
     timings: {
       Monday: '9:00 AM - 8:00 PM',
@@ -131,12 +133,7 @@ export default function AddBusiness() {
   const [branchAutofillLoading, setBranchAutofillLoading] = useState(false);
   const [branchAutofillSuccess, setBranchAutofillSuccess] = useState(false);
 
-  // Sync isPincodeVerified when draft is loaded
-  useEffect(() => {
-    if (formData.pincode) {
-      setIsPincodeVerified(true);
-    }
-  }, [formData.pincode]);
+
 
   // Fetch categories dynamically on component mount
   useEffect(() => {
@@ -260,6 +257,9 @@ export default function AddBusiness() {
     if (draft.coverImageUrl) setCoverFile('draft_cover.png');
     if (draft.galleryUrls && draft.galleryUrls.length > 0) {
       setGalleryFiles(draft.galleryUrls.map((url, i) => `draft_gallery_${i}.png`));
+    }
+    if (draft.pincode) {
+      setIsPincodeVerified(true);
     }
   };
 
@@ -798,6 +798,7 @@ export default function AddBusiness() {
       locality: addrDetails.locality,
       coordinates: addrDetails.coordinates,
       isAddressVerified: addrDetails.isVerified,
+      googlePlaceId: addrDetails.googlePlaceId || '',
     };
     setFormData(updated);
     saveDraft(updated);
@@ -867,7 +868,7 @@ export default function AddBusiness() {
       const updated = {
         ...formData,
         galleryUrls: [
-          'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80',
+          'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=500&q=80',
           'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&q=80',
           'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80',
         ]
@@ -903,7 +904,7 @@ export default function AddBusiness() {
       setBranchForm(prev => ({
         ...prev,
         galleryUrls: [
-          'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80',
+          'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=500&q=80',
           'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&q=80',
           'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80',
         ]
@@ -1230,93 +1231,54 @@ export default function AddBusiness() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-4 text-left">
-                <div className="flex flex-col gap-1.5 relative">
-                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Search Business on Google <span className="text-red-500">*</span></label>
-                  <div className="flex items-center gap-2 w-full relative">
-                    <div className="relative flex-grow">
-                      <input
-                        type="text"
-                        placeholder="Type your business name..."
-                        value={googleQuery}
-                        onFocus={() => { if (googleSuggestions.length > 0) setShowGoogleDropdown(true); }}
-                        onChange={(e) => handleGoogleInputChange(e.target.value)}
-                        className="py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold w-full focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 animate-none"
-                      />
-                      {showGoogleDropdown && (
-                        <>
-                          <div className="fixed inset-0 z-20 cursor-default" onClick={() => setShowGoogleDropdown(false)} />
-                          <div className="absolute top-[100%] left-0 w-full bg-white border border-slate-200 rounded-xl shadow-xl mt-1 overflow-hidden z-30 flex flex-col max-h-60 overflow-y-auto animate-scaleUp font-sans">
-                            {googleSuggestions.map((sug) => (
-                              <button
-                                key={sug.place_id}
-                                type="button"
-                                onClick={() => handleSelectSuggestion(sug)}
-                                className="w-full text-left py-2.5 px-4 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex flex-col border-b border-slate-50 last:border-b-0 cursor-pointer border-none"
-                              >
-                                <span className="font-extrabold text-slate-800">{sug.structured_formatting?.main_text || sug.description}</span>
-                                <span className="text-[10px] text-slate-400 mt-0.5 font-medium">{sug.structured_formatting?.secondary_text || sug.description}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    <button 
-                      onClick={handleGoogleAutofill}
-                      disabled={autofillLoading}
-                      className="py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm shrink-0 cursor-pointer disabled:opacity-70 flex items-center gap-1.5"
-                    >
-                      {autofillLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : 'Import'}
-                    </button>
-                  </div>
+              <div className="flex flex-col gap-4 text-left animate-fadeIn">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Google Business Profile Link <span className="text-red-500">*</span></label>
+                  <input
+                    type="url"
+                    placeholder="https://maps.app.goo.gl/..."
+                    value={formData.googleBusinessLink || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, googleBusinessLink: e.target.value }))}
+                    className="py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold w-full focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Select Eligible Udumalpet Pincode <span className="text-red-500">*</span></label>
+                  <select
+                    name="pincode"
+                    value={formData.pincode}
+                    onChange={handleInputChange}
+                    className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
+                  >
+                    <option value="">-- Choose Pincode --</option>
+                    <option value="642126">642126 - Udumalpet Main Town</option>
+                    <option value="642207">642207 - Pungamuthur</option>
+                    <option value="642154">642154 - Bodipatti & Gandhi Nagar</option>
+                    <option value="642112">642112 - Dhali</option>
+                    <option value="642205">642205 - Pethappampatti</option>
+                    <option value="642122">642122 - Poolankinar</option>
+                    <option value="642204">642204 - Komaralingam & Kolumam</option>
+                    <option value="642201">642201 - Gudimangalam</option>
+                    <option value="642203">642203 - Kaniyur</option>
+                    <option value="642102">642102 - Amaravathi Nagar</option>
+                    <option value="642128">642128 - Venkatesa Mills</option>
+                    <option value="642113">642113 - Madathukulam</option>
+                    <option value="642206">642206 - Poolavadi</option>
+                    <option value="642132">642132 - Valavadi</option>
+                    <option value="642111">642111 - Agrahara Kannadiputhur</option>
+                  </select>
                 </div>
 
                 <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4.5 text-xs text-slate-500 leading-relaxed font-semibold">
-                  <span className="font-extrabold text-slate-700 block mb-0.5">ℹ️ Instant Import</span>
-                  Searching and importing your business via Google automatically retrieves details like name, address, phone number, coordinates, and reviews!
+                  <span className="font-extrabold text-slate-700 block mb-0.5">ℹ️ Google Business Profile Verification</span>
+                  Please provide the Google Business Profile Link or Google Maps URL for your business location. Our administrators will use this link to verify your listing details.
                 </div>
 
                 {error && (
                   <div className="text-red-650 text-xs font-semibold bg-red-50 border border-red-200 p-3 rounded-xl flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
                     <span>{error}</span>
-                  </div>
-                )}
-
-                {autofillSuccess && (
-                  <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl p-3.5 text-xs font-semibold flex items-center gap-2.5 animate-slideDown">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-                    <span>Success! Google Business details loaded beautifully. Click proceed to begin filling.</span>
-                  </div>
-                )}
-
-                {googleQuery && !formData.pincode && autofillSuccess && (
-                  <div className="flex flex-col gap-1.5 animate-fadeIn border-t border-slate-100 pt-3">
-                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Select Eligible Udumalpet Pincode <span className="text-red-500">*</span></label>
-                    <select
-                      name="pincode"
-                      value={formData.pincode}
-                      onChange={handleInputChange}
-                      className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
-                    >
-                      <option value="">-- Choose Pincode --</option>
-                      <option value="642126">642126 - Udumalpet Main Town</option>
-                      <option value="642207">642207 - Pungamuthur</option>
-                      <option value="642154">642154 - Bodipatti & Gandhi Nagar</option>
-                      <option value="642112">642112 - Dhali</option>
-                      <option value="642205">642205 - Pethappampatti</option>
-                      <option value="642122">642122 - Poolankinar</option>
-                      <option value="642204">642204 - Komaralingam & Kolumam</option>
-                      <option value="642201">642201 - Gudimangalam</option>
-                      <option value="642203">642203 - Kaniyur</option>
-                      <option value="642102">642102 - Amaravathi Nagar</option>
-                      <option value="642128">642128 - Venkatesa Mills</option>
-                      <option value="642113">642113 - Madathukulam</option>
-                      <option value="642206">642206 - Poolavadi</option>
-                      <option value="642132">642132 - Valavadi</option>
-                      <option value="642111">642111 - Agrahara Kannadiputhur</option>
-                    </select>
                   </div>
                 )}
 
@@ -1330,16 +1292,21 @@ export default function AddBusiness() {
                   </button>
                   <button
                     onClick={() => {
+                      if (!formData.googleBusinessLink) {
+                        setError("Please enter your Google Business Profile link.");
+                        return;
+                      }
                       if (!formData.pincode) {
-                        setError("Please select/verify a valid Udumalpet pincode first.");
+                        setError("Please select a valid Udumalpet pincode first.");
                         return;
                       }
                       setError("");
                       setIsPincodeVerified(true);
+                      saveDraft({ ...formData });
                     }}
                     className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow"
                   >
-                    Proceed to Form
+                    Verify & Proceed
                   </button>
                 </div>
               </div>
@@ -1464,93 +1431,54 @@ export default function AddBusiness() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-4 text-left">
-                <div className="flex flex-col gap-1.5 relative">
-                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Search Branch on Google <span className="text-red-500">*</span></label>
-                  <div className="flex items-center gap-2 w-full relative">
-                    <div className="relative flex-grow">
-                      <input
-                        type="text"
-                        placeholder="Type your branch name..."
-                        value={branchGoogleQuery}
-                        onFocus={() => { if (branchGoogleSuggestions.length > 0) setShowBranchGoogleDropdown(true); }}
-                        onChange={(e) => handleBranchGoogleInputChange(e.target.value)}
-                        className="py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold w-full focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                      />
-                      {showBranchGoogleDropdown && (
-                        <>
-                          <div className="fixed inset-0 z-20 cursor-default" onClick={() => setShowBranchGoogleDropdown(false)} />
-                          <div className="absolute top-[100%] left-0 w-full bg-white border border-slate-200 rounded-xl shadow-xl mt-1 overflow-hidden z-30 flex flex-col max-h-60 overflow-y-auto font-sans border-none">
-                            {branchGoogleSuggestions.map((sug) => (
-                              <button
-                                key={sug.place_id}
-                                type="button"
-                                onClick={() => handleSelectBranchSuggestion(sug)}
-                                className="w-full text-left py-2.5 px-4 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex flex-col border-none cursor-pointer"
-                              >
-                                <span className="font-extrabold text-slate-800">{sug.structured_formatting?.main_text || sug.description}</span>
-                                <span className="text-[10px] text-slate-400 mt-0.5 font-medium">{sug.structured_formatting?.secondary_text || sug.description}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    <button 
-                      onClick={handleBranchGoogleAutofill}
-                      disabled={branchAutofillLoading}
-                      className="py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm shrink-0 cursor-pointer disabled:opacity-70 flex items-center gap-1.5"
-                    >
-                      {branchAutofillLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : 'Import'}
-                    </button>
-                  </div>
+              <div className="flex flex-col gap-4 text-left animate-fadeIn">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Google Business Profile Link <span className="text-red-500">*</span></label>
+                  <input
+                    type="url"
+                    placeholder="https://maps.app.goo.gl/..."
+                    value={branchForm.googleBusinessLink || ''}
+                    onChange={(e) => setBranchForm(prev => ({ ...prev, googleBusinessLink: e.target.value }))}
+                    className="py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold w-full focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                  />
                 </div>
 
-                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4.5 text-xs text-slate-505 leading-relaxed font-semibold">
-                  <span className="font-extrabold text-slate-700 block mb-0.5">ℹ️ Instant Import</span>
-                  Searching and importing your branch via Google automatically retrieves details like name, address, phone number, coordinates, and reviews!
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Select Eligible Udumalpet Pincode <span className="text-red-500">*</span></label>
+                  <select
+                    name="pincode"
+                    value={branchForm.pincode}
+                    onChange={handleBranchInputChange}
+                    className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
+                  >
+                    <option value="">-- Choose Pincode --</option>
+                    <option value="642126">642126 - Udumalpet Main Town</option>
+                    <option value="642207">642207 - Pungamuthur</option>
+                    <option value="642154">642154 - Bodipatti & Gandhi Nagar</option>
+                    <option value="642112">642112 - Dhali</option>
+                    <option value="642205">642205 - Pethappampatti</option>
+                    <option value="642122">642122 - Poolankinar</option>
+                    <option value="642204">642204 - Komaralingam & Kolumam</option>
+                    <option value="642201">642201 - Gudimangalam</option>
+                    <option value="642203">642203 - Kaniyur</option>
+                    <option value="642102">642102 - Amaravathi Nagar</option>
+                    <option value="642128">642128 - Venkatesa Mills</option>
+                    <option value="642113">642113 - Madathukulam</option>
+                    <option value="642206">642206 - Poolavadi</option>
+                    <option value="642132">642132 - Valavadi</option>
+                    <option value="642111">642111 - Agrahara Kannadiputhur</option>
+                  </select>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4.5 text-xs text-slate-500 leading-relaxed font-semibold">
+                  <span className="font-extrabold text-slate-700 block mb-0.5">ℹ️ Google Business Profile Verification</span>
+                  Please provide the Google Business Profile Link or Google Maps URL for your branch location. Our administrators will use this link to verify your branch listing details.
                 </div>
 
                 {error && (
                   <div className="text-red-650 text-xs font-semibold bg-red-50 border border-red-200 p-3 rounded-xl flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
                     <span>{error}</span>
-                  </div>
-                )}
-
-                {branchAutofillSuccess && (
-                  <div className="bg-emerald-50 border border-emerald-250 text-emerald-700 rounded-xl p-3.5 text-xs font-semibold flex items-center gap-2.5 animate-slideDown">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-                    <span>Success! Google Business details loaded beautifully. Click proceed to begin filling.</span>
-                  </div>
-                )}
-
-                {branchGoogleQuery && !branchForm.pincode && branchAutofillSuccess && (
-                  <div className="flex flex-col gap-1.5 animate-fadeIn border-t border-slate-100 pt-3">
-                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Select Eligible Udumalpet Pincode <span className="text-red-500">*</span></label>
-                    <select
-                      name="pincode"
-                      value={branchForm.pincode}
-                      onChange={handleBranchInputChange}
-                      className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
-                    >
-                      <option value="">-- Choose Pincode --</option>
-                      <option value="642126">642126 - Udumalpet Main Town</option>
-                      <option value="642207">642207 - Pungamuthur</option>
-                      <option value="642154">642154 - Bodipatti & Gandhi Nagar</option>
-                      <option value="642112">642112 - Dhali</option>
-                      <option value="642205">642205 - Pethappampatti</option>
-                      <option value="642122">642122 - Poolankinar</option>
-                      <option value="642204">642204 - Komaralingam & Kolumam</option>
-                      <option value="642201">642201 - Gudimangalam</option>
-                      <option value="642203">642203 - Kaniyur</option>
-                      <option value="642102">642102 - Amaravathi Nagar</option>
-                      <option value="642128">642128 - Venkatesa Mills</option>
-                      <option value="642113">642113 - Madathukulam</option>
-                      <option value="642206">642206 - Poolavadi</option>
-                      <option value="642132">642132 - Valavadi</option>
-                      <option value="642111">642111 - Agrahara Kannadiputhur</option>
-                    </select>
                   </div>
                 )}
 
@@ -1564,8 +1492,12 @@ export default function AddBusiness() {
                   </button>
                   <button
                     onClick={() => {
+                      if (!branchForm.googleBusinessLink) {
+                        setError("Please enter your Google Business Profile link.");
+                        return;
+                      }
                       if (!branchForm.pincode) {
-                        setError("Please select/verify a valid Udumalpet pincode first.");
+                        setError("Please select a pincode to verify eligibility.");
                         return;
                       }
                       setError("");
@@ -1573,7 +1505,7 @@ export default function AddBusiness() {
                     }}
                     className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow"
                   >
-                    Proceed to Form
+                    Verify & Proceed
                   </button>
                 </div>
               </div>
@@ -2028,37 +1960,37 @@ export default function AddBusiness() {
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Website URL</label>
+                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Website URL (Optional)</label>
                       <input
                         type="text"
                         name="website"
                         value={formData.website || ''}
                         onChange={handleInputChange}
-                        placeholder="e.g. www.store.com"
+                        placeholder="e.g. www.mybusiness.com"
                         className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
                       />
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Facebook URL</label>
+                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Facebook URL (Optional)</label>
                       <input
                         type="text"
                         name="facebook"
                         value={formData.facebook || ''}
                         onChange={handleInputChange}
-                        placeholder="e.g. facebook.com/store"
+                        placeholder="e.g. facebook.com/mybusiness"
                         className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
                       />
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Instagram URL</label>
+                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Instagram Handle (Optional)</label>
                       <input
                         type="text"
                         name="instagram"
                         value={formData.instagram || ''}
                         onChange={handleInputChange}
-                        placeholder="e.g. instagram.com/store"
+                        placeholder="e.g. @mybusiness"
                         className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
                       />
                     </div>
@@ -2157,6 +2089,7 @@ export default function AddBusiness() {
                       pincode={formData.pincode}
                       onAddressSelect={handleAddressSelect}
                       initialAddress={formData.address}
+                      googlePlaceId={formData.googlePlaceId}
                     />
                   </div>
                 </div>
@@ -2454,37 +2387,37 @@ export default function AddBusiness() {
                         </div>
 
                         <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Website URL</label>
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Website URL (Optional)</label>
                           <input
                             type="text"
                             name="website"
                             value={branchForm.website || ''}
                             onChange={handleBranchInputChange}
-                            placeholder="e.g. www.store.com"
+                            placeholder="e.g. www.mybusiness.com"
                             className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
                           />
                         </div>
 
                         <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Facebook URL</label>
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Facebook URL (Optional)</label>
                           <input
                             type="text"
                             name="facebook"
                             value={branchForm.facebook || ''}
                             onChange={handleBranchInputChange}
-                            placeholder="e.g. facebook.com/store"
+                            placeholder="e.g. facebook.com/mybusiness"
                             className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
                           />
                         </div>
 
                         <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Instagram URL</label>
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Instagram Handle (Optional)</label>
                           <input
                             type="text"
                             name="instagram"
                             value={branchForm.instagram || ''}
                             onChange={handleBranchInputChange}
-                            placeholder="e.g. instagram.com/store"
+                            placeholder="e.g. @mybusiness"
                             className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
                           />
                         </div>

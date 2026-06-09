@@ -55,6 +55,8 @@ export default function AdminDashboard() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [reportsData, setReportsData] = useState({});
+  const [pendingCategories, setPendingCategories] = useState([]);
+  const [presetCategories, setPresetCategories] = useState([]);
 
   // Slide-over Modal State
   const [selectedBiz, setSelectedBiz] = useState(null);
@@ -541,10 +543,49 @@ export default function AdminDashboard() {
         expired: activeBiz.filter(b => b.subscriptionStatus === 'expired').length
       });
 
+      // Fetch dynamic seeded preset categories
+      const categoriesRes = await fetch('http://localhost:5000/api/categories', { headers });
+      const categoriesData = await categoriesRes.json();
+      if (categoriesData.success) {
+        setPresetCategories(categoriesData.data);
+      }
+
+      // Fetch pending custom category requests
+      const pendingCatRes = await fetch('http://localhost:5000/api/admin/category-review/pending', { headers });
+      const pendingCatData = await pendingCatRes.json();
+      if (pendingCatData.success) {
+        setPendingCategories(pendingCatData.data);
+      }
+
     } catch (err) {
       console.error('Error hydrating admin platform datasets:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resolveCategoryRequest = async (businessId, action, categoryId = null, newCategoryName = null, icon = null) => {
+    try {
+      const storedToken = localStorage.getItem('ubt_token');
+      const headers = { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${storedToken}` 
+      };
+      const res = await fetch('http://localhost:5000/api/admin/category-review/resolve', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ businessId, action, categoryId, newCategoryName, icon })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(data.message || "Category request resolved successfully!");
+        loadPlatformRealData();
+      } else {
+        alert(data.message || "Failed to resolve category request.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error resolving category request.");
     }
   };
 
@@ -579,18 +620,121 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleManualSubscription = (bizId) => {
-    setBusinesses(prev => prev.map(b => {
-      if (b._id === bizId) {
-        return { 
-          ...b, 
-          subscriptionStatus: 'active', 
-          subscriptionExpiry: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000) 
-        };
+  const handleManualSubscription = async (bizId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/businesses/${bizId}/activate-subscription`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token || localStorage.getItem('ubt_token')}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Plan manually activated successfully for 30 days!');
+        loadPlatformRealData();
+      } else {
+        alert(data.message || 'Failed to activate subscription.');
       }
-      return b;
-    }));
-    alert('Plan manually activated successfully for 30 days!');
+    } catch (err) {
+      setBusinesses(prev => prev.map(b => {
+        if (b._id === bizId) {
+          return { 
+            ...b, 
+            subscriptionStatus: 'active', 
+            subscriptionExpiry: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000) 
+          };
+        }
+        return b;
+      }));
+      alert('Plan manually activated successfully for 30 days (offline simulation)!');
+    }
+  };
+
+  const handleSuspendSubscription = async (bizId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/businesses/${bizId}/suspend-subscription`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token || localStorage.getItem('ubt_token')}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message || 'Action executed successfully!');
+        loadPlatformRealData();
+      } else {
+        alert(data.message || 'Failed to update subscription status.');
+      }
+    } catch (err) {
+      setBusinesses(prev => prev.map(b => {
+        if (b._id === bizId) {
+          const isSuspended = b.subscriptionStatus === 'suspended';
+          return { 
+            ...b, 
+            subscriptionStatus: isSuspended ? 'none' : 'suspended',
+            isPremium: false
+          };
+        }
+        return b;
+      }));
+      alert('Subscription status updated successfully (offline simulation)!');
+    }
+  };
+
+  const handleSendReminder = async (bizId) => {
+    const businessObj = businesses.find(b => b._id === bizId);
+    const businessName = businessObj ? businessObj.name : '';
+    const defaultMsg = `Friendly reminder: Please renew your subscription for "${businessName}" to maintain premium visibility and access.`;
+    const customMessage = window.prompt("Enter customized reminder text (leave empty to send default message):", defaultMsg);
+    
+    if (customMessage === null) return;
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/businesses/${bizId}/send-reminder`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token || localStorage.getItem('ubt_token')}`
+        },
+        body: JSON.stringify({ message: customMessage })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Subscription reminder sent successfully!');
+      } else {
+        alert(data.message || 'Failed to send subscription reminder.');
+      }
+    } catch (err) {
+      alert('Subscription reminder successfully sent (offline simulation)!');
+    }
+  };
+
+  const handleBroadcast = async () => {
+    if (!newNotice.title || !newNotice.message) return;
+    try {
+      const res = await fetch('http://localhost:5000/api/admin/notifications/broadcast', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token || localStorage.getItem('ubt_token')}`
+        },
+        body: JSON.stringify({
+          title: newNotice.title,
+          message: newNotice.message,
+          type: newNotice.type
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNoticeSuccess(true);
+        setNewNotice({ title: '', message: '', type: 'announcement' });
+        setTimeout(() => setNoticeSuccess(false), 4000);
+      } else {
+        alert(data.message || 'Failed to broadcast system notification.');
+      }
+    } catch (err) {
+      alert('Failed to broadcast system notification (network error).');
+    }
   };
 
   const handleBlogAction = async (blogId, status, suggestions = '') => {
@@ -1449,6 +1593,16 @@ export default function AdminDashboard() {
                       >
                         Testimonials ({appTestimonials.filter(t => t.status === 'Pending').length})
                       </button>
+                      <button
+                        onClick={() => setPendingSubTab('Categories')}
+                        className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                          pendingSubTab === 'Categories'
+                            ? 'bg-[#027244] text-white shadow-sm shadow-emerald-950/15'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        Categories ({pendingCategories.length})
+                      </button>
                     </div>
                   </div>
 
@@ -1708,6 +1862,68 @@ export default function AdminDashboard() {
                             </div>
                           )}
                         </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Sub-tab view: Categories */}
+                  {pendingSubTab === 'Categories' && (
+                    <div className="flex flex-col gap-4">
+                      {pendingCategories.length === 0 ? (
+                        <div className="bg-white border border-slate-200 rounded-3xl p-16 text-center text-slate-400 flex flex-col items-center gap-3">
+                          <CheckCircle2 className="h-10 w-10 text-emerald-600 animate-bounce" />
+                          <span className="text-sm font-bold text-slate-800 font-sans">Queue Empty!</span>
+                          <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-xs">All custom category requests are resolved.</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-4">
+                          {pendingCategories.map(biz => (
+                            <div key={biz._id} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-left">
+                              <div className="flex flex-col text-left font-sans">
+                                <div className="flex items-center gap-2">
+                                  <span className="bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-sm">Custom category request</span>
+                                  <span className="text-[9px] font-extrabold text-slate-400">Biz Status: {biz.status}</span>
+                                </div>
+                                <span className="font-black text-sm mt-2 text-[#001c41]">"{biz.customCategoryName}"</span>
+                                <span className="text-[10.5px] text-slate-400 font-semibold mt-1">Requested by business: <b className="text-slate-555">{biz.name}</b> ({biz.ownerId?.fullName || 'Owner'})</span>
+                              </div>
+                              
+                              <div className="flex flex-wrap gap-2 items-center">
+                                <select
+                                  onChange={(e) => {
+                                    const catId = e.target.value;
+                                    if (!catId) return;
+                                    const matched = presetCategories.find(c => c._id === catId);
+                                    if (matched) {
+                                      const confirmed = confirm(`Assign existing category "${matched.categoryName}" for "${biz.customCategoryName}"?`);
+                                      if (confirmed) {
+                                        resolveCategoryRequest(biz._id, 'assign', matched._id);
+                                      }
+                                    }
+                                    e.target.value = "";
+                                  }}
+                                  className="py-1.5 px-3 border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-xl text-[10px] font-extrabold cursor-pointer transition-colors outline-none font-sans"
+                                >
+                                  <option value="">-- Assign Existing Category --</option>
+                                  {presetCategories.map(c => (
+                                    <option key={c._id} value={c._id}>{c.categoryName}</option>
+                                  ))}
+                                </select>
+                                <button
+                                  onClick={() => {
+                                    const isCreate = confirm(`Create genuinely new category "${biz.customCategoryName}"? It will auto-resolve the business mapping.`);
+                                    if (isCreate) {
+                                      resolveCategoryRequest(biz._id, 'create', null, biz.customCategoryName);
+                                    }
+                                  }}
+                                  className="py-1.5 px-3 bg-[#027244] hover:bg-[#005934] text-white text-[10px] font-extrabold rounded-xl transition-colors cursor-pointer shadow-sm shadow-emerald-800/10 font-sans"
+                                >
+                                  Create & Map
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   )}
@@ -1994,38 +2210,97 @@ export default function AdminDashboard() {
                           <th className="p-4">Price</th>
                           <th className="p-4">Status</th>
                           <th className="p-4">Expiry Date</th>
-                          <th className="p-4 text-right">Manual Action</th>
+                          <th className="p-4">Days Unsubscribed</th>
+                          <th className="p-4 text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 font-medium">
-                        {businesses.map(b => (
-                          <tr key={b._id} className="hover:bg-slate-50/50">
-                            <td className="p-4 font-bold text-slate-800">{b.name}</td>
-                            <td className="p-4">{b.subscriptionStatus === 'active' ? 'Premium Package' : 'Basic Tier'}</td>
-                            <td className="p-4 font-extrabold text-slate-800">
-                              {b.subscriptionStatus === 'active' ? '₹499 / Mon' : '₹0'}
-                            </td>
-                            <td className="p-4">
-                              <span className={`px-2.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide border ${
-                                b.subscriptionStatus === 'active' ? 'bg-emerald-50 border-emerald-250 text-emerald-700' : 'bg-slate-50 border-slate-200 text-slate-400'
-                              }`}>
-                                {b.subscriptionStatus}
-                              </span>
-                            </td>
-                            <td className="p-4 font-bold text-slate-500">
-                              {b.subscriptionExpiry ? new Date(b.subscriptionExpiry).toLocaleDateString() : 'N/A'}
-                            </td>
-                            <td className="p-4 text-right">
-                              <button 
-                                onClick={() => handleManualSubscription(b._id)}
-                                disabled={b.subscriptionStatus === 'active'}
-                                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-sm"
-                              >
-                                Activate 30 Days
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                        {businesses.map(b => {
+                          const getDaysUnsubscribed = (biz) => {
+                            if (biz.subscriptionStatus === 'active') return 'N/A (Active)';
+                            const dateToCompare = biz.subscriptionExpiry ? new Date(biz.subscriptionExpiry) : new Date(biz.createdAt || Date.now());
+                            const diffDays = Math.floor((new Date() - dateToCompare) / (1000 * 60 * 60 * 24));
+                            if (diffDays <= 0) return '0 days';
+                            return `${diffDays} days${biz.subscriptionExpiry ? '' : ' (since registration)'}`;
+                          };
+
+                          return (
+                            <tr key={b._id} className="hover:bg-slate-50/50">
+                              <td className="p-4 flex items-center gap-3">
+                                <div className="h-9 w-9 bg-slate-100 rounded-xl overflow-hidden shrink-0 border border-slate-200">
+                                  <img src={b.coverImageUrl} className="h-full w-full object-cover" alt={b.name} />
+                                </div>
+                                <div className="flex flex-col text-left">
+                                  <span className="font-extrabold text-slate-800 text-xs leading-none">{b.name}</span>
+                                  <a 
+                                    href={`/businesses/${b._id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[#027244] hover:text-[#005934] hover:underline font-black text-[10px] mt-1.5 flex items-center gap-1 w-fit cursor-pointer leading-none"
+                                  >
+                                    View Profile →
+                                  </a>
+                                </div>
+                              </td>
+                              <td className="p-4">{b.subscriptionStatus === 'active' ? 'Premium Package' : 'Basic Tier'}</td>
+                              <td className="p-4 font-extrabold text-slate-800">
+                                {b.subscriptionStatus === 'active' ? '₹499 / Mon' : '₹0'}
+                              </td>
+                              <td className="p-4">
+                                <span className={`px-2.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide border ${
+                                  b.subscriptionStatus === 'active' 
+                                    ? 'bg-emerald-50 border-emerald-250 text-emerald-700' 
+                                    : (b.subscriptionStatus === 'suspended' ? 'bg-rose-50 border-rose-250 text-rose-700' : 'bg-slate-50 border-slate-200 text-slate-400')
+                                }`}>
+                                  {b.subscriptionStatus}
+                                </span>
+                              </td>
+                              <td className="p-4 font-bold text-slate-500">
+                                {b.subscriptionExpiry ? new Date(b.subscriptionExpiry).toLocaleDateString() : 'N/A'}
+                              </td>
+                              <td className="p-4 font-bold text-slate-550">
+                                {getDaysUnsubscribed(b)}
+                              </td>
+                              <td className="p-4 text-right">
+                                <div className="flex gap-2 justify-end">
+                                  <a 
+                                    href={`/businesses/${b._id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[9.5px] font-extrabold text-center leading-none shadow-xs flex items-center justify-center"
+                                  >
+                                    View Profile
+                                  </a>
+                                  {user?.role === 'superadmin' && (
+                                    <button 
+                                      onClick={() => handleManualSubscription(b._id)}
+                                      disabled={b.subscriptionStatus === 'active'}
+                                      className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[9.5px] rounded-lg cursor-pointer disabled:opacity-40 shadow-xs border-none"
+                                    >
+                                      Activate 30 Days
+                                    </button>
+                                  )}
+                                  <button 
+                                    onClick={() => handleSuspendSubscription(b._id)}
+                                    className={`px-2.5 py-1.5 font-extrabold text-[9.5px] rounded-lg cursor-pointer shadow-xs border-none text-white ${
+                                      b.subscriptionStatus === 'suspended' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-rose-600 hover:bg-rose-700'
+                                    }`}
+                                  >
+                                    {b.subscriptionStatus === 'suspended' ? 'Reactivate' : 'Suspend'}
+                                  </button>
+                                  {b.subscriptionStatus !== 'active' && (
+                                    <button 
+                                      onClick={() => handleSendReminder(b._id)}
+                                      className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[9.5px] rounded-lg cursor-pointer shadow-xs border-none"
+                                    >
+                                      Send Reminder
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -2086,12 +2361,7 @@ export default function AdminDashboard() {
                     </div>
 
                     <button
-                      onClick={() => {
-                        if (!newNotice.title || !newNotice.message) return;
-                        setNoticeSuccess(true);
-                        setNewNotice({ title: '', message: '', type: 'announcement' });
-                        setTimeout(() => setNoticeSuccess(false), 4000);
-                      }}
+                      onClick={handleBroadcast}
                       disabled={!newNotice.title || !newNotice.message}
                       className="py-3 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer disabled:opacity-50"
                     >

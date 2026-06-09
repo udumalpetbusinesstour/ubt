@@ -15,10 +15,10 @@ export default function Footer() {
             A trusted local platform to discover, connect and grow with verified businesses in and around Udumalpet.
           </p>
           <div className="flex items-center gap-3 mt-1">
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="h-8 w-8 rounded-full border border-slate-700 hover:border-emerald-500 flex items-center justify-center hover:bg-[#027244] hover:text-white transition-all text-slate-400">
+            <a href="https://www.facebook.com/profile.php?fb_profile_edit_entry_point=%7B%22click_point%22%3A%22edit_profile_button%22%2C%22feature%22%3A%22profile_header%22%7D&id=61590472206771&sk=about" target="_blank" rel="noopener noreferrer" className="h-8 w-8 rounded-full border border-slate-700 hover:border-emerald-500 flex items-center justify-center hover:bg-[#027244] hover:text-white transition-all text-slate-400">
               <Facebook className="h-4 w-4" />
             </a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="h-8 w-8 rounded-full border border-slate-700 hover:border-emerald-500 flex items-center justify-center hover:bg-[#027244] hover:text-white transition-all text-slate-400">
+            <a href="https://www.instagram.com/udumalpet.co.in/" target="_blank" rel="noopener noreferrer" className="h-8 w-8 rounded-full border border-slate-700 hover:border-emerald-500 flex items-center justify-center hover:bg-[#027244] hover:text-white transition-all text-slate-400">
               <Instagram className="h-4 w-4" />
             </a>
             <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer" className="h-8 w-8 rounded-full border border-slate-700 hover:border-emerald-500 flex items-center justify-center hover:bg-[#027244] hover:text-white transition-all text-slate-400">

@@ -20,7 +20,7 @@ const NotificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['expiry_warning', 'expired', 'approval_status', 'broadcast', 'support'],
+    enum: ['expiry_warning', 'expired', 'approval_status', 'broadcast', 'support', 'payment_status'],
     required: true,
   },
   isRead: {

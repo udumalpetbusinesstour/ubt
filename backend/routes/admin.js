@@ -13,6 +13,10 @@ const {
   moderateReview,
   moderateUser
 } = require('../controllers/adminController');
+const {
+  getPendingCategoryReviews,
+  resolveCategoryReview
+} = require('../controllers/superadminController');
 
 // Protect all admin routes
 router.use(protect);
@@ -62,11 +66,10 @@ router.get('/stats', async (req, res, next) => {
 
 router.get('/businesses', async (req, res, next) => {
   try {
-    const Branch = require('../models/Branch');
     const businesses = await Business.find().sort({ createdAt: -1 });
     const data = await Promise.all(businesses.map(async (b) => {
       const bObj = b.toObject();
-      bObj.branchCount = await Branch.countDocuments({ businessId: b._id });
+      bObj.branchCount = await Business.countDocuments({ parentBusinessId: b._id });
       return bObj;
     }));
     res.json({ success: true, count: data.length, data });
@@ -105,9 +108,18 @@ router.put('/businesses/:id/status', async (req, res, next) => {
     
     // Sync status of all branches of this business
     try {
-      const Branch = require('../models/Branch');
       const branchStatus = status === 'Approved' ? 'Approved' : (status === 'Suspended' ? 'Suspended' : (status === 'Rejected' ? 'Rejected' : 'Pending Verification'));
-      await Branch.updateMany({ businessId: business._id }, { status: branchStatus });
+      const statusMap = {
+        'Pending Verification': 'pending',
+        'Under Review': 'under_review',
+        'Approved': 'approved',
+        'Rejected': 'rejected',
+        'Suspended': 'suspended'
+      };
+      await Business.updateMany(
+        { parentBusinessId: business._id },
+        { status: branchStatus, verificationStatus: statusMap[branchStatus] || 'pending' }
+      );
       console.log(`[BRANCHES MODERATION] Marked branches for business ${business._id} as ${branchStatus}`);
     } catch (branchModErr) {
       console.error('Error updating branch statuses during business moderation:', branchModErr);
@@ -224,19 +236,221 @@ router.post('/notifications/send', async (req, res, next) => {
   }
 });
 
+// @desc    Broadcast platform-wide notification
+// @route   POST /api/admin/notifications/broadcast
+// @access  Private/Admin
+router.post('/notifications/broadcast', async (req, res, next) => {
+  try {
+    const { title, message } = req.body;
+    if (!title || !message) {
+      return res.status(400).json({ success: false, message: 'Title and message parameters are required' });
+    }
+
+    // Find all users who are merchants, owners, admins, or superadmins
+    const users = await User.find({ role: { $in: ['merchant', 'owner', 'admin', 'superadmin'] } });
+    
+    // Create notification documents
+    const notifications = users.map(u => ({
+      userId: u._id,
+      title,
+      message,
+      type: 'broadcast'
+    }));
+
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications);
+    }
+
+    res.status(201).json({ 
+      success: true, 
+      message: `System notification broadcast successfully to ${notifications.length} users.` 
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Approve/Reject/Deactivate a business branch
+// @route   PUT /api/admin/branches/:id/status
+// @access  Private/Admin
+// @desc    Activate a business listing subscription for 30 days
+// @route   PUT /api/admin/businesses/:id/activate-subscription
+// @access  Private/SuperAdmin Only
+router.put('/businesses/:id/activate-subscription', async (req, res, next) => {
+  try {
+    if (req.user.role !== 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Access denied: Only SuperAdmin can manually activate subscriptions' });
+    }
+
+    const business = await Business.findById(req.params.id);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    business.subscriptionStatus = 'active';
+    business.subscriptionExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    business.isPremium = true;
+    await business.save({ validateBeforeSave: false });
+
+    // Cascade to branches
+    try {
+      await Business.updateMany(
+        { parentBusinessId: business._id },
+        { subscriptionStatus: 'active', isPremium: true, subscriptionExpiry: business.subscriptionExpiry }
+      );
+    } catch (branchErr) {
+      console.error('Error cascading activation to branches:', branchErr);
+    }
+
+    // Send notification
+    await Notification.create({
+      userId: business.ownerId,
+      businessId: business._id,
+      title: 'Subscription Activated',
+      message: `Your premium listing subscription for "${business.name}" has been manually activated for 30 days.`,
+      type: 'payment_status'
+    });
+
+    res.json({ success: true, message: 'Subscription successfully activated for 30 days', data: business });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Suspend a business listing subscription
+// @route   PUT /api/admin/businesses/:id/suspend-subscription
+// @access  Private/Admin
+router.put('/businesses/:id/suspend-subscription', async (req, res, next) => {
+  try {
+    const business = await Business.findById(req.params.id);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    // If already suspended, this acts as Reactivate (clearing suspension back to none or restoring)
+    const isSuspended = business.subscriptionStatus === 'suspended';
+    if (isSuspended) {
+      business.subscriptionStatus = 'none';
+      business.isPremium = false;
+      await business.save({ validateBeforeSave: false });
+
+      // Cascade to branches
+      try {
+        await Business.updateMany(
+          { parentBusinessId: business._id },
+          { subscriptionStatus: 'none', isPremium: false }
+        );
+      } catch (branchErr) {
+        console.error('Error cascading reactivation to branches:', branchErr);
+      }
+
+      await Notification.create({
+        userId: business.ownerId,
+        businessId: business._id,
+        title: 'Subscription Suspension Lifted',
+        message: `Your business "${business.name}" subscription suspension has been lifted by the administrator.`,
+        type: 'approval_status'
+      });
+
+      return res.json({ success: true, message: 'Subscription suspension successfully lifted', data: business });
+    } else {
+      business.subscriptionStatus = 'suspended';
+      business.isPremium = false;
+      await business.save({ validateBeforeSave: false });
+
+      // Cascade to branches
+      try {
+        await Business.updateMany(
+          { parentBusinessId: business._id },
+          { subscriptionStatus: 'suspended', isPremium: false }
+        );
+      } catch (branchErr) {
+        console.error('Error cascading suspension to branches:', branchErr);
+      }
+
+      await Notification.create({
+        userId: business.ownerId,
+        businessId: business._id,
+        title: 'Subscription Suspended',
+        message: `Your premium listing subscription for "${business.name}" has been temporarily suspended by the administrator.`,
+        type: 'approval_status'
+      });
+
+      return res.json({ success: true, message: 'Subscription successfully suspended', data: business });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Send manual subscription reminder
+// @route   POST /api/admin/businesses/:id/send-reminder
+// @access  Private/Admin
+router.post('/businesses/:id/send-reminder', async (req, res, next) => {
+  try {
+    const business = await Business.findById(req.params.id).populate('ownerId');
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    const customMessage = req.body.message;
+    const reminderMessage = customMessage || `Friendly reminder: Please renew your subscription for "${business.name}" to maintain premium visibility and access.`;
+
+    // Send in-app notification
+    await Notification.create({
+      userId: business.ownerId ? (business.ownerId._id || business.ownerId) : null,
+      businessId: business._id,
+      title: 'Subscription Renewal Reminder',
+      message: reminderMessage,
+      type: 'payment_status'
+    });
+
+    // Send email
+    if (business.ownerId && business.ownerId.email) {
+      const ownerName = business.ownerId.fullName || business.ownerId.name || 'Merchant';
+      const { sendEmail } = require('../utils/emailHelper');
+      
+      const emailText = customMessage
+        ? `Hello ${ownerName},\n\n${customMessage}\n\nBest regards,\nUBT Billing Audit Team`
+        : `Hello ${ownerName},\n\nThis is a friendly reminder that your premium listing subscription for "${business.name}" is currently inactive, expired, or about to expire.\n\nPlease log in to your UBT merchant dashboard and renew your subscription to maintain priority search ranking, verified badge status, and premium lead access.\n\nBest regards,\nUBT Billing Audit Team`;
+
+      try {
+        await sendEmail({
+          to: business.ownerId.email,
+          subject: `Action Required: Subscription Reminder for "${business.name}"`,
+          text: emailText
+        });
+      } catch (emailErr) {
+        console.error('[SMTP] Failed to send manual subscription reminder email:', emailErr.message);
+      }
+    }
+
+    res.json({ success: true, message: 'Subscription reminder successfully dispatched' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // @desc    Approve/Reject/Deactivate a business branch
 // @route   PUT /api/admin/branches/:id/status
 // @access  Private/Admin
 router.put('/branches/:id/status', async (req, res, next) => {
   try {
     const { status } = req.body;
-    const Branch = require('../models/Branch');
-    const branch = await Branch.findById(req.params.id);
+    const branch = await Business.findById(req.params.id);
     if (!branch) {
       return res.status(404).json({ success: false, message: 'Branch not found' });
     }
 
     branch.status = status;
+    const statusMap = {
+      'Pending Verification': 'pending',
+      'Under Review': 'under_review',
+      'Approved': 'approved',
+      'Rejected': 'rejected',
+      'Suspended': 'suspended'
+    };
+    branch.verificationStatus = statusMap[status] || 'pending';
     await branch.save();
 
     res.json({ success: true, message: `Branch successfully marked as ${status}`, data: branch });
@@ -244,5 +458,10 @@ router.put('/branches/:id/status', async (req, res, next) => {
     next(error);
   }
 });
+
+// Category requests vetting (accessible to Admin)
+router.get('/category-review/pending', getPendingCategoryReviews);
+router.post('/category-review/resolve', resolveCategoryReview);
+
 
 module.exports = router;

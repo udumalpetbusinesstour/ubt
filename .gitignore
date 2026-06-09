@@ -71,6 +71,8 @@ backend/fix_events.js
 backend/read_direct_mongodb.js
 backend/update_all_businesses.js
 backend/update_db_socials.js
+backend/check_branch.js
+backend/migrate_branches.js
 
 # Frontend production build output (do not commit dist)
 frontend/dist/

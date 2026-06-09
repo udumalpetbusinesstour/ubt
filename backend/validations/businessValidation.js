@@ -48,6 +48,14 @@ const businessSchema = Joi.object({
   longitude: Joi.number().min(77.0).max(78.0).optional(), // Longitude boundary for Udumalpet
   googlePlaceId: Joi.string().allow('').optional(),
   googleLinked: Joi.boolean().default(false),
+  googleRating: Joi.number().min(0).max(5).optional(),
+  googleReviewsCount: Joi.number().integer().min(0).optional(),
+  googleReviews: Joi.array().items(Joi.object({
+    authorName: Joi.string().allow('').optional(),
+    rating: Joi.number().optional(),
+    text: Joi.string().allow('').optional(),
+    createdAt: Joi.any().optional()
+  })).optional(),
   tags: Joi.array().items(Joi.string().trim()).optional(),
   highlights: Joi.array().items(Joi.string().trim()).optional(),
   galleryImages: Joi.array().items(Joi.string().uri()).optional(),

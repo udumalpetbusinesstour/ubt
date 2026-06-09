@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const Branch = require('../models/Branch');
 const Business = require('../models/Business');
 const { protect } = require('../middleware/auth');
 
@@ -45,12 +44,12 @@ router.get('/business/:businessId', async (req, res) => {
         return res.status(403).json({ success: false, message: 'Access denied: You are not authorized to view all branches' });
       }
 
-      const branches = await Branch.find({ businessId }).sort({ createdAt: -1 });
+      const branches = await Business.find({ parentBusinessId: businessId }).sort({ createdAt: -1 });
       return res.json({ success: true, count: branches.length, data: branches });
     }
 
     // Public request: Return only approved branches
-    const branches = await Branch.find({ businessId, status: 'Approved' }).sort({ createdAt: -1 });
+    const branches = await Business.find({ parentBusinessId: businessId, status: 'Approved' }).sort({ createdAt: -1 });
     res.json({ success: true, count: branches.length, data: branches });
   } catch (error) {
     console.error('Error fetching branches:', error);
@@ -96,14 +95,25 @@ router.post('/', protect, async (req, res) => {
     // Admins create approved branches directly; merchants create pending branches
     const defaultStatus = isAdmin ? 'Approved' : 'Pending Verification';
 
-    const branch = await Branch.create({
-      businessId,
+    const branch = await Business.create({
+      parentBusinessId: businessId,
+      businessId: businessId, // compatibility
+      ownerId: business.ownerId,
+      category: business.category,
+      categoryId: business.categoryId,
+      type: business.type || business.category,
+      city: business.city || 'Udumalpet',
+      state: business.state || 'Tamil Nadu',
+      subscriptionStatus: business.subscriptionStatus,
+      subscriptionExpiry: business.subscriptionExpiry,
+      isPremium: business.isPremium,
       name,
+      businessName: name,
       address,
       phone,
       googleMapsLocation,
       googleBusinessLink,
-      workingHours,
+      workingHours: workingHours || '9:00 AM - 8:00 PM',
       branchManagerName,
       latitude: latitude || 10.5891,
       longitude: longitude || 77.2412,
@@ -112,7 +122,7 @@ router.post('/', protect, async (req, res) => {
         lng: longitude || 77.2412
       },
       status: defaultStatus,
-      isPrimary: isPrimary || false
+      verificationStatus: defaultStatus === 'Approved' ? 'approved' : 'pending'
     });
 
     res.status(201).json({ success: true, data: branch });
@@ -127,12 +137,12 @@ router.post('/', protect, async (req, res) => {
 // @access  Private
 router.put('/:id', protect, async (req, res) => {
   try {
-    let branch = await Branch.findById(req.params.id);
+    let branch = await Business.findById(req.params.id);
     if (!branch) {
       return res.status(404).json({ success: false, message: 'Branch not found' });
     }
 
-    const business = await Business.findById(branch.businessId);
+    const business = await Business.findById(branch.parentBusinessId || branch.businessId);
     if (!business) {
       return res.status(404).json({ success: false, message: 'Parent business not found' });
     }
@@ -147,6 +157,16 @@ router.put('/:id', protect, async (req, res) => {
     // If a merchant updates, reset status to Pending Verification for moderation. If admin, retain status unless modified.
     if (!isAdmin) {
       req.body.status = 'Pending Verification';
+      req.body.verificationStatus = 'pending';
+    } else if (req.body.status) {
+      const statusMap = {
+        'Pending Verification': 'pending',
+        'Under Review': 'under_review',
+        'Approved': 'approved',
+        'Rejected': 'rejected',
+        'Suspended': 'suspended'
+      };
+      req.body.verificationStatus = statusMap[req.body.status] || 'pending';
     }
 
     // Sync coordinates subdocument if lat/lng changes
@@ -157,7 +177,12 @@ router.put('/:id', protect, async (req, res) => {
       };
     }
 
-    branch = await Branch.findByIdAndUpdate(req.params.id, req.body, {
+    // Auto-fill businessName/name if changed
+    if (req.body.name) {
+      req.body.businessName = req.body.name;
+    }
+
+    branch = await Business.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
@@ -174,12 +199,12 @@ router.put('/:id', protect, async (req, res) => {
 // @access  Private
 router.delete('/:id', protect, async (req, res) => {
   try {
-    const branch = await Branch.findById(req.params.id);
+    const branch = await Business.findById(req.params.id);
     if (!branch) {
       return res.status(404).json({ success: false, message: 'Branch not found' });
     }
 
-    const business = await Business.findById(branch.businessId);
+    const business = await Business.findById(branch.parentBusinessId || branch.businessId);
     if (!business) {
       return res.status(404).json({ success: false, message: 'Parent business not found' });
     }
@@ -191,7 +216,7 @@ router.delete('/:id', protect, async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized to delete this branch' });
     }
 
-    await Branch.deleteOne({ _id: req.params.id });
+    await Business.deleteOne({ _id: req.params.id });
     res.json({ success: true, message: 'Branch deleted successfully' });
   } catch (error) {
     console.error('Error deleting branch:', error);

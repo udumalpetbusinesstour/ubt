@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import MockGoogleMaps from '@/components/MockGoogleMaps';
 import { 
@@ -29,6 +29,7 @@ function DashboardContent() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [business, setBusiness] = useState(null);
+  const [primaryBusiness, setPrimaryBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -203,12 +204,7 @@ function DashboardContent() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadedPhotosCount, setUploadedPhotosCount] = useState(4);
   const [uploadLoading, setUploadLoading] = useState(false);
-  const [photoGallery, setPhotoGallery] = useState([
-    'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&q=80',
-    'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=300&q=80',
-    'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=300&q=80',
-    'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=300&q=80',
-  ]);
+  const [photoGallery, setPhotoGallery] = useState([]);
 
   // Quick Edit states
   const [showEditModal, setShowEditModal] = useState(false);
@@ -558,12 +554,15 @@ function DashboardContent() {
         if (data.data) {
           const userBiz = data.data;
           setBusiness(userBiz);
+          setPrimaryBusiness(userBiz);
           if (userBiz.offers) {
             setOffersList(userBiz.offers);
           } else {
             setOffersList([]);
           }
           fetchBranches(authToken, userBiz._id);
+          fetchLeads(authToken, userBiz._id);
+          fetchReviews(authToken, userBiz._id);
           setEditFields({
             name: userBiz.name || '',
             category: userBiz.category || 'Services',
@@ -597,6 +596,12 @@ function DashboardContent() {
             timingsSat: userBiz.timings?.Saturday || '9:00 AM - 8:00 PM',
             timingsSun: userBiz.timings?.Sunday || '9:00 AM - 1:00 PM',
           });
+          // Initialize photo gallery from business data
+          const galleryArr = Array.isArray(userBiz.galleryUrls) 
+            ? userBiz.galleryUrls 
+            : (typeof userBiz.galleryUrls === 'string' ? userBiz.galleryUrls.split(',').map(s => s.trim()).filter(Boolean) : []);
+          setPhotoGallery(galleryArr);
+          setUploadedPhotosCount(galleryArr.length);
           
           // Calculate completeness percentage based on filled fields
           let score = 30; // base score for basic details
@@ -644,8 +649,11 @@ function DashboardContent() {
         ]
       };
       setBusiness(mockBiz);
+      setPrimaryBusiness(mockBiz);
       setOffersList(mockBiz.offers);
       fetchBranches(authToken, mockBiz._id);
+      fetchLeads(authToken, mockBiz._id);
+      fetchReviews(authToken, mockBiz._id);
       setEditFields({
         name: mockBiz.name || '',
         category: mockBiz.category || 'Services',
@@ -679,9 +687,69 @@ function DashboardContent() {
         timingsSat: mockBiz.timings?.Saturday || '9:00 AM - 8:00 PM',
         timingsSun: mockBiz.timings?.Sunday || '9:00 AM - 1:00 PM',
       });
+      // Initialize photo gallery from mock business data
+      const mockGalleryArr = Array.isArray(mockBiz.galleryUrls) 
+        ? mockBiz.galleryUrls 
+        : (typeof mockBiz.galleryUrls === 'string' ? mockBiz.galleryUrls.split(',').map(s => s.trim()).filter(Boolean) : []);
+      setPhotoGallery(mockGalleryArr);
+      setUploadedPhotosCount(mockGalleryArr.length);
       setProfileCompletion(90);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLeads = async (authToken, businessId) => {
+    if (!businessId) return;
+    const activeToken = authToken || token || localStorage.getItem('ubt_token');
+    try {
+      if (!activeToken || businessId === 'UBT-10024') {
+        throw new Error('Offline mock mode');
+      }
+      const res = await fetch(`http://localhost:5000/api/leads/business/${businessId}`, {
+        headers: { Authorization: `Bearer ${activeToken}` },
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        const colors = [
+          'bg-blue-100 text-blue-600',
+          'bg-green-100 text-green-600',
+          'bg-purple-100 text-purple-600',
+          'bg-amber-100 text-amber-600',
+          'bg-slate-100 text-slate-600'
+        ];
+        const formatted = data.data.map((lead, idx) => {
+          const createdAt = new Date(lead.createdAt);
+          const timeStr = createdAt.toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          return {
+            _id: lead._id,
+            name: lead.name,
+            phone: lead.phone,
+            message: lead.message,
+            category: business?.category || 'General Service',
+            time: timeStr,
+            initial: (lead.name || 'L').charAt(0).toUpperCase(),
+            color: colors[idx % colors.length],
+            reply: lead.reply || '',
+            responded: lead.status === 'Responded' || !!lead.reply
+          };
+        });
+        setLeadsList(formatted);
+      }
+    } catch (err) {
+      console.warn('Using fallback mock leads due to error or mock business id:', err.message);
+      setLeadsList([
+        { name: 'Suresh Kumar', category: 'Electrical Wiring', phone: '+91 97865 43210', time: '2 mins ago', initial: 'S', color: 'bg-blue-100 text-blue-600', reply: '', responded: false },
+        { name: 'Ramesh Babu', category: 'Switch Board Repair', phone: '+91 94423 56789', time: '15 mins ago', initial: 'R', color: 'bg-green-100 text-green-600', reply: '', responded: false },
+        { name: 'Kavin Prakash', category: 'Inverter Installation', phone: '+91 91500 67890', time: '1 hour ago', initial: 'K', color: 'bg-purple-100 text-purple-600', reply: '', responded: false },
+        { name: 'Vijay Anand', category: 'Fan Installation', phone: '+91 95678 12345', time: '2 hours ago', initial: 'V', color: 'bg-amber-100 text-amber-600', reply: '', responded: false },
+        { name: 'Meena Devi', category: 'General Service', phone: '+91 99945 67890', time: '3 hours ago', initial: 'M', color: 'bg-slate-100 text-slate-600', reply: '', responded: false }
+      ]);
     }
   };
 
@@ -698,6 +766,15 @@ function DashboardContent() {
       const data = await res.json();
       if (data.success) {
         setBranches(data.data);
+        // If branchId URL param is set, auto-switch to that branch using the full handleSwitchBusiness flow
+        const branchIdParam = new URLSearchParams(window.location.search).get('branchId');
+        if (branchIdParam) {
+          // Use a short delay to ensure setBranches has settled first
+          setTimeout(() => {
+            handleSwitchBusiness(branchIdParam);
+            setActiveTab('Business Details');
+          }, 150);
+        }
       } else {
         setBranchesError(data.message || 'Failed to fetch branches');
         throw new Error(data.message || 'Failed to fetch branches');
@@ -740,6 +817,130 @@ function DashboardContent() {
       setBranches(mockBranches);
     } finally {
       setBranchesLoading(false);
+    }
+  };
+
+  const fetchReviews = async (authToken, businessId) => {
+    if (!businessId) return;
+    const activeToken = authToken || token || localStorage.getItem('ubt_token');
+    try {
+      if (!activeToken || businessId === 'UBT-10024') {
+        throw new Error('Offline mock mode');
+      }
+      const res = await fetch(`http://localhost:5000/api/reviews/${businessId}`, {
+        headers: { Authorization: `Bearer ${activeToken}` },
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        const formatted = data.data.map(r => ({
+          id: r._id,
+          authorName: r.authorName,
+          rating: r.rating,
+          text: r.text,
+          createdAt: r.createdAt,
+          replyText: r.replyText || '',
+          replied: !!r.replyText
+        }));
+        setLocalReviews(formatted);
+      }
+    } catch (err) {
+      console.warn('Using fallback mock reviews:', err.message);
+    }
+  };
+
+  const applyBusinessToState = (targetBiz) => {
+    setBusiness(targetBiz);
+    const activeToken = token || localStorage.getItem('ubt_token');
+    fetchLeads(activeToken, targetBiz._id);
+    fetchReviews(activeToken, targetBiz._id);
+    setOffersList(targetBiz.offers || []);
+
+    // Sync photo gallery from the switched business
+    const switchedGallery = Array.isArray(targetBiz.galleryUrls) ? targetBiz.galleryUrls
+      : (typeof targetBiz.galleryUrls === 'string' ? targetBiz.galleryUrls.split(',').map(s => s.trim()).filter(Boolean) : []);
+    setPhotoGallery(switchedGallery);
+    setUploadedPhotosCount(switchedGallery.length);
+
+    setEditFields({
+      name: targetBiz.name || '',
+      category: targetBiz.category || 'Services',
+      type: targetBiz.type || '',
+      description: targetBiz.description || '',
+      highlights: Array.isArray(targetBiz.highlights) ? targetBiz.highlights.join(', ') : '',
+      phone: targetBiz.phone || '',
+      whatsapp: targetBiz.whatsapp || '',
+      email: targetBiz.email || '',
+      website: targetBiz.website || '',
+      facebook: targetBiz.facebook || '',
+      instagram: targetBiz.instagram || '',
+      address: targetBiz.address || '',
+      locality: targetBiz.locality || '',
+      pincode: targetBiz.pincode || '',
+      yearEstablished: targetBiz.yearEstablished || '',
+      employeeCount: targetBiz.employeeCount || '',
+      gstNumber: targetBiz.gstNumber || '',
+      serviceArea: targetBiz.serviceArea || '',
+      languagesKnown: targetBiz.languagesKnown || '',
+      services: Array.isArray(targetBiz.services) ? targetBiz.services.join(', ') : '',
+      brands: Array.isArray(targetBiz.brands) ? targetBiz.brands.join(', ') : '',
+      logoUrl: targetBiz.logoUrl || '',
+      coverImageUrl: targetBiz.coverImageUrl || '',
+      galleryUrls: Array.isArray(targetBiz.galleryUrls) ? targetBiz.galleryUrls.join(', ') : '',
+      timingsMon: targetBiz.timings?.Monday || '9:00 AM - 8:00 PM',
+      timingsTue: targetBiz.timings?.Tuesday || '9:00 AM - 8:00 PM',
+      timingsWed: targetBiz.timings?.Wednesday || '9:00 AM - 8:00 PM',
+      timingsThu: targetBiz.timings?.Thursday || '9:00 AM - 8:00 PM',
+      timingsFri: targetBiz.timings?.Friday || '9:00 AM - 8:00 PM',
+      timingsSat: targetBiz.timings?.Saturday || '9:00 AM - 8:00 PM',
+      timingsSun: targetBiz.timings?.Sunday || '9:00 AM - 1:00 PM',
+    });
+  };
+
+  const handleSwitchBusiness = async (bizId) => {
+    if (!bizId || (business && business._id === bizId)) return;
+    setLoading(true);
+    try {
+      const activeToken = token || localStorage.getItem('ubt_token');
+
+      // If switching back to primary business, use the cached primary data
+      if (primaryBusiness && bizId === primaryBusiness._id) {
+        applyBusinessToState(primaryBusiness);
+        setLoading(false);
+        return;
+      }
+
+      // Always fetch fresh full data for a branch from the API
+      try {
+        const res = await fetch(`http://localhost:5000/api/businesses/${bizId}`, {
+          headers: { Authorization: `Bearer ${activeToken}` },
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          const fullBiz = data.data;
+          // Inherit subscription from parent if this is a branch
+          if (fullBiz.parentBusinessId && primaryBusiness) {
+            fullBiz.subscriptionStatus = primaryBusiness.subscriptionStatus;
+            fullBiz.subscriptionExpiry = primaryBusiness.subscriptionExpiry;
+            fullBiz.isPremium = primaryBusiness.isPremium;
+          }
+          applyBusinessToState(fullBiz);
+          // Also update the branches array entry with fresh data
+          setBranches(prev => prev.map(b => b._id === bizId ? fullBiz : b));
+          return;
+        }
+      } catch (apiErr) {
+        console.warn('Could not fetch fresh branch data, using cache:', apiErr.message);
+      }
+
+      // Fallback: use cached branch data from branches array
+      const cachedBranch = branches.find(b => b._id === bizId);
+      if (cachedBranch) {
+        applyBusinessToState(cachedBranch);
+      }
+    } catch (err) {
+      console.error('Error switching business:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -2076,31 +2277,92 @@ function DashboardContent() {
       const data = await res.json();
       if (data.success) {
         setBusiness(data.data);
+        // Sync photo gallery from updated business data
+        const updatedGallery = Array.isArray(data.data.galleryUrls) ? data.data.galleryUrls
+          : (typeof data.data.galleryUrls === 'string' ? data.data.galleryUrls.split(',').map(s => s.trim()).filter(Boolean) : []);
+        setPhotoGallery(updatedGallery);
+        setUploadedPhotosCount(updatedGallery.length);
+        
+        // Also update the branches list in state if this is a branch
+        if (data.data.parentBusinessId) {
+          setBranches(prev => prev.map(b => b._id === data.data._id ? data.data : b));
+        }
+
         setShowEditModal(false);
       } else {
         throw new Error('Fallback required');
       }
     } catch (err) {
       // Mock update locally on fallback
-      setBusiness(prev => ({
-        ...prev,
-        ...postData,
-        _id: prev._id
-      }));
+      setBusiness(prev => {
+        const updatedMock = {
+          ...prev,
+          ...postData,
+          _id: prev._id
+        };
+        if (updatedMock.parentBusinessId) {
+          setBranches(prevBr => prevBr.map(b => b._id === updatedMock._id ? updatedMock : b));
+        }
+        return updatedMock;
+      });
       setShowEditModal(false);
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = async (e) => {
     e.preventDefault();
     setUploadLoading(true);
-    setTimeout(() => {
-      setUploadedPhotosCount(prev => prev + 1);
-      setUploadLoading(false);
+    try {
+      // Save current photoGallery (already uploaded) to backend
+      await saveInlineFields({ galleryUrls: photoGallery });
+      // Update editFields to reflect saved gallery
+      setEditFields(prev => ({ ...prev, galleryUrls: photoGallery.join(', ') }));
+      setBusiness(prev => ({ ...prev, galleryUrls: photoGallery }));
       setShowUploadModal(false);
-    }, 1500);
+    } catch (err) {
+      console.error('Error saving gallery:', err);
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  const handleGalleryFileUpload = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadLoading(true);
+    const activeToken = token || localStorage.getItem('ubt_token');
+    const uploadedUrls = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > 5 * 1024 * 1024) {
+        continue;
+      }
+      const formData = new FormData();
+      formData.append('image', file);
+      try {
+        const res = await fetch('http://localhost:5000/api/upload', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${activeToken}` },
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          uploadedUrls.push(data.url);
+        }
+      } catch (err) {
+        console.error('Gallery upload error:', err);
+      }
+    }
+    if (uploadedUrls.length > 0) {
+      setPhotoGallery(prev => {
+        const combined = [...prev, ...uploadedUrls];
+        setUploadedPhotosCount(combined.length);
+        return combined;
+      });
+    }
+    setUploadLoading(false);
   };
 
   const handlePaymentCheckout = async (planOverride) => {
@@ -2301,7 +2563,7 @@ function DashboardContent() {
       { label: 'Dashboard', icon: <Briefcase className="h-4 w-4" /> },
       { label: 'Business Details', icon: <Edit3 className="h-4 w-4" /> },
       { label: 'Branches', icon: <MapPin className="h-4 w-4" /> },
-      { label: 'Photos & Media', icon: <ImageIcon className="h-4 w-4" />, onClick: () => setShowUploadModal(true) },
+      { label: 'Photos & Media', icon: <ImageIcon className="h-4 w-4" /> },
       { label: 'Reviews & Reputation', icon: <Star className="h-4 w-4" /> },
       { label: 'Leads & Enquiries', icon: <Mail className="h-4 w-4" />, badge: 18 },
       { label: 'Subscription & Billing', icon: <CreditCard className="h-4 w-4" />, onClick: () => setShowRenewModal(true) },
@@ -2365,7 +2627,6 @@ function DashboardContent() {
                     <AlertCircle className="h-2.5 w-2.5" /> Pending Vetting
                   </span>
                 )}
-                <span className="text-[9px] text-slate-500 font-semibold uppercase">ID: {business._id}</span>
               </div>
             </div>
           </div>
@@ -2470,15 +2731,38 @@ function DashboardContent() {
             </div>
           </div>
 
+          {/* Active Business/Branch Switcher */}
+          {primaryBusiness && branches && branches.length > 0 && (
+            <div className="flex items-center gap-2 bg-emerald-50/50 border border-emerald-150 rounded-xl px-2.5 py-1.5 shadow-3xs animate-fadeIn max-w-[150px] sm:max-w-none">
+              <span className="text-[9.5px] text-[#027244] font-black uppercase tracking-wider font-sans hidden md:inline">Active Office:</span>
+              <select
+                value={business?._id || ''}
+                onChange={(e) => {
+                  handleSwitchBusiness(e.target.value);
+                  setActiveTab('Business Details');
+                }}
+                className="bg-transparent border-none text-xs font-black text-[#001c41] outline-none cursor-pointer pr-3 font-sans max-w-full"
+              >
+                <option value={primaryBusiness._id}>{primaryBusiness.name} (Main Office)</option>
+                {branches.map((br) => (
+                  <option key={br._id} value={br._id}>{br.name} (Branch)</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Right Header tools */}
           <div className="flex items-center gap-3 md:gap-4 shrink-0">
             {business && (
               <Link 
                 to={`/businesses/${business._id}`}
+                target="_blank"
                 className="px-4 py-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-extrabold text-emerald-600 hover:text-emerald-700 flex items-center gap-2 transition-all shadow-xs cursor-pointer"
               >
                 <Globe className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">View Business Profile</span>
+                <span className="hidden sm:inline">
+                  {business.parentBusinessId ? 'View Branch Profile' : 'View Business Profile'}
+                </span>
                 <ExternalLink className="h-3 w-3" />
               </Link>
             )}
@@ -2645,7 +2929,7 @@ function DashboardContent() {
           {activeTab === 'Dashboard' && business && (
             <>
               {/* 3. KPI CARDS ROW (6 Horizontal premium aligned widgets) */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
                 
                 {/* Total Leads */}
                 <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
@@ -2654,7 +2938,7 @@ function DashboardContent() {
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Total Leads</span>
-                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">128</span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{leadsList.length}</span>
                     <span className="text-[9px] font-extrabold text-emerald-600 flex items-center gap-0.5 mt-1.5">
                       ↑ 18% this month
                     </span>
@@ -2668,7 +2952,7 @@ function DashboardContent() {
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Call Clicks</span>
-                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">46</span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.callClicks ?? 46}</span>
                     <span className="text-[9px] font-extrabold text-emerald-600 flex items-center gap-0.5 mt-1.5">
                       ↑ 12% this month
                     </span>
@@ -2682,9 +2966,39 @@ function DashboardContent() {
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">WhatsApp Clicks</span>
-                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">82</span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.whatsappClicks ?? 82}</span>
                     <span className="text-[9px] font-extrabold text-emerald-600 flex items-center gap-0.5 mt-1.5">
                       ↑ 22% this month
+                    </span>
+                  </div>
+                </div>
+
+                {/* Website Clicks */}
+                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                  <div className="h-10.5 w-10.5 rounded-xl bg-teal-50 text-teal-650 flex items-center justify-center shrink-0">
+                    <Globe className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="flex flex-col text-left overflow-hidden min-w-0">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Website Clicks</span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.websiteClicks ?? 24}</span>
+                    <span className="text-[9px] font-extrabold text-emerald-600 flex items-center gap-0.5 mt-1.5">
+                      ↑ 15% this month
+                    </span>
+                  </div>
+                </div>
+
+                {/* Social Clicks */}
+                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                  <div className="h-10.5 w-10.5 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center shrink-0">
+                    <Users className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="flex flex-col text-left overflow-hidden min-w-0">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Social Clicks</span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">
+                      {((business.facebookClicks || 0) + (business.instagramClicks || 0)) || 56}
+                    </span>
+                    <span className="text-[9px] font-extrabold text-emerald-600 flex items-center gap-0.5 mt-1.5">
+                      ↑ 19% this month
                     </span>
                   </div>
                 </div>
@@ -3110,6 +3424,35 @@ function DashboardContent() {
                   </div>
                 )}
 
+                {/* Branch Profile Banner - shows when viewing a branch */}
+                {business.parentBusinessId && primaryBusiness && (
+                  <div className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 text-blue-800 text-xs py-3 px-4 rounded-2xl flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-7 w-7 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
+                        <Briefcase className="h-3.5 w-3.5" />
+                      </div>
+                      <div>
+                        <span className="font-extrabold block text-[11px]">
+                          Branch Profile — {business.locality || business.address || business.name}
+                        </span>
+                        <span className="text-[10px] text-blue-600 font-semibold flex items-center gap-1">
+                          Under: {primaryBusiness.name}
+                          {business.phone && <span className="text-slate-400 ml-2">· {business.phone}</span>}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        handleSwitchBusiness(primaryBusiness._id);
+                        setActiveTab('Business Details');
+                      }}
+                      className="shrink-0 py-1.5 px-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[10px] rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                      <ArrowLeft className="h-3 w-3" /> Main Business
+                    </button>
+                  </div>
+                )}
+
                 {/* Premium Header Banner (Cover Image) */}
                 <section className="w-full relative bg-[#090D1C] text-white py-12 px-6 rounded-3xl overflow-hidden border border-slate-800/20">
                   {/* Background Image opacity filter */}
@@ -3485,7 +3828,16 @@ function DashboardContent() {
                       <div className="flex flex-col gap-6 animate-fadeIn text-left">
                         
                         <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-5">
-                          <h3 className="text-base font-extrabold text-slate-800 font-sans border-b border-slate-100 pb-2.5">Customer Ratings & Synced Feedback</h3>
+                          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                            <h3 className="text-base font-extrabold text-slate-800 font-sans">Customer Ratings & Synced Feedback</h3>
+                            <button
+                              type="button"
+                              onClick={() => setSearchParams({ tab: 'Reviews & Reputation' })}
+                              className="shrink-0 py-2 px-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl flex items-center gap-1.5 transition-all shadow cursor-pointer border-none"
+                            >
+                              <Star className="h-3.5 w-3.5" /> Manage
+                            </button>
+                          </div>
                           
                           <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-6 shadow-3xs">
                             <div className="text-center flex flex-col gap-1 shrink-0 bg-white border border-slate-250 p-4 rounded-xl shadow-3xs min-w-[120px]">
@@ -3677,19 +4029,36 @@ function DashboardContent() {
                     {previewTab === 'map' && (
                       <div className="flex flex-col gap-5 animate-fadeIn text-left">
                         <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4">
-                          <h3 className="text-base font-extrabold text-slate-800 font-sans border-b border-slate-100 pb-2.5">Map & Directions</h3>
+                          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                            <h3 className="text-base font-extrabold text-slate-800 font-sans">Map & Directions</h3>
+                            {/* Google Maps directions URL — opens in browser, completely free, no API key */}
+                            <a
+                              href={`https://www.google.com/maps/dir/?api=1&destination=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="shrink-0 py-2 px-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl flex items-center gap-1.5 transition-all shadow"
+                            >
+                              <MapPin className="h-3.5 w-3.5" /> Get Directions
+                            </a>
+                          </div>
+                          {/* Leaflet OSM embed via iframe - zero API key, fully free */}
                           <div className="h-80 w-full rounded-2xl border border-slate-200 bg-slate-100 relative overflow-hidden shadow-3xs">
                             <iframe
                               title="Interactive Business Map"
                               width="100%"
                               height="100%"
                               style={{ border: 0 }}
-                              allowFullScreen=""
                               loading="lazy"
-                              referrerPolicy="no-referrer-when-downgrade"
-                              src={`https://maps.google.com/maps?q=${business.locality || 'Gandhi Nagar'},Udumalpet&z=16&output=embed`}
+                              src={`https://www.openstreetmap.org/export/embed.html?bbox=${(business.coordinates?.lng || 77.2412) - 0.01},${(business.coordinates?.lat || 10.5891) - 0.01},${(business.coordinates?.lng || 77.2412) + 0.01},${(business.coordinates?.lat || 10.5891) + 0.01}&layer=mapnik&marker=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}`}
                               className="absolute inset-0 w-full h-full opacity-95"
                             />
+                          </div>
+                          <div className="flex items-start gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                            <MapPin className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest">Business Location</span>
+                              <span className="text-xs font-bold text-slate-700 mt-1">{business.address || `${business.locality || 'Gandhi Nagar'}, Udumalpet, Tamil Nadu - ${business.pincode || '642126'}`}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -4032,6 +4401,252 @@ function DashboardContent() {
                   ))}
                 </div>
               )}
+
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB: PHOTOS & MEDIA MANAGEMENT */}
+          {/* ========================================================================= */}
+          {activeTab === 'Photos & Media' && business && (
+            <div className="flex flex-col gap-6 text-left animate-fadeIn">
+
+              {/* Header */}
+              <div className="bg-gradient-to-r from-white via-white to-blue-50/20 border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col">
+                  <h3 className="font-extrabold text-[#001c41] text-base md:text-lg tracking-tight font-sans">Photos & Media Manager</h3>
+                  <span className="text-[11px] text-slate-450 font-semibold mt-1">Upload and manage your business logo, cover image, and photo gallery</span>
+                </div>
+                <button
+                  onClick={() => { setEditTab('services'); setShowEditModal(true); }}
+                  className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-6 rounded-xl transition-all shadow-md shrink-0 flex items-center gap-2 cursor-pointer border border-emerald-700/10"
+                >
+                  <Upload className="h-4.5 w-4.5" /> Open Full Editor
+                </button>
+              </div>
+
+              {uploadError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-xs font-bold flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" /> {uploadError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {/* Logo Upload Card */}
+                <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col gap-4">
+                  <div className="border-b border-slate-100 pb-3">
+                    <h4 className="font-extrabold text-slate-800 text-sm">Business Logo</h4>
+                    <span className="text-[10px] text-slate-400 font-semibold mt-0.5 block">Square logo shown on your listing card. (Max 5MB)</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="h-20 w-20 rounded-2xl border border-slate-200 bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                      {editFields.logoUrl ? (
+                        <img src={editFields.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                      ) : (
+                        <ImageIcon className="h-8 w-8 text-slate-300" />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2 flex-1">
+                      <label className="cursor-pointer">
+                        <div className={`py-2.5 px-4 border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-xl text-[11px] font-extrabold text-slate-700 flex items-center gap-2 transition-colors ${logoUploading ? 'opacity-60 pointer-events-none' : ''}`}>
+                          {logoUploading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                          {logoUploading ? 'Uploading...' : 'Upload Logo'}
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleDashboardImageUpload(e, 'logoUrl')}
+                          className="hidden"
+                          disabled={logoUploading}
+                        />
+                      </label>
+                      {editFields.logoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setEditFields(prev => ({ ...prev, logoUrl: '' }))}
+                          className="text-[10px] text-red-500 hover:text-red-700 font-bold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="h-3 w-3" /> Remove Logo
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cover Image Upload Card */}
+                <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col gap-4">
+                  <div className="border-b border-slate-100 pb-3">
+                    <h4 className="font-extrabold text-slate-800 text-sm">Cover / Banner Image</h4>
+                    <span className="text-[10px] text-slate-400 font-semibold mt-0.5 block">Landscape image shown as your profile banner. (Max 5MB)</span>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    {editFields.coverImageUrl ? (
+                      <div className="h-32 rounded-2xl overflow-hidden border border-slate-200 relative group">
+                        <img src={editFields.coverImageUrl} alt="Cover" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <button
+                            type="button"
+                            onClick={() => setEditFields(prev => ({ ...prev, coverImageUrl: '' }))}
+                            className="bg-red-600 text-white rounded-xl py-1.5 px-3 text-[10px] font-extrabold flex items-center gap-1 shadow cursor-pointer"
+                          >
+                            <Trash2 className="h-3 w-3" /> Remove
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-32 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center">
+                        <ImageIcon className="h-8 w-8 text-slate-300" />
+                      </div>
+                    )}
+                    <label className="cursor-pointer">
+                      <div className={`py-2.5 px-4 border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-xl text-[11px] font-extrabold text-slate-700 flex items-center gap-2 transition-colors w-fit ${coverUploading ? 'opacity-60 pointer-events-none' : ''}`}>
+                        {coverUploading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                        {coverUploading ? 'Uploading...' : 'Upload Cover Image'}
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleDashboardImageUpload(e, 'coverImageUrl')}
+                        className="hidden"
+                        disabled={coverUploading}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Gallery Photos Full Section */}
+              <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col gap-5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div>
+                    <h4 className="font-extrabold text-slate-800 text-sm">Photo Gallery</h4>
+                    <span className="text-[10px] text-slate-400 font-semibold mt-0.5 block">
+                      {editFields.galleryUrls ? editFields.galleryUrls.split(',').filter(Boolean).length : 0} photos uploaded · Up to 50 photos allowed
+                    </span>
+                  </div>
+                  <label className={`cursor-pointer ${galleryUploading ? 'opacity-60 pointer-events-none' : ''}`}>
+                    <div className="py-2.5 px-4 bg-[#027244] hover:bg-[#005934] text-white rounded-xl text-[11px] font-extrabold flex items-center gap-2 transition-colors shadow-md">
+                      {galleryUploading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                      {galleryUploading ? 'Uploading...' : 'Add Photos'}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => handleDashboardImageUpload(e, 'galleryUrls')}
+                      className="hidden"
+                      disabled={galleryUploading}
+                    />
+                  </label>
+                </div>
+
+                {/* Gallery Grid */}
+                {editFields.galleryUrls && editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean).length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean).map((url, idx) => (
+                      <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border border-slate-200 shadow-3xs bg-slate-100">
+                        <img src={url} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/40 transition-colors flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const currentUrls = editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean);
+                              const updated = currentUrls.filter((_, uIdx) => uIdx !== idx);
+                              setEditFields(prev => ({ ...prev, galleryUrls: updated.join(', ') }));
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 hover:bg-red-700 text-white h-8 w-8 rounded-xl flex items-center justify-center shadow cursor-pointer"
+                            title="Delete this photo"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <span className="absolute bottom-1 left-1 bg-slate-900/70 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-lg select-none">
+                          #{idx + 1}
+                        </span>
+                      </div>
+                    ))}
+
+                    {/* Add more slot */}
+                    <label className={`aspect-square rounded-2xl border-2 border-dashed border-slate-300 hover:border-emerald-500 flex flex-col items-center justify-center gap-2 cursor-pointer bg-slate-50 hover:bg-emerald-50/30 transition-all ${galleryUploading ? 'opacity-60 pointer-events-none' : ''}`}>
+                      <Plus className="h-6 w-6 text-slate-400" />
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wide">Add More</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) => handleDashboardImageUpload(e, 'galleryUrls')}
+                        className="hidden"
+                        disabled={galleryUploading}
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <label className="cursor-pointer block">
+                    <div className="border-2 border-dashed border-slate-200 rounded-2xl p-12 flex flex-col items-center gap-4 bg-slate-50 hover:bg-slate-100 transition-colors text-center">
+                      <div className="h-14 w-14 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center">
+                        <ImageIcon className="h-7 w-7 text-blue-500" />
+                      </div>
+                      <div>
+                        <span className="font-extrabold text-slate-700 text-sm block">No photos uploaded yet</span>
+                        <span className="text-[11px] text-slate-400 font-semibold mt-1 block">Click to select photos from your device (PNG, JPG, max 5MB each)</span>
+                      </div>
+                      <div className="py-2.5 px-6 bg-[#027244] text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-2">
+                        <Upload className="h-4 w-4" /> Upload Photos
+                      </div>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => handleDashboardImageUpload(e, 'galleryUrls')}
+                      className="hidden"
+                      disabled={galleryUploading}
+                    />
+                  </label>
+                )}
+
+                {/* Save changes note */}
+                {(editFields.logoUrl !== (business.logoUrl || '') || editFields.coverImageUrl !== (business.coverImageUrl || '') || editFields.galleryUrls !== (Array.isArray(business.galleryUrls) ? business.galleryUrls.join(', ') : (business.galleryUrls || ''))) && (
+                  <div className="border-t border-slate-100 pt-4 flex items-center justify-between gap-4 bg-emerald-50/50 rounded-2xl px-4 py-3 border border-emerald-100">
+                    <span className="text-[11px] font-extrabold text-emerald-700 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-600" /> Changes detected — save to update your profile
+                    </span>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const galleryArr = editFields.galleryUrls
+                          ? editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean)
+                          : [];
+                        await saveInlineFields({
+                          logoUrl: editFields.logoUrl,
+                          coverImageUrl: editFields.coverImageUrl,
+                          galleryUrls: galleryArr,
+                        });
+                      }}
+                      className="shrink-0 py-2.5 px-5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer flex items-center gap-1.5 transition-all"
+                    >
+                      <CheckCircle className="h-3.5 w-3.5" /> Save Changes
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Tips Card */}
+              <div className="bg-blue-50 border border-blue-100 rounded-3xl p-5 flex items-start gap-4">
+                <div className="h-9 w-9 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
+                  <Info className="h-4.5 w-4.5 text-blue-600" />
+                </div>
+                <div className="flex flex-col gap-1 text-left">
+                  <span className="font-extrabold text-blue-800 text-xs">Photo Tips for Better Visibility</span>
+                  <ul className="text-[10.5px] text-blue-700 font-semibold leading-relaxed list-disc list-inside mt-0.5 space-y-0.5">
+                    <li>Use bright, well-lit photos of your store, products, or work</li>
+                    <li>Upload a clear logo — square format works best (e.g. 400×400px)</li>
+                    <li>Cover image should be landscape (e.g. 1200×400px)</li>
+                    <li>More photos = higher search ranking on the directory</li>
+                  </ul>
+                </div>
+              </div>
 
             </div>
           )}
@@ -4459,17 +5074,45 @@ function DashboardContent() {
                                   className="flex-grow border border-slate-200 rounded-xl px-4 py-3 text-xs bg-white focus:outline-emerald-600 font-semibold shadow-3xs"
                                 />
                                 <button
-                                  onClick={() => {
-                                    if (leadReplyText.trim()) {
-                                      const updatedList = [...leadsList];
-                                      updatedList[selectedLeadIdx] = {
-                                        ...activeLead,
-                                        reply: leadReplyText,
-                                        responded: true
-                                      };
-                                      setLeadsList(updatedList);
-                                      setLeadReplyText('');
+                                  onClick={async () => {
+                                    if (!leadReplyText.trim()) return;
+                                    if (activeLead._id) {
+                                      const activeToken = token || localStorage.getItem('ubt_token');
+                                      try {
+                                        const res = await fetch(`http://localhost:5000/api/leads/${activeLead._id}/reply`, {
+                                          method: 'PUT',
+                                          headers: {
+                                            'Content-Type': 'application/json',
+                                            Authorization: `Bearer ${activeToken}`
+                                          },
+                                          body: JSON.stringify({ reply: leadReplyText })
+                                        });
+                                        const data = await res.json();
+                                        if (data.success) {
+                                          const updatedList = [...leadsList];
+                                          updatedList[selectedLeadIdx] = {
+                                            ...activeLead,
+                                            reply: leadReplyText,
+                                            responded: true
+                                          };
+                                          setLeadsList(updatedList);
+                                          setLeadReplyText('');
+                                          return;
+                                        }
+                                      } catch (err) {
+                                        console.warn('Failed to reply via API, applying offline fallback updates', err);
+                                      }
                                     }
+                                    
+                                    // Offline fallback update
+                                    const updatedList = [...leadsList];
+                                    updatedList[selectedLeadIdx] = {
+                                      ...activeLead,
+                                      reply: leadReplyText,
+                                      responded: true
+                                    };
+                                    setLeadsList(updatedList);
+                                    setLeadReplyText('');
                                   }}
                                   className="py-3 px-5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer transition-all border border-slate-800 btn-active-press"
                                 >
@@ -4803,19 +5446,39 @@ function DashboardContent() {
                         </div>
                       </div>
 
-                      <div className="flex gap-2.5 mt-2 border-t border-slate-100 pt-4">
-                        <button
-                          onClick={() => handleOpenBranchModal(branch)}
-                          className="flex-1 py-2 border border-slate-200 hover:border-slate-350 text-slate-700 hover:bg-slate-50 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                        >
-                          <Edit3 className="h-3.5 w-3.5" /> Edit Branch
-                        </button>
-                        <button
-                          onClick={() => handleBranchDelete(branch._id)}
-                          className="flex-1 py-2 border border-rose-200 hover:border-rose-350 text-rose-600 hover:bg-rose-50/30 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" /> Delete Branch
-                        </button>
+                      <div className="flex flex-col gap-2 mt-2 border-t border-slate-100 pt-4">
+                        <div className="flex gap-2">
+                          <Link
+                            to={`/businesses/${branch._id}`}
+                            target="_blank"
+                            className="flex-1 py-2 border border-[#027244] text-[#027244] hover:bg-emerald-50/30 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" /> View Profile
+                          </Link>
+                          <button
+                            onClick={() => {
+                              handleSwitchBusiness(branch._id);
+                              setActiveTab('Business Details');
+                            }}
+                            className="flex-1 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm border-none"
+                          >
+                            <Settings className="h-3.5 w-3.5" /> Manage Branch
+                          </button>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleOpenBranchModal(branch)}
+                            className="flex-1 py-2 border border-slate-200 hover:border-slate-350 text-slate-700 hover:bg-slate-50 font-extrabold text-[11px] rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1"
+                          >
+                            <Edit3 className="h-3 w-3" /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleBranchDelete(branch._id)}
+                            className="flex-1 py-2 border border-rose-200 hover:border-rose-350 text-rose-600 hover:bg-rose-50/30 font-extrabold text-[11px] rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1"
+                          >
+                            <Trash2 className="h-3 w-3" /> Delete
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -6823,7 +7486,7 @@ function DashboardContent() {
                   multiple
                   className="hidden" 
                   id="file-selector"
-                  onChange={() => setUploadedPhotosCount(prev => prev + 1)}
+                  onChange={handleGalleryFileUpload}
                 />
                 <label 
                   htmlFor="file-selector"
@@ -6857,14 +7520,12 @@ function DashboardContent() {
                       </div>
                     </div>
                   ))}
-                  {photoGallery.length < 4 && (
-                    <label 
-                      htmlFor="file-selector"
-                      className="h-16 border-2 border-dashed border-slate-200 rounded-xl hover:border-slate-350 transition-colors flex items-center justify-center text-slate-400 hover:text-slate-600 bg-slate-50/50 cursor-pointer shadow-2xs"
-                    >
-                      <Plus className="h-5 w-5" />
-                    </label>
-                  )}
+                  <label 
+                    htmlFor="file-selector"
+                    className="h-16 border-2 border-dashed border-slate-200 rounded-xl hover:border-emerald-300 transition-colors flex items-center justify-center text-slate-400 hover:text-emerald-600 bg-slate-50/50 cursor-pointer shadow-2xs"
+                  >
+                    {uploadLoading ? <RefreshCw className="h-5 w-5 animate-spin text-emerald-600" /> : <Plus className="h-5 w-5" />}
+                  </label>
                 </div>
               </div>
 
