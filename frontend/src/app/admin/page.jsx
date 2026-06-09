@@ -589,6 +589,44 @@ export default function AdminDashboard() {
     }
   };
 
+  const updatePresetCategory = async (catId, payload) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/categories/${catId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Category renamed successfully!");
+        loadPlatformRealData();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const deletePresetCategory = async (catId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/categories/${catId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Category removed successfully!");
+        loadPlatformRealData();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleAction = async (bizId, type) => {
     let nextStatus = 'Pending Verification';
     if (type === 'approve') nextStatus = 'Approved';
@@ -849,8 +887,8 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-800 text-left">
       
       {/* 1. SIDEBAR CONTAINER */}
-      <aside className={`bg-[#001c41] text-white flex flex-col justify-between transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'} shrink-0 relative overflow-hidden z-20`}>
-        <div className="flex flex-col gap-8 py-6">
+      <aside className={`bg-[#001c41] text-white flex flex-col justify-between transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'} shrink-0 relative overflow-hidden z-20 h-screen sticky top-0`}>
+        <div className="flex flex-col gap-8 py-6 flex-1 overflow-y-auto">
           {/* Logo Brand */}
           <div className="px-6 flex items-center justify-start py-2">
             <Link to="/" className="flex items-center select-none shrink-0">
@@ -867,6 +905,7 @@ export default function AdminDashboard() {
             {[
               { id: 'Dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
               { id: 'Businesses', label: 'Businesses', icon: <Store className="h-5 w-5" /> },
+              { id: 'Category Management', label: 'Categories', icon: <Grid className="h-5 w-5" /> },
               { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" /> },
               { id: 'Blogs', label: 'Blogs Moderation', icon: <BookOpen className="h-5 w-5" /> },
               { id: 'Events', label: 'Events Moderation', icon: <Calendar className="h-5 w-5" /> },
@@ -2780,6 +2819,302 @@ export default function AdminDashboard() {
                           )}
                         </tbody>
                       </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: CATEGORY MANAGEMENT */}
+              {activeTab === 'Category Management' && (
+                <div className="flex flex-col gap-6 text-left animate-fadeIn">
+                  
+                  {/* Title Block */}
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex flex-col text-left">
+                      <h3 className="font-extrabold text-slate-800 text-base leading-tight font-sans">Category Management Console</h3>
+                      <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Seeded presets, custom requests vetting, automatic icon assignment, and category mergers.</span>
+                    </div>
+                  </div>
+
+                  {/* Split Layout: Left side for requests & grid, Right side for operations */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans">
+                    
+                    {/* Left & Center: Requests and Category Lists */}
+                    <div className="lg:col-span-2 flex flex-col gap-6">
+                      
+                      {/* Section 1: Pending Requests */}
+                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
+                        <h4 className="font-extrabold text-xs uppercase tracking-wider mb-4 border-b pb-3 border-slate-100 flex items-center gap-2 text-slate-800">
+                          <Clock className="h-4.5 w-4.5 text-amber-500 animate-spin-slow" /> Custom Category Requests ({pendingCategories.length})
+                        </h4>
+                        
+                        {pendingCategories.length === 0 ? (
+                          <div className="text-center py-10 text-slate-400 text-xs font-semibold flex flex-col items-center gap-2">
+                            <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+                            <span>All custom category requests resolved!</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-4">
+                            {pendingCategories.map(biz => (
+                              <div key={biz._id} className="border border-slate-200 rounded-2xl p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+                                <div className="flex flex-col text-left">
+                                  <div className="flex items-center gap-2">
+                                    <span className="bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-sm">Custom category request</span>
+                                    <span className="text-[9px] font-extrabold text-slate-400">Biz Status: {biz.status}</span>
+                                  </div>
+                                  <span className="font-black text-sm mt-2 text-[#001c41]">"{biz.customCategoryName}"</span>
+                                  <span className="text-[10.5px] text-slate-400 font-semibold mt-1">Requested by business: <b className="text-slate-555">{biz.name}</b> ({biz.ownerId?.fullName || 'Owner'})</span>
+                                </div>
+                                
+                                <div className="flex flex-wrap gap-2 items-center">
+                                  <select
+                                    onChange={(e) => {
+                                      const catId = e.target.value;
+                                      if (!catId) return;
+                                      const matched = presetCategories.find(c => c._id === catId);
+                                      if (matched) {
+                                        const confirmed = confirm(`Assign existing category "${matched.categoryName}" for "${biz.customCategoryName}"?`);
+                                        if (confirmed) {
+                                          resolveCategoryRequest(biz._id, 'assign', matched._id);
+                                        }
+                                      }
+                                      e.target.value = "";
+                                    }}
+                                    className="py-1.5 px-3 border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-xl text-[10px] font-extrabold cursor-pointer transition-colors outline-none font-sans"
+                                  >
+                                    <option value="">-- Assign Existing Category --</option>
+                                    {presetCategories.map(c => (
+                                      <option key={c._id} value={c._id}>{c.categoryName}</option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    onClick={() => {
+                                      const isCreate = confirm(`Create genuinely new category "${biz.customCategoryName}"? It will auto-resolve the business mapping.`);
+                                      if (isCreate) {
+                                        resolveCategoryRequest(biz._id, 'create', null, biz.customCategoryName);
+                                      }
+                                    }}
+                                    className="py-1.5 px-3 bg-[#027244] hover:bg-[#005934] text-white text-[10px] font-extrabold rounded-xl transition-colors cursor-pointer shadow-sm shadow-emerald-800/10 font-sans"
+                                  >
+                                    Create & Map
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Section 2: Preset Seeded Categories Grid */}
+                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
+                        <div className="flex justify-between items-center mb-4 border-b pb-3 border-slate-100">
+                          <h4 className="font-extrabold text-xs uppercase tracking-wider flex items-center gap-2 text-slate-800">
+                            <Grid className="h-4.5 w-4.5 text-emerald-500" /> Preset Categories ({presetCategories.length})
+                          </h4>
+                          <span className="text-[10px] text-slate-500 font-bold">Sort: Alphabetical</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto pr-1">
+                          {presetCategories.map(cat => {
+                            const count = businesses.filter(b => b.category === cat.categoryName || b.type === cat.categoryName).length;
+                            return (
+                              <div 
+                                key={cat._id} 
+                                className="border border-slate-200 rounded-2xl p-4 flex justify-between items-center transition-all bg-slate-50/50 hover:bg-slate-50"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="h-9 w-9 rounded-xl flex items-center justify-center font-black shrink-0 bg-emerald-50 text-[#027244] border border-emerald-100">
+                                    <Store className="h-4.5 w-4.5" />
+                                  </div>
+                                  <div className="flex flex-col text-left min-w-0">
+                                    <span className="font-extrabold text-xs truncate text-slate-800">{cat.categoryName}</span>
+                                    <span className="text-[9px] text-slate-400 mt-1 font-semibold truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
+                                    <span className="text-[9.5px] text-emerald-650 font-black mt-2 leading-none">{count} active businesses</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-1.5 shrink-0">
+                                  <button
+                                    onClick={() => {
+                                      const newName = prompt("Rename category:", cat.categoryName);
+                                      if (!newName || newName === cat.categoryName) return;
+                                      updatePresetCategory(cat._id, { categoryName: newName });
+                                    }}
+                                    className="h-7 w-7 rounded-lg border border-slate-355 hover:bg-slate-100 flex items-center justify-center cursor-pointer text-slate-550 font-extrabold text-[10px]"
+                                    title="Edit Category Name"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
+                                        deletePresetCategory(cat._id);
+                                      }
+                                    }}
+                                    className="h-7 w-7 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 flex items-center justify-center cursor-pointer border border-rose-500/10"
+                                    title="Delete Category"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Actions Column (Add Category & Merge Console) */}
+                    <div className="lg:col-span-1 flex flex-col gap-6">
+                      
+                      {/* Action 1: Add Category Form */}
+                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-5">
+                        <div>
+                          <h4 className="font-extrabold text-xs uppercase tracking-wider mb-1 text-slate-800">Add Preset Category</h4>
+                          <span className="text-[10px] text-slate-400 font-semibold leading-relaxed">Add a new standard business classification instantly. Includes Levenshtein duplicate prevention warning.</span>
+                        </div>
+
+                        <form
+                          onSubmit={async (e) => {
+                            e.preventDefault();
+                            const targetName = e.target.categoryName.value.trim();
+                            if (!targetName) return;
+
+                            try {
+                              // Duplicate prevention fuzzy check
+                              const dupRes = await fetch('http://localhost:5000/api/categories/check-duplicate', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ categoryName: targetName })
+                              });
+                              const dupData = await dupRes.json();
+                              if (dupData.success && dupData.isDuplicate) {
+                                alert(dupData.message);
+                                return;
+                              }
+
+                              // Create Category
+                              const createRes = await fetch('http://localhost:5000/api/categories', {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
+                                },
+                                body: JSON.stringify({ categoryName: targetName, description: 'Preset category created manually' })
+                              });
+                              if (createRes.ok) {
+                                alert(`Category "${targetName}" created successfully!`);
+                                e.target.reset();
+                                loadPlatformRealData();
+                              }
+                            } catch (err) {
+                              console.error(err);
+                            }
+                          }}
+                          className="flex flex-col gap-4 text-left"
+                        >
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest leading-none">Category Name *</label>
+                            <input
+                              type="text"
+                              name="categoryName"
+                              required
+                              placeholder="e.g. Solar Solutions"
+                              className="w-full border border-slate-200 px-3 py-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] bg-slate-50/50 text-[#001c41]"
+                            />
+                          </div>
+
+                          <button
+                            type="submit"
+                            className="py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer"
+                          >
+                            Add Category
+                          </button>
+                        </form>
+                      </div>
+
+                      {/* Action 2: Merge Duplicate Categories Panel */}
+                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-5">
+                        <div>
+                          <h4 className="font-extrabold text-xs uppercase tracking-wider mb-1 text-slate-800">Merge Categories Console</h4>
+                          <span className="text-[10px] text-slate-400 font-semibold leading-relaxed">Combine similar or duplicate categories (e.g. "Restaurant" into "Restaurants"). Links all matching businesses to target and resolves source.</span>
+                        </div>
+
+                        <form
+                          onSubmit={async (e) => {
+                            e.preventDefault();
+                            const sourceId = e.target.sourceCategoryId.value;
+                            const targetId = e.target.targetCategoryId.value;
+                            if (!sourceId || !targetId) {
+                              alert("Please select both source and target categories.");
+                              return;
+                            }
+                            if (sourceId === targetId) {
+                              alert("Source and target categories must be different.");
+                              return;
+                            }
+
+                            if (confirm("Are you sure you want to merge these categories? This will remap all businesses linked to source category and permanently delete it!")) {
+                              try {
+                                const mergeRes = await fetch('http://localhost:5000/api/admin/categories/merge', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
+                                  },
+                                  body: JSON.stringify({ sourceCategoryId: sourceId, targetCategoryId: targetId })
+                                });
+                                const data = await mergeRes.json();
+                                if (data.success) {
+                                  alert(data.message || "Categories successfully merged!");
+                                  loadPlatformRealData();
+                                } else {
+                                  alert(data.message || "Merge execution failed.");
+                                }
+                              } catch (err) {
+                                console.error(err);
+                              }
+                            }
+                          }}
+                          className="flex flex-col gap-4 text-left"
+                        >
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest leading-none">Source Category (To Merge / Delete)</label>
+                            <select
+                              name="sourceCategoryId"
+                              required
+                              className="w-full border border-slate-200 px-3 py-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] cursor-pointer bg-slate-50/50 text-[#001c41]"
+                            >
+                              <option value="">-- Select Source --</option>
+                              {presetCategories.map(c => (
+                                <option key={c._id} value={c._id}>{c.categoryName}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[9.5px] font-black text-slate-500 uppercase tracking-widest leading-none">Target Category (To Keep / Direct To)</label>
+                            <select
+                              name="targetCategoryId"
+                              required
+                              className="w-full border border-slate-200 px-3 py-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] cursor-pointer bg-slate-50/50 text-[#001c41]"
+                            >
+                              <option value="">-- Select Target --</option>
+                              {presetCategories.map(c => (
+                                <option key={c._id} value={c._id}>{c.categoryName}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <button
+                            type="submit"
+                            className="py-3 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer"
+                          >
+                            Execute Category Merger
+                          </button>
+                        </form>
+                      </div>
+
                     </div>
                   </div>
                 </div>

@@ -15,7 +15,8 @@ const {
 } = require('../controllers/adminController');
 const {
   getPendingCategoryReviews,
-  resolveCategoryReview
+  resolveCategoryReview,
+  mergeCategories
 } = require('../controllers/superadminController');
 
 // Protect all admin routes
@@ -462,6 +463,7 @@ router.put('/branches/:id/status', async (req, res, next) => {
 // Category requests vetting (accessible to Admin)
 router.get('/category-review/pending', getPendingCategoryReviews);
 router.post('/category-review/resolve', resolveCategoryReview);
+router.post('/categories/merge', mergeCategories);
 
 
 module.exports = router;

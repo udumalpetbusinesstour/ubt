@@ -1400,7 +1400,7 @@ export default function SuperAdminDashboard() {
         { id: 'Reviews Moderation', label: 'Reviews', icon: <MessageSquare className="h-4.5 w-4.5" /> },
         { id: 'Referrals', label: 'Referrals', icon: <Gift className="h-4.5 w-4.5" /> },
         { id: 'Support Tickets', label: 'Leads / Enquiries', icon: <FileText className="h-4.5 w-4.5" /> },
-        { id: 'Reports', label: 'Subscribers', icon: <Users className="h-4.5 w-4.5" /> }
+        { id: 'Reports', label: 'Reports & Trends', icon: <BarChart3 className="h-4.5 w-4.5" /> }
       ]
     },
     {
@@ -1446,8 +1446,8 @@ export default function SuperAdminDashboard() {
         themeMode === 'dark' 
           ? 'bg-gradient-to-b from-[#060a13] via-[#0b111e] to-[#03060b] border-slate-800/80' 
           : 'bg-gradient-to-b from-[#001c41] via-[#002d62] to-[#00122d] border-[#027244]/20'
-      } hidden md:flex`}>
-        <div className="flex flex-col gap-6 py-6 overflow-y-auto max-h-[80vh]">
+      } hidden md:flex h-screen sticky top-0`}>
+        <div className="flex flex-col gap-6 py-6 overflow-y-auto flex-1">
           {/* Logo brand with UBT Typography Branding */}
           <div className="px-6 flex flex-col gap-2 py-2 border-b border-slate-900/50">
             <div className="flex items-center justify-between">
@@ -3401,7 +3401,7 @@ export default function SuperAdminDashboard() {
                                     >
                                       {m.fullName}
                                     </span>
-                                    <span className="text-[9.5px] text-slate-400 font-bold mt-1">Joined: {m.createdAt.toLocaleDateString()}</span>
+                                    <span className="text-[9.5px] text-slate-400 font-bold mt-1">Joined: {m.createdAt ? new Date(m.createdAt).toLocaleDateString() : 'N/A'}</span>
                                   </div>
                                 </td>
                                 <td className="p-4.5">
@@ -3522,7 +3522,7 @@ export default function SuperAdminDashboard() {
                                   >
                                     {u.fullName}
                                   </span>
-                                  <span className="text-[9.5px] text-slate-400 font-bold mt-1">Registered: {u.createdAt.toLocaleDateString()}</span>
+                                  <span className="text-[9.5px] text-slate-400 font-bold mt-1">Registered: {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}</span>
                                 </div>
                               </td>
                               <td className="p-4.5 text-left">
