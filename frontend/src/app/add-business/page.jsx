@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { ShieldCheck, ArrowLeft, ArrowRight, Upload, Sparkles, CheckCircle2, ChevronRight, Eye, RefreshCw, AlertCircle, AlertTriangle, Lock, Briefcase, Lightbulb, Headset, Phone, Mail, Clock, Search } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, ArrowRight, Upload, Sparkles, CheckCircle2, ChevronRight, Eye, RefreshCw, AlertCircle, AlertTriangle, Lock, Briefcase, Lightbulb, Headset, Phone, Mail, Clock, Search, BookOpen } from 'lucide-react';
 import MockGoogleMaps from '@/components/MockGoogleMaps';
 import ChoosePlan from '../choose-plan/page';
 
@@ -19,6 +19,28 @@ const branchSteps = [
   { id: 3, name: 'Contact & Location' },
   { id: 4, name: 'Photos & Media' },
 ];
+
+const isFoodRelated = (category, customCategoryName) => {
+  if (!category) return false;
+  const foodCategories = [
+    'Restaurants', 'Bakeries', 'Cafes & Tea Shops', 'Sweet Shops', 
+    'Fast Food Centers', 'Catering Services', 'Juice & Ice Cream Parlors',
+    'Food & Restaurants', 'Food & Drinks', 'Hotels & Restaurants'
+  ];
+  if (foodCategories.includes(category)) {
+    return true;
+  }
+  if (category === 'Others' && customCategoryName) {
+    const customLower = customCategoryName.toLowerCase();
+    const foodKeywords = [
+      'food', 'restaurant', 'cafe', 'bakery', 'sweet', 'catering', 
+      'juice', 'ice cream', 'parlor', 'hotel', 'dhaba', 'mess', 
+      'biryani', 'pizza', 'burger', 'kitchen', 'canteen', 'sweets', 'tea'
+    ];
+    return foodKeywords.some(keyword => customLower.includes(keyword));
+  }
+  return false;
+};
 
 export default function AddBusiness() {
   const navigate = useNavigate();
@@ -123,6 +145,14 @@ export default function AddBusiness() {
   const [isPincodeVerified, setIsPincodeVerified] = useState(false);
   const [eligibilityMethod, setEligibilityMethod] = useState('google'); // 'google' | 'pincode'
 
+  // Main Google autofill states (eligibility screen)
+  const [gmbQuery, setGmbQuery] = useState('');
+  const [gmbSuggestions, setGmbSuggestions] = useState([]);
+  const [showGmbDropdown, setShowGmbDropdown] = useState(false);
+  const [gmbAutofillLoading, setGmbAutofillLoading] = useState(false);
+  const [gmbAutofillSuccess, setGmbAutofillSuccess] = useState(false);
+  const [gmbImportedReviews, setGmbImportedReviews] = useState([]);
+
   // Branch eligibility gating states
   const [isBranchEligibilityVerified, setIsBranchEligibilityVerified] = useState(false);
   const [branchEligibilityMethod, setBranchEligibilityMethod] = useState('google');
@@ -132,6 +162,7 @@ export default function AddBusiness() {
   const [selectedBranchPlaceId, setSelectedBranchPlaceId] = useState(null);
   const [branchAutofillLoading, setBranchAutofillLoading] = useState(false);
   const [branchAutofillSuccess, setBranchAutofillSuccess] = useState(false);
+  const [branchImportedReviews, setBranchImportedReviews] = useState([]);
 
 
 
@@ -843,38 +874,80 @@ export default function AddBusiness() {
     return () => clearTimeout(timer);
   }, [formData.address, formData.locality, formData.pincode, formData.coordinates?.lat, formData.coordinates?.lng, currentStep]);
 
-  const handleLogoUpload = (e) => {
+  const uploadFileToServer = async (file) => {
+    // Always read from localStorage at call time — avoids stale closure captures
+    const activeToken = localStorage.getItem('ubt_token');
+    if (!activeToken) throw new Error('Not logged in. Please log in and try again.');
+    const fd = new FormData();
+    fd.append('image', file);
+    const res = await fetch('http://localhost:5000/api/upload', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${activeToken}` },
+      body: fd,
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'Upload failed');
+    return data.url || data.fileUrl;
+  };
+
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [uploadingBranchLogo, setUploadingBranchLogo] = useState(false);
+  const [uploadingBranchCover, setUploadingBranchCover] = useState(false);
+  const [uploadingBranchGallery, setUploadingBranchGallery] = useState(false);
+
+  const handleLogoUpload = async (e) => {
     if (e.target.files && e.target.files[0]) {
-      setLogoFile(e.target.files[0].name);
-      const updated = { ...formData, logoUrl: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150&q=80' };
-      setFormData(updated);
-      saveDraft(updated);
+      const file = e.target.files[0];
+      setLogoFile(file.name);
+      setUploadingLogo(true);
+      try {
+        const url = await uploadFileToServer(file);
+        const updated = { ...formData, logoUrl: url };
+        setFormData(updated);
+        saveDraft(updated);
+      } catch (err) {
+        setError('Logo upload failed: ' + err.message);
+      } finally {
+        setUploadingLogo(false);
+      }
     }
   };
 
-  const handleCoverUpload = (e) => {
+  const handleCoverUpload = async (e) => {
     if (e.target.files && e.target.files[0]) {
-      setCoverFile(e.target.files[0].name);
-      const updated = { ...formData, coverImageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80' };
-      setFormData(updated);
-      saveDraft(updated);
+      const file = e.target.files[0];
+      setCoverFile(file.name);
+      setUploadingCover(true);
+      try {
+        const url = await uploadFileToServer(file);
+        const updated = { ...formData, coverImageUrl: url };
+        setFormData(updated);
+        saveDraft(updated);
+      } catch (err) {
+        setError('Cover upload failed: ' + err.message);
+      } finally {
+        setUploadingCover(false);
+      }
     }
   };
 
-  const handleGalleryUpload = (e) => {
+  const handleGalleryUpload = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      const names = Array.from(e.target.files).map(f => f.name);
-      setGalleryFiles(prev => [...prev, ...names]);
-      const updated = {
-        ...formData,
-        galleryUrls: [
-          'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=500&q=80',
-          'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&q=80',
-          'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80',
-        ]
-      };
-      setFormData(updated);
-      saveDraft(updated);
+      const files = Array.from(e.target.files);
+      setGalleryFiles(prev => [...prev, ...files.map(f => f.name)]);
+      setUploadingGallery(true);
+      try {
+        const urls = await Promise.all(files.map(f => uploadFileToServer(f)));
+        const updated = { ...formData, galleryUrls: [...(formData.galleryUrls || []), ...urls] };
+        setFormData(updated);
+        saveDraft(updated);
+      } catch (err) {
+        setError('Gallery upload failed: ' + err.message);
+      } finally {
+        setUploadingGallery(false);
+      }
     }
   };
 
@@ -883,32 +956,51 @@ export default function AddBusiness() {
     setBranchForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleBranchLogoUpload = (e) => {
+  const handleBranchLogoUpload = async (e) => {
     if (e.target.files && e.target.files[0]) {
-      setBranchLogoFile(e.target.files[0].name);
-      setBranchForm(prev => ({ ...prev, logoUrl: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150&q=80' }));
+      const file = e.target.files[0];
+      setBranchLogoFile(file.name);
+      setUploadingBranchLogo(true);
+      try {
+        const url = await uploadFileToServer(file);
+        setBranchForm(prev => ({ ...prev, logoUrl: url }));
+      } catch (err) {
+        setError('Branch logo upload failed: ' + err.message);
+      } finally {
+        setUploadingBranchLogo(false);
+      }
     }
   };
 
-  const handleBranchCoverUpload = (e) => {
+  const handleBranchCoverUpload = async (e) => {
     if (e.target.files && e.target.files[0]) {
-      setBranchCoverFile(e.target.files[0].name);
-      setBranchForm(prev => ({ ...prev, coverImageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80' }));
+      const file = e.target.files[0];
+      setBranchCoverFile(file.name);
+      setUploadingBranchCover(true);
+      try {
+        const url = await uploadFileToServer(file);
+        setBranchForm(prev => ({ ...prev, coverImageUrl: url }));
+      } catch (err) {
+        setError('Branch cover upload failed: ' + err.message);
+      } finally {
+        setUploadingBranchCover(false);
+      }
     }
   };
 
-  const handleBranchGalleryUpload = (e) => {
+  const handleBranchGalleryUpload = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      const names = Array.from(e.target.files).map(f => f.name);
-      setBranchGalleryFiles(prev => [...prev, ...names]);
-      setBranchForm(prev => ({
-        ...prev,
-        galleryUrls: [
-          'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=500&q=80',
-          'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&q=80',
-          'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80',
-        ]
-      }));
+      const files = Array.from(e.target.files);
+      setBranchGalleryFiles(prev => [...prev, ...files.map(f => f.name)]);
+      setUploadingBranchGallery(true);
+      try {
+        const urls = await Promise.all(files.map(f => uploadFileToServer(f)));
+        setBranchForm(prev => ({ ...prev, galleryUrls: [...(prev.galleryUrls || []), ...urls] }));
+      } catch (err) {
+        setError('Branch gallery upload failed: ' + err.message);
+      } finally {
+        setUploadingBranchGallery(false);
+      }
     }
   };
 
@@ -1232,6 +1324,97 @@ export default function AddBusiness() {
               </div>
             ) : (
               <div className="flex flex-col gap-4 text-left animate-fadeIn">
+
+                {/* Search & Autofill */}
+                <div className="flex flex-col gap-1.5 relative">
+                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Search Your Business Name <span className="text-slate-400 font-semibold normal-case">(autofill details)</span></label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Type your business name..."
+                      value={gmbQuery}
+                      onChange={async (e) => {
+                        const val = e.target.value;
+                        setGmbQuery(val);
+                        setGmbAutofillSuccess(false);
+                        if (val.length < 2) { setGmbSuggestions([]); setShowGmbDropdown(false); return; }
+                        try {
+                          const res = await fetch(`http://localhost:5000/api/businesses/google-autocomplete?q=${encodeURIComponent(val)}&types=establishment`);
+                          const data = await res.json();
+                          if (data.success) { setGmbSuggestions(data.predictions || []); setShowGmbDropdown(true); }
+                        } catch {}
+                      }}
+                      className="py-3 px-4 pr-10 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold w-full focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                    />
+                    {gmbAutofillLoading && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="h-4 w-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                    {gmbAutofillSuccess && !gmbAutofillLoading && (
+                      <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
+                    )}
+                  </div>
+                  {showGmbDropdown && gmbSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 z-50 bg-white border border-slate-200 rounded-xl shadow-lg mt-1 overflow-hidden">
+                      {gmbSuggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          className="w-full text-left px-4 py-3 hover:bg-emerald-50 border-b border-slate-100 last:border-0 transition-colors"
+                          onClick={async () => {
+                            setShowGmbDropdown(false);
+                            setGmbQuery(s.structured_formatting?.main_text || s.description);
+                            setGmbAutofillLoading(true);
+                            setGmbAutofillSuccess(false);
+                            try {
+                              const res = await fetch('http://localhost:5000/api/businesses/google-autofill', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ placeId: s.place_id })
+                              });
+                              const data = await res.json();
+                              if (data.success && data.data) {
+                                const d = data.data;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  name: d.name || prev.name,
+                                  phone: d.phone || prev.phone,
+                                  whatsapp: d.phone || prev.whatsapp,
+                                  website: d.website || prev.website,
+                                  address: d.address || prev.address,
+                                  locality: d.locality || prev.locality,
+                                  pincode: d.pincode || prev.pincode,
+                                  coordinates: d.latitude ? { lat: d.latitude, lng: d.longitude } : prev.coordinates,
+                                  googlePlaceId: d.googlePlaceId || prev.googlePlaceId,
+                                  googleRating: d.googleRating || prev.googleRating,
+                                  googleReviewsCount: d.googleReviewsCount || prev.googleReviewsCount,
+                                  googleReviews: d.googleReviews?.length ? d.googleReviews : prev.googleReviews,
+                                  timings: d.timings || prev.timings,
+                                }));
+                                setGmbImportedReviews(d.googleReviews || []);
+                                setGmbAutofillSuccess(true);
+                              }
+                            } catch {}
+                            finally { setGmbAutofillLoading(false); }
+                          }}
+                        >
+                          <div className="text-xs font-bold text-slate-800">{s.structured_formatting?.main_text || s.description}</div>
+                          <div className="text-[11px] text-slate-500 font-medium">{s.structured_formatting?.secondary_text || ''}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {gmbAutofillSuccess && (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 font-semibold flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Details autofilled successfully! You can still edit any field in the next steps.</span>
+                  </div>
+                )}
+
+                {/* Google Business Profile Link */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Google Business Profile Link <span className="text-red-500">*</span></label>
                   <input
@@ -1243,36 +1426,30 @@ export default function AddBusiness() {
                   />
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Select Eligible Udumalpet Pincode <span className="text-red-500">*</span></label>
-                  <select
-                    name="pincode"
-                    value={formData.pincode}
-                    onChange={handleInputChange}
-                    className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
-                  >
-                    <option value="">-- Choose Pincode --</option>
-                    <option value="642126">642126 - Udumalpet Main Town</option>
-                    <option value="642207">642207 - Pungamuthur</option>
-                    <option value="642154">642154 - Bodipatti & Gandhi Nagar</option>
-                    <option value="642112">642112 - Dhali</option>
-                    <option value="642205">642205 - Pethappampatti</option>
-                    <option value="642122">642122 - Poolankinar</option>
-                    <option value="642204">642204 - Komaralingam & Kolumam</option>
-                    <option value="642201">642201 - Gudimangalam</option>
-                    <option value="642203">642203 - Kaniyur</option>
-                    <option value="642102">642102 - Amaravathi Nagar</option>
-                    <option value="642128">642128 - Venkatesa Mills</option>
-                    <option value="642113">642113 - Madathukulam</option>
-                    <option value="642206">642206 - Poolavadi</option>
-                    <option value="642132">642132 - Valavadi</option>
-                    <option value="642111">642111 - Agrahara Kannadiputhur</option>
-                  </select>
-                </div>
+                {/* Imported Reviews Preview */}
+                {gmbImportedReviews.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wide">📥 Imported Google Reviews</span>
+                      <span className="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full">{gmbImportedReviews.length} reviews</span>
+                    </div>
+                    <div className="flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
+                      {gmbImportedReviews.map((r, i) => (
+                        <div key={i} className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-extrabold text-slate-800">{r.authorName}</span>
+                            <span className="text-xs font-bold text-amber-500">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 font-medium leading-relaxed line-clamp-2">{r.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4.5 text-xs text-slate-500 leading-relaxed font-semibold">
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-xs text-slate-500 leading-relaxed font-semibold">
                   <span className="font-extrabold text-slate-700 block mb-0.5">ℹ️ Google Business Profile Verification</span>
-                  Please provide the Google Business Profile Link or Google Maps URL for your business location. Our administrators will use this link to verify your listing details.
+                  Paste your Google Maps / Business Profile link above. You can also search your business name above to autofill all details and import Google Reviews automatically.
                 </div>
 
                 {error && (
@@ -1296,17 +1473,13 @@ export default function AddBusiness() {
                         setError("Please enter your Google Business Profile link.");
                         return;
                       }
-                      if (!formData.pincode) {
-                        setError("Please select a valid Udumalpet pincode first.");
-                        return;
-                      }
                       setError("");
                       setIsPincodeVerified(true);
                       saveDraft({ ...formData });
                     }}
                     className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow"
                   >
-                    Verify & Proceed
+                    Verify &amp; Proceed
                   </button>
                 </div>
               </div>
@@ -1432,6 +1605,94 @@ export default function AddBusiness() {
               </div>
             ) : (
               <div className="flex flex-col gap-4 text-left animate-fadeIn">
+
+                {/* Branch Search & Autofill */}
+                <div className="flex flex-col gap-1.5 relative">
+                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Search Branch Name <span className="text-slate-400 font-semibold normal-case">(autofill details)</span></label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Type branch name..."
+                      value={branchGoogleQuery}
+                      onChange={async (e) => {
+                        const val = e.target.value;
+                        setBranchGoogleQuery(val);
+                        setBranchAutofillSuccess(false);
+                        if (val.length < 2) { setBranchGoogleSuggestions([]); setShowBranchGoogleDropdown(false); return; }
+                        try {
+                          const res = await fetch(`http://localhost:5000/api/businesses/google-autocomplete?q=${encodeURIComponent(val)}&types=establishment`);
+                          const data = await res.json();
+                          if (data.success) { setBranchGoogleSuggestions(data.predictions || []); setShowBranchGoogleDropdown(true); }
+                        } catch {}
+                      }}
+                      className="py-3 px-4 pr-10 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold w-full focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                    />
+                    {branchAutofillLoading && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="h-4 w-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                    {branchAutofillSuccess && !branchAutofillLoading && (
+                      <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
+                    )}
+                  </div>
+                  {showBranchGoogleDropdown && branchGoogleSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 z-50 bg-white border border-slate-200 rounded-xl shadow-lg mt-1 overflow-hidden">
+                      {branchGoogleSuggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          className="w-full text-left px-4 py-3 hover:bg-emerald-50 border-b border-slate-100 last:border-0 transition-colors"
+                          onClick={async () => {
+                            setShowBranchGoogleDropdown(false);
+                            setBranchGoogleQuery(s.structured_formatting?.main_text || s.description);
+                            setBranchAutofillLoading(true);
+                            setBranchAutofillSuccess(false);
+                            try {
+                              const res = await fetch('http://localhost:5000/api/businesses/google-autofill', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ placeId: s.place_id })
+                              });
+                              const data = await res.json();
+                              if (data.success && data.data) {
+                                const d = data.data;
+                                setBranchForm(prev => ({
+                                  ...prev,
+                                  name: d.name || prev.name,
+                                  phone: d.phone || prev.phone,
+                                  whatsapp: d.phone || prev.whatsapp,
+                                  website: d.website || prev.website,
+                                  address: d.address || prev.address,
+                                  locality: d.locality || prev.locality,
+                                  pincode: d.pincode || prev.pincode,
+                                  coordinates: d.latitude ? { lat: d.latitude, lng: d.longitude } : prev.coordinates,
+                                  googleBusinessLink: d.googlePlaceId ? `https://maps.google.com/?cid=${d.googlePlaceId}` : prev.googleBusinessLink,
+                                  timings: d.timings || prev.timings,
+                                }));
+                                setBranchImportedReviews(d.googleReviews || []);
+                                setBranchAutofillSuccess(true);
+                              }
+                            } catch {}
+                            finally { setBranchAutofillLoading(false); }
+                          }}
+                        >
+                          <div className="text-xs font-bold text-slate-800">{s.structured_formatting?.main_text || s.description}</div>
+                          <div className="text-[11px] text-slate-500 font-medium">{s.structured_formatting?.secondary_text || ''}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {branchAutofillSuccess && (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 font-semibold flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Details autofilled successfully! You can still edit any field in the next steps.</span>
+                  </div>
+                )}
+
+                {/* Google Business Profile Link */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Google Business Profile Link <span className="text-red-500">*</span></label>
                   <input
@@ -1443,36 +1704,30 @@ export default function AddBusiness() {
                   />
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Select Eligible Udumalpet Pincode <span className="text-red-500">*</span></label>
-                  <select
-                    name="pincode"
-                    value={branchForm.pincode}
-                    onChange={handleBranchInputChange}
-                    className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
-                  >
-                    <option value="">-- Choose Pincode --</option>
-                    <option value="642126">642126 - Udumalpet Main Town</option>
-                    <option value="642207">642207 - Pungamuthur</option>
-                    <option value="642154">642154 - Bodipatti & Gandhi Nagar</option>
-                    <option value="642112">642112 - Dhali</option>
-                    <option value="642205">642205 - Pethappampatti</option>
-                    <option value="642122">642122 - Poolankinar</option>
-                    <option value="642204">642204 - Komaralingam & Kolumam</option>
-                    <option value="642201">642201 - Gudimangalam</option>
-                    <option value="642203">642203 - Kaniyur</option>
-                    <option value="642102">642102 - Amaravathi Nagar</option>
-                    <option value="642128">642128 - Venkatesa Mills</option>
-                    <option value="642113">642113 - Madathukulam</option>
-                    <option value="642206">642206 - Poolavadi</option>
-                    <option value="642132">642132 - Valavadi</option>
-                    <option value="642111">642111 - Agrahara Kannadiputhur</option>
-                  </select>
-                </div>
+                {/* Imported Reviews Preview */}
+                {branchImportedReviews.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wide">📥 Imported Google Reviews</span>
+                      <span className="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full">{branchImportedReviews.length} reviews</span>
+                    </div>
+                    <div className="flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
+                      {branchImportedReviews.map((r, i) => (
+                        <div key={i} className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-extrabold text-slate-800">{r.authorName}</span>
+                            <span className="text-xs font-bold text-amber-500">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 font-medium leading-relaxed line-clamp-2">{r.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4.5 text-xs text-slate-500 leading-relaxed font-semibold">
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-xs text-slate-500 leading-relaxed font-semibold">
                   <span className="font-extrabold text-slate-700 block mb-0.5">ℹ️ Google Business Profile Verification</span>
-                  Please provide the Google Business Profile Link or Google Maps URL for your branch location. Our administrators will use this link to verify your branch listing details.
+                  Search your branch name above to autofill details and import reviews, or paste your Google Maps link directly. Our admins will verify your branch details.
                 </div>
 
                 {error && (
@@ -1496,16 +1751,12 @@ export default function AddBusiness() {
                         setError("Please enter your Google Business Profile link.");
                         return;
                       }
-                      if (!branchForm.pincode) {
-                        setError("Please select a pincode to verify eligibility.");
-                        return;
-                      }
                       setError("");
                       setIsBranchEligibilityVerified(true);
                     }}
                     className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow"
                   >
-                    Verify & Proceed
+                    Verify &amp; Proceed
                   </button>
                 </div>
               </div>
@@ -2117,13 +2368,18 @@ export default function AddBusiness() {
                       <div className="flex flex-col gap-1.5">
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Business Logo</span>
                         <div className="flex items-center gap-4">
-                          <div className="h-16 w-16 bg-slate-55 border border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 font-bold text-xs select-none">
-                            {logoFile ? '✓ Logo' : 'Logo'}
+                          <div className="h-16 w-16 bg-slate-50 border border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 font-bold text-xs select-none overflow-hidden">
+                            {uploadingLogo ? (
+                              <div className="h-5 w-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                            ) : formData.logoUrl ? (
+                              <img src={formData.logoUrl} alt="Logo" className="h-full w-full object-cover rounded-2xl" />
+                            ) : 'Logo'}
                           </div>
                           <label className="py-2.5 px-4 border border-slate-300 hover:bg-slate-50 font-bold text-xs rounded-xl cursor-pointer transition-colors shadow-sm text-slate-700">
-                            Choose File
-                            <input type="file" onChange={handleLogoUpload} className="hidden" />
+                            {uploadingLogo ? 'Uploading...' : logoFile ? 'Change File' : 'Choose File'}
+                            <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" disabled={uploadingLogo} />
                           </label>
+                          {logoFile && !uploadingLogo && <span className="text-xs text-emerald-600 font-bold">✓ Uploaded</span>}
                         </div>
                       </div>
 
@@ -2131,13 +2387,18 @@ export default function AddBusiness() {
                       <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-4">
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Main Cover Image</span>
                         <div className="flex items-center gap-4">
-                          <div className="h-16 w-32 bg-slate-55 border border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 font-bold text-xs select-none">
-                            {coverFile ? '✓ Cover Loaded' : 'Cover'}
+                          <div className="h-16 w-32 bg-slate-50 border border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 font-bold text-xs select-none overflow-hidden">
+                            {uploadingCover ? (
+                              <div className="h-5 w-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                            ) : formData.coverImageUrl ? (
+                              <img src={formData.coverImageUrl} alt="Cover" className="h-full w-full object-cover rounded-2xl" />
+                            ) : 'Cover'}
                           </div>
                           <label className="py-2.5 px-4 border border-slate-300 hover:bg-slate-50 font-bold text-xs rounded-xl cursor-pointer transition-colors shadow-sm text-slate-700">
-                            Choose File
-                            <input type="file" onChange={handleCoverUpload} className="hidden" />
+                            {uploadingCover ? 'Uploading...' : coverFile ? 'Change File' : 'Choose File'}
+                            <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" disabled={uploadingCover} />
                           </label>
+                          {coverFile && !uploadingCover && <span className="text-xs text-emerald-600 font-bold">✓ Uploaded</span>}
                         </div>
                       </div>
                     </div>
@@ -2150,12 +2411,44 @@ export default function AddBusiness() {
                       </div>
 
                       <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl transition-colors cursor-pointer bg-slate-50/50">
-                        <Upload className="h-8 w-8 text-slate-400 mb-2" />
-                        <label className="font-bold text-xs text-emerald-600 hover:underline cursor-pointer select-none">
-                          Click to upload gallery photos
-                          <input type="file" multiple onChange={handleGalleryUpload} className="hidden" />
-                        </label>
+                        {uploadingGallery ? (
+                          <>
+                            <div className="h-8 w-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin mb-2" />
+                            <span className="text-xs text-emerald-600 font-bold">Uploading photos...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-8 w-8 text-slate-400 mb-2" />
+                            <label className="font-bold text-xs text-emerald-600 hover:underline cursor-pointer select-none">
+                              Click to upload gallery photos
+                              <input type="file" multiple accept="image/*" onChange={handleGalleryUpload} className="hidden" />
+                            </label>
+                          </>
+                        )}
                       </div>
+
+                      {/* Uploaded gallery previews */}
+                      {formData.galleryUrls && formData.galleryUrls.length > 0 && (
+                        <div className="grid grid-cols-3 gap-2">
+                          {formData.galleryUrls.map((url, i) => (
+                            <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200">
+                              <img src={url} alt={`Gallery ${i + 1}`} className="h-full w-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newUrls = formData.galleryUrls.filter((_, idx) => idx !== i);
+                                  const newFiles = galleryFiles.filter((_, idx) => idx !== i);
+                                  setGalleryFiles(newFiles);
+                                  const updated = { ...formData, galleryUrls: newUrls };
+                                  setFormData(updated);
+                                  saveDraft(updated);
+                                }}
+                                className="absolute top-1 right-1 h-5 w-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center font-bold hover:bg-red-600"
+                              >×</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
                       {/* Uploaded files count badge */}
                       <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs text-slate-600 font-semibold">
@@ -2166,6 +2459,7 @@ export default function AddBusiness() {
                       </div>
                     </div>
                   </div>
+
                 </div>
               )}
 

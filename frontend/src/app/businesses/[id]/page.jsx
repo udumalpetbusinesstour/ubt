@@ -3,9 +3,32 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   MapPin, Phone, Mail, Clock, ShieldCheck, HeartHandshake, Star, Share2, Heart, Award, 
   ArrowLeft, Send, CheckCircle2, MessageSquare, AlertCircle, RefreshCw, Calendar, Globe, Sparkles,
-  Briefcase, Users, ChevronRight, Check, X, Facebook, Twitter, Edit3, Plus, Upload, Trash2, Instagram
+  Briefcase, Users, ChevronRight, Check, X, Facebook, Twitter, Edit3, Plus, Upload, Trash2, Instagram, Move, ImageIcon
 } from 'lucide-react';
 
+
+const isFoodRelated = (category, customCategoryName) => {
+  const cat = (category || '').toLowerCase();
+  const sub = (customCategoryName || '').toLowerCase();
+  
+  const foodKeywords = [
+    'food', 'restaurant', 'restarent', 'cafe', 'bakery', 'sweet', 'catering', 
+    'juice', 'ice cream', 'parlor', 'hotel', 'dhaba', 'mess', 
+    'biryani', 'pizza', 'burger', 'kitchen', 'canteen', 'sweets', 'tea',
+    'beverage', 'stall', 'caterer', 'dining', 'eatery', 'baker'
+  ];
+  
+  const foodCategories = [
+    'Restaurants', 'Bakeries', 'Cafes & Tea Shops', 'Sweet Shops', 
+    'Fast Food Centers', 'Catering Services', 'Juice & Ice Cream Parlors',
+    'Food & Restaurants', 'Food & Drinks', 'Hotels & Restaurants'
+  ];
+
+  return (
+    foodCategories.includes(category) ||
+    foodKeywords.some(keyword => cat.includes(keyword) || sub.includes(keyword))
+  );
+};
 
 export default function BusinessDetail() {
   const params = useParams();
@@ -16,6 +39,198 @@ export default function BusinessDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
+
+  const [mediaError, setMediaError] = useState('');
+
+  const [showMenuModal, setShowMenuModal] = useState(false);
+  const [menuUploading, setMenuUploading] = useState(false);
+  const [menuUrlsState, setMenuUrlsState] = useState([]);
+  const [menuError, setMenuError] = useState('');
+
+  // Sync menuUrlsState with business.menuUrls
+  useEffect(() => {
+    if (business && business.menuUrls) {
+      setMenuUrlsState(business.menuUrls);
+    }
+  }, [business, showMenuModal]);
+
+  const handleMenuUpload = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setMenuUploading(true);
+    setMenuError('');
+    const token = localStorage.getItem('ubt_token');
+    const uploaded = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > 5 * 1024 * 1024) {
+        setMenuError(`File ${file.name} is too large (max 5MB).`);
+        continue;
+      }
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const res = await fetch('http://localhost:5000/api/upload', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          uploaded.push(data.url);
+        } else {
+          setMenuError(data.message || 'Failed to upload menu page.');
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        setMenuError('Failed to upload. Make sure server is running.');
+      }
+    }
+
+    if (uploaded.length > 0) {
+      setMenuUrlsState(prev => [...prev, ...uploaded]);
+    }
+    setMenuUploading(false);
+  };
+
+  const handleSaveMenu = async () => {
+    setMenuUploading(true);
+    setMenuError('');
+    const token = localStorage.getItem('ubt_token');
+    try {
+      const res = await fetch(`http://localhost:5000/api/businesses/${business._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          menuUrls: menuUrlsState,
+          isFoodBusiness: true
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBusiness(data.data);
+        setShowMenuModal(false);
+      } else {
+        setBusiness(prev => ({ ...prev, menuUrls: menuUrlsState, isFoodBusiness: true }));
+        setShowMenuModal(false);
+      }
+    } catch (err) {
+      console.error('Save menu error:', err);
+      setBusiness(prev => ({ ...prev, menuUrls: menuUrlsState, isFoodBusiness: true }));
+      setShowMenuModal(false);
+    } finally {
+      setMenuUploading(false);
+    }
+  };
+
+
+
+  const handleGalleryUpload = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setMediaError('');
+    const token = localStorage.getItem('ubt_token');
+    const uploaded = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > 5 * 1024 * 1024) {
+        setMediaError(`File ${file.name} is too large (max 5MB).`);
+        continue;
+      }
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const res = await fetch('http://localhost:5000/api/upload', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          uploaded.push(data.url);
+        } else {
+          setMediaError(data.message || `Failed to upload ${file.name}`);
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        setMediaError('Upload failed. Check if local server is running.');
+      }
+    }
+
+    if (uploaded.length > 0) {
+      const currentGallery = Array.from(new Set(business.galleryUrls || [])).filter(Boolean);
+      const combined = Array.from(new Set([...currentGallery, ...uploaded]));
+      
+      try {
+        const saveRes = await fetch(`http://localhost:5000/api/businesses/${business._id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            galleryUrls: combined
+          })
+        });
+        const saveData = await saveRes.json();
+        if (saveData.success) {
+          setBusiness(saveData.data);
+        } else {
+          setBusiness(prev => ({ ...prev, galleryUrls: combined }));
+        }
+      } catch (err) {
+        console.error('Save gallery error:', err);
+        setBusiness(prev => ({ ...prev, galleryUrls: combined }));
+      }
+    }
+  };
+
+  const handleDeleteGalleryPhoto = async (urlToDelete) => {
+    if (!window.confirm('Are you sure you want to remove this image from the gallery?')) return;
+    
+    setMediaError('');
+    const token = localStorage.getItem('ubt_token');
+    const currentGallery = Array.from(new Set(business.galleryUrls || [])).filter(Boolean);
+    const updated = currentGallery.filter(url => url !== urlToDelete);
+
+    try {
+      const saveRes = await fetch(`http://localhost:5000/api/businesses/${business._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          galleryUrls: updated
+        })
+      });
+      const saveData = await saveRes.json();
+      if (saveData.success) {
+        setBusiness(saveData.data);
+      } else {
+        setBusiness(prev => ({ ...prev, galleryUrls: updated }));
+      }
+    } catch (err) {
+      console.error('Delete photo error:', err);
+      setBusiness(prev => ({ ...prev, galleryUrls: updated }));
+    }
+  };
+
 
   useEffect(() => {
     const storedUser = localStorage.getItem('ubt_user');
@@ -554,17 +769,10 @@ export default function BusinessDetail() {
     (!business.ownerId && !business.owner)
   );
   const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin');
-  const galleryCount = business.galleryUrls?.length || 0;
+  const displayGallery = Array.from(new Set(business.galleryUrls || [])).filter(Boolean);
+  const galleryCount = displayGallery.length;
   const mainImage = business.coverImageUrl || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80";
-  const displayGallery = business.galleryUrls && business.galleryUrls.length > 0
-    ? business.galleryUrls
-    : [
-        'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80',
-        'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&q=80',
-        'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=500&q=80',
-        'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=500&q=80',
-      ];
-  const remainingCount = Math.max(0, galleryCount - 4);
+  const remainingCount = Math.max(0, galleryCount - 5);
 
   const allReviews = [
     ...(reviews || []).map(r => ({ ...r, isGoogle: false })),
@@ -601,17 +809,31 @@ export default function BusinessDetail() {
       )}
 
       {/* Premium Header Banner (Matching Image 5) */}
-      <section className="w-full relative bg-[#090D1C] text-white py-14 px-4 border-b border-slate-800/60 overflow-hidden">
+      <section className="w-full relative bg-slate-900 text-white py-14 px-4 border-b border-slate-800/60 overflow-hidden">
         {/* Background Image opacity filter */}
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-[0.08]" 
-          style={{ backgroundImage: `url('${mainImage}')` }} 
+          className="absolute inset-0 bg-cover" 
+          style={{ 
+            backgroundImage: `url('${mainImage}')`,
+            backgroundPosition: `center ${business.coverImageOffset ?? 50}%`,
+            opacity: 0.85
+          }} 
         />
-        {/* Sleek Blue ambient light overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/90 to-transparent" />
+        {/* Sleek dark shadow gradient bottom-up */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/45 to-slate-950/15" />
         
+        {mediaError && (
+          <div className="absolute top-4 left-4 right-4 bg-red-600 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl text-center z-30 shadow flex items-center justify-center gap-2 animate-fadeIn">
+            <AlertCircle className="h-4.5 w-4.5 shrink-0" />
+            <span>{mediaError}</span>
+            <button onClick={() => setMediaError('')} className="bg-white/10 hover:bg-white/20 text-white rounded-lg p-1 ml-auto cursor-pointer">
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+
         <div className="relative max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10">
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 w-full">
             {/* Go Back button with Left Arrow */}
             <button 
               onClick={() => {
@@ -636,19 +858,32 @@ export default function BusinessDetail() {
               <span className="text-slate-200">{business.name}</span>
             </div>
             
-            {/* Title Block with Verified Badge */}
-            <div className="flex flex-wrap items-center gap-3.5 mt-2">
-              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white font-sans">{business.name}</h1>
-              {business.isAddressVerified && (
-                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-400/25 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm shrink-0">
-                  <ShieldCheck className="h-3.5 w-3.5" /> Verified Business
-                </span>
+            {/* Title Block with Logo and Verified Badge */}
+            <div className="flex items-center gap-4 mt-2 flex-wrap text-left">
+              {business.logoUrl ? (
+                <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-white shadow-md shrink-0 flex items-center justify-center">
+                  <img src={business.logoUrl} alt={`${business.name} Logo`} className="h-full w-full object-cover" />
+                </div>
+              ) : (
+                <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-gradient-to-tr from-emerald-500 to-teal-650 shadow-md shrink-0 flex items-center justify-center font-extrabold text-white text-xl uppercase">
+                  {business.name ? business.name.charAt(0) : 'B'}
+                </div>
               )}
-              {branches.length > 0 && (
-                <span className="bg-blue-500/10 text-blue-400 border border-blue-400/25 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm shrink-0">
-                  {branches.length + 1} Branches
-                </span>
-              )}
+              <div className="flex flex-col gap-1.5 justify-center">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white font-sans">{business.name}</h1>
+                  {business.isAddressVerified && (
+                    <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-400/25 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm shrink-0">
+                      <ShieldCheck className="h-3.5 w-3.5" /> Verified Business
+                    </span>
+                  )}
+                  {branches.length > 0 && (
+                    <span className="bg-blue-500/10 text-blue-400 border border-blue-400/25 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm shrink-0">
+                      {branches.length + 1} Branches
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Website and Social Media links below Business Name */}
@@ -778,7 +1013,7 @@ export default function BusinessDetail() {
           </div>
 
           {/* Banner Action Buttons */}
-          <div className="flex items-center gap-3 shrink-0 mt-4 md:mt-0">
+          <div className="flex items-center gap-3 shrink-0 mt-4 md:mt-0 flex-wrap">
             <button className="h-10 px-4 bg-white/5 border border-white/10 hover:border-white/20 rounded-xl flex items-center justify-center gap-2 text-slate-300 hover:text-white transition-all cursor-pointer font-bold text-xs">
               <Share2 className="h-4 w-4" /> Share
             </button>
@@ -957,47 +1192,159 @@ export default function BusinessDetail() {
                 <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                   <h3 className="text-lg font-extrabold text-slate-800 font-sans">Photos & Gallery</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2">
-                  {/* Left Large Image (takes 3 columns) */}
-                  <div 
-                    className="md:col-span-3 h-80 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
-                    onClick={() => setActiveTab('photos')}
-                    style={{ 
-                      backgroundImage: `url('${mainImage}')`,
-                      filter: isExpired ? 'blur(4px)' : 'none'
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                
+                {galleryCount === 0 ? (
+                  <div className="w-full bg-slate-50/50 border border-dashed border-slate-200 rounded-3xl p-8 text-center flex flex-col items-center justify-center gap-3.5 mt-2 animate-fadeIn">
+                    <div className="h-12 w-12 rounded-2xl bg-emerald-550/10 border border-emerald-550/20 flex items-center justify-center text-emerald-600">
+                      <ImageIcon className="h-6 w-6" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-slate-800 font-extrabold text-sm">No photos uploaded yet</span>
+                      <span className="text-xs text-slate-400 font-semibold">Add photos showing your storefront, services, products, or team.</span>
+                    </div>
+                    {isOwner && (
+                      <label className="py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-2 cursor-pointer transition-colors mt-1 select-none">
+                        <Upload className="h-3.5 w-3.5" /> Upload Photos
+                        <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" />
+                      </label>
+                    )}
                   </div>
-                  
-                  {/* Right 2x2 Grid Collage (takes 2 columns) */}
-                  <div className="md:col-span-2 grid grid-cols-2 gap-3 h-80">
-                    {[...Array(4)].map((_, i) => {
-                      const imgUrl = displayGallery[i] || mainImage;
-                      const isLast = i === 3;
-                      
-                      return (
+                ) : galleryCount === 1 ? (
+                  <div className="grid grid-cols-1 gap-3 mt-2 animate-fadeIn">
+                    <div 
+                      className="h-80 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
+                      onClick={() => setActiveTab('photos')}
+                      style={{ 
+                        backgroundImage: `url('${displayGallery[0]}')`,
+                        filter: isExpired ? 'blur(4px)' : 'none'
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                    </div>
+                  </div>
+                ) : galleryCount === 2 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 h-80 animate-fadeIn">
+                    {displayGallery.slice(0, 2).map((url, idx) => (
+                      <div 
+                        key={idx}
+                        className="rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
+                        onClick={() => setActiveTab('photos')}
+                        style={{ 
+                          backgroundImage: `url('${url}')`,
+                          filter: isExpired ? 'blur(4px)' : 'none'
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                      </div>
+                    ))}
+                  </div>
+                ) : galleryCount === 3 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2 h-80 animate-fadeIn">
+                    <div 
+                      className="md:col-span-3 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
+                      onClick={() => setActiveTab('photos')}
+                      style={{ 
+                        backgroundImage: `url('${displayGallery[0]}')`,
+                        filter: isExpired ? 'blur(4px)' : 'none'
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                    </div>
+                    <div className="md:col-span-2 grid grid-rows-2 gap-3 h-full">
+                      {displayGallery.slice(1, 3).map((url, idx) => (
                         <div 
-                          key={i}
-                          onClick={() => setActiveTab('photos')}
+                          key={idx}
                           className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
+                          onClick={() => setActiveTab('photos')}
                           style={{ 
-                            backgroundImage: `url('${imgUrl}')`,
+                            backgroundImage: `url('${url}')`,
                             filter: isExpired ? 'blur(4px)' : 'none'
                           }}
                         >
                           <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
-                          {isLast && remainingCount > 0 && (
-                            <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] flex flex-col items-center justify-center text-white text-center select-none animate-fadeIn">
-                              <span className="text-lg font-black tracking-wide">+{remainingCount}</span>
-                              <span className="text-[9px] font-black uppercase tracking-wider mt-0.5">More Photos</span>
-                            </div>
-                          )}
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                ) : galleryCount === 4 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2 h-80 animate-fadeIn">
+                    <div 
+                      className="md:col-span-3 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
+                      onClick={() => setActiveTab('photos')}
+                      style={{ 
+                        backgroundImage: `url('${displayGallery[0]}')`,
+                        filter: isExpired ? 'blur(4px)' : 'none'
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                    </div>
+                    <div className="md:col-span-2 grid grid-rows-2 gap-3 h-full">
+                      <div 
+                        className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
+                        onClick={() => setActiveTab('photos')}
+                        style={{ 
+                          backgroundImage: `url('${displayGallery[1]}')`,
+                          filter: isExpired ? 'blur(4px)' : 'none'
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        {displayGallery.slice(2, 4).map((url, idx) => (
+                          <div 
+                            key={idx}
+                            className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
+                            onClick={() => setActiveTab('photos')}
+                            style={{ 
+                              backgroundImage: `url('${url}')`,
+                              filter: isExpired ? 'blur(4px)' : 'none'
+                            }}
+                          >
+                            <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2 h-80 animate-fadeIn">
+                    <div 
+                      className="md:col-span-3 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
+                      onClick={() => setActiveTab('photos')}
+                      style={{ 
+                        backgroundImage: `url('${displayGallery[0]}')`,
+                        filter: isExpired ? 'blur(4px)' : 'none'
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                    </div>
+                    <div className="md:col-span-2 grid grid-cols-2 gap-3 h-full">
+                      {displayGallery.slice(1, 5).map((url, idx) => {
+                        const isLast = idx === 3;
+                        const moreCount = galleryCount - 5;
+                        return (
+                          <div 
+                            key={idx}
+                            className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
+                            onClick={() => setActiveTab('photos')}
+                            style={{ 
+                              backgroundImage: `url('${url}')`,
+                              filter: isExpired ? 'blur(4px)' : 'none'
+                            }}
+                          >
+                            <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                            {isLast && moreCount > 0 && (
+                              <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] flex flex-col items-center justify-center text-white text-center select-none animate-fadeIn">
+                                <span className="text-lg font-black tracking-wide">+{moreCount}</span>
+                                <span className="text-[9px] font-black uppercase tracking-wider mt-0.5">More Photos</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Our Services Quick View */}
@@ -1110,21 +1457,68 @@ export default function BusinessDetail() {
           {/* TAB 3: PHOTOS */}
           {activeTab === 'photos' && (
             <div className="flex flex-col gap-6 animate-fadeIn text-left">
-              <h3 className="text-xl font-extrabold text-slate-800 font-sans border-b border-slate-100 pb-3">Store & Work Gallery ({galleryCount})</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-                {displayGallery.map((url, idx) => (
-                  <div 
-                    key={idx} 
-                    className="h-44 rounded-2xl bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer hover:shadow-md transition-shadow" 
-                    style={{ 
-                      backgroundImage: `url('${url}')`,
-                      filter: isExpired ? 'blur(4px)' : 'none' 
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/15 transition-colors" />
-                  </div>
-                ))}
+              <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 className="text-xl font-extrabold text-slate-800 font-sans font-sans">Store & Work Gallery ({galleryCount})</h3>
+                {isOwner && (
+                  <label className="py-2 px-4 bg-emerald-650 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-md cursor-pointer uppercase tracking-wider select-none">
+                    <Plus className="h-4 w-4" /> Add Photos
+                    <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" />
+                  </label>
+                )}
               </div>
+              
+              {galleryCount === 0 ? (
+                <div className="w-full bg-slate-50/50 border border-dashed border-slate-200 rounded-3xl p-12 text-center flex flex-col items-center justify-center gap-4 max-w-md mx-auto my-6 animate-fadeIn">
+                  <div className="h-14 w-14 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600">
+                    <ImageIcon className="h-7 w-7" />
+                  </div>
+                  <div className="flex flex-col gap-1.5 text-center">
+                    <span className="font-extrabold text-slate-800 text-sm">No photos uploaded yet</span>
+                    <span className="text-xs text-slate-400 font-semibold leading-relaxed">
+                      Showcase your work and business storefront by uploading high-quality photos.
+                    </span>
+                  </div>
+                  {isOwner && (
+                    <label className="py-2.5 px-5 bg-emerald-650 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-2 cursor-pointer transition-colors select-none">
+                      <Upload className="h-4 w-4" /> Upload Photos
+                      <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" />
+                    </label>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-2">
+                  {displayGallery.map((url, idx) => (
+                    <div 
+                      key={idx} 
+                      className="h-44 rounded-2xl bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow" 
+                      style={{ 
+                        backgroundImage: `url('${url}')`,
+                        filter: isExpired ? 'blur(4px)' : 'none' 
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/25 transition-colors" />
+                      {isOwner && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteGalleryPhoto(url)}
+                          className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity shadow-md cursor-pointer border border-red-500/25 z-10"
+                          title="Delete photo"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {isOwner && (
+                    <label className="h-44 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-slate-100/30 hover:border-emerald-500 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all select-none">
+                      <Plus className="h-6 w-6 text-slate-400" />
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Add More</span>
+                      <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" />
+                    </label>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

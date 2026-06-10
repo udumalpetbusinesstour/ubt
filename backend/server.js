@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const app = require('./app');
 const { startSubscriptionCron } = require('./cron/subscriptionCron');
+const { startGoogleReviewsCron } = require('./cron/googleReviewsCron');
 const { seedDefaultPlans } = require('./routes/plans');
 
 // Routes Mounts
@@ -78,6 +79,9 @@ const initializeServer = async () => {
 
     // 4. Initialize Background Expiry Sweep Cron Tasks
     startSubscriptionCron();
+
+    // 5. Initialize Weekly Google Reviews Sync Cron
+    startGoogleReviewsCron();
 
     console.log('UBT Backend Subsystems initialized and synced successfully.');
   } catch (error) {

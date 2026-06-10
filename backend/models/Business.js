@@ -143,6 +143,10 @@ const BusinessSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  coverImageOffset: {
+    type: Number,
+    default: 50,
+  },
   galleryUrls: {
     type: [String],
     default: [],
@@ -150,6 +154,14 @@ const BusinessSchema = new mongoose.Schema({
   galleryImages: {
     type: [String],
     default: [],
+  },
+  menuUrls: {
+    type: [String],
+    default: [],
+  },
+  isFoodBusiness: {
+    type: Boolean,
+    default: false,
   },
   googlePlaceId: {
     type: String,

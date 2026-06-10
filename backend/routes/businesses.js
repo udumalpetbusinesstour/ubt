@@ -732,6 +732,8 @@ router.post('/google-autofill', async (req, res) => {
       }
     }
 
+    const cleanTimingStr = (str) => str.replace(/[\u2013\u2014\u2012\u2010]/g, '-').replace(/[\u202F\u00A0]/g, ' ').trim();
+
     const timings = {
       Monday: '9:00 AM - 8:00 PM',
       Tuesday: '9:00 AM - 8:00 PM',
@@ -747,7 +749,7 @@ router.post('/google-autofill', async (req, res) => {
         const parts = text.split(': ');
         if (parts.length >= 2) {
           const day = parts[0];
-          const hours = parts.slice(1).join(': ').replace(/\u2013/g, '-').replace(/\u2014/g, '-');
+          const hours = cleanTimingStr(parts.slice(1).join(': '));
           if (timings.hasOwnProperty(day)) {
             timings[day] = hours;
           }
@@ -755,12 +757,33 @@ router.post('/google-autofill', async (req, res) => {
       }
     }
 
-    const googleReviews = (result.reviews || []).map(r => ({
-      authorName: r.authorAttribution?.displayName || r.author_name || 'A Google User',
+    // Reviews from Places API (New) — may be empty if billing tier doesn't include reviews
+    let googleReviews = (result.reviews || []).map(r => ({
+      authorName: r.authorAttribution?.displayName || 'A Google User',
       rating: r.rating || 0,
-      text: r.text?.text || r.text || '',
+      text: r.text?.text || '',
       createdAt: r.publishTime ? new Date(r.publishTime) : new Date(),
     }));
+
+    // Fallback: use legacy Places Details API to get reviews when new API returns none
+    if (googleReviews.length === 0) {
+      try {
+        const legacyUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&key=${apiKey}`;
+        const legacyResp = await fetch(legacyUrl);
+        const legacyData = await legacyResp.json();
+        if (legacyData.status === 'OK' && legacyData.result?.reviews) {
+          googleReviews = legacyData.result.reviews.slice(0, 5).map(r => ({
+            authorName: r.author_name || 'A Google User',
+            rating: r.rating || 0,
+            text: r.text || '',
+            createdAt: new Date(r.time * 1000),
+          }));
+          console.log(`[Autofill] Fetched ${googleReviews.length} reviews via legacy Places API for ${placeId}`);
+        }
+      } catch (legacyErr) {
+        console.warn('[Autofill] Legacy Places reviews fetch failed:', legacyErr.message);
+      }
+    }
 
     const detail = {
       name: result.displayName?.text || '',
@@ -785,6 +808,7 @@ router.post('/google-autofill', async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
 
 // @desc    Validate Address and Boundaries
 // @route   POST /api/businesses/validate-address
@@ -968,7 +992,9 @@ router.post('/', protect, async (req, res) => {
       timings,
       customCategoryName,
       categoryStatus,
-      offers
+      offers,
+      menuUrls,
+      isFoodBusiness
     } = req.body;
 
     // 0. Final validation of required fields
@@ -1071,6 +1097,8 @@ router.post('/', protect, async (req, res) => {
       logoUrl: logoUrl || '',
       coverImageUrl: coverImageUrl || '',
       galleryUrls: galleryUrls || [],
+      menuUrls: menuUrls || [],
+      isFoodBusiness: isFoodBusiness !== undefined ? isFoodBusiness : false,
       googlePlaceId: googlePlaceId || '',
       googleRating: googleRating || 0,
       googleReviewsCount: googleReviewsCount || 0,
