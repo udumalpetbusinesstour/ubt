@@ -81,3 +81,9 @@ frontend/dist/
 frontend/src/app/dashboard/search_dashboard.cjs
 frontend/src/app/dashboard/search_dashboard.js
 frontend/src/app/dashboard/search-dashboard-view.cjs
+
+# Temporary backend debug/test scripts
+backend/test_analytics.js
+backend/test_superadmin.js
+backend/seed_active_subscriptions.js
+backend/check_blogs.js

@@ -26,7 +26,11 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
   const [redeemPointsAmount, setRedeemPointsAmount] = useState(0);
 
   // Plan Selection states
-  const [selectedPlan, setSelectedPlan] = useState('Yearly'); // default to Yearly
+  const [plans, setPlans] = useState([
+    { _id: 'monthly', name: 'Monthly Premium Plan', type: 'Monthly', price: 99, durationDays: 28, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing'], isActive: true },
+    { _id: 'yearly', name: 'Yearly Premium Plan', type: 'Yearly', price: 999, durationDays: 365, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing'], isActive: true, isOffer: true, offerText: 'Save 2 Months' }
+  ]);
+  const [selectedPlan, setSelectedPlan] = useState('Yearly Premium Plan'); // default to Yearly
   const [activeFaq, setActiveFaq] = useState(null);
   const [monthlyPrice, setMonthlyPrice] = useState(99);
   const [yearlyPrice, setYearlyPrice] = useState(999);
@@ -109,11 +113,19 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
       try {
         const plansRes = await fetch('http://localhost:5000/api/plans');
         const plansData = await plansRes.json();
-        if (plansData.success && plansData.data) {
+        if (plansData.success && plansData.data && plansData.data.length > 0) {
+          setPlans(plansData.data);
           const monthlyPlan = plansData.data.find(p => p.type === 'Monthly');
           const yearlyPlan = plansData.data.find(p => p.type === 'Yearly');
           if (monthlyPlan) setMonthlyPrice(monthlyPlan.price);
           if (yearlyPlan) setYearlyPrice(yearlyPlan.price);
+
+          // Select default plan
+          if (yearlyPlan) {
+            setSelectedPlan(yearlyPlan.name);
+          } else {
+            setSelectedPlan(plansData.data[0].name);
+          }
         }
       } catch (err) {
         console.warn('Could not fetch active plan prices, using default values (₹99 / ₹999).', err);
@@ -126,8 +138,13 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
     }
   };
 
-  const handlePlanSelect = (plan) => {
-    setSelectedPlan(plan);
+  const getSelectedPlanPrice = () => {
+    const activePlan = plans.find(p => p.name === selectedPlan || p.type === selectedPlan);
+    return activePlan ? activePlan.price : 99;
+  };
+
+  const handlePlanSelect = (planName) => {
+    setSelectedPlan(planName);
   };
 
   const handleApplyReferralPointsToggle = (checked) => {
@@ -136,7 +153,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
       // Default to max possible points redeemable
       const maxRedeem = Math.min(
         referralStats.referralPoints,
-        selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10
+        getSelectedPlanPrice() * 10
       );
       setRedeemPointsAmount(maxRedeem);
     } else {
@@ -149,7 +166,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
     if (referralStats) {
       const maxRedeem = Math.min(
         referralStats.referralPoints,
-        selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10
+        getSelectedPlanPrice() * 10
       );
       if (val > maxRedeem) {
         setRedeemPointsAmount(maxRedeem);
@@ -493,7 +510,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                     <input
                       type="number"
                       min="0"
-                      max={Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10)}
+                      max={Math.min(referralStats.referralPoints, getSelectedPlanPrice() * 10)}
                       value={redeemPointsAmount}
                       onChange={handleRedeemPointsChange}
                       className="w-full bg-white border border-slate-200 rounded-xl py-2 px-3.5 text-xs font-extrabold text-slate-800 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-500/30 transition-all shadow-inner"
@@ -501,7 +518,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                     <button
                       type="button"
                       onClick={() => {
-                        const maxRed = Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10);
+                        const maxRed = Math.min(referralStats.referralPoints, getSelectedPlanPrice() * 10);
                         setRedeemPointsAmount(maxRed);
                       }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-5 hover:bg-emerald-100 border border-emerald-250/40 text-[#027244] text-[9.5px] font-black px-2 py-1 rounded-lg uppercase tracking-wide transition-colors cursor-pointer"
@@ -512,180 +529,129 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                 </div>
 
                 <span className="text-[9.5px] text-slate-400 font-semibold leading-relaxed text-left block">
-                  You can redeem up to {Math.min(referralStats.referralPoints, selectedPlan === 'Monthly' ? monthlyPrice * 10 : yearlyPrice * 10)} points. (1 point = ₹0.10)
+                  You can redeem up to {Math.min(referralStats.referralPoints, getSelectedPlanPrice() * 10)} points. (1 point = ₹0.10)
                 </span>
               </div>
             )}
           </div>
         )}
-
         {/* Toggle Selector - General Flow Only */}
         {flowParam === 'general' && (
           <div className="flex justify-center mt-2">
             <div className="bg-slate-100 border border-slate-200 p-1 rounded-full flex items-center gap-1 w-fit shadow-inner">
-              <button
-                type="button"
-                onClick={() => handlePlanSelect('Monthly')}
-                className={`py-2 px-6 rounded-full text-xs font-black transition-all cursor-pointer ${
-                  selectedPlan === 'Monthly'
-                    ? 'bg-[#027244] text-white shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                Monthly
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePlanSelect('Yearly')}
-                className={`py-2 px-6 rounded-full text-xs font-black transition-all cursor-pointer ${
-                  selectedPlan === 'Yearly'
-                    ? 'bg-[#027244] text-white shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                Yearly (Save 2 Months)
-              </button>
+              {plans.map((p) => (
+                <button
+                  key={p._id || p.id}
+                  type="button"
+                  onClick={() => handlePlanSelect(p.name)}
+                  className={`py-2 px-6 rounded-full text-xs font-black transition-all cursor-pointer ${
+                    selectedPlan === p.name
+                      ? 'bg-[#027244] text-white shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  {p.name.replace(' Subscription', '').replace(' Plan', '')}
+                </button>
+              ))}
             </div>
           </div>
         )}
 
         {/* Cards Grid */}
-        <div className={`grid grid-cols-1 ${flowParam === 'general' ? 'md:grid-cols-2' : 'max-w-md mx-auto w-full'} gap-6 mt-4`}>
-          
-          {/* Monthly Card - General Flow Only */}
-          {flowParam === 'general' && (
-            <div 
-              onClick={() => handlePlanSelect('Monthly')}
-              className={`bg-white border rounded-[24px] p-6 flex flex-col justify-between items-center text-center shadow-sm relative transition-all duration-300 cursor-pointer ${
-                selectedPlan === 'Monthly'
-                  ? 'border-[#027244] ring-2 ring-emerald-100 bg-emerald-50/5'
-                  : 'border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <div className="flex flex-col items-center gap-4 w-full">
-                {/* Icon */}
-                <div className="h-12 w-12 rounded-full bg-emerald-50 border border-emerald-100 text-[#027244] flex items-center justify-center shadow-inner">
-                  <Calendar className="h-5.5 w-5.5" />
-                </div>
-                
-                <div className="flex flex-col gap-1">
-                  <h3 className="font-extrabold text-slate-800 text-base">Monthly Membership</h3>
-                  <div className="flex items-baseline justify-center gap-1.5 mt-1">
-                    <span className="text-3xl font-extrabold text-[#001c41]">
-                      ₹{getDiscountedPrice(monthlyPrice)}
-                    </span>
-                    <span className="text-xs text-slate-400 font-semibold">/ Month</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 font-semibold mt-1">Perfect for trying the platform.</p>
-                </div>
-                
-                <div className="w-full border-t border-dashed border-slate-200 my-2" />
-                
-                {/* Features */}
-                <div className="flex flex-col gap-3.5 items-start w-full px-2 text-xs text-slate-650 font-semibold">
-                  {[
-                    'Digital Visiting Card',
-                    'Dedicated Landing Page',
-                    'Event Posting',
-                    'Business Blog Publishing'
-                  ].map((feature, fIdx) => (
-                    <div key={fIdx} className="flex items-center gap-2.5 text-left">
-                      <CheckCircle className="h-4 w-4 text-[#027244] shrink-0" />
-                      <span>{feature}</span>
+        <div className={`grid grid-cols-1 ${plans.length === 1 ? 'max-w-md mx-auto w-full' : plans.length === 2 ? 'md:grid-cols-2 max-w-3xl mx-auto w-full' : 'md:grid-cols-3 max-w-5xl w-full'} gap-6 mt-4`}>
+          {plans
+            .filter(p => flowParam !== 'early_access' || p.type === 'Yearly')
+            .map((p) => {
+              const isSelected = selectedPlan === p.name || (selectedPlan === 'Monthly' && p.type === 'Monthly') || (selectedPlan === 'Yearly' && p.type === 'Yearly');
+              const defaultFeatures = [
+                'Digital Visiting Card',
+                'Dedicated Landing Page',
+                'Event Posting',
+                'Business Blog Publishing'
+              ];
+              const featuresToUse = defaultFeatures;
+              
+              return (
+                <div 
+                  key={p._id || p.id}
+                  onClick={() => handlePlanSelect(p.name)}
+                  className={`bg-white border-2 rounded-[24px] p-6 flex flex-col justify-between items-center text-center shadow-md relative transition-all duration-300 cursor-pointer ${
+                    isSelected
+                      ? 'border-[#027244] ring-2 ring-emerald-100 bg-emerald-50/5'
+                      : 'border-slate-200 hover:border-[#027244]/50'
+                  }`}
+                >
+                  {/* Popular / Offer Badge */}
+                  {(p.isOffer || p.type === 'Yearly') && (
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#027244] text-white text-[9px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider shadow">
+                      {p.type === 'Yearly' && !p.isOffer ? 'Most Popular' : (p.offerText || 'Special Offer')}
                     </div>
-                  ))}
-                </div>
-              </div>
+                  )}
 
-              <button
-                disabled={paymentLoading}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePaymentCheckout('Monthly');
-                }}
-                className="mt-8 py-3 bg-white hover:bg-emerald-50 border border-[#027244] text-[#027244] hover:text-[#005934] transition-all w-full rounded-xl font-extrabold text-xs cursor-pointer shadow-sm active:scale-98 disabled:opacity-50"
-              >
-                {paymentLoading && selectedPlan === 'Monthly' ? 'Initializing...' : 'Start Monthly Plan'}
-              </button>
-            </div>
-          )}
+                  {/* Save Months Ribbon */}
+                  {p.isOffer && p.offerText && (
+                    <div className="absolute top-0 right-0 overflow-hidden w-24 h-24 pointer-events-none rounded-tr-3xl">
+                      <div className="absolute top-4 -right-8 w-28 bg-amber-400 text-slate-900 font-extrabold text-[8px] tracking-wider py-1.5 uppercase text-center rotate-45 shadow-sm">
+                        {p.offerText}
+                      </div>
+                    </div>
+                  )}
 
-          {/* Yearly Card - Always Visible */}
-          <div 
-            onClick={() => handlePlanSelect('Yearly')}
-            className={`bg-white border-2 rounded-[24px] p-6 flex flex-col justify-between items-center text-center shadow-md relative transition-all duration-300 cursor-pointer ${
-              selectedPlan === 'Yearly' || flowParam === 'early_access'
-                ? 'border-[#027244] ring-2 ring-emerald-100 bg-emerald-50/5'
-                : 'border-slate-300 hover:border-[#027244]/50'
-            }`}
-          >
-            {/* Popular Badge */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#027244] text-white text-[9px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider shadow">
-              Most Popular
-            </div>
-
-            {/* Save 2 Months Ribbon */}
-            <div className="absolute top-0 right-0 overflow-hidden w-24 h-24 pointer-events-none rounded-tr-3xl">
-              <div className="absolute top-4 -right-8 w-28 bg-amber-400 text-slate-900 font-extrabold text-[8px] tracking-wider py-1.5 uppercase text-center rotate-45 shadow-sm">
-                Save 2 Months
-              </div>
-            </div>
-
-            <div className="flex flex-col items-center gap-4 w-full">
-              {/* Icon */}
-              <div className="h-12 w-12 rounded-full bg-emerald-50 border border-emerald-100 text-[#027244] flex items-center justify-center shadow-inner">
-                <Calendar className="h-5.5 w-5.5" />
-              </div>
-              
-              <div className="flex flex-col gap-1">
-                <h3 className="font-extrabold text-slate-800 text-base">Annual Membership</h3>
-                <div className="flex items-baseline justify-center gap-1.5 mt-1">
-                  <span className="text-3xl font-extrabold text-[#001c41]">
-                    ₹{getDiscountedPrice(yearlyPrice)}
-                  </span>
-                  <span className="text-xs text-slate-400 font-semibold">/ Year</span>
-                </div>
-                {/* strike-through original & save text */}
-                <div className="flex items-center justify-center gap-2 text-[10px] font-black mt-0.5">
-                  <span className="text-slate-400 line-through">₹{monthlyPrice * 12}</span>
-                  <span className="text-[#027244] bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5 font-sans">Save ₹{(monthlyPrice * 12) - yearlyPrice}</span>
-                </div>
-                {/* Get 12 Months access oval badge */}
-                <div className="border border-dashed border-slate-200 rounded-full px-3.5 py-1.5 text-[9.5px] font-extrabold text-slate-550 bg-slate-50/50 mt-2 tracking-wide leading-none">
-                  Get 12 Months Access for the Price of 10
-                </div>
-              </div>
-              
-              <div className="w-full border-t border-dashed border-slate-200 my-1" />
-              
-              {/* Features */}
-              <div className="flex flex-col gap-3.5 items-start w-full px-2 text-xs text-slate-655 font-semibold">
-                {[
-                  'Digital Visiting Card',
-                  'Dedicated Landing Page',
-                  'Event Posting',
-                  'Business Blog Publishing'
-                ].map((feature, fIdx) => (
-                  <div key={fIdx} className="flex items-center gap-2.5 text-left">
-                    <CheckCircle className="h-4 w-4 text-[#027244] shrink-0" />
-                    <span>{feature}</span>
+                  <div className="flex flex-col items-center gap-4 w-full">
+                    {/* Icon */}
+                    <div className="h-12 w-12 rounded-full bg-emerald-50 border border-emerald-100 text-[#027244] flex items-center justify-center shadow-inner">
+                      <Calendar className="h-5.5 w-5.5" />
+                    </div>
+                    
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-extrabold text-slate-800 text-base">{p.name}</h3>
+                      <div className="flex items-baseline justify-center gap-1.5 mt-1">
+                        <span className="text-3xl font-extrabold text-[#001c41]">
+                          ₹{getDiscountedPrice(p.price)}
+                        </span>
+                        <span className="text-xs text-slate-400 font-semibold">/ {p.durationDays} Days</span>
+                      </div>
+                      {p.type === 'Yearly' && (
+                        <div className="flex items-center justify-center gap-2 text-[10px] font-black mt-0.5">
+                          <span className="text-slate-400 line-through">₹{monthlyPrice * 12}</span>
+                          <span className="text-[#027244] bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5 font-sans">Save ₹{(monthlyPrice * 12) - p.price}</span>
+                        </div>
+                      )}
+                      {p.description && (
+                        <p className="text-[11px] text-slate-400 font-semibold mt-1">{p.description}</p>
+                      )}
+                    </div>
+                    
+                    <div className="w-full border-t border-dashed border-slate-200 my-1" />
+                    
+                    {/* Features */}
+                    <div className="flex flex-col gap-3.5 items-start w-full px-2 text-xs text-slate-655 font-semibold">
+                      {featuresToUse.map((feature, fIdx) => (
+                        <div key={fIdx} className="flex items-center gap-2.5 text-left">
+                          <CheckCircle className="h-4 w-4 text-[#027244] shrink-0" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
 
-            <button
-              disabled={paymentLoading}
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePaymentCheckout('Yearly');
-              }}
-              className="mt-8 py-3 bg-[#027244] hover:bg-[#005934] text-white transition-all w-full rounded-xl font-extrabold text-xs cursor-pointer shadow-md active:scale-98 disabled:opacity-50"
-            >
-              {paymentLoading && (selectedPlan === 'Yearly' || flowParam === 'early_access') ? 'Initializing...' : 'Start Annual Plan'}
-            </button>
-          </div>
-
+                  <button
+                    disabled={paymentLoading}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePaymentCheckout(p.name);
+                    }}
+                    className={`mt-8 py-3 transition-all w-full rounded-xl font-extrabold text-xs cursor-pointer shadow-md active:scale-98 disabled:opacity-50 ${
+                      isSelected
+                        ? 'bg-[#027244] hover:bg-[#005934] text-white'
+                        : 'bg-white hover:bg-emerald-50 border border-[#027244] text-[#027244] hover:text-[#005934]'
+                    }`}
+                  >
+                    {paymentLoading && selectedPlan === p.name ? 'Initializing...' : `Start ${p.type} Plan`}
+                  </button>
+                </div>
+              );
+            })}
         </div>
 
         {isStep && (

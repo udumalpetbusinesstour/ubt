@@ -538,13 +538,35 @@ export default function Home() {
     navigate(url);
   };
 
-  const handleCall = (phone, name) => {
+  const handleCall = async (phone, name, bizId) => {
+    if (bizId) {
+      try {
+        await fetch(`http://localhost:5000/api/businesses/${bizId}/click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'call' })
+        });
+      } catch (err) {
+        console.error('Failed to track call click:', err);
+      }
+    }
     window.open(`tel:${phone}`);
   };
 
-  const handleWhatsApp = (whatsapp, name) => {
+  const handleWhatsApp = async (whatsapp, name, bizId) => {
+    if (bizId) {
+      try {
+        await fetch(`http://localhost:5000/api/businesses/${bizId}/click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'whatsapp' })
+        });
+      } catch (err) {
+        console.error('Failed to track whatsapp click:', err);
+      }
+    }
     const cleanNum = whatsapp.replace(/[^0-9]/g, '');
-    window.open(`https://wa.me/${cleanNum}?text=Hello%20${encodeURIComponent(name)},%20I%20saw%20your%20listing%20on%20Udumalpet%20Business%20Tour.`);
+    window.open(`https://wa.me/${cleanNum}?text=Hello%20${encodeURIComponent(name)},%20I%20saw%20your%2520listing%20on%20Udumalpet%20Business%20Tour.`);
   };
 
   // Categories list is now dynamically defined and updated inside the Home component based on business counts.

@@ -12,6 +12,7 @@ const Query = require('../models/Query');
 const Notification = require('../models/Notification');
 const AdminAction = require('../models/AdminAction');
 const SystemSetting = require('../models/SystemSetting');
+const Lead = require('../models/Lead');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
 const { sendEmail } = require('../utils/emailHelper');
 
@@ -123,6 +124,21 @@ const getRevenueAnalytics = async (req, res, next) => {
 
     const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
 
+    // Group paid payments by month
+    const monthlyRevenue = await Payment.aggregate([
+      { $match: { paymentStatus: 'Paid' } },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$paidAt' },
+            month: { $month: '$paidAt' }
+          },
+          total: { $sum: '$amount' }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+
     // Dynamic stats mapping
     const planCounts = await Subscription.aggregate([
       { $group: { _id: '$plan', count: { $sum: 1 }, totalSales: { $sum: '$amount' } } }
@@ -138,6 +154,7 @@ const getRevenueAnalytics = async (req, res, next) => {
       expiredSubscriptions,
       totalListedBusinesses,
       planCounts,
+      monthlyRevenue,
       paymentsLog: payments.slice(0, 15) // Return last 15 payments
     });
   } catch (err) {
@@ -150,26 +167,79 @@ const getRevenueAnalytics = async (req, res, next) => {
  */
 const getSuperAdminStats = async (req, res, next) => {
   try {
-    const totalBusinesses = await Business.countDocuments();
+    const { fromDate, toDate } = req.query;
+
+    const bizQuery = {};
+    const userQuery = { role: { $in: ['merchant', 'owner'] }, status: 'Active' };
+    const eventQuery = { status: { $in: ['Approved', 'approved'] } };
+    const blogQuery = { status: { $in: ['Pending Approval', 'Pending Review'] } };
+    const reviewQuery = {};
+    const paymentQuery = { paymentStatus: 'Paid' };
+    const leadQuery = {};
+
+    if (fromDate || toDate) {
+      const dateRange = {};
+      if (fromDate) dateRange.$gte = new Date(fromDate);
+      if (toDate) {
+        const endOfDay = new Date(toDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        dateRange.$lte = endOfDay;
+      }
+
+      bizQuery.createdAt = dateRange;
+      userQuery.createdAt = dateRange;
+      eventQuery.createdAt = dateRange;
+      blogQuery.createdAt = dateRange;
+      reviewQuery.createdAt = dateRange;
+      paymentQuery.paidAt = dateRange;
+      leadQuery.createdAt = dateRange;
+    }
+
+    const totalBusinesses = await Business.countDocuments(bizQuery);
     const pendingApprovals = await Business.countDocuments({
+      ...bizQuery,
       status: { $in: ['Pending Verification', 'Under Review'] }
     });
-    const verifiedBusinesses = await Business.countDocuments({ status: 'Approved' });
-    const expiredSubscriptions = await Business.countDocuments({ subscriptionStatus: 'expired' });
+    const verifiedBusinesses = await Business.countDocuments({ ...bizQuery, status: 'Approved' });
+    const expiredSubscriptions = await Business.countDocuments({ ...bizQuery, subscriptionStatus: 'expired' });
     
-    const activeMerchants = await User.countDocuments({
-      role: { $in: ['merchant', 'owner'] },
-      status: 'Active'
-    });
+    const activeMerchants = await User.countDocuments(userQuery);
     
-    const totalReviews = await Review.countDocuments();
-    const payments = await Payment.find({ paymentStatus: 'Paid' });
+    const totalReviews = await Review.countDocuments(reviewQuery);
+    const payments = await Payment.find(paymentQuery);
     const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
     
-    const activeEvents = await Event.countDocuments({ status: { $in: ['Approved', 'approved'] } });
-    const pendingBlogs = await Blog.countDocuments({ status: { $in: ['Pending Approval', 'Pending Review'] } });
+    const activeEvents = await Event.countDocuments(eventQuery);
+    const pendingBlogs = await Blog.countDocuments(blogQuery);
     
-    const suspendedAccounts = await User.countDocuments({ status: 'Suspended' });
+    const suspendedAccounts = await User.countDocuments({
+      ...(fromDate || toDate ? { createdAt: bizQuery.createdAt } : {}),
+      status: 'Suspended'
+    });
+    
+    // Aggregate clicks and leads metrics
+    const totalLeads = await Lead.countDocuments(leadQuery);
+    const clickAggregation = await Business.aggregate([
+      { $match: bizQuery },
+      {
+        $group: {
+          _id: null,
+          totalCallClicks: { $sum: '$callClicks' },
+          totalWhatsappClicks: { $sum: '$whatsappClicks' },
+          totalWebsiteClicks: { $sum: '$websiteClicks' },
+          totalInstagramClicks: { $sum: '$instagramClicks' },
+          totalFacebookClicks: { $sum: '$facebookClicks' }
+        }
+      }
+    ]);
+
+    const clicks = clickAggregation[0] || {
+      totalCallClicks: 0,
+      totalWhatsappClicks: 0,
+      totalWebsiteClicks: 0,
+      totalInstagramClicks: 0,
+      totalFacebookClicks: 0
+    };
 
     // Format system uptime dynamically
     const seconds = process.uptime();
@@ -214,7 +284,13 @@ const getSuperAdminStats = async (req, res, next) => {
         totalRevenue,
         activeEvents,
         pendingBlogs,
-        suspendedAccounts
+        suspendedAccounts,
+        totalLeads,
+        totalCallClicks: clicks.totalCallClicks || 0,
+        totalWhatsappClicks: clicks.totalWhatsappClicks || 0,
+        totalWebsiteClicks: clicks.totalWebsiteClicks || 0,
+        totalInstagramClicks: clicks.totalInstagramClicks || 0,
+        totalFacebookClicks: clicks.totalFacebookClicks || 0
       },
       metrics: {
         uptime: uptimeStr,

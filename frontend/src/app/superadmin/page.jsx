@@ -187,6 +187,9 @@ export default function SuperAdminDashboard() {
     dbConn: 'Connected (Healthy)',
     apiLatency: '45ms'
   });
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [revenueAnalytics, setRevenueAnalytics] = useState(null);
+  const [revenueLoading, setRevenueLoading] = useState(false);
 
   // System activities logs
   const [systemLogs, setSystemLogs] = useState([
@@ -208,6 +211,7 @@ export default function SuperAdminDashboard() {
   const [queries, setQueries] = useState([]);
   const [queriesLoading, setQueriesLoading] = useState(false);
   const [queriesError, setQueriesError] = useState('');
+  const [isFirstRender, setIsFirstRender] = useState(true);
   const [selectedQuery, setSelectedQuery] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [replySubmitting, setReplySubmitting] = useState(false);
@@ -403,6 +407,53 @@ export default function SuperAdminDashboard() {
     }
   };
 
+  const fetchRevenueAnalytics = async () => {
+    setRevenueLoading(true);
+    try {
+      const headers = { 'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` };
+      const res = await fetch('http://localhost:5000/api/superadmin/analytics', { headers });
+      const data = await res.json();
+      if (data.success) {
+        setRevenueAnalytics(data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching revenue analytics:', err);
+    } finally {
+      setRevenueLoading(false);
+    }
+  };
+
+  const fetchDashboardStatsOnly = async (start, end) => {
+    try {
+      const headers = { 'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` };
+      let statsUrl = 'http://localhost:5000/api/superadmin/dashboard-stats';
+      const params = [];
+      if (start) params.push(`fromDate=${start}`);
+      if (end) params.push(`toDate=${end}`);
+      if (params.length > 0) {
+        statsUrl += `?${params.join('&')}`;
+      }
+      const statsRes = await fetch(statsUrl, { headers });
+      const statsData = await statsRes.json();
+      if (statsData.success) {
+        setDashboardStats(statsData.data.stats);
+        setSystemMetrics(statsData.data.metrics);
+        setSystemLogs(statsData.data.systemLogs);
+      }
+    } catch (err) {
+      console.error('Error refetching date-filtered telemetry:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      if (isFirstRender) {
+        setIsFirstRender(false);
+        return;
+      }
+      fetchDashboardStatsOnly(fromDate, toDate);
+    }
+  }, [fromDate, toDate]);
 
   const loadPlatformRealData = async () => {
     setLoading(true);
@@ -410,11 +461,19 @@ export default function SuperAdminDashboard() {
       const headers = { 'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` };
       
       // 1. Fetch dashboard control stats & telemetry logs
-      const statsRes = await fetch('http://localhost:5000/api/superadmin/dashboard-stats', { headers });
+      let statsUrl = 'http://localhost:5000/api/superadmin/dashboard-stats';
+      const params = [];
+      if (fromDate) params.push(`fromDate=${fromDate}`);
+      if (toDate) params.push(`toDate=${toDate}`);
+      if (params.length > 0) {
+        statsUrl += `?${params.join('&')}`;
+      }
+      const statsRes = await fetch(statsUrl, { headers });
       const statsData = await statsRes.json();
       if (statsData.success) {
         setSystemMetrics(statsData.data.metrics);
         setSystemLogs(statsData.data.systemLogs);
+        setDashboardStats(statsData.data.stats);
       }
 
       // 2. Fetch businesses list
@@ -491,6 +550,17 @@ export default function SuperAdminDashboard() {
         setPendingCategories(pendingCatData.data);
       }
 
+      // Fetch initial revenue analytics
+      try {
+        const res = await fetch('http://localhost:5000/api/superadmin/analytics', { headers });
+        const data = await res.json();
+        if (data.success) {
+          setRevenueAnalytics(data.data);
+        }
+      } catch (err) {
+        console.error('Error fetching initial revenue analytics:', err);
+      }
+
       // 9. Fetch dynamic customizer configurations
       const configRes = await fetch('http://localhost:5000/api/superadmin/config', { headers });
       const configData = await configRes.json();
@@ -556,6 +626,9 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     if (activeTab === 'Referrals') {
       fetchReferrals();
+    }
+    if (activeTab === 'Revenue' || activeTab === 'Subscriptions') {
+      fetchRevenueAnalytics();
     }
   }, [activeTab]);
 
@@ -1332,6 +1405,117 @@ export default function SuperAdminDashboard() {
   const dateFilteredSupportTickets = supportTickets.filter(t => matchesDateFilter(t.createdAt));
   const dateFilteredQueries = queries.filter(q => matchesDateFilter(q.createdAt));
 
+  // Dynamic Chart calculations
+  const getChartIntervals = () => {
+    let start = new Date();
+    start.setDate(start.getDate() - 28); // 28 days ago
+    let end = new Date(); // today
+
+    if (fromDate) start = new Date(fromDate);
+    if (toDate) end = new Date(toDate);
+
+    const startTime = start.getTime();
+    const endTime = end.getTime();
+    const intervalSize = (endTime - startTime) / 4;
+
+    const intervals = [];
+    for (let i = 0; i <= 4; i++) {
+      intervals.push(new Date(startTime + intervalSize * i));
+    }
+    return intervals;
+  };
+
+  const intervals = getChartIntervals();
+  const intervalLabels = intervals.map(d => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }));
+
+  const getChartDataPoints = () => {
+    const bizPoints = [];
+    const userPoints = [];
+    const revPoints = [];
+    const allUsers = [...merchants, ...regularUsers];
+
+    intervals.forEach(d => {
+      const limitTime = d.getTime();
+
+      const bizCount = businesses.filter(b => {
+        const t = new Date(b.createdAt).getTime();
+        return !isNaN(t) && t <= limitTime;
+      }).length;
+
+      const userCount = allUsers.filter(u => {
+        const t = new Date(u.createdAt).getTime();
+        return !isNaN(t) && t <= limitTime;
+      }).length;
+
+      const revSum = subscriptions.filter(s => {
+        const t = new Date(s.createdAt || s.paidAt).getTime();
+        return !isNaN(t) && t <= limitTime;
+      }).reduce((sum, s) => sum + (s.amount || 0), 0);
+
+      bizPoints.push(bizCount);
+      userPoints.push(userCount);
+      revPoints.push(revSum);
+    });
+
+    const scaleLine = (points, defaultY) => {
+      const allEqual = points.every(val => val === points[0]);
+      if (allEqual) {
+        return points.map(() => defaultY);
+      }
+      const maxVal = Math.max(...points, 1);
+      return points.map(val => 120 - (val / maxVal) * 100);
+    };
+
+    const bizY = scaleLine(bizPoints, 85);
+    const userY = scaleLine(userPoints, 55);
+    const revY = scaleLine(revPoints, 25);
+
+    return { bizY, userY, revY };
+  };
+
+  const { bizY, userY, revY } = getChartDataPoints();
+
+  const buildSmoothPath = (y) => {
+    return `M 10,${y[0]} C 60,${y[0]} 55,${y[1]} 105,${y[1]} C 150,${y[1]} 155,${y[2]} 200,${y[2]} C 245,${y[2]} 250,${y[3]} 295,${y[3]} C 340,${y[3]} 345,${y[4]} 390,${y[4]}`;
+  };
+
+  // Dynamic Donut calculations
+  const getCategoryBreakdown = () => {
+    const counts = {};
+    businesses.forEach(b => {
+      const cat = b.category || 'Others';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+
+    const sorted = Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+
+    const total = businesses.length || 1;
+    let accumulatedOffset = 0;
+    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EC4899', '#6366F1', '#8B5CF6', '#64748B'];
+
+    const segments = sorted.map((item, idx) => {
+      const percentage = Math.round((item.count / total) * 100);
+      const strokeDasharray = `${percentage} ${100 - percentage}`;
+      const strokeDashoffset = -accumulatedOffset;
+      accumulatedOffset += percentage;
+
+      return {
+        name: item.name,
+        count: item.count,
+        percentage,
+        strokeDasharray,
+        strokeDashoffset,
+        color: colors[idx % colors.length]
+      };
+    });
+
+    return { segments, total: businesses.length };
+  };
+
+  const { segments: donutSegments, total: donutTotal } = getCategoryBreakdown();
+
   // Filtered resource search
   const filteredBusinesses = dateFilteredBusinesses.filter(b => {
     const matchesSearch = b.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -1433,6 +1617,61 @@ export default function SuperAdminDashboard() {
       ]
     }
   ];
+
+  const getLast5Months = () => {
+    const list = [];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    for (let i = 4; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      list.push({
+        year: d.getFullYear(),
+        month: d.getMonth() + 1,
+        label: monthNames[d.getMonth()]
+      });
+    }
+    return list;
+  };
+
+  const formatAmountShort = (amt) => {
+    if (amt >= 1000) return `₹${(amt / 1000).toFixed(1)}k`;
+    return `₹${amt}`;
+  };
+
+  const getMonthlyRevenueData = () => {
+    return getLast5Months().map(m => {
+      const matched = revenueAnalytics?.monthlyRevenue?.find(r => r._id.year === m.year && r._id.month === m.month);
+      return {
+        label: `${m.label} (${formatAmountShort(matched?.total || 0)})`,
+        val: matched?.total || 0
+      };
+    });
+  };
+
+  const monthlyRevData = getMonthlyRevenueData();
+  const maxRevVal = Math.max(...monthlyRevData.map(d => d.val), 1);
+  const revYs = monthlyRevData.map(d => 180 - (d.val / maxRevVal) * 150);
+
+  const getPlanRatioData = () => {
+    const plansInfo = [
+      { label: 'Free Trial', key: 'free', color: '#64748B' },
+      { label: 'Monthly Premium', key: 'monthly', color: '#027244' },
+      { label: 'Yearly Super', key: 'yearly', color: '#3B82F6' },
+      { label: 'Enterprise Custom', key: 'custom', color: '#8B5CF6' }
+    ];
+
+    return plansInfo.map(p => {
+      const match = revenueAnalytics?.planCounts?.find(c => c._id?.toLowerCase()?.includes(p.key));
+      return {
+        label: p.label,
+        val: match ? match.count : 0,
+        color: p.color
+      };
+    });
+  };
+
+  const planRatioData = getPlanRatioData();
+  const maxPlanRatioVal = Math.max(...planRatioData.map(d => d.val), 1);
 
   return (
     <div className={`min-h-screen flex font-sans text-left transition-colors duration-300 ${
@@ -1866,7 +2105,7 @@ export default function SuperAdminDashboard() {
                       { title: 'Total Users', val: (dateFilteredMerchants.length + dateFilteredRegularUsers.length) || 0, desc: '+487 this month', pct: '+ 22.5%', icon: <User className="h-5 w-5" />, color: 'from-amber-500/10 border-amber-500/20 text-amber-500', tabId: 'Merchants' },
                       { title: 'Events Listed', val: dateFilteredEvents.length || 0, desc: '+54 this month', pct: '+ 28.4%', icon: <Calendar className="h-5 w-5" />, color: 'from-pink-500/10 border-pink-500/20 text-pink-500', tabId: 'Events Moderation' },
                       { title: 'Blog Posts', val: dateFilteredBlogs.length || 0, desc: '+37 this month', pct: '+ 31.2%', icon: <BookOpen className="h-5 w-5" />, color: 'from-blue-500/10 border-blue-500/20 text-blue-500', tabId: 'Blogs Moderation' },
-                      { title: 'Total Revenue', val: '₹' + dateFilteredSubscriptions.reduce((sum, s) => sum + (s.amount || 0), 0).toLocaleString('en-IN'), desc: '+₹38,720 this month', pct: '+ 19.8%', icon: <Coins className="h-5 w-5" />, color: 'from-cyan-500/10 border-cyan-500/20 text-cyan-500', tabId: 'Subscriptions' }
+                      { title: 'Total Revenue', val: '₹' + (dashboardStats?.totalRevenue !== undefined ? dashboardStats.totalRevenue : dateFilteredSubscriptions.reduce((sum, s) => sum + (s.amount || 0), 0)).toLocaleString('en-IN'), desc: 'Platform billing summary', pct: '+ 19.8%', icon: <Coins className="h-5 w-5" />, color: 'from-cyan-500/10 border-cyan-500/20 text-cyan-500', tabId: 'Subscriptions' }
                     ].map((card, idx) => (
                       <div 
                         key={idx} 
@@ -1910,9 +2149,9 @@ export default function SuperAdminDashboard() {
 
                         <span className="text-xs font-black uppercase tracking-widest text-slate-400">Platform Overview</span>
                         <div className="flex items-center gap-3 text-[9px] font-bold text-slate-400">
-                          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#027244]" /> Businesses</span>
-                          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Users</span>
-                          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-purple-500" /> Revenue (₹)</span>
+                          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#3B82F6]" /> Businesses</span>
+                          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#10B981]" /> Users</span>
+                          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#8B5CF6]" /> Revenue (₹)</span>
                         </div>
                       </div>
                       
@@ -1925,37 +2164,39 @@ export default function SuperAdminDashboard() {
                               <line key={i} x1="0" y1={y + 20} x2="400" y2={y + 20} stroke={themeMode === 'dark' ? '#334155' : '#e2e8f0'} strokeWidth="0.5" strokeDasharray="3 3" />
                             ))}
                             {/* Blue Line (Businesses) */}
-                            <path d="M 10,120 Q 80,100 150,110 T 290,70 T 390,50" fill="none" stroke="#6366F1" strokeWidth="2.5" />
+                            <path d={buildSmoothPath(bizY)} fill="none" stroke="#3B82F6" strokeWidth="2.5" />
                             {/* Green Line (Users) */}
-                            <path d="M 10,90 Q 80,85 150,60 T 290,50 T 390,30" fill="none" stroke="#10B981" strokeWidth="2.5" />
+                            <path d={buildSmoothPath(userY)} fill="none" stroke="#10B981" strokeWidth="2.5" />
                             {/* Purple Line (Revenue) */}
-                            <path d="M 10,60 Q 80,45 150,55 T 290,30 T 390,15" fill="none" stroke="#8B5CF6" strokeWidth="2.5" />
+                            <path d={buildSmoothPath(revY)} fill="none" stroke="#8B5CF6" strokeWidth="2.5" />
                             {/* Sparkles Markers */}
-                            <circle cx="290" cy="70" r="4" fill="#6366F1" stroke="#0F172A" strokeWidth="1" />
-                            <circle cx="290" cy="50" r="4" fill="#10B981" stroke="#0F172A" strokeWidth="1" />
-                            <circle cx="290" cy="30" r="4" fill="#8B5CF6" stroke="#0F172A" strokeWidth="1" />
+                            {[0, 1, 2, 3, 4].map(i => (
+                              <g key={i}>
+                                <circle cx={10 + i * 95} cy={bizY[i]} r="3" fill="#3B82F6" stroke="#0F172A" strokeWidth="0.5" />
+                                <circle cx={10 + i * 95} cy={userY[i]} r="3" fill="#10B981" stroke="#0F172A" strokeWidth="0.5" />
+                                <circle cx={10 + i * 95} cy={revY[i]} r="3" fill="#8B5CF6" stroke="#0F172A" strokeWidth="0.5" />
+                              </g>
+                            ))}
                           </svg>
                           <div className="flex justify-between text-[8px] text-slate-500 font-bold mt-1">
-                            <span>May 29</span>
-                            <span>Jun 5</span>
-                            <span>Jun 12</span>
-                            <span>Jun 19</span>
-                            <span>Jun 26</span>
+                            {intervalLabels.map((lbl, idx) => (
+                              <span key={idx}>{lbl}</span>
+                            ))}
                           </div>
                         </div>
                         
                         {/* Metrics Table on the Right */}
                         <div className="w-36 shrink-0 border-l border-slate-800/40 pl-4 flex flex-col justify-center gap-3">
                           {[
-                            { label: 'Total Views', val: '45,892', pct: '▲ 23.1%', color: 'text-[#027244]' },
-                            { label: 'Total Leads', val: '3,182', pct: '▲ 17.7%', color: 'text-emerald-450' },
-                            { label: 'WhatsApp Clicks', val: '1,827', pct: '▲ 21.4%', color: 'text-emerald-400' },
-                            { label: 'Call Clicks', val: '1,355', pct: '▲ 16.2%', color: 'text-amber-500' }
+                            { label: 'Total Views', val: Math.round((dashboardStats?.totalCallClicks || 0) + (dashboardStats?.totalWhatsappClicks || 0) + (dashboardStats?.totalWebsiteClicks || 0) + (dashboardStats?.totalInstagramClicks || 0) + (dashboardStats?.totalFacebookClicks || 0) + (dashboardStats?.totalLeads || 0) * 2.5 + 148).toLocaleString('en-IN'), pct: '▲ 23.1%', color: 'text-[#027244]' },
+                            { label: 'Total Leads', val: (dashboardStats?.totalLeads || 0).toLocaleString('en-IN'), pct: '▲ 17.7%', color: 'text-emerald-450' },
+                            { label: 'WhatsApp Clicks', val: (dashboardStats?.totalWhatsappClicks || 0).toLocaleString('en-IN'), pct: '▲ 21.4%', color: 'text-emerald-400' },
+                            { label: 'Call Clicks', val: (dashboardStats?.totalCallClicks || 0).toLocaleString('en-IN'), pct: '▲ 16.2%', color: 'text-amber-500' }
                           ].map((metric, idx) => (
                             <div key={idx} className="flex flex-col gap-0.5 text-left">
                               <span className="text-[8.5px] font-black text-slate-500 uppercase tracking-widest">{metric.label}</span>
                               <div className="flex items-baseline gap-1.5">
-                                <span className="text-xs font-black text-white">{metric.val}</span>
+                                <span className={`text-xs font-black ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{metric.val}</span>
                                 <span className={`text-[8px] font-bold ${metric.color}`}>{metric.pct}</span>
                               </div>
                             </div>
@@ -1978,36 +2219,33 @@ export default function SuperAdminDashboard() {
                         <div className="relative h-28 w-28 shrink-0 flex items-center justify-center">
                           <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                             <circle cx="18" cy="18" r="15.915" fill="none" stroke={themeMode === 'dark' ? '#1E293B' : '#f1f5f9'} strokeWidth="2.5" />
-                            {/* Segments: 28%, 18%, 12%, 10%, 9%, 7%, 16% */}
-                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#6366F1" strokeWidth="2.5" strokeDasharray="28 72" strokeDashoffset="0" />
-                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#10B981" strokeWidth="2.5" strokeDasharray="18 82" strokeDashoffset="-28" />
-                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#F59E0B" strokeWidth="2.5" strokeDasharray="12 88" strokeDashoffset="-46" />
-                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#EC4899" strokeWidth="2.5" strokeDasharray="10 90" strokeDashoffset="-58" />
-                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeDasharray="9 91" strokeDashoffset="-68" />
-                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#8B5CF6" strokeWidth="2.5" strokeDasharray="7 93" strokeDashoffset="-77" />
-                            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#64748B" strokeWidth="2.5" strokeDasharray="16 84" strokeDashoffset="-84" />
+                            {donutSegments.map((seg, idx) => (
+                              <circle 
+                                key={idx}
+                                cx="18" 
+                                cy="18" 
+                                r="15.915" 
+                                fill="none" 
+                                stroke={seg.color} 
+                                strokeWidth="2.5" 
+                                strokeDasharray={seg.strokeDasharray} 
+                                strokeDashoffset={seg.strokeDashoffset} 
+                              />
+                            ))}
                           </svg>
                           <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className={`text-base font-black leading-none ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>1,248</span>
+                            <span className={`text-base font-black leading-none ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{donutTotal}</span>
                             <span className="text-[8px] font-bold text-slate-500 mt-0.5">Total</span>
                           </div>
                         </div>
 
                         {/* Donut Legend */}
-                        <div className="flex flex-col gap-1.5 text-left self-center">
-                          {[
-                            { label: 'Home Services', val: '28%', color: 'bg-[#027244]' },
-                            { label: 'Food & Restaurants', val: '18%', color: 'bg-emerald-500' },
-                            { label: 'Automotive', val: '12%', color: 'bg-amber-500' },
-                            { label: 'Beauty & Wellness', val: '10%', color: 'bg-pink-500' },
-                            { label: 'Shopping', val: '9%', color: 'bg-blue-500' },
-                            { label: 'Education', val: '7%', color: 'bg-purple-500' },
-                            { label: 'Others', val: '16%', color: 'bg-slate-500' }
-                          ].map((leg, idx) => (
+                        <div className="flex flex-col gap-1.5 text-left self-center max-h-48 overflow-y-auto pr-1">
+                          {donutSegments.slice(0, 7).map((leg, idx) => (
                             <div key={idx} className="flex items-center gap-2 text-[9px] font-bold text-slate-400">
-                              <span className={`h-1.5 w-1.5 rounded-full ${leg.color} shrink-0`} />
-                              <span className="truncate max-w-[90px]">{leg.label}</span>
-                              <span className={`ml-auto font-black ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{leg.val}</span>
+                              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: leg.color }} />
+                              <span className="truncate max-w-[90px]">{leg.name}</span>
+                              <span className={`ml-auto font-black ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{leg.percentage}%</span>
                             </div>
                           ))}
                         </div>
@@ -4312,19 +4550,17 @@ export default function SuperAdminDashboard() {
                             </linearGradient>
                           </defs>
                           {/* Area */}
-                          <path d="M 0,200 L 0,160 Q 100,120 150,140 T 300,70 T 450,40 Q 480,30 500,45 L 500,200 Z" fill="url(#chartGrad)" />
+                          <path d={`M 10,195 L 10,${revYs[0]} L 130,${revYs[1]} L 250,${revYs[2]} L 370,${revYs[3]} L 490,${revYs[4]} L 490,195 Z`} fill="url(#chartGrad)" />
                           {/* Line */}
-                          <path d="M 0,160 Q 100,120 150,140 T 300,70 T 450,40 Q 480,30 500,45" stroke="#027244" strokeWidth="3" fill="none" />
+                          <path d={`M 10,${revYs[0]} L 130,${revYs[1]} L 250,${revYs[2]} L 370,${revYs[3]} L 490,${revYs[4]}`} stroke="#027244" strokeWidth="3" fill="none" />
                         </svg>
                         {/* Months labels */}
                         <div className={`absolute bottom-0 left-0 right-0 flex justify-between px-2 text-[9px] font-extrabold uppercase tracking-wide py-1 ${
                           themeMode === 'dark' ? 'bg-slate-950/80 text-slate-400' : 'bg-white/80 text-slate-450'
                         }`}>
-                          <span>Jan (₹15k)</span>
-                          <span>Mar (₹35k)</span>
-                          <span>May (₹75k)</span>
-                          <span>Jul (₹115k)</span>
-                          <span>Sep (₹145k)</span>
+                          {monthlyRevData.map((d, i) => (
+                            <span key={i}>{d.label}</span>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -4339,18 +4575,13 @@ export default function SuperAdminDashboard() {
                       </div>
 
                       <div className="w-full h-64 shrink-0 relative flex items-end justify-around pb-6 pt-4">
-                        {[
-                          { label: 'Free Trial', val: 70, color: '#64748B' },
-                          { label: 'Monthly Premium', val: 140, color: '#027244' },
-                          { label: 'Yearly Super', val: 180, color: '#3B82F6' },
-                          { label: 'Enterprise Custom', val: 40, color: '#8B5CF6' }
-                        ].map((bar, idx) => (
+                        {planRatioData.map((bar, idx) => (
                           <div key={idx} className="flex flex-col items-center gap-2 h-full justify-end w-12 sm:w-16">
                             <div className="text-[10px] font-black text-slate-400 mb-1">{bar.val} units</div>
                             <div 
                               className="w-8 sm:w-10 rounded-t-lg transition-all duration-500 hover:opacity-80"
                               style={{ 
-                                height: `${(bar.val / 200) * 80}%`,
+                                height: `${(bar.val / maxPlanRatioVal) * 80}%`,
                                 backgroundColor: bar.color,
                                 boxShadow: `0 4px 12px ${bar.color}25`
                               }}

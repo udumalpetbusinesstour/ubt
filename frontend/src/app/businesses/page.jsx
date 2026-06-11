@@ -596,11 +596,33 @@ function BusinessesList() {
     }
   };
 
-  const handleCall = (phone, name) => {
+  const handleCall = async (phone, name, bizId) => {
+    if (bizId) {
+      try {
+        await fetch(`http://localhost:5000/api/businesses/${bizId}/click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'call' })
+        });
+      } catch (err) {
+        console.error('Failed to track call click:', err);
+      }
+    }
     window.open(`tel:${phone}`);
   };
 
-  const handleWhatsApp = (whatsapp, name) => {
+  const handleWhatsApp = async (whatsapp, name, bizId) => {
+    if (bizId) {
+      try {
+        await fetch(`http://localhost:5000/api/businesses/${bizId}/click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'whatsapp' })
+        });
+      } catch (err) {
+        console.error('Failed to track whatsapp click:', err);
+      }
+    }
     const cleanNum = whatsapp.replace(/[^0-9]/g, '');
     window.open(`https://wa.me/${cleanNum}?text=Hello%20${encodeURIComponent(name)},%20I%20saw%20your%20listing%20on%20Udumalpet%20Business%20Tour.`);
   };
@@ -1352,7 +1374,7 @@ function BusinessesList() {
                                 {/* Right Panel Actions */}
                                 <div className="flex flex-col justify-center gap-2 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6 shrink-0 md:w-36">
                                   <button
-                                    onClick={(e) => { e.stopPropagation(); handleCall(biz.phone, biz.name); }}
+                                    onClick={(e) => { e.stopPropagation(); handleCall(biz.phone, biz.name, biz._id); }}
                                     className="py-2.5 w-full border border-[#027244] hover:bg-emerald-50 text-[#027244] font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                                   >
                                     <PhoneCall className="h-3.5 w-3.5" />
@@ -1360,7 +1382,7 @@ function BusinessesList() {
                                   </button>
                                   {!isExpired ? (
                                     <button
-                                      onClick={(e) => { e.stopPropagation(); handleWhatsApp(biz.whatsapp, biz.name); }}
+                                      onClick={(e) => { e.stopPropagation(); handleWhatsApp(biz.whatsapp, biz.name, biz._id); }}
                                       className="py-2.5 w-full bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer"
                                     >
                                       <span>WhatsApp</span>
@@ -1880,7 +1902,7 @@ function BusinessesList() {
                       <div className="flex flex-col justify-center gap-2 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6 shrink-0 md:w-36">
                         {/* Call button */}
                         <button
-                          onClick={() => handleCall(biz.phone, biz.name)}
+                          onClick={() => handleCall(biz.phone, biz.name, biz._id)}
                           className="py-2.5 w-full border border-[#027244] hover:bg-emerald-50 text-[#027244] font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                         >
                           <PhoneCall className="h-3.5 w-3.5" />
@@ -1890,7 +1912,7 @@ function BusinessesList() {
                         {/* WhatsApp button - HIDDEN on expired subscriptions! */}
                         {!isExpired ? (
                           <button
-                            onClick={() => handleWhatsApp(biz.whatsapp, biz.name)}
+                            onClick={() => handleWhatsApp(biz.whatsapp, biz.name, biz._id)}
                             className="py-2.5 w-full bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer"
                           >
                             <span>WhatsApp</span>
