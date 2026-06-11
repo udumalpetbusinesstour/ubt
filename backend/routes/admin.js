@@ -161,6 +161,50 @@ router.put('/businesses/:id/status', async (req, res, next) => {
   }
 });
 
+// @desc    Delete a business listing permanently
+// @route   DELETE /api/admin/businesses/:id
+// @access  Private/Admin
+router.delete('/businesses/:id', async (req, res, next) => {
+  try {
+    const business = await Business.findById(req.params.id);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    const bizName = business.name;
+    const bizId = business._id;
+    const ownerId = business.ownerId;
+
+    // Perform cascade delete of associated collections: reviews, events, blogs, subscriptions, payments
+    const Review = require('../models/Review');
+    const Event = require('../models/Event');
+    const Blog = require('../models/Blog');
+    const Subscription = require('../models/Subscription');
+    const Payment = require('../models/Payment');
+
+    await Review.deleteMany({ businessId: bizId });
+    await Event.deleteMany({ businessId: bizId });
+    await Blog.deleteMany({ businessId: bizId });
+    await Subscription.deleteMany({ businessId: bizId });
+    await Payment.deleteMany({ businessId: bizId });
+    
+    await Business.deleteOne({ _id: bizId });
+
+    // Send notification
+    const Notification = require('../models/Notification');
+    await Notification.create({
+      userId: ownerId,
+      title: `Listing Deleted`,
+      message: `Your listing directory "${bizName}" was permanently removed by admin control desk.`,
+      type: 'approval_status'
+    });
+
+    res.json({ success: true, message: 'Listing and all cascaded collections removed successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // @desc    Toggle premium visibility override
 // @route   PUT /api/admin/businesses/:id/premium
 // @access  Private/Admin

@@ -350,17 +350,15 @@ export default function Login() {
         const redirect = searchParams.get('redirect');
         if (redirect && redirect !== '/' && redirect !== '/login' && redirect !== '/register') {
           navigate(redirect);
+        } else if (user.role === 'superadmin') {
+          navigate('/superadmin');
+        } else if (user.role === 'admin') {
+          navigate('/admin');
         } else if (draftBusiness) {
           localStorage.setItem('ubt_draft_business', JSON.stringify(draftBusiness));
           navigate('/add-business');
         } else {
-          if (user.role === 'superadmin') {
-            navigate('/superadmin');
-          } else if (user.role === 'admin') {
-            navigate('/admin');
-          } else {
-            navigate('/dashboard');
-          }
+          navigate('/dashboard');
         }
       } else {
         setError(data.message || 'Invalid credentials.');
