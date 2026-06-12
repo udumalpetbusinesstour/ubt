@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const atlasUri = 'mongodb+srv://udumalpetbusinesstour:xsjTZAsfHMc1wr6Z@udumalpetbusinesstour.tggc5t5.mongodb.net/udtbusiness?retryWrites=true&w=majority&appName=udumalpetbusinesstour';
+const atlasUri = process.env.MONGO_URI || 'mongodb+srv://udumalpetbusinesstour:<password>@udumalpetbusinesstour.tggc5t5.mongodb.net/udtbusiness?retryWrites=true&w=majority';
 
 // High-quality category-specific stock photos from Unsplash
 const stockPhotos = {

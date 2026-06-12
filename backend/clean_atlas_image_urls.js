@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const atlasUri = 'mongodb+srv://udumalpetbusinesstour:xsjTZAsfHMc1wr6Z@udumalpetbusinesstour.tggc5t5.mongodb.net/udtbusiness?retryWrites=true&w=majority&appName=udumalpetbusinesstour';
+const atlasUri = process.env.MONGO_URI || 'mongodb+srv://udumalpetbusinesstour:<password>@udumalpetbusinesstour.tggc5t5.mongodb.net/udtbusiness?retryWrites=true&w=majority';
 
 const defaultUnsplashBusiness = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80';
 
