@@ -285,6 +285,41 @@ function BusinessesList() {
   const [contactSuccess, setContactSuccess] = useState(null);
   const [contactError, setContactError] = useState('');
 
+  const categoryDetails = [
+    { name: 'Automotive', icon: <Car className="h-4.5 w-4.5 text-red-500" />, bg: 'bg-red-50' },
+    { name: 'Beauty & Wellness', icon: <Sparkles className="h-4.5 w-4.5 text-pink-500" />, bg: 'bg-pink-50' },
+    { name: 'Education', icon: <GraduationCap className="h-4.5 w-4.5 text-blue-500" />, bg: 'bg-blue-50' },
+    { name: 'Electronics', icon: <Tv className="h-4.5 w-4.5 text-emerald-500" />, bg: 'bg-emerald-50' },
+    { name: 'Food & Restaurants', icon: <Utensils className="h-4.5 w-4.5 text-amber-500" />, bg: 'bg-amber-50' },
+    { name: 'Health & Medical', icon: <HeartPulse className="h-4.5 w-4.5 text-red-500" />, bg: 'bg-red-50' },
+    { name: 'Home Services', icon: <HomeIcon className="h-4.5 w-4.5 text-teal-500" />, bg: 'bg-teal-50' },
+    { name: 'Real Estate', icon: <Building className="h-4.5 w-4.5 text-indigo-500" />, bg: 'bg-indigo-50' },
+    { name: 'Shopping', icon: <ShoppingBag className="h-4.5 w-4.5 text-amber-500" />, bg: 'bg-amber-50' },
+    { name: 'Manufacturing', icon: <Factory className="h-4.5 w-4.5 text-slate-500" />, bg: 'bg-slate-50' },
+    { name: 'Professional Services', icon: <Briefcase className="h-4.5 w-4.5 text-emerald-500" />, bg: 'bg-emerald-50' },
+    { name: 'Travel & Hospitality', icon: <Compass className="h-4.5 w-4.5 text-purple-500" />, bg: 'bg-purple-50' },
+    { name: 'Construction', icon: <Wrench className="h-4.5 w-4.5 text-orange-500" />, bg: 'bg-orange-50' },
+    { name: 'Agriculture', icon: <Sprout className="h-4.5 w-4.5 text-green-500" />, bg: 'bg-green-50' },
+    { name: 'Finance & Insurance', icon: <CreditCard className="h-4.5 w-4.5 text-blue-500" />, bg: 'bg-blue-50' },
+    { name: 'Events & Entertainment', icon: <Sparkles className="h-4.5 w-4.5 text-pink-500" />, bg: 'bg-pink-50' },
+    { name: 'Sports & Fitness', icon: <Dumbbell className="h-4.5 w-4.5 text-emerald-500" />, bg: 'bg-emerald-50' },
+    { name: 'Others', icon: <Grid className="h-4.5 w-4.5 text-slate-500" />, bg: 'bg-slate-50' }
+  ];
+
+  const dynamicCategoryDetails = [...categoryDetails];
+  const dynamicAvailableCategories = [...availableCategories];
+
+  dbCategories.forEach(cat => {
+    if (!cat.parentCategory && !categoryDetails.some(c => c.name.toLowerCase() === cat.categoryName.toLowerCase())) {
+      dynamicCategoryDetails.push({
+        name: cat.categoryName,
+        icon: renderCategoryIcon(cat.icon || 'Store', "h-4.5 w-4.5 text-emerald-500"),
+        bg: 'bg-emerald-50'
+      });
+      dynamicAvailableCategories.push(cat.categoryName);
+    }
+  });
+
   const getParentCategory = (subName) => {
     if (!subName) return 'Others';
     // 1. Check database categories first
@@ -964,40 +999,6 @@ function BusinessesList() {
     );
   }
 
-  const categoryDetails = [
-    { name: 'Automotive', icon: <Car className="h-4.5 w-4.5 text-red-500" />, bg: 'bg-red-50' },
-    { name: 'Beauty & Wellness', icon: <Sparkles className="h-4.5 w-4.5 text-pink-500" />, bg: 'bg-pink-50' },
-    { name: 'Education', icon: <GraduationCap className="h-4.5 w-4.5 text-blue-500" />, bg: 'bg-blue-50' },
-    { name: 'Electronics', icon: <Tv className="h-4.5 w-4.5 text-emerald-500" />, bg: 'bg-emerald-50' },
-    { name: 'Food & Restaurants', icon: <Utensils className="h-4.5 w-4.5 text-amber-500" />, bg: 'bg-amber-50' },
-    { name: 'Health & Medical', icon: <HeartPulse className="h-4.5 w-4.5 text-red-500" />, bg: 'bg-red-50' },
-    { name: 'Home Services', icon: <HomeIcon className="h-4.5 w-4.5 text-teal-500" />, bg: 'bg-teal-50' },
-    { name: 'Real Estate', icon: <Building className="h-4.5 w-4.5 text-indigo-500" />, bg: 'bg-indigo-50' },
-    { name: 'Shopping', icon: <ShoppingBag className="h-4.5 w-4.5 text-amber-500" />, bg: 'bg-amber-50' },
-    { name: 'Manufacturing', icon: <Factory className="h-4.5 w-4.5 text-slate-500" />, bg: 'bg-slate-50' },
-    { name: 'Professional Services', icon: <Briefcase className="h-4.5 w-4.5 text-emerald-500" />, bg: 'bg-emerald-50' },
-    { name: 'Travel & Hospitality', icon: <Compass className="h-4.5 w-4.5 text-purple-500" />, bg: 'bg-purple-50' },
-    { name: 'Construction', icon: <Wrench className="h-4.5 w-4.5 text-orange-500" />, bg: 'bg-orange-50' },
-    { name: 'Agriculture', icon: <Sprout className="h-4.5 w-4.5 text-green-500" />, bg: 'bg-green-50' },
-    { name: 'Finance & Insurance', icon: <CreditCard className="h-4.5 w-4.5 text-blue-500" />, bg: 'bg-blue-50' },
-    { name: 'Events & Entertainment', icon: <Sparkles className="h-4.5 w-4.5 text-pink-500" />, bg: 'bg-pink-50' },
-    { name: 'Sports & Fitness', icon: <Dumbbell className="h-4.5 w-4.5 text-emerald-500" />, bg: 'bg-emerald-50' },
-    { name: 'Others', icon: <Grid className="h-4.5 w-4.5 text-slate-500" />, bg: 'bg-slate-50' }
-  ];
-  const dynamicCategoryDetails = [...categoryDetails];
-  const dynamicAvailableCategories = [...availableCategories];
-
-  dbCategories.forEach(cat => {
-    if (!cat.parentCategory && !categoryDetails.some(c => c.name.toLowerCase() === cat.categoryName.toLowerCase())) {
-      dynamicCategoryDetails.push({
-        name: cat.categoryName,
-        icon: renderCategoryIcon(cat.icon || 'Store', "h-4.5 w-4.5 text-emerald-500"),
-        bg: 'bg-emerald-50'
-      });
-      dynamicAvailableCategories.push(cat.categoryName);
-    }
-  });
-
   if (isCategoriesView) {
     const hotCategories = [...dbCategories]
       .sort((a, b) => (b.views || 0) - (a.views || 0))
@@ -1111,7 +1112,7 @@ function BusinessesList() {
                             {renderCategoryIcon(cat.icon, "h-4.5 w-4.5 text-[#027244]")}
                           </div>
                           <div className="flex flex-col z-10 mt-3">
-                            <span className="font-extrabold text-[#001c41] text-[13px] leading-snug group-hover:text-[#027244] transition-colors duration-300 truncate">
+                            <span className="font-medium text-[#001c41] text-[17px] leading-snug group-hover:text-[#027244] transition-colors duration-300 truncate">
                               {cat.categoryName}
                             </span>
                             <span className="text-[10px] text-slate-400 font-extrabold mt-1 uppercase tracking-wide leading-none">
@@ -1151,10 +1152,10 @@ function BusinessesList() {
                               {cat.icon}
                             </div>
                             <div className="flex flex-col z-10 mt-3">
-                              <span className="font-extrabold text-[#001c41] text-[13px] leading-snug group-hover:text-[#027244] transition-colors duration-300 truncate">
+                              <span className="font-medium text-[#001c41] text-[17px] leading-snug group-hover:text-[#027244] transition-colors duration-300 truncate">
                                 {cat.name}
                               </span>
-                              <span className="text-[10px] text-slate-450 font-extrabold mt-1 uppercase tracking-wide leading-none flex items-center gap-1">
+                              <span className="text-[10px] text-slate-455 font-extrabold mt-1 uppercase tracking-wide leading-none flex items-center gap-1">
                                 <span>{count} Listings</span>
                                 <span>•</span>
                                 <span className="text-emerald-600 font-bold hover:underline">Explore →</span>
@@ -1203,7 +1204,7 @@ function BusinessesList() {
                                 {renderCategoryIcon(parentIconStr, "h-4.5 w-4.5 text-[#027244]")}
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-xs font-bold text-slate-700 group-hover:text-[#027244] transition-colors truncate">
+                                <span className="text-[17px] font-medium text-slate-700 group-hover:text-[#027244] transition-colors truncate">
                                   All {selectedCategoryInExplore}
                                 </span>
                                 <span className="text-[9px] text-slate-400 font-semibold mt-0.5 leading-none">
@@ -1232,7 +1233,7 @@ function BusinessesList() {
                                 {renderCategoryIcon(cat.icon, "h-4.5 w-4.5 text-[#027244]")}
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-xs font-bold text-slate-700 group-hover:text-[#027244] transition-colors truncate">
+                                <span className="text-[17px] font-medium text-slate-700 group-hover:text-[#027244] transition-colors truncate">
                                   {cat.categoryName}
                                 </span>
                                 <span className="text-[9px] text-slate-400 font-semibold mt-0.5 leading-none">
@@ -1458,7 +1459,7 @@ function BusinessesList() {
                             {renderCategoryIcon(cat.icon, "h-4 w-4 text-[#027244]")}
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="text-xs font-bold text-slate-700 group-hover:text-[#027244] transition-colors truncate">
+                            <span className="text-[17px] font-medium text-slate-700 group-hover:text-[#027244] transition-colors truncate">
                               {cat.categoryName}
                             </span>
                             <span className="text-[9px] text-slate-400 font-semibold mt-0.5 leading-none">
@@ -1583,7 +1584,7 @@ function BusinessesList() {
 
             <div className="flex flex-col gap-2 mt-2 max-h-56 overflow-y-auto pr-1">
               {/* All Categories Checkbox */}
-              <label className="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-[17px] font-medium text-slate-600 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={selectedCategory === 'All Categories'}
@@ -1594,7 +1595,7 @@ function BusinessesList() {
               </label>
 
               {filteredCategories.map((c) => (
-                <label key={c} className="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer select-none">
+                <label key={c} className="flex items-center gap-2 text-[17px] font-medium text-slate-600 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={!!checkedCategories[c]}

@@ -774,7 +774,7 @@ export default function Home() {
               <div className="h-12 w-12 rounded-xl flex items-center justify-center text-2xl select-none transition-transform duration-500 ease-out-expo group-hover:scale-110">
                 {cat.icon}
               </div>
-              <span className="text-xs font-extrabold text-slate-700 transition-colors duration-300 group-hover:text-[#027244]">{cat.name}</span>
+              <span className="text-[17px] font-medium text-slate-700 transition-colors duration-300 group-hover:text-[#027244]">{cat.name}</span>
             </Link>
           ))}
         </div>
