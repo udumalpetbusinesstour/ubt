@@ -377,6 +377,7 @@ const updateBusinessStatus = async (req, res, next) => {
     if (status === 'Approved') {
       verification = 'approved';
       actionWord = 'approve';
+      business.subscriptionStatus = 'active';
     } else if (status === 'Rejected') {
       verification = 'rejected';
       actionWord = 'reject';
@@ -394,6 +395,8 @@ const updateBusinessStatus = async (req, res, next) => {
     if (status === 'Approved') {
       const { checkAndCompleteReferralByBusiness } = require('../utils/referralHelper');
       await checkAndCompleteReferralByBusiness(business._id);
+      const { ensureCategoriesExist } = require('../utils/categoryHelper');
+      await ensureCategoriesExist(business);
     }
 
     // Log admin action
@@ -1388,6 +1391,13 @@ const resolveCategoryReview = async (req, res, next) => {
         return sendError(res, 400, 'Category name is required to create a new category');
       }
 
+      // Force governmental subcategories to always be nested under "Governmental organisations"
+      let resolvedParentCategory = parentCategory;
+      const govSubcategories = ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'];
+      if (govSubcategories.includes(finalName.trim().toLowerCase())) {
+        resolvedParentCategory = 'Governmental organisations';
+      }
+
       // Check duplicate using exact match
       const exists = await Category.findOne({ categoryName: { $regex: new RegExp(`^${finalName.trim()}$`, 'i') } });
       if (exists) {
@@ -1395,6 +1405,15 @@ const resolveCategoryReview = async (req, res, next) => {
         business.category = exists.categoryName;
         business.customCategoryName = null;
         business.categoryStatus = 'Normal';
+        
+        // Correct parent category of existing category document if mismatched
+        const expectedParent = resolvedParentCategory && resolvedParentCategory !== 'None' && resolvedParentCategory !== 'Others' ? resolvedParentCategory.trim() : null;
+        if (exists.parentCategory !== expectedParent) {
+          exists.parentCategory = expectedParent;
+          await exists.save();
+          console.log(`[CATEGORY RESOLUTION] Corrected parent category of existing category "${exists.categoryName}" to "${expectedParent}"`);
+        }
+
         await business.save();
         return sendSuccess(res, 200, `Category already exists. Automatically mapped to: ${exists.categoryName}`, business);
       }
@@ -1410,8 +1429,21 @@ const resolveCategoryReview = async (req, res, next) => {
         description: `Custom category dynamically approved by administrator for ${business.name}`
       };
       
-      if (parentCategory && parentCategory !== 'None') {
-        categoryData.parentCategory = parentCategory.trim();
+      if (resolvedParentCategory && resolvedParentCategory !== 'None' && resolvedParentCategory !== 'Others') {
+        // Ensure parent category document exists in the collection to prevent orphans
+        let parentDoc = await Category.findOne({ categoryName: { $regex: new RegExp(`^${resolvedParentCategory.trim()}$`, 'i') } });
+        if (!parentDoc) {
+          parentDoc = await Category.create({
+            categoryName: resolvedParentCategory.trim(),
+            parentCategory: null,
+            icon: 'Building',
+            description: `Auto-created parent category during review resolution: ${business.name}`
+          });
+          console.log(`[CATEGORY RESOLUTION SYNC] Auto-created parent category document: "${parentDoc.categoryName}"`);
+        }
+        categoryData.parentCategory = parentDoc.categoryName;
+      } else if (resolvedParentCategory) {
+        categoryData.parentCategory = resolvedParentCategory.trim();
       }
 
       const newCat = await Category.create(categoryData);
@@ -1420,6 +1452,9 @@ const resolveCategoryReview = async (req, res, next) => {
       business.category = newCat.categoryName;
       business.customCategoryName = null;
       business.categoryStatus = 'Normal';
+      if (business.status === 'Approved') {
+        business.subscriptionStatus = 'active';
+      }
       await business.save();
 
       // Log action

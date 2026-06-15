@@ -282,6 +282,14 @@ const mockSuggestions = [
       main_text: "Dhosaikadai.com",
       secondary_text: "Trigger Showroom, near Aishwarya Nagar, Gandhi Nagar, Udumalaipettai, Tamil Nadu - 642154"
     }
+  },
+  {
+    description: "Udumalaipettai Taluk Office, Udumalpet Main Town, Tamil Nadu - 642126",
+    place_id: "mock_place_udumalaipettai_taluk_office",
+    structured_formatting: {
+      main_text: "Udumalaipettai Taluk Office",
+      secondary_text: "Udumalpet Main Town, Tamil Nadu - 642126"
+    }
   }
 ];
 
@@ -315,6 +323,32 @@ const mockAddressSuggestions = [
 
 // Google Place Details Mock Data
 const mockDetails = {
+  mock_place_udumalaipettai_taluk_office: {
+    name: "Udumalaipettai Taluk Office",
+    address: "Udumalaipettai Taluk Office, Udumalpet Main Town, Tamil Nadu - 642126",
+    phone: "+91 4252 220261",
+    website: "https://tiruppur.nic.in",
+    latitude: 10.585,
+    longitude: 77.251,
+    pincode: "642126",
+    locality: "Udumalpet Town",
+    googlePlaceId: "mock_place_udumalaipettai_taluk_office",
+    googleRating: 4.5,
+    googleReviewsCount: 15,
+    googleReviews: [
+      { authorName: "Local Citizen", rating: 5, text: "Official government services. Helpful staff and well-maintained facility.", createdAt: new Date() },
+      { authorName: "Ramesh Kumar", rating: 4, text: "Typical government office, queue is long but process gets completed.", createdAt: new Date() }
+    ],
+    openingHours: {
+      Monday: "10:00 AM - 5:45 PM",
+      Tuesday: "10:00 AM - 5:45 PM",
+      Wednesday: "10:00 AM - 5:45 PM",
+      Thursday: "10:00 AM - 5:45 PM",
+      Friday: "10:00 AM - 5:45 PM",
+      Saturday: "Closed",
+      Sunday: "Closed"
+    }
+  },
   mock_place_sippi_opticals: {
     name: "Sippi Opticals",
     address: "0, Katcheri St, opposite Udumalaipettai, Udumalpet Main Town, Tamil Nadu - 642126",
@@ -655,6 +689,7 @@ router.get('/draft', protect, async (req, res) => {
     const listings = await Business.find({ ownerId: req.user._id }).sort({ createdAt: -1 });
     let business = null;
 
+    const isAdminUser = req.user && (req.user.role === 'admin' || req.user.role === 'superadmin');
     const isTestUser = 
       (req.user && (
         req.user.email === 'test@gmail.com' || 
@@ -662,7 +697,7 @@ router.get('/draft', protect, async (req, res) => {
         req.user.fullName === 'xxx' || 
         req.user.phone === '1234567891' || 
         req.user.mobileNumber === '1234567891'
-      ));
+      )) || isAdminUser;
 
     if (listings.length > 1) {
       business = listings[0];
@@ -702,6 +737,7 @@ router.get('/my-business', protect, async (req, res) => {
     }).sort({ createdAt: -1 });
     let business = null;
     
+    const isAdminUser = req.user && (req.user.role === 'admin' || req.user.role === 'superadmin');
     const isTestUser = 
       (req.user && (
         req.user.email === 'test@gmail.com' || 
@@ -709,7 +745,7 @@ router.get('/my-business', protect, async (req, res) => {
         req.user.fullName === 'xxx' || 
         req.user.phone === '1234567891' || 
         req.user.mobileNumber === '1234567891'
-      ));
+      )) || isAdminUser;
 
     if (listings.length > 1) {
       business = listings[0]; // Keep the most recently created listing
@@ -722,7 +758,11 @@ router.get('/my-business', protect, async (req, res) => {
       business = listings[0];
     }
     
-    res.json({ success: true, data: business });
+    if (isAdminUser) {
+      res.json({ success: true, data: business, allBusinesses: listings });
+    } else {
+      res.json({ success: true, data: business });
+    }
   } catch (error) {
     console.error('Error fetching my-business:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -827,7 +867,15 @@ router.post('/google-autofill', async (req, res) => {
 
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   if (!apiKey || mockDetails[placeId] || placeId.startsWith('mock_place_') || placeId.startsWith('mock_addr_')) {
-    const detail = mockDetails[placeId] || mockDetails['mock_place_rk_electricals'];
+    let detail = mockDetails[placeId];
+    if (!detail) {
+      const lowerId = String(placeId || '').toLowerCase();
+      if (lowerId.includes('taluk') || lowerId.includes('office') || lowerId.includes('gov') || lowerId.includes('police') || lowerId.includes('municipality')) {
+        detail = mockDetails['mock_place_udumalaipettai_taluk_office'];
+      } else {
+        detail = mockDetails['mock_place_rk_electricals'];
+      }
+    }
     return res.json({ success: true, data: detail });
   }
 
@@ -846,7 +894,15 @@ router.post('/google-autofill', async (req, res) => {
     
     if (result.error) {
       console.warn(`Google Place Details API (New) error: ${result.error.message}. Falling back to mock details.`);
-      const detail = mockDetails[placeId] || mockDetails['mock_place_rk_electricals'];
+      let detail = mockDetails[placeId];
+      if (!detail) {
+        const lowerId = String(placeId || '').toLowerCase();
+        if (lowerId.includes('taluk') || lowerId.includes('office') || lowerId.includes('gov') || lowerId.includes('police') || lowerId.includes('municipality')) {
+          detail = mockDetails['mock_place_udumalaipettai_taluk_office'];
+        } else {
+          detail = mockDetails['mock_place_rk_electricals'];
+        }
+      }
       return res.json({ success: true, data: detail });
     }
 
@@ -997,6 +1053,13 @@ router.post('/google-autofill-link', async (req, res) => {
       if (searchMatch) {
         return decodeURIComponent(searchMatch[1].replace(/\+/g, ' '));
       }
+      try {
+        const urlObj = new URL(urlStr);
+        const query = urlObj.searchParams.get('query') || urlObj.searchParams.get('q');
+        if (query) {
+          return query;
+        }
+      } catch (e) {}
       return '';
     };
     try {
@@ -1036,6 +1099,12 @@ router.post('/google-autofill-link', async (req, res) => {
                  linkLower.includes('sippy') || origLower.includes('sippy') || 
                  linkLower.includes('opticals') || origLower.includes('opticals')) {
         placeId = 'mock_place_sippi_opticals';
+      } else if (linkLower.includes('taluk') || origLower.includes('taluk') ||
+                 linkLower.includes('gov') || origLower.includes('gov') ||
+                 linkLower.includes('office') || origLower.includes('office') ||
+                 linkLower.includes('police') || origLower.includes('police') ||
+                 linkLower.includes('municipality') || origLower.includes('municipality')) {
+        placeId = 'mock_place_udumalaipettai_taluk_office';
       } else if (extractedName) {
         // Fallback: search mockDetails by name if name matches any key
         const keys = Object.keys(mockDetails);
@@ -1078,14 +1147,106 @@ router.post('/google-autofill-link', async (req, res) => {
       } catch (err) {
         console.warn('Text search fallback failed:', err.message);
       }
+    }    // 6. Return Mock Details if mock place or missing/mock API Key
+    if (!placeId || isMockKey || mockDetails[placeId] || placeId.startsWith('mock_place_') || placeId.startsWith('mock_addr_')) {
+        let baseDetail = mockDetails[placeId];
+        if (!baseDetail) {
+          const lowerId = String(placeId || '').toLowerCase();
+          const lowerName = String(extractedName || '').toLowerCase();
+          if (lowerId.includes('taluk') || lowerId.includes('office') || lowerId.includes('gov') || lowerId.includes('police') || lowerId.includes('municipality') ||
+              lowerName.includes('taluk') || lowerName.includes('office') || lowerName.includes('gov') || lowerName.includes('police') || lowerName.includes('municipality')) {
+            baseDetail = mockDetails['mock_place_udumalaipettai_taluk_office'];
+          } else {
+            baseDetail = mockDetails['mock_place_rk_electricals'];
+          }
+        }
+        const detail = {
+          logoUrl: "",
+          coverImageUrl: "",
+          galleryUrls: [],
+          ...baseDetail
+        };
+      
+      // If we don't have placeId or it's a non-predefined placeId (fallback to RK Electricals),
+      // but we extracted a name, let's dynamically customize the mock details!
+      if ((!placeId || !mockDetails[placeId]) && extractedName) {
+        const name = extractedName;
+        const lat = extractedLat || 10.585;
+        const lng = extractedLng || 77.251;
+        const isGov = name.toLowerCase().includes('taluk') || name.toLowerCase().includes('office') || name.toLowerCase().includes('gov') || name.toLowerCase().includes('police') || name.toLowerCase().includes('municipality');
+        const dynamicDetail = {
+          name: name,
+          address: `${name}, Udumalpet Main Town, Tamil Nadu - 642126`,
+          phone: isGov ? "+91 4252 220261" : "+91 98765 43210",
+          website: isGov ? "https://tiruppur.nic.in" : `https://${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.business.site`,
+          latitude: lat,
+          longitude: lng,
+          googlePlaceId: placeId || `mock_place_${name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+          googleRating: 4.5,
+          googleReviewsCount: 15,
+          googleReviews: [
+            { authorName: "Local Guide", rating: 5, text: "Great service and behavior. Highly recommended!", createdAt: new Date() }
+          ],
+          logoUrl: "",
+          coverImageUrl: "",
+          galleryUrls: [],
+          openingHours: isGov ? {
+            Monday: "10:00 AM - 5:45 PM",
+            Tuesday: "10:00 AM - 5:45 PM",
+            Wednesday: "10:00 AM - 5:45 PM",
+            Thursday: "10:00 AM - 5:45 PM",
+            Friday: "10:00 AM - 5:45 PM",
+            Saturday: "Closed",
+            Sunday: "Closed"
+          } : {
+            Monday: "9:00 AM - 8:00 PM",
+            Tuesday: "9:00 AM - 8:00 PM",
+            Wednesday: "9:00 AM - 8:00 PM",
+            Thursday: "9:00 AM - 8:00 PM",
+            Friday: "9:00 AM - 8:00 PM",
+            Saturday: "9:00 AM - 8:00 PM",
+            Sunday: "Closed"
+          },
+          timings: isGov ? {
+            Monday: "10:00 AM - 5:45 PM",
+            Tuesday: "10:00 AM - 5:45 PM",
+            Wednesday: "10:00 AM - 5:45 PM",
+            Thursday: "10:00 AM - 5:45 PM",
+            Friday: "10:00 AM - 5:45 PM",
+            Saturday: "Closed",
+            Sunday: "Closed"
+          } : {
+            Monday: "9:00 AM - 8:00 PM",
+            Tuesday: "9:00 AM - 8:00 PM",
+            Wednesday: "9:00 AM - 8:00 PM",
+            Thursday: "9:00 AM - 8:00 PM",
+            Friday: "9:00 AM - 8:00 PM",
+            Saturday: "9:00 AM - 8:00 PM",
+            Sunday: "Closed"
+          },
+          pincode: "642126",
+          locality: "Udumalpet Town"
+        };
+        return res.json({ success: true, data: dynamicDetail });
+      }
+ 
+      return res.json({ success: true, data: detail });
     }
 
-    // 6. Return Mock Details if mock place or missing/mock API Key
-    if (!placeId || isMockKey || mockDetails[placeId] || placeId.startsWith('mock_place_') || placeId.startsWith('mock_addr_')) {
-      const detail = mockDetails[placeId] || mockDetails['mock_place_rk_electricals'];
-      
-      // If we don't have placeId but we extracted a name, let's dynamically customize the mock details!
-      if (!placeId && extractedName) {
+    // Call real Places Details API
+    const url = `https://places.googleapis.com/v1/places/${placeId}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,location,regularOpeningHours,rating,userRatingCount,reviews,addressComponents'
+      }
+    });
+
+    const result = await response.json();
+    if (result.error) {
+      if ((!placeId || !mockDetails[placeId]) && extractedName) {
         const name = extractedName;
         const lat = extractedLat || 10.585;
         const lng = extractedLng || 77.251;
@@ -1096,12 +1257,15 @@ router.post('/google-autofill-link', async (req, res) => {
           website: `https://${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.business.site`,
           latitude: lat,
           longitude: lng,
-          googlePlaceId: `mock_place_${name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+          googlePlaceId: placeId || `mock_place_${name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
           googleRating: 4.5,
           googleReviewsCount: 15,
           googleReviews: [
             { authorName: "Local Guide", rating: 5, text: "Great service and behavior. Highly recommended!", createdAt: new Date() }
           ],
+          logoUrl: "",
+          coverImageUrl: "",
+          galleryUrls: [],
           openingHours: {
             Monday: "9:00 AM - 8:00 PM",
             Tuesday: "9:00 AM - 8:00 PM",
@@ -1125,23 +1289,6 @@ router.post('/google-autofill-link', async (req, res) => {
         };
         return res.json({ success: true, data: dynamicDetail });
       }
-
-      return res.json({ success: true, data: detail });
-    }
-
-    // Call real Places Details API
-    const url = `https://places.googleapis.com/v1/places/${placeId}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,location,regularOpeningHours,rating,userRatingCount,reviews,addressComponents'
-      }
-    });
-
-    const result = await response.json();
-    if (result.error) {
       const detail = mockDetails[placeId] || mockDetails['mock_place_rk_electricals'];
       return res.json({ success: true, data: detail });
     }
@@ -1435,6 +1582,7 @@ router.post('/', protect, async (req, res) => {
     }
 
     // Merge/Clean duplicates first to make sure there is at most one business listing
+    const isAdminUser = req.user && (req.user.role === 'admin' || req.user.role === 'superadmin');
     const isTestUser = 
       (req.user && (
         req.user.email === 'test@gmail.com' || 
@@ -1445,10 +1593,13 @@ router.post('/', protect, async (req, res) => {
       )) ||
       phone === '1234567891' ||
       email === 'test@gmail.com' ||
-      name === 'xxx';
+      name === 'xxx' ||
+      isAdminUser; // Bypasses duplicate deletion for admins
 
     let business = null;
-    if (!isTestUser) {
+    if (req.body._id) {
+      business = await Business.findOne({ _id: req.body._id, ownerId: req.user._id });
+    } else if (!isTestUser) {
       const listings = await Business.find({ ownerId: req.user._id }).sort({ createdAt: -1 });
       if (listings.length > 0) {
         business = listings[0];
@@ -1459,7 +1610,7 @@ router.post('/', protect, async (req, res) => {
         }
       }
     } else {
-      console.log(`[TEST USER BYPASS] Allowed duplicate registration for test account: ${req.user?.email || email}`);
+      console.log(`[TEST USER BYPASS] Allowed duplicate registration for test/admin account: ${req.user?.email || email}`);
     }
 
     const updateData = {
@@ -1699,11 +1850,18 @@ router.post('/draft', protect, async (req, res) => {
   try {
     const fields = req.body;
     
-    // Find existing business for this user (primary listing only)
-    let business = await Business.findOne({
-      ownerId: req.user._id,
-      $or: [{ parentBusinessId: null }, { parentBusinessId: { $exists: false } }]
-    });
+    let business = null;
+    const isAdminUser = req.user && (req.user.role === 'admin' || req.user.role === 'superadmin');
+
+    if (fields._id) {
+      business = await Business.findOne({ _id: fields._id, ownerId: req.user._id });
+    } else if (!isAdminUser) {
+      // Find existing business for this user (primary listing only)
+      business = await Business.findOne({
+        ownerId: req.user._id,
+        $or: [{ parentBusinessId: null }, { parentBusinessId: { $exists: false } }]
+      });
+    }
     
     if (business) {
       // If the business is already paid, don't allow modifying it via draft (bypassed in dev mode)

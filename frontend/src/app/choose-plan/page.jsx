@@ -187,6 +187,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
   };
 
   const getDiscountedPrice = (originalPrice) => {
+    if (user && (user.role === 'admin' || user.role === 'superadmin')) return 0;
     if (!applyReferralPoints) return originalPrice;
     const discount = Number(redeemPointsAmount || 0) * 0.10; // 1 point = 10 paise (₹0.10)
     const finalPrice = Math.max(0, originalPrice - discount);
@@ -208,6 +209,51 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
 
     setPaymentLoading(true);
     setError('');
+
+    const isAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
+
+    if (isAdmin) {
+      try {
+        const mockOrderId = 'free_admin_bypass_' + Date.now();
+        const verifyRes = await fetch('http://localhost:5000/api/payments/verify-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            businessId: business._id,
+            planType: planToUse,
+            razorpayOrderId: mockOrderId,
+            razorpayPaymentId: 'pay_free_admin_' + Date.now(),
+            razorpaySignature: '',
+            applyReferralPoints: false,
+            redeemPointsAmount: 0
+          }),
+        });
+        const verifyData = await verifyRes.json();
+        if (verifyData.success) {
+          setPaymentSuccess(true);
+          if (isStep && onNext) {
+            setTimeout(() => {
+              onNext(verifyData.business);
+            }, 1500);
+          } else {
+            setTimeout(() => {
+              navigate('/add-business');
+            }, 1500);
+          }
+        } else {
+          setError(verifyData.message || 'Payment verification failed.');
+        }
+      } catch (err) {
+        console.error('Admin free activation error:', err);
+        setError('Admin free activation failed.');
+      } finally {
+        setPaymentLoading(false);
+      }
+      return;
+    }
 
     try {
       // 1. Create order on backend
@@ -655,7 +701,11 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                         : 'bg-white hover:bg-emerald-50 border border-[#027244] text-[#027244] hover:text-[#005934]'
                     }`}
                   >
-                    {paymentLoading && selectedPlan === p.name ? 'Initializing...' : `Start ${p.type} Plan`}
+                    {paymentLoading && selectedPlan === p.name 
+                      ? 'Activating...' 
+                      : (user && (user.role === 'admin' || user.role === 'superadmin') 
+                          ? 'Activate Free Admin Plan' 
+                          : `Start ${p.type} Plan`)}
                   </button>
                 </div>
               );

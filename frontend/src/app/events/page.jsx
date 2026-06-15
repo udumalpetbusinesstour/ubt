@@ -343,6 +343,23 @@ export default function EventsPage() {
       const token = localStorage.getItem('ubt_token');
       if (!token) return;
       
+      const storedUser = localStorage.getItem('ubt_user');
+      let isAdmin = false;
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser && (parsedUser.role === 'admin' || parsedUser.role === 'superadmin')) {
+            isAdmin = true;
+          }
+        } catch (e) {}
+      }
+
+      if (isAdmin) {
+        setHasActiveSubscription(true);
+        setPaymentPrice(0);
+        return;
+      }
+      
       const res = await fetch('http://localhost:5000/api/events/check-subscription', {
         headers: { Authorization: `Bearer ${token}` }
       });

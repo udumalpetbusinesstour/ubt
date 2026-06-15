@@ -24,6 +24,20 @@ const renderCategoryIcon = (iconName, className = "h-4.5 w-4.5") => {
   return <IconComp className={className} />;
 };
 
+const isGovernmentalOrPublic = (biz) => {
+  if (!biz) return false;
+  const parent = (biz.requestedParentCategory || '').toLowerCase();
+  const cat = (biz.category || '').toLowerCase();
+  
+  const govParents = ['governmental organisations', 'government organisations', 'governmental organisation', 'government organisation'];
+  if (govParents.includes(parent)) return true;
+  
+  const govCats = ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'];
+  if (govCats.includes(cat)) return true;
+  
+  return false;
+};
+
 const parentCategoryMapping = {
   'Shopping': [
     'Grocery Stores', 'Supermarkets', 'Vegetable & Fruit Shops', 'Textile & Garments', 
@@ -83,6 +97,9 @@ const parentCategoryMapping = {
   'Sports & Fitness': [
     'Gyms', 'Yoga Centers', 'Sports Academies', 'Sports Equipment Stores'
   ],
+  'Governmental organisations': [
+    'Taluk Office', 'Municipality', 'Police Stations', 'Hospitals', 'Banks', 'Schools'
+  ],
   'Others': [
     'Temples', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs', 'Others'
   ]
@@ -106,6 +123,7 @@ const availableCategories = [
   'Finance & Insurance',
   'Events & Entertainment',
   'Sports & Fitness',
+  'Governmental organisations',
   'Others'
 ];
 
@@ -127,6 +145,7 @@ const parentIconStringMap = {
   'Finance & Insurance': 'CreditCard',
   'Events & Entertainment': 'Sparkles',
   'Sports & Fitness': 'Dumbbell',
+  'Governmental organisations': 'Building',
   'Others': 'Grid'
 };
 
@@ -249,6 +268,7 @@ function BusinessesList() {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'All Categories');
   const [selectedLocality, setSelectedLocality] = useState(searchParams.get('locality') || 'All Localities');
+  const [showHints, setShowHints] = useState(false);
   
   // Sidebar checkbox states
   const [checkedCategories, setCheckedCategories] = useState({});
@@ -838,13 +858,52 @@ function BusinessesList() {
     }
   };
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    triggerQueryUpdate();
+  const getCategoryHints = () => {
+    if (!searchTerm.trim()) return [];
+    
+    const query = searchTerm.toLowerCase();
+    const suggestions = [];
+    const seenNames = new Set();
+    
+    // 1. Check parent categories (dynamicAvailableCategories)
+    dynamicAvailableCategories.forEach(cat => {
+      if (cat.toLowerCase().includes(query) && !seenNames.has(cat.toLowerCase()) && cat !== 'Others' && cat !== 'All Categories') {
+        seenNames.add(cat.toLowerCase());
+        suggestions.push({ name: cat, type: 'category' });
+      }
+    });
+    
+    // 2. Check static subcategories from parentCategoryMapping
+    Object.entries(parentCategoryMapping).forEach(([parent, subs]) => {
+      subs.forEach(sub => {
+        if (sub.toLowerCase().includes(query) && !seenNames.has(sub.toLowerCase()) && sub !== 'Others') {
+          seenNames.add(sub.toLowerCase());
+          suggestions.push({ name: sub, type: 'subcategory', parent });
+        }
+      });
+    });
+    
+    // 3. Check database categories (dbCategories)
+    if (Array.isArray(dbCategories)) {
+      dbCategories.forEach(cat => {
+        if (cat.categoryName && cat.categoryName.toLowerCase().includes(query) && !seenNames.has(cat.categoryName.toLowerCase())) {
+          seenNames.add(cat.categoryName.toLowerCase());
+          suggestions.push({ name: cat.categoryName, type: 'subcategory', parent: cat.parentCategory || 'Others' });
+        }
+      });
+    }
+    
+    return suggestions.slice(0, 8); // Limit to 8 hints
   };
 
-  const triggerQueryUpdate = (newCat, newLoc, newVerified, newPremium, newRating) => {
-    let url = `/businesses?q=${encodeURIComponent(searchTerm)}`;
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    triggerQueryUpdate(selectedCategory, selectedLocality);
+  };
+
+  const triggerQueryUpdate = (newCat, newLoc, newVerified, newPremium, newRating, newSearch) => {
+    const sTerm = newSearch !== undefined ? newSearch : searchTerm;
+    let url = `/businesses?q=${encodeURIComponent(sTerm)}`;
     
     // category filter
     let cat = '';
@@ -1385,6 +1444,27 @@ function BusinessesList() {
           .map(cat => cat.categoryName.toLowerCase())
       : [];
 
+    const filteredExploreBusinesses = (() => {
+      if (!selectedCategoryInExplore) return [];
+      
+      return allBusinesses.filter(biz => {
+        if (biz.status !== 'Approved') return false;
+
+        const parent = getParentCategory(biz.category || '');
+        const parentMatches = parent.toLowerCase() === selectedCategoryInExplore.toLowerCase() ||
+                              (biz.requestedParentCategory && biz.requestedParentCategory.toLowerCase() === selectedCategoryInExplore.toLowerCase());
+                              
+        if (!parentMatches) return false;
+
+        if (selectedSubcategoryInExplore && selectedSubcategoryInExplore !== 'All') {
+          const bizSub = (biz.category === 'Others' ? biz.customCategoryName : biz.category) || '';
+          const bizSubMatches = bizSub.toLowerCase() === selectedSubcategoryInExplore.toLowerCase();
+          if (!bizSubMatches) return false;
+        }
+        return true;
+      });
+    })();
+
     const exploreItemsPerPage = 6;
     const totalExplorePages = Math.ceil(filteredExploreBusinesses.length / exploreItemsPerPage);
     const displayedExploreBusinesses = filteredExploreBusinesses.slice((explorePage - 1) * exploreItemsPerPage, explorePage * exploreItemsPerPage);
@@ -1668,8 +1748,8 @@ function BusinessesList() {
                     ) : (
                       <div className="flex flex-col gap-5">
                         {displayedExploreBusinesses.map((biz) => {
-                          const isExpired = biz.subscriptionStatus === 'expired';
-                          const isSubscribed = biz.subscriptionStatus === 'active';
+                          const isExpired = biz.subscriptionStatus === 'expired' && !isGovernmentalOrPublic(biz);
+                          const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
                           return (
                             <div
                               key={biz._id}
@@ -1949,15 +2029,54 @@ function BusinessesList() {
           </p>
           
           <form onSubmit={handleSearchSubmit} className="mt-8 w-full bg-white border border-slate-200 shadow-xl rounded-2xl p-2 flex flex-col md:flex-row gap-2 max-w-5xl">
-            <div className="flex-1 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
+            <div className="flex-1 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100 relative">
               <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
               <input
                 type="text"
                 placeholder="What are you looking for?"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setShowHints(true);
+                }}
+                onFocus={() => setShowHints(true)}
+                onBlur={() => setTimeout(() => setShowHints(false), 200)}
                 className="w-full bg-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none"
               />
+              
+              {/* Category Hints / Suggestions Dropdown */}
+              {showHints && searchTerm.trim().length > 0 && (
+                <div className="absolute top-full left-0 w-full bg-white border border-slate-200 shadow-xl rounded-b-xl mt-1.5 z-40 max-h-60 overflow-y-auto text-left">
+                  {getCategoryHints().length > 0 ? (
+                    getCategoryHints().map((hint, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setSearchTerm(hint.name);
+                          const targetCategory = hint.type === 'category' ? hint.name : (hint.parent || 'All Categories');
+                          setSelectedCategory(targetCategory);
+                          setShowHints(false);
+                          triggerQueryUpdate(targetCategory, selectedLocality, undefined, undefined, undefined, hint.name);
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-xs font-semibold text-slate-750 hover:bg-slate-50 border-b border-slate-50 flex items-center justify-between transition-colors cursor-pointer border-none bg-transparent"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Grid className="h-3.5 w-3.5 text-emerald-600" />
+                          <span className="text-slate-800 font-extrabold">{hint.name}</span>
+                        </span>
+                        <span className="text-[10px] text-slate-400 uppercase tracking-widest font-black">
+                          {hint.type === 'category' ? 'Category' : `in ${hint.parent}`}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-xs text-slate-400 font-bold">
+                      No matching categories found. Press search to query name.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="w-full md:w-48 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
@@ -2101,8 +2220,8 @@ function BusinessesList() {
           {!loading && businesses.length > 0 && (
             <div className={viewMode === 'list' ? 'flex flex-col gap-5' : 'grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4.5 sm:gap-6'}>
               {displayedBusinesses.map((biz) => {
-                const isExpired = biz.subscriptionStatus === 'expired';
-                const isSubscribed = biz.subscriptionStatus === 'active';
+                const isExpired = biz.subscriptionStatus === 'expired' && !isGovernmentalOrPublic(biz);
+                const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
                 
                 return (
                   <div

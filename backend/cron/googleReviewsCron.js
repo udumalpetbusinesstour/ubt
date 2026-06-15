@@ -1,8 +1,27 @@
 const cron = require('node-cron');
 const Business = require('../models/Business');
 
+const cleanTimingStr = (str) => str.replace(/[\u2013\u2014\u2012\u2010]/g, '-').replace(/[\u202F\u00A0]/g, ' ').trim();
+
+const parseWeekdayDescriptions = (weekdayDescriptions) => {
+  if (!Array.isArray(weekdayDescriptions)) return null;
+  const timings = {};
+  weekdayDescriptions.forEach(desc => {
+    const splitIndex = desc.indexOf(':');
+    if (splitIndex !== -1) {
+      const day = desc.substring(0, splitIndex).trim();
+      const time = cleanTimingStr(desc.substring(splitIndex + 1).trim());
+      const validDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      if (validDays.includes(day)) {
+        timings[day] = time;
+      }
+    }
+  });
+  return Object.keys(timings).length > 0 ? timings : null;
+};
+
 /**
- * Fetches the latest Google Place details (rating + up to 5 reviews) for a business
+ * Fetches the latest Google Place details (rating + up to 5 reviews + opening hours) for a business
  * using the Google Places API (New) or falls back gracefully if no API key is set.
  */
 const fetchGooglePlaceDetails = async (placeId, apiKey) => {
@@ -16,7 +35,7 @@ const fetchGooglePlaceDetails = async (placeId, apiKey) => {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'id,rating,userRatingCount,reviews'
+        'X-Goog-FieldMask': 'id,rating,userRatingCount,reviews,regularOpeningHours'
       }
     });
 
@@ -27,6 +46,11 @@ const fetchGooglePlaceDetails = async (placeId, apiKey) => {
       return null;
     }
 
+    let timings = null;
+    if (result.regularOpeningHours?.weekdayDescriptions) {
+      timings = parseWeekdayDescriptions(result.regularOpeningHours.weekdayDescriptions);
+    }
+
     // Map reviews from new API
     let googleReviews = (result.reviews || []).slice(0, 5).map(r => ({
       authorName: r.authorAttribution?.displayName || 'A Google User',
@@ -35,20 +59,25 @@ const fetchGooglePlaceDetails = async (placeId, apiKey) => {
       createdAt: r.publishTime ? new Date(r.publishTime) : new Date(),
     }));
 
-    // Fallback to legacy Places Details API if new API returns no reviews
-    if (googleReviews.length === 0) {
+    // Fallback to legacy Places Details API if new API returns no reviews or if we need opening hours
+    if (googleReviews.length === 0 || !timings) {
       try {
-        const legacyUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&key=${apiKey}`;
+        const legacyUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total,opening_hours&key=${apiKey}`;
         const legacyResp = await fetch(legacyUrl);
         const legacyData = await legacyResp.json();
-        if (legacyData.status === 'OK' && legacyData.result?.reviews) {
-          googleReviews = legacyData.result.reviews.slice(0, 5).map(r => ({
-            authorName: r.author_name || 'A Google User',
-            rating: r.rating || 0,
-            text: r.text || '',
-            createdAt: new Date(r.time * 1000),
-          }));
-          console.log(`[GoogleReviewsCron] Fetched ${googleReviews.length} reviews via legacy API for ${placeId}`);
+        if (legacyData.status === 'OK') {
+          if (legacyData.result?.reviews && googleReviews.length === 0) {
+            googleReviews = legacyData.result.reviews.slice(0, 5).map(r => ({
+              authorName: r.author_name || 'A Google User',
+              rating: r.rating || 0,
+              text: r.text || '',
+              createdAt: new Date(r.time * 1000),
+            }));
+          }
+          if (!timings && legacyData.result?.opening_hours?.weekday_text) {
+            timings = parseWeekdayDescriptions(legacyData.result.opening_hours.weekday_text);
+          }
+          console.log(`[GoogleReviewsCron] Fetched legacy details for ${placeId}`);
         }
       } catch (legacyErr) {
         console.warn(`[GoogleReviewsCron] Legacy API fallback failed for ${placeId}:`, legacyErr.message);
@@ -59,6 +88,7 @@ const fetchGooglePlaceDetails = async (placeId, apiKey) => {
       googleRating: result.rating || 0,
       googleReviewsCount: result.userRatingCount || 0,
       googleReviews,
+      timings,
     };
   } catch (err) {
     console.error(`[GoogleReviewsCron] Fetch error for placeId ${placeId}:`, err.message);
@@ -99,12 +129,16 @@ const runGoogleReviewsSync = async () => {
       const details = await fetchGooglePlaceDetails(biz.googlePlaceId, apiKey);
 
       if (details) {
-        await Business.findByIdAndUpdate(biz._id, {
+        const updateData = {
           googleRating: details.googleRating,
           googleReviewsCount: details.googleReviewsCount,
           googleReviews: details.googleReviews,
           googleLinked: true,
-        });
+        };
+        if (details.timings) {
+          updateData.timings = details.timings;
+        }
+        await Business.findByIdAndUpdate(biz._id, updateData);
         updated++;
         console.log(
           `[GoogleReviewsCron] ✓ Synced "${biz.name}" — ` +

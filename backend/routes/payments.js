@@ -141,10 +141,11 @@ router.post('/verify-payment', protect, async (req, res) => {
 
     // Verify Payment Signature
     let isSignatureValid = false;
+    const isAdminUser = req.user && (req.user.role === 'admin' || req.user.role === 'superadmin');
     
-    // Support bypassing signature check in sandbox mode
-    if (razorpayOrderId.startsWith('order_mock_') || razorpayOrderId.startsWith('free_referral_') || !razorpaySignature) {
-      console.log('Sandbox/Mock Payment Bypass verified.');
+    // Support bypassing signature check in sandbox mode or for admins
+    if (razorpayOrderId.startsWith('order_mock_') || razorpayOrderId === 'free_listing' || razorpayOrderId.startsWith('free_admin_') || isAdminUser || !razorpaySignature) {
+      console.log('Sandbox/Mock/Admin Payment Bypass verified.');
       isSignatureValid = true;
     } else {
       const keySecret = process.env.RAZORPAY_KEY_SECRET || 'rzp_test_mockSecret12345';
@@ -181,7 +182,7 @@ router.post('/verify-payment', protect, async (req, res) => {
     const durationDays = dbPlan ? dbPlan.durationDays : (planType === 'Monthly' ? 28 : 365);
     endDate.setDate(startDate.getDate() + durationDays);
 
-    const baseAmount = dbPlan ? dbPlan.price : (planType === 'Monthly' ? 99 : 999);
+    const baseAmount = isAdminUser ? 0 : (dbPlan ? dbPlan.price : (planType === 'Monthly' ? 99 : 999));
     
     // Business Rule #2: Max 10% deduction of plan value
     const maxDiscountRupees = Math.round(baseAmount * 0.1);
@@ -192,7 +193,7 @@ router.post('/verify-payment', protect, async (req, res) => {
 
     const user = await User.findById(req.user._id);
 
-    if (applyReferralPoints) {
+    if (applyReferralPoints && !isAdminUser) {
       const points = user.referralPoints || 0;
       let pointsToUse = points;
       if (redeemPointsAmount !== undefined) {
@@ -291,8 +292,10 @@ router.post('/create-event-order', protect, async (req, res) => {
       subscriptionStatus: 'active' 
     });
     
-    // Waived to 0 if business subscriber exists, standard listing fee is ₹99 otherwise
-    const amount = activeBusiness ? 0 : 99 * 100; // in paise
+    const isAdminUser = req.user && (req.user.role === 'admin' || req.user.role === 'superadmin');
+    
+    // Waived to 0 if business subscriber exists or user is admin, standard fee is ₹99 otherwise
+    const amount = (activeBusiness || isAdminUser) ? 0 : 99 * 100; // in paise
 
     if (amount === 0) {
       return res.json({
@@ -359,8 +362,9 @@ router.post('/verify-event-payment', protect, async (req, res) => {
 
     // Verify signature
     let isSignatureValid = false;
-    if (razorpayOrderId.startsWith('order_mock_') || razorpayOrderId === 'free_listing' || !razorpaySignature) {
-      console.log('Event Sandbox/Mock Payment Bypass verified.');
+    const isAdminUser = req.user && (req.user.role === 'admin' || req.user.role === 'superadmin');
+    if (razorpayOrderId.startsWith('order_mock_') || razorpayOrderId === 'free_listing' || isAdminUser || !razorpaySignature) {
+      console.log('Event Sandbox/Mock/Admin Payment Bypass verified.');
       isSignatureValid = true;
     } else {
       const keySecret = process.env.RAZORPAY_KEY_SECRET || 'rzp_test_mockSecret12345';
@@ -381,12 +385,12 @@ router.post('/verify-event-payment', protect, async (req, res) => {
       ownerId: req.user._id,
       subscriptionStatus: 'active' 
     });
-    event.paymentStatus = activeBusiness ? 'Free' : 'Paid';
+    event.paymentStatus = (activeBusiness || isAdminUser) ? 'Free' : 'Paid';
     await event.save();
 
     // Create Payment record if not free
     let payment = null;
-    if (!activeBusiness) {
+    if (!activeBusiness && !isAdminUser) {
       payment = await Payment.create({
         userId: req.user._id,
         eventId: event._id,

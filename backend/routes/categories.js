@@ -11,6 +11,10 @@ router.get('/', async (req, res, next) => {
   try {
     const { seedDefaultCategories } = require('../models/Category');
     await seedDefaultCategories();
+
+    const { syncAllApprovedCategories } = require('../utils/categoryHelper');
+    await syncAllApprovedCategories();
+
     const categories = await Category.find().sort({ categoryName: 1 });
     return sendSuccess(res, 200, 'Categories retrieved successfully', categories);
   } catch (err) {

@@ -5,8 +5,99 @@ import {
   ArrowRight, Eye, Grid, Shield, CreditCard, LayoutDashboard, Store, BookOpen, Calendar, 
   MessageSquare, CreditCard as CardIcon, Bell, BarChart3, Settings, LogOut, Search, User, 
   MapPin, ChevronRight, Landmark, Trash2, Mail, Globe, Award, ShieldAlert, CheckCircle2,
-  Clock, Plus, Filter, ShieldCheck as ShieldOk, Activity, Cpu, Database, Terminal, Gift, Smile
+  Clock, Plus, Filter, ShieldCheck as ShieldOk, Activity, Cpu, Database, Terminal, Gift, Smile,
+  Upload
 } from 'lucide-react';
+
+const availableCategories = [
+  'Automotive',
+  'Beauty & Wellness',
+  'Education',
+  'Electronics',
+  'Food & Restaurants',
+  'Health & Medical',
+  'Home Services',
+  'Real Estate',
+  'Shopping',
+  'Manufacturing',
+  'Professional Services',
+  'Travel & Hospitality',
+  'Construction',
+  'Agriculture',
+  'Finance & Insurance',
+  'Events & Entertainment',
+  'Sports & Fitness',
+  'Governmental organisations',
+  'Others'
+];
+
+const parentCategoryMapping = {
+  'Shopping': [
+    'Grocery Stores', 'Supermarkets', 'Vegetable & Fruit Shops', 'Textile & Garments', 
+    'Footwear Shops', 'Jewelry Shops', 'Gift Shops', 'Stationery & Book Stores', 
+    'Furniture Shops', 'Hardware Stores', 'Paint Stores', 'Pet Shops', 'Cosmetic Stores'
+  ],
+  'Electronics': [
+    'Mobile Stores', 'Computer & Laptop Stores', 'Electronics & Appliances'
+  ],
+  'Food & Restaurants': [
+    'Restaurants', 'Hotels & Lodges', 'Bakeries', 'Cafes & Tea Shops', 
+    'Sweet Shops', 'Fast Food Centers', 'Catering Services', 'Juice & Ice Cream Parlors'
+  ],
+  'Health & Medical': [
+    'Hospitals', 'Clinics', 'Dental Clinics', 'Pharmacies', 
+    'Diagnostic Labs', 'Physiotherapy Centers', 'Veterinary Clinics'
+  ],
+  'Beauty & Wellness': [
+    'Beauty Parlours', 'Salons & Barbers', 'Spa & Wellness Centers'
+  ],
+  'Education': [
+    'Schools', 'Colleges', 'Tuition Centers', 'Coaching Institutes', 
+    'Computer Training Centers', 'Driving Schools'
+  ],
+  'Automotive': [
+    'Car Showrooms', 'Bike Showrooms', 'Automobile Service Centers', 
+    'Car Wash Services', 'Tyre Shops', 'Spare Parts Dealers', 'Petrol Bunks'
+  ],
+  'Home Services': [
+    'Electricians', 'Plumbers', 'Carpenters', 'AC Service & Repair', 
+    'Home Cleaning Services', 'Interior Designers', 'Pest Control Services'
+  ],
+  'Real Estate': [
+    'Real Estate Agencies'
+  ],
+  'Construction': [
+    'Builders & Contractors', 'Construction Material Suppliers', 'Cement & Steel Dealers', 
+    'Architects', 'Borewell Services'
+  ],
+  'Agriculture': [
+    'Farm Equipment Dealers', 'Coconut Traders', 'Fertilizer & Pesticide Shops', 
+    'Dairy Farms', 'Poultry Farms', 'Agricultural Consultants', 'Irrigation Equipment Suppliers'
+  ],
+  'Professional Services': [
+    'Chartered Accountants', 'Auditors', 'Advocates / Lawyers', 'Tax Consultants'
+  ],
+  'Finance & Insurance': [
+    'Insurance Agents', 'Financial Advisors'
+  ],
+  'Events & Entertainment': [
+    'Event Organizers', 'Wedding Planners', 'Photography & Videography', 
+    'Decoration Services', 'Sound & Lighting Services', 'Printing & Flex Services'
+  ],
+  'Travel & Hospitality': [
+    'Travel Agencies', 'Tours & Travels', 'Vehicle Rentals', 'Taxi Services', 'Bus Operators'
+  ],
+  'Sports & Fitness': [
+    'Gyms', 'Yoga Centers', 'Sports Academies', 'Sports Equipment Stores'
+  ],
+  'Governmental organisations': [
+    'Taluk Office', 'Municipality', 'Police Stations', 'Hospitals', 'Banks', 'Schools'
+  ],
+  'Others': [
+    'Temples', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs', 'Others'
+  ]
+};
+
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -107,6 +198,170 @@ export default function AdminDashboard() {
   const [referralsError, setReferralsError] = useState('');
   const [referralFilter, setReferralFilter] = useState('All'); // All | Pending | Completed | Rejected
   const [referralSearch, setReferralSearch] = useState('');
+
+  // Directory Add Modal States
+  const [showAddDirectoryModal, setShowAddDirectoryModal] = useState(false);
+  const [dirGmbLink, setDirGmbLink] = useState('');
+  const [isCustomMain, setIsCustomMain] = useState(false);
+  const [dirAutofillLoading, setDirAutofillLoading] = useState(false);
+  const [dirAutofillSuccess, setDirAutofillSuccess] = useState(false);
+  const [dirSubmitLoading, setDirSubmitLoading] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+
+  const initialDirForm = {
+    name: '',
+    requestedParentCategory: '',
+    category: '',
+    customCategoryName: '',
+    categoryStatus: 'Normal',
+    address: '',
+    locality: '',
+    pincode: '642126',
+    phone: '',
+    website: '',
+    googleMapsLocation: '',
+    googlePlaceId: '',
+    description: '',
+    latitude: 10.5891,
+    longitude: 77.2412,
+    googleRating: 0,
+    googleReviewsCount: 0,
+    googleReviews: [],
+    logoUrl: '',
+    coverImageUrl: '',
+    galleryUrls: []
+  };
+  const [dirForm, setDirForm] = useState(initialDirForm);
+
+  const resetDirectoryForm = () => {
+    setDirForm(initialDirForm);
+    setDirGmbLink('');
+    setDirAutofillLoading(false);
+    setDirAutofillSuccess(false);
+    setLogoUploading(false);
+    setCoverUploading(false);
+    setGalleryUploading(false);
+    setIsCustomMain(false);
+  };
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image file size must be less than 5MB.');
+      return;
+    }
+
+    setLogoUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('ubt_token')}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setDirForm(prev => ({ ...prev, logoUrl: data.url }));
+      } else {
+        alert(data.message || 'Failed to upload logo.');
+      }
+    } catch (err) {
+      console.error('Logo upload error:', err);
+      alert('Network error uploading logo.');
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  const handleCoverUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image file size must be less than 5MB.');
+      return;
+    }
+
+    setCoverUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('ubt_token')}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setDirForm(prev => ({ ...prev, coverImageUrl: data.url }));
+      } else {
+        alert(data.message || 'Failed to upload cover image.');
+      }
+    } catch (err) {
+      console.error('Cover upload error:', err);
+      alert('Network error uploading cover image.');
+    } finally {
+      setCoverUploading(false);
+    }
+  };
+
+  const handleGalleryUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setGalleryUploading(true);
+    const uploadedUrls = [];
+
+    for (const file of files) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`File ${file.name} is too large. Must be less than 5MB.`);
+        continue;
+      }
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const res = await fetch('http://localhost:5000/api/upload', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('ubt_token')}`
+          },
+          body: formData
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          uploadedUrls.push(data.url);
+        } else {
+          console.warn(`Failed to upload ${file.name}:`, data.message);
+        }
+      } catch (err) {
+        console.error(`Error uploading ${file.name}:`, err);
+      }
+    }
+
+    if (uploadedUrls.length > 0) {
+      setDirForm(prev => ({
+        ...prev,
+        galleryUrls: [...(prev.galleryUrls || []), ...uploadedUrls]
+      }));
+    }
+    setGalleryUploading(false);
+  };
 
   const fetchAppTestimonials = async () => {
     setTestimonialsLoading(true);
@@ -340,6 +595,136 @@ export default function AdminDashboard() {
       // Simulate offline update
       setReferrals(prev => prev.map(r => r._id === referralId ? { ...r, status: action === 'approve' ? 'completed' : 'rejected', rejectionReason } : r));
       alert(`Referral successfully ${action}d (simulated offline mode)!`);
+    }
+  };
+
+  const handleDirLinkAutofill = async () => {
+    if (!dirGmbLink.trim()) return;
+    
+    setDirAutofillLoading(true);
+    setDirAutofillSuccess(false);
+    try {
+      const token = localStorage.getItem('ubt_token');
+      const res = await fetch('http://localhost:5000/api/businesses/google-autofill-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ link: dirGmbLink })
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        const d = data.data;
+        let placePincode = d.pincode ? d.pincode.replace(/\s+/g, '').slice(0, 6) : '642126';
+        
+        setDirForm(prev => ({
+          ...prev,
+          name: d.name || prev.name,
+          address: d.address || prev.address,
+          phone: d.phone || prev.phone,
+          website: d.website || prev.website,
+          locality: d.locality || prev.locality,
+          pincode: placePincode,
+          googlePlaceId: d.googlePlaceId || '',
+          googleRating: d.googleRating || 0,
+          googleReviewsCount: d.googleReviewsCount || 0,
+          googleReviews: d.googleReviews || [],
+          latitude: d.latitude || prev.latitude,
+          longitude: d.longitude || prev.longitude,
+          logoUrl: d.logoUrl || prev.logoUrl || '',
+          coverImageUrl: d.coverImageUrl || prev.coverImageUrl || '',
+          galleryUrls: d.galleryUrls || prev.galleryUrls || [],
+          googleMapsLocation: dirGmbLink
+        }));
+        setDirAutofillSuccess(true);
+      } else {
+        alert(data.message || 'Failed to auto-fill details from Google link.');
+      }
+    } catch (err) {
+      console.error('Error GMB link autofill:', err);
+      alert('Network error fetching details from Google Link.');
+    } finally {
+      setDirAutofillLoading(false);
+    }
+  };
+
+  const handlePublishDirListing = async () => {
+    if (!dirForm.name || !dirForm.requestedParentCategory || !dirForm.category || !dirForm.address || !dirForm.locality || !dirForm.phone) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    if (dirForm.category === 'Others' && (!dirForm.customCategoryName || !dirForm.customCategoryName.trim())) {
+      alert('Please specify your custom subcategory name');
+      return;
+    }
+    if (!dirForm.requestedParentCategory.trim()) {
+      alert('Please specify the main category name');
+      return;
+    }
+    
+    setDirSubmitLoading(true);
+    try {
+      const token = localStorage.getItem('ubt_token');
+      const payload = {
+        name: dirForm.name,
+        requestedParentCategory: dirForm.requestedParentCategory,
+        category: dirForm.category,
+        customCategoryName: dirForm.category === 'Others' ? dirForm.customCategoryName : '',
+        categoryStatus: dirForm.category === 'Others' || !availableCategories.includes(dirForm.requestedParentCategory) ? 'Pending Review' : 'Normal',
+        address: dirForm.address,
+        locality: dirForm.locality,
+        phone: dirForm.phone,
+        website: dirForm.website,
+        googleMapsLocation: dirForm.googleMapsLocation,
+        googlePlaceId: dirForm.googlePlaceId,
+        pincode: dirForm.pincode,
+        latitude: dirForm.latitude,
+        longitude: dirForm.longitude,
+        description: dirForm.description,
+        googleRating: dirForm.googleRating,
+        googleReviewsCount: dirForm.googleReviewsCount,
+        googleReviews: dirForm.googleReviews,
+        logoUrl: dirForm.logoUrl,
+        coverImageUrl: dirForm.coverImageUrl,
+        galleryUrls: dirForm.galleryUrls
+      };
+      
+      const res = await fetch('http://localhost:5000/api/admin/businesses/directory-add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        // Hydrate details back to list
+        const newBiz = {
+          ...data.data,
+          ownerName: (user && (user.fullName || user.name)) || 'Merchant',
+          ownerEmail: (user && user.email) || ''
+        };
+        setBusinesses(prev => [newBiz, ...prev]);
+        
+        // Update stats
+        setReportsData(prev => ({
+          ...prev,
+          total: (prev.total || 0) + 1
+        }));
+        
+        alert('Directory listing successfully added and published live!');
+        setShowAddDirectoryModal(false);
+        resetDirectoryForm();
+      } else {
+        alert(data.message || 'Failed to publish directory listing');
+      }
+    } catch (err) {
+      console.error('Error publishing directory listing:', err);
+      alert('Network error publishing directory listing');
+    } finally {
+      setDirSubmitLoading(false);
     }
   };
 
@@ -1043,9 +1428,17 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-3">
               <div className="flex flex-col text-right hidden sm:flex leading-none">
                 <span className="font-extrabold text-[#001c41] text-xs">{user?.fullName || 'Admin Account'}</span>
-                <span className="text-[8.5px] text-emerald-600 font-extrabold uppercase mt-1 tracking-wider bg-emerald-50 border border-emerald-100/50 px-2 py-0.5 rounded-full self-end">
-                  {user?.role || 'Admin'}
-                </span>
+                <div className="flex items-center gap-1.5 mt-1 self-end">
+                  <span className="text-[8.5px] text-emerald-600 font-extrabold uppercase tracking-wider bg-emerald-50 border border-emerald-100/50 px-2 py-0.5 rounded-full">
+                    {user?.role || 'Admin'}
+                  </span>
+                  <Link
+                    to="/dashboard"
+                    className="text-[9.5px] font-black text-[#027244] hover:text-[#005934] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/50 px-2 py-0.5 rounded uppercase transition-colors shrink-0"
+                  >
+                    Switch to Merchant
+                  </Link>
+                </div>
               </div>
               <div className="h-10 w-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-[#001c41] text-xs">
                 A
@@ -1556,6 +1949,13 @@ export default function AdminDashboard() {
                       <h3 className="font-extrabold text-[#001c41] text-base">Registrations Directory</h3>
                       <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Audit, suspend, or update registered listings across the town division</span>
                     </div>
+                    <button
+                      onClick={() => setShowAddDirectoryModal(true)}
+                      className="px-4 py-2.5 bg-[#027244] hover:bg-[#005934] text-white rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-emerald-850/15"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>Add Directory Listing</span>
+                    </button>
                   </div>
 
                   <div className="bg-white border border-slate-200/80 shadow-xs rounded-[28px] overflow-hidden">
@@ -1998,9 +2398,25 @@ export default function AdminDashboard() {
                                   <span className="text-[9px] font-extrabold text-slate-400">Biz Status: {biz.status}</span>
                                 </div>
                                 <span className="font-black text-sm mt-2 text-[#001c41]">"{biz.customCategoryName}"</span>
+                                {biz.requestedParentCategory && (
+                                  <span className="text-[11px] text-emerald-600 font-extrabold mt-1">Requested Parent Category: {biz.requestedParentCategory}</span>
+                                )}
                                 <span className="text-[10.5px] text-slate-400 font-semibold mt-1">Requested by business: <b className="text-slate-555">{biz.name}</b> ({biz.ownerId?.fullName || 'Owner'})</span>
                               </div>
                               <div className="flex flex-wrap gap-2 items-center">
+                                {biz.requestedParentCategory && (
+                                  <button
+                                    onClick={() => {
+                                      const confirmed = confirm(`Approve new subcategory "${biz.customCategoryName}" nested under requested parent category "${biz.requestedParentCategory}"?`);
+                                      if (confirmed) {
+                                        resolveCategoryRequest(biz._id, 'create', null, biz.customCategoryName, null, biz.requestedParentCategory);
+                                      }
+                                    }}
+                                    className="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold rounded-xl transition-all shadow-sm cursor-pointer font-sans"
+                                  >
+                                    Approve as Requested
+                                  </button>
+                                )}
                                 <select
                                   onChange={(e) => {
                                     const catId = e.target.value;
@@ -2032,6 +2448,7 @@ export default function AdminDashboard() {
                                     'Food & Restaurants', 'Health & Medical', 'Home Services', 'Real Estate',
                                     'Shopping', 'Professional Services', 'Travel & Hospitality', 'Construction',
                                     'Agriculture', 'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness',
+                                    'Governmental organisations',
                                     'Others'
                                   ].map(c => (
                                     <option key={c} value={c}>Parent: {c}</option>
@@ -3153,13 +3570,32 @@ export default function AdminDashboard() {
                           <div className="flex flex-col gap-4">
                             {pendingCategories.map(biz => (
                               <div key={biz._id} className="border border-slate-200 rounded-2xl p-5 flex flex-col justify-between gap-4 bg-slate-50/50 text-left">
-                                <div className="flex flex-col text-left font-sans">
-                                  <div className="flex items-center gap-2">
-                                    <span className="bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-sm">Custom category request</span>
-                                    <span className="text-[9px] font-extrabold text-slate-400">Biz Status: {biz.status}</span>
+                                <div className="flex justify-between items-start flex-wrap gap-4">
+                                  <div className="flex flex-col text-left font-sans">
+                                    <div className="flex items-center gap-2">
+                                      <span className="bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-sm">Custom category request</span>
+                                      <span className="text-[9px] font-extrabold text-slate-400">Biz Status: {biz.status}</span>
+                                    </div>
+                                    <span className="font-black text-sm mt-2 text-[#001c41]">"{biz.customCategoryName}"</span>
+                                    {biz.requestedParentCategory && (
+                                      <span className="text-[11px] text-emerald-600 font-extrabold mt-1">Requested Parent Category: {biz.requestedParentCategory}</span>
+                                    )}
+                                    <span className="text-[10.5px] text-slate-400 font-semibold mt-1">Requested by business: <b className="text-slate-555">{biz.name}</b> ({biz.ownerId?.fullName || 'Owner'})</span>
                                   </div>
-                                  <span className="font-black text-sm mt-2 text-[#001c41]">"{biz.customCategoryName}"</span>
-                                  <span className="text-[10.5px] text-slate-400 font-semibold mt-1">Requested by business: <b className="text-slate-555">{biz.name}</b> ({biz.ownerId?.fullName || 'Owner'})</span>
+                                  {biz.requestedParentCategory && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const confirmed = confirm(`Approve new subcategory "${biz.customCategoryName}" nested under requested parent category "${biz.requestedParentCategory}"?`);
+                                        if (confirmed) {
+                                          resolveCategoryRequest(biz._id, 'create', null, biz.customCategoryName, null, biz.requestedParentCategory);
+                                        }
+                                      }}
+                                      className="py-1.5 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold rounded-xl transition-all shadow-sm cursor-pointer"
+                                    >
+                                      Approve as Requested
+                                    </button>
+                                  )}
                                 </div>
                                 
                                 <div className="flex flex-col gap-4 mt-2 bg-slate-100/50 p-4 rounded-2xl w-full font-sans">
@@ -3290,6 +3726,7 @@ export default function AdminDashboard() {
                                               'Food & Restaurants', 'Health & Medical', 'Home Services', 'Real Estate',
                                               'Shopping', 'Professional Services', 'Travel & Hospitality', 'Construction',
                                               'Agriculture', 'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness',
+                                              'Governmental organisations',
                                               'Others'
                                             ].map(c => (
                                               <option key={c} value={c}>{c}</option>
@@ -4132,6 +4569,504 @@ export default function AdminDashboard() {
                   Approve & Publish
                 </button>
               </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {showAddDirectoryModal && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-end p-0">
+          <div className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between animate-slideLeft text-left font-sans">
+            
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] font-black text-[#027244] uppercase tracking-widest">Directory Panel</span>
+                <h3 className="font-extrabold text-[#001c41] text-base mt-1">Add Directory Listing</h3>
+              </div>
+              <button 
+                onClick={() => { setShowAddDirectoryModal(false); resetDirectoryForm(); }}
+                className="h-8.5 w-8.5 rounded-xl hover:bg-slate-200/80 flex items-center justify-center text-slate-450 hover:text-slate-700 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="p-6 flex-grow overflow-y-auto flex flex-col gap-5">
+              
+              {/* Google Autofill Section */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col gap-3">
+                <label className="text-xs font-black text-slate-700">Google Maps / GMB Link (Auto-fill)</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-grow">
+                    <Globe className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <input
+                      type="url"
+                      placeholder="Paste Google Maps or GMB Link..."
+                      value={dirGmbLink}
+                      onChange={(e) => setDirGmbLink(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 bg-white border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDirLinkAutofill}
+                    disabled={dirAutofillLoading || !dirGmbLink.trim()}
+                    className="px-4 py-2 bg-[#027244] hover:bg-[#005934] disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs rounded-xl cursor-pointer transition-colors shadow shadow-emerald-800/10 flex items-center gap-1 shrink-0"
+                  >
+                    {dirAutofillLoading ? (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Fetching...
+                      </>
+                    ) : (
+                      'Autofill'
+                    )}
+                  </button>
+                </div>
+                {dirAutofillLoading && (
+                  <div className="text-[10px] text-[#027244] font-bold flex items-center gap-1">
+                    <RefreshCw className="h-3 w-3 animate-spin" /> Importing details from Google...
+                  </div>
+                )}
+                {dirAutofillSuccess && (
+                  <div className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
+                    <Check className="h-3.5 w-3.5" /> Details, photos, and ratings imported successfully.
+                  </div>
+                )}
+              </div>
+
+              {/* Directory Listing Form Fields */}
+              <div className="flex flex-col gap-4">
+                
+                {/* Business Name */}
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-[10.5px] font-black text-slate-700 uppercase">Business Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={dirForm.name}
+                    onChange={(e) => setDirForm({ ...dirForm, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                    placeholder="e.g. Taluk Office"
+                  />
+                </div>
+
+                {/* Main Category Selector / Input */}
+                <div className="flex flex-col gap-1.5 text-left">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Main Category *</label>
+                    {(isCustomMain || (dirForm.requestedParentCategory !== '' && !availableCategories.includes(dirForm.requestedParentCategory))) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCustomMain(false);
+                          setDirForm(prev => ({
+                            ...prev,
+                            requestedParentCategory: '',
+                            category: '',
+                            customCategoryName: '',
+                            categoryStatus: 'Normal'
+                          }));
+                        }}
+                        className="text-[10px] text-emerald-600 hover:text-emerald-700 font-bold underline focus:outline-hidden"
+                      >
+                        Choose Standard
+                      </button>
+                    )}
+                  </div>
+                  {(isCustomMain || (dirForm.requestedParentCategory !== '' && !availableCategories.includes(dirForm.requestedParentCategory))) ? (
+                    <input
+                      type="text"
+                      placeholder="Specify Custom Main Category (e.g. Tourism, Logistics)"
+                      required
+                      value={availableCategories.includes(dirForm.requestedParentCategory) ? '' : dirForm.requestedParentCategory}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setDirForm({
+                          ...dirForm,
+                          requestedParentCategory: val,
+                          category: 'Others',
+                          categoryStatus: 'Pending Review'
+                        });
+                      }}
+                      className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                    />
+                  ) : (
+                    <select
+                      required
+                      value={availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : ''}
+                      onChange={(e) => {
+                        const parentVal = e.target.value;
+                        if (parentVal === 'Others') {
+                          setIsCustomMain(true);
+                          setDirForm({
+                            ...dirForm,
+                            requestedParentCategory: '',
+                            category: 'Others',
+                            customCategoryName: '',
+                            categoryStatus: 'Pending Review'
+                          });
+                        } else {
+                          const subs = parentCategoryMapping[parentVal] || [];
+                          const subVal = subs[0] || '';
+                          setDirForm({
+                            ...dirForm,
+                            requestedParentCategory: parentVal,
+                            category: subVal,
+                            customCategoryName: '',
+                            categoryStatus: 'Normal'
+                          });
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-slate-205 bg-white rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244] cursor-pointer"
+                    >
+                      <option value="">-- Choose Main Category --</option>
+                      {availableCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                {/* Subcategory Selector / Input */}
+                {dirForm.requestedParentCategory !== '' && (
+                  <div className="flex flex-col gap-1.5 text-left animate-fadeIn">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10.5px] font-black text-slate-700 uppercase">Sub Category *</label>
+                      {dirForm.category === 'Others' && !(isCustomMain || (dirForm.requestedParentCategory !== '' && !availableCategories.includes(dirForm.requestedParentCategory))) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const subs = parentCategoryMapping[dirForm.requestedParentCategory] || [];
+                            const subVal = subs[0] || '';
+                            setDirForm(prev => ({
+                              ...prev,
+                              category: subVal,
+                              customCategoryName: '',
+                              categoryStatus: 'Normal'
+                            }));
+                          }}
+                          className="text-[10px] text-emerald-600 hover:text-emerald-700 font-bold underline focus:outline-hidden"
+                        >
+                          Choose Standard
+                        </button>
+                      )}
+                    </div>
+                    {dirForm.category === 'Others' ? (
+                      <input
+                        type="text"
+                        placeholder="Specify Custom Subcategory (e.g. EV Charging Station, Solar Solutions)"
+                        required
+                        value={dirForm.customCategoryName || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setDirForm({
+                            ...dirForm,
+                            customCategoryName: val,
+                            categoryStatus: 'Pending Review'
+                          });
+                        }}
+                        className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                      />
+                    ) : (
+                      <select
+                        required
+                        value={((parentCategoryMapping[availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Others'] || []).includes(dirForm.category) || presetCategories.some(c => c.categoryName === dirForm.category)) ? dirForm.category : ''}
+                        onChange={(e) => {
+                          const subVal = e.target.value;
+                          const isCustomParent = !availableCategories.includes(dirForm.requestedParentCategory);
+                          setDirForm({
+                            ...dirForm,
+                            category: subVal,
+                            customCategoryName: '',
+                            categoryStatus: (subVal === 'Others' || isCustomParent) ? 'Pending Review' : 'Normal'
+                          });
+                        }}
+                        className="w-full px-3 py-2 border border-slate-205 bg-white rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244] cursor-pointer"
+                      >
+                        <option value="">-- Choose Subcategory --</option>
+                        {(parentCategoryMapping[availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Others'] || []).map(sub => (
+                          <option key={sub} value={sub}>{sub}</option>
+                        ))}
+                        {/* Dynamically append custom database categories matching this parent category */}
+                        {presetCategories
+                          .filter(c => c.parentCategory === (availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Others') && !(parentCategoryMapping[availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Others'] || []).includes(c.categoryName))
+                          .map(c => (
+                            <option key={c.categoryName} value={c.categoryName}>{c.categoryName}</option>
+                          ))}
+                        <option value="Others">Others (Custom Category)</option>
+                      </select>
+                    )}
+                  </div>
+                )}
+
+                {/* Phone */}
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-[10.5px] font-black text-slate-700 uppercase">Phone Number *</label>
+                  <input
+                    type="text"
+                    required
+                    value={dirForm.phone}
+                    onChange={(e) => setDirForm({ ...dirForm, phone: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                    placeholder="e.g. 04252 223456"
+                  />
+                </div>
+
+                {/* Website */}
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-[10.5px] font-black text-slate-700 uppercase">Website (Optional)</label>
+                  <input
+                    type="url"
+                    value={dirForm.website}
+                    onChange={(e) => setDirForm({ ...dirForm, website: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                    placeholder="e.g. https://udumalpet.nic.in"
+                  />
+                </div>
+
+                {/* Location / Locality */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Location / Locality *</label>
+                    <input
+                      type="text"
+                      required
+                      value={dirForm.locality}
+                      onChange={(e) => setDirForm({ ...dirForm, locality: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                      placeholder="e.g. Gandhi Nagar"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Pincode (Optional)</label>
+                    <input
+                      type="text"
+                      value={dirForm.pincode}
+                      onChange={(e) => setDirForm({ ...dirForm, pincode: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                      placeholder="e.g. 642126"
+                    />
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-[10.5px] font-black text-slate-700 uppercase">Address *</label>
+                  <textarea
+                    required
+                    rows={2}
+                    value={dirForm.address}
+                    onChange={(e) => setDirForm({ ...dirForm, address: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                    placeholder="e.g. Palani Road, Gandhi Nagar, Udumalpet"
+                  />
+                </div>
+
+                {/* Google Maps Link */}
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-[10.5px] font-black text-slate-700 uppercase">Google Maps Link</label>
+                  <input
+                    type="url"
+                    value={dirForm.googleMapsLocation}
+                    onChange={(e) => setDirForm({ ...dirForm, googleMapsLocation: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                    placeholder="e.g. https://maps.google.com/?q=..."
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-[10.5px] font-black text-slate-700 uppercase">Description (Optional)</label>
+                  <textarea
+                    rows={3}
+                    value={dirForm.description}
+                    onChange={(e) => setDirForm({ ...dirForm, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                    placeholder="Describe this listing..."
+                  />
+                </div>
+
+                {/* Google Ratings and Reviews */}
+                <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 mt-2">
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <div className="flex items-center gap-1">
+                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-450" />
+                      <label className="text-[10.5px] font-black text-slate-700 uppercase">Google Rating</label>
+                    </div>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="5"
+                      value={dirForm.googleRating || ''}
+                      onChange={(e) => setDirForm({ ...dirForm, googleRating: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                      placeholder="e.g. 4.5"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Reviews Count</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={dirForm.googleReviewsCount || ''}
+                      onChange={(e) => setDirForm({ ...dirForm, googleReviewsCount: parseInt(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                      placeholder="e.g. 48"
+                    />
+                  </div>
+                </div>
+
+                {/* Logo Image Upload */}
+                <div className="flex flex-col gap-1.5 text-left border-t border-slate-100 pt-4 mt-2">
+                  <label className="text-[10.5px] font-black text-slate-700 uppercase">Logo Image</label>
+                  <div className="flex items-center gap-4">
+                    <div className="relative h-20 w-20 rounded-full border-2 border-dashed border-slate-350 flex items-center justify-center bg-slate-50 overflow-hidden shrink-0 group">
+                      {dirForm.logoUrl ? (
+                        <>
+                          <img src={dirForm.logoUrl} alt="Logo" className="h-full w-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setDirForm({ ...dirForm, logoUrl: '' })}
+                            className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity cursor-pointer border-none"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </>
+                      ) : logoUploading ? (
+                        <RefreshCw className="h-6 w-6 animate-spin text-[#027244]" />
+                      ) : (
+                        <label className="cursor-pointer flex flex-col items-center justify-center text-slate-400 hover:text-[#027244] transition-colors w-full h-full">
+                          <Upload className="h-5 w-5" />
+                          <span className="text-[9px] font-bold mt-1">Upload</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-xs font-bold text-slate-750">Business Logo</span>
+                      <span className="text-[10px] text-slate-400 font-semibold mt-1">Upload a square logo. Max size 5MB.</span>
+                      {dirForm.logoUrl && (
+                        <span className="text-[9.5px] text-[#027244] font-bold mt-1.5 truncate max-w-xs">{dirForm.logoUrl}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cover Image Upload */}
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-[10.5px] font-black text-slate-700 uppercase">Cover Image</label>
+                  <div className="relative h-36 w-full rounded-2xl border-2 border-dashed border-slate-350 flex items-center justify-center bg-slate-50 overflow-hidden group">
+                    {dirForm.coverImageUrl ? (
+                      <>
+                        <img src={dirForm.coverImageUrl} alt="Cover Banner" className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setDirForm({ ...dirForm, coverImageUrl: '' })}
+                          className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity cursor-pointer border-none"
+                        >
+                          <div className="flex items-center gap-1.5 bg-rose-600 px-3 py-1.5 rounded-lg text-xs font-bold shadow-md">
+                            <Trash2 className="h-4 w-4" /> Remove Cover
+                          </div>
+                        </button>
+                      </>
+                    ) : coverUploading ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <RefreshCw className="h-7 w-7 animate-spin text-[#027244]" />
+                        <span className="text-[10px] text-slate-400 font-bold">Uploading Cover...</span>
+                      </div>
+                    ) : (
+                      <label className="cursor-pointer flex flex-col items-center justify-center text-slate-400 hover:text-[#027244] transition-colors w-full h-full p-4">
+                        <Upload className="h-6 w-6" />
+                        <span className="text-xs font-extrabold mt-1">Upload Cover Photo</span>
+                        <span className="text-[10px] text-slate-450 font-semibold mt-0.5">High-quality landscape banner. Max size 5MB.</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleCoverUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                  {dirForm.coverImageUrl && (
+                    <span className="text-[9.5px] text-[#027244] font-bold truncate max-w-full">{dirForm.coverImageUrl}</span>
+                  )}
+                </div>
+
+                {/* Gallery Images Upload */}
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-[10.5px] font-black text-slate-700 uppercase">Gallery Images</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {/* Upload button card */}
+                    <label className="h-20 border-2 border-dashed border-slate-350 rounded-xl bg-slate-50 hover:bg-slate-100 flex flex-col items-center justify-center text-slate-400 hover:text-[#027244] transition-colors cursor-pointer p-2 shrink-0">
+                      {galleryUploading ? (
+                        <RefreshCw className="h-5 w-5 animate-spin text-[#027244]" />
+                      ) : (
+                        <>
+                          <Plus className="h-5 w-5" />
+                          <span className="text-[9px] font-bold mt-1">Add Photo</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleGalleryUpload}
+                        className="hidden"
+                        disabled={galleryUploading}
+                      />
+                    </label>
+
+                    {/* Previews */}
+                    {dirForm.galleryUrls && dirForm.galleryUrls.map((url, idx) => (
+                      <div key={idx} className="relative h-20 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 group">
+                        <img src={url} alt={`Gallery ${idx + 1}`} className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newUrls = dirForm.galleryUrls.filter((_, i) => i !== idx);
+                            setDirForm({ ...dirForm, galleryUrls: newUrls });
+                          }}
+                          className="absolute top-1 right-1 h-5 w-5 rounded-full bg-slate-950/70 text-white flex items-center justify-center hover:bg-rose-600 transition-colors cursor-pointer border-none"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-semibold mt-1">Select multiple photos for your business gallery. Max size 5MB each.</span>
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-slate-200 bg-slate-50 flex gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => { setShowAddDirectoryModal(false); resetDirectoryForm(); }}
+                className="flex-1 py-3 border border-slate-250 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl text-center transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={dirSubmitLoading || !dirForm.name || !dirForm.requestedParentCategory || !dirForm.category || !dirForm.address || !dirForm.locality || !dirForm.phone || (dirForm.category === 'Others' && !dirForm.customCategoryName?.trim())}
+                onClick={handlePublishDirListing}
+                className="flex-1 py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl text-center shadow shadow-emerald-800/10 cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {dirSubmitLoading ? 'Publishing...' : 'Publish Listing'}
+              </button>
             </div>
 
           </div>

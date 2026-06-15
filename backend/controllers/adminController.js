@@ -39,6 +39,9 @@ const moderateBusiness = async (req, res, next) => {
 
     business.status = nextStatus;
     business.verificationStatus = nextVerification;
+    if (action === 'approve' || action === 'reactivate') {
+      business.subscriptionStatus = 'active';
+    }
     if (action === 'suspend') {
       business.subscriptionStatus = 'none';
       business.isPremium = false;
@@ -60,6 +63,8 @@ const moderateBusiness = async (req, res, next) => {
     if (action === 'approve' || action === 'reactivate') {
       const { checkAndCompleteReferralByBusiness } = require('../utils/referralHelper');
       await checkAndCompleteReferralByBusiness(business._id);
+      const { ensureCategoriesExist } = require('../utils/categoryHelper');
+      await ensureCategoriesExist(business);
     }
 
     // Log the administrative action audit trail

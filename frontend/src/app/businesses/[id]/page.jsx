@@ -30,6 +30,19 @@ const isFoodRelated = (category, customCategoryName) => {
     foodKeywords.some(keyword => cat.includes(keyword) || sub.includes(keyword))
   );
 };
+const isGovernmentalOrPublic = (biz) => {
+  if (!biz) return false;
+  const parent = (biz.requestedParentCategory || '').toLowerCase();
+  const cat = (biz.category || '').toLowerCase();
+  
+  const govParents = ['governmental organisations', 'government organisations', 'governmental organisation', 'government organisation'];
+  if (govParents.includes(parent)) return true;
+  
+  const govCats = ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'];
+  if (govCats.includes(cat)) return true;
+  
+  return false;
+};
 
 export default function BusinessDetail() {
   const params = useParams();
@@ -200,6 +213,7 @@ export default function BusinessDetail() {
           googleRating: googlePlace.googleRating || 4.7,
           googleReviewsCount: googlePlace.googleReviewsCount || 10,
           googleReviews: googlePlace.googleReviews || [],
+          timings: googlePlace.openingHours || googlePlace.timings || business.timings,
           isAddressVerified: true,
           googleLinked: true
         };
@@ -223,7 +237,8 @@ export default function BusinessDetail() {
           googlePlaceId: googlePlace.googlePlaceId,
           googleRating: googlePlace.googleRating,
           googleReviewsCount: googlePlace.googleReviewsCount,
-          googleReviews: googlePlace.googleReviews
+          googleReviews: googlePlace.googleReviews,
+          timings: googlePlace.openingHours || googlePlace.timings
         })
       });
       const syncData = await syncRes.json();
@@ -1156,7 +1171,7 @@ Please confirm availability and delivery time.`;
             {/* Website and Social Media links below Business Name */}
             {(business.website || business.facebook || business.instagram) && (
               <div className="mt-2.5 flex flex-wrap items-center gap-4 text-xs font-black text-slate-350">
-                {business.website && (
+                {business.website && !isGovernmentalOrPublic(business) && (
                   <a 
                     href={business.website.startsWith('http') ? business.website : `https://${business.website}`} 
                     target="_blank" 
@@ -1264,7 +1279,7 @@ Please confirm availability and delivery time.`;
                 )}
 
                 {/* WhatsApp Action */}
-                {!isExpired && business.whatsapp && (
+                {!isExpired && business.whatsapp && !isGovernmentalOrPublic(business) && (
                   <button 
                     onClick={() => handleWhatsApp(business.whatsapp, business.name)}
                     title="Chat on WhatsApp"
@@ -1298,44 +1313,46 @@ Please confirm availability and delivery time.`;
       </section>
 
       {/* Tabs navigation bar */}
-      <section className="w-full bg-white border-b border-slate-200/80 sticky top-[76px] z-20 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 flex overflow-x-auto gap-8">
-          {[
-            { id: 'overview', label: 'Overview' },
-            ...(isFoodRelated(business?.category, business?.customCategoryName) ? [
-              { id: 'menu', label: `Menu${menuItems.length > 0 ? ` (${menuItems.length})` : ''}` }
-            ] : []),
-            { id: 'services', label: 'Services' },
-            { id: 'photos', label: `Photos (${galleryCount})` },
-            { id: 'reviews', label: `Reviews (${allReviews.length})` },
-            { id: 'offers', label: `Offers (${business.offers ? business.offers.filter(o => o.active !== false).length : 0})` },
-            { id: 'about', label: 'About' },
-            ...((branches.length > 0 || isOwner) ? [{ id: 'branches', label: branches.length > 0 ? `Branches (${branches.length + 1})` : 'Branches' }] : []),
-            { id: 'map', label: 'Map & Location' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`py-4.5 text-xs font-black border-b-2 uppercase tracking-wider shrink-0 transition-all cursor-pointer ${
-                activeTab === tab.id 
-                  ? 'border-emerald-600 text-emerald-600' 
-                  : 'border-transparent text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </section>
+      {!isGovernmentalOrPublic(business) && (
+        <section className="w-full bg-white border-b border-slate-200/80 sticky top-[76px] z-20 shadow-xs">
+          <div className="max-w-7xl mx-auto px-4 md:px-8 flex overflow-x-auto gap-8">
+            {[
+              { id: 'overview', label: 'Overview' },
+              ...(isFoodRelated(business?.category, business?.customCategoryName) ? [
+                { id: 'menu', label: `Menu${menuItems.length > 0 ? ` (${menuItems.length})` : ''}` }
+              ] : []),
+              { id: 'services', label: 'Services' },
+              { id: 'photos', label: `Photos (${galleryCount})` },
+              { id: 'reviews', label: `Reviews (${allReviews.length})` },
+              { id: 'offers', label: `Offers (${business.offers ? business.offers.filter(o => o.active !== false).length : 0})` },
+              { id: 'about', label: 'About' },
+              ...((branches.length > 0 || isOwner) ? [{ id: 'branches', label: branches.length > 0 ? `Branches (${branches.length + 1})` : 'Branches' }] : []),
+              { id: 'map', label: 'Map & Location' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`py-4.5 text-xs font-black border-b-2 uppercase tracking-wider shrink-0 transition-all cursor-pointer ${
+                  activeTab === tab.id 
+                    ? 'border-emerald-600 text-emerald-600' 
+                    : 'border-transparent text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Main Grid Content */}
       <section className="max-w-7xl w-full px-4 md:px-8 py-10 relative">
         <div 
           className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full"
           style={{
-            filter: business && business.subscriptionStatus !== 'active' && !isAdmin && !isOwner ? 'blur(8px) grayscale(20%)' : 'none',
-            pointerEvents: business && business.subscriptionStatus !== 'active' && !isAdmin && !isOwner ? 'none' : 'auto',
-            userSelect: business && business.subscriptionStatus !== 'active' && !isAdmin && !isOwner ? 'none' : 'auto',
+            filter: business && business.subscriptionStatus !== 'active' && !isGovernmentalOrPublic(business) && !isAdmin && !isOwner ? 'blur(8px) grayscale(20%)' : 'none',
+            pointerEvents: business && business.subscriptionStatus !== 'active' && !isGovernmentalOrPublic(business) && !isAdmin && !isOwner ? 'none' : 'auto',
+            userSelect: business && business.subscriptionStatus !== 'active' && !isGovernmentalOrPublic(business) && !isAdmin && !isOwner ? 'none' : 'auto',
           }}
         >
         
@@ -1355,182 +1372,246 @@ Please confirm availability and delivery time.`;
                 <p className="text-sm text-slate-500 leading-relaxed text-justify font-medium">{business.description}</p>
                 
                 {/* Highlights chip tags - dynamic from business.highlights */}
-                <div className="flex flex-wrap gap-2.5 mt-3">
-                  {(Array.isArray(business.highlights) && business.highlights.length > 0
-                    ? business.highlights
-                    : ['On-time Service', 'Expert Technicians', 'Quality Materials', 'Affordable Pricing']
-                  ).map((tag) => (
-                    <span key={tag} className="bg-emerald-50/50 border border-emerald-100 text-emerald-700 text-[11px] font-bold py-2 px-4 rounded-xl flex items-center gap-1.5">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" /> {tag}
-                    </span>
-                  ))}
-                </div>
+                {!isGovernmentalOrPublic(business) && (
+                  <div className="flex flex-wrap gap-2.5 mt-3">
+                    {(Array.isArray(business.highlights) && business.highlights.length > 0
+                      ? business.highlights
+                      : ['On-time Service', 'Expert Technicians', 'Quality Materials', 'Affordable Pricing']
+                    ).map((tag) => (
+                      <span key={tag} className="bg-emerald-50/50 border border-emerald-100 text-emerald-700 text-[11px] font-bold py-2 px-4 rounded-xl flex items-center gap-1.5">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" /> {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Specifications block (Upgrade from list to exact 2-column gorgeous details grid from Image 5) */}
               <div className="flex flex-col gap-4 border-t border-slate-100 pt-8">
                 <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                  <h3 className="text-lg font-extrabold text-slate-800 font-sans">Business Information</h3>
+                  <h3 className="text-lg font-extrabold text-slate-800 font-sans">
+                    {isGovernmentalOrPublic(business) ? 'Office Information' : 'Business Information'}
+                  </h3>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 mt-2 p-1 text-slate-700">
-                  {/* row 1 */}
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
-                      <Briefcase className="h-5 w-5" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Business Type</span>
-                      <span className="font-extrabold text-slate-800 text-sm mt-2">{business.type}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
-                      <Clock className="h-5 w-5" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Working Hours</span>
-                      <div className="flex flex-col mt-2 font-extrabold text-slate-800 text-sm leading-snug">
-                        {business.parentBusinessId && business.workingHours ? (
-                          <span>{business.workingHours}</span>
-                        ) : (
-                          <>
-                            <span>Mon - Sat: {business.timings?.Monday || '9:00 AM - 8:00 PM'}</span>
-                            {business.timings?.Sunday && <span>Sun: {business.timings.Sunday}</span>}
-                          </>
-                        )}
+                  {!isGovernmentalOrPublic(business) && (
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
+                        <Briefcase className="h-5 w-5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Business Type</span>
+                        <span className="font-extrabold text-slate-800 text-sm mt-2">{business.type}</span>
                       </div>
                     </div>
-                  </div>
+                  )}
+                            
+                  {isGovernmentalOrPublic(business) && (
+                    <>
+                      {business.website && (
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
+                            <Globe className="h-5 w-5" />
+                          </div>
+                          <div className="flex flex-col text-left">
+                            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Official Website</span>
+                            <a 
+                              href={business.website.startsWith('http') ? business.website : `https://${business.website}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-extrabold text-emerald-600 hover:text-emerald-700 text-sm mt-2 break-all"
+                            >
+                              {business.website}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+
+                      {business.phone && (
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
+                            <Phone className="h-5 w-5" />
+                          </div>
+                          <div className="flex flex-col text-left">
+                            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Contact Phone</span>
+                            <a 
+                              href={`tel:${business.phone}`}
+                              className="font-extrabold text-slate-800 hover:text-emerald-600 text-sm mt-2"
+                            >
+                              {business.phone}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+
+                      {business.email && (
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
+                            <Mail className="h-5 w-5" />
+                          </div>
+                          <div className="flex flex-col text-left">
+                            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Official Email</span>
+                            <a 
+                              href={`mailto:${business.email}`}
+                              className="font-extrabold text-slate-800 hover:text-emerald-600 text-sm mt-2 break-all"
+                            >
+                              {business.email}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+
+                      {(business.address || business.locality) && (
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
+                            <MapPin className="h-5 w-5" />
+                          </div>
+                          <div className="flex flex-col text-left">
+                            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Office Location</span>
+                            <span className="font-extrabold text-slate-800 text-sm mt-2 leading-relaxed">
+                              {business.address || `${business.locality}, Udumalpet, Tamil Nadu - ${business.pincode}`}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {!isGovernmentalOrPublic(business) && (
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
+                        <Clock className="h-5 w-5" />
+                      </div>
+                      <div className="flex flex-col w-full max-w-[240px]">
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">
+                          Working Hours
+                        </span>
+                        <div className="flex flex-col mt-2 font-extrabold text-slate-800 text-sm leading-snug">
+                          {business.parentBusinessId && business.workingHours ? (
+                            <span>{business.workingHours}</span>
+                          ) : (
+                            <>
+                              <span>Mon - Sat: {business.timings?.Monday || '9:00 AM - 8:00 PM'}</span>
+                              {business.timings?.Sunday && <span>Sun: {business.timings.Sunday}</span>}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* row 2 */}
-                  <div className="flex items-start gap-4 border-t border-slate-100 pt-5 md:border-t-0 md:pt-0">
-                    <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
-                      <Calendar className="h-5 w-5" />
+                  {!isGovernmentalOrPublic(business) && (
+                    <div className="flex items-start gap-4 border-t border-slate-100 pt-5 md:border-t-0 md:pt-0">
+                      <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
+                        <Calendar className="h-5 w-5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Year of Establishment</span>
+                        <span className="font-extrabold text-slate-800 text-sm mt-2">{business.yearEstablished || '2012'}</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Year of Establishment</span>
-                      <span className="font-extrabold text-slate-800 text-sm mt-2">{business.yearEstablished || '2012'}</span>
-                    </div>
-                  </div>
+                  )}
 
-                  <div className="flex items-start gap-4 border-t border-slate-100 pt-5 md:border-t-0 md:pt-0">
-                    <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
-                      <Globe className="h-5 w-5" />
+                  {!isGovernmentalOrPublic(business) && (
+                    <div className="flex items-start gap-4 border-t border-slate-100 pt-5 md:border-t-0 md:pt-0">
+                      <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
+                        <Globe className="h-5 w-5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Languages Known</span>
+                        <span className="font-extrabold text-slate-800 text-sm mt-2">{business.languagesKnown || 'Tamil, English'}</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Languages Known</span>
-                      <span className="font-extrabold text-slate-800 text-sm mt-2">{business.languagesKnown || 'Tamil, English'}</span>
-                    </div>
-                  </div>
+                  )}
 
                   {/* row 3 */}
-                  <div className="flex items-start gap-4 border-t border-slate-100 pt-5">
-                    <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
-                      <Users className="h-5 w-5" />
+                  {!isGovernmentalOrPublic(business) && (
+                    <div className="flex items-start gap-4 border-t border-slate-100 pt-5">
+                      <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Employees</span>
+                        <span className="font-extrabold text-slate-800 text-sm mt-2">{business.employeeCount || '10 - 20'}</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Employees</span>
-                      <span className="font-extrabold text-slate-800 text-sm mt-2">{business.employeeCount || '10 - 20'}</span>
-                    </div>
-                  </div>
+                  )}
 
-                  <div className="flex items-start gap-4 border-t border-slate-100 pt-5">
-                    <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
-                      <MapPin className="h-5 w-5" />
+                  {!isGovernmentalOrPublic(business) && (
+                    <div className="flex items-start gap-4 border-t border-slate-100 pt-5">
+                      <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
+                        <MapPin className="h-5 w-5" />
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Service Area</span>
+                        <span className="font-extrabold text-slate-800 text-sm mt-2 leading-relaxed">
+                          {business.serviceArea || 'Udumalpet, Pollachi, Palladam, Madathukulam and nearby areas'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex flex-col text-left">
-                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Service Area</span>
-                      <span className="font-extrabold text-slate-800 text-sm mt-2 leading-relaxed">
-                        {business.serviceArea || 'Udumalpet, Pollachi, Palladam, Madathukulam and nearby areas'}
-                      </span>
-                    </div>
-                  </div>
+                  )}
 
                   {/* row 4 - full width */}
-                  <div className="flex items-start gap-4 border-t border-slate-100 pt-5 md:col-span-2">
-                    <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
-                      <Award className="h-5 w-5" />
+                  {!isGovernmentalOrPublic(business) && (
+                    <div className="flex items-start gap-4 border-t border-slate-100 pt-5 md:col-span-2">
+                      <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
+                        <Award className="h-5 w-5" />
+                      </div>
+                      <div className="flex flex-col font-sans">
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">GST Number</span>
+                        <span className="font-extrabold text-slate-800 text-sm mt-2 tracking-wide">
+                          {isExpired ? 'Hidden due to expiry' : business.gstNumber || '33ABCDE1234F1Z5'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex flex-col font-sans">
-                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">GST Number</span>
-                      <span className="font-extrabold text-slate-800 text-sm mt-2 tracking-wide">
-                        {isExpired ? 'Hidden due to expiry' : business.gstNumber || '33ABCDE1234F1Z5'}
-                      </span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
               {/* Premium collage gallery */}
-              <div className="flex flex-col gap-4 border-t border-slate-100 pt-8">
-                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                  <h3 className="text-lg font-extrabold text-slate-800 font-sans">Photos & Gallery</h3>
-                </div>
-                
-                {galleryCount === 0 ? (
-                  <div className="w-full bg-slate-50/50 border border-dashed border-slate-200 rounded-3xl p-8 text-center flex flex-col items-center justify-center gap-3.5 mt-2 animate-fadeIn">
-                    <div className="h-12 w-12 rounded-2xl bg-emerald-550/10 border border-emerald-550/20 flex items-center justify-center text-emerald-600">
-                      <ImageIcon className="h-6 w-6" />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-slate-800 font-extrabold text-sm">No photos uploaded yet</span>
-                      <span className="text-xs text-slate-400 font-semibold">Add photos showing your storefront, services, products, or team.</span>
-                    </div>
-                    {isOwner && (
-                      <label className="py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-2 cursor-pointer transition-colors mt-1 select-none">
-                        <Upload className="h-3.5 w-3.5" /> Upload Photos
-                        <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" />
-                      </label>
-                    )}
+              {(!isGovernmentalOrPublic(business) || galleryCount > 0 || isOwner) && (
+                <div className="flex flex-col gap-4 border-t border-slate-100 pt-8">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <h3 className="text-lg font-extrabold text-slate-800 font-sans">Photos & Gallery</h3>
                   </div>
-                ) : galleryCount === 1 ? (
-                  <div className="grid grid-cols-1 gap-3 mt-2 animate-fadeIn">
-                    <div 
-                      className="h-80 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
-                      onClick={() => setActiveTab('photos')}
-                      style={{ 
-                        backgroundImage: `url('${displayGallery[0]}')`,
-                        filter: isExpired ? 'blur(4px)' : 'none'
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                  
+                  {galleryCount === 0 ? (
+                    <div className="w-full bg-slate-50/50 border border-dashed border-slate-200 rounded-3xl p-8 text-center flex flex-col items-center justify-center gap-3.5 mt-2 animate-fadeIn">
+                      <div className="h-12 w-12 rounded-2xl bg-emerald-550/10 border border-emerald-550/20 flex items-center justify-center text-emerald-600">
+                        <ImageIcon className="h-6 w-6" />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-slate-800 font-extrabold text-sm">No photos uploaded yet</span>
+                        <span className="text-xs text-slate-400 font-semibold">Add photos showing your storefront, services, products, or team.</span>
+                      </div>
+                      {isOwner && (
+                        <label className="py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-2 cursor-pointer transition-colors mt-1 select-none">
+                          <Upload className="h-3.5 w-3.5" /> Upload Photos
+                          <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" />
+                        </label>
+                      )}
                     </div>
-                  </div>
-                ) : galleryCount === 2 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 h-80 animate-fadeIn">
-                    {displayGallery.slice(0, 2).map((url, idx) => (
+                  ) : galleryCount === 1 ? (
+                    <div className="grid grid-cols-1 gap-3 mt-2 animate-fadeIn">
                       <div 
-                        key={idx}
-                        className="rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
+                        className="h-80 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
                         onClick={() => setActiveTab('photos')}
                         style={{ 
-                          backgroundImage: `url('${url}')`,
+                          backgroundImage: `url('${displayGallery[0]}')`,
                           filter: isExpired ? 'blur(4px)' : 'none'
                         }}
                       >
                         <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
                       </div>
-                    ))}
-                  </div>
-                ) : galleryCount === 3 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2 h-80 animate-fadeIn">
-                    <div 
-                      className="md:col-span-3 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
-                      onClick={() => setActiveTab('photos')}
-                      style={{ 
-                        backgroundImage: `url('${displayGallery[0]}')`,
-                        filter: isExpired ? 'blur(4px)' : 'none'
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
                     </div>
-                    <div className="md:col-span-2 grid grid-rows-2 gap-3 h-full">
-                      {displayGallery.slice(1, 3).map((url, idx) => (
+                  ) : galleryCount === 2 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 h-80 animate-fadeIn">
+                      {displayGallery.slice(0, 2).map((url, idx) => (
                         <div 
                           key={idx}
-                          className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
+                          className="rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
                           onClick={() => setActiveTab('photos')}
                           style={{ 
                             backgroundImage: `url('${url}')`,
@@ -1541,32 +1622,20 @@ Please confirm availability and delivery time.`;
                         </div>
                       ))}
                     </div>
-                  </div>
-                ) : galleryCount === 4 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2 h-80 animate-fadeIn">
-                    <div 
-                      className="md:col-span-3 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
-                      onClick={() => setActiveTab('photos')}
-                      style={{ 
-                        backgroundImage: `url('${displayGallery[0]}')`,
-                        filter: isExpired ? 'blur(4px)' : 'none'
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
-                    </div>
-                    <div className="md:col-span-2 grid grid-rows-2 gap-3 h-full">
+                  ) : galleryCount === 3 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2 h-80 animate-fadeIn">
                       <div 
-                        className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
+                        className="md:col-span-3 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
                         onClick={() => setActiveTab('photos')}
                         style={{ 
-                          backgroundImage: `url('${displayGallery[1]}')`,
+                          backgroundImage: `url('${displayGallery[0]}')`,
                           filter: isExpired ? 'blur(4px)' : 'none'
                         }}
                       >
                         <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        {displayGallery.slice(2, 4).map((url, idx) => (
+                      <div className="md:col-span-2 grid grid-rows-2 gap-3 h-full">
+                        {displayGallery.slice(1, 3).map((url, idx) => (
                           <div 
                             key={idx}
                             className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
@@ -1581,122 +1650,166 @@ Please confirm availability and delivery time.`;
                         ))}
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2 h-80 animate-fadeIn">
-                    <div 
-                      className="md:col-span-3 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
-                      onClick={() => setActiveTab('photos')}
-                      style={{ 
-                        backgroundImage: `url('${displayGallery[0]}')`,
-                        filter: isExpired ? 'blur(4px)' : 'none'
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                  ) : galleryCount === 4 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2 h-80 animate-fadeIn">
+                      <div 
+                        className="md:col-span-3 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
+                        onClick={() => setActiveTab('photos')}
+                        style={{ 
+                          backgroundImage: `url('${displayGallery[0]}')`,
+                          filter: isExpired ? 'blur(4px)' : 'none'
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                      </div>
+                      <div className="md:col-span-2 grid grid-rows-2 gap-3 h-full">
+                        <div 
+                          className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
+                          onClick={() => setActiveTab('photos')}
+                          style={{ 
+                            backgroundImage: `url('${displayGallery[1]}')`,
+                            filter: isExpired ? 'blur(4px)' : 'none'
+                          }}
+                        >
+                          <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {displayGallery.slice(2, 4).map((url, idx) => (
+                            <div 
+                              key={idx}
+                              className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
+                              onClick={() => setActiveTab('photos')}
+                              style={{ 
+                                backgroundImage: `url('${url}')`,
+                                filter: isExpired ? 'blur(4px)' : 'none'
+                              }}
+                            >
+                              <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <div className="md:col-span-2 grid grid-cols-2 gap-3 h-full">
-                      {displayGallery.slice(1, 5).map((url, idx) => {
-                        const isLast = idx === 3;
-                        const moreCount = galleryCount - 5;
-                        return (
-                          <div 
-                            key={idx}
-                            className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
-                            onClick={() => setActiveTab('photos')}
-                            style={{ 
-                              backgroundImage: `url('${url}')`,
-                              filter: isExpired ? 'blur(4px)' : 'none'
-                            }}
-                          >
-                            <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
-                            {isLast && moreCount > 0 && (
-                              <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] flex flex-col items-center justify-center text-white text-center select-none animate-fadeIn">
-                                <span className="text-lg font-black tracking-wide">+{moreCount}</span>
-                                <span className="text-[9px] font-black uppercase tracking-wider mt-0.5">More Photos</span>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2 h-80 animate-fadeIn">
+                      <div 
+                        className="md:col-span-3 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
+                        onClick={() => setActiveTab('photos')}
+                        style={{ 
+                          backgroundImage: `url('${displayGallery[0]}')`,
+                          filter: isExpired ? 'blur(4px)' : 'none'
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                      </div>
+                      <div className="md:col-span-2 grid grid-cols-2 gap-3 h-full">
+                        {displayGallery.slice(1, 5).map((url, idx) => {
+                          const isLast = idx === 3;
+                          const moreCount = galleryCount - 5;
+                          return (
+                            <div 
+                              key={idx}
+                              className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
+                              onClick={() => setActiveTab('photos')}
+                              style={{ 
+                                backgroundImage: `url('${url}')`,
+                                filter: isExpired ? 'blur(4px)' : 'none'
+                              }}
+                            >
+                              <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/10 transition-colors" />
+                              {isLast && moreCount > 0 && (
+                                <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] flex flex-col items-center justify-center text-white text-center select-none animate-fadeIn">
+                                  <span className="text-lg font-black tracking-wide">+{moreCount}</span>
+                                  <span className="text-[9px] font-black uppercase tracking-wider mt-0.5">More Photos</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
 
               {/* Our Services Quick View */}
-              <div className="flex flex-col gap-4 border-t border-slate-100 pt-8">
-                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                  <h3 className="text-lg font-extrabold text-slate-800 font-sans">Our Services</h3>
-                    <button 
-                      onClick={() => setActiveTab('services')}
-                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer flex items-center gap-0.5"
-                    >
-                      View All Services <ChevronRight className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                  {(Array.isArray(business.services) ? business.services : []).slice(0, 8).map((service, idx) => (
-                    <div key={idx} className="bg-white border border-slate-200 p-4 rounded-2xl flex items-center gap-3 shadow-2xs">
-                      <Check className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
-                      <span className="text-sm font-bold text-slate-700">{service}</span>
+              {!isGovernmentalOrPublic(business) && (
+                <div className="flex flex-col gap-4 border-t border-slate-100 pt-8">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <h3 className="text-lg font-extrabold text-slate-800 font-sans">Our Services</h3>
+                      <button 
+                        onClick={() => setActiveTab('services')}
+                        className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer flex items-center gap-0.5"
+                      >
+                        View All Services <ChevronRight className="h-3.5 w-3.5" />
+                      </button>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Customer Reviews Quick View */}
-              <div className="flex flex-col gap-6 border-t border-slate-100 pt-8">
-                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                  <h3 className="text-lg font-extrabold text-slate-800 font-sans">Customer Reviews ({allReviews.length})</h3>
-                  <button 
-                    onClick={() => setActiveTab('reviews')}
-                    className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer flex items-center gap-0.5"
-                  >
-                    View All Reviews <ChevronRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-                
-                {/* Rating Card & Top Reviews side by side */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Left score card */}
-                  <div className="md:col-span-1 bg-slate-50 border border-slate-200/80 rounded-3xl p-6 flex flex-col items-center justify-center text-center gap-2 shadow-2xs h-full min-h-[220px]">
-                    <span className="text-5xl font-black text-slate-800">{(business.googleRating ?? 0).toFixed(1)}</span>
-                    <div className="flex text-amber-400 gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`h-4.5 w-4.5 ${i < Math.floor(business.googleRating ?? 0) ? 'fill-current' : 'text-slate-200'}`} />
-                      ))}
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Out of 5 Stars</span>
-                  </div>
- 
-                  {/* Right reviews stream (2 items preview) */}
-                  <div className="md:col-span-2 flex flex-col gap-4">
-                    {allReviews.slice(0, 2).map((rev, idx) => (
-                      <div key={idx} className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-2.5 shadow-2xs text-left">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <div className="h-7 w-7 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-[10px] font-black text-emerald-700 uppercase">
-                              {(rev.authorName || 'R').charAt(0)}
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName || 'Anonymous'}</span>
-                              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">
-                                {rev.isGoogle ? 'Google Review' : 'Verified Customer'}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center text-amber-400 gap-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`h-3 w-3 ${i < rev.rating ? 'fill-current' : 'text-slate-200'}`} />
-                            ))}
-                          </div>
-                        </div>
-                        <p className="text-[11.5px] text-slate-550 font-medium leading-relaxed mt-0.5 line-clamp-2">{rev.text}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    {(Array.isArray(business.services) ? business.services : []).slice(0, 8).map((service, idx) => (
+                      <div key={idx} className="bg-white border border-slate-200 p-4 rounded-2xl flex items-center gap-3 shadow-2xs">
+                        <Check className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
+                        <span className="text-sm font-bold text-slate-700">{service}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* Customer Reviews Quick View */}
+              {!isGovernmentalOrPublic(business) && (
+                <div className="flex flex-col gap-6 border-t border-slate-100 pt-8">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <h3 className="text-lg font-extrabold text-slate-800 font-sans">Customer Reviews ({allReviews.length})</h3>
+                    <button 
+                      onClick={() => setActiveTab('reviews')}
+                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer flex items-center gap-0.5"
+                    >
+                      View All Reviews <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  
+                  {/* Rating Card & Top Reviews side by side */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Left score card */}
+                    <div className="md:col-span-1 bg-slate-50 border border-slate-200/80 rounded-3xl p-6 flex flex-col items-center justify-center text-center gap-2 shadow-2xs h-full min-h-[220px]">
+                      <span className="text-5xl font-black text-slate-800">{(business.googleRating ?? 0).toFixed(1)}</span>
+                      <div className="flex text-amber-400 gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`h-4.5 w-4.5 ${i < Math.floor(business.googleRating ?? 0) ? 'fill-current' : 'text-slate-200'}`} />
+                        ))}
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Out of 5 Stars</span>
+                    </div>
+   
+                    {/* Right reviews stream (2 items preview) */}
+                    <div className="md:col-span-2 flex flex-col gap-4">
+                      {allReviews.slice(0, 2).map((rev, idx) => (
+                        <div key={idx} className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-2.5 shadow-2xs text-left">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <div className="h-7 w-7 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-[10px] font-black text-emerald-700 uppercase">
+                                {(rev.authorName || 'R').charAt(0)}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName || 'Anonymous'}</span>
+                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">
+                                  {rev.isGoogle ? 'Google Review' : 'Verified Customer'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center text-amber-400 gap-0.5">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} className={`h-3 w-3 ${i < rev.rating ? 'fill-current' : 'text-slate-200'}`} />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-[11.5px] text-slate-550 font-medium leading-relaxed mt-0.5 line-clamp-2">{rev.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
             </div>
           )}
@@ -2375,7 +2488,9 @@ Please confirm availability and delivery time.`;
             {/* Sticky Contact Business Card */}
             <div className="bg-white border border-slate-200 shadow-lg rounded-[28px] p-6 flex flex-col gap-5 text-left">
               <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                <span className="font-black text-sm text-[#001c41] uppercase tracking-wider">Contact Business</span>
+                <span className="font-black text-sm text-[#001c41] uppercase tracking-wider">
+                  {isGovernmentalOrPublic(business) ? 'Contact Office' : 'Contact Business'}
+                </span>
                 <div className="flex items-center gap-2">
                   {(business.isAddressVerified || (business.googlePlaceId && business.googlePlaceId !== '') || (business.googleBusinessLink && business.googleBusinessLink !== '') || business.googleLinked) ? (
                     <span className="bg-emerald-50 text-emerald-700 border border-emerald-150 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-0.5">
@@ -2406,65 +2521,67 @@ Please confirm availability and delivery time.`;
               </div>
 
               {/* Enquiry box */}
-              <form onSubmit={handleSendEnquiry} className="border-t border-slate-100 pt-5 flex flex-col gap-3.5 mt-2">
-                <span className="font-extrabold text-xs text-slate-700 uppercase tracking-widest">Send Enquiry</span>
-                
-                {enquirySuccess && (
-                  <div className="bg-emerald-50 border border-emerald-250 text-[#027244] rounded-xl p-3 text-[10.5px] font-bold flex items-center gap-2 animate-fadeIn">
-                    <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
-                    <span>Enquiry successfully sent to owner!</span>
-                  </div>
-                )}
+              {!isGovernmentalOrPublic(business) && (
+                <form onSubmit={handleSendEnquiry} className="border-t border-slate-100 pt-5 flex flex-col gap-3.5 mt-2">
+                  <span className="font-extrabold text-xs text-slate-700 uppercase tracking-widest">Send Enquiry</span>
+                  
+                  {enquirySuccess && (
+                    <div className="bg-emerald-50 border border-emerald-250 text-[#027244] rounded-xl p-3 text-[10.5px] font-bold flex items-center gap-2 animate-fadeIn">
+                      <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
+                      <span>Enquiry successfully sent to owner!</span>
+                    </div>
+                  )}
 
-                <input
-                  type="text"
-                  placeholder="Your Name..."
-                  value={enquiryName}
-                  onChange={(e) => setEnquiryName(e.target.value)}
-                  disabled={isExpired}
-                  className="py-2.5 px-3 border border-slate-200 rounded-xl shadow-2xs text-xs font-bold text-slate-700 bg-slate-50/20 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 disabled:opacity-50"
-                />
-                
-                <input
-                  type="text"
-                  placeholder="Your Phone Number..."
-                  value={enquiryPhone}
-                  onChange={(e) => setEnquiryPhone(e.target.value)}
-                  disabled={isExpired}
-                  className="py-2.5 px-3 border border-slate-200 rounded-xl shadow-2xs text-xs font-bold text-slate-700 bg-slate-50/20 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 disabled:opacity-50"
-                />
-                
-                <textarea
-                  placeholder="Enquiry message..."
-                  value={enquiryMessage}
-                  onChange={(e) => setEnquiryMessage(e.target.value)}
-                  rows="2.5"
-                  disabled={isExpired}
-                  className="py-2.5 px-3 border border-slate-200 rounded-xl shadow-2xs text-xs font-bold text-slate-700 bg-slate-50/20 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 disabled:opacity-50"
-                />
-                
-                <button
-                  type="submit"
-                  disabled={isExpired || !enquiryName || !enquiryPhone || !enquiryMessage}
-                  className="py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-800/10 cursor-pointer disabled:opacity-50"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                  <span>Send Enquiry</span>
-                </button>
-              </form>
+                  <input
+                    type="text"
+                    placeholder="Your Name..."
+                    value={enquiryName}
+                    onChange={(e) => setEnquiryName(e.target.value)}
+                    disabled={isExpired}
+                    className="py-2.5 px-3 border border-slate-200 rounded-xl shadow-2xs text-xs font-bold text-slate-700 bg-slate-50/20 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 disabled:opacity-50"
+                  />
+                  
+                  <input
+                    type="text"
+                    placeholder="Your Phone Number..."
+                    value={enquiryPhone}
+                    onChange={(e) => setEnquiryPhone(e.target.value)}
+                    disabled={isExpired}
+                    className="py-2.5 px-3 border border-slate-200 rounded-xl shadow-2xs text-xs font-bold text-slate-700 bg-slate-50/20 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 disabled:opacity-50"
+                  />
+                  
+                  <textarea
+                    placeholder="Enquiry message..."
+                    value={enquiryMessage}
+                    onChange={(e) => setEnquiryMessage(e.target.value)}
+                    rows="2.5"
+                    disabled={isExpired}
+                    className="py-2.5 px-3 border border-slate-200 rounded-xl shadow-2xs text-xs font-bold text-slate-700 bg-slate-50/20 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 disabled:opacity-50"
+                  />
+                  
+                  <button
+                    type="submit"
+                    disabled={isExpired || !enquiryName || !enquiryPhone || !enquiryMessage}
+                    className="py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-800/10 cursor-pointer disabled:opacity-50"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    <span>Send Enquiry</span>
+                  </button>
+                </form>
+              )}
             </div>
 
             {/* Timings / Business Hours card */}
             <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-6 flex flex-col gap-4 text-left">
               <span className="font-extrabold text-sm text-slate-800 border-b border-slate-100 pb-3 flex items-center justify-between gap-1.5 w-full">
                 <span className="flex items-center gap-1.5">
-                  <Clock className="h-4 w-4 text-slate-500" /> Business Hours
+                  <Clock className="h-4 w-4 text-slate-500" /> {isGovernmentalOrPublic(business) ? 'Office Hours' : 'Business Hours'}
                 </span>
               </span>
               <div className="flex flex-col gap-3 text-xs font-bold text-slate-600">
                 {business.parentBusinessId && business.workingHours ? (
                   <div className="flex justify-between py-2 border-b border-slate-50 last:border-b-0">
-                    <span className="text-slate-400 font-semibold">Working Hours</span>
+                    <span className="text-slate-400 font-semibold">{isGovernmentalOrPublic(business) ? 'Office Hours' : 'Working Hours'}</span>
                     <span className="text-slate-700 font-bold">{business.workingHours}</span>
                   </div>
                 ) : (
@@ -2546,7 +2663,7 @@ Please confirm availability and delivery time.`;
         </div>
       </div>
 
-      {business && business.subscriptionStatus !== 'active' && !isAdmin && !isOwner && (
+      {business && business.subscriptionStatus !== 'active' && !isGovernmentalOrPublic(business) && !isAdmin && !isOwner && (
         <div className="absolute inset-0 bg-[#F8FAFC]/55 backdrop-blur-[2px] flex items-center justify-center p-4 z-10 select-none pointer-events-auto">
           <div className="bg-white/90 backdrop-blur-xl border border-slate-200/60 rounded-[32px] p-8 max-w-lg w-full text-center shadow-[0_20px_50px_rgba(0,0,0,0.08)] flex flex-col items-center gap-5 hover:scale-[1.01] transition-transform duration-300">
             <div className="h-16 w-16 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-3xl flex items-center justify-center shadow-inner animate-bounce">

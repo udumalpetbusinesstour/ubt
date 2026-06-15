@@ -1,5 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+
+const isGovernmentalOrPublic = (biz) => {
+  if (!biz) return false;
+  const parent = (biz.requestedParentCategory || '').toLowerCase();
+  const cat = (biz.category || '').toLowerCase();
+  
+  const govParents = ['governmental organisations', 'government organisations', 'governmental organisation', 'government organisation'];
+  if (govParents.includes(parent)) return true;
+  
+  const govCats = ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'];
+  if (govCats.includes(cat)) return true;
+  
+  return false;
+};
 import { 
   Search, MapPin, Grid, Shield, Heart, Phone, Users, Star, ArrowRight, Check, ShieldCheck,
   ChevronLeft, ChevronRight, HelpCircle, Eye, MessageSquare, Play, Sparkles, X, Gift, Rocket,
@@ -824,7 +838,7 @@ export default function Home() {
 
         <div className="flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory sm:grid sm:grid-cols-2 lg:grid-cols-4">
           {featuredBusinesses.map((biz) => {
-            const isSubscribed = biz.subscriptionStatus === 'active';
+            const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
             return (
               <div 
                 key={biz._id} 

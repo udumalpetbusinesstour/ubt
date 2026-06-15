@@ -291,6 +291,10 @@ BusinessSchema.pre('save', async function() {
   if (this.galleryUrls && this.galleryUrls.length && (!this.galleryImages || !this.galleryImages.length)) this.galleryImages = this.galleryUrls;
   if (this.galleryImages && this.galleryImages.length && (!this.galleryUrls || !this.galleryUrls.length)) this.galleryUrls = this.galleryImages;
   
+  if (this.category && (this.isModified('category') || !this.type)) {
+    this.type = this.category;
+  }
+
   if (this.status) {
     const statusMap = {
       'Pending Verification': 'pending',

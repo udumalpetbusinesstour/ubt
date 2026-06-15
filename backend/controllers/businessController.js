@@ -39,6 +39,7 @@ const registerBusiness = async (req, res, next) => {
       galleryImages,
       openingHours,
       customCategoryName,
+      requestedParentCategory,
       categoryStatus,
       highlights
     } = value;
@@ -112,6 +113,7 @@ const registerBusiness = async (req, res, next) => {
       isPremium: false,
       featured: false,
       customCategoryName,
+      requestedParentCategory,
       categoryStatus
     });
 
@@ -240,7 +242,7 @@ const getBusinessById = async (req, res, next) => {
  */
 const syncGoogleBusiness = async (req, res, next) => {
   try {
-    const { googlePlaceId, googleRating, googleReviewsCount, googleReviews } = req.body;
+    const { googlePlaceId, googleRating, googleReviewsCount, googleReviews, timings } = req.body;
     
     const business = await Business.findById(req.params.id);
     if (!business) {
@@ -260,6 +262,10 @@ const syncGoogleBusiness = async (req, res, next) => {
     
     if (googleReviews && googleReviews.length) {
       business.googleReviews = googleReviews;
+    }
+
+    if (timings) {
+      business.timings = timings;
     }
 
     await business.save();

@@ -1972,9 +1972,17 @@ export default function SuperAdminDashboard() {
                   <span className={`font-extrabold text-xs ${themeMode === 'dark' ? 'text-slate-200' : 'text-[#001c41]'}`}>
                     {user?.fullName || 'Super Admin'}
                   </span>
-                  <span className="text-[8px] text-amber-600 font-extrabold uppercase mt-1 tracking-wider bg-amber-50 border border-amber-100/50 px-2 py-0.5 rounded-full self-end leading-none">
-                    superadmin
-                  </span>
+                  <div className="flex items-center gap-1.5 mt-1 self-end leading-none">
+                    <span className="text-[8px] text-amber-600 font-extrabold uppercase tracking-wider bg-amber-50 border border-amber-100/50 px-2 py-0.5 rounded-full">
+                      superadmin
+                    </span>
+                    <Link
+                      to="/dashboard"
+                      className="text-[9px] font-black text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250/30 px-1.5 py-0.5 rounded uppercase transition-all"
+                    >
+                      Switch to Merchant
+                    </Link>
+                  </div>
                 </div>
                 <div className="h-9 w-9 rounded-full bg-emerald-50 text-[#027244] border border-emerald-100 flex items-center justify-center font-black text-xs shadow-2xs">
                   SA
@@ -3265,13 +3273,32 @@ export default function SuperAdminDashboard() {
                           <div className="flex flex-col gap-4">
                             {pendingCategories.map(biz => (
                               <div key={biz._id} className="border border-slate-200/50 dark:border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between gap-4 bg-slate-50/50 dark:bg-slate-950/20 text-left">
-                                <div className="flex flex-col text-left">
-                                  <div className="flex items-center gap-2">
-                                    <span className="bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-sm">Custom category request</span>
-                                    <span className="text-[9px] font-extrabold text-slate-400">Biz Status: {biz.status}</span>
+                                <div className="flex justify-between items-start flex-wrap gap-4">
+                                  <div className="flex flex-col text-left">
+                                    <div className="flex items-center gap-2">
+                                      <span className="bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-sm">Custom category request</span>
+                                      <span className="text-[9px] font-extrabold text-slate-400">Biz Status: {biz.status}</span>
+                                    </div>
+                                    <span className={`font-black text-sm mt-2 ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>"{biz.customCategoryName}"</span>
+                                    {biz.requestedParentCategory && (
+                                      <span className="text-[11px] text-emerald-600 dark:text-emerald-450 font-extrabold mt-1">Requested Parent Category: {biz.requestedParentCategory}</span>
+                                    )}
+                                    <span className="text-[10.5px] text-slate-400 font-semibold mt-1">Requested by business: <b className="text-slate-555">{biz.name}</b> ({biz.ownerId?.fullName || 'Owner'})</span>
                                   </div>
-                                  <span className={`font-black text-sm mt-2 ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>"{biz.customCategoryName}"</span>
-                                  <span className="text-[10.5px] text-slate-400 font-semibold mt-1">Requested by business: <b className="text-slate-555">{biz.name}</b> ({biz.ownerId?.fullName || 'Owner'})</span>
+                                  {biz.requestedParentCategory && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const confirmed = confirm(`Approve new subcategory "${biz.customCategoryName}" nested under requested parent category "${biz.requestedParentCategory}"?`);
+                                        if (confirmed) {
+                                          resolveCategoryRequest(biz._id, 'create', null, biz.customCategoryName, null, biz.requestedParentCategory);
+                                        }
+                                      }}
+                                      className="py-1.5 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold rounded-xl transition-all shadow-sm cursor-pointer"
+                                    >
+                                      Approve as Requested
+                                    </button>
+                                  )}
                                 </div>
                                 
                                 <div className="flex flex-col gap-4 mt-2 bg-slate-100/50 dark:bg-slate-900/30 p-4 rounded-2xl w-full">
@@ -3412,6 +3439,7 @@ export default function SuperAdminDashboard() {
                                               'Food & Restaurants', 'Health & Medical', 'Home Services', 'Real Estate',
                                               'Shopping', 'Professional Services', 'Travel & Hospitality', 'Construction',
                                               'Agriculture', 'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness',
+                                              'Governmental organisations',
                                               'Others'
                                             ].map(c => (
                                               <option key={c} value={c}>{c}</option>

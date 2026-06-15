@@ -79,6 +79,87 @@ router.get('/businesses', async (req, res, next) => {
   }
 });
 
+// @desc    Add a directory listing directly (Approved status, no subscription validation)
+// @route   POST /api/admin/businesses/directory-add
+// @access  Private/Admin
+router.post('/businesses/directory-add', async (req, res, next) => {
+  try {
+    const {
+      name,
+      requestedParentCategory,
+      category,
+      customCategoryName,
+      categoryStatus,
+      address,
+      locality,
+      phone,
+      website,
+      description,
+      googleMapsLocation,
+      googlePlaceId,
+      pincode,
+      latitude,
+      longitude,
+      googleRating,
+      googleReviewsCount,
+      googleReviews,
+      logoUrl,
+      coverImageUrl,
+      galleryUrls
+    } = req.body;
+
+    if (!name || !requestedParentCategory || !category) {
+      return res.status(400).json({ success: false, message: 'Name, Main Category, and Subcategory are required' });
+    }
+
+    const resolvedPincode = pincode || '642126';
+    const lat = latitude || 10.5891;
+    const lng = longitude || 77.2412;
+
+    const business = await Business.create({
+      ownerId: req.user._id,
+      name,
+      businessName: name,
+      requestedParentCategory,
+      category,
+      type: category, // Keep type synced with category for backward compatibility
+      customCategoryName: category === 'Others' ? customCategoryName : '',
+      categoryStatus: categoryStatus || 'Normal',
+      address: address || `${locality}, Udumalpet`,
+      locality: locality || 'Udumalpet',
+      phone: phone || '04252 223456',
+      whatsapp: phone || '04252 223456',
+      website: website || '',
+      description: description || `${name} is listed in the Udumalpet Business Tour local directory.`,
+      googleBusinessLink: googleMapsLocation || '',
+      googleMapsLocation: googleMapsLocation || '',
+      googlePlaceId: googlePlaceId || '',
+      pincode: resolvedPincode,
+      latitude: lat,
+      longitude: lng,
+      coordinates: { lat, lng },
+      status: 'Approved',
+      verificationStatus: 'approved',
+      subscriptionStatus: 'active',
+      isPremium: false,
+      googleRating: googleRating || 0,
+      googleReviewsCount: googleReviewsCount || 0,
+      googleReviews: googleReviews || [],
+      logoUrl: logoUrl || '',
+      coverImageUrl: coverImageUrl || '',
+      galleryUrls: galleryUrls || [],
+      galleryImages: galleryUrls || []
+    });
+
+    const { ensureCategoriesExist } = require('../utils/categoryHelper');
+    await ensureCategoriesExist(business);
+
+    res.status(201).json({ success: true, data: business });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // @desc    Moderate business listing (approve, reject, suspend)
 // @route   POST /api/admin/businesses/moderate
 // @access  Private/Admin
@@ -99,6 +180,7 @@ router.put('/businesses/:id/status', async (req, res, next) => {
     if (status === 'Approved') {
       business.isAddressVerified = true;
       business.verificationStatus = 'approved';
+      business.subscriptionStatus = 'active';
     } else if (status === 'Rejected') {
       business.verificationStatus = 'rejected';
     } else if (status === 'Suspended') {

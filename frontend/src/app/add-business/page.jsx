@@ -79,6 +79,9 @@ const parentCategoryMapping = {
   'Sports & Fitness': [
     'Gyms', 'Yoga Centers', 'Sports Academies', 'Sports Equipment Stores'
   ],
+  'Governmental organisations': [
+    'Taluk Office', 'Municipality', 'Police Stations', 'Hospitals', 'Banks', 'Schools'
+  ],
   'Others': [
     'Temples', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs', 'Others'
   ]
@@ -102,6 +105,7 @@ const availableCategories = [
   'Finance & Insurance',
   'Events & Entertainment',
   'Sports & Fitness',
+  'Governmental organisations',
   'Others'
 ];
 
@@ -241,6 +245,7 @@ export default function AddBusiness() {
   });
 
   const [isCustomLocality, setIsCustomLocality] = useState(false);
+  const [isCustomMain, setIsCustomMain] = useState(false);
   const [isBranchCustomLocality, setIsBranchCustomLocality] = useState(false);
 
   // Sync locality type classification based on value borders
@@ -485,7 +490,8 @@ export default function AddBusiness() {
     } else {
       try {
         setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
 
         // Read step parameter if any
         const stepParam = parseInt(searchParams.get('step'));
@@ -499,8 +505,14 @@ export default function AddBusiness() {
           setIsBranchMode(true);
         }
 
+        const isAdmin = parsedUser && (parsedUser.role === 'admin' || parsedUser.role === 'superadmin');
+        const isNew = searchParams.get('new') === 'true';
+
         const storedDraft = localStorage.getItem('ubt_draft_business');
-        if (storedDraft) {
+        if (isNew && isAdmin) {
+          // Bypass draft fetch and start with a blank form!
+          console.log('[ADMIN BYPASS] Initializing blank business registration flow');
+        } else if (storedDraft) {
           try {
             const draft = JSON.parse(storedDraft);
             populateDraft(draft);
@@ -2067,50 +2079,35 @@ export default function AddBusiness() {
                       />
                     </div>
 
-                    {/* Main Category Selector */}
+                    {/* Main Category Selector / Input */}
                     <div className="flex flex-col gap-1.5 text-left">
-                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Main Category <span className="text-red-500">*</span></label>
-                      <select
-                        name="requestedParentCategory"
-                        value={availableCategories.includes(formData.requestedParentCategory) ? formData.requestedParentCategory : (formData.requestedParentCategory ? 'Others' : '')}
-                        onChange={(e) => {
-                          const parentVal = e.target.value;
-                          let subVal = '';
-                          
-                          if (parentVal && parentVal !== 'Others') {
-                            const subs = parentCategoryMapping[parentVal] || [];
-                            subVal = subs[0] || '';
-                          } else if (parentVal === 'Others') {
-                            subVal = 'Others';
-                          }
-
-                          const updated = {
-                            ...formData,
-                            requestedParentCategory: parentVal === 'Others' ? '' : parentVal,
-                            category: subVal,
-                            customCategoryName: parentVal === 'Others' ? '' : '',
-                            categoryStatus: parentVal === 'Others' ? 'Pending Review' : 'Normal'
-                          };
-                          setFormData(updated);
-                          saveDraft(updated);
-                        }}
-                        className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
-                      >
-                        <option value="">-- Choose Main Category --</option>
-                        {availableCategories.map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Custom Main Category Input */}
-                    {(formData.requestedParentCategory === '' || !availableCategories.includes(formData.requestedParentCategory)) && 
-                     (formData.requestedParentCategory !== undefined) && (
-                      <div className="flex flex-col gap-1.5 text-left animate-fadeIn">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Specify Custom Main Category <span className="text-red-500">*</span></label>
+                      <div className="flex justify-between items-center">
+                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Main Category <span className="text-red-500">*</span></label>
+                        {(isCustomMain || (formData.requestedParentCategory !== '' && !availableCategories.includes(formData.requestedParentCategory))) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsCustomMain(false);
+                              const updated = {
+                                ...formData,
+                                requestedParentCategory: '',
+                                category: '',
+                                customCategoryName: '',
+                                categoryStatus: 'Normal'
+                              };
+                              setFormData(updated);
+                              saveDraft(updated);
+                            }}
+                            className="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline focus:outline-none cursor-pointer"
+                          >
+                            Choose Standard
+                          </button>
+                        )}
+                      </div>
+                      {(isCustomMain || (formData.requestedParentCategory !== '' && !availableCategories.includes(formData.requestedParentCategory))) ? (
                         <input
                           type="text"
-                          placeholder="e.g. Tourism Services, Logistics"
+                          placeholder="Specify Custom Main Category (e.g. Tourism Services, Logistics)"
                           value={availableCategories.includes(formData.requestedParentCategory) ? '' : formData.requestedParentCategory}
                           onChange={(e) => {
                             const val = e.target.value;
@@ -2125,70 +2122,128 @@ export default function AddBusiness() {
                           }}
                           className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
                         />
-                      </div>
-                    )}
-
-                    {/* Subcategory Selector */}
-                    {formData.requestedParentCategory !== '' && (
-                      <div className="flex flex-col gap-1.5 text-left animate-fadeIn">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Subcategory <span className="text-red-500">*</span></label>
+                      ) : (
                         <select
-                          name="category"
-                          value={(parentCategoryMapping[availableCategories.includes(formData.requestedParentCategory) ? formData.requestedParentCategory : 'Others'] || []).includes(formData.category) ? formData.category : (formData.category ? 'Others' : '')}
+                          name="requestedParentCategory"
+                          value={availableCategories.includes(formData.requestedParentCategory) ? formData.requestedParentCategory : ''}
                           onChange={(e) => {
-                            const subVal = e.target.value;
-                            const isCustomParent = !availableCategories.includes(formData.requestedParentCategory);
-                            const updated = {
-                              ...formData,
-                              category: subVal,
-                              customCategoryName: subVal === 'Others' ? '' : '',
-                              categoryStatus: (subVal === 'Others' || isCustomParent) ? 'Pending Review' : 'Normal'
-                            };
-                            setFormData(updated);
-                            saveDraft(updated);
+                            const parentVal = e.target.value;
+                            if (parentVal === 'Others') {
+                              setIsCustomMain(true);
+                              const updated = {
+                                ...formData,
+                                requestedParentCategory: '',
+                                category: 'Others',
+                                customCategoryName: '',
+                                categoryStatus: 'Pending Review'
+                              };
+                              setFormData(updated);
+                              saveDraft(updated);
+                            } else {
+                              const subs = parentCategoryMapping[parentVal] || [];
+                              const subVal = subs[0] || '';
+                              const updated = {
+                                ...formData,
+                                requestedParentCategory: parentVal,
+                                category: subVal,
+                                customCategoryName: '',
+                                categoryStatus: 'Normal'
+                              };
+                              setFormData(updated);
+                              saveDraft(updated);
+                            }
                           }}
                           className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
                         >
-                          <option value="">-- Choose Subcategory --</option>
-                          {(parentCategoryMapping[availableCategories.includes(formData.requestedParentCategory) ? formData.requestedParentCategory : 'Others'] || []).map(sub => (
-                            <option key={sub} value={sub}>{sub}</option>
+                          <option value="">-- Choose Main Category --</option>
+                          {availableCategories.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
                           ))}
-                          <option value="Others">Others (Custom Category)</option>
                         </select>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
-                    {/* Custom Subcategory Input */}
-                    {formData.category === 'Others' && (
+                    {/* Subcategory Selector / Input */}
+                    {formData.requestedParentCategory !== '' && (
                       <div className="flex flex-col gap-1.5 text-left animate-fadeIn">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Specify Custom Subcategory <span className="text-red-500">*</span></label>
-                        <input
-                          type="text"
-                          placeholder="e.g. EV Charging Station, Solar Solutions"
-                          value={formData.customCategoryName || ''}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            const updated = {
-                              ...formData,
-                              customCategoryName: val,
-                              categoryStatus: 'Pending Review'
-                            };
-                            setFormData(updated);
-                            saveDraft(updated);
-                          }}
-                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                        />
-                        <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 mt-2 flex flex-col gap-1.5 text-xs text-left animate-fadeIn">
-                          <div className="flex items-center gap-2">
-                            <span className="font-extrabold text-blue-900">Category Status:</span>
-                            <span className="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide">
-                              Pending Review
-                            </span>
-                          </div>
-                          <p className="text-blue-750 font-semibold leading-relaxed">
-                            "Your custom category request will be dynamically verified and approved/linked by superadmin upon publication."
-                          </p>
+                        <div className="flex justify-between items-center">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Subcategory <span className="text-red-500">*</span></label>
+                          {formData.category === 'Others' && !(isCustomMain || (formData.requestedParentCategory !== '' && !availableCategories.includes(formData.requestedParentCategory))) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const subs = parentCategoryMapping[formData.requestedParentCategory] || [];
+                                const subVal = subs[0] || '';
+                                const updated = {
+                                  ...formData,
+                                  category: subVal,
+                                  customCategoryName: '',
+                                  categoryStatus: 'Normal'
+                                };
+                                setFormData(updated);
+                                saveDraft(updated);
+                              }}
+                              className="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline focus:outline-none cursor-pointer"
+                            >
+                              Choose Standard
+                            </button>
+                          )}
                         </div>
+                        {formData.category === 'Others' ? (
+                          <div className="flex flex-col gap-1.5 text-left animate-fadeIn">
+                            <input
+                              type="text"
+                              placeholder="Specify Custom Subcategory (e.g. EV Charging Station, Solar Solutions)"
+                              value={formData.customCategoryName || ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const updated = {
+                                  ...formData,
+                                  customCategoryName: val,
+                                  categoryStatus: 'Pending Review'
+                                };
+                                setFormData(updated);
+                                saveDraft(updated);
+                              }}
+                              className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                            />
+                            <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 mt-2 flex flex-col gap-1.5 text-xs text-left animate-fadeIn">
+                              <div className="flex items-center gap-2">
+                                <span className="font-extrabold text-blue-900">Category Status:</span>
+                                <span className="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide">
+                                  Pending Review
+                                </span>
+                              </div>
+                              <p className="text-blue-750 font-semibold leading-relaxed">
+                                "Your custom category request will be dynamically verified and approved/linked by superadmin upon publication."
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <select
+                            name="category"
+                            value={((parentCategoryMapping[availableCategories.includes(formData.requestedParentCategory) ? formData.requestedParentCategory : 'Others'] || []).includes(formData.category) || (dbCategories || []).some(c => c.categoryName === formData.category)) ? formData.category : ''}
+                            onChange={(e) => {
+                              const subVal = e.target.value;
+                              const isCustomParent = !availableCategories.includes(formData.requestedParentCategory);
+                              const updated = {
+                                ...formData,
+                                category: subVal,
+                                customCategoryName: '',
+                                categoryStatus: (subVal === 'Others' || isCustomParent) ? 'Pending Review' : 'Normal'
+                              };
+                              setFormData(updated);
+                              saveDraft(updated);
+                            }}
+                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
+                          >
+                            <option value="">-- Choose Subcategory --</option>
+                            {(parentCategoryMapping[availableCategories.includes(formData.requestedParentCategory) ? formData.requestedParentCategory : 'Others'] || []).map(sub => (
+                              <option key={sub} value={sub}>{sub}</option>
+                            ))}
+                            <option value="Others">Others (Custom Category)</option>
+                          </select>
+                        )}
                       </div>
                     )}
 

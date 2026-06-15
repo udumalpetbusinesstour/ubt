@@ -68,6 +68,9 @@ const parentCategoryMapping = {
   'Sports & Fitness': [
     'Gyms', 'Yoga Centers', 'Sports Academies', 'Sports Equipment Stores'
   ],
+  'Governmental organisations': [
+    'Taluk Office', 'Municipality', 'Police Stations', 'Hospitals', 'Banks', 'Schools'
+  ],
   'Others': [
     'Temples', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs', 'Others'
   ]
@@ -91,6 +94,7 @@ const availableCategories = [
   'Finance & Insurance',
   'Events & Entertainment',
   'Sports & Fitness',
+  'Governmental organisations',
   'Others'
 ];
 
@@ -181,6 +185,7 @@ function DashboardContent() {
   const [verifySuccess, setVerifySuccess] = useState('');
 
   const [primaryBusiness, setPrimaryBusiness] = useState(null);
+  const [allBusinesses, setAllBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -467,6 +472,7 @@ function DashboardContent() {
   // Quick Edit states
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTab, setEditTab] = useState('general'); // general | contact | specs | services
+  const [isCustomMain, setIsCustomMain] = useState(false);
   const [modalMarginTop, setModalMarginTop] = useState(20);
 
   const openModalAtClickLevel = (e, modalSetter, estimatedHeight = 550) => {
@@ -994,6 +1000,12 @@ function DashboardContent() {
       const data = await res.json();
       
       if (data.success) {
+        if (data.allBusinesses) {
+          setAllBusinesses(data.allBusinesses);
+        } else if (data.data) {
+          setAllBusinesses([data.data]);
+        }
+
         if (data.data) {
           const userBiz = data.data;
           setBusiness(userBiz);
@@ -1362,6 +1374,16 @@ function DashboardContent() {
     setLoading(true);
     try {
       const activeToken = token || localStorage.getItem('ubt_token');
+
+      // If switching to one of the admin-owned listings
+      const targetAdminBiz = allBusinesses.find(b => b._id === bizId);
+      if (targetAdminBiz) {
+        applyBusinessToState(targetAdminBiz);
+        // Fetch branches of this admin business listing as well
+        fetchBranches(activeToken, targetAdminBiz._id);
+        setLoading(false);
+        return;
+      }
 
       // If switching back to primary business, use the cached primary data
       if (primaryBusiness && bizId === primaryBusiness._id) {
@@ -3320,7 +3342,10 @@ function DashboardContent() {
   // Safe defaults if business is null (standard user has no listing)
   const isExpired = business ? business.subscriptionStatus === 'expired' : false;
   const daysLeft = business ? getDaysRemaining(business.subscriptionExpiry) : 0;
-  const isMandatorySubscription = business && business.status === 'Approved' && business.subscriptionStatus !== 'active';
+  const isMandatorySubscription = business && business.status === 'Approved' && business.subscriptionStatus !== 'active' && !(
+    ['governmental organisations', 'government organisations', 'governmental organisation', 'government organisation'].includes((business.requestedParentCategory || '').toLowerCase()) ||
+    ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'].includes((business.category || '').toLowerCase())
+  );
 
   // Mock items aligned with the exact design mockup!
   const mockLeads = [
@@ -3349,6 +3374,9 @@ function DashboardContent() {
     ] : [
       { label: 'My Business', icon: <Briefcase className="h-4 w-4" /> }
     ]),
+    ...((user?.role === 'admin' || user?.role === 'superadmin') ? [
+      { label: 'Add New Listing', icon: <Plus className="h-4 w-4" />, onClick: () => navigate('/add-business?new=true') }
+    ] : []),
     { label: 'Events', icon: <Calendar className="h-4 w-4" /> },
     { label: 'My Blogs', icon: <FileEdit className="h-4 w-4" /> },
     { label: 'Settings', icon: <Settings className="h-4 w-4" /> },
@@ -3376,43 +3404,65 @@ function DashboardContent() {
 
         {/* Business Identity Card */}
         {business && (
-          <div className="p-4.5 bg-slate-900/40 border border-slate-800/60 rounded-2xl m-4.5 flex items-center gap-3">
-            <div className="h-10 w-10 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center font-extrabold text-[#001c41] text-sm shadow-inner uppercase select-none shrink-0">
-              {(business.name || 'B').charAt(0)}
-            </div>
-            <div className="flex flex-col overflow-hidden">
-              <h4 className="font-extrabold text-white text-xs leading-snug truncate">{business.name}</h4>
-              <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                {isGmbVerified ? (
-                  <span className="bg-emerald-950/80 text-emerald-400 border border-emerald-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-1 shrink-0">
-                    <svg className="h-2.5 w-2.5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z" fill="currentColor" />
-                      <path d="m9 12 2 2 4-4" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg> UDT Verified
-                  </span>
-                ) : business.status === 'Approved' ? (
-                  <span className="bg-blue-950/80 text-blue-400 border border-blue-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
-                    <Check className="h-2.5 w-2.5" /> Approved
-                  </span>
-                ) : business.status === 'Under Review' ? (
-                  <span className="bg-blue-950/80 text-blue-400 border border-blue-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0 animate-pulse">
-                    <AlertCircle className="h-2.5 w-2.5" /> Under Review
-                  </span>
-                ) : business.status === 'Suspended' ? (
-                  <span className="bg-red-950/80 text-red-400 border border-red-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
-                    <AlertCircle className="h-2.5 w-2.5" /> Suspended
-                  </span>
-                ) : business.status === 'Rejected' ? (
-                  <span className="bg-rose-950/80 text-rose-455 border border-rose-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
-                    <AlertCircle className="h-2.5 w-2.5" /> Rejected
-                  </span>
-                ) : (
-                  <span className="bg-amber-950/80 text-amber-400 border border-amber-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
-                    <AlertCircle className="h-2.5 w-2.5" /> Pending Vetting
-                  </span>
-                )}
+          <div className="p-4.5 bg-slate-900/40 border border-slate-800/60 rounded-2xl m-4.5 flex flex-col gap-3">
+            <div className="flex items-center gap-3 w-full">
+              <div className="h-10 w-10 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center font-extrabold text-[#001c41] text-sm shadow-inner uppercase select-none shrink-0">
+                {(business.name || 'B').charAt(0)}
+              </div>
+              <div className="flex flex-col overflow-hidden flex-grow text-left">
+                <h4 className="font-extrabold text-white text-xs leading-snug truncate">{business.name}</h4>
+                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                  {isGmbVerified ? (
+                    <span className="bg-emerald-950/80 text-emerald-400 border border-emerald-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-1 shrink-0">
+                      <svg className="h-2.5 w-2.5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z" fill="currentColor" />
+                        <path d="m9 12 2 2 4-4" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg> UDT Verified
+                    </span>
+                  ) : business.status === 'Approved' ? (
+                    <span className="bg-blue-950/80 text-blue-400 border border-blue-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
+                      <Check className="h-2.5 w-2.5" /> Approved
+                    </span>
+                  ) : business.status === 'Under Review' ? (
+                    <span className="bg-blue-950/80 text-blue-400 border border-blue-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0 animate-pulse">
+                      <AlertCircle className="h-2.5 w-2.5" /> Under Review
+                    </span>
+                  ) : business.status === 'Suspended' ? (
+                    <span className="bg-red-950/80 text-red-400 border border-red-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
+                      <AlertCircle className="h-2.5 w-2.5" /> Suspended
+                    </span>
+                  ) : business.status === 'Rejected' ? (
+                    <span className="bg-rose-950/80 text-rose-455 border border-rose-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
+                      <AlertCircle className="h-2.5 w-2.5" /> Rejected
+                    </span>
+                  ) : (
+                    <span className="bg-amber-950/80 text-amber-400 border border-amber-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
+                      <AlertCircle className="h-2.5 w-2.5" /> Pending Vetting
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
+            
+            {(user?.role === 'admin' || user?.role === 'superadmin') && allBusinesses.length > 0 && (
+              <div className="w-full flex flex-col gap-1.5 mt-1 border-t border-slate-800/60 pt-2.5">
+                <label className="text-[9px] font-black text-slate-550 uppercase tracking-widest text-left">Switch Active Listing</label>
+                <select
+                  value={business._id}
+                  onChange={(e) => {
+                    const selected = allBusinesses.find(b => b._id === e.target.value);
+                    if (selected) handleSwitchBusiness(selected);
+                  }}
+                  className="w-full bg-slate-800/80 border border-slate-700/80 text-white rounded-xl py-2 px-3 text-[11px] font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                >
+                  {allBusinesses.map((b) => (
+                    <option key={b._id} value={b._id} className="bg-slate-900 text-white font-semibold">
+                      {b.name || 'Untitled Draft'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         )}
 
@@ -3608,9 +3658,19 @@ function DashboardContent() {
               )}
               <div className="flex flex-col text-left hidden sm:flex">
                 <span className="text-xs font-extrabold text-slate-800 leading-none">{user?.fullName}</span>
-                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-                  {user?.role === 'admin' ? 'Administrator' : (business ? 'Business Owner' : 'Writer / Member')}
-                </span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                    {user?.role === 'superadmin' ? 'Super Admin' : (user?.role === 'admin' ? 'Administrator' : (business ? 'Business Owner' : 'Writer / Member'))}
+                  </span>
+                  {(user?.role === 'admin' || user?.role === 'superadmin') && (
+                    <Link
+                      to={user.role === 'superadmin' ? '/superadmin' : '/admin'}
+                      className="text-[9px] font-black text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded uppercase hover:underline shrink-0"
+                    >
+                      Switch to Admin
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -8240,76 +8300,33 @@ function DashboardContent() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Main Category */}
+                    {/* Main Category Selector / Input */}
                     <div className="flex flex-col gap-1">
-                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Main Category</label>
-                      <select 
-                        value={availableCategories.includes(editFields.requestedParentCategory) ? editFields.requestedParentCategory : (editFields.requestedParentCategory ? 'Others' : '')}
-                        onChange={(e) => {
-                          const parentVal = e.target.value;
-                          let subVal = '';
-                          
-                          if (parentVal && parentVal !== 'Others') {
-                            const subs = parentCategoryMapping[parentVal] || [];
-                            subVal = subs[0] || '';
-                          } else if (parentVal === 'Others') {
-                            subVal = 'Others';
-                          }
-
-                          setEditFields({
-                            ...editFields,
-                            requestedParentCategory: parentVal === 'Others' ? '' : parentVal,
-                            category: subVal,
-                            customCategoryName: '',
-                            categoryStatus: parentVal === 'Others' ? 'Pending Review' : 'Normal'
-                          });
-                        }}
-                        className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20 cursor-pointer"
-                      >
-                        <option value="">-- Choose Main Category --</option>
-                        {availableCategories.map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Subcategory */}
-                    {editFields.requestedParentCategory !== '' && (
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Subcategory</label>
-                        <select 
-                          value={(parentCategoryMapping[availableCategories.includes(editFields.requestedParentCategory) ? editFields.requestedParentCategory : 'Others'] || []).includes(editFields.category) ? editFields.category : (editFields.category ? 'Others' : '')}
-                          onChange={(e) => {
-                            const subVal = e.target.value;
-                            const isCustomParent = !availableCategories.includes(editFields.requestedParentCategory);
-                            setEditFields({
-                              ...editFields,
-                              category: subVal,
-                              customCategoryName: '',
-                              categoryStatus: (subVal === 'Others' || isCustomParent) ? 'Pending Review' : 'Normal'
-                            });
-                          }}
-                          className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20 cursor-pointer"
-                        >
-                          <option value="">-- Choose Subcategory --</option>
-                          {(parentCategoryMapping[availableCategories.includes(editFields.requestedParentCategory) ? editFields.requestedParentCategory : 'Others'] || []).map(sub => (
-                            <option key={sub} value={sub}>{sub}</option>
-                          ))}
-                          <option value="Others">Others (Custom Category)</option>
-                        </select>
+                      <div className="flex justify-between items-center">
+                        <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Main Category</label>
+                        {(isCustomMain || (editFields.requestedParentCategory !== '' && !availableCategories.includes(editFields.requestedParentCategory))) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsCustomMain(false);
+                              setEditFields(prev => ({
+                                ...prev,
+                                requestedParentCategory: '',
+                                category: '',
+                                customCategoryName: '',
+                                categoryStatus: 'Normal'
+                              }));
+                            }}
+                            className="text-[9px] text-[#027244] hover:text-[#005934] font-bold underline focus:outline-none cursor-pointer"
+                          >
+                            Choose Standard
+                          </button>
+                        )}
                       </div>
-                    )}
-                  </div>
-
-                  {/* Custom Input Rows if selected "Others" */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Specify Custom Main Category */}
-                    {(editFields.requestedParentCategory === '' || !availableCategories.includes(editFields.requestedParentCategory)) && (
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Specify Custom Main Category</label>
+                      {(isCustomMain || (editFields.requestedParentCategory !== '' && !availableCategories.includes(editFields.requestedParentCategory))) ? (
                         <input 
                           type="text" 
-                          placeholder="e.g. Tourism Services"
+                          placeholder="Specify Custom Main Category"
                           value={availableCategories.includes(editFields.requestedParentCategory) ? '' : editFields.requestedParentCategory}
                           onChange={(e) => {
                             const val = e.target.value;
@@ -8322,27 +8339,103 @@ function DashboardContent() {
                           }}
                           className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
                         />
-                      </div>
-                    )}
-
-                    {/* Specify Custom Subcategory */}
-                    {editFields.category === 'Others' && (
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Specify Custom Subcategory</label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g. EV Charging Station"
-                          value={editFields.customCategoryName || ''}
+                      ) : (
+                        <select 
+                          value={availableCategories.includes(editFields.requestedParentCategory) ? editFields.requestedParentCategory : ''}
                           onChange={(e) => {
-                            const val = e.target.value;
-                            setEditFields({
-                              ...editFields,
-                              customCategoryName: val,
-                              categoryStatus: 'Pending Review'
-                            });
+                            const parentVal = e.target.value;
+                            if (parentVal === 'Others') {
+                              setIsCustomMain(true);
+                              setEditFields({
+                                ...editFields,
+                                requestedParentCategory: '',
+                                category: 'Others',
+                                customCategoryName: '',
+                                categoryStatus: 'Pending Review'
+                              });
+                            } else {
+                              const subs = parentCategoryMapping[parentVal] || [];
+                              const subVal = subs[0] || '';
+                              setEditFields({
+                                ...editFields,
+                                requestedParentCategory: parentVal,
+                                category: subVal,
+                                customCategoryName: '',
+                                categoryStatus: 'Normal'
+                              });
+                            }
                           }}
-                          className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
-                        />
+                          className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20 cursor-pointer"
+                        >
+                          <option value="">-- Choose Main Category --</option>
+                          {availableCategories.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+
+                    {/* Subcategory Selector / Input */}
+                    {editFields.requestedParentCategory !== '' && (
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between items-center">
+                          <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Subcategory</label>
+                          {editFields.category === 'Others' && !(isCustomMain || (editFields.requestedParentCategory !== '' && !availableCategories.includes(editFields.requestedParentCategory))) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const subs = parentCategoryMapping[editFields.requestedParentCategory] || [];
+                                const subVal = subs[0] || '';
+                                setEditFields(prev => ({
+                                  ...prev,
+                                  category: subVal,
+                                  customCategoryName: '',
+                                  categoryStatus: 'Normal'
+                                }));
+                              }}
+                              className="text-[9px] text-[#027244] hover:text-[#005934] font-bold underline focus:outline-none cursor-pointer"
+                            >
+                              Choose Standard
+                            </button>
+                          )}
+                        </div>
+                        {editFields.category === 'Others' ? (
+                          <input 
+                            type="text" 
+                            placeholder="Specify Custom Subcategory"
+                            value={editFields.customCategoryName || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditFields({
+                                ...editFields,
+                                customCategoryName: val,
+                                categoryStatus: 'Pending Review'
+                              });
+                            }}
+                            className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20"
+                          />
+                        ) : (
+                          <select 
+                            value={((parentCategoryMapping[availableCategories.includes(editFields.requestedParentCategory) ? editFields.requestedParentCategory : 'Others'] || []).includes(editFields.category)) ? editFields.category : ''}
+                            onChange={(e) => {
+                              const subVal = e.target.value;
+                              const isCustomParent = !availableCategories.includes(editFields.requestedParentCategory);
+                              setEditFields({
+                                ...editFields,
+                                category: subVal,
+                                customCategoryName: '',
+                                categoryStatus: (subVal === 'Others' || isCustomParent) ? 'Pending Review' : 'Normal'
+                              });
+                            }}
+                            className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20 cursor-pointer"
+                          >
+                            <option value="">-- Choose Subcategory --</option>
+                            {(parentCategoryMapping[availableCategories.includes(editFields.requestedParentCategory) ? editFields.requestedParentCategory : 'Others'] || []).map(sub => (
+                              <option key={sub} value={sub}>{sub}</option>
+                            ))}
+                            <option value="Others">Others (Custom Category)</option>
+                          </select>
+                        )}
                       </div>
                     )}
                   </div>
