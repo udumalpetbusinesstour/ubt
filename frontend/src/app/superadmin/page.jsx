@@ -1976,12 +1976,6 @@ export default function SuperAdminDashboard() {
                     <span className="text-[8px] text-amber-600 font-extrabold uppercase tracking-wider bg-amber-50 border border-amber-100/50 px-2 py-0.5 rounded-full">
                       superadmin
                     </span>
-                    <Link
-                      to="/dashboard"
-                      className="text-[9px] font-black text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250/30 px-1.5 py-0.5 rounded uppercase transition-all"
-                    >
-                      Switch to Merchant
-                    </Link>
                   </div>
                 </div>
                 <div className="h-9 w-9 rounded-full bg-emerald-50 text-[#027244] border border-emerald-100 flex items-center justify-center font-black text-xs shadow-2xs">

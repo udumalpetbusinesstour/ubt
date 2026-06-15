@@ -218,7 +218,7 @@ export default function AdminDashboard() {
     categoryStatus: 'Normal',
     address: '',
     locality: '',
-    pincode: '642126',
+    pincode: '',
     phone: '',
     website: '',
     googleMapsLocation: '',
@@ -1428,16 +1428,10 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-3">
               <div className="flex flex-col text-right hidden sm:flex leading-none">
                 <span className="font-extrabold text-[#001c41] text-xs">{user?.fullName || 'Admin Account'}</span>
-                <div className="flex items-center gap-1.5 mt-1 self-end">
+                <div className="mt-1 self-end">
                   <span className="text-[8.5px] text-emerald-600 font-extrabold uppercase tracking-wider bg-emerald-50 border border-emerald-100/50 px-2 py-0.5 rounded-full">
                     {user?.role || 'Admin'}
                   </span>
-                  <Link
-                    to="/dashboard"
-                    className="text-[9.5px] font-black text-[#027244] hover:text-[#005934] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/50 px-2 py-0.5 rounded uppercase transition-colors shrink-0"
-                  >
-                    Switch to Merchant
-                  </Link>
                 </div>
               </div>
               <div className="h-10 w-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-[#001c41] text-xs">

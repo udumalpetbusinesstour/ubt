@@ -3662,14 +3662,6 @@ function DashboardContent() {
                   <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
                     {user?.role === 'superadmin' ? 'Super Admin' : (user?.role === 'admin' ? 'Administrator' : (business ? 'Business Owner' : 'Writer / Member'))}
                   </span>
-                  {(user?.role === 'admin' || user?.role === 'superadmin') && (
-                    <Link
-                      to={user.role === 'superadmin' ? '/superadmin' : '/admin'}
-                      className="text-[9px] font-black text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded uppercase hover:underline shrink-0"
-                    >
-                      Switch to Admin
-                    </Link>
-                  )}
                 </div>
               </div>
             </div>
