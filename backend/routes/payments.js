@@ -13,9 +13,13 @@ const Payment = require('../models/Payment');
 // Initialize Razorpay client with fallback key
 let razorpay;
 try {
+  const rawKeyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_mockKeyId12345';
+  const rawKeySecret = process.env.RAZORPAY_KEY_SECRET || 'rzp_test_mockSecret12345';
+  const key_id = rawKeyId.trim().replace(/['"]/g, '');
+  const key_secret = rawKeySecret.trim().replace(/['"]/g, '');
   razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_mockKeyId12345',
-    key_secret: process.env.RAZORPAY_KEY_SECRET || 'rzp_test_mockSecret12345',
+    key_id,
+    key_secret,
   });
 } catch (error) {
   console.error('Error initializing Razorpay Client:', error.message);
@@ -84,9 +88,11 @@ router.post('/create-order', protect, async (req, res) => {
     // Resolve Razorpay Plan ID
     let planId;
     if (planType === 'Monthly' || planType.includes('Monthly')) {
-      planId = process.env.RAZORPAY_MONTHLY_PLAN_ID || 'plan_T2gPOtzN9SzA22';
+      const rawPlanId = process.env.RAZORPAY_MONTHLY_PLAN_ID || 'plan_T2gPOtzN9SzA22';
+      planId = rawPlanId.trim().replace(/['"]/g, '');
     } else if (planType === 'Yearly' || planType.includes('Yearly')) {
-      planId = process.env.RAZORPAY_YEARLY_PLAN_ID || 'plan_T2gQxHxwqMigsk';
+      const rawPlanId = process.env.RAZORPAY_YEARLY_PLAN_ID || 'plan_T2gQxHxwqMigsk';
+      planId = rawPlanId.trim().replace(/['"]/g, '');
     }
 
     let isMock = false;
@@ -108,7 +114,7 @@ router.post('/create-order', protect, async (req, res) => {
           }
         });
       } catch (err) {
-        console.error('Razorpay Subscription SDK creation failed:', err.message);
+        console.error('Razorpay Subscription SDK creation failed. Error details:', err);
         isMock = true;
       }
     }
