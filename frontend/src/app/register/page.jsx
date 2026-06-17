@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { 
   ShieldCheck, Mail, Lock, Phone, User, AlertCircle, Loader, 
