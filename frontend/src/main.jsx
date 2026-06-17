@@ -4,7 +4,10 @@ import App from './App.jsx';
 import './app/globals.css';
 
 // Centralized API URL Routing Interceptor for Production (Render)
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.PROD && typeof window !== 'undefined' 
+    ? window.location.origin 
+    : 'http://localhost:5000');
 if (API_URL !== 'http://localhost:5000') {
   const originalFetch = window.fetch;
   window.fetch = async function (input, init) {
