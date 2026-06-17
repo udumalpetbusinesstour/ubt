@@ -95,7 +95,8 @@ router.post('/create-order', protect, async (req, res) => {
     try {
       order = await razorpay.orders.create(options);
     } catch (err) {
-      console.warn('Razorpay SDK failed (key invalid/unconfigured), creating a mock order object.');
+      console.error('Razorpay SDK Order Creation Failed. Error Details:', err);
+      console.warn('Falling back to mock order object.');
       order = {
         id: 'order_mock_' + Math.random().toString(36).substr(2, 9),
         amount: amount,
@@ -316,7 +317,8 @@ router.post('/create-event-order', protect, async (req, res) => {
     try {
       order = await razorpay.orders.create(options);
     } catch (err) {
-      console.warn('Razorpay SDK failed, fallback to mock order.');
+      console.error('Razorpay SDK Event Order Creation Failed. Error Details:', err);
+      console.warn('Falling back to mock order.');
       order = {
         id: 'order_mock_' + Math.random().toString(36).substr(2, 9),
         amount: amount,
