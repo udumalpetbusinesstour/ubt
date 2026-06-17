@@ -3811,6 +3811,21 @@ function DashboardContent() {
           {/* ========================================================================= */}
           {activeTab === 'Dashboard' && business && (
             <>
+              {(user?.isFoundingMember || business?.isFoundingMember) && (
+                <div className="bg-gradient-to-r from-amber-550 via-amber-600 to-yellow-500 text-white rounded-3xl p-6 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 border border-amber-400/20 text-left animate-fadeIn mb-2 shrink-0">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-white/10 rounded-2xl text-white shrink-0 flex items-center justify-center">
+                      <Sparkles className="h-6 w-6 text-white fill-current animate-pulse" />
+                    </div>
+                    <div className="flex flex-col">
+                      <h3 className="font-extrabold text-sm md:text-base text-white">Congratulations, You are a Founding Member! 🌟</h3>
+                      <p className="text-xs text-amber-100 font-medium leading-relaxed mt-1">
+                        As one of the first 100 premium businesses on Udumalpet Business Tour, you have been awarded the exclusive **Founding Member** badge. Your business profile carries this tag permanently on the directory.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
               {/* 3. KPI CARDS ROW (6 Horizontal premium aligned widgets) */}
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
                 

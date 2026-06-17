@@ -170,7 +170,7 @@ router.post('/businesses/moderate', moderateBusiness);
 // @access  Private/Admin
 router.put('/businesses/:id/status', async (req, res, next) => {
   try {
-    const { status } = req.body;
+    const { status, isFoundingMember } = req.body;
     const business = await Business.findById(req.params.id).populate('ownerId');
     if (!business) {
       return res.status(404).json({ success: false, message: 'Business not found' });
@@ -183,6 +183,14 @@ router.put('/businesses/:id/status', async (req, res, next) => {
       business.subscriptionStatus = 'active';
     } else if (status === 'Rejected') {
       business.verificationStatus = 'rejected';
+    }
+
+    if (typeof isFoundingMember === 'boolean') {
+      business.isFoundingMember = isFoundingMember;
+      if (business.ownerId) {
+        const ownerUserId = business.ownerId._id || business.ownerId;
+        await User.findByIdAndUpdate(ownerUserId, { isFoundingMember });
+      }
     } else if (status === 'Suspended') {
       business.verificationStatus = 'suspended';
       business.subscriptionStatus = 'none';

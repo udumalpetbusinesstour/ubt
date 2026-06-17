@@ -228,6 +228,10 @@ const BusinessSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  isFoundingMember: {
+    type: Boolean,
+    default: false,
+  },
   customCategoryName: {
     type: String,
     trim: true,

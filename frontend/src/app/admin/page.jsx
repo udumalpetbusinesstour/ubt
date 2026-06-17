@@ -164,6 +164,15 @@ export default function AdminDashboard() {
   // Slide-over Modal State
   const [selectedBiz, setSelectedBiz] = useState(null);
   const [showBizModal, setShowBizModal] = useState(false);
+  const [isFoundingMemberCheck, setIsFoundingMemberCheck] = useState(false);
+
+  useEffect(() => {
+    if (selectedBiz) {
+      setIsFoundingMemberCheck(selectedBiz.isFoundingMember || false);
+    } else {
+      setIsFoundingMemberCheck(false);
+    }
+  }, [selectedBiz]);
   
   // Blog Moderation Modal State
   const [selectedBlogModal, setSelectedBlogModal] = useState(null);
@@ -1064,7 +1073,10 @@ export default function AdminDashboard() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ status: nextStatus })
+        body: JSON.stringify({ 
+          status: nextStatus,
+          isFoundingMember: type === 'approve' ? isFoundingMemberCheck : undefined
+        })
       });
       const data = await res.json();
       if (data.success) {
@@ -1075,9 +1087,9 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       // Fallback mock update locally
-      setBusinesses(prev => prev.map(b => b._id === bizId ? { ...b, status: nextStatus } : b));
+      setBusinesses(prev => prev.map(b => b._id === bizId ? { ...b, status: nextStatus, isFoundingMember: type === 'approve' ? isFoundingMemberCheck : b.isFoundingMember } : b));
       if (selectedBiz && selectedBiz._id === bizId) {
-        setSelectedBiz(prev => ({ ...prev, status: nextStatus }));
+        setSelectedBiz(prev => ({ ...prev, status: nextStatus, isFoundingMember: type === 'approve' ? isFoundingMemberCheck : prev.isFoundingMember }));
       }
     }
   };
@@ -4304,21 +4316,34 @@ export default function AdminDashboard() {
             </div>
 
             {/* Modal Action Footer */}
-            <div className="p-6 border-t border-slate-200 bg-slate-50 flex gap-3 shrink-0">
-              <button 
-                onClick={() => { handleAction(selectedBiz._id, 'reject'); setShowBizModal(false); }}
-                disabled={selectedBiz.status === 'Rejected'}
-                className="flex-1 py-3 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 text-center"
-              >
-                Reject Listing
-              </button>
-              <button 
-                onClick={() => { handleAction(selectedBiz._id, 'approve'); setShowBizModal(false); }}
-                disabled={selectedBiz.status === 'Approved'}
-                className="flex-1 py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 text-center shadow shadow-emerald-800/10"
-              >
-                Approve & Publish
-              </button>
+            <div className="p-6 border-t border-slate-200 bg-slate-50 flex flex-col gap-4 shrink-0">
+              {selectedBiz.status !== 'Approved' && (
+                <label className="flex items-center gap-2 px-1 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={isFoundingMemberCheck}
+                    onChange={(e) => setIsFoundingMemberCheck(e.target.checked)}
+                    className="h-4.5 w-4.5 rounded text-[#027244] focus:ring-[#027244] border-slate-300 cursor-pointer"
+                  />
+                  <span className="text-xs font-bold text-slate-700">Award "Founding Member" Badge upon approval</span>
+                </label>
+              )}
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => { handleAction(selectedBiz._id, 'reject'); setShowBizModal(false); }}
+                  disabled={selectedBiz.status === 'Rejected'}
+                  className="flex-1 py-3 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 text-center"
+                >
+                  Reject Listing
+                </button>
+                <button 
+                  onClick={() => { handleAction(selectedBiz._id, 'approve'); setShowBizModal(false); }}
+                  disabled={selectedBiz.status === 'Approved'}
+                  className="flex-1 py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 text-center shadow shadow-emerald-800/10"
+                >
+                  Approve & Publish
+                </button>
+              </div>
             </div>
 
           </div>

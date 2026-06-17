@@ -1605,7 +1605,7 @@ function BusinessesList() {
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4.5 text-left animate-fadeIn">
-                      {dynamicCategoryDetails.map((cat, idx) => {
+                      {[...dynamicCategoryDetails].sort((a, b) => (categoryCounts[b.name] || 0) - (categoryCounts[a.name] || 0)).map((cat, idx) => {
                         const count = categoryCounts[cat.name] || 0;
                         return (
                           <div 
@@ -1772,6 +1772,12 @@ function BusinessesList() {
                                       <div className="bg-white border border-amber-100 px-2 py-0.5 rounded-lg shadow-xs flex items-center gap-1">
                                         <Sparkles className="h-3.5 w-3.5 text-amber-500 fill-current" />
                                         <span className="text-[9px] font-black text-amber-600 uppercase tracking-wider">Premium</span>
+                                      </div>
+                                    )}
+                                    {biz.isFoundingMember && (
+                                      <div className="bg-amber-500 text-white px-2 py-0.5 rounded-lg shadow-xs flex items-center gap-1 border border-amber-600">
+                                        <Sparkles className="h-3.5 w-3.5 text-white fill-current" />
+                                        <span className="text-[9px] font-black uppercase tracking-wider">Founding Member</span>
                                       </div>
                                     )}
                                     {(biz.isAddressVerified || (biz.googlePlaceId && biz.googlePlaceId !== '') || (biz.googleBusinessLink && biz.googleBusinessLink !== '') || biz.googleLinked) && (
@@ -2254,7 +2260,12 @@ function BusinessesList() {
                               <span className="text-[8px] sm:text-[9px] font-black text-amber-600 uppercase tracking-wider">Premium</span>
                             </div>
                           )}
-                          
+                          {biz.isFoundingMember && (
+                            <div className="bg-amber-500 text-white px-1.5 py-0.5 rounded-lg shadow-xs flex items-center gap-0.5 border border-amber-600">
+                              <Sparkles className="h-2.5 w-2.5 text-white fill-current" />
+                              <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider">Founding Member</span>
+                            </div>
+                          )}
                           {(biz.isAddressVerified || (biz.googlePlaceId && biz.googlePlaceId !== '') || (biz.googleBusinessLink && biz.googleBusinessLink !== '') || biz.googleLinked) && (
                             <div className="bg-white border border-emerald-100 px-1.5 py-0.5 rounded-lg shadow-xs flex items-center gap-0.5">
                                <svg className="h-3 w-3 text-[#027244] shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

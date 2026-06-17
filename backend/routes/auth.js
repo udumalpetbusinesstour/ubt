@@ -5,13 +5,18 @@ const {
   loginUser, 
   getMe, 
   updateProfile, 
-  deleteAccount 
+  deleteAccount,
+  googleLogin
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
 // @route   POST /api/auth/register
 // @access  Public
 router.post('/register', registerUser);
+
+// @route   POST /api/auth/google-login
+// @access  Public
+router.post('/google-login', googleLogin);
 
 // @route   POST /api/auth/login
 // @access  Public

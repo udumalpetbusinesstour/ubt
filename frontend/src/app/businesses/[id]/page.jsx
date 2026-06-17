@@ -1159,6 +1159,11 @@ Please confirm availability and delivery time.`;
               <div className="flex flex-col gap-1.5 justify-center">
                 <div className="flex flex-wrap items-center gap-3">
                   <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white font-sans">{business.name}</h1>
+                  {business.isFoundingMember && (
+                    <span className="bg-amber-550 text-white border border-amber-500/30 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm shrink-0">
+                      <Sparkles className="h-3.5 w-3.5 text-white fill-current animate-pulse" /> Founding Member
+                    </span>
+                  )}
                   {(business.isAddressVerified || (business.googlePlaceId && business.googlePlaceId !== '') || (business.googleBusinessLink && business.googleBusinessLink !== '') || business.googleLinked) ? (
                     <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-400/25 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm shrink-0">
                       <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

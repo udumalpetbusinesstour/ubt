@@ -297,10 +297,96 @@ const deleteAccount = async (req, res, next) => {
   }
 };
 
+/**
+ * Authenticate or register via Google Sign-In
+ */
+const googleLogin = async (req, res, next) => {
+  try {
+    const { credential, isMock, email: mockEmail, name: mockName } = req.body;
+    let email, name, picture;
+
+    if (isMock) {
+      // For local development / testing fallback
+      email = mockEmail || 'google_partner_test@udumalpet.in';
+      name = mockName || 'Google Partner Member';
+      picture = '';
+    } else {
+      if (!credential) {
+        return sendError(res, 400, 'Google credential token is required');
+      }
+
+      // Verify Google ID token via public API
+      const googleVerifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+      if (!googleVerifyRes.ok) {
+        return sendError(res, 400, 'Google token verification failed');
+      }
+
+      const payload = await googleVerifyRes.json();
+      
+      // Check client ID if configured
+      const expectedClientId = process.env.GOOGLE_CLIENT_ID;
+      if (expectedClientId && payload.aud !== expectedClientId) {
+        return sendError(res, 400, 'Google Client ID mismatch');
+      }
+
+      email = payload.email;
+      name = payload.name;
+      picture = payload.picture;
+    }
+
+    if (!email) {
+      return sendError(res, 400, 'Could not retrieve email from Google Account');
+    }
+
+    // Find user
+    let user = await User.findOne({ email: email.toLowerCase() });
+    
+    if (!user) {
+      // Register user dynamically
+      user = await User.create({
+        name: name,
+        fullName: name,
+        email: email.toLowerCase(),
+        password: `oauth_pwd_${Math.random().toString(36).substring(2, 12)}`, // Secure dummy password
+        role: 'owner', // Default role for registering business owners
+        isVerified: true,
+        status: 'Active',
+        profileImage: picture || ''
+      });
+    }
+
+    // Check suspension status
+    if (user.status === 'Suspended') {
+      return sendError(res, 403, 'Your account has been suspended due to system violations.');
+    }
+
+    // Generate JWT
+    const token = generateToken(user._id);
+
+    return sendSuccess(res, 200, 'Google authentication successful', {
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        fullName: user.fullName || user.name,
+        email: user.email,
+        phone: user.phone || user.mobileNumber,
+        role: user.role,
+        profileImage: user.profileImage,
+        isFoundingMember: user.isFoundingMember || false
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getMe,
   updateProfile,
-  deleteAccount
+  deleteAccount,
+  googleLogin
 };
+

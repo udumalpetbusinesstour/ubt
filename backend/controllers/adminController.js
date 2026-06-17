@@ -13,11 +13,19 @@ const { sendEmail } = require('../utils/emailHelper');
  */
 const moderateBusiness = async (req, res, next) => {
   try {
-    const { businessId, action, remarks } = req.body;
+    const { businessId, action, remarks, isFoundingMember } = req.body;
 
     const business = await Business.findById(businessId).populate('ownerId');
     if (!business) {
       return sendError(res, 404, 'Business listing not found');
+    }
+
+    if (typeof isFoundingMember === 'boolean') {
+      business.isFoundingMember = isFoundingMember;
+      if (business.ownerId) {
+        const ownerUserId = business.ownerId._id || business.ownerId;
+        await User.findByIdAndUpdate(ownerUserId, { isFoundingMember });
+      }
     }
 
     let nextStatus = 'Pending Verification';

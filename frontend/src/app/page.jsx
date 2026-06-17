@@ -917,6 +917,22 @@ export default function Home() {
                       filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
                     }}
                   />
+                  {isSubscribed && (
+                    <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">
+                      {biz.isPremium && (
+                        <div className="bg-white border border-amber-100 px-1.5 py-0.5 rounded-lg shadow-xs flex items-center gap-0.5">
+                          <Sparkles className="h-3 w-3 text-amber-500 fill-current" />
+                          <span className="text-[8px] sm:text-[9px] font-black text-amber-600 uppercase tracking-wider">Premium</span>
+                        </div>
+                      )}
+                      {biz.isFoundingMember && (
+                        <div className="bg-amber-500 text-white px-1.5 py-0.5 rounded-lg shadow-xs flex items-center gap-0.5 border border-amber-600">
+                          <Sparkles className="h-2.5 w-2.5 text-white fill-current" />
+                          <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider">Founding Member</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div 
                   className="p-5 flex-grow flex flex-col justify-between gap-3.5 bg-white"

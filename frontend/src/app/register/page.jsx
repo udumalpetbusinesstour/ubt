@@ -99,26 +99,89 @@ export default function Register() {
     }
   };
 
-  const handleSocialMock = (provider) => {
-    setError('');
-    setInfoMessage(`Mocking ${provider} registration single sign-on...`);
-    setTimeout(() => {
-      const dummyUser = {
-        id: 'user_social_' + Math.random().toString(36).substr(2, 9),
-        fullName: 'New UBT Registered Member',
-        email: `newmember_${Date.now()}@udumalpet.in`,
-        mobileNumber: '+91 94435 12345',
-        role: 'owner',
-      };
-      localStorage.setItem('ubt_token', 'mock_jwt_token_' + Math.random().toString(36).substr(2, 9));
-      localStorage.setItem('ubt_user', JSON.stringify(dummyUser));
-      const redirect = searchParams.get('redirect');
-      if (redirect && redirect !== '/' && redirect !== '/login' && redirect !== '/register') {
-        navigate(redirect);
-      } else {
-        navigate('/add-business');
+  useEffect(() => {
+    // Dynamically load Google Identity Services script
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    return () => {
+      // Safely cleanup script on unmount
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
       }
-    }, 1200);
+    };
+  }, []);
+
+  const handleGoogleLogin = async (googleCredential = null) => {
+    setLoading(true);
+    setError('');
+    setInfoMessage(googleCredential ? 'Registering with Google...' : 'Signing up with Google Account...');
+    
+    try {
+      const isMock = !googleCredential;
+      const payload = isMock ? {
+        isMock: true,
+        email: `newgooglemember_${Date.now()}@udumalpet.in`,
+        name: 'New Google Member'
+      } : {
+        isMock: false,
+        credential: googleCredential
+      };
+
+      const res = await fetch('http://localhost:5000/api/auth/google-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        const token = data.token || (data.data && data.data.token);
+        const user = data.user || (data.data && data.data.user);
+
+        if (!token || !user) {
+          setError('Google registration response validation error.');
+          return;
+        }
+
+        localStorage.setItem('ubt_token', token);
+        localStorage.setItem('ubt_user', JSON.stringify(user));
+        setInfoMessage('Account registered successfully! Redirecting...');
+        
+        const redirect = searchParams.get('redirect');
+        setTimeout(() => {
+          if (redirect && redirect !== '/' && redirect !== '/login' && redirect !== '/register') {
+            navigate(redirect);
+          } else {
+            navigate('/add-business');
+          }
+        }, 1200);
+      } else {
+        setError(data.message || 'Google registration failed.');
+      }
+    } catch (err) {
+      setError('Google Sign-Up connection failed. Try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const triggerGoogleSignIn = () => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (clientId && window.google) {
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (response) => {
+          handleGoogleLogin(response.credential);
+        }
+      });
+      window.google.accounts.id.prompt();
+    } else {
+      handleGoogleLogin(null);
+    }
   };
 
   const renderSidebar = () => {
@@ -639,21 +702,15 @@ export default function Register() {
                 <div className="flex-grow border-t border-slate-200"></div>
               </div>
 
-              {/* Side-by-side social buttons matching the mockup */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Stacked Google-only sign-up button */}
+              <div className="flex flex-col gap-2.5 font-sans">
                 <button
-                  onClick={() => handleSocialMock('Google')}
-                  className="py-2.5 border border-slate-200 hover:bg-slate-50 text-[#001c41] font-bold text-[10.5px] rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  type="button"
+                  onClick={triggerGoogleSignIn}
+                  className="py-2.5 border border-slate-200 hover:bg-slate-50 text-[#001c41] font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer w-full"
                 >
                   <img src="https://www.svgrepo.com/show/355037/google-icon.svg" className="h-3.5 w-3.5" alt="Google" />
                   <span>Sign up with Google</span>
-                </button>
-                <button
-                  onClick={() => handleSocialMock('Facebook')}
-                  className="py-2.5 border border-slate-200 hover:bg-slate-50 text-[#001c41] font-bold text-[10.5px] rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <img src="https://www.svgrepo.com/show/157818/facebook.svg" className="h-3.5 w-3.5" alt="Facebook" />
-                  <span>Sign up with Facebook</span>
                 </button>
               </div>
             </div>

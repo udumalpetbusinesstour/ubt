@@ -84,9 +84,9 @@ router.post('/create-order', protect, async (req, res) => {
     // Resolve Razorpay Plan ID
     let planId;
     if (planType === 'Monthly' || planType.includes('Monthly')) {
-      planId = process.env.RAZORPAY_MONTHLY_PLAN_ID || 'plan_T2cpUom8WLUu5G';
+      planId = process.env.RAZORPAY_MONTHLY_PLAN_ID || 'plan_T2gPOtzN9SzA22';
     } else if (planType === 'Yearly' || planType.includes('Yearly')) {
-      planId = process.env.RAZORPAY_YEARLY_PLAN_ID || 'plan_T2cr0CIymBlF9y';
+      planId = process.env.RAZORPAY_YEARLY_PLAN_ID || 'plan_T2gQxHxwqMigsk';
     }
 
     let isMock = false;

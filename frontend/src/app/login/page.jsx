@@ -10,15 +10,9 @@ export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const fromParam = searchParams.get('from') || 'business';
-  const [activeTab, setActiveTab] = useState('password'); // password | otp
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  
-  // OTP states
-  const [phone, setPhone] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState('');
   
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -370,100 +364,94 @@ export default function Login() {
     }
   };
 
-  const handleSendOTP = async (e) => {
-    e.preventDefault();
-    if (!phone) {
-      setError('Please enter mobile number.');
-      return;
-    }
-    setLoading(true);
-    setError('');
-    try {
-      const res = await fetch('http://localhost:5000/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobileNumber: phone }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setOtpSent(true);
-        setInfoMessage(data.message);
-      } else {
-        setError(data.message);
-      }
-    } catch (err) {
-      setError('Failed to send OTP.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    // Dynamically load Google Identity Services script
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
 
-  const handleOTPLogin = async (e) => {
-    e.preventDefault();
-    if (!phone || !otp) {
-      setError('Please fill in mobile number and OTP.');
-      return;
-    }
+    return () => {
+      // Safely cleanup script on unmount
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
+
+  const handleGoogleLogin = async (googleCredential = null) => {
     setLoading(true);
     setError('');
+    setInfoMessage(googleCredential ? 'Authenticating with Google...' : 'Signing in with Google Account...');
+    
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login-otp', {
+      const isMock = !googleCredential;
+      const payload = isMock ? {
+        isMock: true,
+        email: 'google_partner_test@udumalpet.in',
+        name: 'Google Partner Member'
+      } : {
+        isMock: false,
+        credential: googleCredential
+      };
+
+      const res = await fetch('http://localhost:5000/api/auth/google-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobileNumber: phone, otp }),
+        body: JSON.stringify(payload),
       });
+
       const data = await res.json();
       if (data.success) {
         const token = data.token || (data.data && data.data.token);
         const user = data.user || (data.data && data.data.user);
 
         if (!token || !user) {
-          setError('Response validation error: token or user information missing.');
+          setError('Google Login response validation error.');
           return;
         }
 
         localStorage.setItem('ubt_token', token);
         localStorage.setItem('ubt_user', JSON.stringify(user));
+        setInfoMessage('Logged in successfully! Redirecting...');
+        
         const redirect = searchParams.get('redirect');
-        if (redirect && redirect !== '/' && redirect !== '/login' && redirect !== '/register') {
-          navigate(redirect);
-        } else if (user.role === 'superadmin') {
-          navigate('/superadmin');
-        } else if (user.role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/dashboard');
-        }
+        setTimeout(() => {
+          if (redirect && redirect !== '/' && redirect !== '/login' && redirect !== '/register') {
+            navigate(redirect);
+          } else if (user.role === 'superadmin') {
+            navigate('/superadmin');
+          } else if (user.role === 'admin') {
+            navigate('/admin');
+          } else {
+            navigate('/dashboard');
+          }
+        }, 1200);
       } else {
-        setError(data.message);
+        setError(data.message || 'Google Login failed.');
       }
     } catch (err) {
-      setError('Verification failed. Try again.');
+      setError('Google Sign-In connection failed. Try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSocialMock = (provider) => {
-    setError('');
-    setInfoMessage(`Mocking ${provider} single sign-on...`);
-    setTimeout(() => {
-      const dummyUser = {
-        id: 'user_social_' + Math.random().toString(36).substr(2, 9),
-        fullName: 'Udumalpet Partner Account',
-        email: 'partner@udumalpet.in',
-        mobileNumber: '+91 94435 12345',
-        role: 'owner',
-      };
-      localStorage.setItem('ubt_token', 'mock_jwt_token_' + Math.random().toString(36).substr(2, 9));
-      localStorage.setItem('ubt_user', JSON.stringify(dummyUser));
-      const redirect = searchParams.get('redirect');
-      if (redirect && redirect !== '/' && redirect !== '/login' && redirect !== '/register') {
-        navigate(redirect);
-      } else {
-        navigate('/dashboard');
-      }
-    }, 1200);
+  const triggerGoogleSignIn = () => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (clientId && window.google) {
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (response) => {
+          handleGoogleLogin(response.credential);
+        }
+      });
+      window.google.accounts.id.prompt();
+    } else {
+      // Fallback mock registration/login in database
+      handleGoogleLogin(null);
+    }
   };
 
   return (
@@ -514,138 +502,66 @@ export default function Login() {
               </div>
             )}
 
-            {/* Toggle tabs (Password / OTP) */}
-            <div className="border-b border-slate-100 flex gap-5">
-              <button
-                onClick={() => { setActiveTab('password'); setError(''); }}
-                className={`pb-2.5 text-xs uppercase tracking-wider font-extrabold border-b-2 transition-all cursor-pointer ${
-                  activeTab === 'password'
-                    ? 'border-[#027244] text-[#027244]'
-                    : 'border-transparent text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                Login with Password
-              </button>
-              <button
-                onClick={() => { setActiveTab('otp'); setError(''); }}
-                className={`pb-2.5 text-xs uppercase tracking-wider font-extrabold border-b-2 transition-all cursor-pointer ${
-                  activeTab === 'otp'
-                    ? 'border-[#027244] text-[#027244]'
-                    : 'border-transparent text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                Login with OTP
-              </button>
-            </div>
-
-            {/* Password Login tab */}
-            {activeTab === 'password' && (
-              <form onSubmit={handlePasswordLogin} className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-700">Email or Mobile Number <span className="text-red-500">*</span></label>
-                  <div className="relative flex items-center">
-                    <User className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
-                    <input
-                      type="text"
-                      placeholder="Enter your email or mobile number"
-                      value={emailOrPhone}
-                      onChange={(e) => setEmailOrPhone(e.target.value)}
-                      className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
-                    />
-                  </div>
+            <form onSubmit={handlePasswordLogin} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-700">Email or Mobile Number <span className="text-red-500">*</span></label>
+                <div className="relative flex items-center">
+                  <User className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
+                  <input
+                    type="text"
+                    placeholder="Enter your email or mobile number"
+                    value={emailOrPhone}
+                    onChange={(e) => setEmailOrPhone(e.target.value)}
+                    className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
+                  />
                 </div>
+              </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-700">Password <span className="text-red-500">*</span></label>
-                  <div className="relative flex items-center">
-                    <Lock className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full py-2.5 pl-10 pr-10 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Remember / Forgot Row */}
-                <div className="flex justify-between items-center mt-1">
-                  <label className="flex items-center text-xs font-semibold text-slate-500 cursor-pointer select-none">
-                    <input type="checkbox" id="remember" className="h-4 w-4 border-slate-300 rounded text-[#027244] focus:ring-[#027244]" />
-                    <span className="ml-2">Remember Me</span>
-                  </label>
-                  <a 
-                    href="#" 
-                    onClick={(e) => { e.preventDefault(); setInfoMessage("Password reset instructions sent. (Check mock notification)"); }} 
-                    className="text-xs font-extrabold text-[#027244] hover:underline"
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-700">Password <span className="text-red-500">*</span></label>
+                <div className="relative flex items-center">
+                  <Lock className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full py-2.5 pl-10 pr-10 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none"
                   >
-                    Forgot Password?
-                  </a>
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-[#027244] hover:bg-[#005934] text-white font-black text-xs py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+              {/* Remember / Forgot Row */}
+              <div className="flex justify-between items-center mt-1">
+                <label className="flex items-center text-xs font-semibold text-slate-500 cursor-pointer select-none">
+                  <input type="checkbox" id="remember" className="h-4 w-4 border-slate-300 rounded text-[#027244] focus:ring-[#027244]" />
+                  <span className="ml-2">Remember Me</span>
+                </label>
+                <a 
+                  href="#" 
+                  onClick={(e) => { e.preventDefault(); setInfoMessage("Password reset instructions sent. (Check mock notification)"); }} 
+                  className="text-xs font-extrabold text-[#027244] hover:underline"
                 >
-                  {loading && <Loader className="h-4 w-4 animate-spin" />}
-                  <span>Login</span>
-                </button>
-              </form>
-            )}
+                  Forgot Password?
+                </a>
+              </div>
 
-            {/* OTP Login tab */}
-            {activeTab === 'otp' && (
-              <form onSubmit={otpSent ? handleOTPLogin : handleSendOTP} className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-700">Mobile Number <span className="text-red-500">*</span></label>
-                  <div className="relative flex items-center">
-                    <Phone className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
-                    <input
-                      type="text"
-                      placeholder="Enter mobile number"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      disabled={otpSent}
-                      className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all disabled:bg-slate-100 disabled:text-slate-400"
-                    />
-                  </div>
-                </div>
-
-                {otpSent && (
-                  <div className="flex flex-col gap-1.5 animate-slideDown">
-                    <label className="text-xs font-bold text-slate-700">Enter OTP <span className="text-red-500">*</span></label>
-                    <div className="relative flex items-center">
-                      <Key className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
-                      <input
-                        type="text"
-                        placeholder="Enter 6-digit OTP"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-[#027244] hover:bg-[#005934] text-white font-black text-xs py-3 rounded-xl transition-all shadow flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {loading && <Loader className="h-4 w-4 animate-spin" />}
-                  <span>{otpSent ? 'Verify & Login' : 'Send OTP'}</span>
-                </button>
-              </form>
-            )}
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-[#027244] hover:bg-[#005934] text-white font-black text-xs py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+              >
+                {loading && <Loader className="h-4 w-4 animate-spin" />}
+                <span>Login</span>
+              </button>
+            </form>
 
             {/* Social logins */}
             <div className="flex flex-col gap-3 mt-1 border-t border-slate-100 pt-4">
@@ -657,18 +573,12 @@ export default function Login() {
 
               <div className="flex flex-col gap-2.5 font-sans">
                 <button
-                  onClick={() => handleSocialMock('Google')}
-                  className="py-2.5 border border-slate-200 hover:bg-slate-50 text-[#001c41] font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  type="button"
+                  onClick={triggerGoogleSignIn}
+                  className="py-2.5 border border-slate-200 hover:bg-slate-50 text-[#001c41] font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer w-full"
                 >
                   <img src="https://www.svgrepo.com/show/355037/google-icon.svg" className="h-4 w-4" alt="Google" />
                   <span>Continue with Google</span>
-                </button>
-                <button
-                  onClick={() => handleSocialMock('Facebook')}
-                  className="py-2.5 border border-slate-200 hover:bg-slate-50 text-[#001c41] font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
-                >
-                  <img src="https://www.svgrepo.com/show/157818/facebook.svg" className="h-4 w-4" alt="Facebook" />
-                  <span>Continue with Facebook</span>
                 </button>
               </div>
             </div>

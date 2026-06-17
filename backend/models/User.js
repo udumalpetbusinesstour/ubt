@@ -75,6 +75,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     trim: true,
     default: '',
+  },
+  isFoundingMember: {
+    type: Boolean,
+    default: false,
   }
 }, {
   timestamps: true
