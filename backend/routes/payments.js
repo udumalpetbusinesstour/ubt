@@ -87,10 +87,10 @@ router.post('/create-order', protect, async (req, res) => {
 
     // Resolve Razorpay Plan ID
     let planId;
-    if (planType === 'Monthly' || planType.includes('Monthly')) {
+    if (planType && (planType.toLowerCase() === 'monthly' || planType.toLowerCase().includes('monthly'))) {
       const rawPlanId = process.env.RAZORPAY_MONTHLY_PLAN_ID || 'plan_T2gPOtzN9SzA22';
       planId = rawPlanId.trim().replace(/['"]/g, '');
-    } else if (planType === 'Yearly' || planType.includes('Yearly')) {
+    } else if (planType && (planType.toLowerCase() === 'yearly' || planType.toLowerCase().includes('yearly'))) {
       const rawPlanId = process.env.RAZORPAY_YEARLY_PLAN_ID || 'plan_T2gQxHxwqMigsk';
       planId = rawPlanId.trim().replace(/['"]/g, '');
     }
