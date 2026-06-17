@@ -88,7 +88,7 @@ router.post('/create-order', protect, async (req, res) => {
     const options = {
       amount: amount,
       currency: 'INR',
-      receipt: `receipt_biz_${businessId}_${Date.now()}`,
+      receipt: `rcpt_biz_${businessId.toString().slice(-12)}_${Date.now()}`,
     };
 
     let order;
@@ -310,7 +310,7 @@ router.post('/create-event-order', protect, async (req, res) => {
     const options = {
       amount: amount,
       currency: 'INR',
-      receipt: `receipt_evt_${eventId}_${Date.now()}`,
+      receipt: `rcpt_evt_${eventId.toString().slice(-12)}_${Date.now()}`,
     };
 
     let order;
