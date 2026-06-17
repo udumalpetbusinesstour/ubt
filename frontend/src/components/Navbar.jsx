@@ -237,23 +237,13 @@ export default function Navbar() {
               </div>
 
               {user.role === 'superadmin' || user.role === 'admin' ? (
-                <>
-                  <Link
-                    to={user.role === 'superadmin' ? '/superadmin' : '/admin'}
-                    className="hover:text-emerald-600 font-semibold flex items-center gap-1"
-                  >
-                    <User className="h-3.5 w-3.5" />
-                    <span>Admin Panel</span>
-                  </Link>
-                  <span className="text-slate-300">|</span>
-                  <Link
-                    to="/dashboard"
-                    className="hover:text-emerald-600 font-semibold flex items-center gap-1"
-                  >
-                    <Building2 className="h-3.5 w-3.5" />
-                    <span>Merchant Panel</span>
-                  </Link>
-                </>
+                <Link
+                  to={user.role === 'superadmin' ? '/superadmin' : '/admin'}
+                  className="hover:text-emerald-600 font-semibold flex items-center gap-1"
+                >
+                  <User className="h-3.5 w-3.5" />
+                  <span>Admin Panel</span>
+                </Link>
               ) : (
                 <Link
                   to="/dashboard"
@@ -326,20 +316,12 @@ export default function Navbar() {
               </>
             ) : (
               user.role === 'superadmin' || user.role === 'admin' ? (
-                <div className="flex items-center gap-1.5">
-                  <Link
-                    to={user.role === 'superadmin' ? '/superadmin' : '/admin'}
-                    className="text-[10px] font-black text-slate-705 hover:text-[#027244] border border-slate-200 bg-slate-50 px-2 py-1.5 rounded-lg shadow-3xs"
-                  >
-                    Admin
-                  </Link>
-                  <Link
-                    to="/dashboard"
-                    className="text-[10px] font-black text-slate-750 hover:text-[#027244] border border-slate-200 bg-slate-50 px-2 py-1.5 rounded-lg shadow-3xs"
-                  >
-                    Merchant
-                  </Link>
-                </div>
+                <Link
+                  to={user.role === 'superadmin' ? '/superadmin' : '/admin'}
+                  className="text-[10px] font-black text-slate-705 hover:text-[#027244] border border-slate-200 bg-slate-50 px-2.5 py-1.5 rounded-lg shadow-3xs"
+                >
+                  Admin
+                </Link>
               ) : (
                 <Link
                   to="/dashboard"
@@ -386,24 +368,14 @@ export default function Navbar() {
             {user && (
               <div className="flex flex-col gap-3.5 mt-2">
                 {user.role === 'superadmin' || user.role === 'admin' ? (
-                  <>
-                    <Link
-                      to={user.role === 'superadmin' ? '/superadmin' : '/admin'}
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-3 text-base font-semibold py-2.5 text-slate-600 hover:text-[#027244] transition-colors border-b border-slate-50"
-                    >
-                      <User className="h-4.5 w-4.5 text-emerald-500 shrink-0" />
-                      <span>Admin Panel</span>
-                    </Link>
-                    <Link
-                      to="/dashboard"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-3 text-base font-semibold py-2.5 text-slate-600 hover:text-[#027244] transition-colors border-b border-slate-50"
-                    >
-                      <Building2 className="h-4.5 w-4.5 text-emerald-500 shrink-0" />
-                      <span>Merchant Panel</span>
-                    </Link>
-                  </>
+                  <Link
+                    to={user.role === 'superadmin' ? '/superadmin' : '/admin'}
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 text-base font-semibold py-2.5 text-slate-600 hover:text-[#027244] transition-colors border-b border-slate-50"
+                  >
+                    <User className="h-4.5 w-4.5 text-emerald-500 shrink-0" />
+                    <span>Admin Panel</span>
+                  </Link>
                 ) : (
                   <Link
                     to="/dashboard"
