@@ -537,7 +537,7 @@ const mockDetails = {
 // @access  Public
 router.get('/', async (req, res) => {
   try {
-    const { q, category, locality, rating, verified, type } = req.query;
+    const { q, category, locality, rating, verified, type, sort, limit } = req.query;
 
     let query = {};
 
@@ -648,26 +648,39 @@ router.get('/', async (req, res) => {
     businesses = businessesWithCounts;
 
     // Custom Sorting: 
+    // If sort === 'views', sort by views count.
+    // Otherwise, use the standard priority sorting:
     // 1. Premium + Active first
     // 2. Verified + Active second
     // 3. Subscription Expired lower rank
     // 4. Alphabetical / Newest
-    businesses.sort((a, b) => {
-      // Premium active vs others
-      const aPremium = a.isPremium && a.subscriptionStatus === 'active';
-      const bPremium = b.isPremium && b.subscriptionStatus === 'active';
-      if (aPremium && !bPremium) return -1;
-      if (!aPremium && bPremium) return 1;
+    if (sort === 'views') {
+      businesses.sort((a, b) => (b.views || 0) - (a.views || 0));
+    } else {
+      businesses.sort((a, b) => {
+        // Premium active vs others
+        const aPremium = a.isPremium && a.subscriptionStatus === 'active';
+        const bPremium = b.isPremium && b.subscriptionStatus === 'active';
+        if (aPremium && !bPremium) return -1;
+        if (!aPremium && bPremium) return 1;
 
-      // Active vs Expired
-      const aActive = a.subscriptionStatus === 'active';
-      const bActive = b.subscriptionStatus === 'active';
-      if (aActive && !bActive) return -1;
-      if (!aActive && bActive) return 1;
+        // Active vs Expired
+        const aActive = a.subscriptionStatus === 'active';
+        const bActive = b.subscriptionStatus === 'active';
+        if (aActive && !bActive) return -1;
+        if (!aActive && bActive) return 1;
 
-      // Rating sort
-      return b.googleRating - a.googleRating;
-    });
+        // Rating sort
+        return b.googleRating - a.googleRating;
+      });
+    }
+
+    if (limit) {
+      const limitNum = parseInt(limit);
+      if (!isNaN(limitNum)) {
+        businesses = businesses.slice(0, limitNum);
+      }
+    }
 
     res.json({ success: true, count: businesses.length, data: businesses });
   } catch (error) {
@@ -1439,7 +1452,14 @@ router.post('/validate-address', async (req, res) => {
 // @access  Public
 router.get('/:id', async (req, res) => {
   try {
-    const business = await Business.findById(req.id || req.params.id);
+    const skipInc = req.query.skipInc === 'true';
+    const business = skipInc
+      ? await Business.findById(req.id || req.params.id)
+      : await Business.findByIdAndUpdate(
+          req.id || req.params.id,
+          { $inc: { views: 1 } },
+          { new: true }
+        );
     if (!business) {
       return res.status(404).json({ success: false, message: 'Business not found' });
     }

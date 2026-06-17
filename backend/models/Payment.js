@@ -20,14 +20,15 @@ const PaymentSchema = new mongoose.Schema({
   },
   orderId: {
     type: String,
-    required: true,
   },
   paymentId: {
     type: String,
   },
   razorpayOrderId: {
     type: String,
-    required: true,
+  },
+  razorpaySubscriptionId: {
+    type: String,
   },
   razorpayPaymentId: {
     type: String,

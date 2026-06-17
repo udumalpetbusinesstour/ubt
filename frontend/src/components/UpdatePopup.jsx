@@ -152,7 +152,7 @@ export default function UpdatePopup() {
                 <Bell className="h-8 w-8" />
               </div>
               <h3 className="text-2xl font-black text-[#001c41] tracking-tight mb-2 flex items-center gap-1.5 justify-center">
-                <span>Stay Updated with UBT</span>
+                <span>Stay Updated with Udumalpet Business Tour</span>
                 <Sparkles className="h-5 w-5 text-amber-500 fill-current" />
               </h3>
               <p className="text-xs text-slate-500 font-semibold leading-relaxed">

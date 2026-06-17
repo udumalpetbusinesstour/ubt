@@ -124,6 +124,10 @@ const BlogSchema = new mongoose.Schema({
     }
   ],
   comments: [CommentSchema],
+  views: {
+    type: Number,
+    default: 0,
+  },
 }, {
   timestamps: true
 });

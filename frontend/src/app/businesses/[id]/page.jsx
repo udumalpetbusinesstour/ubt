@@ -4,7 +4,7 @@ import {
   MapPin, Phone, Mail, Clock, ShieldCheck, HeartHandshake, Star, Share2, Heart, Award, 
   ArrowLeft, Send, CheckCircle2, MessageSquare, AlertCircle, RefreshCw, Calendar, Globe, Sparkles,
   Briefcase, Users, ChevronRight, Check, X, Facebook, Twitter, Edit3, Plus, Upload, Trash2, Instagram, Move, ImageIcon,
-  Utensils
+  Utensils, Eye
 } from 'lucide-react';
 
 
@@ -43,6 +43,8 @@ const isGovernmentalOrPublic = (biz) => {
   
   return false;
 };
+
+const viewedBusinesses = new Set();
 
 export default function BusinessDetail() {
   const params = useParams();
@@ -558,10 +560,19 @@ export default function BusinessDetail() {
 
   const fetchBusinessDetails = async () => {
     setLoading(true);
+    const hasBeenViewed = viewedBusinesses.has(params.id);
+    if (!hasBeenViewed) {
+      viewedBusinesses.add(params.id);
+    }
     try {
-      const res = await fetch(`http://localhost:5000/api/businesses/${params.id}`);
+      const url = hasBeenViewed
+        ? `http://localhost:5000/api/businesses/${params.id}?skipInc=true`
+        : `http://localhost:5000/api/businesses/${params.id}`;
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
+        const currentViews = data.data.views || 0;
+        localStorage.setItem(`ubt_views_${params.id}`, currentViews);
         setBusiness(data.data);
         setReviews(data.data.reviews || []);
         fetchBranches(data.data._id);
@@ -818,6 +829,12 @@ export default function BusinessDetail() {
       const targetId = params.id === 'UBT-10024' ? 'biz_4' : params.id;
       const mockDetails = mockBizList[targetId];
       if (mockDetails) {
+        let next = Number(localStorage.getItem(`ubt_views_${targetId}`) || 0);
+        if (!hasBeenViewed) {
+          next = next + 1;
+          localStorage.setItem(`ubt_views_${targetId}`, next);
+        }
+        mockDetails.views = next;
         setBusiness(mockDetails);
         setReviews(mockDetails.googleReviews || []);
         if (isFoodRelated(mockDetails.category, mockDetails.customCategoryName)) {
@@ -1130,7 +1147,7 @@ Please confirm availability and delivery time.`;
             
             {/* Title Block with Logo and Verified Badge */}
             <div className="flex items-center gap-4 mt-2 flex-wrap text-left">
-              {business.logoUrl ? (
+              {business.logoUrl && !business.logoUrl.includes('images.unsplash.com') ? (
                 <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-white shadow-md shrink-0 flex items-center justify-center">
                   <img src={business.logoUrl} alt={`${business.name} Logo`} className="h-full w-full object-cover" />
                 </div>
@@ -1222,6 +1239,12 @@ Please confirm availability and delivery time.`;
                 </div>
                 <span className="font-black text-white ml-1">{(business.googleRating ?? 0).toFixed(1)}</span>
                 <span className="text-[10px] text-slate-400">({business.googleReviewsCount || 0} Reviews)</span>
+              </div>
+              <span className="text-slate-600">•</span>
+              <div className="flex items-center gap-1 bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg text-slate-350">
+                <Eye className="h-3.5 w-3.5 text-emerald-400" />
+                <span className="font-black text-white ml-1">{business.views || 0}</span>
+                <span className="text-[10px] text-slate-400">Views</span>
               </div>
               <span className="text-slate-600">•</span>
               <span className="text-emerald-450 font-bold bg-emerald-500/5 border border-emerald-500/15 px-2.5 py-1 rounded-lg">{business.type}</span>

@@ -46,7 +46,9 @@ const SubscriptionSchema = new mongoose.Schema({
   },
   razorpayOrderId: {
     type: String,
-    required: true,
+  },
+  razorpaySubscriptionId: {
+    type: String,
   },
   razorpayPaymentId: {
     type: String,

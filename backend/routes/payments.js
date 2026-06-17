@@ -81,36 +81,52 @@ router.post('/create-order', protect, async (req, res) => {
       discountAmountRupees = pointsUsed / 10;
     }
 
-    const finalAmountRupees = planPrice - discountAmountRupees;
-    const amount = Math.round(finalAmountRupees * 100); // paise
+    // Resolve Razorpay Plan ID
+    let planId;
+    if (planType === 'Monthly' || planType.includes('Monthly')) {
+      planId = process.env.RAZORPAY_MONTHLY_PLAN_ID || 'plan_T2cpUom8WLUu5G';
+    } else if (planType === 'Yearly' || planType.includes('Yearly')) {
+      planId = process.env.RAZORPAY_YEARLY_PLAN_ID || 'plan_T2cr0CIymBlF9y';
+    }
 
-    // Razorpay mock / real order creation
-    const options = {
-      amount: amount,
-      currency: 'INR',
-      receipt: `rcpt_biz_${businessId.toString().slice(-12)}_${Date.now()}`,
-    };
+    let isMock = false;
+    if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_mockKeyId12345' || !razorpay) {
+      isMock = true;
+    }
 
-    let order;
-    try {
-      order = await razorpay.orders.create(options);
-    } catch (err) {
-      console.error('Razorpay SDK Order Creation Failed. Error Details:', err);
-      console.warn('Falling back to mock order object.');
-      order = {
-        id: 'order_mock_' + Math.random().toString(36).substr(2, 9),
-        amount: amount,
-        currency: 'INR',
-        receipt: options.receipt,
+    let subscription;
+    if (!isMock) {
+      try {
+        subscription = await razorpay.subscriptions.create({
+          plan_id: planId,
+          total_count: planType.includes('Monthly') ? 120 : 10, // Max charges (e.g. 10 years monthly / 10 years yearly)
+          quantity: 1,
+          customer_notify: 1,
+          notes: {
+            businessId: businessId.toString(),
+            planType: planType
+          }
+        });
+      } catch (err) {
+        console.error('Razorpay Subscription SDK creation failed:', err.message);
+        isMock = true;
+      }
+    }
+
+    if (isMock) {
+      subscription = {
+        id: 'sub_mock_' + Math.random().toString(36).substr(2, 9),
         status: 'created',
+        plan_id: planId
       };
     }
 
     res.json({
       success: true,
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
+      isSubscription: true,
+      subscriptionId: subscription.id,
+      amount: Math.round((planPrice - discountAmountRupees) * 100), // paise
+      currency: 'INR',
       keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_mockKeyId12345',
       discountApplied: discountAmountRupees,
       pointsUsed
@@ -132,11 +148,12 @@ router.post('/verify-payment', protect, async (req, res) => {
       razorpayOrderId,
       razorpayPaymentId,
       razorpaySignature,
+      razorpaySubscriptionId, // Added support for subscription validation
       applyReferralPoints,
       redeemPointsAmount,
     } = req.body;
 
-    if (!businessId || !planType || !razorpayOrderId) {
+    if (!businessId || !planType || (!razorpayOrderId && !razorpaySubscriptionId)) {
       return res.status(400).json({ success: false, message: 'Missing payment parameters' });
     }
 
@@ -145,15 +162,32 @@ router.post('/verify-payment', protect, async (req, res) => {
     const isAdminUser = req.user && (req.user.role === 'admin' || req.user.role === 'superadmin');
     
     // Support bypassing signature check in sandbox mode or for admins
-    if (razorpayOrderId.startsWith('order_mock_') || razorpayOrderId === 'free_listing' || razorpayOrderId.startsWith('free_admin_') || isAdminUser || !razorpaySignature) {
-      console.log('Sandbox/Mock/Admin Payment Bypass verified.');
+    const isBypass = (
+      (razorpayOrderId && (razorpayOrderId.startsWith('order_mock_') || razorpayOrderId === 'free_listing' || razorpayOrderId.startsWith('free_admin_'))) ||
+      (razorpaySubscriptionId && razorpaySubscriptionId.startsWith('sub_mock_')) ||
+      isAdminUser || 
+      !razorpaySignature
+    );
+
+    if (isBypass) {
+      console.log('Sandbox/Mock/Admin Subscription/Payment Bypass verified.');
       isSignatureValid = true;
     } else {
       const keySecret = process.env.RAZORPAY_KEY_SECRET || 'rzp_test_mockSecret12345';
-      const generatedSignature = crypto
-        .createHmac('sha256', keySecret)
-        .update(`${razorpayOrderId}|${razorpayPaymentId}`)
-        .digest('hex');
+      let generatedSignature = '';
+      if (razorpaySubscriptionId) {
+        // subscription validation is paymentId + '|' + subscriptionId
+        generatedSignature = crypto
+          .createHmac('sha256', keySecret)
+          .update(`${razorpayPaymentId}|${razorpaySubscriptionId}`)
+          .digest('hex');
+      } else {
+        // order validation is orderId + '|' + paymentId
+        generatedSignature = crypto
+          .createHmac('sha256', keySecret)
+          .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+          .digest('hex');
+      }
 
       isSignatureValid = generatedSignature === razorpaySignature;
     }
@@ -224,7 +258,8 @@ router.post('/verify-payment', protect, async (req, res) => {
       amountPaid: finalAmount,
       referralDiscount: discountAmountRupees,
       status: 'active',
-      razorpayOrderId: razorpayOrderId,
+      razorpayOrderId: razorpayOrderId || undefined,
+      razorpaySubscriptionId: razorpaySubscriptionId || undefined,
       razorpayPaymentId: razorpayPaymentId || 'pay_mock_' + Math.random().toString(36).substr(2, 9),
       startDate,
       endDate,
@@ -236,9 +271,10 @@ router.post('/verify-payment', protect, async (req, res) => {
       userId: req.user._id,
       businessId: business._id,
       subscriptionId: subscription._id,
-      orderId: razorpayOrderId,
+      orderId: razorpayOrderId || razorpaySubscriptionId,
       paymentId: subscription.razorpayPaymentId,
-      razorpayOrderId: razorpayOrderId,
+      razorpayOrderId: razorpayOrderId || undefined,
+      razorpaySubscriptionId: razorpaySubscriptionId || undefined,
       razorpayPaymentId: subscription.razorpayPaymentId,
       amount: finalAmount,
       paymentMethod: 'UPI',
@@ -498,18 +534,102 @@ router.post('/webhook', async (req, res) => {
     }
 
     const { event: eventType, payload } = req.body;
-    if (!payload || !payload.payment) {
-      return res.json({ success: true, message: 'Webhook event type unhandled' });
+    if (!payload) {
+      return res.json({ success: true, message: 'Webhook payload missing' });
     }
 
-    const paymentEntity = payload.payment.entity;
-    const orderId = paymentEntity.order_id;
-    const paymentId = paymentEntity.id;
-    const amount = paymentEntity.amount / 100; // Rupee conversion
+    console.log(`[Webhook details] Event: ${eventType}`);
 
-    console.log(`[Webhook details] Event: ${eventType}, Order: ${orderId}, Payment ID: ${paymentId}`);
+    if (eventType === 'subscription.charged') {
+      const subscriptionEntity = payload.subscription?.entity;
+      const paymentEntity = payload.payment?.entity;
+      
+      if (!subscriptionEntity || !paymentEntity) {
+        return res.json({ success: true, message: 'Subscription charged event missing detail entities' });
+      }
 
-    if (eventType === 'payment.captured') {
+      const subId = subscriptionEntity.id;
+      const paymentId = paymentEntity.id;
+      const amount = paymentEntity.amount / 100;
+
+      let localSub = await Subscription.findOne({
+        $or: [
+          { razorpaySubscriptionId: subId },
+          { razorpayOrderId: subId }
+        ]
+      });
+
+      // Calculate extended expiry dates
+      const durationDays = subscriptionEntity.notes?.planType === 'Yearly' ? 365 : 30;
+      const currentEndSeconds = subscriptionEntity.current_end;
+      const expiryDate = currentEndSeconds ? new Date(currentEndSeconds * 1000) : new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+
+      if (localSub) {
+        localSub.status = 'active';
+        localSub.razorpayPaymentId = paymentId;
+        localSub.endDate = expiryDate;
+        localSub.expiryDate = expiryDate;
+        await localSub.save();
+
+        const business = await Business.findById(localSub.businessId);
+        if (business) {
+          business.subscriptionStatus = 'active';
+          business.subscriptionExpiry = expiryDate;
+          business.isPremium = true;
+          await business.save();
+        }
+
+        // Add to Payment history
+        await Payment.create({
+          userId: localSub.userId || localSub.ownerId,
+          businessId: localSub.businessId,
+          subscriptionId: localSub._id,
+          orderId: subId,
+          paymentId: paymentId,
+          razorpayOrderId: undefined,
+          razorpaySubscriptionId: subId,
+          razorpayPaymentId: paymentId,
+          amount: amount,
+          paymentMethod: paymentEntity.method || 'UPI',
+          status: 'Paid',
+          paymentStatus: 'Paid',
+          paymentDate: new Date(),
+          paidAt: new Date(),
+        });
+      }
+    } else if (eventType === 'subscription.cancelled' || eventType === 'subscription.halted') {
+      const subscriptionEntity = payload.subscription?.entity;
+      if (subscriptionEntity) {
+        const subId = subscriptionEntity.id;
+        const localSub = await Subscription.findOne({
+          $or: [
+            { razorpaySubscriptionId: subId },
+            { razorpayOrderId: subId }
+          ]
+        });
+
+        if (localSub) {
+          localSub.status = 'expired';
+          await localSub.save();
+
+          const business = await Business.findById(localSub.businessId);
+          if (business) {
+            business.subscriptionStatus = 'expired';
+            business.isPremium = false;
+            await business.save();
+          }
+        }
+      }
+    } else if (eventType === 'payment.captured') {
+      if (!payload.payment) {
+        return res.json({ success: true, message: 'Webhook payment capture entity missing' });
+      }
+
+      const paymentEntity = payload.payment.entity;
+      const orderId = paymentEntity.order_id;
+      const paymentId = paymentEntity.id;
+      const amount = paymentEntity.amount / 100; // Rupee conversion
+
       let payment = await Payment.findOne({ razorpayOrderId: orderId });
       const subscription = await Subscription.findOne({ razorpayOrderId: orderId });
       let eventRecord = null;
@@ -582,6 +702,15 @@ router.post('/webhook', async (req, res) => {
         await eventRecord.save();
       }
     } else if (eventType === 'payment.failed') {
+      if (!payload.payment) {
+        return res.json({ success: true, message: 'Webhook payment failure entity missing' });
+      }
+
+      const paymentEntity = payload.payment.entity;
+      const orderId = paymentEntity.order_id;
+      const paymentId = paymentEntity.id;
+      const amount = paymentEntity.amount / 100; // Rupee conversion
+
       let payment = await Payment.findOne({ razorpayOrderId: orderId });
       const subscription = await Subscription.findOne({ razorpayOrderId: orderId });
       let eventRecord = null;

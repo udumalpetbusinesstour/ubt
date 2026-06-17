@@ -182,7 +182,14 @@ router.get('/admin/all', protect, admin, async (req, res) => {
 // @access  Public
 router.get('/:id', async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id).populate('businessId');
+    const skipInc = req.query.skipInc === 'true';
+    const event = skipInc
+      ? await Event.findById(req.params.id).populate('businessId')
+      : await Event.findByIdAndUpdate(
+          req.params.id,
+          { $inc: { views: 1 } },
+          { new: true }
+        ).populate('businessId');
     if (!event) {
       return res.status(404).json({ success: false, message: 'Event not found' });
     }

@@ -87,9 +87,12 @@ export default function Home() {
   const [locationTerm, setLocationTerm] = useState('');
   const [categoryTerm, setCategoryTerm] = useState('All Categories');
   const [featuredBusinesses, setFeaturedBusinesses] = useState(mockFeatured);
+  const [topViewedBusinesses, setTopViewedBusinesses] = useState([]);
   const [activeFaq, setActiveFaq] = useState(null);
   const faqScrollRef = useRef(null);
+  const categoryScrollRef = useRef(null);
   const testimonialScrollRef = useRef(null);
+  const topViewedScrollRef = useRef(null);
 
   // Testimonials state
   const fallbackTestimonials = [
@@ -238,6 +241,32 @@ export default function Home() {
         }
       } catch (err) {
         console.warn('Backend server offline, running fallback featured businesses sync.');
+      }
+
+      // 1b. Fetch top viewed businesses
+      try {
+        const res = await fetch('http://localhost:5000/api/businesses?sort=views&limit=10');
+        const data = await res.json();
+        if (data.success && data.data.length > 0) {
+          const mapped = data.data.map(b => ({
+            ...b,
+            views: Number(localStorage.getItem(`ubt_views_${b._id}`) || b.views || 0)
+          }));
+          setTopViewedBusinesses(mapped);
+        } else {
+          const mapped = mockFeatured.map(b => ({
+            ...b,
+            views: Number(localStorage.getItem(`ubt_views_${b._id}`) || b.views || 0)
+          }));
+          setTopViewedBusinesses(mapped);
+        }
+      } catch (err) {
+        console.warn('Backend server offline, running fallback top viewed businesses sync.');
+        const mapped = mockFeatured.map(b => ({
+          ...b,
+          views: Number(localStorage.getItem(`ubt_views_${b._id}`) || b.views || 0)
+        }));
+        setTopViewedBusinesses(mapped);
       }
 
       // 2. Fetch all businesses to calculate category counts dynamically
@@ -462,6 +491,18 @@ export default function Home() {
     faqScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
   };
 
+  const handleScrollCategories = (direction) => {
+    if (!categoryScrollRef.current) return;
+    const scrollAmount = direction === 'left' ? -350 : 350;
+    categoryScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  };
+
+  const handleScrollTopViewed = (direction) => {
+    if (!topViewedScrollRef.current) return;
+    const scrollAmount = direction === 'left' ? -350 : 350;
+    topViewedScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  };
+
   const handleScrollTestimonials = (direction) => {
     if (!testimonialScrollRef.current) return;
     const scrollAmount = direction === 'left' ? -360 : 360;
@@ -640,38 +681,8 @@ export default function Home() {
               A trusted local platform to discover, connect and grow with verified businesses in and around Udumalpet.
             </p>
 
-            {/* Onboarding CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 mt-6 w-full sm:w-auto">
-              <Link 
-                to="/register?flow=early_access"
-                id="join-early-access-btn"
-                className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3.5 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Rocket className="h-4.5 w-4.5 animate-pulse" />
-                <span>Join Early Access</span>
-              </Link>
-              <Link 
-                to="/register?flow=general"
-                id="register-business-btn"
-                className="bg-white hover:bg-slate-50 border-2 border-[#027244] text-[#027244] font-extrabold text-xs py-3.5 px-6 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Store className="h-4.5 w-4.5" />
-                <span>Register Your Business</span>
-              </Link>
-            </div>
-
-            {/* Shaking Referral Tag */}
-            <button 
-              type="button"
-              onClick={() => window.dispatchEvent(new CustomEvent('open-referral-modal'))}
-              className="mt-6 bg-amber-400 hover:bg-amber-500 text-slate-900 text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-full shadow-md animate-shake border border-amber-500/20 flex items-center gap-2 cursor-pointer transition-all"
-            >
-              <Gift className="h-4 w-4 text-[#027244] shrink-0 animate-bounce" />
-              Refer other business & earn rewards!
-            </button>
-
             {/* Rich horizontal search bar */}
-            <form onSubmit={handleSearchSubmit} className="mt-4 md:mt-8 w-full bg-white border border-slate-200/80 rounded-2xl shadow-xl p-2 flex flex-col md:flex-row gap-2 max-w-3xl">
+            <form onSubmit={handleSearchSubmit} className="mt-6 w-full bg-white border border-slate-200/80 rounded-2xl shadow-xl p-2 flex flex-col md:flex-row gap-2 max-w-3xl">
               <div className="flex-1 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
                 <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
                 <input
@@ -729,7 +740,7 @@ export default function Home() {
             </form>
 
             {/* Popular searches chips */}
-            <div className="mt-6 flex flex-wrap items-center gap-3.5 text-xs font-bold">
+            <div className="mt-4 flex flex-wrap items-center gap-3.5 text-xs font-bold">
               <span className="text-[#001c41]">Popular Searches:</span>
               {['Hotels', 'Shops', 'Services', 'Hospitals', 'Schools'].map((chip) => (
                 <Link 
@@ -741,6 +752,36 @@ export default function Home() {
                 </Link>
               ))}
             </div>
+
+            {/* Onboarding CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 mt-8 w-full sm:w-auto">
+              <Link 
+                to="/register?flow=early_access"
+                id="join-early-access-btn"
+                className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3.5 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Rocket className="h-4.5 w-4.5 animate-pulse" />
+                <span>Join Early Access</span>
+              </Link>
+              <Link 
+                to="/register?flow=general"
+                id="register-business-btn"
+                className="bg-white hover:bg-slate-50 border-2 border-[#027244] text-[#027244] font-extrabold text-xs py-3.5 px-6 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Store className="h-4.5 w-4.5" />
+                <span>Register Your Business</span>
+              </Link>
+            </div>
+
+            {/* Shaking Referral Tag */}
+            <button 
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-referral-modal'))}
+              className="mt-6 bg-amber-400 hover:bg-amber-500 text-slate-900 text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-full shadow-md animate-shake border border-amber-500/20 flex items-center gap-2 cursor-pointer transition-all"
+            >
+              <Gift className="h-4 w-4 text-[#027244] shrink-0 animate-bounce" />
+              Refer other business & earn rewards!
+            </button>
 
           </div>
 
@@ -800,19 +841,42 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-none snap-x snap-mandatory sm:grid sm:grid-cols-4 lg:grid-cols-8">
-          {categoriesList.map((cat) => (
-            <Link 
-              key={cat.name} 
-              to={cat.path}
-              className="card-premium group rounded-2xl py-4.5 px-3 sm:py-6 sm:px-4 flex flex-col items-center justify-center gap-2.5 sm:gap-4 text-center cursor-pointer w-[calc(50%-8px)] min-w-[135px] shrink-0 snap-start sm:w-auto sm:shrink-0 md:shrink"
-            >
-              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl flex items-center justify-center text-xl sm:text-2xl select-none transition-transform duration-500 ease-out-expo group-hover:scale-110 [&>svg]:h-5.5 [&>svg]:w-5.5 sm:[&>svg]:h-7 sm:[&>svg]:w-7">
-                {cat.icon}
-              </div>
-              <span className="text-xs sm:text-[17px] font-medium text-slate-700 transition-colors duration-300 group-hover:text-[#027244] line-clamp-1">{cat.name}</span>
-            </Link>
-          ))}
+        <div className="relative w-full">
+          {/* Scroll Left Button */}
+          <button 
+            onClick={() => handleScrollCategories('left')}
+            className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+            aria-label="Scroll Categories Left"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+
+          <div 
+            ref={categoryScrollRef} 
+            className="flex overflow-x-auto gap-4 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
+          >
+            {categoriesList.map((cat) => (
+              <Link 
+                key={cat.name} 
+                to={cat.path}
+                className="card-premium group rounded-2xl py-4.5 px-3 sm:py-6 sm:px-4 flex flex-col items-center justify-center gap-2.5 sm:gap-4 text-center cursor-pointer w-[130px] sm:w-[160px] shrink-0 snap-start"
+              >
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl flex items-center justify-center text-xl sm:text-2xl select-none transition-transform duration-500 ease-out-expo group-hover:scale-110 [&>svg]:h-5.5 [&>svg]:w-5.5 sm:[&>svg]:h-7 sm:[&>svg]:w-7">
+                  {cat.icon}
+                </div>
+                <span className="text-xs sm:text-[17px] font-medium text-slate-700 transition-colors duration-300 group-hover:text-[#027244] line-clamp-1">{cat.name}</span>
+              </Link>
+            ))}
+          </div>
+
+          {/* Scroll Right Button */}
+          <button 
+            onClick={() => handleScrollCategories('right')}
+            className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+            aria-label="Scroll Categories Right"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
       </section>
 
@@ -947,6 +1011,82 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* Top Viewed Businesses Section (Horizontal scrollable row with manual scroll chevron controls) */}
+      {topViewedBusinesses && topViewedBusinesses.length > 0 && (
+        <section className="w-full py-12 flex flex-col gap-6 bg-white overflow-hidden border-b border-slate-100">
+          <div className="max-w-7xl mx-auto w-full px-4 md:px-8 flex flex-col gap-1 text-left">
+            <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Top Viewed Businesses</h2>
+            <p className="text-sm text-slate-500 font-medium">Most popular local directories ranked by client profile views</p>
+          </div>
+          
+          <div className="max-w-7xl mx-auto w-full px-4 md:px-8 relative">
+            {/* Scroll Left Button */}
+            <button 
+              onClick={() => handleScrollTopViewed('left')}
+              className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+              aria-label="Scroll Top Viewed Left"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+
+            {/* The scrolling wrapper */}
+            <div 
+              ref={topViewedScrollRef}
+              className="flex overflow-x-auto gap-6 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
+            >
+              {topViewedBusinesses.map((biz) => {
+                return (
+                  <div 
+                    key={biz._id}
+                    onClick={() => navigate(`/businesses/${biz._id}`)}
+                    className="w-[260px] sm:w-[285px] shrink-0 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 text-left snap-start"
+                  >
+                    {/* Logo/Image */}
+                    {biz.logoUrl && !biz.logoUrl.includes('images.unsplash.com') ? (
+                      <div className="h-14 w-14 rounded-xl border border-slate-100 overflow-hidden bg-white shrink-0">
+                        <img src={biz.logoUrl} alt={biz.name} className="h-full w-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="h-14 w-14 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-650 text-white font-extrabold text-lg flex items-center justify-center shrink-0 uppercase select-none">
+                        {biz.name ? biz.name.charAt(0) : 'B'}
+                      </div>
+                    )}
+                    
+                    {/* Content details */}
+                    <div className="flex flex-col justify-between overflow-hidden">
+                      <div className="flex flex-col gap-0.5">
+                        <h4 className="font-extrabold text-sm text-[#001c41] truncate" title={biz.name}>{biz.name}</h4>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide truncate">{biz.category}</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <div className="flex items-center gap-0.5 text-xs text-amber-500 font-extrabold">
+                          <Star className="h-3.5 w-3.5 fill-current" />
+                          <span>{(biz.googleRating || 0).toFixed(1)}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-slate-400 font-semibold">
+                          <Eye className="h-3.5 w-3.5 text-slate-400" />
+                          <span>{biz.views || 0} views</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Scroll Right Button */}
+            <button 
+              onClick={() => handleScrollTopViewed('right')}
+              className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+              aria-label="Scroll Top Viewed Right"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* 6. How It Works Section (Connected with dashed lines) */}
       <section id="how-it-works" className="max-w-7xl w-full px-4 md:px-8 py-16 flex flex-col items-center gap-12">
@@ -1182,46 +1322,36 @@ export default function Home() {
       {/* 8. FAQ Section */}
       <section id="faq" className="max-w-6xl w-full px-4 md:px-8 py-16 flex flex-col gap-12 border-t border-slate-200/50">
         
-        {/* Header Block: Image left to FAQ heading + Scroll Navigation Arrows */}
-        <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10">
-          <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 text-center md:text-left">
-            <div className="flex-shrink-0 select-none">
-              <img 
-                src="/faq_illustration.png" 
-                alt="FAQ Illustration" 
-                className="max-h-[100px] md:max-h-[140px] w-auto object-contain"
-              />
-            </div>
-            <div className="max-w-xl">
-              <h2 className="text-2xl md:text-3xl font-extrabold text-[#001c41] tracking-tight">Frequently Asked Questions</h2>
-              <p className="text-sm text-slate-500 font-medium mt-2">Find quick answers to common queries about Udumalpet Business Tour</p>
-            </div>
+        {/* Header Block: Image left to FAQ heading */}
+        <div className="w-full flex flex-col md:flex-row items-center gap-6 md:gap-10 text-center md:text-left">
+          <div className="flex-shrink-0 select-none">
+            <img 
+              src="/faq_illustration.png" 
+              alt="FAQ Illustration" 
+              className="max-h-[100px] md:max-h-[140px] w-auto object-contain"
+            />
           </div>
-          
-          {/* Scroll Navigation Arrows */}
-          <div className="flex gap-2 select-none shrink-0">
-            <button
-              onClick={() => handleScrollFaqs('left')}
-              aria-label="Scroll FAQs left"
-              className="h-8 w-8 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center shadow-xs text-slate-400 hover:text-[#027244] cursor-pointer transition-colors"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => handleScrollFaqs('right')}
-              aria-label="Scroll FAQs right"
-              className="h-8 w-8 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center shadow-xs text-slate-400 hover:text-[#027244] cursor-pointer transition-colors"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
+          <div className="max-w-xl">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-[#001c41] tracking-tight">Frequently Asked Questions</h2>
+            <p className="text-sm text-slate-500 font-medium mt-2">Find quick answers to common queries about Udumalpet Business Tour</p>
           </div>
         </div>
 
         {/* FAQs horizontally scrollable wrapper */}
-        <div 
-          ref={faqScrollRef}
-          className="w-full flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden animate-fadeIn"
-        >
+        <div className="relative w-full">
+          {/* Scroll Left Button */}
+          <button 
+            onClick={() => handleScrollFaqs('left')}
+            aria-label="Scroll FAQs left"
+            className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+
+          <div 
+            ref={faqScrollRef}
+            className="w-full flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth animate-fadeIn"
+          >
           {[
             {
               q: 'How do I register and list my business on UBT?',
@@ -1274,6 +1404,16 @@ export default function Home() {
               </div>
             </div>
           ))}
+          </div>
+
+          {/* Scroll Right Button */}
+          <button 
+            onClick={() => handleScrollFaqs('right')}
+            aria-label="Scroll FAQs right"
+            className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
       </section>
 

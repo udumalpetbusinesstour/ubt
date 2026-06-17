@@ -66,7 +66,14 @@ router.get('/admin/all', protect, admin, async (req, res) => {
 // @access  Public (if Approved, or if author/admin is requesting)
 router.get('/:id', async (req, res) => {
   try {
-    const blog = await Blog.findById(req.params.id);
+    const skipInc = req.query.skipInc === 'true';
+    const blog = skipInc
+      ? await Blog.findById(req.params.id)
+      : await Blog.findByIdAndUpdate(
+          req.params.id,
+          { $inc: { views: 1 } },
+          { new: true }
+        );
     if (!blog) {
       return res.status(404).json({ success: false, message: 'Blog post not found' });
     }

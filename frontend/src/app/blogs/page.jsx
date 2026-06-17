@@ -4,7 +4,7 @@ import {
   BookOpen, Search, Plus, Calendar, User, Heart, MessageSquare, Clock, X, CheckCircle, 
   AlertCircle, ArrowLeft, RefreshCw, Share2, Upload, Trash2, Briefcase, MapPin, 
   Sparkles, Calendar as CalIcon, Cpu, Activity, GraduationCap, Plane, Coffee, Tag, 
-  ChevronDown, Check, ArrowUpDown, Star, Mail
+  ChevronDown, Check, ArrowUpDown, Star, Mail, Eye
 } from 'lucide-react';
 
 const STANDARD_CATEGORIES = [
@@ -175,19 +175,33 @@ export default function BlogsPage() {
     fetchBlogs();
   }, [searchParams]);
 
+  const getStoredViews = (id, defaultViews) => {
+    const stored = localStorage.getItem(`ubt_views_${id}`);
+    if (stored !== null) return Number(stored);
+    return defaultViews || 0;
+  };
+
   const fetchBlogs = async () => {
     setLoading(true);
     try {
       const res = await fetch('http://localhost:5000/api/blogs');
       const data = await res.json();
       if (data.success) {
-        setBlogs(data.data);
+        const blogsWithViews = data.data.map(b => ({
+          ...b,
+          views: getStoredViews(b._id, b.views)
+        }));
+        setBlogs(blogsWithViews);
       } else {
         throw new Error('Backend failed');
       }
     } catch (err) {
       console.warn('Backend server offline, loading mock tourism blog posts.');
-      setBlogs(mockBlogs);
+      const blogsWithViews = mockBlogs.map(b => ({
+        ...b,
+        views: getStoredViews(b._id, b.views)
+      }));
+      setBlogs(blogsWithViews);
     } finally {
       setLoading(false);
     }
@@ -736,6 +750,10 @@ export default function BlogsPage() {
                                 {blog.comments?.length || 0}
                               </span>
                             )}
+                            <span className="flex items-center gap-1 font-black text-slate-500" title="Views">
+                              <Eye className="h-3.5 w-3.5" />
+                              {blog.views || 0}
+                            </span>
                             <button
                               onClick={(e) => handleShareClick(e, blog._id)}
                               className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-blue-600 cursor-pointer relative flex items-center justify-center transition-colors border-none"

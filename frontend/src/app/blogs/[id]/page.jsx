@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, Calendar, User, Heart, MessageSquare, Clock, Send, Trash2, RefreshCw, AlertCircle, ShieldCheck, Share2, CheckCircle
+  ArrowLeft, Calendar, User, Heart, MessageSquare, Clock, Send, Trash2, RefreshCw, AlertCircle, ShieldCheck, Share2, CheckCircle, Eye
 } from 'lucide-react';
 
 const mockBlogs = [
@@ -54,6 +54,8 @@ const mockBlogs = [
   }
 ];
 
+const viewedBlogs = new Set();
+
 export default function BlogDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -90,10 +92,19 @@ export default function BlogDetail() {
 
   const fetchBlogDetails = async () => {
     setLoading(true);
+    const hasBeenViewed = viewedBlogs.has(id);
+    if (!hasBeenViewed) {
+      viewedBlogs.add(id);
+    }
     try {
-      const res = await fetch(`http://localhost:5000/api/blogs/${id}`);
+      const url = hasBeenViewed 
+        ? `http://localhost:5000/api/blogs/${id}?skipInc=true`
+        : `http://localhost:5000/api/blogs/${id}`;
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
+        const currentViews = data.data.views || 0;
+        localStorage.setItem(`ubt_views_${id}`, currentViews);
         setBlog(data.data);
       } else {
         throw new Error('Not found');
@@ -102,6 +113,12 @@ export default function BlogDetail() {
       console.warn('Backend server offline, searching mock datasets.');
       const mockObj = mockBlogs.find(b => b._id === id);
       if (mockObj) {
+        let next = Number(localStorage.getItem(`ubt_views_${id}`) || 0);
+        if (!hasBeenViewed) {
+          next = next + 1;
+          localStorage.setItem(`ubt_views_${id}`, next);
+        }
+        mockObj.views = next;
         setBlog(mockObj);
       } else {
         setBlog(null);
@@ -358,6 +375,11 @@ export default function BlogDetail() {
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
               {readTime} Min Read
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1">
+              <Eye className="h-3.5 w-3.5 text-slate-400" />
+              {blog.views || 0} Views
             </span>
             {blog.status !== 'Approved' && (
               <span className="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded text-[9px] font-extrabold uppercase ml-auto animate-pulse select-none">

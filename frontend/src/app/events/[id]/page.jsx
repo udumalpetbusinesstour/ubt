@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, Calendar, User, Heart, MessageSquare, Clock, Send, Trash2, RefreshCw, AlertCircle, Share2, CheckCircle, MapPin, Phone, ExternalLink, Bookmark
+  ArrowLeft, Calendar, User, Heart, MessageSquare, Clock, Send, Trash2, RefreshCw, AlertCircle, Share2, CheckCircle, MapPin, Phone, ExternalLink, Bookmark, Eye
 } from 'lucide-react';
 
 const mockEvents = [
@@ -261,6 +261,8 @@ const mockEvents = [
   }
 ];
 
+const viewedEvents = new Set();
+
 export default function EventDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -297,10 +299,19 @@ export default function EventDetail() {
 
   const fetchEventDetails = async () => {
     setLoading(true);
+    const hasBeenViewed = viewedEvents.has(id);
+    if (!hasBeenViewed) {
+      viewedEvents.add(id);
+    }
     try {
-      const res = await fetch(`http://localhost:5000/api/events/${id}`);
+      const url = hasBeenViewed 
+        ? `http://localhost:5000/api/events/${id}?skipInc=true`
+        : `http://localhost:5000/api/events/${id}`;
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
+        const currentViews = data.data.views || 0;
+        localStorage.setItem(`ubt_views_${id}`, currentViews);
         setEvent(data.data);
       } else {
         throw new Error('Not found');
@@ -309,6 +320,12 @@ export default function EventDetail() {
       console.warn('Backend server offline, searching mock events.');
       const mockObj = mockEvents.find(e => e._id === id);
       if (mockObj) {
+        let next = Number(localStorage.getItem(`ubt_views_${id}`) || 0);
+        if (!hasBeenViewed) {
+          next = next + 1;
+          localStorage.setItem(`ubt_views_${id}`, next);
+        }
+        mockObj.views = next;
         setEvent(mockObj);
       } else {
         setEvent(null);
@@ -572,6 +589,11 @@ export default function EventDetail() {
 
             <span className="text-[9.5px] font-black uppercase tracking-wider px-2.5 py-0.5 bg-emerald-50 border border-emerald-100 rounded-md text-[#027244] select-none">
               {event.price === 0 ? 'FREE' : `₹${event.price}`}
+            </span>
+
+            <span className="text-[9.5px] font-black uppercase tracking-wider px-2.5 py-0.5 bg-slate-50 border border-slate-200 rounded-md text-slate-550 select-none flex items-center gap-1">
+              <Eye className="h-3.5 w-3.5 text-slate-400" />
+              {event.views || 0} Views
             </span>
 
             {new Date(event.endDate || event.date) < new Date() && (

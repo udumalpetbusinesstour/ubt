@@ -3207,11 +3207,8 @@ function DashboardContent() {
 
       const options = {
         key: orderData.keyId,
-        amount: orderData.amount,
-        currency: orderData.currency,
         name: 'Udumalpet Business Tour',
         description: `${planToUse} Premium Subscription`,
-        order_id: orderData.orderId,
         handler: async function (response) {
           try {
             // 2. Verify payment on backend
@@ -3227,6 +3224,7 @@ function DashboardContent() {
                 razorpayOrderId: response.razorpay_order_id,
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpaySignature: response.razorpay_signature,
+                razorpaySubscriptionId: response.razorpay_subscription_id,
                 applyReferralPoints: applyReferralPoints,
                 redeemPointsAmount: Number(redeemPointsAmount || 0)
               }),
@@ -3264,12 +3262,20 @@ function DashboardContent() {
         }
       };
 
+      if (orderData.isSubscription) {
+        options.subscription_id = orderData.subscriptionId;
+      } else {
+        options.amount = orderData.amount;
+        options.currency = orderData.currency;
+        options.order_id = orderData.orderId;
+      }
+
       const rzp1 = new window.Razorpay(options);
       rzp1.open();
     } catch (err) {
       console.warn('Razorpay popup blocked/failed, finalizing database via local Sandbox payment verification...', err);
       try {
-        const mockOrderId = 'order_mock_' + Math.random().toString(36).substr(2, 9);
+        const mockSubId = orderData.subscriptionId || 'sub_mock_' + Math.random().toString(36).substr(2, 9);
         const mockPaymentId = 'pay_mock_' + Math.random().toString(36).substr(2, 9);
         
         const verifyRes = await fetch('http://localhost:5000/api/payments/verify-payment', {
@@ -3281,7 +3287,8 @@ function DashboardContent() {
           body: JSON.stringify({
             businessId: business._id,
             planType: planToUse,
-            razorpayOrderId: mockOrderId,
+            razorpayOrderId: '',
+            razorpaySubscriptionId: mockSubId,
             razorpayPaymentId: mockPaymentId,
             razorpaySignature: '',
             applyReferralPoints: applyReferralPoints,
@@ -3535,8 +3542,8 @@ function DashboardContent() {
           <p className="text-[10px] text-slate-400 font-semibold leading-normal">
             Our support team is here to help you.
           </p>
-          <a href="tel:+911234567890" className="text-xs text-emerald-400 hover:text-emerald-300 font-extrabold flex items-center gap-1 transition-colors mt-0.5">
-            +91 12345 67890
+          <a href="tel:+918925728260" className="text-xs text-emerald-400 hover:text-emerald-300 font-extrabold flex items-center gap-1 transition-colors mt-0.5">
+            +91 89257 28260
           </a>
         </div>
       </aside>
@@ -3744,7 +3751,7 @@ function DashboardContent() {
                       </p>
                     </div>
                   </div>
-                  <a href="tel:+911234567890" className="bg-red-650 hover:bg-red-700 text-white font-extrabold text-[10.5px] py-2 px-5 rounded-xl transition-all shadow-sm shrink-0 uppercase tracking-wide">
+                  <a href="tel:+918925728260" className="bg-red-650 hover:bg-red-700 text-white font-extrabold text-[10.5px] py-2 px-5 rounded-xl transition-all shadow-sm shrink-0 uppercase tracking-wide">
                     Helpline Support
                   </a>
                 </div>
@@ -4372,7 +4379,7 @@ function DashboardContent() {
                       
                       {/* Title Block with Logo and Verified Badge */}
                       <div className="flex items-center gap-4 mt-2 flex-wrap text-left">
-                        {business.logoUrl ? (
+                        {business.logoUrl && !business.logoUrl.includes('images.unsplash.com') ? (
                           <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-white shadow-md shrink-0 flex items-center justify-center relative group">
                             <img src={business.logoUrl} alt={`${business.name} Logo`} className="h-full w-full object-cover" />
                             <label className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity text-white text-[9px] font-black uppercase tracking-wider select-none text-center p-1">

@@ -27,8 +27,8 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
 
   // Plan Selection states
   const [plans, setPlans] = useState([
-    { _id: 'monthly', name: 'Monthly Premium Plan', type: 'Monthly', price: 99, durationDays: 28, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing'], isActive: true },
-    { _id: 'yearly', name: 'Yearly Premium Plan', type: 'Yearly', price: 999, durationDays: 365, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing'], isActive: true, isOffer: true, offerText: 'Save 2 Months' }
+    { _id: 'monthly', name: 'Monthly Premium Plan', type: 'Monthly', price: 99, durationDays: 28, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing', 'Access to Udumalpet Business WhatsApp Group'], isActive: true },
+    { _id: 'yearly', name: 'Yearly Premium Plan', type: 'Yearly', price: 999, durationDays: 365, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing', 'Access to Udumalpet Business WhatsApp Group'], isActive: true, isOffer: true, offerText: 'Save 2 Months' }
   ]);
   const [selectedPlan, setSelectedPlan] = useState('Yearly Premium Plan'); // default to Yearly
   const [activeFaq, setActiveFaq] = useState(null);
@@ -330,11 +330,8 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
 
       const options = {
         key: orderData.keyId,
-        amount: orderData.amount,
-        currency: orderData.currency,
         name: 'Udumalpet Business Tour',
         description: `${planToUse} Premium Subscription`,
-        order_id: orderData.orderId,
         handler: async function (response) {
           try {
             // Verify payment on backend
@@ -350,6 +347,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                 razorpayOrderId: response.razorpay_order_id,
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpaySignature: response.razorpay_signature,
+                razorpaySubscriptionId: response.razorpay_subscription_id,
                 applyReferralPoints: applyReferralPoints,
                 redeemPointsAmount: Number(redeemPointsAmount || 0)
               }),
@@ -391,12 +389,20 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
         }
       };
 
+      if (orderData.isSubscription) {
+        options.subscription_id = orderData.subscriptionId;
+      } else {
+        options.amount = orderData.amount;
+        options.currency = orderData.currency;
+        options.order_id = orderData.orderId;
+      }
+
       const rzp1 = new window.Razorpay(options);
       rzp1.open();
     } catch (err) {
       console.warn('Razorpay popup blocked/failed, finalizing database via local Sandbox payment verification...', err);
       try {
-        const mockOrderId = 'order_mock_' + Math.random().toString(36).substr(2, 9);
+        const mockSubId = orderData.subscriptionId || 'sub_mock_' + Math.random().toString(36).substr(2, 9);
         const mockPaymentId = 'pay_mock_' + Math.random().toString(36).substr(2, 9);
         
         const verifyRes = await fetch('http://localhost:5000/api/payments/verify-payment', {
@@ -408,7 +414,8 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
           body: JSON.stringify({
             businessId: business._id,
             planType: planToUse,
-            razorpayOrderId: mockOrderId,
+            razorpayOrderId: '',
+            razorpaySubscriptionId: mockSubId,
             razorpayPaymentId: mockPaymentId,
             razorpaySignature: '',
             applyReferralPoints: applyReferralPoints,
@@ -621,7 +628,8 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                 'Digital Visiting Card',
                 'Dedicated Landing Page',
                 'Event Posting',
-                'Business Blog Publishing'
+                'Business Blog Publishing',
+                'Access to Udumalpet Business WhatsApp Group'
               ];
               const featuresToUse = defaultFeatures;
               

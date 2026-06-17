@@ -4,7 +4,7 @@ import {
   Search, Calendar, MapPin, User, Phone, ShieldCheck, Bookmark, Sparkles, 
   Clock, Grid, ChevronRight, AlertCircle, ArrowLeft, CheckCircle2, MessageSquare, 
   Plus, Lock, PlusCircle, Check, DollarSign, ExternalLink, Tag, Heart, Trash2, Send, X,
-  RefreshCw
+  RefreshCw, Eye, Share2
 } from 'lucide-react';
 
 const availableCategories = [
@@ -312,6 +312,7 @@ export default function EventsPage() {
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [activeCommentsEvent, setActiveCommentsEvent] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [copiedEventId, setCopiedEventId] = useState(null);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -378,6 +379,12 @@ export default function EventsPage() {
     }
   };
 
+  const getStoredViews = (id, defaultViews) => {
+    const stored = localStorage.getItem(`ubt_views_${id}`);
+    if (stored !== null) return Number(stored);
+    return defaultViews || 0;
+  };
+
   const fetchEvents = async () => {
     setLoading(true);
     try {
@@ -388,16 +395,28 @@ export default function EventsPage() {
         const fetchedIds = new Set((data.data || []).map(item => item._id));
         const nonDuplicateMock = mockEvents.filter(mock => !fetchedIds.has(mock._id));
         const combined = [...(data.data || []), ...nonDuplicateMock];
-        setEvents(combined);
-        calculateCounts(combined);
+        const combinedWithViews = combined.map(e => ({
+          ...e,
+          views: getStoredViews(e._id, e.views)
+        }));
+        setEvents(combinedWithViews);
+        calculateCounts(combinedWithViews);
       } else {
-        setEvents(mockEvents);
-        calculateCounts(mockEvents);
+        const combinedWithViews = mockEvents.map(e => ({
+          ...e,
+          views: getStoredViews(e._id, e.views)
+        }));
+        setEvents(combinedWithViews);
+        calculateCounts(combinedWithViews);
       }
     } catch (err) {
       console.warn('API Offline, using realistic mock events fallbacks');
-      setEvents(mockEvents);
-      calculateCounts(mockEvents);
+      const combinedWithViews = mockEvents.map(e => ({
+        ...e,
+        views: getStoredViews(e._id, e.views)
+      }));
+      setEvents(combinedWithViews);
+      calculateCounts(combinedWithViews);
     } finally {
       setLoading(false);
     }
@@ -445,6 +464,15 @@ export default function EventsPage() {
         });
       }
     }
+  };
+
+  const handleShareClick = (e, eventId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const shareUrl = `${window.location.origin}/events/${eventId}`;
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedEventId(eventId);
+    setTimeout(() => setCopiedEventId(null), 2000);
   };
 
   const isLikedByUser = (evt) => {
@@ -1870,7 +1898,8 @@ export default function EventsPage() {
                   return (
                     <div 
                       key={evt._id}
-                      className="bg-white border border-slate-100 shadow-sm rounded-3xl overflow-hidden flex flex-col md:flex-row p-4 gap-6 transition-all duration-300 hover:shadow-md hover:border-slate-200/80"
+                      className="bg-white border border-slate-100 shadow-sm rounded-3xl overflow-hidden flex flex-col md:flex-row p-4 gap-6 transition-all duration-300 hover:shadow-md hover:border-slate-200/80 cursor-pointer group"
+                      onClick={() => navigate(`/events/${evt._id}`)}
                     >
                       {/* Cover Image Container */}
                       <div className="shrink-0 overflow-hidden relative h-40 w-full md:w-52 rounded-2xl bg-slate-50 border border-slate-100">
@@ -1907,6 +1936,7 @@ export default function EventsPage() {
                                 href={evt.paymentLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
                                 className="text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 bg-emerald-50 border border-emerald-250 text-[#027244] hover:bg-emerald-100 rounded-md flex items-center gap-1 transition-colors leading-none"
                               >
                                 <span>Tickets</span>
@@ -1938,24 +1968,51 @@ export default function EventsPage() {
                           </p>
                         </div>
 
-                        {/* Interactive Likes & Comments Bar */}
-                        <div className="flex gap-4 border-t border-slate-100 pt-3 mt-1 text-[11px] font-black text-slate-455">
+                        {/* Interactive Likes, Comments, Views, Share Bar (Blogs style) */}
+                        <div className="flex items-center gap-4 border-t border-slate-100 pt-3.5 mt-1 text-[10.5px] text-slate-400">
                           <button 
                             onClick={(e) => { e.stopPropagation(); handleToggleLike(evt._id); }}
-                            className={`flex items-center gap-1 bg-transparent border-none cursor-pointer hover:text-red-550 transition-colors ${
-                              isLikedByUser(evt) ? 'text-red-550' : 'text-slate-450'
-                            }`}
+                            className="flex items-center gap-1 bg-transparent border-none cursor-pointer text-rose-500 transition-colors"
+                            title="Like Event"
                           >
-                            <Heart className={`h-4 w-4 ${isLikedByUser(evt) ? 'fill-current text-red-550' : ''}`} />
-                            <span>{evt.likes ? evt.likes.length : 0} Likes</span>
+                            <Heart className={`h-3.5 w-3.5 ${isLikedByUser(evt) ? 'fill-current text-rose-500' : 'fill-rose-50'}`} />
+                            <span>{evt.likes ? evt.likes.length : 0}</span>
                           </button>
+                          
                           <button 
                             onClick={(e) => { e.stopPropagation(); openEventCommentsModal(evt); }}
-                            className="flex items-center gap-1 bg-transparent border-none cursor-pointer hover:text-[#027244] text-slate-455 transition-colors"
+                            className="flex items-center gap-1 bg-transparent border-none cursor-pointer text-blue-500 transition-colors"
+                            title="Comments"
                           >
-                            <MessageSquare className="h-4 w-4" />
-                            <span>{evt.comments ? evt.comments.length : 0} Comments</span>
+                            <MessageSquare className="h-3.5 w-3.5 fill-blue-50" />
+                            <span>{evt.comments ? evt.comments.length : 0}</span>
                           </button>
+                          
+                          <span className="flex items-center gap-1 font-black text-slate-500 select-none animate-fadeIn" title="Views">
+                            <Eye className="h-3.5 w-3.5 text-slate-450" />
+                            <span>{evt.views || 0}</span>
+                          </span>
+                          
+                          <button 
+                            onClick={(e) => handleShareClick(e, evt._id)}
+                            className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-blue-650 cursor-pointer relative flex items-center justify-center transition-colors border-none"
+                            title="Share Event"
+                          >
+                            {copiedEventId === evt._id ? (
+                              <span className="absolute -top-7 left-0 bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap animate-fadeIn">
+                                Copied!
+                              </span>
+                            ) : null}
+                            <Share2 className="h-3.5 w-3.5" />
+                          </button>
+                          
+                          <button 
+                            onClick={() => openEventCommentsModal(evt)}
+                            className="py-1 px-3 border border-[#027244] hover:bg-emerald-50 text-[#027244] text-[10px] font-black rounded-lg cursor-pointer transition-colors ml-1"
+                          >
+                            Read More
+                          </button>
+                          
                           {evt.businessId && (
                             <div className="ml-auto">
                               <Link 
@@ -1973,7 +2030,7 @@ export default function EventsPage() {
                       </div>
 
                       {/* Middle-Right Specs Section */}
-                      <div className="w-full md:w-64 shrink-0 flex flex-col justify-center gap-3.5 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6 text-xs font-semibold text-slate-650 text-left">
+                      <div className="w-full md:w-64 shrink-0 flex flex-col justify-center gap-3.5 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6 text-xs font-semibold text-slate-655 text-left">
                         
                         <div className="flex items-start gap-2.5">
                           <Calendar className="h-4.5 w-4.5 text-[#027244] shrink-0 mt-0.5" />
@@ -2010,28 +2067,7 @@ export default function EventsPage() {
 
                       </div>
 
-                      {/* Right Action Section */}
-                      <div className="w-full md:w-36 shrink-0 flex flex-col items-stretch md:items-end justify-center gap-3 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6">
-                        
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); openEventCommentsModal(evt); }}
-                          className="w-full border border-emerald-600 hover:bg-emerald-50 text-[#027244] font-extrabold text-xs py-2 px-4 rounded-xl transition-all text-center cursor-pointer shadow-xs"
-                        >
-                          View Details
-                        </button>
-
-                        <button 
-                           onClick={(e) => { e.stopPropagation(); handleToggleLike(evt._id); }}
-                           className={`self-center md:self-end p-2 border hover:bg-slate-50 rounded-xl transition-all cursor-pointer flex items-center justify-center ${
-                             isLikedByUser(evt) ? 'text-[#027244] border-emerald-200 bg-emerald-50/50' : 'text-slate-400 border-slate-200'
-                           }`}
-                         >
-                           <Bookmark className={`h-4.5 w-4.5 ${isLikedByUser(evt) ? 'fill-current' : ''}`} />
-                         </button>
-
-                       </div>
-
-                     </div>
+                    </div>
                    );
                  })}
                </div>
