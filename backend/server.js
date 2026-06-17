@@ -1,4 +1,7 @@
 const dotenv = require('dotenv');
+// Load environment variables immediately before loading other backend modules
+dotenv.config();
+
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const app = require('./app');
@@ -20,9 +23,6 @@ app.use('/api/testimonials', require('./routes/testimonials'));
 app.use('/api/newsletter', require('./routes/newsletter'));
 app.use('/api/update-subscribers', require('./routes/updateSubscribers'));
 app.use('/api/menu', require('./routes/menu'));
-
-// Load environment variables
-dotenv.config();
 
 // Seeder routine for UBT administrative credentials
 const seedAdministrativeCredentials = async () => {
