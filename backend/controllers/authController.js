@@ -44,21 +44,11 @@ const registerUser = async (req, res, next) => {
       }
     }
 
-    // Check duplicate
-    const userExists = await User.findOne({
-      $or: [
-        { email },
-        { phone: resolvedPhone },
-        { mobileNumber: resolvedPhone }
-      ]
-    });
+    // Check duplicate email
+    const userExists = await User.findOne({ email });
 
     if (userExists) {
-      const isEmailMatch = userExists.email && email && (userExists.email.toLowerCase() === email.toLowerCase());
-      const message = isEmailMatch 
-        ? 'Email address is already registered' 
-        : 'Mobile number is already registered';
-      return sendError(res, 400, message);
+      return sendError(res, 400, 'Email address is already registered');
     }
 
     // Look up referrer if referral code provided
@@ -70,11 +60,7 @@ const registerUser = async (req, res, next) => {
       }
 
       // Check self-referral
-      if (
-        referrer.email.toLowerCase() === email.toLowerCase() ||
-        referrer.phone === resolvedPhone ||
-        referrer.mobileNumber === resolvedPhone
-      ) {
+      if (referrer.email.toLowerCase() === email.toLowerCase()) {
         return sendError(res, 400, 'You cannot refer yourself');
       }
     }

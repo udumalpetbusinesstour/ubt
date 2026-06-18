@@ -111,45 +111,49 @@ export default function Register() {
       document.body.appendChild(script);
     }
 
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     let checkInterval;
-
-    const initGoogleBtn = () => {
-      if (window.google && clientId) {
+    const checkGoogle = () => {
+      if (window.google) {
         clearInterval(checkInterval);
         setGoogleAvailable(true);
-        try {
-          window.google.accounts.id.initialize({
-            client_id: clientId,
-            callback: (response) => {
-              handleGoogleLogin(response.credential);
-            }
-          });
-          
-          const parent = document.getElementById('google-signin-btn');
-          if (parent) {
-            window.google.accounts.id.renderButton(parent, {
-              theme: 'outline',
-              size: 'large',
-              width: parent.offsetWidth || 340,
-              text: 'signup_with',
-              shape: 'rectangular',
-            });
-          }
-        } catch (err) {
-          console.error("Google Client SDK init failed:", err);
-        }
       }
     };
 
     // Poll for the Google SDK to load
-    checkInterval = setInterval(initGoogleBtn, 500);
-    initGoogleBtn();
+    checkInterval = setInterval(checkGoogle, 500);
+    checkGoogle();
 
     return () => {
       clearInterval(checkInterval);
     };
   }, []);
+
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (googleAvailable && clientId) {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: (response) => {
+            handleGoogleLogin(response.credential);
+          }
+        });
+        
+        const parent = document.getElementById('google-signin-btn');
+        if (parent) {
+          window.google.accounts.id.renderButton(parent, {
+            theme: 'outline',
+            size: 'large',
+            width: parent.offsetWidth || 340,
+            text: 'signup_with',
+            shape: 'rectangular',
+          });
+        }
+      } catch (err) {
+        console.error("Google button render failed:", err);
+      }
+    }
+  }, [googleAvailable]);
 
   const handleGoogleLogin = async (googleCredential = null) => {
     setLoading(true);
