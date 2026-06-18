@@ -82,8 +82,8 @@ const parentCategoryMapping = {
   'Governmental organisations': [
     'Taluk Office', 'Municipality', 'Police Stations', 'Hospitals', 'Banks', 'Schools'
   ],
-  'Others': [
-    'Temples', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs', 'Others'
+  'Public Sector': [
+    'Temples', 'Govt Schools', 'Govt Offices', 'Govt Hospitals', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs', 'Others'
   ]
 };
 
@@ -106,7 +106,7 @@ const availableCategories = [
   'Events & Entertainment',
   'Sports & Fitness',
   'Governmental organisations',
-  'Others'
+  'Public Sector'
 ];
 
 const availableLocalities = [
@@ -2222,7 +2222,7 @@ export default function AddBusiness() {
                         ) : (
                           <select
                             name="category"
-                            value={((parentCategoryMapping[availableCategories.includes(formData.requestedParentCategory) ? formData.requestedParentCategory : 'Others'] || []).includes(formData.category) || (dbCategories || []).some(c => c.categoryName === formData.category)) ? formData.category : ''}
+                            value={((parentCategoryMapping[availableCategories.includes(formData.requestedParentCategory) ? formData.requestedParentCategory : 'Public Sector'] || []).includes(formData.category) || (dbCategories || []).some(c => c.categoryName === formData.category)) ? formData.category : ''}
                             onChange={(e) => {
                               const subVal = e.target.value;
                               const isCustomParent = !availableCategories.includes(formData.requestedParentCategory);
@@ -2238,7 +2238,7 @@ export default function AddBusiness() {
                             className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
                           >
                             <option value="">-- Choose Subcategory --</option>
-                            {(parentCategoryMapping[availableCategories.includes(formData.requestedParentCategory) ? formData.requestedParentCategory : 'Others'] || []).map(sub => (
+                            {(parentCategoryMapping[availableCategories.includes(formData.requestedParentCategory) ? formData.requestedParentCategory : 'Public Sector'] || []).map(sub => (
                               <option key={sub} value={sub}>{sub}</option>
                             ))}
                             <option value="Others">Others (Custom Category)</option>

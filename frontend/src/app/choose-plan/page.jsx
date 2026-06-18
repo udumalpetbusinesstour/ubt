@@ -3,7 +3,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { 
   ShieldCheck, Gift, Copy, Check, MessageSquare, Loader, ArrowLeft, 
   ArrowRight, Lock, Calendar, CreditCard, Globe, BookOpen, Sparkles, 
-  CheckCircle, X, Phone, Star, MapPin
+  CheckCircle, X, Phone, Star, MapPin, Landmark
 } from 'lucide-react';
 
 export default function ChoosePlan({ isStep = false, onNext = null, initialBusiness = null }) {
@@ -377,7 +377,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
         prefill: {
           name: user?.fullName || '',
           email: user?.email || '',
-          contact: user?.mobileNumber || '',
+          contact: user?.phone || user?.mobileNumber || '',
         },
         theme: {
           color: '#027244', 
@@ -486,6 +486,138 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
     );
   }
 
+  const isPublicSector = business && (business.requestedParentCategory === 'Public Sector' || business.category === 'Public Sector');
+
+  if (isPublicSector) {
+    return (
+      <div className={isStep ? "w-full bg-white flex flex-col gap-6" : "w-full min-h-screen bg-[#F8FAFC] pt-6 pb-12 px-4 md:px-8 font-sans flex flex-col items-center"}>
+        {!isStep && (
+          <div className="max-w-5xl w-full flex justify-between items-center mb-6">
+            <Link 
+              to="/" 
+              className="flex items-center gap-2 text-xs font-extrabold text-[#001c41] hover:text-[#027244] transition-all bg-white py-2.5 px-4 rounded-xl border border-slate-200 shadow-sm hover:shadow group"
+            >
+              <ArrowLeft className="h-4 w-4 text-slate-400 group-hover:text-[#027244] transition-colors" />
+              <span>Back to Home</span>
+            </Link>
+          </div>
+        )}
+
+        <div className={isStep ? "w-full flex flex-col gap-6 relative" : "max-w-xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-10 flex flex-col gap-6 relative mx-auto"}>
+          
+          <div className="text-center flex flex-col items-center gap-1.5 animate-fadeIn">
+            <span className="text-[10px] font-black uppercase text-[#027244] tracking-widest bg-emerald-50 border border-emerald-100 rounded-full px-3 py-1">Free Public Sector Plan</span>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-[#001c41] tracking-tight mt-2">Public Sector Directory</h2>
+            <p className="text-xs text-slate-400 font-semibold max-w-md mt-1">Submit your temple, school, or community service listing for free.</p>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-650 text-xs font-semibold p-4 rounded-2xl flex items-center gap-2 shadow-xs">
+              <X className="h-4.5 w-4.5 text-red-500 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {paymentSuccess && (
+            <div className="bg-emerald-50 border border-emerald-250 text-emerald-800 text-xs font-semibold p-4 rounded-2xl flex items-center gap-2.5 shadow-sm animate-fadeIn">
+              <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0" />
+              <span>Activation Request Submitted Successfully! Proceeding...</span>
+            </div>
+          )}
+
+          <div className="bg-white border-2 border-[#027244] ring-2 ring-emerald-100 rounded-[24px] p-6 flex flex-col justify-between items-center text-center shadow-md relative mt-4 hover:border-emerald-500 transition-all duration-300">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#027244] text-white text-[9px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider shadow">
+              100% Free Plan
+            </div>
+
+            <div className="flex flex-col items-center gap-4 w-full">
+              <div className="h-12 w-12 rounded-full bg-emerald-50 border border-emerald-100 text-[#027244] flex items-center justify-center shadow-inner">
+                <Landmark className="h-5.5 w-5.5" />
+              </div>
+              
+              <div className="flex flex-col gap-1">
+                <h3 className="font-extrabold text-slate-800 text-base">Public Sector Free Listing</h3>
+                <div className="flex items-baseline justify-center gap-1.5 mt-1">
+                  <span className="text-3xl font-extrabold text-[#001c41]">₹0</span>
+                  <span className="text-xs text-slate-400 font-semibold">/ Lifetime Free</span>
+                </div>
+                <p className="text-[11px] text-slate-505 font-semibold mt-2 max-w-sm">
+                  This listing will bypass payments because it is in a public sector category. It will go live after admin approval.
+                </p>
+              </div>
+              
+              <div className="w-full border-t border-dashed border-slate-200 my-2" />
+              
+              <div className="flex flex-col gap-3.5 items-start w-full px-2 text-xs text-slate-655 font-semibold">
+                <div className="flex items-center gap-2.5 text-left">
+                  <CheckCircle className="h-4 w-4 text-[#027244] shrink-0" />
+                  <span>Free digital visiting card & location details</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-left">
+                  <CheckCircle className="h-4 w-4 text-[#027244] shrink-0" />
+                  <span>Listed under Public Sector categories</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-left">
+                  <CheckCircle className="h-4 w-4 text-[#027244] shrink-0" />
+                  <span>Admin approval vetting protection</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              disabled={paymentLoading}
+              onClick={async () => {
+                setPaymentLoading(true);
+                setError('');
+                try {
+                  const verifyRes = await fetch('http://localhost:5000/api/payments/verify-payment', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                      businessId: business._id,
+                      planType: 'Yearly',
+                      razorpayOrderId: 'public_sector_free',
+                      razorpayPaymentId: 'pay_public_sector_free_' + Date.now(),
+                      razorpaySignature: '',
+                      applyReferralPoints: false,
+                      redeemPointsAmount: 0
+                    }),
+                  });
+                  const verifyData = await verifyRes.json();
+                  if (verifyData.success) {
+                    setPaymentSuccess(true);
+                    if (isStep && onNext) {
+                      setTimeout(() => {
+                        onNext(verifyData.business);
+                      }, 1500);
+                    } else {
+                      setTimeout(() => {
+                        navigate('/add-business');
+                      }, 1500);
+                    }
+                  } else {
+                    setError(verifyData.message || 'Verification of free listing failed.');
+                  }
+                } catch (err) {
+                  console.error('Free activation error:', err);
+                  setError('Free activation failed.');
+                } finally {
+                  setPaymentLoading(false);
+                }
+              }}
+              className="mt-8 py-3 w-full rounded-xl bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs cursor-pointer shadow-md transition-all active:scale-98 disabled:opacity-50"
+            >
+              {paymentLoading ? 'Activating Free Listing...' : 'Activate Free Listing'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={isStep ? "w-full bg-white flex flex-col gap-6" : "w-full min-h-screen bg-[#F8FAFC] pt-6 pb-12 px-4 md:px-8 font-sans flex flex-col items-center"}>
       
@@ -533,69 +665,6 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
           </div>
         )}
 
-        {/* Referral Points Widget */}
-        {referralStats && referralStats.referralPoints > 0 && (
-          <div className="bg-emerald-50/50 border border-emerald-100/80 rounded-2xl p-4.5 flex flex-col gap-3.5 max-w-md mx-auto w-full shadow-2xs transition-all">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 bg-emerald-100/50 border border-emerald-250/30 rounded-xl flex items-center justify-center text-emerald-600 shadow-2xs">
-                  <Gift className="h-5 w-5 animate-bounce" />
-                </div>
-                <div className="flex flex-col text-left font-sans">
-                  <span className="text-xs font-extrabold text-slate-800">Redeem Referral Points</span>
-                  <span className="text-[10px] text-slate-500 font-semibold mt-0.5">
-                    Available: {referralStats.referralPoints} points (₹{referralStats.referralCredits.toFixed(2)})
-                  </span>
-                </div>
-              </div>
-              <input 
-                type="checkbox" 
-                checked={applyReferralPoints} 
-                onChange={(e) => handleApplyReferralPointsToggle(e.target.checked)}
-                className="h-5 w-5 border-slate-350 rounded-md text-emerald-600 focus:ring-emerald-500 cursor-pointer transition-colors"
-              />
-            </div>
-
-            {applyReferralPoints && (
-              <div className="pt-3 border-t border-dashed border-emerald-100 flex flex-col gap-2.5 animate-fadeIn">
-                <div className="flex items-center justify-between gap-3">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Points to Redeem</label>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs font-extrabold text-[#027244]">₹{(Number(redeemPointsAmount || 0) * 0.10).toFixed(2)}</span>
-                    <span className="text-[10px] text-slate-400 font-semibold">discount</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <div className="relative flex-grow">
-                    <input
-                      type="number"
-                      min="0"
-                      max={Math.min(referralStats.referralPoints, Math.round(getSelectedPlanPrice() * 0.1) * 10)}
-                      value={redeemPointsAmount}
-                      onChange={handleRedeemPointsChange}
-                      className="w-full bg-white border border-slate-200 rounded-xl py-2 px-3.5 text-xs font-extrabold text-slate-800 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-500/30 transition-all shadow-inner"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const maxRed = Math.min(referralStats.referralPoints, Math.round(getSelectedPlanPrice() * 0.1) * 10);
-                        setRedeemPointsAmount(maxRed);
-                      }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-5 hover:bg-emerald-100 border border-emerald-250/40 text-[#027244] text-[9.5px] font-black px-2 py-1 rounded-lg uppercase tracking-wide transition-colors cursor-pointer"
-                    >
-                      Max
-                    </button>
-                  </div>
-                </div>
-
-                <span className="text-[9.5px] text-slate-400 font-semibold leading-relaxed text-left block">
-                  You can redeem up to {Math.min(referralStats.referralPoints, Math.round(getSelectedPlanPrice() * 0.1) * 10)} points. (1 point = ₹0.10)
-                </span>
-              </div>
-            )}
-          </div>
-        )}
         {/* Toggle Selector - General Flow Only */}
         {flowParam === 'general' && (
           <div className="flex justify-center mt-2">

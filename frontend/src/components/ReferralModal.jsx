@@ -84,10 +84,10 @@ export default function ReferralModal({ isOpen, onClose }) {
           <div className="lg:col-span-7 flex flex-col gap-5">
             <span className="text-[10px] font-black uppercase text-[#027244] tracking-wider">UBT Partner Network</span>
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#001c41] leading-tight">
-              Refer. Earn. <span className="text-[#027244]">Save.</span>
+              Refer. Earn. <span className="text-[#027244]">Redeem.</span>
             </h1>
             <p className="text-slate-500 text-xs md:text-sm font-semibold leading-relaxed max-w-xl">
-              Refer new businesses to UBT and earn referral points. Redeem your points and get discounts on your subscription renewal.
+              Refer new businesses to UBT and earn referral points. Accumulate 1,000 points (100 referrals) and request a direct ₹1,000 cashback refund.
             </p>
 
             {/* Quick Steps Row */}
@@ -97,8 +97,8 @@ export default function ReferralModal({ isOpen, onClose }) {
                 <div className="h-9 w-9 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-100/60 text-[#027244] shrink-0">
                   <Users className="h-4.5 w-4.5" />
                 </div>
-                <h4 className="font-extrabold text-[11px] text-slate-800 uppercase tracking-wider">Refer a Business</h4>
-                <p className="text-slate-400 text-[10px] font-semibold leading-relaxed">
+                <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider">Refer a Business</h4>
+                <p className="text-slate-500 text-[12px] font-medium leading-relaxed">
                   Share your referral link with friends or business connections.
                 </p>
               </div>
@@ -108,8 +108,8 @@ export default function ReferralModal({ isOpen, onClose }) {
                 <div className="h-9 w-9 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-100/60 text-[#027244] shrink-0">
                   <Sparkles className="h-4.5 w-4.5" />
                 </div>
-                <h4 className="font-extrabold text-[11px] text-slate-800 uppercase tracking-wider">They Join & Subscribe</h4>
-                <p className="text-slate-400 text-[10px] font-semibold leading-relaxed">
+                <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider">They Join & Subscribe</h4>
+                <p className="text-slate-500 text-[12px] font-medium leading-relaxed">
                   When they join and complete payment, you earn points.
                 </p>
               </div>
@@ -119,9 +119,9 @@ export default function ReferralModal({ isOpen, onClose }) {
                 <div className="h-9 w-9 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-100/60 text-[#027244] shrink-0">
                   <Gift className="h-4.5 w-4.5" />
                 </div>
-                <h4 className="font-extrabold text-[11px] text-slate-800 uppercase tracking-wider">Earn Points & Save</h4>
-                <p className="text-slate-400 text-[10px] font-semibold leading-relaxed">
-                  Redeem your points and get discount on your next renewal.
+                <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider">₹1,000 Cashback</h4>
+                <p className="text-slate-500 text-[12px] font-medium leading-relaxed">
+                  Redeem 1,000 points to claim a direct ₹1,000 cashback refund.
                 </p>
               </div>
             </div>
@@ -169,8 +169,8 @@ export default function ReferralModal({ isOpen, onClose }) {
                   01
                 </span>
               </div>
-              <h4 className="font-extrabold text-xs text-slate-800">Get Your Referral Link</h4>
-              <p className="text-slate-450 text-[10.5px] font-semibold leading-relaxed max-w-[180px]">
+              <h4 className="font-extrabold text-[13.5px] text-[#001c41]">Get Your Referral Link</h4>
+              <p className="text-slate-500 text-[12px] font-medium leading-relaxed max-w-[180px]">
                 Login to your dashboard and get your unique referral link or code.
               </p>
             </div>
@@ -185,8 +185,8 @@ export default function ReferralModal({ isOpen, onClose }) {
                   02
                 </span>
               </div>
-              <h4 className="font-extrabold text-xs text-slate-800">Share With Others</h4>
-              <p className="text-slate-450 text-[10.5px] font-semibold leading-relaxed max-w-[180px]">
+              <h4 className="font-extrabold text-[13.5px] text-[#001c41]">Share With Others</h4>
+              <p className="text-slate-500 text-[12px] font-medium leading-relaxed max-w-[180px]">
                 Share your link with your friends, family or any business owner around you.
               </p>
             </div>
@@ -201,8 +201,8 @@ export default function ReferralModal({ isOpen, onClose }) {
                   03
                 </span>
               </div>
-              <h4 className="font-extrabold text-xs text-slate-800">They Join UBT</h4>
-              <p className="text-slate-450 text-[10.5px] font-semibold leading-relaxed max-w-[180px]">
+              <h4 className="font-extrabold text-[13.5px] text-[#001c41]">They Join UBT</h4>
+              <p className="text-slate-500 text-[12px] font-medium leading-relaxed max-w-[180px]">
                 When they register and subscribe to any paid plan, the referral is successful.
               </p>
             </div>
@@ -217,9 +217,9 @@ export default function ReferralModal({ isOpen, onClose }) {
                   04
                 </span>
               </div>
-              <h4 className="font-extrabold text-xs text-slate-800">You Earn Points</h4>
-              <p className="text-slate-450 text-[10.5px] font-semibold leading-relaxed max-w-[180px]">
-                You earn referral points which you can redeem and get discount on your renewal.
+              <h4 className="font-extrabold text-[13.5px] text-[#001c41]">You Redeem for Cashback</h4>
+              <p className="text-slate-500 text-[12px] font-medium leading-relaxed max-w-[180px]">
+                You earn points that can be redeemed for a direct ₹1,000 cashback refund from the admin.
               </p>
             </div>
 
@@ -228,11 +228,11 @@ export default function ReferralModal({ isOpen, onClose }) {
 
         {/* 3. CONVERSIONS AND CALCULATOR */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          {/* Left column - Earn More, Save More */}
+          {/* Left column - Earn More, Refund More */}
           <div className="bg-white border border-slate-200 shadow-2xs rounded-3xl p-5 md:p-6 flex flex-col gap-5 text-left">
             <div className="flex flex-col gap-0.5 border-b border-slate-100 pb-2.5">
-              <h3 className="text-base font-extrabold text-slate-800">Earn More, Save More</h3>
-              <p className="text-[10px] text-slate-400 font-semibold">Accumulate referral points and convert them to credit discount benefits.</p>
+              <h3 className="text-base font-extrabold text-slate-800">Referral Point Milestones</h3>
+              <p className="text-xs text-slate-500 font-medium">Accumulate referral points and redeem 1,000 points for a ₹1,000 cashback refund.</p>
             </div>
 
             <div className="overflow-hidden border border-slate-200/85 rounded-xl">
@@ -241,16 +241,15 @@ export default function ReferralModal({ isOpen, onClose }) {
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-black uppercase text-[9px] tracking-wider">
                     <th className="px-4 py-2">Referrals</th>
                     <th className="px-4 py-2">Points Earned</th>
-                    <th className="px-4 py-2">Credit Value</th>
+                    <th className="px-4 py-2">Redemption Option</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {[
-                    { ref: '1 Business', pts: '100 Points', val: '₹10' },
-                    { ref: '5 Businesses', pts: '500 Points', val: '₹50' },
-                    { ref: '10 Businesses', pts: '1000 Points', val: '₹100' },
-                    { ref: '20 Businesses', pts: '2000 Points', val: '₹200' },
-                    { ref: '50 Businesses', pts: '5000 Points', val: '₹500' }
+                    { ref: '1 Business', pts: '10 Points', val: 'Accumulate' },
+                    { ref: '10 Businesses', pts: '100 Points', val: 'Accumulate' },
+                    { ref: '50 Businesses', pts: '500 Points', val: 'Accumulate' },
+                    { ref: '100 Businesses', pts: '1000 Points', val: 'Redeem for ₹1,000 Cashback' }
                   ].map((row, idx) => (
                     <tr key={idx} className="hover:bg-slate-50/50">
                       <td className="px-4 py-2 text-slate-800 font-extrabold">{row.ref}</td>
@@ -268,8 +267,8 @@ export default function ReferralModal({ isOpen, onClose }) {
                 <Award className="h-4.5 w-4.5" />
               </div>
               <div className="flex flex-col gap-0.5 text-slate-700 leading-normal text-xs">
-                <span className="font-extrabold text-slate-800">Use your points as discount on your subscription renewal.</span>
-                <span className="text-[#027244] font-black mt-0.5">100 Points = ₹10 Credit</span>
+                <span className="font-extrabold text-slate-800">Once you reach 1,000 points, redeem them on the merchant dashboard.</span>
+                <span className="text-[#027244] font-black mt-0.5">1 Referral = 10 Points</span>
               </div>
             </div>
           </div>
@@ -277,22 +276,22 @@ export default function ReferralModal({ isOpen, onClose }) {
           {/* Right column - Example calculator */}
           <div className="bg-white border border-slate-200 shadow-2xs rounded-3xl p-5 md:p-6 flex flex-col gap-5 text-left">
             <div className="flex flex-col gap-0.5 border-b border-slate-100 pb-2.5">
-              <h3 className="text-base font-extrabold text-slate-800">Example: How You Save</h3>
-              <p className="text-[10px] text-slate-400 font-semibold">Simulated billing breakdown showing referral point credit value offsets.</p>
+              <h3 className="text-base font-extrabold text-slate-800">Example: How You Redeem</h3>
+              <p className="text-xs text-slate-500 font-medium">Step-by-step example showing manual refund redemption flows.</p>
             </div>
 
             <div className="flex flex-col gap-3 font-semibold text-xs border border-slate-200/80 rounded-xl p-4 bg-slate-50/30">
               <div className="flex justify-between border-b border-slate-100 pb-2 text-slate-500">
-                <span>Annual Plan Price</span>
-                <span className="font-extrabold text-slate-850">₹{yearlyPrice}</span>
+                <span>Required Points for Cashback</span>
+                <span className="font-extrabold text-slate-850">1,000 Points</span>
               </div>
               <div className="flex justify-between border-b border-slate-100 pb-2 text-slate-500">
-                <span>Available Credit (from 15 Referrals)</span>
-                <span className="font-extrabold text-rose-600">-₹150</span>
+                <span>Successful Referred Businesses</span>
+                <span className="font-extrabold text-slate-800">100 Businesses</span>
               </div>
               <div className="flex justify-between pt-1.5 text-xs">
-                <span className="font-extrabold text-slate-800">You Pay</span>
-                <span className="font-black text-[#027244] text-sm">₹{yearlyPrice - 150}</span>
+                <span className="font-extrabold text-slate-800">Redeemable Value</span>
+                <span className="font-black text-[#027244] text-sm">₹1,000 Cashback Refund</span>
               </div>
             </div>
 
@@ -302,8 +301,8 @@ export default function ReferralModal({ isOpen, onClose }) {
                 <Coins className="h-4.5 w-4.5" />
               </div>
               <div className="flex flex-col gap-0.5 text-slate-700 leading-normal text-xs">
-                <span className="font-extrabold text-slate-800">The more you refer, the more you save!</span>
-                <span className="text-emerald-700 font-bold mt-0.5">It's our way of saying Thank You!</span>
+                <span className="font-extrabold text-slate-800">Points are earned ONLY after success payment of referred member.</span>
+                <span className="text-emerald-700 font-bold mt-0.5">Manual cashback refund processed within 2-3 business days!</span>
               </div>
             </div>
           </div>
@@ -323,8 +322,8 @@ export default function ReferralModal({ isOpen, onClose }) {
               <div className="h-11 w-11 bg-emerald-50 rounded-full border border-emerald-100 flex items-center justify-center text-[#027244] shadow-2xs">
                 <Users className="h-5 w-5" />
               </div>
-              <h4 className="font-extrabold text-[11px] text-slate-850 uppercase tracking-wide leading-tight">Help Local Businesses Grow Online</h4>
-              <p className="text-slate-400 text-[10px] font-semibold leading-relaxed max-w-[150px] mx-auto">
+              <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider leading-tight">Help Local Businesses Grow Online</h4>
+              <p className="text-slate-500 text-[12px] font-medium leading-relaxed max-w-[170px] mx-auto">
                 Support other businesses in getting discovered by thousands of customers.
               </p>
             </div>
@@ -334,8 +333,8 @@ export default function ReferralModal({ isOpen, onClose }) {
               <div className="h-11 w-11 bg-emerald-50 rounded-full border border-emerald-100 flex items-center justify-center text-[#027244] shadow-2xs">
                 <Coins className="h-5 w-5" />
               </div>
-              <h4 className="font-extrabold text-[11px] text-slate-850 uppercase tracking-wide leading-tight">Earn Rewards Automatically</h4>
-              <p className="text-slate-400 text-[10px] font-semibold leading-relaxed max-w-[150px] mx-auto">
+              <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider leading-tight">Earn Rewards Automatically</h4>
+              <p className="text-slate-500 text-[12px] font-medium leading-relaxed max-w-[170px] mx-auto">
                 Earn points for every successful referral automatically.
               </p>
             </div>
@@ -345,9 +344,9 @@ export default function ReferralModal({ isOpen, onClose }) {
               <div className="h-11 w-11 bg-emerald-50 rounded-full border border-emerald-100 flex items-center justify-center text-[#027244] shadow-2xs">
                 <Gift className="h-5 w-5" />
               </div>
-              <h4 className="font-extrabold text-[11px] text-slate-850 uppercase tracking-wide leading-tight">Save on Your Subscription</h4>
-              <p className="text-slate-400 text-[10px] font-semibold leading-relaxed max-w-[150px] mx-auto">
-                Redeem points and reduce your renewal amount. More points, more savings!
+              <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider leading-tight">₹1,000 Cashback Refund</h4>
+              <p className="text-slate-500 text-[12px] font-medium leading-relaxed max-w-[170px] mx-auto">
+                Accumulate 1,000 points and request a direct ₹1,000 cashback refund. The admin will contact you and process the refund manually!
               </p>
             </div>
 
@@ -356,8 +355,8 @@ export default function ReferralModal({ isOpen, onClose }) {
               <div className="h-11 w-11 bg-emerald-50 rounded-full border border-emerald-100 flex items-center justify-center text-[#027244] shadow-2xs">
                 <Award className="h-5 w-5" />
               </div>
-              <h4 className="font-extrabold text-[11px] text-slate-850 uppercase tracking-wide leading-tight">Be a Community Champion</h4>
-              <p className="text-slate-400 text-[10px] font-semibold leading-relaxed max-w-[150px] mx-auto">
+              <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider leading-tight">Be a Community Champion</h4>
+              <p className="text-slate-500 text-[12px] font-medium leading-relaxed max-w-[170px] mx-auto">
                 Top referrers will be featured on our platform as UBT Champions.
               </p>
             </div>
@@ -367,8 +366,8 @@ export default function ReferralModal({ isOpen, onClose }) {
               <div className="h-11 w-11 bg-emerald-50 rounded-full border border-emerald-100 flex items-center justify-center text-[#027244] shadow-2xs">
                 <Trophy className="h-5 w-5" />
               </div>
-              <h4 className="font-extrabold text-[11px] text-slate-850 uppercase tracking-wide leading-tight">Build a Stronger Network</h4>
-              <p className="text-slate-400 text-[10px] font-semibold leading-relaxed max-w-[150px] mx-auto">
+              <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider leading-tight">Build a Stronger Network</h4>
+              <p className="text-slate-500 text-[12px] font-medium leading-relaxed max-w-[170px] mx-auto">
                 The more good businesses join, the stronger our local business community.
               </p>
             </div>
@@ -430,7 +429,7 @@ export default function ReferralModal({ isOpen, onClose }) {
             <span>Trusted by 500+ Businesses in Udumalpet</span>
           </div>
           <div className="text-slate-450 leading-relaxed text-center sm:text-right">
-            Have questions? Contact us at <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-slate-600 hover:text-[#027244] font-extrabold hover:underline transition-colors">udumalpetbusinesstour@gmail.com</a> | <strong className="text-slate-655 font-sans">97500 12345</strong>
+            Have questions? Contact us at <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-slate-600 hover:text-[#027244] font-extrabold hover:underline transition-colors">udumalpetbusinesstour@gmail.com</a> | <a href="tel:+918925728260" className="text-slate-600 hover:text-[#027244] font-extrabold hover:underline transition-colors">+91 89257 28260</a>
           </div>
         </section>
 

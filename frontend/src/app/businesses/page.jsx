@@ -6,7 +6,7 @@ import {
   ChevronDown, ChevronUp, Users, Car, GraduationCap, Tv, Utensils, 
   HeartPulse, Home as HomeIcon, Building, ShoppingBag, Factory, Compass, 
   Wrench, Sprout, CreditCard, Dumbbell, Briefcase, Mail, Info, Clock,
-  Activity, Leaf, Coins, Camera, Plane, Landmark, Store, X
+  Activity, Leaf, Coins, Camera, Plane, Landmark, Store, X, Globe
 } from 'lucide-react';
 import AboutUsView from '../../components/AboutUsView';
 
@@ -16,7 +16,7 @@ const lucideIcons = {
   ChevronDown, ChevronUp, Users, Car, GraduationCap, Tv, Utensils, 
   HeartPulse, HomeIcon, Building, ShoppingBag, Factory, Compass, 
   Wrench, Sprout, CreditCard, Dumbbell, Briefcase, Mail, Info, Clock,
-  Activity, Leaf, Coins, Camera, Plane, Landmark, Store, X
+  Activity, Leaf, Coins, Camera, Plane, Landmark, Store, X, Globe
 };
 
 const renderCategoryIcon = (iconName, className = "h-4.5 w-4.5") => {
@@ -29,7 +29,7 @@ const isGovernmentalOrPublic = (biz) => {
   const parent = (biz.requestedParentCategory || '').toLowerCase();
   const cat = (biz.category || '').toLowerCase();
   
-  const govParents = ['governmental organisations', 'government organisations', 'governmental organisation', 'government organisation'];
+  const govParents = ['governmental organisations', 'government organisations', 'governmental organisation', 'government organisation', 'public sector'];
   if (govParents.includes(parent)) return true;
   
   const govCats = ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'];
@@ -100,8 +100,8 @@ const parentCategoryMapping = {
   'Governmental organisations': [
     'Taluk Office', 'Municipality', 'Police Stations', 'Hospitals', 'Banks', 'Schools'
   ],
-  'Others': [
-    'Temples', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs', 'Others'
+  'Public Sector': [
+    'Temples', 'Govt Schools', 'Govt Offices', 'Govt Hospitals', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs'
   ]
 };
 
@@ -124,7 +124,7 @@ const availableCategories = [
   'Events & Entertainment',
   'Sports & Fitness',
   'Governmental organisations',
-  'Others'
+  'Public Sector'
 ];
 
 const parentIconStringMap = {
@@ -146,7 +146,7 @@ const parentIconStringMap = {
   'Events & Entertainment': 'Sparkles',
   'Sports & Fitness': 'Dumbbell',
   'Governmental organisations': 'Building',
-  'Others': 'Grid'
+  'Public Sector': 'Landmark'
 };
 
 const availableLocalities = [
@@ -283,6 +283,7 @@ function BusinessesList() {
   const [showAllLocalities, setShowAllLocalities] = useState(false);
 
   const [businesses, setBusinesses] = useState([]);
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [viewMode, setViewMode] = useState(typeof window !== 'undefined' && window.innerWidth < 768 ? 'grid' : 'list'); // list | grid
@@ -298,6 +299,161 @@ function BusinessesList() {
   const [dbCategories, setDbCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  const initialAnonForm = {
+    name: '',
+    requestedParentCategory: 'Public Sector',
+    category: '',
+    customCategoryName: '',
+    address: '',
+    locality: '',
+    phone: '',
+    website: '',
+    googleMapsLocation: '',
+    googlePlaceId: '',
+    pincode: '642126',
+    latitude: 10.5891,
+    longitude: 77.2412,
+    description: '',
+    googleRating: 0,
+    googleReviewsCount: 0,
+    googleReviews: [],
+    logoUrl: '',
+    coverImageUrl: '',
+    galleryUrls: []
+  };
+
+  const [showAnonymousAddModal, setShowAnonymousAddModal] = useState(false);
+  const [anonForm, setAnonForm] = useState(initialAnonForm);
+  const [anonGmbLink, setAnonGmbLink] = useState('');
+  const [anonAutofillLoading, setAnonAutofillLoading] = useState(false);
+  const [anonAutofillSuccess, setAnonAutofillSuccess] = useState(false);
+  const [anonSubmitLoading, setAnonSubmitLoading] = useState(false);
+  const [isAnonCustomSub, setIsAnonCustomSub] = useState(false);
+
+  const resetAnonForm = () => {
+    setAnonForm(initialAnonForm);
+    setAnonGmbLink('');
+    setAnonAutofillSuccess(false);
+    setIsAnonCustomSub(false);
+  };
+
+  const handleAnonLinkAutofill = async () => {
+    if (!anonGmbLink.trim()) return;
+    setAnonAutofillLoading(true);
+    setAnonAutofillSuccess(false);
+    try {
+      let placeId = anonGmbLink;
+      if (anonGmbLink.includes('google.com/maps') || anonGmbLink.includes('goo.gl/maps') || anonGmbLink.includes('maps.app.goo.gl')) {
+        const resolveRes = await fetch('http://localhost:5000/api/businesses/google-autofill-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: anonGmbLink })
+        });
+        const resolveData = await resolveRes.json();
+        if (resolveData.success && resolveData.placeId) {
+          placeId = resolveData.placeId;
+        } else {
+          alert('Could not extract place details from Maps URL. Trying standard search.');
+        }
+      }
+      
+      const res = await fetch('http://localhost:5000/api/businesses/google-autofill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ placeId })
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        const d = data.data;
+        setAnonForm(prev => ({
+          ...prev,
+          name: d.name || prev.name,
+          address: d.address || prev.address,
+          locality: d.locality || prev.locality,
+          phone: d.phone || prev.phone,
+          website: d.website || prev.website,
+          pincode: d.pincode || prev.pincode,
+          googlePlaceId: d.googlePlaceId || prev.googlePlaceId,
+          latitude: d.latitude || prev.latitude,
+          longitude: d.longitude || prev.longitude,
+          googleRating: d.googleRating || prev.googleRating,
+          googleReviewsCount: d.googleReviewsCount || prev.googleReviewsCount,
+          googleReviews: d.googleReviews || prev.googleReviews,
+          logoUrl: d.logoUrl || prev.logoUrl,
+          coverImageUrl: d.coverImageUrl || prev.coverImageUrl,
+          galleryUrls: d.galleryUrls || prev.galleryUrls,
+          googleMapsLocation: anonGmbLink
+        }));
+        setAnonAutofillSuccess(true);
+      } else {
+        alert(data.message || 'Failed to auto-fill details from Google link.');
+      }
+    } catch (err) {
+      console.error('Error GMB link autofill:', err);
+      alert('Network error fetching details from Google Link.');
+    } finally {
+      setAnonAutofillLoading(false);
+    }
+  };
+
+  const handlePublishAnonListing = async () => {
+    if (!anonForm.name || !anonForm.category || !anonForm.address || !anonForm.locality || !anonForm.phone) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    if (anonForm.category === 'Others' && (!anonForm.customCategoryName || !anonForm.customCategoryName.trim())) {
+      alert('Please specify your custom subcategory name');
+      return;
+    }
+    
+    setAnonSubmitLoading(true);
+    try {
+      const payload = {
+        name: anonForm.name,
+        requestedParentCategory: 'Public Sector',
+        category: anonForm.category,
+        customCategoryName: anonForm.category === 'Others' ? anonForm.customCategoryName : '',
+        address: anonForm.address,
+        locality: anonForm.locality,
+        phone: anonForm.phone,
+        website: anonForm.website,
+        googleMapsLocation: anonForm.googleMapsLocation,
+        googlePlaceId: anonForm.googlePlaceId,
+        pincode: anonForm.pincode,
+        latitude: anonForm.latitude,
+        longitude: anonForm.longitude,
+        description: anonForm.description,
+        googleRating: anonForm.googleRating,
+        googleReviewsCount: anonForm.googleReviewsCount,
+        googleReviews: anonForm.googleReviews,
+        logoUrl: anonForm.logoUrl,
+        coverImageUrl: anonForm.coverImageUrl,
+        galleryUrls: anonForm.galleryUrls
+      };
+      
+      const res = await fetch('http://localhost:5000/api/businesses/anonymous-add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Your listing has been submitted successfully and is pending admin approval.');
+        setShowAnonymousAddModal(false);
+        resetAnonForm();
+      } else {
+        alert(data.message || 'Failed to submit listing');
+      }
+    } catch (err) {
+      console.error('Error submitting listing:', err);
+      alert('Network error submitting listing');
+    } finally {
+      setAnonSubmitLoading(false);
+    }
+  };
 
   const renderFilterContent = (isMobile = false) => {
     return (
@@ -525,7 +681,7 @@ function BusinessesList() {
     { name: 'Finance & Insurance', icon: <CreditCard className="h-4.5 w-4.5 text-blue-500" />, bg: 'bg-blue-50' },
     { name: 'Events & Entertainment', icon: <Sparkles className="h-4.5 w-4.5 text-pink-500" />, bg: 'bg-pink-50' },
     { name: 'Sports & Fitness', icon: <Dumbbell className="h-4.5 w-4.5 text-emerald-500" />, bg: 'bg-emerald-50' },
-    { name: 'Others', icon: <Grid className="h-4.5 w-4.5 text-slate-500" />, bg: 'bg-slate-50' }
+    { name: 'Public Sector', icon: <Landmark className="h-4.5 w-4.5 text-slate-500" />, bg: 'bg-slate-50' }
   ];
 
   const dynamicCategoryDetails = [...categoryDetails];
@@ -569,7 +725,12 @@ function BusinessesList() {
   };
 
   const handleCategoryClick = async (categoryName) => {
-    navigate(`/businesses?category=${encodeURIComponent(categoryName)}`);
+    const parent = getParentCategory(categoryName);
+    if (parent.toLowerCase() === categoryName.toLowerCase()) {
+      navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}`);
+    } else {
+      navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}&subcategory=${encodeURIComponent(categoryName)}`);
+    }
     
     // Background view increment
     try {
@@ -584,7 +745,12 @@ function BusinessesList() {
   };
 
   const handleHotCategoryClick = async (categoryName, parentCatName) => {
-    navigate(`/businesses?category=${encodeURIComponent(categoryName)}`);
+    const parent = parentCatName || getParentCategory(categoryName);
+    if (parent.toLowerCase() === categoryName.toLowerCase()) {
+      navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}`);
+    } else {
+      navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}&subcategory=${encodeURIComponent(categoryName)}`);
+    }
     
     // Background view increment
     try {
@@ -1604,56 +1770,95 @@ function BusinessesList() {
                       <span className="text-[10.5px] text-slate-400 font-bold">Select a parent category to view subcategories</span>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4.5 text-left animate-fadeIn">
-                      {[...dynamicCategoryDetails].sort((a, b) => (categoryCounts[b.name] || 0) - (categoryCounts[a.name] || 0)).map((cat, idx) => {
-                        const count = categoryCounts[cat.name] || 0;
-                        return (
-                          <div 
-                            key={idx}
-                            onClick={() => navigate(`/businesses?focus=categories&category=${encodeURIComponent(cat.name)}`)}
-                            className="card-premium group rounded-3xl p-4 sm:p-6 cursor-pointer flex flex-col justify-between h-32 sm:h-36 relative overflow-hidden bg-white border border-slate-200/65 hover:border-[#027244] transition-all"
-                          >
-                            <div className="absolute -right-6 -bottom-6 w-16 h-16 bg-slate-50 rounded-full group-hover:bg-emerald-50/40 transition-colors duration-500 pointer-events-none" />
-                            <div className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full ${cat.bg} flex items-center justify-center shrink-0 shadow-2xs transition-transform duration-500 group-hover:scale-110`}>
-                              {cat.icon}
-                            </div>
-                            <div className="flex flex-col z-10 mt-3">
-                              <span className="font-medium text-[#001c41] text-sm sm:text-[17px] leading-snug group-hover:text-[#027244] transition-colors duration-300 truncate">
-                                {cat.name}
-                              </span>
-                              <span className="text-[9px] sm:text-[10px] text-slate-455 font-extrabold mt-1 uppercase tracking-wide leading-none flex items-center gap-1">
-                                <span>{count} Listings</span>
-                                <span>•</span>
-                                <span className="text-emerald-600 font-bold hover:underline">Explore →</span>
-                              </span>
-                            </div>
+                    {(() => {
+                      const sortedCats = [...dynamicCategoryDetails].sort((a, b) => (categoryCounts[b.name] || 0) - (categoryCounts[a.name] || 0));
+                      const visibleCats = showAllCategories ? sortedCats : sortedCats.slice(0, 6);
+                      return (
+                        <>
+                          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4.5 text-left animate-fadeIn">
+                            {visibleCats.map((cat, idx) => {
+                              const count = categoryCounts[cat.name] || 0;
+                              return (
+                                <div 
+                                  key={idx}
+                                  onClick={async () => {
+                                    try {
+                                      fetch('http://localhost:5000/api/categories/view', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ categoryName: cat.name })
+                                      });
+                                    } catch (e) {}
+                                    navigate(`/businesses?focus=categories&category=${encodeURIComponent(cat.name)}`);
+                                  }}
+                                  className="card-premium group rounded-3xl p-4 sm:p-6 cursor-pointer flex flex-col justify-between h-32 sm:h-36 relative overflow-hidden bg-white border border-slate-200/65 hover:border-[#027244] transition-all"
+                                >
+                                  <div className="absolute -right-6 -bottom-6 w-16 h-16 bg-slate-50 rounded-full group-hover:bg-emerald-50/40 transition-colors duration-500 pointer-events-none" />
+                                  <div className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full ${cat.bg} flex items-center justify-center shrink-0 shadow-2xs transition-transform duration-500 group-hover:scale-110`}>
+                                    {cat.icon}
+                                  </div>
+                                  <div className="flex flex-col z-10 mt-3">
+                                    <span className="font-medium text-[#001c41] text-sm sm:text-[17px] leading-snug group-hover:text-[#027244] transition-colors duration-300 truncate">
+                                      {cat.name}
+                                    </span>
+                                    <span className="text-[9px] sm:text-[10px] text-slate-455 font-extrabold mt-1 uppercase tracking-wide leading-none flex items-center gap-1">
+                                      <span>{count} Listings</span>
+                                      <span>•</span>
+                                      <span className="text-emerald-600 font-bold hover:underline">Explore →</span>
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
-                        );
-                      })}
-                    </div>
+
+                          {!showAllCategories && sortedCats.length > 6 && (
+                            <div className="flex justify-center mt-6">
+                              <button 
+                                onClick={() => setShowAllCategories(true)}
+                                className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-250 hover:border-[#027244] text-[#001c41] hover:text-[#027244] font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer group"
+                              >
+                                <span>Load More Categories</span>
+                                <ChevronDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5 text-[#027244]" />
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </>
                 ) : !selectedSubcategoryInExplore ? (
                   // State B: Subcategories grid (drilldown) under selected parent category.
                   // Occupies the entire right-side content pane.
                   <>
-                    <div className="flex flex-col gap-4 border-b border-slate-100 pb-4">
-                      <div className="flex items-center gap-3">
-                        <button 
-                          onClick={() => navigate('/businesses?focus=categories')}
-                          className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#027244] bg-slate-100 hover:bg-emerald-50/50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-                        >
-                          <ArrowLeft className="h-3.5 w-3.5" /> Back to Categories
-                        </button>
-                        <div className="h-4 w-px bg-slate-200" />
-                        <h2 className="font-extrabold text-base text-[#001c41] flex items-center gap-2">
-                          {renderCategoryIcon(parentIconStringMap[selectedCategoryInExplore], "h-5 w-5 text-[#027244]")}
-                          {selectedCategoryInExplore}
-                        </h2>
-                      </div>
-                      <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
-                        Select a subcategory to browse local listings under {selectedCategoryInExplore}.
-                      </p>
-                    </div>
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b border-slate-100 pb-4">
+                       <div className="flex flex-col gap-2">
+                         <div className="flex items-center gap-3">
+                           <button 
+                             onClick={() => navigate('/businesses?focus=categories')}
+                             className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#027244] bg-slate-100 hover:bg-emerald-50/50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                           >
+                             <ArrowLeft className="h-3.5 w-3.5" /> Back to Categories
+                           </button>
+                           <div className="h-4 w-px bg-slate-200" />
+                           <h2 className="font-extrabold text-base text-[#001c41] flex items-center gap-2">
+                             {renderCategoryIcon(parentIconStringMap[selectedCategoryInExplore], "h-5 w-5 text-[#027244]")}
+                             {selectedCategoryInExplore}
+                           </h2>
+                         </div>
+                         <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
+                           Select a subcategory to browse local listings under {selectedCategoryInExplore}.
+                         </p>
+                       </div>
+                       {selectedCategoryInExplore === 'Public Sector' && (
+                         <button
+                           onClick={() => { setShowAnonymousAddModal(true); resetAnonForm(); }}
+                           className="self-start sm:self-center py-2.5 px-4.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 shadow transition-all cursor-pointer border-none"
+                         >
+                           <span>+ Add Directory Listing</span>
+                         </button>
+                       )}
+                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-4 text-left animate-fadeIn">
                       {/* "All" parent category card first */}
@@ -1662,7 +1867,7 @@ function BusinessesList() {
                         const parentIconStr = parentIconStringMap[selectedCategoryInExplore] || 'Store';
                         return (
                           <div 
-                            onClick={() => navigate(`/businesses?category=${encodeURIComponent(selectedCategoryInExplore)}`)}
+                            onClick={() => navigate(`/businesses?focus=categories&category=${encodeURIComponent(selectedCategoryInExplore)}&subcategory=All`)}
                             className="bg-white border border-slate-200/60 rounded-2xl p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:border-emerald-100 hover:bg-emerald-50/30 transition-all duration-300 group"
                           >
                             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -1689,11 +1894,25 @@ function BusinessesList() {
                       {relatedSubcategories.map((cat) => {
                         const count = allBusinesses.filter(b => b.category?.toLowerCase() === cat.categoryName.toLowerCase()).length;
                         return (
-                          <div 
-                            key={cat._id}
-                            onClick={() => navigate(`/businesses?category=${encodeURIComponent(cat.categoryName)}`)}
-                            className="bg-white border border-slate-200/60 rounded-2xl p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:border-emerald-100 hover:bg-emerald-50/30 transition-all duration-300 group"
-                          >
+                           <div 
+                             key={cat._id}
+                             onClick={async () => {
+                               try {
+                                 await fetch('http://localhost:5000/api/categories/view', {
+                                   method: 'POST',
+                                   headers: { 'Content-Type': 'application/json' },
+                                   body: JSON.stringify({ categoryName: cat.categoryName })
+                                 });
+                                 setDbCategories(prev => prev.map(c => 
+                                   c.categoryName === cat.categoryName ? { ...c, views: (c.views || 0) + 1 } : c
+                                 ));
+                               } catch (err) {
+                                 console.warn('Failed to increment category view:', err);
+                               }
+                               navigate(`/businesses?focus=categories&category=${encodeURIComponent(selectedCategoryInExplore)}&subcategory=${encodeURIComponent(cat.categoryName)}`);
+                             }}
+                             className="bg-white border border-slate-200/60 rounded-2xl p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:border-emerald-100 hover:bg-emerald-50/30 transition-all duration-300 group"
+                           >
                             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                               <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-emerald-50 border border-emerald-100/50 flex items-center justify-center shrink-0 text-[#027244] group-hover:scale-110 transition-transform duration-300">
                                 {renderCategoryIcon(cat.icon, "h-4 w-4 text-[#027244]")}
@@ -2007,6 +2226,295 @@ function BusinessesList() {
             </div>
           </aside>
         </section>
+
+        {showAnonymousAddModal && (
+          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-end p-0">
+            <div className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between animate-slideLeft text-left font-sans">
+              
+              {/* Modal Header */}
+              <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] font-black text-[#027244] uppercase tracking-widest">Public Sector Listing</span>
+                  <h3 className="font-extrabold text-[#001c41] text-base mt-1">Add Directory Listing</h3>
+                </div>
+                <button 
+                  onClick={() => { setShowAnonymousAddModal(false); resetAnonForm(); }}
+                  className="h-8.5 w-8.5 rounded-xl hover:bg-slate-200/80 flex items-center justify-center text-slate-450 hover:text-slate-700 transition-colors cursor-pointer border-none bg-transparent"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Modal Scrollable Body */}
+              <div className="p-6 flex-grow overflow-y-auto flex flex-col gap-5">
+                
+                {/* Google Autofill Section */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col gap-3">
+                  <label className="text-xs font-black text-slate-700">Google Maps / GMB Link (Auto-fill)</label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-grow">
+                      <Globe className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                      <input
+                        type="url"
+                        placeholder="Paste Google Maps or GMB Link..."
+                        value={anonGmbLink}
+                        onChange={(e) => setAnonGmbLink(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 bg-white border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAnonLinkAutofill}
+                      disabled={anonAutofillLoading || !anonGmbLink.trim()}
+                      className="px-4 py-2 bg-[#027244] hover:bg-[#005934] disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs rounded-xl cursor-pointer transition-colors shadow flex items-center gap-1 shrink-0 border-none"
+                    >
+                      {anonAutofillLoading ? (
+                        <>
+                          <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Fetching...
+                        </>
+                      ) : (
+                        'Autofill'
+                      )}
+                    </button>
+                  </div>
+                  {anonAutofillLoading && (
+                    <div className="text-[10px] text-[#027244] font-bold flex items-center gap-1">
+                      <RefreshCw className="h-3 w-3 animate-spin" /> Importing details from Google...
+                    </div>
+                  )}
+                  {anonAutofillSuccess && (
+                    <div className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
+                      <Check className="h-3.5 w-3.5" /> Details, photos, and ratings imported successfully.
+                    </div>
+                  )}
+                </div>
+
+                {/* Directory Listing Form Fields */}
+                <div className="flex flex-col gap-4">
+                  
+                  {/* Business Name */}
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Business Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={anonForm.name}
+                      onChange={(e) => setAnonForm({ ...anonForm, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                      placeholder="e.g. Taluk Office"
+                    />
+                  </div>
+
+                  {/* Main Category (ReadOnly Public Sector) */}
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Main Category</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value="Public Sector"
+                      className="w-full px-3 py-2 border border-slate-200 bg-slate-100 rounded-xl text-xs font-semibold text-slate-500 focus:outline-hidden"
+                    />
+                  </div>
+
+                  {/* Subcategory Selection */}
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10.5px] font-black text-slate-700 uppercase">Sub Category *</label>
+                      {anonForm.category === 'Others' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAnonForm(prev => ({
+                              ...prev,
+                              category: 'Temples',
+                              customCategoryName: ''
+                            }));
+                          }}
+                          className="text-[10px] text-emerald-600 hover:text-emerald-700 font-bold underline focus:outline-hidden border-none bg-transparent"
+                        >
+                          Choose Standard
+                        </button>
+                      )}
+                    </div>
+                    {anonForm.category === 'Others' ? (
+                      <input
+                        type="text"
+                        placeholder="Specify Custom Subcategory (e.g. Govt Library, Fire Station)"
+                        required
+                        value={anonForm.customCategoryName || ''}
+                        onChange={(e) => {
+                          setAnonForm({
+                            ...anonForm,
+                            customCategoryName: e.target.value
+                          });
+                        }}
+                        className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                      />
+                    ) : (
+                      <select
+                        required
+                        value={anonForm.category}
+                        onChange={(e) => {
+                          const subVal = e.target.value;
+                          setAnonForm({
+                            ...anonForm,
+                            category: subVal,
+                            customCategoryName: ''
+                          });
+                        }}
+                        className="w-full px-3 py-2 border border-slate-205 bg-white rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244] cursor-pointer"
+                      >
+                        <option value="">-- Choose Subcategory --</option>
+                        <option value="Temples">Temples</option>
+                        <option value="Govt Schools">Govt Schools</option>
+                        <option value="Govt Offices">Govt Offices</option>
+                        <option value="Govt Hospitals">Govt Hospitals</option>
+                        <option value="Marriage Halls">Marriage Halls</option>
+                        <option value="Community Halls">Community Halls</option>
+                        <option value="Trusts & NGOs">Trusts & NGOs</option>
+                        <option value="Others">Others (Custom Category)</option>
+                      </select>
+                    )}
+                  </div>
+
+                  {/* Phone */}
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Phone Number *</label>
+                    <input
+                      type="text"
+                      required
+                      value={anonForm.phone}
+                      onChange={(e) => setAnonForm({ ...anonForm, phone: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                      placeholder="e.g. 04252 223456"
+                    />
+                  </div>
+
+                  {/* Website */}
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Website (Optional)</label>
+                    <input
+                      type="url"
+                      value={anonForm.website}
+                      onChange={(e) => setAnonForm({ ...anonForm, website: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                      placeholder="e.g. https://udumalpet.nic.in"
+                    />
+                  </div>
+
+                  {/* Location / Locality */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5 text-left">
+                      <label className="text-[10.5px] font-black text-slate-700 uppercase">Location / Locality *</label>
+                      <input
+                        type="text"
+                        required
+                        value={anonForm.locality}
+                        onChange={(e) => setAnonForm({ ...anonForm, locality: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                        placeholder="e.g. Gandhi Nagar"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5 text-left">
+                      <label className="text-[10.5px] font-black text-slate-700 uppercase">Pincode (Optional)</label>
+                      <input
+                        type="text"
+                        value={anonForm.pincode}
+                        onChange={(e) => setAnonForm({ ...anonForm, pincode: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                        placeholder="e.g. 642126"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Address */}
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Address *</label>
+                    <textarea
+                      required
+                      rows={2}
+                      value={anonForm.address}
+                      onChange={(e) => setAnonForm({ ...anonForm, address: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                      placeholder="e.g. Palani Road, Gandhi Nagar, Udumalpet"
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Description (Optional)</label>
+                    <textarea
+                      rows={3}
+                      value={anonForm.description}
+                      onChange={(e) => setAnonForm({ ...anonForm, description: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                      placeholder="Describe this listing..."
+                    />
+                  </div>
+
+                  {/* Google Ratings and Reviews */}
+                  <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 mt-2">
+                    <div className="flex flex-col gap-1.5 text-left">
+                      <div className="flex items-center gap-1">
+                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-450" />
+                        <label className="text-[10.5px] font-black text-slate-700 uppercase">Google Rating</label>
+                      </div>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="5"
+                        value={anonForm.googleRating || ''}
+                        onChange={(e) => setAnonForm({ ...anonForm, googleRating: parseFloat(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                        placeholder="e.g. 4.5"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5 text-left">
+                      <label className="text-[10.5px] font-black text-slate-700 uppercase">Reviews Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={anonForm.googleReviewsCount || ''}
+                        onChange={(e) => setAnonForm({ ...anonForm, googleReviewsCount: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
+                        placeholder="e.g. 48"
+                      />
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* Modal Actions Footer */}
+              <div className="p-6 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => { setShowAnonymousAddModal(false); resetAnonForm(); }}
+                  className="px-5 py-2.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-extrabold text-xs rounded-xl cursor-pointer transition-colors shadow-2xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePublishAnonListing}
+                  disabled={anonSubmitLoading}
+                  className="px-5 py-2.5 bg-[#027244] hover:bg-[#005934] disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs rounded-xl cursor-pointer transition-all shadow flex items-center gap-1.5 border-none"
+                >
+                  {anonSubmitLoading ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Submitting...
+                    </>
+                  ) : (
+                    'Publish Listing'
+                  )}
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
       </div>
     );
   }

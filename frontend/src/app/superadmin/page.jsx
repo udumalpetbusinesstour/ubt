@@ -48,6 +48,7 @@ export default function SuperAdminDashboard() {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
   // Extend Subscription Modal States
   const [showExtendSubModal, setShowExtendSubModal] = useState(false);
@@ -238,6 +239,10 @@ export default function SuperAdminDashboard() {
   const [referralFilter, setReferralFilter] = useState('All'); // All | Pending | Completed | Rejected
   const [referralSearch, setReferralSearch] = useState('');
 
+  // Redemption states
+  const [redemptions, setRedemptions] = useState([]);
+  const [redemptionsLoading, setRedemptionsLoading] = useState(false);
+
   // Modal State
   const [selectedBiz, setSelectedBiz] = useState(null);
   const [showBizModal, setShowBizModal] = useState(false);
@@ -392,6 +397,91 @@ export default function SuperAdminDashboard() {
     } catch (err) {
       setReferrals(prev => prev.map(r => r._id === referralId ? { ...r, status: action === 'approve' ? 'completed' : 'rejected', rejectionReason } : r));
       alert(`Referral successfully ${action}d (simulated offline mode)!`);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      if (!activeToken) return;
+      const res = await fetch('http://localhost:5000/api/notifications', {
+        headers: {
+          'Authorization': `Bearer ${activeToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setNotifications(data.data.filter(n => !n.isRead));
+      }
+    } catch (err) {
+      console.error('Error fetching admin notifications:', err);
+    }
+  };
+
+  const markAllNotificationsRead = async () => {
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      if (!activeToken) return;
+      const res = await fetch('http://localhost:5000/api/notifications/read-all', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${activeToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotifications([]);
+        setNotificationsOpen(false);
+      }
+    } catch (err) {
+      console.error('Error marking notifications as read:', err);
+    }
+  };
+
+  const fetchRedemptions = async () => {
+    setRedemptionsLoading(true);
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      const res = await fetch('http://localhost:5000/api/referrals/admin/redemptions', {
+        headers: {
+          'Authorization': `Bearer ${activeToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setRedemptions(data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching admin redemptions:', err);
+    } finally {
+      setRedemptionsLoading(false);
+    }
+  };
+
+  const handleProcessRefund = async (redemptionId) => {
+    const remarks = window.prompt('Enter manual refund transaction reference / remarks:', 'Manual refund processed and merchant notified.');
+    if (remarks === null) return; // cancelled
+
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/referrals/admin/redemptions/${redemptionId}/refund`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ remarks })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Refund request marked as completed and merchant notified!');
+        fetchRedemptions();
+      } else {
+        alert(data.message || 'Failed to update refund status.');
+      }
+    } catch (err) {
+      console.error('Refund processing error:', err);
+      alert('An error occurred during refund processing.');
     }
   };
 
@@ -627,6 +717,8 @@ export default function SuperAdminDashboard() {
       fetchQueries();
       fetchPlans();
       fetchReferrals();
+      fetchRedemptions();
+      fetchNotifications();
     } catch (err) {
       localStorage.removeItem('ubt_user');
       localStorage.removeItem('ubt_token');
@@ -635,8 +727,18 @@ export default function SuperAdminDashboard() {
   }, []);
 
   useEffect(() => {
+    if (!token) return;
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000); // 30 seconds
+    return () => clearInterval(interval);
+  }, [token]);
+
+  useEffect(() => {
     if (activeTab === 'Referrals') {
       fetchReferrals();
+    }
+    if (activeTab === 'Refunds') {
+      fetchRedemptions();
     }
     if (activeTab === 'Revenue' || activeTab === 'Subscriptions') {
       fetchRevenueAnalytics();
@@ -1944,17 +2046,33 @@ export default function SuperAdminDashboard() {
                 }`}
               >
                 <Bell className="h-4.5 w-4.5" />
-                <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-red-500 animate-ping" />
+                {notifications.length > 0 && (
+                  <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-white select-none animate-pulse" />
+                )}
               </button>
               {notificationsOpen && (
-                <div className="absolute right-0 mt-2.5 w-72 rounded-2xl bg-white border border-slate-200 shadow-xl p-4 flex flex-col gap-3 animate-fadeIn z-20 text-[#001c41]">
+                <div className="absolute right-0 mt-2.5 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl py-3 px-4 flex flex-col gap-2.5 animate-fadeIn z-20 text-[#001c41]">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <span className="font-extrabold text-xs">Recent Telemetry Alert</span>
-                    <span className="text-[9px] bg-red-50 text-red-650 px-2 py-0.5 rounded font-black uppercase">Critical</span>
+                    <span className="font-extrabold text-xs text-slate-700">Notifications ({notifications.length})</span>
+                    {notifications.length > 0 && (
+                      <button onClick={markAllNotificationsRead} className="text-emerald-600 hover:text-emerald-700 hover:underline text-[10px] font-bold cursor-pointer border-none bg-transparent">
+                        Clear all
+                      </button>
+                    )}
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-[11px] text-slate-500 font-semibold leading-relaxed">Failed transaction #pay_123456 aborted by gateway due to authorization timeout.</p>
-                    <span className="text-[8.5px] text-slate-400 font-bold mt-1">10 minutes ago</span>
+                  <div className="max-h-60 overflow-y-auto flex flex-col gap-2">
+                    {notifications.length === 0 ? (
+                      <div className="py-4 text-center text-slate-400 text-xs font-semibold">No new notifications</div>
+                    ) : (
+                      notifications.map((n) => (
+                        <div key={n._id} className="p-2.5 rounded-xl bg-slate-50/50 hover:bg-slate-50 border border-slate-100 text-[11px] font-semibold leading-relaxed text-left flex flex-col gap-1">
+                          <p className="text-slate-650 m-0">{n.message}</p>
+                          <span className="text-[9px] text-slate-400 font-bold">
+                            {new Date(n.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
@@ -5897,41 +6015,51 @@ export default function SuperAdminDashboard() {
                           </tr>
                         </thead>
                         <tbody>
-                          {[
-                            { id: 'ref_1', merchant: 'Selvam Windfarms Ltd', pId: 'pay_9A12Jd8s7', amt: '₹4,999.00', reason: 'Accidental double payment during yearly subscription checkout', status: 'Pending Approval' },
-                            { id: 'ref_2', merchant: 'Thirumoorthy Resort & Spa', pId: 'pay_2G71Ks9f2', amt: '₹500.00', reason: 'Business listing discontinued by the owner', status: 'Refunded' },
-                            { id: 'ref_3', merchant: 'Udumalpet IT Park Cafeteria', pId: 'pay_6B22Md4a1', amt: '₹99.00', reason: 'Duplicate event listing standard charge', status: 'Refunded' }
-                          ].map(ref => (
-                            <tr key={ref.id} className={`border-b last:border-0 ${themeMode === 'dark' ? 'border-slate-850 hover:bg-slate-900/10' : 'border-slate-100 hover:bg-slate-50/50'}`}>
-                              <td className="py-4 font-extrabold">{ref.merchant}</td>
-                              <td className="py-4 text-slate-400 font-bold font-mono">{ref.pId}</td>
-                              <td className="py-4 font-extrabold text-[#027244]">{ref.amt}</td>
-                              <td className="py-4 text-slate-450 pr-4 leading-normal">{ref.reason}</td>
-                              <td className="py-4">
-                                <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
-                                  ref.status === 'Refunded' 
-                                    ? 'bg-emerald-50 dark:bg-emerald-950/20 text-[#027244]' 
-                                    : 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 animate-pulse'
-                                }`}>
-                                  {ref.status}
-                                </span>
-                              </td>
-                              <td className="py-4 text-right">
-                                {ref.status === 'Pending Approval' ? (
-                                  <div className="flex gap-2 justify-end">
-                                    <button 
-                                      onClick={() => alert('Refund approved successfully! Funds will be credited to the merchant within 5-7 business days.')}
-                                      className="px-3 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-lg transition-colors cursor-pointer"
-                                    >
-                                      Approve Refund
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <span className="text-[10px] text-slate-400 font-bold select-none">-</span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
+                          {redemptions.map(ref => (
+                             <tr key={ref._id} className={`border-b last:border-0 ${themeMode === 'dark' ? 'border-slate-850 hover:bg-slate-900/10' : 'border-slate-100 hover:bg-slate-50/50'}`}>
+                               <td className="py-4 font-extrabold">
+                                 <div className="flex flex-col text-left">
+                                   <span className="font-extrabold">{ref.userId?.fullName || ref.userId?.name || 'Unknown Merchant'}</span>
+                                   <span className="text-[10px] text-slate-400 font-semibold mt-0.5">{ref.userId?.email || ref.userId?.phone}</span>
+                                 </div>
+                               </td>
+                               <td className="py-4 text-slate-400 font-bold font-mono">1000 Pts</td>
+                               <td className="py-4 font-extrabold text-[#027244]">{ref.points} Pts</td>
+                               <td className="py-4 text-slate-450 pr-4 leading-normal">{ref.remarks || 'Refund redemption requested.'}</td>
+                               <td className="py-4">
+                                 <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                                   ref.status === 'Refunded' 
+                                     ? 'bg-emerald-50 dark:bg-emerald-950/20 text-[#027244]' 
+                                     : ref.status === 'Rejected'
+                                       ? 'bg-red-50 dark:bg-red-950/20 text-red-650'
+                                       : 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 animate-pulse'
+                                 }`}>
+                                   {ref.status}
+                                 </span>
+                               </td>
+                               <td className="py-4 text-right">
+                                 {ref.status === 'Pending Approval' ? (
+                                   <div className="flex gap-2 justify-end">
+                                     <button 
+                                       onClick={() => handleProcessRefund(ref._id)}
+                                       className="px-3 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-lg transition-colors cursor-pointer"
+                                     >
+                                       Initiate Refund & Mark Refunded
+                                     </button>
+                                   </div>
+                                 ) : (
+                                   <span className="text-[10px] text-slate-400 font-bold select-none">-</span>
+                                 )}
+                               </td>
+                             </tr>
+                           ))}
+                           {redemptions.length === 0 && (
+                             <tr>
+                               <td colSpan="6" className="py-8 text-center text-slate-400 font-bold">
+                                 No refund redemptions queue requests found.
+                               </td>
+                             </tr>
+                           )}
                         </tbody>
                       </table>
                     </div>

@@ -11,10 +11,10 @@ const ensureCategoriesExist = async (business) => {
 
     if (!category) return;
 
-    // Force governmental subcategories to always be nested under "Governmental organisations"
+    // Force governmental subcategories to always be nested under "Governmental organisations" unless requested parent category is "Public Sector"
     const govSubcategories = ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'];
     const subNameClean = (category === 'Others' ? customCategoryName : category)?.trim();
-    if (subNameClean && govSubcategories.includes(subNameClean.toLowerCase())) {
+    if (subNameClean && govSubcategories.includes(subNameClean.toLowerCase()) && requestedParentCategory !== 'Public Sector') {
       requestedParentCategory = 'Governmental organisations';
       business.requestedParentCategory = 'Governmental organisations';
     }

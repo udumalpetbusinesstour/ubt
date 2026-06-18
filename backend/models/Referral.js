@@ -23,7 +23,7 @@ const ReferralSchema = new mongoose.Schema({
   },
   points: {
     type: Number,
-    default: 100,
+    default: 10,
   },
   rejectionReason: {
     type: String,

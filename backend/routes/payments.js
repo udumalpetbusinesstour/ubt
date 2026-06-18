@@ -72,19 +72,6 @@ router.post('/create-order', protect, async (req, res) => {
     let discountAmountRupees = 0;
     let pointsUsed = 0;
 
-    if (applyReferralPoints) {
-      const points = user.referralPoints || 0;
-      let pointsToUse = points;
-      if (redeemPointsAmount !== undefined) {
-        pointsToUse = Math.min(Number(redeemPointsAmount), points);
-      }
-      pointsToUse = Math.max(0, pointsToUse);
-      
-      // Limit points by the maximum points allowed for this plan
-      pointsUsed = Math.min(pointsToUse, maxPointsAllowed);
-      discountAmountRupees = pointsUsed / 10;
-    }
-
     // Resolve Razorpay Plan ID
     let planId;
     if (planType && (planType.toLowerCase() === 'monthly' || planType.toLowerCase().includes('monthly'))) {
@@ -163,15 +150,71 @@ router.post('/verify-payment', protect, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing payment parameters' });
     }
 
+    // Fetch Business first so we can check if it belongs to Public Sector
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    // Idempotency: Check if this payment has already been verified and processed
+    if (razorpayPaymentId) {
+      const existingPayment = await Payment.findOne({
+        $or: [
+          { paymentId: razorpayPaymentId },
+          { razorpayPaymentId: razorpayPaymentId }
+        ]
+      });
+      if (existingPayment) {
+        console.log(`Payment ${razorpayPaymentId} already verified and processed.`);
+        const subscription = await Subscription.findOne({
+          $or: [
+            { razorpayOrderId: razorpayOrderId || undefined },
+            { razorpaySubscriptionId: razorpaySubscriptionId || undefined },
+            { _id: existingPayment.subscriptionId || undefined }
+          ].filter(Boolean)
+        });
+        return res.json({
+          success: true,
+          message: 'Subscription successfully activated (already processed)!',
+          business,
+          subscription,
+          payment: existingPayment
+        });
+      }
+    }
+
+    // Idempotency: Check if subscription has already been created and is active
+    let existingSub = null;
+    if (razorpaySubscriptionId) {
+      existingSub = await Subscription.findOne({ razorpaySubscriptionId });
+    } else if (razorpayOrderId) {
+      existingSub = await Subscription.findOne({ razorpayOrderId });
+    }
+
+    if (existingSub && existingSub.status === 'active') {
+      console.log(`Subscription is already active.`);
+      const existingPay = await Payment.findOne({ subscriptionId: existingSub._id });
+      return res.json({
+        success: true,
+        message: 'Subscription successfully activated (already processed)!',
+        business,
+        subscription: existingSub,
+        payment: existingPay
+      });
+    }
+
+    const isPublicSector = (business.requestedParentCategory === 'Public Sector' || business.category === 'Public Sector');
+
     // Verify Payment Signature
     let isSignatureValid = false;
     const isAdminUser = req.user && (req.user.role === 'admin' || req.user.role === 'superadmin');
     
-    // Support bypassing signature check in sandbox mode or for admins
+    // Support bypassing signature check in sandbox mode, for admins, or for free Public Sector listings
     const isBypass = (
-      (razorpayOrderId && (razorpayOrderId.startsWith('order_mock_') || razorpayOrderId === 'free_listing' || razorpayOrderId.startsWith('free_admin_'))) ||
+      (razorpayOrderId && (razorpayOrderId.startsWith('order_mock_') || razorpayOrderId === 'free_listing' || razorpayOrderId === 'public_sector_free' || razorpayOrderId.startsWith('free_admin_'))) ||
       (razorpaySubscriptionId && razorpaySubscriptionId.startsWith('sub_mock_')) ||
       isAdminUser || 
+      isPublicSector ||
       !razorpaySignature
     );
 
@@ -202,12 +245,6 @@ router.post('/verify-payment', protect, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Payment verification failed' });
     }
 
-    // Fetch Business
-    const business = await Business.findById(businessId);
-    if (!business) {
-      return res.status(404).json({ success: false, message: 'Business not found' });
-    }
-
     // Calculate dates
     const startDate = new Date();
     let endDate = new Date();
@@ -220,10 +257,16 @@ router.post('/verify-payment', protect, async (req, res) => {
       isActive: true
     });
 
-    const durationDays = dbPlan ? dbPlan.durationDays : (planType === 'Monthly' ? 28 : 365);
+    let durationDays = dbPlan ? dbPlan.durationDays : (planType === 'Monthly' ? 28 : 365);
+    if (isPublicSector) {
+      durationDays = 3650; // 10 years free subscription
+    }
     endDate.setDate(startDate.getDate() + durationDays);
 
-    const baseAmount = isAdminUser ? 0 : (dbPlan ? dbPlan.price : (planType === 'Monthly' ? 99 : 999));
+    let baseAmount = isAdminUser ? 0 : (dbPlan ? dbPlan.price : (planType === 'Monthly' ? 99 : 999));
+    if (isPublicSector) {
+      baseAmount = 0;
+    }
     
     // Business Rule #2: Max 10% deduction of plan value
     const maxDiscountRupees = Math.round(baseAmount * 0.1);
@@ -233,23 +276,6 @@ router.post('/verify-payment', protect, async (req, res) => {
     let pointsUsed = 0;
 
     const user = await User.findById(req.user._id);
-
-    if (applyReferralPoints && !isAdminUser) {
-      const points = user.referralPoints || 0;
-      let pointsToUse = points;
-      if (redeemPointsAmount !== undefined) {
-        pointsToUse = Math.min(Number(redeemPointsAmount), points);
-      }
-      pointsToUse = Math.max(0, pointsToUse);
-      pointsUsed = Math.min(pointsToUse, maxPointsAllowed);
-      discountAmountRupees = pointsUsed / 10;
-
-      if (pointsUsed > 0) {
-        user.referralPoints -= pointsUsed;
-        await user.save();
-        console.log(`[Referral Redeem] Deducted ${pointsUsed} points from user ${user.email}`);
-      }
-    }
 
     const finalAmount = baseAmount - discountAmountRupees;
 
@@ -402,6 +428,25 @@ router.post('/verify-event-payment', protect, async (req, res) => {
     const event = await Event.findById(eventId);
     if (!event) {
       return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+
+    // Idempotency: Check if payment already exists for this event
+    if (razorpayPaymentId) {
+      const existingPayment = await Payment.findOne({
+        $or: [
+          { paymentId: razorpayPaymentId },
+          { razorpayPaymentId: razorpayPaymentId }
+        ]
+      });
+      if (existingPayment) {
+        console.log(`Event payment ${razorpayPaymentId} already processed.`);
+        return res.json({
+          success: true,
+          message: 'Event payment successfully verified (already processed)!',
+          event,
+          payment: existingPayment,
+        });
+      }
     }
 
     // Verify signature
@@ -585,23 +630,34 @@ router.post('/webhook', async (req, res) => {
           await business.save();
         }
 
-        // Add to Payment history
-        await Payment.create({
-          userId: localSub.userId || localSub.ownerId,
-          businessId: localSub.businessId,
-          subscriptionId: localSub._id,
-          orderId: subId,
-          paymentId: paymentId,
-          razorpayOrderId: undefined,
-          razorpaySubscriptionId: subId,
-          razorpayPaymentId: paymentId,
-          amount: amount,
-          paymentMethod: paymentEntity.method || 'UPI',
-          status: 'Paid',
-          paymentStatus: 'Paid',
-          paymentDate: new Date(),
-          paidAt: new Date(),
+        // Prevent duplicate payment records for webhook retries
+        const existingPayment = await Payment.findOne({
+          $or: [
+            { paymentId: paymentId },
+            { razorpayPaymentId: paymentId }
+          ]
         });
+        if (!existingPayment) {
+          // Add to Payment history
+          await Payment.create({
+            userId: localSub.userId || localSub.ownerId,
+            businessId: localSub.businessId,
+            subscriptionId: localSub._id,
+            orderId: subId,
+            paymentId: paymentId,
+            razorpayOrderId: undefined,
+            razorpaySubscriptionId: subId,
+            razorpayPaymentId: paymentId,
+            amount: amount,
+            paymentMethod: paymentEntity.method || 'UPI',
+            status: 'Paid',
+            paymentStatus: 'Paid',
+            paymentDate: new Date(),
+            paidAt: new Date(),
+          });
+        } else {
+          console.log(`Payment ${paymentId} already recorded in subscription.charged.`);
+        }
       }
     } else if (eventType === 'subscription.cancelled' || eventType === 'subscription.halted') {
       const subscriptionEntity = payload.subscription?.entity;
@@ -636,10 +692,24 @@ router.post('/webhook', async (req, res) => {
       const paymentId = paymentEntity.id;
       const amount = paymentEntity.amount / 100; // Rupee conversion
 
-      let payment = await Payment.findOne({ razorpayOrderId: orderId });
-      const subscription = await Subscription.findOne({ razorpayOrderId: orderId });
+      let payment = await Payment.findOne({
+        $or: [
+          { paymentId: paymentId },
+          { razorpayPaymentId: paymentId }
+        ]
+      });
+      if (!payment && orderId) {
+        payment = await Payment.findOne({ razorpayOrderId: orderId });
+      }
+
+      const subscription = await Subscription.findOne({
+        $or: [
+          { razorpayOrderId: orderId || undefined },
+          { razorpaySubscriptionId: orderId || undefined }
+        ].filter(Boolean)
+      });
       let eventRecord = null;
-      if (!subscription) {
+      if (!subscription && orderId) {
         eventRecord = await Event.findOne({
           $or: [
             { razorpayOrderId: orderId },
@@ -717,10 +787,24 @@ router.post('/webhook', async (req, res) => {
       const paymentId = paymentEntity.id;
       const amount = paymentEntity.amount / 100; // Rupee conversion
 
-      let payment = await Payment.findOne({ razorpayOrderId: orderId });
-      const subscription = await Subscription.findOne({ razorpayOrderId: orderId });
+      let payment = await Payment.findOne({
+        $or: [
+          { paymentId: paymentId },
+          { razorpayPaymentId: paymentId }
+        ]
+      });
+      if (!payment && orderId) {
+        payment = await Payment.findOne({ razorpayOrderId: orderId });
+      }
+
+      const subscription = await Subscription.findOne({
+        $or: [
+          { razorpayOrderId: orderId || undefined },
+          { razorpaySubscriptionId: orderId || undefined }
+        ].filter(Boolean)
+      });
       let eventRecord = null;
-      if (!subscription) {
+      if (!subscription && orderId) {
         eventRecord = await Event.findOne({
           $or: [
             { razorpayOrderId: orderId },
@@ -759,6 +843,50 @@ router.post('/webhook', async (req, res) => {
       if (subscription) {
         subscription.status = 'pending';
         await subscription.save();
+      }
+    } else if (eventType === 'payment.refunded') {
+      if (!payload.payment) {
+        return res.json({ success: true, message: 'Webhook payment refund entity missing' });
+      }
+
+      const paymentEntity = payload.payment.entity;
+      const orderId = paymentEntity.order_id;
+      const paymentId = paymentEntity.id;
+
+      let payment = await Payment.findOne({
+        $or: [
+          { paymentId: paymentId },
+          { razorpayPaymentId: paymentId }
+        ]
+      });
+
+      if (payment) {
+        payment.status = 'Refunded';
+        payment.paymentStatus = 'Refunded';
+        await payment.save();
+
+        if (payment.subscriptionId) {
+          const subscription = await Subscription.findById(payment.subscriptionId);
+          if (subscription) {
+            subscription.status = 'refunded';
+            await subscription.save();
+
+            const business = await Business.findById(subscription.businessId);
+            if (business) {
+              business.subscriptionStatus = 'expired';
+              business.isPremium = false;
+              await business.save();
+            }
+          }
+        }
+
+        if (payment.eventId) {
+          const eventRecord = await Event.findById(payment.eventId);
+          if (eventRecord) {
+            eventRecord.paymentStatus = 'Refunded';
+            await eventRecord.save();
+          }
+        }
       }
     }
 

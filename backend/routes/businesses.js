@@ -1510,6 +1510,107 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// @desc    Add a directory listing anonymously (Pending Verification, Public Sector only)
+// @route   POST /api/businesses/anonymous-add
+// @access  Public
+router.post('/anonymous-add', async (req, res) => {
+  try {
+    const {
+      name,
+      requestedParentCategory,
+      category,
+      customCategoryName,
+      address,
+      locality,
+      phone,
+      website,
+      description,
+      googleMapsLocation,
+      googlePlaceId,
+      pincode,
+      latitude,
+      longitude,
+      googleRating,
+      googleReviewsCount,
+      googleReviews,
+      logoUrl,
+      coverImageUrl,
+      galleryUrls
+    } = req.body;
+
+    if (!name || !requestedParentCategory || !category || !phone || !address || !locality) {
+      return res.status(400).json({ success: false, message: 'Name, Main Category, Subcategory, Phone, Address, and Locality are required' });
+    }
+
+    if (requestedParentCategory !== 'Public Sector') {
+      return res.status(400).json({ success: false, message: 'Anonymous directory addition is restricted to Public Sector category listings only.' });
+    }
+
+    const resolvedPincode = pincode || '642126';
+    const lat = latitude || 10.5891;
+    const lng = longitude || 77.2412;
+
+    const geoValidation = await validateAddressAndBoundary(
+      `${address || ''} ${locality || ''}`,
+      resolvedPincode,
+      lat,
+      lng
+    );
+    if (!geoValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: geoValidation.message,
+      });
+    }
+
+    const User = require('../models/User');
+    const adminUser = await User.findOne({ email: 'admin@gmail.com' }) || await User.findOne({ role: 'admin' }) || await User.findOne({ role: 'superadmin' });
+    if (!adminUser) {
+      return res.status(500).json({ success: false, message: 'Administrative user account not found to associate with listing' });
+    }
+
+    const business = await Business.create({
+      ownerId: adminUser._id,
+      name,
+      businessName: name,
+      requestedParentCategory,
+      category,
+      type: category,
+      customCategoryName: category === 'Others' ? customCategoryName : '',
+      categoryStatus: (category === 'Others') ? 'Pending Review' : 'Normal',
+      address: address || `${locality}, Udumalpet`,
+      locality: locality || 'Udumalpet',
+      phone,
+      whatsapp: phone,
+      website: website || '',
+      description: description || `${name} is listed in the Udumalpet Business Tour local directory.`,
+      googleBusinessLink: googleMapsLocation || '',
+      googleMapsLocation: googleMapsLocation || '',
+      googlePlaceId: googlePlaceId || '',
+      pincode: resolvedPincode,
+      latitude: geoValidation.lat,
+      longitude: geoValidation.lng,
+      coordinates: { lat: geoValidation.lat, lng: geoValidation.lng },
+      status: 'Pending Verification',
+      verificationStatus: 'pending',
+      subscriptionStatus: 'none',
+      isPremium: false,
+      googleRating: googleRating || 0,
+      googleReviewsCount: googleReviewsCount || 0,
+      googleReviews: googleReviews || [],
+      logoUrl: logoUrl || '',
+      coverImageUrl: coverImageUrl || '',
+      galleryUrls: galleryUrls || [],
+      galleryImages: galleryUrls || []
+    });
+
+    res.status(201).json({ success: true, data: business });
+  } catch (error) {
+    console.error('Error in anonymous-add route:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // @desc    Create a new business listing (Pending Approval)
 // @route   POST /api/businesses
 // @access  Private

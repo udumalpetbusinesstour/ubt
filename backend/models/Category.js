@@ -192,18 +192,19 @@ const seedDefaultCategories = async () => {
       { categoryName: 'Sports Academies', parentCategory: 'Sports & Fitness', icon: 'Dumbbell', description: 'Cricket coaching, badminton courts, and swimming academies' },
       { categoryName: 'Sports Equipment Stores', parentCategory: 'Sports & Fitness', icon: 'Dumbbell', description: 'Bats, balls, nets, and fitness wearables shops' },
 
-      // Others (Parent: Others)
-      { categoryName: 'Temples', parentCategory: 'Others', icon: 'Landmark', description: 'Town temples, historical kovils, and worship shrines' },
-      { categoryName: 'Marriage Halls', parentCategory: 'Others', icon: 'Landmark', description: 'Traditional Kalyana Mandapams and wedding reception halls' },
-      { categoryName: 'Community Halls', parentCategory: 'Others', icon: 'Landmark', description: 'Mini halls, party lawns, and municipal community halls' },
-      { categoryName: 'Trusts & NGOs', parentCategory: 'Others', icon: 'Landmark', description: 'Social service organizations, charity trusts, and NGOs' },
-      { categoryName: 'Others', parentCategory: 'Others', icon: 'Store', description: 'Special fallback category for custom entries' }
+      // Public Sector (Parent: Public Sector)
+      { categoryName: 'Public Sector', parentCategory: null, icon: 'Landmark', description: 'Public services, temples, government schools, and community services' },
+      { categoryName: 'Temples', parentCategory: 'Public Sector', icon: 'Landmark', description: 'Town temples, historical kovils, and worship shrines' },
+      { categoryName: 'Govt Schools', parentCategory: 'Public Sector', icon: 'GraduationCap', description: 'Government and municipal schools' },
+      { categoryName: 'Govt Offices', parentCategory: 'Public Sector', icon: 'Building', description: 'Government offices, municipal offices, and service centers' },
+      { categoryName: 'Govt Hospitals', parentCategory: 'Public Sector', icon: 'Activity', description: 'Government hospitals and public primary health centers' },
+      { categoryName: 'Marriage Halls', parentCategory: 'Public Sector', icon: 'Building', description: 'Traditional Kalyana Mandapams and wedding reception halls' },
+      { categoryName: 'Community Halls', parentCategory: 'Public Sector', icon: 'Building', description: 'Mini halls, party lawns, and municipal community halls' },
+      { categoryName: 'Trusts & NGOs', parentCategory: 'Public Sector', icon: 'Users', description: 'Social service organizations, charity trusts, and NGOs' }
     ];
 
     for (const item of list) {
       const exists = await Category.findOne({ categoryName: item.categoryName });
-      const seededViews = Math.floor(Math.random() * 800) + 150;
-      
       const slug = item.categoryName
         .toLowerCase()
         .trim()
@@ -218,8 +219,8 @@ const seedDefaultCategories = async () => {
         slug
       };
       
-      if (!exists || !exists.views) {
-        updateFields.views = seededViews;
+      if (!exists) {
+        updateFields.views = 0;
       }
       
       await Category.findOneAndUpdate(

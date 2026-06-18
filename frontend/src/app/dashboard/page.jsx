@@ -71,8 +71,8 @@ const parentCategoryMapping = {
   'Governmental organisations': [
     'Taluk Office', 'Municipality', 'Police Stations', 'Hospitals', 'Banks', 'Schools'
   ],
-  'Others': [
-    'Temples', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs', 'Others'
+  'Public Sector': [
+    'Temples', 'Govt Schools', 'Govt Offices', 'Govt Hospitals', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs'
   ]
 };
 
@@ -95,7 +95,7 @@ const availableCategories = [
   'Events & Entertainment',
   'Sports & Fitness',
   'Governmental organisations',
-  'Others'
+  'Public Sector'
 ];
 
 const getEventDefaultImage = (category) => {
@@ -212,6 +212,9 @@ function DashboardContent() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [applyReferralPoints, setApplyReferralPoints] = useState(false);
   const [redeemPointsAmount, setRedeemPointsAmount] = useState(0);
+  const [redemptionRequests, setRedemptionRequests] = useState([]);
+  const [redemptionsLoading, setRedemptionsLoading] = useState(false);
+  const [redemptionSubmitting, setRedemptionSubmitting] = useState(false);
 
   const handleVerifyGoogleBusiness = async () => {
     setVerifyLoading(true);
@@ -2388,9 +2391,66 @@ function DashboardContent() {
     }
   };
 
+  const fetchMyRedemptions = async () => {
+    setRedemptionsLoading(true);
+    try {
+      const activeToken = token || localStorage.getItem('ubt_token');
+      const res = await fetch('http://localhost:5000/api/referrals/my-redemptions', {
+        headers: {
+          Authorization: `Bearer ${activeToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setRedemptionRequests(data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch redemptions:', err);
+    } finally {
+      setRedemptionsLoading(false);
+    }
+  };
+
+  const handleRedeemPoints = async () => {
+    if (!referralStats || (referralStats.referralPoints || 0) < 1000) {
+      alert('You need at least 1,000 points to request a redemption.');
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to redeem 1,000 points for a ₹1,000 cashback refund? 1,000 points will be deducted immediately.')) {
+      return;
+    }
+
+    setRedemptionSubmitting(true);
+    try {
+      const activeToken = token || localStorage.getItem('ubt_token');
+      const res = await fetch('http://localhost:5000/api/referrals/redeem', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message || 'Redemption request submitted successfully! Admin will contact you.');
+        fetchReferralStats();
+        fetchMyRedemptions();
+      } else {
+        alert(data.message || 'Failed to submit redemption request.');
+      }
+    } catch (err) {
+      console.error('Redemption error:', err);
+      alert('An error occurred during redemption. Please try again.');
+    } finally {
+      setRedemptionSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     if (token && activeTab === 'Referral & Rewards') {
       fetchReferralStats();
+      fetchMyRedemptions();
     }
   }, [token, activeTab]);
 
@@ -2752,7 +2812,7 @@ function DashboardContent() {
           prefill: {
             name: user?.fullName || '',
             email: user?.email || '',
-            contact: user?.mobileNumber || '',
+            contact: user?.phone || user?.mobileNumber || '',
           },
           theme: {
             color: '#027244',
@@ -3248,9 +3308,9 @@ function DashboardContent() {
           }
         },
         prefill: {
-          name: user.fullName,
-          email: user.email,
-          contact: user.mobileNumber,
+          name: user.fullName || '',
+          email: user.email || '',
+          contact: user.phone || user.mobileNumber || '',
         },
         theme: {
           color: '#027244', 
@@ -7467,10 +7527,10 @@ function DashboardContent() {
                     UBT Referral & Rewards Program
                   </span>
                   <h2 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">
-                    Refer. Earn. Save.
+                    Refer. Earn. Redeem.
                   </h2>
                   <p className="text-xs md:text-sm text-slate-200 font-medium leading-relaxed mt-1">
-                    Refer new businesses to UBT and earn referral points. Redeem your points and get discounts on your subscription renewal.
+                    Refer new businesses to UBT and earn referral points. Once you reach 1,000 points, request a manual cash refund! (1 Referral = 10 Points)
                   </p>
                 </div>
                 
@@ -7479,7 +7539,7 @@ function DashboardContent() {
                   <Gift className="h-7 w-7 text-amber-300 animate-pulse mb-1.5" />
                   <span className="text-[9px] uppercase font-black text-slate-300 tracking-wider">Available Points Balance</span>
                   <span className="text-2xl font-black mt-1 text-white">{referralStats?.referralPoints || 0} POINTS</span>
-                  <span className="text-[11px] font-bold text-emerald-300 mt-1">₹{referralStats?.referralCredits || 0} Credit Value</span>
+                  <span className="text-[11px] font-bold text-emerald-300 mt-1">1 Business Referral = 10 Points</span>
                 </div>
               </div>
 
@@ -7489,7 +7549,7 @@ function DashboardContent() {
                 <div className="lg:col-span-2 bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4 text-left">
                   <h3 className="font-extrabold text-[#001c41] text-sm md:text-base tracking-tight">Your Unique Referral Link</h3>
                   <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                    Share your invite link with other local merchants in Udumalpet. When they register, make their subscription payment, and get approved, you'll earn 100 points!
+                    Share your invite link with other local merchants in Udumalpet. When they register, complete their subscription payment, and get approved, you'll earn 10 points!
                   </p>
 
                   <div className="flex gap-2.5 items-center mt-2">
@@ -7551,10 +7611,11 @@ function DashboardContent() {
                   </div>
 
                   <button 
-                    onClick={(e) => openModalAtClickLevel(e, setShowRenewModal, 650)}
-                    className="w-full py-3 bg-[#001c41] hover:bg-[#002d62] text-white text-xs font-extrabold rounded-xl transition-all shadow-sm cursor-pointer active:scale-98"
+                    disabled={!referralStats || (referralStats.referralPoints || 0) < 1000 || redemptionSubmitting}
+                    onClick={handleRedeemPoints}
+                    className="w-full py-3 bg-[#027244] hover:bg-[#005934] disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-xs font-extrabold rounded-xl transition-all shadow-sm cursor-pointer active:scale-98 text-center"
                   >
-                    Redeem Available Credit
+                    {redemptionSubmitting ? 'Submitting Request...' : (referralStats && (referralStats.referralPoints || 0) >= 1000 ? 'Redeem 1,000 Points for ₹1,000 Cashback' : 'Redeem ₹1,000 Cashback (Requires 1000 Pts)')}
                   </button>
                 </div>
               </div>
@@ -7568,16 +7629,16 @@ function DashboardContent() {
                     {[
                       { step: '01', title: 'Get Referral Link', desc: 'Login to your dashboard and get your unique referral link or code.' },
                       { step: '02', title: 'Share With Others', desc: 'Share your link with your friends, family or any business owner around you.' },
-                      { step: '03', title: 'They Join UBT', desc: 'When they register and subscribe to any paid plan, the referral is successful.' },
-                      { step: '04', title: 'You Earn Points', desc: 'You earn referral points (100 Points = ₹10 Credit) which you can redeem.' }
+                      { step: '03', title: 'They Join UBT', desc: 'When they register, subscribe to a paid plan, and get approved by the admin.' },
+                      { step: '04', title: 'Redeem points', desc: 'Once you accumulate 1,000 points, redeem them here for a ₹1,000 cashback refund.' }
                     ].map((item, idx) => (
                       <div key={idx} className="flex gap-3 items-start">
                         <span className="h-7 w-7 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center font-extrabold text-emerald-600 text-xs shrink-0 select-none">
                           {item.step}
                         </span>
                         <div className="flex flex-col gap-0.5 text-left">
-                          <h4 className="font-extrabold text-slate-800 text-xs">{item.title}</h4>
-                          <p className="text-[10px] text-slate-500 font-semibold leading-relaxed mt-0.5">{item.desc}</p>
+                          <h4 className="font-extrabold text-[#001c41] text-[13.5px]">{item.title}</h4>
+                          <p className="text-[12px] text-slate-500 font-medium leading-relaxed mt-0.5">{item.desc}</p>
                         </div>
                       </div>
                     ))}
@@ -7586,23 +7647,22 @@ function DashboardContent() {
 
                 {/* Conversion Grid */}
                 <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4 text-left">
-                  <h3 className="font-extrabold text-[#001c41] text-sm md:text-base tracking-tight">Earn More, Save More</h3>
+                  <h3 className="font-extrabold text-[#001c41] text-sm md:text-base tracking-tight">Referral Point Milestones</h3>
                   <div className="overflow-hidden border border-slate-100 rounded-xl mt-1">
-                    <table className="w-full border-collapse text-xs font-semibold text-slate-600">
+                    <table className="w-full border-collapse text-xs font-semibold text-slate-650">
                       <thead className="bg-slate-50 border-b border-slate-100 text-[9.5px] uppercase font-black text-slate-400">
                         <tr>
                           <th className="p-3 text-left">Successful Referrals</th>
                           <th className="p-3 text-left">Points Earned</th>
-                          <th className="p-3 text-left">Credit Value</th>
+                          <th className="p-3 text-left">Redemption Option</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {[
-                          { refs: '1 Business', pts: '100 Points', val: '₹10 Credit' },
-                          { refs: '5 Businesses', pts: '500 Points', val: '₹50 Credit' },
-                          { refs: '10 Businesses', pts: '1000 Points', val: '₹100 Credit' },
-                          { refs: '20 Businesses', pts: '2000 Points', val: '₹200 Credit' },
-                          { refs: '50 Businesses', pts: '5000 Points', val: '₹500 Credit' }
+                          { refs: '1 Business', pts: '10 Points', val: 'Accumulate' },
+                          { refs: '10 Businesses', pts: '100 Points', val: 'Accumulate' },
+                          { refs: '50 Businesses', pts: '500 Points', val: 'Accumulate' },
+                          { refs: '100 Businesses', pts: '1000 Points', val: 'Redeem for ₹1,000 Cashback' }
                         ].map((row, idx) => (
                           <tr key={idx} className="hover:bg-slate-50/50">
                             <td className="p-3 font-extrabold text-slate-800">{row.refs}</td>
@@ -7689,6 +7749,65 @@ function DashboardContent() {
                           <tr>
                             <td colSpan="5" className="p-8 text-center text-slate-400 text-xs font-bold leading-normal">
                               You haven't referred any businesses yet. Share your invite link above to start earning!
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Point Redemptions History */}
+              <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4 text-left">
+                <h3 className="font-extrabold text-[#001c41] text-sm md:text-base tracking-tight">Points Redemption History</h3>
+                
+                {redemptionsLoading ? (
+                  <div className="py-8 text-center text-slate-450 flex flex-col items-center justify-center gap-2">
+                    <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Loading redemptions log...</span>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto border border-slate-200 rounded-2xl">
+                    <table className="w-full border-collapse text-left text-xs font-semibold text-slate-650">
+                      <thead className="bg-slate-50 border-b border-slate-200 uppercase text-[9px] font-black text-slate-400 tracking-wider">
+                        <tr>
+                          <th className="p-4">Requested Date</th>
+                          <th className="p-4">Points Redeemed</th>
+                          <th className="p-4">Status</th>
+                          <th className="p-4">Admin Remarks</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-medium">
+                        {redemptionRequests.map(req => {
+                          const isRefunded = req.status === 'Refunded';
+                          const isRejected = req.status === 'Rejected';
+                          
+                          return (
+                            <tr key={req._id} className="hover:bg-slate-50/50 transition-colors">
+                              <td className="p-4 text-slate-500 font-bold">
+                                {new Date(req.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </td>
+                              <td className="p-4 font-extrabold text-slate-800">{req.points} Points</td>
+                              <td className="p-4">
+                                <span className={`px-2.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
+                                  isRefunded
+                                    ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
+                                    : isRejected
+                                      ? 'bg-red-50 border-red-200 text-red-650'
+                                      : 'bg-amber-50 border-amber-250 text-amber-600'
+                                  }`}>
+                                  {req.status}
+                                </span>
+                              </td>
+                              <td className="p-4 text-slate-500 font-semibold">{req.remarks || 'Pending manual processing'}</td>
+                            </tr>
+                          );
+                        })}
+                        {redemptionRequests.length === 0 && (
+                          <tr>
+                            <td colSpan="4" className="p-8 text-center text-slate-450 text-xs font-bold leading-normal">
+                              No redemption requests made yet.
                             </td>
                           </tr>
                         )}
@@ -7934,7 +8053,6 @@ function DashboardContent() {
               <h2 className="text-2xl md:text-3xl font-extrabold text-[#001c41] tracking-tight">Choose Your Plan</h2>
               <p className="text-xs text-slate-400 font-semibold max-w-md mt-1">Select the subscription package that best fits your business goals</p>
             </div>
-
             {/* Quick business & subscription stats overview banner */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full bg-[#F8FAFC] border border-slate-200/60 p-4.5 rounded-2xl">
               <div className="flex flex-col text-left">
@@ -7960,73 +8078,10 @@ function DashboardContent() {
               <div className="flex flex-col text-left sm:border-l sm:border-slate-200 sm:pl-4">
                 <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Referral Points</span>
                 <span className="text-xs font-extrabold text-slate-800 mt-1.5">
-                  {referralStats?.referralPoints || 0} Points (₹{referralStats?.referralCredits || 0} Credits)
+                  {referralStats?.referralPoints || 0} Points
                 </span>
               </div>
             </div>
-
-            <>
-            {referralStats && referralStats.referralPoints > 0 && (
-              <div className="bg-emerald-50/50 border border-emerald-100/80 rounded-2xl p-4.5 flex flex-col gap-3.5 max-w-md mx-auto w-full shadow-2xs mt-2 mb-2 transition-all">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 bg-emerald-100/50 border border-emerald-250/30 rounded-xl flex items-center justify-center text-emerald-600 shadow-2xs">
-                      <Gift className="h-5 w-5" />
-                    </div>
-                    <div className="flex flex-col text-left font-sans">
-                      <span className="text-xs font-extrabold text-slate-800">Redeem Referral Points</span>
-                      <span className="text-[10px] text-slate-500 font-semibold mt-0.5">
-                        Available: {referralStats.referralPoints} points (₹{referralStats.referralCredits})
-                      </span>
-                    </div>
-                  </div>
-                  <input 
-                    type="checkbox" 
-                    checked={applyReferralPoints} 
-                    onChange={(e) => handleApplyReferralPointsToggle(e.target.checked)}
-                    className="h-5 w-5 border-slate-300 rounded-md text-emerald-600 focus:ring-emerald-500 cursor-pointer transition-colors"
-                  />
-                </div>
-
-                {applyReferralPoints && (
-                  <div className="pt-3 border-t border-dashed border-emerald-100 flex flex-col gap-2.5 animate-fadeIn">
-                    <div className="flex items-center justify-between gap-3">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Points to Redeem</label>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs font-extrabold text-[#027244]">₹{(Number(redeemPointsAmount || 0) * 0.10).toFixed(2)}</span>
-                        <span className="text-[10px] text-slate-400 font-semibold">discount</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="relative flex-grow">
-                        <input
-                          type="number"
-                          min="0"
-                          max={referralStats ? Math.min(referralStats.referralPoints, Math.round(getSelectedPlanPrice() * 0.1) * 10) : 0}
-                          value={redeemPointsAmount}
-                          onChange={handleRedeemPointsChange}
-                          className="w-full bg-white border border-slate-200 rounded-xl py-2 px-3.5 text-xs font-extrabold text-slate-800 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-500/30 transition-all shadow-inner"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const maxRed = referralStats ? Math.min(referralStats.referralPoints, Math.round(getSelectedPlanPrice() * 0.1) * 10) : 0;
-                            setRedeemPointsAmount(maxRed);
-                          }}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250/40 text-[#027244] text-[9.5px] font-black px-2 py-1 rounded-lg uppercase tracking-wide transition-colors cursor-pointer"
-                        >
-                          Max
-                        </button>
-                      </div>
-                    </div>
-
-                    <span className="text-[9.5px] text-slate-400 font-semibold leading-relaxed text-left block">
-                      You can redeem up to {referralStats ? Math.min(referralStats.referralPoints, Math.round(getSelectedPlanPrice() * 0.1) * 10) : 0} points for this plan. (1 point = ₹0.10)
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Toggle selector */}
             <div className="flex justify-center mt-2">
@@ -8181,8 +8236,6 @@ function DashboardContent() {
                 ))}
               </div>
             </div>
-          </>
-
           </div>
         </div>
       )}

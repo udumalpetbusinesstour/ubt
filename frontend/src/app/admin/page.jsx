@@ -28,7 +28,7 @@ const availableCategories = [
   'Events & Entertainment',
   'Sports & Fitness',
   'Governmental organisations',
-  'Others'
+  'Public Sector'
 ];
 
 const parentCategoryMapping = {
@@ -93,8 +93,8 @@ const parentCategoryMapping = {
   'Governmental organisations': [
     'Taluk Office', 'Municipality', 'Police Stations', 'Hospitals', 'Banks', 'Schools'
   ],
-  'Others': [
-    'Temples', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs', 'Others'
+  'Public Sector': [
+    'Temples', 'Govt Schools', 'Govt Offices', 'Govt Hospitals', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs', 'Others'
   ]
 };
 
@@ -147,6 +147,7 @@ export default function AdminDashboard() {
   const [payments, setPayments] = useState([]);
   const [subscriptionTab, setSubscriptionTab] = useState('override');
   const [notifications, setNotifications] = useState([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [reportsData, setReportsData] = useState({});
   const [pendingCategories, setPendingCategories] = useState([]);
   const [presetCategories, setPresetCategories] = useState([]);
@@ -207,6 +208,12 @@ export default function AdminDashboard() {
   const [referralsError, setReferralsError] = useState('');
   const [referralFilter, setReferralFilter] = useState('All'); // All | Pending | Completed | Rejected
   const [referralSearch, setReferralSearch] = useState('');
+
+  // Redemption/Refund states
+  const [redemptions, setRedemptions] = useState([]);
+  const [redemptionsLoading, setRedemptionsLoading] = useState(false);
+  const [redemptionsError, setRedemptionsError] = useState('');
+  const [referralSubTab, setReferralSubTab] = useState('queue'); // queue | refunds | points
 
   // Directory Add Modal States
   const [showAddDirectoryModal, setShowAddDirectoryModal] = useState(false);
@@ -536,6 +543,44 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchNotifications = async () => {
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      if (!activeToken) return;
+      const res = await fetch('http://localhost:5000/api/notifications', {
+        headers: {
+          'Authorization': `Bearer ${activeToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setNotifications(data.data.filter(n => !n.isRead));
+      }
+    } catch (err) {
+      console.error('Error fetching admin notifications:', err);
+    }
+  };
+
+  const markAllNotificationsRead = async () => {
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      if (!activeToken) return;
+      const res = await fetch('http://localhost:5000/api/notifications/read-all', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${activeToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotifications([]);
+        setNotificationsOpen(false);
+      }
+    } catch (err) {
+      console.error('Error marking notifications as read:', err);
+    }
+  };
+
   const fetchReferrals = async () => {
     setReferralsLoading(true);
     setReferralsError('');
@@ -604,6 +649,74 @@ export default function AdminDashboard() {
       // Simulate offline update
       setReferrals(prev => prev.map(r => r._id === referralId ? { ...r, status: action === 'approve' ? 'completed' : 'rejected', rejectionReason } : r));
       alert(`Referral successfully ${action}d (simulated offline mode)!`);
+    }
+  };
+
+  const fetchRedemptions = async () => {
+    setRedemptionsLoading(true);
+    setRedemptionsError('');
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      const res = await fetch('http://localhost:5000/api/referrals/admin/redemptions', {
+        headers: {
+          'Authorization': `Bearer ${activeToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRedemptions(data.data);
+      } else {
+        throw new Error(data.message || 'Failed to fetch redemptions.');
+      }
+    } catch (err) {
+      console.warn('API error, using realistic mockup redemptions.', err);
+      // Fallback mock redemptions for offline testing
+      const mockRedemptions = [
+        {
+          _id: 'redem1',
+          userId: { fullName: 'Aravind Swamy', email: 'aravind@gmail.com', mobileNumber: '9443211111' },
+          points: 1000,
+          status: 'Pending Approval',
+          remarks: '',
+          createdAt: new Date().toISOString()
+        },
+        {
+          _id: 'redem2',
+          userId: { fullName: 'Lakshmi Textiles Owner', email: 'lakshmi@gmail.com', mobileNumber: '9443599999' },
+          points: 1000,
+          status: 'Refunded',
+          remarks: 'Bank transfer completed ref#12345',
+          createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
+        }
+      ];
+      setRedemptions(mockRedemptions);
+    } finally {
+      setRedemptionsLoading(false);
+    }
+  };
+
+  const handleRedemptionRefund = async (redemptionId, remarks = '') => {
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/referrals/admin/redemptions/${redemptionId}/refund`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ remarks })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRedemptions(prev => prev.map(r => r._id === redemptionId ? { ...r, status: 'Refunded', remarks } : r));
+        alert('Redemption successfully marked as Refunded!');
+      } else {
+        alert(data.message || 'Failed to update redemption status.');
+      }
+    } catch (err) {
+      // Simulate offline update
+      setRedemptions(prev => prev.map(r => r._id === redemptionId ? { ...r, status: 'Refunded', remarks } : r));
+      alert('Redemption successfully marked as Refunded (simulated offline mode)!');
     }
   };
 
@@ -758,6 +871,7 @@ export default function AdminDashboard() {
       fetchQueries();
       fetchAppTestimonials();
       fetchReferrals();
+      fetchNotifications();
     } catch (err) {
       localStorage.removeItem('ubt_user');
       localStorage.removeItem('ubt_token');
@@ -766,8 +880,16 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
+    if (!token) return;
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000); // 30 seconds
+    return () => clearInterval(interval);
+  }, [token]);
+
+  useEffect(() => {
     if (activeTab === 'Referral Moderation') {
       fetchReferrals();
+      fetchRedemptions();
     }
   }, [activeTab]);
 
@@ -886,6 +1008,7 @@ export default function AdminDashboard() {
           ...b,
           ownerName: b.ownerId ? b.ownerId.fullName || b.ownerId.name || 'Merchant' : 'Merchant',
           ownerEmail: b.ownerId ? b.ownerId.email : '',
+          referralPoints: b.ownerId ? b.ownerId.referralPoints || 0 : 0,
           googlePlaceId: b.googlePlaceId || '',
           googleRating: b.googleRating || 0,
           googleReviewsCount: b.googleReviewsCount || 0
@@ -1374,7 +1497,7 @@ export default function AdminDashboard() {
               { id: 'Notifications', label: 'Notifications Hub', icon: <Bell className="h-5 w-5" /> },
               { id: 'Reports', label: 'Reports & Trends', icon: <BarChart3 className="h-5 w-5" /> },
               { id: 'Queries', label: 'Queries Inbox', icon: <Mail className="h-5 w-5" /> },
-              { id: 'Referral Moderation', label: 'Referral Moderation', icon: <Gift className="h-5 w-5" /> }
+              { id: 'Referral Moderation', label: 'Referrals & Refunds', icon: <Gift className="h-5 w-5" /> }
             ].map(item => (
               <button
                 key={item.id}
@@ -1432,10 +1555,43 @@ export default function AdminDashboard() {
 
           {/* Right: profile dropdown notification bar */}
           <div className="flex items-center gap-4">
-            <button className="h-10 w-10 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-500 relative cursor-pointer">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500" />
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setNotificationsOpen(!notificationsOpen)}
+                className="h-10 w-10 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-500 relative cursor-pointer"
+              >
+                <Bell className="h-5 w-5" />
+                {notifications.length > 0 && (
+                  <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-white select-none animate-pulse" />
+                )}
+              </button>
+              {notificationsOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl py-3 px-4 flex flex-col gap-2.5 animate-fadeIn z-50 text-[#001c41]">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <span className="font-extrabold text-xs text-slate-700">Notifications ({notifications.length})</span>
+                    {notifications.length > 0 && (
+                      <button onClick={markAllNotificationsRead} className="text-emerald-600 hover:text-emerald-700 hover:underline text-[10px] font-bold cursor-pointer border-none bg-transparent">
+                        Clear all
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-60 overflow-y-auto flex flex-col gap-2">
+                    {notifications.length === 0 ? (
+                      <div className="py-4 text-center text-slate-400 text-xs font-semibold">No new notifications</div>
+                    ) : (
+                      notifications.map((n) => (
+                        <div key={n._id} className="p-2.5 rounded-xl bg-slate-50/50 hover:bg-slate-50 border border-slate-100 text-[11px] font-semibold leading-relaxed text-left flex flex-col gap-1">
+                          <p className="text-slate-650 m-0">{n.message}</p>
+                          <span className="text-[9px] text-slate-400 font-bold">
+                            {new Date(n.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="h-10 w-[1px] bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="flex flex-col text-right hidden sm:flex leading-none">
@@ -3326,220 +3482,460 @@ export default function AdminDashboard() {
                   {/* Header Dashboard Banner */}
                   <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="flex flex-col text-left font-sans">
-                      <h3 className="font-extrabold text-[#001c41] text-base leading-tight">Referrals & Rewards Moderation</h3>
-                      <span className="text-[10px] text-slate-400 font-semibold mt-1">Review referral credits request logs, verify anti-fraud flags, and manually audit reward balances</span>
+                      <h3 className="font-extrabold text-[#001c41] text-base leading-tight">Referrals & Refunds Control Desk</h3>
+                      <span className="text-[10px] text-slate-400 font-semibold mt-1">Review referral credits request logs, verify anti-fraud flags, manage points, and process cashback refunds.</span>
                     </div>
 
-                    {/* Filter controls */}
+                    {/* Sub-tab navigation */}
                     <div className="bg-slate-100/60 p-1 rounded-xl flex items-center shrink-0 border border-slate-200/30">
-                      {['All', 'Pending', 'Completed', 'Rejected'].map(status => (
+                      {[
+                        { id: 'queue', label: 'Referrals Queue' },
+                        { id: 'refunds', label: 'Cashback Refunds' },
+                        { id: 'points', label: 'Business Points' }
+                      ].map(sub => (
                         <button
-                          key={status}
-                          onClick={() => setReferralFilter(status)}
+                          key={sub.id}
+                          onClick={() => setReferralSubTab(sub.id)}
                           className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                            referralFilter === status
+                            referralSubTab === sub.id
                               ? 'bg-[#027244] text-white shadow-sm shadow-emerald-950/15'
                               : 'text-slate-500 hover:text-slate-800'
                           }`}
                         >
-                          {status === 'All' ? 'All Referrals' : `${status}`}
+                          {sub.label}
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* Summary Metric Stats cards */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 font-sans">
-                    <div className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-2xs text-left flex flex-col gap-1.5">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Total Referrals</span>
-                      <span className="text-2xl font-black text-[#001c41]">{referrals.length}</span>
-                    </div>
-                    <div className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-2xs text-left flex flex-col gap-1.5">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Pending Review</span>
-                      <span className="text-2xl font-black text-amber-600">{referrals.filter(r => r.status === 'pending').length}</span>
-                    </div>
-                    <div className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-2xs text-left flex flex-col gap-1.5">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Completed</span>
-                      <span className="text-2xl font-black text-emerald-650">{referrals.filter(r => r.status === 'completed').length}</span>
-                    </div>
-                    <div className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-2xs text-left flex flex-col gap-1.5">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Rejected / Flagged</span>
-                      <span className="text-2xl font-black text-rose-650">{referrals.filter(r => r.status === 'rejected').length}</span>
-                    </div>
-                  </div>
+                  {referralSubTab === 'queue' && (
+                    <>
+                      {/* Filter controls */}
+                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 flex justify-between items-center gap-4">
+                        <div className="flex flex-col text-left">
+                          <span className="text-xs font-extrabold text-slate-700">Filter Referrals</span>
+                        </div>
+                        <div className="bg-slate-100/60 p-1 rounded-xl flex items-center shrink-0 border border-slate-200/30">
+                          {['All', 'Pending', 'Completed', 'Rejected'].map(status => (
+                            <button
+                              key={status}
+                              onClick={() => setReferralFilter(status)}
+                              className={`px-3 py-1.5 rounded-lg text-[10.5px] font-black transition-all cursor-pointer ${
+                                referralFilter === status
+                                  ? 'bg-[#027244] text-white shadow-sm'
+                                  : 'text-slate-500 hover:text-slate-800'
+                              }`}
+                            >
+                              {status === 'All' ? 'All Referrals' : `${status}`}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
 
-                  {/* Search and Quick Filters bar */}
-                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col sm:flex-row gap-4 justify-between items-center font-sans">
-                    <div className="w-full sm:max-w-md bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2">
-                      <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
-                      <input
-                        type="text"
-                        placeholder="Search by Referrer or Referred Merchant name/email..."
-                        value={referralSearch}
-                        onChange={(e) => setReferralSearch(e.target.value)}
-                        className="w-full bg-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none"
-                      />
-                    </div>
-                  </div>
+                      {/* Summary Metric Stats cards */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 font-sans">
+                        <div className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-2xs text-left flex flex-col gap-1.5">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Total Referrals</span>
+                          <span className="text-2xl font-black text-[#001c41]">{referrals.length}</span>
+                        </div>
+                        <div className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-2xs text-left flex flex-col gap-1.5">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Pending Review</span>
+                          <span className="text-2xl font-black text-amber-600">{referrals.filter(r => r.status === 'pending').length}</span>
+                        </div>
+                        <div className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-2xs text-left flex flex-col gap-1.5">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Completed</span>
+                          <span className="text-2xl font-black text-emerald-655">{referrals.filter(r => r.status === 'completed').length}</span>
+                        </div>
+                        <div className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-2xs text-left flex flex-col gap-1.5">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Rejected / Flagged</span>
+                          <span className="text-2xl font-black text-rose-650">{referrals.filter(r => r.status === 'rejected').length}</span>
+                        </div>
+                      </div>
 
-                  {/* Referrals Moderation List Table */}
-                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden font-sans">
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
-                        <thead>
-                          <tr className="bg-slate-50 border-b border-slate-150 text-[10px] font-black text-slate-450 uppercase tracking-wider text-left">
-                            <th className="px-6 py-4">Referrer (Invited By)</th>
-                            <th className="px-6 py-4">Referred User</th>
-                            <th className="px-6 py-4">Referred Business</th>
-                            <th className="px-6 py-4">Anti-Fraud Validation</th>
-                            <th className="px-6 py-4">Status</th>
-                            <th className="px-6 py-4 text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-xs text-slate-655 font-semibold">
-                          {referralsLoading ? (
-                            <tr>
-                              <td colSpan="6" className="text-center py-12 text-slate-400 font-semibold">
-                                Loading referrals registry...
-                              </td>
-                            </tr>
-                          ) : referrals
-                            .filter(r => {
-                              if (referralFilter === 'Pending') return r.status === 'pending';
-                              if (referralFilter === 'Completed') return r.status === 'completed';
-                              if (referralFilter === 'Rejected') return r.status === 'rejected';
-                              return true;
-                            })
-                            .filter(r => {
-                              const s = referralSearch.toLowerCase();
-                              const referrerName = r.referrerId?.fullName || r.referrerId?.name || '';
-                              const referrerEmail = r.referrerId?.email || '';
-                              const referredName = r.referredUserId?.fullName || r.referredUserId?.name || '';
-                              const referredEmail = r.referredUserId?.email || '';
-                              const bizName = r.referredBusinessId?.name || '';
-                              return (
-                                referrerName.toLowerCase().includes(s) ||
-                                referrerEmail.toLowerCase().includes(s) ||
-                                referredName.toLowerCase().includes(s) ||
-                                referredEmail.toLowerCase().includes(s) ||
-                                bizName.toLowerCase().includes(s)
-                              );
-                            })
-                            .map(r => {
-                              const checks = r.antiFraudChecks || {};
-                              const hasFlags = checks.selfReferral || checks.duplicateMobile || checks.duplicateGST || checks.duplicateBusiness;
-                              return (
-                                <tr key={r._id} className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="px-6 py-4">
-                                    <div className="flex flex-col text-left">
-                                      <span className="font-extrabold text-slate-800">{r.referrerId?.fullName || 'UBT Member'}</span>
-                                      <span className="text-[10px] text-slate-400 mt-0.5">{r.referrerId?.email || 'N/A'}</span>
-                                    </div>
+                      {/* Search bar */}
+                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col sm:flex-row gap-4 justify-between items-center font-sans">
+                        <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2">
+                          <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
+                          <input
+                            type="text"
+                            placeholder="Search by Referrer or Referred Merchant name/email..."
+                            value={referralSearch}
+                            onChange={(e) => setReferralSearch(e.target.value)}
+                            className="w-full bg-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Referrals Moderation List Table */}
+                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden font-sans">
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr className="bg-slate-50 border-b border-slate-150 text-[10px] font-black text-slate-450 uppercase tracking-wider text-left">
+                                <th className="px-6 py-4">Referrer (Invited By)</th>
+                                <th className="px-6 py-4">Referred User</th>
+                                <th className="px-6 py-4">Referred Business</th>
+                                <th className="px-6 py-4">Anti-Fraud Validation</th>
+                                <th className="px-6 py-4">Status</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-xs text-slate-655 font-semibold">
+                              {referralsLoading ? (
+                                <tr>
+                                  <td colSpan="6" className="text-center py-12 text-slate-400 font-semibold">
+                                    Loading referrals registry...
                                   </td>
-                                  <td className="px-6 py-4">
-                                    <div className="flex flex-col text-left">
-                                      <span className="font-extrabold text-slate-800">{r.referredUserId?.fullName || 'New Merchant'}</span>
-                                      <span className="text-[10px] text-slate-400 mt-0.5">{r.referredUserId?.email || 'N/A'}</span>
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    <div className="flex flex-col text-left">
-                                      <span className="font-extrabold text-slate-800">{r.referredBusinessId?.name || 'No business listed yet'}</span>
-                                      {r.referredBusinessId?.gstNumber && (
-                                        <span className="text-[9px] text-slate-400 font-bold uppercase mt-0.5 tracking-wider">GST: {r.referredBusinessId.gstNumber}</span>
-                                      )}
-                                      {r.referredBusinessId && (
-                                        <div className="flex items-center gap-1.5 mt-1">
-                                          <span className={`text-[8.5px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
-                                            r.referredBusinessId.status === 'Approved'
-                                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                                              : 'bg-amber-50 text-amber-700 border border-amber-100'
-                                          }`}>
-                                            {r.referredBusinessId.status}
-                                          </span>
-                                          <span className={`text-[8.5px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
-                                            r.referredBusinessId.subscriptionStatus === 'active'
-                                              ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                                              : 'bg-slate-50 text-slate-550 border border-slate-100'
-                                          }`}>
-                                            {r.referredBusinessId.subscriptionStatus === 'active' ? 'Subscribed' : 'No Sub'}
-                                          </span>
+                                </tr>
+                              ) : referrals
+                                .filter(r => {
+                                  if (referralFilter === 'Pending') return r.status === 'pending';
+                                  if (referralFilter === 'Completed') return r.status === 'completed';
+                                  if (referralFilter === 'Rejected') return r.status === 'rejected';
+                                  return true;
+                                })
+                                .filter(r => {
+                                  const s = referralSearch.toLowerCase();
+                                  const referrerName = r.referrerId?.fullName || r.referrerId?.name || '';
+                                  const referrerEmail = r.referrerId?.email || '';
+                                  const referredName = r.referredUserId?.fullName || r.referredUserId?.name || '';
+                                  const referredEmail = r.referredUserId?.email || '';
+                                  const bizName = r.referredBusinessId?.name || '';
+                                  return (
+                                    referrerName.toLowerCase().includes(s) ||
+                                    referrerEmail.toLowerCase().includes(s) ||
+                                    referredName.toLowerCase().includes(s) ||
+                                    referredEmail.toLowerCase().includes(s) ||
+                                    bizName.toLowerCase().includes(s)
+                                  );
+                                })
+                                .map(r => {
+                                  const checks = r.antiFraudChecks || {};
+                                  const hasFlags = checks.selfReferral || checks.duplicateMobile || checks.duplicateGST || checks.duplicateBusiness;
+                                  return (
+                                    <tr key={r._id} className="hover:bg-slate-50/50 transition-colors">
+                                      <td className="px-6 py-4">
+                                        <div className="flex flex-col text-left">
+                                          <span className="font-extrabold text-slate-800">{r.referrerId?.fullName || 'UBT Member'}</span>
+                                          <span className="text-[10px] text-slate-400 mt-0.5">{r.referrerId?.email || 'N/A'}</span>
                                         </div>
-                                      )}
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    <div className="flex flex-wrap gap-1 max-w-[180px]">
-                                      {checks.selfReferral && <span className="bg-rose-50 text-rose-650 border border-rose-100 text-[8.5px] font-extrabold px-1.5 py-0.5 rounded uppercase">Self Referral</span>}
-                                      {checks.duplicateMobile && <span className="bg-amber-50 text-amber-650 border border-amber-100 text-[8.5px] font-extrabold px-1.5 py-0.5 rounded uppercase">Dup Phone</span>}
-                                      {checks.duplicateGST && <span className="bg-red-50 text-red-650 border border-red-100 text-[8.5px] font-extrabold px-1.5 py-0.5 rounded uppercase">Dup GST</span>}
-                                      {checks.duplicateBusiness && <span className="bg-orange-50 text-orange-655 border border-orange-100 text-[8.5px] font-extrabold px-1.5 py-0.5 rounded uppercase">Dup Name</span>}
-                                      {!hasFlags && <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[8.5px] font-extrabold px-1.5 py-0.5 rounded uppercase">Passed</span>}
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 rounded-full text-[9.5px] font-black uppercase ${
-                                      r.status === 'completed'
-                                        ? 'bg-emerald-50 text-[#027244] border border-emerald-150'
-                                        : r.status === 'rejected'
-                                          ? 'bg-rose-50 text-rose-650 border border-rose-150'
-                                          : 'bg-amber-50 text-amber-650 border border-amber-150'
-                                    }`}>
-                                      {r.status === 'completed' ? 'Approved' : r.status}
-                                    </span>
-                                    {r.rejectionReason && (
-                                      <p className="text-[9px] text-rose-600 mt-1 max-w-[120px] truncate" title={r.rejectionReason}>
-                                        Reason: {r.rejectionReason}
-                                      </p>
-                                    )}
-                                  </td>
-                                  <td className="px-6 py-4 text-right">
-                                    <div className="flex justify-end gap-2">
-                                      {r.status !== 'completed' && (
-                                        <button
-                                          onClick={() => {
-                                            if (confirm('Manually approve this referral and credit 100 points to the referrer?')) {
-                                              handleReferralModerate(r._id, 'approve');
-                                            }
-                                          }}
-                                          className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10px] rounded-lg cursor-pointer transition-colors shadow-2xs"
-                                        >
-                                          Approve
-                                        </button>
-                                      )}
-                                      {r.status !== 'rejected' && (
-                                        <button
-                                          onClick={() => {
-                                            const reason = prompt('Please enter a rejection reason (optional):');
-                                            if (reason !== null) {
-                                              handleReferralModerate(r._id, 'reject', reason);
-                                            }
-                                          }}
-                                          className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[10px] rounded-lg cursor-pointer transition-colors"
-                                        >
-                                          Reject
-                                        </button>
-                                      )}
+                                      </td>
+                                      <td className="px-6 py-4">
+                                        <div className="flex flex-col text-left">
+                                          <span className="font-extrabold text-slate-800">{r.referredUserId?.fullName || 'New Merchant'}</span>
+                                          <span className="text-[10px] text-slate-400 mt-0.5">{r.referredUserId?.email || 'N/A'}</span>
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-4">
+                                        <div className="flex flex-col text-left">
+                                          <span className="font-extrabold text-slate-800">{r.referredBusinessId?.name || 'No business listed yet'}</span>
+                                          {r.referredBusinessId?.gstNumber && (
+                                            <span className="text-[9px] text-slate-400 font-bold uppercase mt-0.5 tracking-wider">GST: {r.referredBusinessId.gstNumber}</span>
+                                          )}
+                                          {r.referredBusinessId && (
+                                            <div className="flex items-center gap-1.5 mt-1">
+                                              <span className={`text-[8.5px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
+                                                r.referredBusinessId.status === 'Approved'
+                                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                                  : 'bg-amber-50 text-amber-700 border border-amber-100'
+                                              }`}>
+                                                {r.referredBusinessId.status}
+                                              </span>
+                                              <span className={`text-[8.5px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
+                                                r.referredBusinessId.subscriptionStatus === 'active'
+                                                  ? 'bg-blue-50 text-blue-700 border border-blue-100'
+                                                  : 'bg-slate-50 text-slate-550 border border-slate-100'
+                                              }`}>
+                                                {r.referredBusinessId.subscriptionStatus === 'active' ? 'Subscribed' : 'No Sub'}
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-4">
+                                        <div className="flex flex-wrap gap-1 max-w-[180px]">
+                                          {checks.selfReferral && <span className="bg-rose-50 text-rose-655 border border-rose-100 text-[8.5px] font-extrabold px-1.5 py-0.5 rounded uppercase">Self Referral</span>}
+                                          {checks.duplicateMobile && <span className="bg-amber-50 text-amber-655 border border-amber-100 text-[8.5px] font-extrabold px-1.5 py-0.5 rounded uppercase">Dup Phone</span>}
+                                          {checks.duplicateGST && <span className="bg-red-50 text-red-650 border border-red-100 text-[8.5px] font-extrabold px-1.5 py-0.5 rounded uppercase">Dup GST</span>}
+                                          {checks.duplicateBusiness && <span className="bg-orange-50 text-orange-655 border border-orange-100 text-[8.5px] font-extrabold px-1.5 py-0.5 rounded uppercase">Dup Name</span>}
+                                          {!hasFlags && <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[8.5px] font-extrabold px-1.5 py-0.5 rounded uppercase">Passed</span>}
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-4">
+                                        <span className={`px-2 py-1 rounded-full text-[9.5px] font-black uppercase ${
+                                          r.status === 'completed'
+                                            ? 'bg-emerald-50 text-[#027244] border border-emerald-150'
+                                            : r.status === 'rejected'
+                                              ? 'bg-rose-50 text-rose-655 border border-rose-150'
+                                              : 'bg-amber-50 text-amber-655 border border-amber-150'
+                                        }`}>
+                                          {r.status === 'completed' ? 'Approved' : r.status}
+                                        </span>
+                                        {r.rejectionReason && (
+                                          <p className="text-[9px] text-rose-600 mt-1 max-w-[120px] truncate" title={r.rejectionReason}>
+                                            Reason: {r.rejectionReason}
+                                          </p>
+                                        )}
+                                      </td>
+                                      <td className="px-6 py-4 text-right">
+                                        <div className="flex justify-end gap-2">
+                                          {r.status !== 'completed' && (
+                                            <button
+                                              onClick={() => {
+                                                if (confirm('Manually approve this referral and credit 100 points to the referrer?')) {
+                                                  handleReferralModerate(r._id, 'approve');
+                                                }
+                                              }}
+                                              className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10px] rounded-lg cursor-pointer transition-colors shadow-2xs"
+                                            >
+                                              Approve
+                                            </button>
+                                          )}
+                                          {r.status !== 'rejected' && (
+                                            <button
+                                              onClick={() => {
+                                                const reason = prompt('Please enter a rejection reason (optional):');
+                                                if (reason !== null) {
+                                                  handleReferralModerate(r._id, 'reject', reason);
+                                                }
+                                              }}
+                                              className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-655 font-extrabold text-[10px] rounded-lg cursor-pointer transition-colors"
+                                            >
+                                              Reject
+                                            </button>
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              {!referralsLoading && referrals.length === 0 && (
+                                <tr>
+                                  <td colSpan="6" className="text-center py-16 text-slate-400">
+                                    <div className="flex flex-col items-center gap-2">
+                                      <Gift className="h-8 w-8 text-slate-300" />
+                                      <span className="text-xs font-bold text-slate-700">No Referrals Recorded</span>
+                                      <p className="text-[11px] text-slate-400 leading-relaxed max-w-xs font-semibold">No referrals have been recorded or submitted on the platform yet.</p>
                                     </div>
                                   </td>
                                 </tr>
-                              );
-                            })}
-                          {!referralsLoading && referrals.length === 0 && (
-                            <tr>
-                              <td colSpan="6" className="text-center py-16 text-slate-400">
-                                <div className="flex flex-col items-center gap-2">
-                                  <Gift className="h-8 w-8 text-slate-300" />
-                                  <span className="text-xs font-bold text-slate-700">No Referrals Recorded</span>
-                                  <p className="text-[11px] text-slate-400 leading-relaxed max-w-xs font-semibold">No referrals have been recorded or submitted on the platform yet.</p>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {referralSubTab === 'refunds' && (
+                    <>
+                      {/* Metric cards */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 font-sans">
+                        <div className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-2xs text-left flex flex-col gap-1.5">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Total Redemption Requests</span>
+                          <span className="text-2xl font-black text-[#001c41]">{redemptions.length}</span>
+                        </div>
+                        <div className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-2xs text-left flex flex-col gap-1.5">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Pending Processing</span>
+                          <span className="text-2xl font-black text-amber-600">
+                            {redemptions.filter(r => r.status === 'Pending Approval').length}
+                          </span>
+                        </div>
+                        <div className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-2xs text-left flex flex-col gap-1.5">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Refunded (Processed)</span>
+                          <span className="text-2xl font-black text-emerald-650">
+                            {redemptions.filter(r => r.status === 'Refunded').length}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Search bar */}
+                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col sm:flex-row gap-4 justify-between items-center font-sans">
+                        <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2">
+                          <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
+                          <input
+                            type="text"
+                            placeholder="Search by Merchant Name or Email..."
+                            value={referralSearch}
+                            onChange={(e) => setReferralSearch(e.target.value)}
+                            className="w-full bg-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Redemptions Table */}
+                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden font-sans">
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr className="bg-slate-50 border-b border-slate-150 text-[10px] font-black text-slate-455 uppercase tracking-wider text-left">
+                                <th className="px-6 py-4">Merchant</th>
+                                <th className="px-6 py-4">Requested Points</th>
+                                <th className="px-6 py-4">Cashback Value</th>
+                                <th className="px-6 py-4">Requested Date</th>
+                                <th className="px-6 py-4">Status</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-xs text-slate-655 font-semibold">
+                              {redemptionsLoading ? (
+                                <tr>
+                                  <td colSpan="6" className="text-center py-12 text-slate-400 font-semibold">
+                                    Loading redemption requests...
+                                  </td>
+                                </tr>
+                              ) : redemptions
+                                .filter(r => {
+                                  const s = referralSearch.toLowerCase();
+                                  const merchantName = r.userId?.fullName || r.userId?.name || '';
+                                  const merchantEmail = r.userId?.email || '';
+                                  return merchantName.toLowerCase().includes(s) || merchantEmail.toLowerCase().includes(s);
+                                })
+                                .map(r => (
+                                  <tr key={r._id} className="hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-6 py-4">
+                                      <div className="flex flex-col text-left">
+                                        <span className="font-extrabold text-slate-800">{r.userId?.fullName || 'UBT Merchant'}</span>
+                                        <span className="text-[10px] text-slate-400 mt-0.5">{r.userId?.email || 'N/A'}</span>
+                                        <span className="text-[10px] text-slate-400 mt-0.5">Phone: {r.userId?.mobileNumber || r.userId?.phone || 'N/A'}</span>
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <span className="font-extrabold text-slate-800">{r.points} points</span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <span className="font-extrabold text-[#027244]">₹{r.points}</span>
+                                    </td>
+                                    <td className="px-6 py-4 text-slate-550">
+                                      {new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <span className={`px-2 py-1 rounded-full text-[9.5px] font-black uppercase ${
+                                        r.status === 'Refunded'
+                                          ? 'bg-emerald-50 text-[#027244] border border-emerald-150'
+                                          : 'bg-amber-50 text-amber-655 border border-amber-150'
+                                      }`}>
+                                        {r.status}
+                                      </span>
+                                      {r.remarks && (
+                                        <p className="text-[10px] text-slate-500 mt-1 max-w-[200px]" title={r.remarks}>
+                                          Remarks: {r.remarks}
+                                        </p>
+                                      )}
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                      {r.status === 'Pending Approval' ? (
+                                        <button
+                                          onClick={() => {
+                                            const remarks = prompt('Enter refund remarks (e.g. Transaction ID, bank payment details):');
+                                            if (remarks !== null) {
+                                              handleRedemptionRefund(r._id, remarks);
+                                            }
+                                          }}
+                                          className="px-3 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10px] rounded-lg cursor-pointer transition-colors shadow-2xs"
+                                        >
+                                          Mark Refunded
+                                        </button>
+                                      ) : (
+                                        <span className="text-slate-400 text-[10px] font-bold">Processed</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              {!redemptionsLoading && redemptions.length === 0 && (
+                                <tr>
+                                  <td colSpan="6" className="text-center py-16 text-slate-400">
+                                    <div className="flex flex-col items-center gap-2">
+                                      <Gift className="h-8 w-8 text-slate-300" />
+                                      <span className="text-xs font-bold text-slate-700">No Redemption Requests</span>
+                                      <p className="text-[11px] text-slate-400 leading-relaxed max-w-xs font-semibold">No points refund requests have been submitted by merchants yet.</p>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {referralSubTab === 'points' && (
+                    <>
+                      {/* Search bar */}
+                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col sm:flex-row gap-4 justify-between items-center font-sans">
+                        <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2">
+                          <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
+                          <input
+                            type="text"
+                            placeholder="Search by Business, Owner Name, or Email..."
+                            value={referralSearch}
+                            onChange={(e) => setReferralSearch(e.target.value)}
+                            className="w-full bg-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Business Points Table */}
+                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden font-sans">
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr className="bg-slate-50 border-b border-slate-150 text-[10px] font-black text-slate-455 uppercase tracking-wider text-left">
+                                <th className="px-6 py-4">Business Name</th>
+                                <th className="px-6 py-4">Merchant (Owner)</th>
+                                <th className="px-6 py-4">Contact Info</th>
+                                <th className="px-6 py-4">Referral Points Balance</th>
+                                <th className="px-6 py-4 text-right">Equivalent Credit Value</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-xs text-slate-655 font-semibold">
+                              {businesses
+                                .filter(b => {
+                                  const s = referralSearch.toLowerCase();
+                                  const bizName = b.name || '';
+                                  const ownerName = b.ownerName || '';
+                                  const ownerEmail = b.ownerEmail || '';
+                                  return (
+                                    bizName.toLowerCase().includes(s) ||
+                                    ownerName.toLowerCase().includes(s) ||
+                                    ownerEmail.toLowerCase().includes(s)
+                                  );
+                                })
+                                .map(b => (
+                                  <tr key={b._id} className="hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-6 py-4">
+                                      <div className="flex flex-col text-left">
+                                        <span className="font-extrabold text-slate-800">{b.name}</span>
+                                        <span className="text-[10px] text-slate-400 mt-0.5">{b.category}</span>
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-slate-800 font-extrabold">
+                                      {b.ownerName}
+                                    </td>
+                                    <td className="px-6 py-4 text-slate-500">
+                                      <div className="flex flex-col text-left">
+                                        <span>{b.ownerEmail || 'N/A'}</span>
+                                        <span className="text-[10px] text-slate-400 mt-0.5">Phone: {b.phone || 'N/A'}</span>
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-2.5 w-2.5 bg-emerald-500 rounded-full" />
+                                        <span className="font-bold text-slate-800">{b.referralPoints || 0} pts</span>
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                      <span className="font-extrabold text-[#027244]">₹{b.referralPoints || 0}</span>
+                                    </td>
+                                  </tr>
+                                ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -4792,7 +5188,7 @@ export default function AdminDashboard() {
                     ) : (
                       <select
                         required
-                        value={((parentCategoryMapping[availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Others'] || []).includes(dirForm.category) || presetCategories.some(c => c.categoryName === dirForm.category)) ? dirForm.category : ''}
+                        value={((parentCategoryMapping[availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Public Sector'] || []).includes(dirForm.category) || presetCategories.some(c => c.categoryName === dirForm.category)) ? dirForm.category : ''}
                         onChange={(e) => {
                           const subVal = e.target.value;
                           const isCustomParent = !availableCategories.includes(dirForm.requestedParentCategory);
@@ -4806,12 +5202,12 @@ export default function AdminDashboard() {
                         className="w-full px-3 py-2 border border-slate-205 bg-white rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244] cursor-pointer"
                       >
                         <option value="">-- Choose Subcategory --</option>
-                        {(parentCategoryMapping[availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Others'] || []).map(sub => (
+                        {(parentCategoryMapping[availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Public Sector'] || []).map(sub => (
                           <option key={sub} value={sub}>{sub}</option>
                         ))}
                         {/* Dynamically append custom database categories matching this parent category */}
                         {presetCategories
-                          .filter(c => c.parentCategory === (availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Others') && !(parentCategoryMapping[availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Others'] || []).includes(c.categoryName))
+                          .filter(c => c.parentCategory === (availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Public Sector') && !(parentCategoryMapping[availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Public Sector'] || []).includes(c.categoryName))
                           .map(c => (
                             <option key={c.categoryName} value={c.categoryName}>{c.categoryName}</option>
                           ))}

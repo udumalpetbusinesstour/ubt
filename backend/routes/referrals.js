@@ -191,4 +191,138 @@ router.get('/top', async (req, res, next) => {
   }
 });
 
+// @desc    Redeem 1000 points for a manual refund request
+// @route   POST /api/referrals/redeem
+// @access  Private
+router.post('/redeem', protect, async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if ((user.referralPoints || 0) < 1000) {
+      return res.status(400).json({ success: false, message: 'Minimum 1000 points required to redeem' });
+    }
+
+    const Redemption = require('../models/Redemption');
+    // Create redemption request
+    const redemption = await Redemption.create({
+      userId: user._id,
+      points: 1000,
+      status: 'Pending Approval'
+    });
+
+    // Deduct points from user
+    user.referralPoints = Math.max(0, (user.referralPoints || 0) - 1000);
+    await user.save();
+
+    // Notify admin & superadmin
+    try {
+      const adminUsers = await User.find({ role: { $in: ['admin', 'superadmin'] } });
+      const notifications = adminUsers.map(adminUser => ({
+        userId: adminUser._id,
+        title: 'New Refund Redemption Request',
+        message: `Merchant "${user.fullName || user.name}" has requested a refund redemption of 1000 points.`,
+        type: 'refund_update'
+      }));
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+      }
+    } catch (notifError) {
+      console.error('Failed to notify admins of redemption request:', notifError);
+    }
+
+    res.json({
+      success: true,
+      message: 'Redemption request submitted successfully. Admin has been notified.',
+      data: redemption,
+      newPoints: user.referralPoints
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Get current user's redemptions
+// @route   GET /api/referrals/my-redemptions
+// @access  Private
+router.get('/my-redemptions', protect, async (req, res, next) => {
+  try {
+    const Redemption = require('../models/Redemption');
+    const redemptions = await Redemption.find({ userId: req.user._id })
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: redemptions
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Get all redemptions (Admin/Superadmin only)
+// @route   GET /api/referrals/admin/redemptions
+// @access  Private/Admin
+router.get('/admin/redemptions', protect, admin, async (req, res, next) => {
+  try {
+    const Redemption = require('../models/Redemption');
+    const redemptions = await Redemption.find()
+      .populate('userId', 'fullName name email phone mobileNumber')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      count: redemptions.length,
+      data: redemptions
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Process refund / Mark as Refunded (Admin/Superadmin only)
+// @route   PUT /api/referrals/admin/redemptions/:id/refund
+// @access  Private/Admin
+router.put('/admin/redemptions/:id/refund', protect, admin, async (req, res, next) => {
+  try {
+    const Redemption = require('../models/Redemption');
+    const { remarks } = req.body;
+
+    const redemption = await Redemption.findById(req.params.id);
+    if (!redemption) {
+      return res.status(404).json({ success: false, message: 'Redemption request not found' });
+    }
+
+    if (redemption.status !== 'Pending Approval') {
+      return res.status(400).json({ success: false, message: `Redemption is already ${redemption.status.toLowerCase()}` });
+    }
+
+    redemption.status = 'Refunded';
+    redemption.remarks = remarks || 'Refund completed by administrator';
+    await redemption.save();
+
+    // Create notification for the merchant user
+    try {
+      await Notification.create({
+        userId: redemption.userId,
+        title: 'Points Refund Processed',
+        message: `Your referral points redemption request for 1000 points has been marked as refunded. Remarks: ${redemption.remarks}`,
+        type: 'refund_update'
+      });
+    } catch (notifError) {
+      console.error('Failed to notify merchant of refund:', notifError);
+    }
+
+    res.json({
+      success: true,
+      message: 'Redemption status updated to Refunded successfully',
+      data: redemption
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

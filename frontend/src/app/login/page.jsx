@@ -600,36 +600,36 @@ export default function Login() {
       </div>
 
       {/* Row of trust badges under the layout card */}
-      <div className="max-w-5xl w-full flex flex-wrap justify-between items-center mt-12 py-5 border-t border-slate-200/60 gap-4 text-xs font-semibold text-slate-500">
+      <div className="max-w-5xl w-full flex flex-wrap justify-between items-center mt-12 py-6 border-t border-slate-200/60 gap-5 text-sm font-semibold text-slate-500">
         {[
           { 
             title: 'Verified Businesses', 
             desc: 'All businesses are manually verified',
-            icon: <ShieldCheck className="h-3.5 w-3.5" /> 
+            icon: <ShieldCheck className="h-4.5 w-4.5" /> 
           },
           { 
             title: 'Safe & Trusted', 
             desc: 'We ensure safe and trusted connections',
-            icon: <Users className="h-3.5 w-3.5" /> 
+            icon: <Users className="h-4.5 w-4.5" /> 
           },
           { 
             title: 'Local Support', 
             desc: 'Dedicated support for local businesses',
-            icon: <MapPin className="h-3.5 w-3.5" /> 
+            icon: <MapPin className="h-4.5 w-4.5" /> 
           },
           { 
             title: 'Thousands of Users', 
             desc: 'Join thousands of happy business owners',
-            icon: <ThumbsUp className="h-3.5 w-3.5" /> 
+            icon: <ThumbsUp className="h-4.5 w-4.5" /> 
           }
         ].map((item, idx) => (
-          <div key={idx} className="flex items-center gap-2.5">
-            <span className="h-8 w-8 rounded-full bg-emerald-50/60 flex items-center justify-center text-[#027244] shrink-0 border border-emerald-100/80 shadow-sm">
+          <div key={idx} className="flex items-center gap-3">
+            <span className="h-10 w-10 rounded-full bg-emerald-50/60 flex items-center justify-center text-[#027244] shrink-0 border border-emerald-100/80 shadow-sm transition-transform hover:scale-105">
               {item.icon}
             </span>
-            <div className="flex flex-col gap-0.5">
-              <span className="font-extrabold text-[#001c41] text-[11px] leading-tight">{item.title}</span>
-              <span className="text-[9.5px] text-slate-400 font-bold leading-none mt-0.5">{item.desc}</span>
+            <div className="flex flex-col gap-0.5 text-left font-sans">
+              <span className="font-extrabold text-[#001c41] text-xs md:text-sm leading-tight">{item.title}</span>
+              <span className="text-[10px] md:text-[11px] text-slate-550 font-medium leading-normal mt-0.5">{item.desc}</span>
             </div>
           </div>
         ))}

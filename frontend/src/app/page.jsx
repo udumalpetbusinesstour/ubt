@@ -6,7 +6,7 @@ const isGovernmentalOrPublic = (biz) => {
   const parent = (biz.requestedParentCategory || '').toLowerCase();
   const cat = (biz.category || '').toLowerCase();
   
-  const govParents = ['governmental organisations', 'government organisations', 'governmental organisation', 'government organisation'];
+  const govParents = ['governmental organisations', 'government organisations', 'governmental organisation', 'government organisation', 'public sector'];
   if (govParents.includes(parent)) return true;
   
   const govCats = ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'];
@@ -19,7 +19,7 @@ import {
   ChevronLeft, ChevronRight, HelpCircle, Eye, MessageSquare, Play, Sparkles, X, Gift, Rocket,
   Hotel, Store, Wrench, HeartPulse, GraduationCap, Home as HouseIcon, Car, LayoutGrid,
   FileEdit, PhoneCall, Smile, Users2, Tv, Utensils, Building, ShoppingBag, Factory, 
-  Briefcase, Compass, Sprout, CreditCard, Dumbbell
+  Briefcase, Compass, Sprout, CreditCard, Dumbbell, Landmark
 } from 'lucide-react';
 
 const mockFeatured = [
@@ -279,7 +279,7 @@ export default function Home() {
             'Automotive', 'Beauty & Wellness', 'Education', 'Electronics', 'Food & Restaurants',
             'Health & Medical', 'Home Services', 'Real Estate', 'Shopping', 'Manufacturing',
             'Professional Services', 'Travel & Hospitality', 'Construction', 'Agriculture',
-            'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness', 'Others'
+            'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness', 'Public Sector'
           ];
           availableCategories.forEach(c => {
             counts[c] = 0;
@@ -313,7 +313,7 @@ export default function Home() {
           'Finance & Insurance': 49,
           'Events & Entertainment': 57,
           'Sports & Fitness': 41,
-          'Others': 38
+          'Public Sector': 38
         };
         updateDynamicCategories(mockCounts);
       }
@@ -324,7 +324,7 @@ export default function Home() {
         'Automotive', 'Beauty & Wellness', 'Education', 'Electronics', 'Food & Restaurants',
         'Health & Medical', 'Home Services', 'Real Estate', 'Shopping', 'Manufacturing',
         'Professional Services', 'Travel & Hospitality', 'Construction', 'Agriculture',
-        'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness', 'Others'
+        'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness', 'Public Sector'
       ];
 
       const iconMap = {
@@ -385,7 +385,7 @@ export default function Home() {
         'Finance & Insurance': <CreditCard className="h-7 w-7 text-blue-600" />,
         'Events & Entertainment': <Sparkles className="h-7 w-7 text-pink-500" />,
         'Sports & Fitness': <Dumbbell className="h-7 w-7 text-emerald-600" />,
-        'Others': <LayoutGrid className="h-7 w-7 text-slate-500" />
+        'Public Sector': <Landmark className="h-7 w-7 text-slate-500" />
       };
 
       const sorted = availableCategories

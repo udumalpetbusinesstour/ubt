@@ -35,7 +35,7 @@ const isGovernmentalOrPublic = (biz) => {
   const parent = (biz.requestedParentCategory || '').toLowerCase();
   const cat = (biz.category || '').toLowerCase();
   
-  const govParents = ['governmental organisations', 'government organisations', 'governmental organisation', 'government organisation'];
+  const govParents = ['governmental organisations', 'government organisations', 'governmental organisation', 'government organisation', 'public sector'];
   if (govParents.includes(parent)) return true;
   
   const govCats = ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'];

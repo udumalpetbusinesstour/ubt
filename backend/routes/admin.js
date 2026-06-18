@@ -67,7 +67,7 @@ router.get('/stats', async (req, res, next) => {
 
 router.get('/businesses', async (req, res, next) => {
   try {
-    const businesses = await Business.find().sort({ createdAt: -1 });
+    const businesses = await Business.find().populate('ownerId', 'fullName name email phone mobileNumber status role referralPoints').sort({ createdAt: -1 });
     const data = await Promise.all(businesses.map(async (b) => {
       const bObj = b.toObject();
       bObj.branchCount = await Business.countDocuments({ parentBusinessId: b._id });

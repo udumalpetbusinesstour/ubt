@@ -1391,10 +1391,10 @@ const resolveCategoryReview = async (req, res, next) => {
         return sendError(res, 400, 'Category name is required to create a new category');
       }
 
-      // Force governmental subcategories to always be nested under "Governmental organisations"
+      // Force governmental subcategories to always be nested under "Governmental organisations" unless parent is "Public Sector"
       let resolvedParentCategory = parentCategory;
       const govSubcategories = ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'];
-      if (govSubcategories.includes(finalName.trim().toLowerCase())) {
+      if (govSubcategories.includes(finalName.trim().toLowerCase()) && resolvedParentCategory !== 'Public Sector') {
         resolvedParentCategory = 'Governmental organisations';
       }
 

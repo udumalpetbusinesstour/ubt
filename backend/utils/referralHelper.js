@@ -39,7 +39,13 @@ const checkAndCompleteReferralByBusiness = async (businessId) => {
     const isBusinessApproved = business.status === 'Approved' || business.verificationStatus === 'approved';
     const isSubscriptionActive = business.subscriptionStatus === 'active';
 
-    if (isBusinessApproved && isSubscriptionActive) {
+    const Payment = require('../models/Payment');
+    const hasPaid = await Payment.exists({
+      businessId: business._id,
+      status: { $in: ['Paid', 'captured'] }
+    });
+
+    if (isBusinessApproved && isSubscriptionActive && hasPaid) {
       // Complete referral
       referral.status = 'completed';
       await referral.save();
@@ -54,7 +60,7 @@ const checkAndCompleteReferralByBusiness = async (businessId) => {
         await Notification.create({
           userId: referrer._id,
           title: 'Referral Points Awarded!',
-          message: `Congratulations! Your referral for "${business.name}" is successful. You have earned ${referral.points} points (worth ₹${referral.points / 10} credit).`,
+          message: `Congratulations! Your referral for "${business.name}" is successful. You have earned ${referral.points} points.`,
           type: 'referral_bonus'
         });
 

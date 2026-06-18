@@ -805,7 +805,7 @@ export default function EventsPage() {
           prefill: {
             name: currentUser?.fullName || '',
             email: currentUser?.email || '',
-            contact: currentUser?.mobileNumber || '',
+            contact: currentUser?.phone || currentUser?.mobileNumber || '',
           },
           theme: {
             color: '#027244',
