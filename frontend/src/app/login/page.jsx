@@ -430,10 +430,12 @@ export default function Login() {
       const payload = isMock ? {
         isMock: true,
         email: 'google_partner_test@udumalpet.in',
-        name: 'Google Partner Member'
+        name: 'Google Partner Member',
+        action: 'login'
       } : {
         isMock: false,
-        credential: googleCredential
+        credential: googleCredential,
+        action: 'login'
       };
 
       const res = await fetch('http://localhost:5000/api/auth/google-login', {

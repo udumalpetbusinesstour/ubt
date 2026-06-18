@@ -48,7 +48,7 @@ const registerUser = async (req, res, next) => {
     const userExists = await User.findOne({ email });
 
     if (userExists) {
-      return sendError(res, 400, 'Email address is already registered');
+      return sendError(res, 400, 'Already signed up. Login to proceed.');
     }
 
     // Look up referrer if referral code provided
@@ -291,7 +291,7 @@ const deleteAccount = async (req, res, next) => {
  */
 const googleLogin = async (req, res, next) => {
   try {
-    const { credential, isMock, email: mockEmail, name: mockName } = req.body;
+    const { credential, isMock, email: mockEmail, name: mockName, action } = req.body;
     let email, name, picture;
 
     if (isMock) {
@@ -329,6 +329,10 @@ const googleLogin = async (req, res, next) => {
 
     // Find user
     let user = await User.findOne({ email: email.toLowerCase() });
+    
+    if (user && (action === 'signup' || action === 'register')) {
+      return sendError(res, 400, 'Already signed up. Login to proceed.');
+    }
     
     if (!user) {
       // Register user dynamically

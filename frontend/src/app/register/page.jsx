@@ -165,10 +165,12 @@ export default function Register() {
       const payload = isMock ? {
         isMock: true,
         email: `newgooglemember_${Date.now()}@udumalpet.in`,
-        name: 'New Google Member'
+        name: 'New Google Member',
+        action: 'signup'
       } : {
         isMock: false,
-        credential: googleCredential
+        credential: googleCredential,
+        action: 'signup'
       };
 
       const res = await fetch('http://localhost:5000/api/auth/google-login', {
