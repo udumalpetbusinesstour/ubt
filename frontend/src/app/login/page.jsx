@@ -17,6 +17,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [infoMessage, setInfoMessage] = useState('');
+  const [googleAvailable, setGoogleAvailable] = useState(false);
 
   const renderSidebar = () => {
 
@@ -365,18 +366,53 @@ export default function Login() {
   };
 
   useEffect(() => {
-    // Dynamically load Google Identity Services script
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
+    // Dynamically load Google Identity Services script if not already present
+    let script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    if (!script) {
+      script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    let checkInterval;
+
+    const initGoogleBtn = () => {
+      if (window.google && clientId) {
+        clearInterval(checkInterval);
+        setGoogleAvailable(true);
+        try {
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: (response) => {
+              handleGoogleLogin(response.credential);
+            }
+          });
+          
+          const parent = document.getElementById('google-signin-btn');
+          if (parent) {
+            window.google.accounts.id.renderButton(parent, {
+              theme: 'outline',
+              size: 'large',
+              width: parent.offsetWidth || 340,
+              text: 'continue_with',
+              shape: 'rectangular',
+            });
+          }
+        } catch (err) {
+          console.error("Google Client SDK init failed:", err);
+        }
+      }
+    };
+
+    // Poll for the Google SDK to load
+    checkInterval = setInterval(initGoogleBtn, 500);
+    initGoogleBtn();
 
     return () => {
-      // Safely cleanup script on unmount
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
+      clearInterval(checkInterval);
     };
   }, []);
 
@@ -571,15 +607,25 @@ export default function Login() {
                 <div className="flex-grow border-t border-slate-200"></div>
               </div>
 
-              <div className="flex flex-col gap-2.5 font-sans">
-                <button
-                  type="button"
-                  onClick={triggerGoogleSignIn}
-                  className="py-2.5 border border-slate-200 hover:bg-slate-50 text-[#001c41] font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer w-full"
-                >
-                  <img src="https://www.svgrepo.com/show/355037/google-icon.svg" className="h-4 w-4" alt="Google" />
-                  <span>Continue with Google</span>
-                </button>
+              <div className="flex flex-col gap-2.5 font-sans items-center w-full justify-center">
+                {googleAvailable ? (
+                  <div id="google-signin-btn" className="w-full flex justify-center min-h-[44px]"></div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={triggerGoogleSignIn}
+                    className="py-2.5 border border-slate-200 hover:bg-slate-50 text-[#001c41] font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer w-full"
+                  >
+                    {/* Inline Google SVG icon to ensure it always renders without network latency */}
+                    <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 shrink-0" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                    </svg>
+                    <span>Continue with Google</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -600,36 +646,36 @@ export default function Login() {
       </div>
 
       {/* Row of trust badges under the layout card */}
-      <div className="max-w-5xl w-full flex flex-wrap justify-between items-center mt-12 py-6 border-t border-slate-200/60 gap-5 text-sm font-semibold text-slate-500">
+      <div className="max-w-5xl w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mt-12 py-6 border-t border-slate-200/60 gap-6 text-sm font-semibold text-slate-500">
         {[
           { 
             title: 'Verified Businesses', 
             desc: 'All businesses are manually verified',
-            icon: <ShieldCheck className="h-4.5 w-4.5" /> 
+            icon: <ShieldCheck className="h-5.5 w-5.5" /> 
           },
           { 
             title: 'Safe & Trusted', 
             desc: 'We ensure safe and trusted connections',
-            icon: <Users className="h-4.5 w-4.5" /> 
+            icon: <Users className="h-5.5 w-5.5" /> 
           },
           { 
             title: 'Local Support', 
             desc: 'Dedicated support for local businesses',
-            icon: <MapPin className="h-4.5 w-4.5" /> 
+            icon: <MapPin className="h-5.5 w-5.5" /> 
           },
           { 
             title: 'Thousands of Users', 
             desc: 'Join thousands of happy business owners',
-            icon: <ThumbsUp className="h-4.5 w-4.5" /> 
+            icon: <ThumbsUp className="h-5.5 w-5.5" /> 
           }
         ].map((item, idx) => (
-          <div key={idx} className="flex items-center gap-3">
-            <span className="h-10 w-10 rounded-full bg-emerald-50/60 flex items-center justify-center text-[#027244] shrink-0 border border-emerald-100/80 shadow-sm transition-transform hover:scale-105">
+          <div key={idx} className="flex items-center gap-4">
+            <span className="h-12 w-12 rounded-full bg-emerald-50/60 flex items-center justify-center text-[#027244] shrink-0 border border-emerald-100/80 shadow-sm transition-all hover:scale-105">
               {item.icon}
             </span>
-            <div className="flex flex-col gap-0.5 text-left font-sans">
-              <span className="font-extrabold text-[#001c41] text-xs md:text-sm leading-tight">{item.title}</span>
-              <span className="text-[10px] md:text-[11px] text-slate-550 font-medium leading-normal mt-0.5">{item.desc}</span>
+            <div className="flex flex-col gap-1 text-left font-sans">
+              <span className="font-extrabold text-[#001c41] text-sm md:text-base leading-tight">{item.title}</span>
+              <span className="text-xs md:text-sm text-slate-500 font-semibold leading-relaxed mt-1">{item.desc}</span>
             </div>
           </div>
         ))}
