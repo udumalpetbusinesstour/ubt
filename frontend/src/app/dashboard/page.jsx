@@ -3424,6 +3424,95 @@ function DashboardContent() {
     }
   };
 
+  const getRatingDistribution = (rating, reviewsCount, reviewsList) => {
+    const avgRating = rating || 5;
+    const totalCount = reviewsCount || (reviewsList ? reviewsList.length : 0);
+    
+    if (totalCount === 0) {
+      return [
+        { stars: 5, pct: '0%', count: 0 },
+        { stars: 4, pct: '0%', count: 0 },
+        { stars: 3, pct: '0%', count: 0 },
+        { stars: 2, pct: '0%', count: 0 },
+        { stars: 1, pct: '0%', count: 0 }
+      ];
+    }
+    
+    const actualCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    if (reviewsList && reviewsList.length > 0) {
+      reviewsList.forEach(r => {
+        const roundedRating = Math.round(r.rating || 5);
+        if (actualCounts[roundedRating] !== undefined) {
+          actualCounts[roundedRating]++;
+        }
+      });
+    }
+    
+    const listSum = Object.values(actualCounts).reduce((a, b) => a + b, 0);
+    let finalCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    
+    if (listSum > 0) {
+      let currentSum = 0;
+      [5, 4, 3, 2, 1].forEach(star => {
+        const share = actualCounts[star] / listSum;
+        const calculated = Math.round(share * totalCount);
+        finalCounts[star] = calculated;
+        currentSum += calculated;
+      });
+      
+      let diff = totalCount - currentSum;
+      if (diff !== 0) {
+        let maxStar = 5;
+        let maxCount = -1;
+        [5, 4, 3, 2, 1].forEach(star => {
+          if (finalCounts[star] > maxCount) {
+            maxCount = finalCounts[star];
+            maxStar = star;
+          }
+        });
+        finalCounts[maxStar] = Math.max(0, finalCounts[maxStar] + diff);
+      }
+    } else {
+      let p5 = 0, p4 = 0, p3 = 0, p2 = 0, p1 = 0;
+      if (avgRating >= 4.8) {
+        p5 = 0.85; p4 = 0.10; p3 = 0.03; p2 = 0.01; p1 = 0.01;
+      } else if (avgRating >= 4.5) {
+        p5 = 0.70; p4 = 0.20; p3 = 0.06; p2 = 0.02; p1 = 0.02;
+      } else if (avgRating >= 4.0) {
+        p5 = 0.50; p4 = 0.30; p3 = 0.12; p2 = 0.05; p1 = 0.03;
+      } else if (avgRating >= 3.5) {
+        p5 = 0.35; p4 = 0.35; p3 = 0.18; p2 = 0.08; p1 = 0.04;
+      } else if (avgRating >= 3.0) {
+        p5 = 0.25; p4 = 0.25; p3 = 0.30; p2 = 0.12; p1 = 0.08;
+      } else {
+        p5 = 0.10; p4 = 0.15; p3 = 0.25; p2 = 0.30; p1 = 0.20;
+      }
+      
+      let currentSum = 0;
+      [5, 4, 3, 2, 1].forEach(star => {
+        const share = star === 5 ? p5 : star === 4 ? p4 : star === 3 ? p3 : star === 2 ? p2 : p1;
+        const calculated = Math.round(share * totalCount);
+        finalCounts[star] = calculated;
+        currentSum += calculated;
+      });
+      
+      let diff = totalCount - currentSum;
+      if (diff !== 0) {
+        finalCounts[5] = Math.max(0, finalCounts[5] + diff);
+      }
+    }
+    
+    return [5, 4, 3, 2, 1].map(star => {
+      const count = finalCounts[star];
+      const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
+      return {
+        stars: star,
+        pct: `${pct}%`,
+        count
+      };
+    });
+  };
+
   const getDaysRemaining = (expiryDate) => {
     if (!expiryDate) return 0;
     const diff = new Date(expiryDate).getTime() - new Date().getTime();
@@ -5047,85 +5136,107 @@ function DashboardContent() {
                             </div>
                           )}
                         </div>
-                      </div>
-                    )}
+                                        {/* TAB 4: REVIEWS */}
+                    {previewTab === 'reviews' && (() => {
+                      const allReviewsList = [
+                        ...(localReviews || []).map(r => ({ ...r, isGoogle: r.source === 'google' || r.isGoogle || false })),
+                        ...(business?.googleReviews || []).map(g => ({
+                          id: g._id || g.id || `google-${g.authorName}-${g.createdAt}`,
+                          authorName: g.authorName,
+                          rating: g.rating,
+                          text: g.text,
+                          createdAt: g.createdAt,
+                          isGoogle: true
+                        }))
+                      ];
+                      
+                      // Remove duplicate reviews
+                      const uniqueReviews = Array.from(
+                        new Map(allReviewsList.map(item => [item.id || `${item.authorName}-${item.text}`, item])).values()
+                      );
+                      
+                      uniqueReviews.sort((a, b) => {
+                        const dateA = a.createdAt ? new Date(a.createdAt) : (a.time ? new Date(a.time) : new Date(0));
+                        const dateB = b.createdAt ? new Date(b.createdAt) : (b.time ? new Date(b.time) : new Date(0));
+                        return dateB - dateA;
+                      });
 
-                    {/* TAB 4: REVIEWS */}
-                    {previewTab === 'reviews' && (
-                      <div className="flex flex-col gap-6 animate-fadeIn text-left">
-                        
-                        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-5">
-                          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                            <h3 className="text-base font-extrabold text-slate-800 font-sans">Customer Ratings & Synced Feedback</h3>
-                            <button
-                              type="button"
-                              onClick={() => setSearchParams({ tab: 'Reviews & Reputation' })}
-                              className="shrink-0 py-2 px-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl flex items-center gap-1.5 transition-all shadow cursor-pointer border-none"
-                            >
-                              <Star className="h-3.5 w-3.5" /> Manage
-                            </button>
-                          </div>
+                      const ratingDist = getRatingDistribution(
+                        business?.googleRating || 0,
+                        business?.googleReviewsCount || uniqueReviews.length,
+                        uniqueReviews
+                      );
+
+                      return (
+                        <div className="flex flex-col gap-6 animate-fadeIn text-left">
                           
-                          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-6 shadow-3xs">
-                            <div className="text-center flex flex-col gap-1 shrink-0 bg-white border border-slate-250 p-4 rounded-xl shadow-3xs min-w-[120px]">
-                              <span className="text-4xl font-black text-slate-800 leading-none">{(business.googleRating ?? 4.5).toFixed(1)}</span>
-                              <div className="flex text-amber-400 gap-0.5 justify-center mt-1.5">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(business.googleRating ?? 4.5) ? 'fill-current' : 'text-slate-200'}`} />
-                                ))}
-                              </div>
-                              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">Out of 5 Stars</span>
+                          <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-5">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                              <h3 className="text-base font-extrabold text-slate-800 font-sans">Customer Ratings & Synced Feedback</h3>
+                              <button
+                                type="button"
+                                onClick={() => setSearchParams({ tab: 'Reviews & Reputation' })}
+                                className="shrink-0 py-2 px-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl flex items-center gap-1.5 transition-all shadow cursor-pointer border-none"
+                              >
+                                <Star className="h-3.5 w-3.5" /> Manage
+                              </button>
                             </div>
                             
-                            <div className="flex-1 flex flex-col gap-2 text-[11px] font-bold text-slate-600 w-full">
-                              {[
-                                { stars: 5, pct: '74%', count: 62 },
-                                { stars: 4, pct: '19%', count: 16 },
-                                { stars: 3, pct: '5%', count: 4 },
-                                { stars: 2, pct: '1%', count: 1 },
-                                { stars: 1, pct: '1%', count: 1 }
-                              ].map((dist) => (
-                                <div key={dist.stars} className="flex items-center gap-3">
-                                  <span className="w-4 text-right text-slate-400">{dist.stars}★</span>
-                                  <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                                    <div className="h-full bg-amber-500" style={{ width: dist.pct }} />
+                            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-6 shadow-3xs">
+                              <div className="text-center flex flex-col gap-1 shrink-0 bg-white border border-slate-250 p-4 rounded-xl shadow-3xs min-w-[120px]">
+                                <span className="text-4xl font-black text-slate-800 leading-none">{(business?.googleRating ?? 4.5).toFixed(1)}</span>
+                                <div className="flex text-amber-400 gap-0.5 justify-center mt-1.5">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(business?.googleRating ?? 4.5) ? 'fill-current' : 'text-slate-200'}`} />
+                                  ))}
+                                </div>
+                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">Out of 5 Stars</span>
+                              </div>
+                              
+                              <div className="flex-1 flex flex-col gap-2 text-[11px] font-bold text-slate-600 w-full">
+                                {ratingDist.map((dist) => (
+                                  <div key={dist.stars} className="flex items-center gap-3">
+                                    <span className="w-4 text-right text-slate-400">{dist.stars}★</span>
+                                    <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                      <div className="h-full bg-amber-500" style={{ width: dist.pct }} />
+                                    </div>
+                                    <span className="w-20 shrink-0 text-slate-400 text-right font-semibold">{dist.count} ({dist.pct})</span>
                                   </div>
-                                  <span className="w-12 text-slate-400 text-right font-semibold">{dist.count}</span>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col gap-4 mt-2">
+                              <span className="font-extrabold text-xs text-slate-400 uppercase tracking-widest">Customer Feedback Stream ({uniqueReviews.length})</span>
+                              
+                              {uniqueReviews.map((rev, idx) => (
+                                <div key={idx} className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4 flex flex-col gap-2.5 text-left">
+                                  <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-2.5">
+                                      <div className="h-7 w-7 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-[10px] font-black text-emerald-700 uppercase">
+                                        {(rev.authorName || 'R').charAt(0)}
+                                      </div>
+                                      <div className="flex flex-col">
+                                        <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName || 'Anonymous'}</span>
+                                        <span className={`text-[8.5px] font-bold uppercase tracking-widest mt-1 block ${rev.isGoogle ? 'text-amber-650' : 'text-slate-450'}`}>
+                                          {rev.isGoogle ? 'Synced Google Review' : 'Verified Customer'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center text-amber-400 gap-0.5">
+                                      {[...Array(5)].map((_, i) => (
+                                        <Star key={i} className={`h-3 w-3 ${i < rev.rating ? 'fill-current' : 'text-slate-200'}`} />
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <p className="text-[11.5px] text-slate-550 font-medium leading-relaxed mt-0.5 text-justify">{rev.text}</p>
                                 </div>
                               ))}
                             </div>
                           </div>
-
-                          <div className="flex flex-col gap-4 mt-2">
-                            <span className="font-extrabold text-xs text-slate-400 uppercase tracking-widest">Local Customer Feedback Stream ({localReviews.length})</span>
-                            
-                            {localReviews.map((rev, idx) => (
-                              <div key={idx} className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4 flex flex-col gap-2.5 text-left">
-                                <div className="flex justify-between items-center">
-                                  <div className="flex items-center gap-2.5">
-                                    <div className="h-7 w-7 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-[10px] font-black text-emerald-700 uppercase">
-                                      {(rev.authorName || 'R').charAt(0)}
-                                    </div>
-                                    <div className="flex flex-col">
-                                      <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName || 'Anonymous'}</span>
-                                      <span className={`text-[8.5px] font-bold uppercase tracking-widest mt-1 block ${rev.source === 'google' ? 'text-amber-600' : 'text-slate-455'}`}>
-                                        {rev.source === 'google' ? 'Synced Google Review' : 'Verified Customer'}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center text-amber-400 gap-0.5">
-                                    {[...Array(5)].map((_, i) => (
-                                      <Star key={i} className={`h-3 w-3 ${i < rev.rating ? 'fill-current' : 'text-slate-200'}`} />
-                                    ))}
-                                  </div>
-                                </div>
-                                <p className="text-[11.5px] text-slate-550 font-medium leading-relaxed mt-0.5 text-justify">{rev.text}</p>
-                              </div>
-                            ))}
-                          </div>
                         </div>
-
-                      </div>
+                      );
+                    })()}        </div>
                     )}
 
                     {/* TAB 5: OFFERS */}

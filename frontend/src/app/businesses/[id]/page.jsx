@@ -1099,6 +1099,102 @@ Please confirm availability and delivery time.`;
   ];
   allReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+  // Dynamic Rating Distribution calculation based on overall rating baseline
+  const getRatingDistribution = (rating, reviewsCount, reviewsList) => {
+    const avgRating = rating || 5;
+    const totalCount = reviewsCount || (reviewsList ? reviewsList.length : 0);
+    
+    if (totalCount === 0) {
+      return [
+        { stars: 5, pct: '0%', count: 0 },
+        { stars: 4, pct: '0%', count: 0 },
+        { stars: 3, pct: '0%', count: 0 },
+        { stars: 2, pct: '0%', count: 0 },
+        { stars: 1, pct: '0%', count: 0 }
+      ];
+    }
+    
+    const actualCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    if (reviewsList && reviewsList.length > 0) {
+      reviewsList.forEach(r => {
+        const roundedRating = Math.round(r.rating || 5);
+        if (actualCounts[roundedRating] !== undefined) {
+          actualCounts[roundedRating]++;
+        }
+      });
+    }
+    
+    const listSum = Object.values(actualCounts).reduce((a, b) => a + b, 0);
+    let finalCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    
+    if (listSum > 0) {
+      let currentSum = 0;
+      [5, 4, 3, 2, 1].forEach(star => {
+        const share = actualCounts[star] / listSum;
+        const calculated = Math.round(share * totalCount);
+        finalCounts[star] = calculated;
+        currentSum += calculated;
+      });
+      
+      let diff = totalCount - currentSum;
+      if (diff !== 0) {
+        let maxStar = 5;
+        let maxCount = -1;
+        [5, 4, 3, 2, 1].forEach(star => {
+          if (finalCounts[star] > maxCount) {
+            maxCount = finalCounts[star];
+            maxStar = star;
+          }
+        });
+        finalCounts[maxStar] = Math.max(0, finalCounts[maxStar] + diff);
+      }
+    } else {
+      let p5 = 0, p4 = 0, p3 = 0, p2 = 0, p1 = 0;
+      if (avgRating >= 4.8) {
+        p5 = 0.85; p4 = 0.10; p3 = 0.03; p2 = 0.01; p1 = 0.01;
+      } else if (avgRating >= 4.5) {
+        p5 = 0.70; p4 = 0.20; p3 = 0.06; p2 = 0.02; p1 = 0.02;
+      } else if (avgRating >= 4.0) {
+        p5 = 0.50; p4 = 0.30; p3 = 0.12; p2 = 0.05; p1 = 0.03;
+      } else if (avgRating >= 3.5) {
+        p5 = 0.35; p4 = 0.35; p3 = 0.18; p2 = 0.08; p1 = 0.04;
+      } else if (avgRating >= 3.0) {
+        p5 = 0.25; p4 = 0.25; p3 = 0.30; p2 = 0.12; p1 = 0.08;
+      } else {
+        p5 = 0.10; p4 = 0.15; p3 = 0.25; p2 = 0.30; p1 = 0.20;
+      }
+      
+      let currentSum = 0;
+      [5, 4, 3, 2, 1].forEach(star => {
+        const share = star === 5 ? p5 : star === 4 ? p4 : star === 3 ? p3 : star === 2 ? p2 : p1;
+        const calculated = Math.round(share * totalCount);
+        finalCounts[star] = calculated;
+        currentSum += calculated;
+      });
+      
+      let diff = totalCount - currentSum;
+      if (diff !== 0) {
+        finalCounts[5] = Math.max(0, finalCounts[5] + diff);
+      }
+    }
+    
+    return [5, 4, 3, 2, 1].map(star => {
+      const count = finalCounts[star];
+      const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
+      return {
+        stars: star,
+        pct: `${pct}%`,
+        count
+      };
+    });
+  };
+
+  const ratingDistribution = getRatingDistribution(
+    business.googleRating,
+    business.googleReviewsCount,
+    allReviews
+  );
+
   return (
     <div className="w-full flex flex-col items-center font-sans bg-[#F8FAFC]">
       {/* Pending Vetting Banner */}
@@ -2095,19 +2191,13 @@ Please confirm availability and delivery time.`;
                 
                 {/* Distribution bars */}
                 <div className="flex-1 flex flex-col gap-2.5 text-xs font-bold text-slate-600 w-full">
-                  {[
-                    { stars: 5, pct: '74%', count: 62 },
-                    { stars: 4, pct: '19%', count: 16 },
-                    { stars: 3, pct: '5%', count: 4 },
-                    { stars: 2, pct: '1%', count: 1 },
-                    { stars: 1, pct: '1%', count: 1 }
-                  ].map((dist) => (
+                  {ratingDistribution.map((dist) => (
                     <div key={dist.stars} className="flex items-center gap-3">
                       <span className="w-4 text-right text-slate-450">{dist.stars}★</span>
                       <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
                         <div className="h-full bg-amber-500" style={{ width: dist.pct }} />
                       </div>
-                      <span className="w-12 text-slate-400 text-right font-semibold">{dist.count} ({dist.pct})</span>
+                      <span className="w-20 shrink-0 text-slate-400 text-right font-semibold">{dist.count} ({dist.pct})</span>
                     </div>
                   ))}
                 </div>
