@@ -739,18 +739,18 @@ export default function Home() {
           {/* Left panel: text & search */}
           <div className="lg:col-span-8 flex flex-col items-start text-left">
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#001c41] tracking-tight leading-tight max-w-2xl font-sans">
-              Discover Trusted <br />
-              Businesses in <br />
+            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#001c41] tracking-tight leading-tight max-w-2xl font-sans">
+              Discover Trusted <br className="hidden sm:inline" />
+              Businesses in <br className="hidden sm:inline" />
               <span className="text-[#027244]">Udumalpet</span>
             </h1>
             
-            <p className="mt-5 text-[15px] md:text-[17px] text-slate-500 font-medium max-w-xl leading-relaxed">
+            <p className="mt-3 text-sm sm:text-[15px] md:text-[17px] text-slate-500 font-medium max-w-xl leading-relaxed">
               A trusted local platform to discover, connect and grow with verified businesses in and around Udumalpet.
             </p>
 
             {/* Rich horizontal search bar */}
-            <form onSubmit={handleSearchSubmit} className="mt-6 w-full bg-white border border-slate-200/80 rounded-2xl shadow-xl p-2 flex flex-col md:flex-row gap-2 max-w-3xl">
+            <form onSubmit={handleSearchSubmit} className="mt-4 w-full bg-white border border-slate-200/80 rounded-2xl shadow-xl p-2 flex flex-col md:flex-row gap-2 max-w-3xl">
               <div className="flex-1 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
                 <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
                 <input
@@ -885,12 +885,12 @@ export default function Home() {
 
       {/* 3. Top Categories Section (Using premium vector icons) */}
       <section className="max-w-[1440px] w-full px-4 md:px-8 py-6 md:py-10 flex flex-col gap-4 md:gap-8">
-        <div className="flex justify-between items-end border-b border-slate-200/80 pb-3">
+        <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
           <div>
-            <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Top Categories</h2>
-            <p className="text-sm text-slate-500 font-medium mt-1">Explore local businesses by specific industry</p>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight">Top Categories</h2>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">Explore local businesses by specific industry</p>
           </div>
-          <Link to="/businesses?focus=categories" className="text-xs font-bold text-[#027244] hover:text-[#005934] flex items-center gap-1">
+          <Link to="/businesses?focus=categories" className="text-xs font-bold text-[#027244] hover:text-[#005934] flex items-center gap-1 shrink-0">
             View All Categories <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -918,7 +918,7 @@ export default function Home() {
                 <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl flex items-center justify-center text-xl sm:text-2xl select-none transition-transform duration-500 ease-out-expo group-hover:scale-110 [&>svg]:h-5.5 [&>svg]:w-5.5 sm:[&>svg]:h-7 sm:[&>svg]:w-7">
                   {cat.icon}
                 </div>
-                <span className="text-xs sm:text-[17px] font-medium text-slate-700 transition-colors duration-300 group-hover:text-[#027244] line-clamp-1">{cat.name}</span>
+                <span className="text-xs sm:text-[17px] font-medium text-slate-700 transition-colors duration-300 group-hover:text-[#027244] line-clamp-2 min-h-[2rem] flex items-center justify-center">{cat.name}</span>
               </Link>
             ))}
           </div>
@@ -936,12 +936,12 @@ export default function Home() {
 
       {/* 4. Featured Businesses Section (With side chevrons!) */}
       <section className="max-w-[1440px] w-full px-4 md:px-8 py-6 md:py-12 flex flex-col gap-4 md:gap-8 relative">
-        <div className="flex justify-between items-end border-b border-slate-200/80 pb-3">
+        <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
           <div>
-            <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Featured Businesses</h2>
-            <p className="text-sm text-slate-500 font-medium mt-1">Direct from our premium verified sponsors</p>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight">Featured Businesses</h2>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">Direct from our premium verified sponsors</p>
           </div>
-          <Link to="/businesses?type=Premium" className="text-xs font-bold text-[#027244] hover:text-[#005934] flex items-center gap-1">
+          <Link to="/businesses?type=Premium" className="text-xs font-bold text-[#027244] hover:text-[#005934] flex items-center gap-1 shrink-0">
             View All Businesses <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>

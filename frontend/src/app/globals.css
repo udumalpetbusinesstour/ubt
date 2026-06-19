@@ -4,6 +4,7 @@
   --font-sans: "Plus Jakarta Sans", "Inter", sans-serif;
   --font-heading: "Plus Jakarta Sans", "Inter", sans-serif;
   --font-logo: "Plus Jakarta Sans", "Inter", sans-serif;
+  --breakpoint-xs: 400px;
 
   /* Increased Font Sizes Everywhere */
   --text-xs: 0.85rem;   /* default 0.75rem */

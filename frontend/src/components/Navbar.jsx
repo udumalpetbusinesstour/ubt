@@ -345,7 +345,7 @@ export default function Navbar() {
 
         {/* Mobile Navigation Drawer */}
         {isOpen && (
-          <div className="lg:hidden absolute top-full left-0 w-full bg-white shadow-xl border-t border-slate-100 py-4 px-6 flex flex-col gap-4 animate-fadeIn text-left z-50">
+          <div className="lg:hidden absolute top-full left-0 w-full bg-white shadow-xl border-t border-slate-100 py-4 px-6 flex flex-col gap-4 animate-fadeIn text-left z-50 max-h-[calc(100vh-80px)] overflow-y-auto">
             {menuItems.map((item) => (
               <Link
                 key={item.name}

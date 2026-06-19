@@ -121,7 +121,7 @@ export default function UpdatePopup() {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden p-6 sm:p-8 flex flex-col items-center animate-scale-up">
+      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 max-h-[calc(100vh-2rem)] overflow-y-auto p-5 xs:p-6 sm:p-8 flex flex-col items-center animate-scale-up">
         
         {/* Close Button */}
         {status !== 'success' && (
@@ -147,15 +147,15 @@ export default function UpdatePopup() {
         ) : (
           <div className="w-full flex flex-col">
             {/* Header Icon & Text */}
-            <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mb-4 animate-pulse">
-                <Bell className="h-8 w-8" />
+            <div className="flex flex-col items-center text-center mb-4 sm:mb-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mb-3 sm:mb-4 animate-pulse">
+                <Bell className="h-6 w-6 sm:h-8 sm:w-8" />
               </div>
-              <h3 className="text-2xl font-black text-[#001c41] tracking-tight mb-2 flex items-center gap-1.5 justify-center">
+              <h3 className="text-xl sm:text-2xl font-black text-[#001c41] tracking-tight mb-2 flex items-center gap-1.5 justify-center">
                 <span>Stay Updated with Udumalpet Business Tour</span>
-                <Sparkles className="h-5 w-5 text-amber-500 fill-current" />
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 fill-current shrink-0" />
               </h3>
-              <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-slate-500 font-semibold leading-relaxed">
                 Enter your name, mobile number, and area to receive updates about trusted local businesses, services, special offers, events, and opportunities in and around Udumalpet.
               </p>
             </div>
@@ -169,9 +169,9 @@ export default function UpdatePopup() {
             )}
 
             {/* Subscription Form */}
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4">
               {/* Name Field */}
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1 sm:gap-1.5">
                 <label className="text-xs font-bold text-slate-700">Full Name</label>
                 <div className="relative flex items-center">
                   <User className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
@@ -181,13 +181,13 @@ export default function UpdatePopup() {
                     placeholder="Enter your name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all"
+                    className="w-full py-2 sm:py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all"
                   />
                 </div>
               </div>
 
               {/* Mobile Number Field */}
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1 sm:gap-1.5">
                 <label className="text-xs font-bold text-slate-700">Mobile Number</label>
                 <div className="relative flex items-center">
                   <Phone className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
@@ -198,13 +198,13 @@ export default function UpdatePopup() {
                     placeholder="Enter 10-digit mobile number"
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
-                    className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all"
+                    className="w-full py-2 sm:py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all"
                   />
                 </div>
               </div>
 
               {/* Area Field */}
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1 sm:gap-1.5">
                 <label className="text-xs font-bold text-slate-700">Area / Location</label>
                 <div className="relative flex items-center">
                   <MapPin className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
@@ -214,7 +214,7 @@ export default function UpdatePopup() {
                     placeholder="e.g., Udumalpet Town, Palani Road"
                     value={area}
                     onChange={(e) => setArea(e.target.value)}
-                    className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all"
+                    className="w-full py-2 sm:py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all"
                   />
                 </div>
               </div>
@@ -223,7 +223,7 @@ export default function UpdatePopup() {
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-2 w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl transition-all shadow-md shadow-emerald-600/15 flex items-center justify-center gap-2 cursor-pointer hover:translate-y-[-1px] active:translate-y-[0px]"
+                className="mt-1 sm:mt-2 w-full py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl transition-all shadow-md shadow-emerald-600/15 flex items-center justify-center gap-2 cursor-pointer hover:translate-y-[-1px] active:translate-y-[0px]"
               >
                 {loading && <Loader className="h-4.5 w-4.5 animate-spin" />}
                 <span>Subscribe for Updates</span>
@@ -233,7 +233,7 @@ export default function UpdatePopup() {
             {/* Snooze/Maybe Later Link */}
             <button
               onClick={handleClose}
-              className="mt-4 text-center text-[11px] text-slate-400 hover:text-slate-600 font-bold hover:underline cursor-pointer"
+              className="mt-3 sm:mt-4 text-center text-[11px] text-slate-400 hover:text-slate-600 font-bold hover:underline cursor-pointer"
             >
               Maybe Later
             </button>
