@@ -179,6 +179,14 @@ const BusinessSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  rawGoogleRating: {
+    type: Number,
+    default: 0,
+  },
+  rawGoogleReviewsCount: {
+    type: Number,
+    default: 0,
+  },
   googleReviews: [
     {
       authorName: String,

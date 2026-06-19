@@ -151,6 +151,39 @@ export default function AddBusiness() {
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
+  // Dynamic Categories calculation helpers
+  const getDynamicMainCategories = () => {
+    const mainCats = new Set(availableCategories);
+    if (Array.isArray(dbCategories)) {
+      dbCategories.forEach(cat => {
+        if (!cat.parentCategory || cat.parentCategory.trim() === '' || cat.parentCategory === 'Others') {
+          if (cat.categoryName && cat.categoryName !== 'Others') {
+            mainCats.add(cat.categoryName.trim());
+          }
+        } else {
+          mainCats.add(cat.parentCategory.trim());
+        }
+      });
+    }
+    return Array.from(mainCats).sort();
+  };
+
+  const getDynamicSubcategories = (parentCategory) => {
+    if (!parentCategory) return [];
+    const subs = new Set(parentCategoryMapping[parentCategory] || []);
+    if (Array.isArray(dbCategories)) {
+      dbCategories.forEach(cat => {
+        if (cat.parentCategory && cat.parentCategory.toLowerCase() === parentCategory.toLowerCase()) {
+          if (cat.categoryName && cat.categoryName !== 'Others') {
+            subs.add(cat.categoryName);
+          }
+        }
+      });
+    }
+    return Array.from(subs).sort();
+  };
+
+
   // Branches wizard states
   const [isBranchMode, setIsBranchMode] = useState(false);
   const [branchStep, setBranchStep] = useState(1);
@@ -1985,13 +2018,8 @@ export default function AddBusiness() {
     <div className="w-full min-h-[90vh] bg-slate-50 font-sans pb-16">
       {/* Scenic Banner Header */}
       <div className="w-full bg-[#001c41] py-16 px-4 md:px-8 relative overflow-hidden text-white font-sans text-center md:text-left select-none border-b border-slate-800 z-0">
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-25 mix-blend-overlay z-0"
-          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1600&q=80')` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#001736] via-[#001c41]/90 to-[#027244]/40 z-0" />
         
-        <div className="max-w-7xl mx-auto relative z-10 flex flex-col gap-2">
+        <div className="max-w-[1440px] mx-auto relative z-10 flex flex-col gap-2">
           <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold uppercase tracking-wider justify-center md:justify-start">
             <Link to="/" className="hover:text-emerald-400 transition-colors">Home</Link>
             <ChevronRight className="h-3 w-3 text-slate-500" />
@@ -2008,7 +2036,7 @@ export default function AddBusiness() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 relative z-10">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-10 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
           {/* Left Column: Form & Stepper (lg:col-span-2) */}
@@ -2083,7 +2111,7 @@ export default function AddBusiness() {
                     <div className="flex flex-col gap-1.5 text-left">
                       <div className="flex justify-between items-center">
                         <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Main Category <span className="text-red-500">*</span></label>
-                        {(isCustomMain || (formData.requestedParentCategory !== '' && !availableCategories.includes(formData.requestedParentCategory))) && (
+                        {(isCustomMain || (formData.requestedParentCategory !== '' && !getDynamicMainCategories().includes(formData.requestedParentCategory))) && (
                           <button
                             type="button"
                             onClick={() => {
@@ -2104,11 +2132,11 @@ export default function AddBusiness() {
                           </button>
                         )}
                       </div>
-                      {(isCustomMain || (formData.requestedParentCategory !== '' && !availableCategories.includes(formData.requestedParentCategory))) ? (
+                      {(isCustomMain || (formData.requestedParentCategory !== '' && !getDynamicMainCategories().includes(formData.requestedParentCategory))) ? (
                         <input
                           type="text"
                           placeholder="Specify Custom Main Category (e.g. Tourism Services, Logistics)"
-                          value={availableCategories.includes(formData.requestedParentCategory) ? '' : formData.requestedParentCategory}
+                          value={getDynamicMainCategories().includes(formData.requestedParentCategory) ? '' : formData.requestedParentCategory}
                           onChange={(e) => {
                             const val = e.target.value;
                             const updated = {
@@ -2125,7 +2153,7 @@ export default function AddBusiness() {
                       ) : (
                         <select
                           name="requestedParentCategory"
-                          value={availableCategories.includes(formData.requestedParentCategory) ? formData.requestedParentCategory : ''}
+                          value={getDynamicMainCategories().includes(formData.requestedParentCategory) ? formData.requestedParentCategory : ''}
                           onChange={(e) => {
                             const parentVal = e.target.value;
                             if (parentVal === 'Others') {
@@ -2140,7 +2168,7 @@ export default function AddBusiness() {
                               setFormData(updated);
                               saveDraft(updated);
                             } else {
-                              const subs = parentCategoryMapping[parentVal] || [];
+                              const subs = getDynamicSubcategories(parentVal);
                               const subVal = subs[0] || '';
                               const updated = {
                                 ...formData,
@@ -2156,7 +2184,7 @@ export default function AddBusiness() {
                           className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
                         >
                           <option value="">-- Choose Main Category --</option>
-                          {availableCategories.map(cat => (
+                          {getDynamicMainCategories().map(cat => (
                             <option key={cat} value={cat}>{cat}</option>
                           ))}
                         </select>
@@ -2168,11 +2196,11 @@ export default function AddBusiness() {
                       <div className="flex flex-col gap-1.5 text-left animate-fadeIn">
                         <div className="flex justify-between items-center">
                           <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Subcategory <span className="text-red-500">*</span></label>
-                          {formData.category === 'Others' && !(isCustomMain || (formData.requestedParentCategory !== '' && !availableCategories.includes(formData.requestedParentCategory))) && (
+                          {formData.category === 'Others' && !(isCustomMain || (formData.requestedParentCategory !== '' && !getDynamicMainCategories().includes(formData.requestedParentCategory))) && (
                             <button
                               type="button"
                               onClick={() => {
-                                const subs = parentCategoryMapping[formData.requestedParentCategory] || [];
+                                const subs = getDynamicSubcategories(formData.requestedParentCategory);
                                 const subVal = subs[0] || '';
                                 const updated = {
                                   ...formData,
@@ -2222,10 +2250,10 @@ export default function AddBusiness() {
                         ) : (
                           <select
                             name="category"
-                            value={((parentCategoryMapping[availableCategories.includes(formData.requestedParentCategory) ? formData.requestedParentCategory : 'Public Sector'] || []).includes(formData.category) || (dbCategories || []).some(c => c.categoryName === formData.category)) ? formData.category : ''}
+                            value={getDynamicSubcategories(formData.requestedParentCategory).includes(formData.category) ? formData.category : ''}
                             onChange={(e) => {
                               const subVal = e.target.value;
-                              const isCustomParent = !availableCategories.includes(formData.requestedParentCategory);
+                              const isCustomParent = !getDynamicMainCategories().includes(formData.requestedParentCategory);
                               const updated = {
                                 ...formData,
                                 category: subVal,
@@ -2238,7 +2266,7 @@ export default function AddBusiness() {
                             className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
                           >
                             <option value="">-- Choose Subcategory --</option>
-                            {(parentCategoryMapping[availableCategories.includes(formData.requestedParentCategory) ? formData.requestedParentCategory : 'Public Sector'] || []).map(sub => (
+                            {getDynamicSubcategories(formData.requestedParentCategory).map(sub => (
                               <option key={sub} value={sub}>{sub}</option>
                             ))}
                             <option value="Others">Others (Custom Category)</option>

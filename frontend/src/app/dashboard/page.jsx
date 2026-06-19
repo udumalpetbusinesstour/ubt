@@ -528,6 +528,55 @@ function DashboardContent() {
     timingsSun: '9:00 AM - 1:00 PM',
   });
 
+  const [dbCategories, setDbCategories] = useState([]);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/categories');
+        const data = await res.json();
+        if (res.ok && data.success && Array.isArray(data.data)) {
+          setDbCategories(data.data);
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  const getDashboardDynamicMainCategories = () => {
+    const mainCats = new Set(availableCategories);
+    if (Array.isArray(dbCategories)) {
+      dbCategories.forEach(cat => {
+        if (!cat.parentCategory || cat.parentCategory.trim() === '' || cat.parentCategory === 'Others') {
+          if (cat.categoryName && cat.categoryName !== 'Others') {
+            mainCats.add(cat.categoryName.trim());
+          }
+        } else {
+          mainCats.add(cat.parentCategory.trim());
+        }
+      });
+    }
+    return Array.from(mainCats).sort();
+  };
+
+  const getDashboardDynamicSubcategories = (parentCategory) => {
+    if (!parentCategory) return [];
+    const subs = new Set(parentCategoryMapping[parentCategory] || []);
+    if (Array.isArray(dbCategories)) {
+      dbCategories.forEach(cat => {
+        if (cat.parentCategory && cat.parentCategory.toLowerCase() === parentCategory.toLowerCase()) {
+          if (cat.categoryName && cat.categoryName !== 'Others') {
+            subs.add(cat.categoryName);
+          }
+        }
+      });
+    }
+    return Array.from(subs).sort();
+  };
+
   // Image upload states & handler
   const [logoUploading, setLogoUploading] = useState(false);
   const [coverUploading, setCoverUploading] = useState(false);
@@ -3737,7 +3786,7 @@ function DashboardContent() {
         </header>
 
         {/* Scrollable Workspace Panels */}
-        <main className="flex-grow overflow-y-auto px-6 py-6 max-w-7xl w-full mx-auto flex flex-col gap-6">
+        <main className="flex-grow overflow-y-auto px-6 py-6 max-w-[1440px] w-full mx-auto flex flex-col gap-6">
           
           {/* Banner notification updates */}
           {successBanner && (
@@ -4454,7 +4503,7 @@ function DashboardContent() {
                       
                       {/* Title Block with Logo and Verified Badge */}
                       <div className="flex items-center gap-4 mt-2 flex-wrap text-left">
-                        {business.logoUrl && !business.logoUrl.includes('images.unsplash.com') ? (
+                        {business.logoUrl ? (
                           <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-white shadow-md shrink-0 flex items-center justify-center relative group">
                             <img src={business.logoUrl} alt={`${business.name} Logo`} className="h-full w-full object-cover" />
                             <label className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity text-white text-[9px] font-black uppercase tracking-wider select-none text-center p-1">
@@ -8371,7 +8420,7 @@ function DashboardContent() {
                     <div className="flex flex-col gap-1">
                       <div className="flex justify-between items-center">
                         <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Main Category</label>
-                        {(isCustomMain || (editFields.requestedParentCategory !== '' && !availableCategories.includes(editFields.requestedParentCategory))) && (
+                        {(isCustomMain || (editFields.requestedParentCategory !== '' && !getDashboardDynamicMainCategories().includes(editFields.requestedParentCategory))) && (
                           <button
                             type="button"
                             onClick={() => {
@@ -8390,11 +8439,11 @@ function DashboardContent() {
                           </button>
                         )}
                       </div>
-                      {(isCustomMain || (editFields.requestedParentCategory !== '' && !availableCategories.includes(editFields.requestedParentCategory))) ? (
+                      {(isCustomMain || (editFields.requestedParentCategory !== '' && !getDashboardDynamicMainCategories().includes(editFields.requestedParentCategory))) ? (
                         <input 
                           type="text" 
                           placeholder="Specify Custom Main Category"
-                          value={availableCategories.includes(editFields.requestedParentCategory) ? '' : editFields.requestedParentCategory}
+                          value={getDashboardDynamicMainCategories().includes(editFields.requestedParentCategory) ? '' : editFields.requestedParentCategory}
                           onChange={(e) => {
                             const val = e.target.value;
                             setEditFields({
@@ -8408,7 +8457,7 @@ function DashboardContent() {
                         />
                       ) : (
                         <select 
-                          value={availableCategories.includes(editFields.requestedParentCategory) ? editFields.requestedParentCategory : ''}
+                          value={getDashboardDynamicMainCategories().includes(editFields.requestedParentCategory) ? editFields.requestedParentCategory : ''}
                           onChange={(e) => {
                             const parentVal = e.target.value;
                             if (parentVal === 'Others') {
@@ -8421,7 +8470,7 @@ function DashboardContent() {
                                 categoryStatus: 'Pending Review'
                               });
                             } else {
-                              const subs = parentCategoryMapping[parentVal] || [];
+                              const subs = getDashboardDynamicSubcategories(parentVal);
                               const subVal = subs[0] || '';
                               setEditFields({
                                 ...editFields,
@@ -8435,7 +8484,7 @@ function DashboardContent() {
                           className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20 cursor-pointer"
                         >
                           <option value="">-- Choose Main Category --</option>
-                          {availableCategories.map(cat => (
+                          {getDashboardDynamicMainCategories().map(cat => (
                             <option key={cat} value={cat}>{cat}</option>
                           ))}
                         </select>
@@ -8447,11 +8496,11 @@ function DashboardContent() {
                       <div className="flex flex-col gap-1">
                         <div className="flex justify-between items-center">
                           <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Subcategory</label>
-                          {editFields.category === 'Others' && !(isCustomMain || (editFields.requestedParentCategory !== '' && !availableCategories.includes(editFields.requestedParentCategory))) && (
+                          {editFields.category === 'Others' && !(isCustomMain || (editFields.requestedParentCategory !== '' && !getDashboardDynamicMainCategories().includes(editFields.requestedParentCategory))) && (
                             <button
                               type="button"
                               onClick={() => {
-                                const subs = parentCategoryMapping[editFields.requestedParentCategory] || [];
+                                const subs = getDashboardDynamicSubcategories(editFields.requestedParentCategory);
                                 const subVal = subs[0] || '';
                                 setEditFields(prev => ({
                                   ...prev,
@@ -8483,10 +8532,10 @@ function DashboardContent() {
                           />
                         ) : (
                           <select 
-                            value={((parentCategoryMapping[availableCategories.includes(editFields.requestedParentCategory) ? editFields.requestedParentCategory : 'Others'] || []).includes(editFields.category)) ? editFields.category : ''}
+                            value={(getDashboardDynamicSubcategories(editFields.requestedParentCategory).includes(editFields.category)) ? editFields.category : ''}
                             onChange={(e) => {
                               const subVal = e.target.value;
-                              const isCustomParent = !availableCategories.includes(editFields.requestedParentCategory);
+                              const isCustomParent = !getDashboardDynamicMainCategories().includes(editFields.requestedParentCategory);
                               setEditFields({
                                 ...editFields,
                                 category: subVal,
@@ -8497,7 +8546,7 @@ function DashboardContent() {
                             className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-slate-50/20 cursor-pointer"
                           >
                             <option value="">-- Choose Subcategory --</option>
-                            {(parentCategoryMapping[availableCategories.includes(editFields.requestedParentCategory) ? editFields.requestedParentCategory : 'Others'] || []).map(sub => (
+                            {getDashboardDynamicSubcategories(editFields.requestedParentCategory).map(sub => (
                               <option key={sub} value={sub}>{sub}</option>
                             ))}
                             <option value="Others">Others (Custom Category)</option>

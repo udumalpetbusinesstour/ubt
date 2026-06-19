@@ -102,6 +102,39 @@ const parentCategoryMapping = {
 export default function AdminDashboard() {
   const navigate = useNavigate();
 
+  // Dynamic Categories calculation helpers
+  const getAdminDynamicMainCategories = () => {
+    const mainCats = new Set(availableCategories);
+    if (Array.isArray(presetCategories)) {
+      presetCategories.forEach(cat => {
+        if (!cat.parentCategory || cat.parentCategory.trim() === '' || cat.parentCategory === 'Others') {
+          if (cat.categoryName && cat.categoryName !== 'Others') {
+            mainCats.add(cat.categoryName.trim());
+          }
+        } else {
+          mainCats.add(cat.parentCategory.trim());
+        }
+      });
+    }
+    return Array.from(mainCats).sort();
+  };
+
+  const getAdminDynamicSubcategories = (parentCategory) => {
+    if (!parentCategory) return [];
+    const subs = new Set(parentCategoryMapping[parentCategory] || []);
+    if (Array.isArray(presetCategories)) {
+      presetCategories.forEach(cat => {
+        if (cat.parentCategory && cat.parentCategory.toLowerCase() === parentCategory.toLowerCase()) {
+          if (cat.categoryName && cat.categoryName !== 'Others') {
+            subs.add(cat.categoryName);
+          }
+        }
+      });
+    }
+    return Array.from(subs).sort();
+  };
+
+
   const formatEventDateRange = (startDate, endDate) => {
     if (!startDate) return 'N/A';
     const startStr = new Date(startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -793,7 +826,7 @@ export default function AdminDashboard() {
         requestedParentCategory: dirForm.requestedParentCategory,
         category: dirForm.category,
         customCategoryName: dirForm.category === 'Others' ? dirForm.customCategoryName : '',
-        categoryStatus: dirForm.category === 'Others' || !availableCategories.includes(dirForm.requestedParentCategory) ? 'Pending Review' : 'Normal',
+        categoryStatus: dirForm.category === 'Others' || !getAdminDynamicMainCategories().includes(dirForm.requestedParentCategory) ? 'Pending Review' : 'Normal',
         address: dirForm.address,
         locality: dirForm.locality,
         phone: dirForm.phone,
@@ -4123,14 +4156,7 @@ export default function AdminDashboard() {
                                             className="py-2 px-3 border border-slate-200 bg-white text-slate-705 hover:bg-slate-50 rounded-xl text-xs font-extrabold cursor-pointer transition-colors outline-none w-full"
                                           >
                                             <option value="">-- Select Main Category --</option>
-                                            {[
-                                              'Automotive', 'Beauty & Wellness', 'Education', 'Electronics',
-                                              'Food & Restaurants', 'Health & Medical', 'Home Services', 'Real Estate',
-                                              'Shopping', 'Professional Services', 'Travel & Hospitality', 'Construction',
-                                              'Agriculture', 'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness',
-                                              'Governmental organisations',
-                                              'Others'
-                                            ].map(c => (
+                                            {getAdminDynamicMainCategories().map(c => (
                                               <option key={c} value={c}>{c}</option>
                                             ))}
                                           </select>
@@ -5072,7 +5098,7 @@ export default function AdminDashboard() {
                 <div className="flex flex-col gap-1.5 text-left">
                   <div className="flex justify-between items-center">
                     <label className="text-[10.5px] font-black text-slate-700 uppercase">Main Category *</label>
-                    {(isCustomMain || (dirForm.requestedParentCategory !== '' && !availableCategories.includes(dirForm.requestedParentCategory))) && (
+                    {(isCustomMain || (dirForm.requestedParentCategory !== '' && !getAdminDynamicMainCategories().includes(dirForm.requestedParentCategory))) && (
                       <button
                         type="button"
                         onClick={() => {
@@ -5091,12 +5117,12 @@ export default function AdminDashboard() {
                       </button>
                     )}
                   </div>
-                  {(isCustomMain || (dirForm.requestedParentCategory !== '' && !availableCategories.includes(dirForm.requestedParentCategory))) ? (
+                  {(isCustomMain || (dirForm.requestedParentCategory !== '' && !getAdminDynamicMainCategories().includes(dirForm.requestedParentCategory))) ? (
                     <input
                       type="text"
                       placeholder="Specify Custom Main Category (e.g. Tourism, Logistics)"
                       required
-                      value={availableCategories.includes(dirForm.requestedParentCategory) ? '' : dirForm.requestedParentCategory}
+                      value={getAdminDynamicMainCategories().includes(dirForm.requestedParentCategory) ? '' : dirForm.requestedParentCategory}
                       onChange={(e) => {
                         const val = e.target.value;
                         setDirForm({
@@ -5111,7 +5137,7 @@ export default function AdminDashboard() {
                   ) : (
                     <select
                       required
-                      value={availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : ''}
+                      value={getAdminDynamicMainCategories().includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : ''}
                       onChange={(e) => {
                         const parentVal = e.target.value;
                         if (parentVal === 'Others') {
@@ -5124,7 +5150,7 @@ export default function AdminDashboard() {
                             categoryStatus: 'Pending Review'
                           });
                         } else {
-                          const subs = parentCategoryMapping[parentVal] || [];
+                          const subs = getAdminDynamicSubcategories(parentVal);
                           const subVal = subs[0] || '';
                           setDirForm({
                             ...dirForm,
@@ -5138,7 +5164,7 @@ export default function AdminDashboard() {
                       className="w-full px-3 py-2 border border-slate-205 bg-white rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244] cursor-pointer"
                     >
                       <option value="">-- Choose Main Category --</option>
-                      {availableCategories.map(cat => (
+                      {getAdminDynamicMainCategories().map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </select>
@@ -5150,11 +5176,11 @@ export default function AdminDashboard() {
                   <div className="flex flex-col gap-1.5 text-left animate-fadeIn">
                     <div className="flex justify-between items-center">
                       <label className="text-[10.5px] font-black text-slate-700 uppercase">Sub Category *</label>
-                      {dirForm.category === 'Others' && !(isCustomMain || (dirForm.requestedParentCategory !== '' && !availableCategories.includes(dirForm.requestedParentCategory))) && (
+                      {dirForm.category === 'Others' && !(isCustomMain || (dirForm.requestedParentCategory !== '' && !getAdminDynamicMainCategories().includes(dirForm.requestedParentCategory))) && (
                         <button
                           type="button"
                           onClick={() => {
-                            const subs = parentCategoryMapping[dirForm.requestedParentCategory] || [];
+                            const subs = getAdminDynamicSubcategories(dirForm.requestedParentCategory);
                             const subVal = subs[0] || '';
                             setDirForm(prev => ({
                               ...prev,
@@ -5188,10 +5214,10 @@ export default function AdminDashboard() {
                     ) : (
                       <select
                         required
-                        value={((parentCategoryMapping[availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Public Sector'] || []).includes(dirForm.category) || presetCategories.some(c => c.categoryName === dirForm.category)) ? dirForm.category : ''}
+                        value={getAdminDynamicSubcategories(dirForm.requestedParentCategory).includes(dirForm.category) ? dirForm.category : ''}
                         onChange={(e) => {
                           const subVal = e.target.value;
-                          const isCustomParent = !availableCategories.includes(dirForm.requestedParentCategory);
+                          const isCustomParent = !getAdminDynamicMainCategories().includes(dirForm.requestedParentCategory);
                           setDirForm({
                             ...dirForm,
                             category: subVal,
@@ -5202,15 +5228,9 @@ export default function AdminDashboard() {
                         className="w-full px-3 py-2 border border-slate-205 bg-white rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244] cursor-pointer"
                       >
                         <option value="">-- Choose Subcategory --</option>
-                        {(parentCategoryMapping[availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Public Sector'] || []).map(sub => (
+                        {getAdminDynamicSubcategories(dirForm.requestedParentCategory).map(sub => (
                           <option key={sub} value={sub}>{sub}</option>
                         ))}
-                        {/* Dynamically append custom database categories matching this parent category */}
-                        {presetCategories
-                          .filter(c => c.parentCategory === (availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Public Sector') && !(parentCategoryMapping[availableCategories.includes(dirForm.requestedParentCategory) ? dirForm.requestedParentCategory : 'Public Sector'] || []).includes(c.categoryName))
-                          .map(c => (
-                            <option key={c.categoryName} value={c.categoryName}>{c.categoryName}</option>
-                          ))}
                         <option value="Others">Others (Custom Category)</option>
                       </select>
                     )}

@@ -130,7 +130,7 @@ export default function Navbar() {
   if (isAuthPage) {
     return (
       <header className="w-full bg-white py-4.5 px-4 md:px-8 border-b border-slate-100 z-50">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <div className="max-w-[1440px] mx-auto flex justify-between items-center">
           <Link to="/" className="flex items-center select-none group py-1">
             <img src="/logo.png" alt="Udumalpet Business Tour" className="h-13 w-auto object-contain" />
           </Link>
@@ -273,7 +273,7 @@ export default function Navbar() {
             : 'relative border-b border-slate-100 bg-white'
         }`}
       >
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <div className="max-w-[1440px] mx-auto flex justify-between items-center">
           {/* Logo */}
           <Link to="/" className="flex items-center select-none group py-1">
             <img src="/logo.png" alt="Udumalpet Business Tour" className="h-13 w-auto object-contain" />
@@ -355,13 +355,15 @@ export default function Navbar() {
                   isItemActive(item.path) ? 'text-emerald-600 font-bold' : 'text-slate-600'
                 }`}
               >
-                <span className="text-emerald-500 shrink-0">{getMenuIcon(item.name)}</span>
+                <span className="text-[#027244] shrink-0">
+                  {getMenuIcon(item.name)}
+                </span>
                 <span>{item.name}</span>
               </Link>
             ))}
 
             {/* Divider */}
-            <div className="w-full border-t border-slate-100 my-1" />
+            {user && <div className="w-full border-t border-slate-100 my-1" />}
 
             {/* Auth actions for mobile */}
             {/* Auth actions when logged in */}
@@ -373,7 +375,7 @@ export default function Navbar() {
                     onClick={() => setIsOpen(false)}
                     className="flex items-center gap-3 text-base font-semibold py-2.5 text-slate-600 hover:text-[#027244] transition-colors border-b border-slate-50"
                   >
-                    <User className="h-4.5 w-4.5 text-emerald-500 shrink-0" />
+                    <User className="h-4.5 w-4.5 text-[#027244] shrink-0" />
                     <span>Admin Panel</span>
                   </Link>
                 ) : (
@@ -382,7 +384,7 @@ export default function Navbar() {
                     onClick={() => setIsOpen(false)}
                     className="flex items-center gap-3 text-base font-semibold py-2.5 text-slate-600 hover:text-[#027244] transition-colors border-b border-slate-50"
                   >
-                    <User className="h-4.5 w-4.5 text-emerald-500 shrink-0" />
+                    <User className="h-4.5 w-4.5 text-[#027244] shrink-0" />
                     <span>Dashboard</span>
                   </Link>
                 )}
@@ -400,7 +402,7 @@ export default function Navbar() {
             )}
 
             {/* Social connection & contact details */}
-            <div className="flex flex-col gap-4 mt-4 pt-4 border-t border-slate-100">
+            <div className="flex flex-col gap-3.5 mt-2.5 pt-2.5 border-t border-slate-100">
               <span className="text-xs font-black text-slate-400 uppercase tracking-widest leading-none">Connect With Us</span>
               <div className="flex items-center gap-3 mt-1.5">
                 <a 

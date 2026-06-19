@@ -89,10 +89,66 @@ export default function Home() {
   const [featuredBusinesses, setFeaturedBusinesses] = useState(mockFeatured);
   const [topViewedBusinesses, setTopViewedBusinesses] = useState([]);
   const [activeFaq, setActiveFaq] = useState(null);
+  const [dbCategories, setDbCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/categories');
+        const data = await res.json();
+        if (res.ok && data.success && Array.isArray(data.data)) {
+          setDbCategories(data.data);
+        }
+      } catch (err) {
+        console.error('Error fetching categories in Home:', err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  const getHomeDynamicMainCategories = () => {
+    const fallbackHomeCategories = [
+      'Automotive',
+      'Beauty & Wellness',
+      'Education',
+      'Electronics',
+      'Food & Restaurants',
+      'Health & Medical',
+      'Home Services',
+      'Real Estate',
+      'Shopping',
+      'Manufacturing',
+      'Professional Services',
+      'Travel & Hospitality',
+      'Construction',
+      'Agriculture',
+      'Finance & Insurance',
+      'Events & Entertainment',
+      'Sports & Fitness',
+      'Public Sector',
+      'Governmental organisations',
+    ];
+    const mainCats = new Set(fallbackHomeCategories);
+    if (Array.isArray(dbCategories)) {
+      dbCategories.forEach(cat => {
+        if (!cat.parentCategory || cat.parentCategory.trim() === '' || cat.parentCategory === 'Others') {
+          if (cat.categoryName && cat.categoryName !== 'Others') {
+            mainCats.add(cat.categoryName.trim());
+          }
+        } else {
+          mainCats.add(cat.parentCategory.trim());
+        }
+      });
+    }
+    return Array.from(mainCats).sort();
+  };
+
   const faqScrollRef = useRef(null);
   const categoryScrollRef = useRef(null);
   const testimonialScrollRef = useRef(null);
   const topViewedScrollRef = useRef(null);
+  const howItWorksScrollRef = useRef(null);
+  const stepsRegisterScrollRef = useRef(null);
 
   // Testimonials state
   const fallbackTestimonials = [
@@ -509,6 +565,18 @@ export default function Home() {
     testimonialScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
   };
 
+  const handleScrollHowItWorks = (direction) => {
+    if (!howItWorksScrollRef.current) return;
+    const scrollAmount = direction === 'left' ? -250 : 250;
+    howItWorksScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  };
+
+  const handleScrollStepsRegister = (direction) => {
+    if (!stepsRegisterScrollRef.current) return;
+    const scrollAmount = direction === 'left' ? -250 : 250;
+    stepsRegisterScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  };
+
   const handleTestimonialSubmit = async (e) => {
     e.preventDefault();
     setSubmitSuccess('');
@@ -666,7 +734,7 @@ export default function Home() {
         </div>
 
         {/* Hero main body */}
-        <div className="relative max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center z-20">
+        <div className="relative max-w-[1440px] w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center z-20">
           
           {/* Left panel: text & search */}
           <div className="lg:col-span-8 flex flex-col items-start text-left">
@@ -712,25 +780,11 @@ export default function Home() {
                   onChange={(e) => setCategoryTerm(e.target.value)}
                   className="w-full bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer"
                 >
-                  <option>All Categories</option>
-                  <option>Automotive</option>
-                  <option>Beauty & Wellness</option>
-                  <option>Education</option>
-                  <option>Electronics</option>
-                  <option>Food & Restaurants</option>
-                  <option>Health & Medical</option>
-                  <option>Home Services</option>
-                  <option>Real Estate</option>
-                  <option>Shopping</option>
-                  <option>Manufacturing</option>
-                  <option>Professional Services</option>
-                  <option>Travel & Hospitality</option>
-                  <option>Construction</option>
-                  <option>Agriculture</option>
-                  <option>Finance & Insurance</option>
-                  <option>Events & Entertainment</option>
-                  <option>Sports & Fitness</option>
-                  <option>Others</option>
+                  <option value="All Categories">All Categories</option>
+                  {getHomeDynamicMainCategories().map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                  <option value="Others">Others</option>
                 </select>
               </div>
 
@@ -799,7 +853,7 @@ export default function Home() {
       </section>
 
       {/* 2. Four Trust Indicators Cards (Row as a single unified bar matching mockup) */}
-      <section className="max-w-7xl w-full px-4 md:px-8 z-10 -mt-8">
+      <section className="max-w-[1440px] w-full px-4 md:px-8 z-10 -mt-8">
         <div className="bg-white border border-slate-200/60 rounded-[20px] shadow-lg py-5 px-6 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-0 lg:divide-x lg:divide-slate-100">
           {[
             { icon: <ShieldCheck className="h-5.5 w-5.5 text-[#027244]" />, title: 'Verified Businesses', desc: 'All businesses are manually verified' },
@@ -830,7 +884,7 @@ export default function Home() {
       </section>
 
       {/* 3. Top Categories Section (Using premium vector icons) */}
-      <section className="max-w-7xl w-full px-4 md:px-8 py-10 flex flex-col gap-8">
+      <section className="max-w-[1440px] w-full px-4 md:px-8 py-6 md:py-10 flex flex-col gap-4 md:gap-8">
         <div className="flex justify-between items-end border-b border-slate-200/80 pb-3">
           <div>
             <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Top Categories</h2>
@@ -845,7 +899,7 @@ export default function Home() {
           {/* Scroll Left Button */}
           <button 
             onClick={() => handleScrollCategories('left')}
-            className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+            className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
             aria-label="Scroll Categories Left"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -872,7 +926,7 @@ export default function Home() {
           {/* Scroll Right Button */}
           <button 
             onClick={() => handleScrollCategories('right')}
-            className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+            className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
             aria-label="Scroll Categories Right"
           >
             <ChevronRight className="h-5 w-5" />
@@ -881,7 +935,7 @@ export default function Home() {
       </section>
 
       {/* 4. Featured Businesses Section (With side chevrons!) */}
-      <section className="max-w-7xl w-full px-4 md:px-8 py-12 flex flex-col gap-8 relative">
+      <section className="max-w-[1440px] w-full px-4 md:px-8 py-6 md:py-12 flex flex-col gap-4 md:gap-8 relative">
         <div className="flex justify-between items-end border-b border-slate-200/80 pb-3">
           <div>
             <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Featured Businesses</h2>
@@ -1010,7 +1064,7 @@ export default function Home() {
 
       {/* 5. Statistics Sections Band (Exact theme color match) */}
       <section className="w-full bg-[#001c41] text-white py-8 sm:py-14 px-4 border-y border-[#001430]">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-10 text-center">
+        <div className="max-w-[1440px] mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-10 text-center">
           {[
             { value: '500+', label: 'Businesses Listed', icon: <Users2 className="h-5 w-5 text-emerald-400" /> },
             { value: '50+', label: 'Categories Covered', icon: <LayoutGrid className="h-5 w-5 text-emerald-400" /> },
@@ -1030,17 +1084,17 @@ export default function Home() {
 
       {/* Top Viewed Businesses Section (Horizontal scrollable row with manual scroll chevron controls) */}
       {topViewedBusinesses && topViewedBusinesses.length > 0 && (
-        <section className="w-full py-12 flex flex-col gap-6 bg-white overflow-hidden border-b border-slate-100">
-          <div className="max-w-7xl mx-auto w-full px-4 md:px-8 flex flex-col gap-1 text-left">
+        <section className="w-full py-6 md:py-12 flex flex-col gap-6 bg-white overflow-hidden border-b border-slate-100">
+          <div className="max-w-[1440px] mx-auto w-full px-4 md:px-8 flex flex-col gap-1 text-left">
             <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Top Viewed Businesses</h2>
             <p className="text-sm text-slate-500 font-medium">Most popular local directories ranked by client profile views</p>
           </div>
           
-          <div className="max-w-7xl mx-auto w-full px-4 md:px-8 relative">
+          <div className="max-w-[1440px] mx-auto w-full px-4 md:px-8 relative">
             {/* Scroll Left Button */}
             <button 
               onClick={() => handleScrollTopViewed('left')}
-              className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+              className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
               aria-label="Scroll Top Viewed Left"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -1059,7 +1113,7 @@ export default function Home() {
                     className="w-[260px] sm:w-[285px] shrink-0 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 text-left snap-start"
                   >
                     {/* Logo/Image */}
-                    {biz.logoUrl && !biz.logoUrl.includes('images.unsplash.com') ? (
+                    {biz.logoUrl ? (
                       <div className="h-14 w-14 rounded-xl border border-slate-100 overflow-hidden bg-white shrink-0">
                         <img src={biz.logoUrl} alt={biz.name} className="h-full w-full object-cover" />
                       </div>
@@ -1095,7 +1149,7 @@ export default function Home() {
             {/* Scroll Right Button */}
             <button 
               onClick={() => handleScrollTopViewed('right')}
-              className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+              className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
               aria-label="Scroll Top Viewed Right"
             >
               <ChevronRight className="h-5 w-5" />
@@ -1105,83 +1159,106 @@ export default function Home() {
       )}
 
       {/* 6. How It Works Section (Connected with dashed lines) */}
-      <section id="how-it-works" className="max-w-7xl w-full px-4 md:px-8 py-16 flex flex-col items-center gap-12">
+      <section id="how-it-works" className="max-w-[1440px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col items-center gap-6 md:gap-12">
         <div className="text-center max-w-md">
           <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">How It Works</h2>
           <p className="text-sm text-slate-500 font-medium mt-2">Connecting local buyers with verified businesses in four easy steps</p>
         </div>
 
-        <div className="w-full flex overflow-x-auto gap-4 pb-4 scrollbar-none snap-x snap-mandatory md:grid md:grid-cols-4 md:gap-8 relative">
-          {[
-            { 
-              num: 1, 
-              title: 'Search', 
-              desc: 'Find the best businesses in Udumalpet', 
-              icon: (
-                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
-                  <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  <path d="M14 15l3 3m-2.5-4a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" stroke="#001c41" strokeWidth="2" />
-                </svg>
-              ) 
-            },
-            { 
-              num: 2, 
-              title: 'Explore', 
-              desc: 'View details, reviews and compare options', 
-              icon: (
-                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="10" cy="10" r="6" stroke="currentColor" strokeWidth="2.5" fill="#E6F2ED" />
-                  <path d="M15 15l5 5" stroke="#001c41" strokeWidth="3" strokeLinecap="round" />
-                  <path d="M8 10h4M10 8v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              ) 
-            },
-            { 
-              num: 3, 
-              title: 'Connect', 
-              desc: 'Call, WhatsApp or send enquiry easily', 
-              icon: (
-                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
-                  <path d="M14 2a5 5 0 015 5M13 5a2 2 0 012 2" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              ) 
-            },
-            { 
-              num: 4, 
-              title: 'Grow Together', 
-              desc: 'Support local businesses and grow together', 
-              icon: (
-                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
-                  <circle cx="8.5" cy="7" r="4" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
-                  <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#001c41" strokeWidth="2" />
-                </svg>
-              ) 
-            }
-          ].map((step, idx) => (
-            <div key={step.num} className={`bg-white border border-slate-200/80 p-5 md:p-6 rounded-3xl shadow-sm hover:shadow-md transition-all relative flex flex-col items-center text-center gap-3.5 md:gap-4 ${idx < 3 ? 'step-connector' : ''} w-[240px] shrink-0 snap-start md:w-auto md:shrink`}>
-              {/* Number Badge */}
-              <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-[#027244] text-white font-extrabold flex items-center justify-center text-xs shadow z-10 border border-[#027244]">
-                {step.num}
+        <div className="relative w-full">
+          {/* Scroll Left Button */}
+          <button 
+            onClick={() => handleScrollHowItWorks('left')}
+            className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95 md:hidden"
+            aria-label="Scroll How It Works Left"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+
+          <div 
+            ref={howItWorksScrollRef}
+            className="w-full flex overflow-x-auto gap-4 sm:gap-6 pb-4 scrollbar-none snap-x snap-mandatory scroll-smooth justify-start md:justify-center"
+          >
+            {[
+              { 
+                num: 1, 
+                title: 'Search', 
+                desc: 'Find the best businesses in Udumalpet', 
+                icon: (
+                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
+                    <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    <path d="M14 15l3 3m-2.5-4a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" stroke="#001c41" strokeWidth="2" />
+                  </svg>
+                ) 
+              },
+              { 
+                num: 2, 
+                title: 'Explore', 
+                desc: 'View details, reviews and compare options', 
+                icon: (
+                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="10" cy="10" r="6" stroke="currentColor" strokeWidth="2.5" fill="#E6F2ED" />
+                    <path d="M15 15l5 5" stroke="#001c41" strokeWidth="3" strokeLinecap="round" />
+                    <path d="M8 10h4M10 8v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                ) 
+              },
+              { 
+                num: 3, 
+                title: 'Connect', 
+                desc: 'Call, WhatsApp or send enquiry easily', 
+                icon: (
+                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
+                    <path d="M14 2a5 5 0 015 5M13 5a2 2 0 012 2" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                ) 
+              },
+              { 
+                num: 4, 
+                title: 'Grow Together', 
+                desc: 'Support local businesses and grow together', 
+                icon: (
+                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
+                    <circle cx="8.5" cy="7" r="4" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
+                    <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#001c41" strokeWidth="2" />
+                  </svg>
+                ) 
+              }
+            ].map((step, idx) => (
+              <div key={step.num} className={`bg-white border border-slate-200/80 p-5 md:p-6 rounded-3xl shadow-sm hover:shadow-md transition-all relative flex flex-col items-center text-center gap-3.5 md:gap-4 ${idx < 3 ? 'step-connector' : ''} w-[240px] sm:w-[280px] shrink-0 snap-start`}>
+                {/* Number Badge */}
+                <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-[#027244] text-white font-extrabold flex items-center justify-center text-xs shadow z-10 border border-[#027244]">
+                  {step.num}
+                </div>
+                {/* Vector line icon */}
+                <div className="h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-emerald-50/50 border border-emerald-100/50 flex items-center justify-center shadow-sm mt-1 z-10">
+                  {step.icon}
+                </div>
+                <h4 className="font-extrabold text-[#001c41] text-base md:text-sm leading-none mt-1 z-10">{step.title}</h4>
+                <p className="text-sm md:text-[13px] text-slate-500 leading-relaxed font-medium max-w-[190px] md:max-w-[200px] z-10">{step.desc}</p>
               </div>
-              {/* Vector line icon */}
-              <div className="h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-emerald-50/50 border border-emerald-100/50 flex items-center justify-center shadow-sm mt-1 z-10">
-                {step.icon}
-              </div>
-              <h4 className="font-extrabold text-[#001c41] text-xs md:text-sm leading-none mt-1 z-10">{step.title}</h4>
-              <p className="text-[11px] md:text-[13px] text-slate-500 leading-relaxed font-medium max-w-[190px] md:max-w-[200px] z-10">{step.desc}</p>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          {/* Scroll Right Button */}
+          <button 
+            onClick={() => handleScrollHowItWorks('right')}
+            className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95 md:hidden"
+            aria-label="Scroll How It Works Right"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
       </section>
 
 
 
       {/* 8. What People Say Section */}
-      <section className="w-full bg-slate-50/50 py-16 px-4 border-t border-slate-200/50 relative">
-        <div className="max-w-6xl mx-auto flex flex-col items-center gap-10 relative">
+      <section className="w-full bg-slate-50/50 py-8 md:py-16 px-4 border-t border-slate-200/50 relative">
+        <div className="max-w-6xl mx-auto flex flex-col items-center gap-6 md:gap-10 relative">
           
           <div className="w-full flex justify-between items-end">
             <div className="text-left">
@@ -1262,81 +1339,104 @@ export default function Home() {
       </section>
 
       {/* How It Works for Businesses Section (Connected with dashed lines) */}
-      <section id="how-it-works-business" className="max-w-7xl w-full px-4 md:px-8 py-16 flex flex-col items-center gap-12 border-t border-slate-200/50">
+      <section id="how-it-works-business" className="max-w-[1440px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col items-center gap-6 md:gap-12 border-t border-slate-200/50">
         <div className="text-center max-w-md">
           <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Steps to Register</h2>
           <p className="text-sm text-slate-500 font-medium mt-2">Follow these simple steps to list and verify your business on Udumalpet Business Tour</p>
         </div>
 
-        <div className="w-full flex overflow-x-auto gap-4 pb-4 scrollbar-none snap-x snap-mandatory md:grid md:grid-cols-4 md:gap-8 relative">
-          {[
-            { 
-              num: 1, 
-              title: 'Create Account', 
-              desc: 'Sign up as a business owner in seconds with your basic contact info', 
-              icon: (
-                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
-                  <circle cx="12" cy="10" r="3" stroke="#001c41" strokeWidth="2" />
-                  <path d="M6 17c0-2 2-3 6-3s6 1 6 3" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
-                  <path d="M19 8h2m-1-1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              ) 
-            },
-            { 
-              num: 2, 
-              title: 'Choose Plan', 
-              desc: 'Select a highly affordable Monthly or Annual subscription plan', 
-              icon: (
-                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" strokeWidth="2.5" fill="#E6F2ED" />
-                  <path d="M3 10h18" stroke="#001c41" strokeWidth="2.5" />
-                  <rect x="7" y="14" width="4" height="2" rx="0.5" fill="#001c41" />
-                  <circle cx="16" cy="14" r="1.5" fill="currentColor" />
-                </svg>
-              ) 
-            },
-            { 
-              num: 3, 
-              title: 'Add Business Info', 
-              desc: 'Provide your location, business category, working hours, and contact details', 
-              icon: (
-                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
-                  <path d="M12 11h4m-8 4h8M8 7h4" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              ) 
-            },
-            { 
-              num: 4, 
-              title: 'Get Verified & Go Live', 
-              desc: 'Submit your details for coordinator vetting to receive your verified badge and live status', 
-              icon: (
-                <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
-                  <path d="M9 11l2 2 4-4" stroke="#001c41" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ) 
-            }
-          ].map((step, idx) => (
-            <div key={step.num} className={`bg-white border border-slate-200/80 p-5 md:p-6 rounded-3xl shadow-sm hover:shadow-md transition-all relative flex flex-col items-center text-center gap-3.5 md:gap-4 ${idx < 3 ? 'step-connector' : ''} w-[240px] shrink-0 snap-start md:w-auto md:shrink`}>
-              {/* Number Badge */}
-              <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-[#027244] text-white font-extrabold flex items-center justify-center text-xs shadow z-10 border border-[#027244]">
-                {step.num}
+        <div className="relative w-full">
+          {/* Scroll Left Button */}
+          <button 
+            onClick={() => handleScrollStepsRegister('left')}
+            className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95 md:hidden"
+            aria-label="Scroll Steps Register Left"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+
+          <div 
+            ref={stepsRegisterScrollRef}
+            className="w-full flex overflow-x-auto gap-4 sm:gap-6 pb-4 scrollbar-none snap-x snap-mandatory scroll-smooth justify-start md:justify-center"
+          >
+            {[
+              { 
+                num: 1, 
+                title: 'Create Account', 
+                desc: 'Sign up as a business owner in seconds with your basic contact info', 
+                icon: (
+                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
+                    <circle cx="12" cy="10" r="3" stroke="#001c41" strokeWidth="2" />
+                    <path d="M6 17c0-2 2-3 6-3s6 1 6 3" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
+                    <path d="M19 8h2m-1-1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                ) 
+              },
+              { 
+                num: 2, 
+                title: 'Choose Plan', 
+                desc: 'Select a highly affordable Monthly or Annual subscription plan', 
+                icon: (
+                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" strokeWidth="2.5" fill="#E6F2ED" />
+                    <path d="M3 10h18" stroke="#001c41" strokeWidth="2.5" />
+                    <rect x="7" y="14" width="4" height="2" rx="0.5" fill="#001c41" />
+                    <circle cx="16" cy="14" r="1.5" fill="currentColor" />
+                  </svg>
+                ) 
+              },
+              { 
+                num: 3, 
+                title: 'Add Business Info', 
+                desc: 'Provide your location, business category, working hours, and contact details', 
+                icon: (
+                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
+                    <path d="M12 11h4m-8 4h8M8 7h4" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                ) 
+              },
+              { 
+                num: 4, 
+                title: 'Get Verified & Go Live', 
+                desc: 'Submit your details for coordinator vetting to receive your verified badge and live status', 
+                icon: (
+                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
+                    <path d="M9 11l2 2 4-4" stroke="#001c41" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) 
+              }
+            ].map((step, idx) => (
+              <div key={step.num} className={`bg-white border border-slate-200/80 p-5 md:p-6 rounded-3xl shadow-sm hover:shadow-md transition-all relative flex flex-col items-center text-center gap-3.5 md:gap-4 ${idx < 3 ? 'step-connector' : ''} w-[240px] sm:w-[280px] shrink-0 snap-start`}>
+                {/* Number Badge */}
+                <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-[#027244] text-white font-extrabold flex items-center justify-center text-xs shadow z-10 border border-[#027244]">
+                  {step.num}
+                </div>
+                {/* Vector line icon */}
+                <div className="h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-emerald-50/50 border border-emerald-100/50 flex items-center justify-center shadow-sm mt-1 z-10">
+                  {step.icon}
+                </div>
+                <h4 className="font-extrabold text-[#001c41] text-base md:text-sm leading-none mt-1 z-10">{step.title}</h4>
+                <p className="text-sm md:text-[13px] text-slate-500 leading-relaxed font-medium max-w-[190px] md:max-w-[200px] z-10">{step.desc}</p>
               </div>
-              {/* Vector line icon */}
-              <div className="h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-emerald-50/50 border border-emerald-100/50 flex items-center justify-center shadow-sm mt-1 z-10">
-                {step.icon}
-              </div>
-              <h4 className="font-extrabold text-[#001c41] text-xs md:text-sm leading-none mt-1 z-10">{step.title}</h4>
-              <p className="text-[11px] md:text-[13px] text-slate-500 leading-relaxed font-medium max-w-[190px] md:max-w-[200px] z-10">{step.desc}</p>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          {/* Scroll Right Button */}
+          <button 
+            onClick={() => handleScrollStepsRegister('right')}
+            className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95 md:hidden"
+            aria-label="Scroll Steps Register Right"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
       </section>
 
       {/* 8. FAQ Section */}
-      <section id="faq" className="max-w-6xl w-full px-4 md:px-8 py-16 flex flex-col gap-12 border-t border-slate-200/50">
+      <section id="faq" className="max-w-6xl w-full px-4 md:px-8 py-8 md:py-16 flex flex-col gap-6 md:gap-12 border-t border-slate-200/50">
         
         {/* Header Block: Image left to FAQ heading */}
         <div className="w-full flex flex-col md:flex-row items-center gap-6 md:gap-10 text-center md:text-left">
@@ -1359,7 +1459,7 @@ export default function Home() {
           <button 
             onClick={() => handleScrollFaqs('left')}
             aria-label="Scroll FAQs left"
-            className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+            className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -1426,7 +1526,7 @@ export default function Home() {
           <button 
             onClick={() => handleScrollFaqs('right')}
             aria-label="Scroll FAQs right"
-            className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+            className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
           >
             <ChevronRight className="h-5 w-5" />
           </button>

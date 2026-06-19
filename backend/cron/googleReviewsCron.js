@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const Business = require('../models/Business');
+const Review = require('../models/Review');
 
 const cleanTimingStr = (str) => str.replace(/[\u2013\u2014\u2012\u2010]/g, '-').replace(/[\u202F\u00A0]/g, ' ').trim();
 
@@ -43,6 +44,18 @@ const fetchGooglePlaceDetails = async (placeId, apiKey) => {
 
     if (result.error) {
       console.warn(`[GoogleReviewsCron] Places API (New) error for ${placeId}: ${result.error.message}`);
+      if (result.error.message.toLowerCase().includes('permission') || result.error.message.toLowerCase().includes('not enabled')) {
+        console.warn(
+          `[GoogleReviewsCron] DIAGNOSTIC TIP: "The caller does not have permission" usually means ` +
+          `the "Places API (New)" is not enabled in your Google Cloud Console for the project associated ` +
+          `with GOOGLE_MAPS_API_KEY, or your API key restrictions do not authorize this API, or billing is active. ` +
+          `Please enable "Places API (New)" and ensure billing is linked.`
+        );
+      } else if (result.error.message.toLowerCase().includes('expired') || result.error.message.toLowerCase().includes('api key')) {
+        console.warn(
+          `[GoogleReviewsCron] DIAGNOSTIC TIP: The API key has expired or is invalid. Please renew it.`
+        );
+      }
       return null;
     }
 
@@ -129,9 +142,27 @@ const runGoogleReviewsSync = async () => {
       const details = await fetchGooglePlaceDetails(biz.googlePlaceId, apiKey);
 
       if (details) {
+        // Fetch all local reviews for this business
+        const allLocalReviews = await Review.find({ businessId: biz._id });
+        const localCount = allLocalReviews.length;
+        const localSum = allLocalReviews.reduce((sum, r) => sum + r.rating, 0);
+
+        // Compute combined count and rating
+        const rawGoogleReviewsCount = details.googleReviewsCount || 0;
+        const rawGoogleRating = details.googleRating || 0;
+
+        const combinedReviewsCount = localCount + rawGoogleReviewsCount;
+        let combinedRating = rawGoogleRating;
+        if (combinedReviewsCount > 0) {
+          const googleWeight = rawGoogleRating * rawGoogleReviewsCount;
+          combinedRating = (localSum + googleWeight) / combinedReviewsCount;
+        }
+
         const updateData = {
-          googleRating: details.googleRating,
-          googleReviewsCount: details.googleReviewsCount,
+          rawGoogleRating,
+          rawGoogleReviewsCount,
+          googleRating: Number(combinedRating.toFixed(1)),
+          googleReviewsCount: combinedReviewsCount,
           googleReviews: details.googleReviews,
           googleLinked: true,
         };
@@ -142,8 +173,8 @@ const runGoogleReviewsSync = async () => {
         updated++;
         console.log(
           `[GoogleReviewsCron] ✓ Synced "${biz.name}" — ` +
-          `${details.googleRating}★ (${details.googleReviewsCount} reviews, ` +
-          `${details.googleReviews.length} fetched)`
+          `Google: ${rawGoogleRating}★ (${rawGoogleReviewsCount} reviews), ` +
+          `Combined: ${combinedRating.toFixed(1)}★ (${combinedReviewsCount} reviews)`
         );
       } else {
         failed++;

@@ -305,3 +305,8 @@ button:active, .btn-active-press:active, a.btn:active {
   animation-play-state: paused;
 }
 
+/* Colorizes logo image to UBT brand dark green (#027244) */
+.filter-brand-green {
+  filter: brightness(0) saturate(100%) invert(27%) sepia(82%) saturate(996%) hue-rotate(113deg) brightness(93%) contrast(98%);
+}
+

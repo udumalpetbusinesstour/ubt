@@ -1319,10 +1319,9 @@ function BusinessesList() {
       <div className="w-full flex flex-col items-center bg-[#F8FAFC]">
         {/* Header Banner */}
         <section 
-          className="w-full relative min-h-[260px] bg-slate-950 text-white py-10 px-4 md:px-8 border-b border-slate-800 bg-cover bg-center"
-          style={{ backgroundImage: "linear-gradient(to bottom, rgba(0, 28, 65, 0.85), rgba(0, 28, 65, 0.98)), url('/thirumoorthy_hills.png')" }}
+          className="w-full relative min-h-[260px] bg-[#001c41] text-white py-10 px-4 md:px-8 border-b border-slate-800"
         >
-          <div className="relative max-w-7xl mx-auto flex flex-col items-center z-10 text-left">
+          <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 text-left">
             <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-2">
               <Link to="/" className="hover:text-emerald-450 transition-colors">Home</Link>
               <span className="text-slate-505">&gt;</span>
@@ -1428,10 +1427,9 @@ function BusinessesList() {
       <div className="w-full flex flex-col items-center bg-[#F8FAFC]">
         {/* Header Banner */}
         <section 
-          className="w-full relative min-h-[260px] bg-slate-950 text-white py-10 px-4 md:px-8 border-b border-slate-800 bg-cover bg-center"
-          style={{ backgroundImage: "linear-gradient(to bottom, rgba(0, 28, 65, 0.85), rgba(0, 28, 65, 0.98)), url('/thirumoorthy_hills.png')" }}
+          className="w-full relative min-h-[260px] bg-[#001c41] text-white py-10 px-4 md:px-8 border-b border-slate-800"
         >
-          <div className="relative max-w-7xl mx-auto flex flex-col items-center z-10 text-left">
+          <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 text-left">
             <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-2">
               <Link to="/" className="hover:text-emerald-450 transition-colors">Home</Link>
               <span className="text-slate-505">&gt;</span>
@@ -1669,10 +1667,9 @@ function BusinessesList() {
       <div className="w-full flex flex-col items-center bg-[#F8FAFC]">
         {/* Header Banner */}
         <section 
-          className="w-full relative min-h-[200px] md:min-h-[260px] bg-slate-950 text-white py-6 md:py-10 px-4 md:px-8 border-b border-slate-800 bg-cover bg-center"
-          style={{ backgroundImage: "linear-gradient(to bottom, rgba(0, 28, 65, 0.8), rgba(0, 28, 65, 0.95)), url('/thirumoorthy_hills.png')" }}
+          className="w-full relative min-h-[200px] md:min-h-[260px] bg-[#001c41] text-white py-6 md:py-10 px-4 md:px-8 border-b border-slate-800"
         >
-          <div className="relative max-w-7xl mx-auto flex flex-col items-center z-10 text-left">
+          <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 text-left">
             <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-2">
               <Link to="/" className="hover:text-emerald-450 transition-colors">Home</Link>
               <span className="text-slate-505">&gt;</span>
@@ -1702,7 +1699,7 @@ function BusinessesList() {
         </section>
 
         {/* Main Two-Column Split Grid */}
-        <section className="max-w-7xl w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <section className="max-w-[1440px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
           
           {/* Left Column: Main categories grid, search results, or subcategory drilldown */}
           <div className="lg:col-span-3 flex flex-col gap-6">
@@ -2523,10 +2520,9 @@ function BusinessesList() {
     <div className="w-full flex flex-col items-center bg-[#F8FAFC]">
       {/* Search Header Banner */}
       <section 
-        className="w-full relative min-h-[200px] md:min-h-[260px] bg-slate-950 text-white py-6 md:py-10 px-4 md:px-8 border-b border-slate-800 bg-cover bg-center"
-        style={{ backgroundImage: "linear-gradient(to bottom, rgba(0, 28, 65, 0.8), rgba(0, 28, 65, 0.95)), url('/thirumoorthy_hills.png')" }}
+        className="w-full relative min-h-[200px] md:min-h-[260px] bg-[#001c41] text-white py-6 md:py-10 px-4 md:px-8 border-b border-slate-800"
       >
-        <div className="relative max-w-7xl mx-auto flex flex-col items-center z-10">
+        <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10">
           
           {/* Breadcrumbs */}
           <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-2">
@@ -2629,7 +2625,7 @@ function BusinessesList() {
       </section>
 
       {/* Main Two-column Content Grid */}
-      <section className="max-w-7xl w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <section className="max-w-[1440px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* Mobile Filter Toggle Button */}
         <div className="lg:hidden flex items-center justify-between gap-4 w-full bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm mb-1.5 text-left col-span-1">
@@ -2968,7 +2964,7 @@ function BusinessesList() {
       </section>
 
       {/* Footer Trust Bar & Business Callout (Combined in one gorgeous container as per mockup crop) */}
-      <div className="max-w-7xl w-full border border-slate-200/80 bg-white rounded-3xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 mt-12 shadow-sm font-sans">
+      <div className="max-w-[1440px] w-full border border-slate-200/80 bg-white rounded-3xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 mt-12 shadow-sm font-sans">
         
         {/* Left Col (Col-span-9): Solid Navy Blue panel with 4 trust columns separated by lines */}
         <div className="lg:col-span-9 bg-[#001c41] text-white p-7 grid grid-cols-2 md:grid-cols-4 gap-6 items-center">

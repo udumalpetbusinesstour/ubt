@@ -46,18 +46,20 @@ router.post('/:businessId', async (req, res) => {
     const localCount = allReviews.length;
     const localSum = allReviews.reduce((sum, r) => sum + r.rating, 0);
 
-    // Merge with existing Google Rating for total display rating
-    let newAvgRating = localSum / localCount;
-    if (business.googlePlaceId && business.googleRating) {
-      // Weight average between Google reviews and local reviews
-      const totalCount = localCount + (business.googleReviewsCount || 0);
-      const googleWeight = (business.googleRating * (business.googleReviewsCount || 0));
+    // Merge with raw Google Rating for total display rating
+    const rawGoogleReviewsCount = business.rawGoogleReviewsCount || 0;
+    const rawGoogleRating = business.rawGoogleRating || 0;
+
+    const totalCount = localCount + rawGoogleReviewsCount;
+    let newAvgRating = 0;
+    if (totalCount > 0) {
+      const googleWeight = rawGoogleRating * rawGoogleReviewsCount;
       newAvgRating = (localSum + googleWeight) / totalCount;
     }
 
-    // Update business rating
+    // Update business rating using raw Google baseline
     business.googleRating = Number(newAvgRating.toFixed(1));
-    business.googleReviewsCount = localCount + (business.googleReviewsCount || 0);
+    business.googleReviewsCount = totalCount;
     await business.save();
 
     res.status(201).json({ success: true, data: review });
@@ -145,20 +147,23 @@ router.put('/:reviewId/moderate', protect, async (req, res) => {
       // Recalculate average rating
       const allReviews = await Review.find({ businessId: business._id });
       const localCount = allReviews.length;
-      if (localCount === 0) {
-        business.googleRating = business.googlePlaceId ? (business.googleRating || 5.0) : 5.0;
-        business.googleReviewsCount = business.googlePlaceId ? (business.googleReviewsCount || 0) : 0;
+      const localSum = allReviews.reduce((sum, r) => sum + r.rating, 0);
+
+      const rawGoogleReviewsCount = business.rawGoogleReviewsCount || 0;
+      const rawGoogleRating = business.rawGoogleRating || 0;
+
+      const totalCount = localCount + rawGoogleReviewsCount;
+      let newAvgRating = 0;
+      if (totalCount > 0) {
+        const googleWeight = rawGoogleRating * rawGoogleReviewsCount;
+        newAvgRating = (localSum + googleWeight) / totalCount;
       } else {
-        const localSum = allReviews.reduce((sum, r) => sum + r.rating, 0);
-        let newAvgRating = localSum / localCount;
-        if (business.googlePlaceId && business.googleRating) {
-          const totalCount = localCount + (business.googleReviewsCount || 0);
-          const googleWeight = (business.googleRating * (business.googleReviewsCount || 0));
-          newAvgRating = (localSum + googleWeight) / totalCount;
-        }
-        business.googleRating = Number(newAvgRating.toFixed(1));
-        business.googleReviewsCount = localCount + (business.googleReviewsCount || 0);
+        // Fallback to default if no reviews at all
+        newAvgRating = business.googlePlaceId ? (rawGoogleRating || 5.0) : 5.0;
       }
+
+      business.googleRating = Number(newAvgRating.toFixed(1));
+      business.googleReviewsCount = totalCount;
       await business.save();
       return res.json({ success: true, message: 'Review permanently deleted' });
     }

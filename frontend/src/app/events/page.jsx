@@ -1742,10 +1742,9 @@ export default function EventsPage() {
     <div className="w-full flex flex-col items-center bg-[#F8FAFC]">
       {/* 1. Header Scenic Banner Overlay */}
       <section 
-        className="w-full relative min-h-[200px] md:min-h-[260px] bg-slate-950 text-white py-6 md:py-10 px-4 md:px-8 border-b border-slate-800 bg-cover bg-center"
-        style={{ backgroundImage: "linear-gradient(to bottom, rgba(0, 28, 65, 0.8), rgba(0, 28, 65, 0.95)), url('/thirumoorthy_hills.png')" }}
+        className="w-full relative min-h-[200px] md:min-h-[260px] bg-[#001c41] text-white py-6 md:py-10 px-4 md:px-8 border-b border-slate-800"
       >
-        <div className="relative max-w-7xl mx-auto flex flex-col items-center z-10">
+        <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10">
           {/* Breadcrumbs */}
           <div className="flex items-center gap-1.5 text-xs text-slate-355 font-bold self-start mt-2">
             <Link to="/" className="hover:text-emerald-455 transition-colors">Home</Link>
@@ -1818,7 +1817,7 @@ export default function EventsPage() {
       </section>
 
       {/* 2. Main content grids */}
-      <section className="max-w-7xl w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <section className="max-w-[1440px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* Left Column Listings (Col-span-3) */}
         <div className="lg:col-span-3 flex flex-col gap-6">

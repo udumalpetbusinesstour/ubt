@@ -478,12 +478,11 @@ export default function BlogsPage() {
       
       {/* 1. Header Banner */}
       <section 
-        className="w-full relative py-8 md:py-16 px-4 md:px-8 bg-cover bg-center text-white overflow-hidden shadow-md"
-        style={{ backgroundImage: "linear-gradient(to bottom, rgba(0, 28, 65, 0.8), rgba(0, 28, 65, 0.95)), url('/thirumoorthy_hills.png')" }}
+        className="w-full relative py-8 md:py-16 px-4 md:px-8 bg-[#001c41] text-white overflow-hidden shadow-md"
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent opacity-60 pointer-events-none" />
         
-        <div className="relative max-w-7xl mx-auto flex flex-col items-center z-10 text-center">
+        <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 text-center">
           
           {/* Breadcrumbs */}
           <div className="flex items-center gap-1.5 text-xs text-slate-300/80 font-bold mt-2">
@@ -531,7 +530,7 @@ export default function BlogsPage() {
       </section>
 
       {/* Main Content Wrap */}
-      <div className="max-w-7xl w-full px-4 md:px-8 mt-12 flex flex-col gap-12">
+      <div className="max-w-[1440px] w-full px-4 md:px-8 mt-12 flex flex-col gap-12">
         
         {/* 2. Featured Articles Section (Only shown when viewing all categories and no active search filter) */}
         {activeCategory === 'All' && !searchQuery && featuredBlogs.length > 0 && (

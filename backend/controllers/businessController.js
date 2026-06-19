@@ -254,9 +254,26 @@ const syncGoogleBusiness = async (req, res, next) => {
       return sendError(res, 403, 'You are not authorized to sync Google integration parameters for this listing.');
     }
 
+    // Fetch all local reviews to calculate combined metrics
+    const allLocalReviews = await Review.find({ businessId: business._id });
+    const localCount = allLocalReviews.length;
+    const localSum = allLocalReviews.reduce((sum, r) => sum + r.rating, 0);
+
+    const rawGoogleReviewsCount = googleReviewsCount !== undefined ? Number(googleReviewsCount) : (business.rawGoogleReviewsCount || 0);
+    const rawGoogleRating = googleRating !== undefined ? Number(googleRating) : (business.rawGoogleRating || 0);
+
+    const combinedReviewsCount = localCount + rawGoogleReviewsCount;
+    let combinedRating = rawGoogleRating;
+    if (combinedReviewsCount > 0) {
+      const googleWeight = rawGoogleRating * rawGoogleReviewsCount;
+      combinedRating = (localSum + googleWeight) / combinedReviewsCount;
+    }
+
     business.googlePlaceId = googlePlaceId || business.googlePlaceId;
-    business.googleRating = googleRating || business.googleRating;
-    business.googleReviewsCount = googleReviewsCount || business.googleReviewsCount;
+    business.rawGoogleRating = rawGoogleRating;
+    business.rawGoogleReviewsCount = rawGoogleReviewsCount;
+    business.googleRating = Number(combinedRating.toFixed(1));
+    business.googleReviewsCount = combinedReviewsCount;
     business.isAddressVerified = true;
     business.googleLinked = true;
     

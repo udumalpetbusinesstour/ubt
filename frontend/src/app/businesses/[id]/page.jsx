@@ -1119,7 +1119,7 @@ Please confirm availability and delivery time.`;
           </div>
         )}
 
-        <div className="relative max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10">
+        <div className="relative max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10">
           <div className="flex flex-col gap-3 w-full">
             {/* Go Back button with Left Arrow */}
             <button 
@@ -1147,7 +1147,7 @@ Please confirm availability and delivery time.`;
             
             {/* Title Block with Logo and Verified Badge */}
             <div className="flex items-center gap-4 mt-2 flex-wrap text-left">
-              {business.logoUrl && !business.logoUrl.includes('images.unsplash.com') ? (
+              {business.logoUrl ? (
                 <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-white shadow-md shrink-0 flex items-center justify-center">
                   <img src={business.logoUrl} alt={`${business.name} Logo`} className="h-full w-full object-cover" />
                 </div>
@@ -1343,7 +1343,7 @@ Please confirm availability and delivery time.`;
       {/* Tabs navigation bar */}
       {!isGovernmentalOrPublic(business) && (
         <section className="w-full bg-white border-b border-slate-200/80 sticky top-[76px] z-20 shadow-xs">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 flex overflow-x-auto gap-8">
+          <div className="max-w-[1440px] mx-auto px-4 md:px-8 flex overflow-x-auto gap-8">
             {[
               { id: 'overview', label: 'Overview' },
               ...(isFoodRelated(business?.category, business?.customCategoryName) ? [
@@ -1374,7 +1374,7 @@ Please confirm availability and delivery time.`;
       )}
 
       {/* Main Grid Content */}
-      <section className="max-w-7xl w-full px-4 md:px-8 py-10 relative">
+      <section className="max-w-[1440px] w-full px-4 md:px-8 py-10 relative">
         <div 
           className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full"
           style={{
