@@ -44,6 +44,31 @@ const isGovernmentalOrPublic = (biz) => {
   return false;
 };
 
+const getQuickTimingsDisplay = (timings) => {
+  if (!timings || typeof timings !== 'object') {
+    return <span>9:00 AM - 8:00 PM</span>;
+  }
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const today = days[new Date().getDay()];
+  const todayTiming = timings[today] || 'Closed';
+  return (
+    <div className="flex flex-col">
+      <span>Today ({today.slice(0, 3)}): {todayTiming}</span>
+      <span className="text-[11px] text-slate-400 font-semibold mt-0.5">Full hours in sidebar</span>
+    </div>
+  );
+};
+
+const getTimingsSummaryString = (timings) => {
+  if (!timings || typeof timings !== 'object') {
+    return typeof timings === 'string' ? timings : '9:00 AM - 8:00 PM';
+  }
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const today = days[new Date().getDay()];
+  const todayTiming = timings[today] || 'Closed';
+  return `Today (${today.slice(0, 3)}): ${todayTiming}`;
+};
+
 const viewedBusinesses = new Set();
 
 export default function BusinessDetail() {
@@ -1519,10 +1544,7 @@ Please confirm availability and delivery time.`;
                           {business.parentBusinessId && business.workingHours ? (
                             <span>{business.workingHours}</span>
                           ) : (
-                            <>
-                              <span>Mon - Sat: {business.timings?.Monday || '9:00 AM - 8:00 PM'}</span>
-                              {business.timings?.Sunday && <span>Sun: {business.timings.Sunday}</span>}
-                            </>
+                            getQuickTimingsDisplay(business.timings)
                           )}
                         </div>
                       </div>
@@ -2398,8 +2420,8 @@ Please confirm availability and delivery time.`;
                         <span className="text-slate-605 font-medium leading-relaxed mt-1">
                           {selectedBranch === null
                             ? (business.parentBusiness 
-                              ? `Mon - Sat: ${business.parentBusiness.timings?.Monday || '9:00 AM - 8:00 PM'}${business.parentBusiness.timings?.Sunday ? ` | Sun: ${business.parentBusiness.timings.Sunday}` : ''}`
-                              : `Mon - Sat: ${business.timings?.Monday || '9:00 AM - 8:00 PM'}${business.timings?.Sunday ? ` | Sun: ${business.timings.Sunday}` : ''}`)
+                              ? getTimingsSummaryString(business.parentBusiness.timings)
+                              : getTimingsSummaryString(business.timings))
                             : (selectedBranch.workingHours || '9:00 AM - 8:00 PM')}
                         </span>
                       </div>

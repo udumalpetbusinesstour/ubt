@@ -907,6 +907,12 @@ router.post('/google-autofill', async (req, res) => {
     
     if (result.error) {
       console.warn(`Google Place Details API (New) error: ${result.error.message}. Falling back to mock details.`);
+      
+      const isMockKey = !apiKey || apiKey.includes('mockKeyId');
+      if (!isMockKey) {
+        return res.status(400).json({ success: false, message: `Google Places API Error: ${result.error.message}` });
+      }
+
       let detail = mockDetails[placeId];
       if (!detail) {
         const lowerId = String(placeId || '').toLowerCase();
@@ -1094,8 +1100,12 @@ router.post('/google-autofill-link', async (req, res) => {
       console.warn('Failed to extract coordinates from URL:', e);
     }
 
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+    const isMockKey = !apiKey || apiKey.includes('mockKeyId');
+
     // 4. Map specific test links or keywords to mock details (checking both target and original links)
-    if (!placeId) {
+    // Only perform mock overrides if we do not have a valid, active API Key!
+    if (!placeId && isMockKey) {
       const linkLower = targetLink.toLowerCase();
       const origLower = originalLink.toLowerCase();
       
@@ -1134,9 +1144,6 @@ router.post('/google-autofill-link', async (req, res) => {
         }
       }
     }
-
-    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-    const isMockKey = !apiKey || apiKey.includes('mockKeyId');
 
     // 5. Try Google Text Search to resolve name to Place ID if API Key is real and we still don't have placeId
     if (!placeId && extractedName && apiKey && !isMockKey) {

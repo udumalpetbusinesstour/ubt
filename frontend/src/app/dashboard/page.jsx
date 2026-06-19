@@ -4784,7 +4784,16 @@ function DashboardContent() {
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Working Hours</span>
-                                <span className="font-extrabold text-slate-800 mt-1">Mon - Sat: {business.timings?.Monday || '9:00 AM - 8:00 PM'}</span>
+                                <span className="font-extrabold text-slate-800 mt-1">
+                                  {(() => {
+                                    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                                    const today = days[new Date().getDay()];
+                                    const todayTiming = (business.timings && typeof business.timings === 'object')
+                                      ? (business.timings[today] || 'Closed')
+                                      : (typeof business.timings === 'string' ? business.timings : '9:00 AM - 8:00 PM');
+                                    return `Today (${today.slice(0, 3)}): ${todayTiming}`;
+                                  })()}
+                                </span>
                               </div>
                             </div>
 
