@@ -2105,7 +2105,7 @@ Please confirm availability and delivery time.`;
                     <div key={dist.stars} className="flex items-center gap-3">
                       <span className="w-4 text-right text-slate-450">{dist.stars}★</span>
                       <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-450" style={{ width: dist.pct }} />
+                        <div className="h-full bg-amber-500" style={{ width: dist.pct }} />
                       </div>
                       <span className="w-12 text-slate-400 text-right font-semibold">{dist.count} ({dist.pct})</span>
                     </div>
@@ -2684,7 +2684,7 @@ Please confirm availability and delivery time.`;
                 <Globe className="h-32 w-32" />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-amber-450 text-[10px] font-black uppercase tracking-widest">Are you a Business Owner?</span>
+                <span className="text-amber-500 text-[10px] font-black uppercase tracking-widest">Are you a Business Owner?</span>
                 <h4 className="font-extrabold text-sm text-white mt-1.5 leading-snug">Get more visibility and new customers by listing your business today.</h4>
               </div>
               <div className="flex flex-col gap-2.5 text-xs text-slate-300 font-semibold mt-1">

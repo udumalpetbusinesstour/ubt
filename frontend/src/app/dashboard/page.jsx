@@ -5088,7 +5088,7 @@ function DashboardContent() {
                                 <div key={dist.stars} className="flex items-center gap-3">
                                   <span className="w-4 text-right text-slate-400">{dist.stars}★</span>
                                   <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                                    <div className="h-full bg-amber-450" style={{ width: dist.pct }} />
+                                    <div className="h-full bg-amber-500" style={{ width: dist.pct }} />
                                   </div>
                                   <span className="w-12 text-slate-400 text-right font-semibold">{dist.count}</span>
                                 </div>
