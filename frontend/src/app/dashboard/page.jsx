@@ -841,6 +841,36 @@ function DashboardContent() {
     { id: '5', authorName: 'Manoj Kumar', rating: 4, time: '3 weeks ago', text: 'Cooperative staff and wide range of items. Highly helpful in emergency wiring issues.', source: 'google', status: 'approved' },
   ]);
 
+  // Dynamic calculations for reviews and ratings
+  const localReviewsCount = (localReviews || []).length;
+  const localAvgRating = localReviewsCount > 0 
+    ? Number(((localReviews || []).reduce((sum, r) => sum + (r.rating || 5), 0) / localReviewsCount).toFixed(1)) 
+    : 0;
+
+  const googleReviewsCountVal = business?.rawGoogleReviewsCount || 0;
+  const googleAvgRatingVal = business?.rawGoogleRating || 0;
+
+  const overallReviewsCount = localReviewsCount + googleReviewsCountVal;
+  const overallAvgRating = overallReviewsCount > 0 
+    ? Number((((localReviews || []).reduce((sum, r) => sum + (r.rating || 5), 0) + (googleAvgRatingVal * googleReviewsCountVal)) / overallReviewsCount).toFixed(1)) 
+    : 0;
+
+  const localReviewsWithReplies = (localReviews || []).filter(r => r.replied || r.replyText || reviewResponses[r.id]).length;
+  const responseRate = localReviewsCount > 0 ? Math.round((localReviewsWithReplies / localReviewsCount) * 100) : 100;
+
+  let reputationLevel = 'Good';
+  if (localReviewsCount === 0) {
+    reputationLevel = 'New Listing';
+  } else if (responseRate >= 90 && overallAvgRating >= 4.5) {
+    reputationLevel = 'Excellent';
+  } else if (responseRate >= 75 && overallAvgRating >= 4.0) {
+    reputationLevel = 'Very Good';
+  } else if (responseRate >= 50 && overallAvgRating >= 3.0) {
+    reputationLevel = 'Good';
+  } else {
+    reputationLevel = 'Needs Attention';
+  }
+
   const [offersList, setOffersList] = useState([
     { id: '1', title: 'Festival Special Ghee Roast', description: 'Buy 2 Get 1 Free on all special ghee roast items. Valid on dining.', rate: 'Buy 2 Get 1', expiry: '2026-06-30', active: true, banner: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80' },
     { id: '2', title: 'Monsoon Discount Campaign', description: 'Flat 10% Off on all electrical installation services. Safe & verified engineers.', rate: '10% OFF', expiry: '2026-07-15', active: true, banner: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80' },
@@ -3424,9 +3454,9 @@ function DashboardContent() {
     }
   };
 
-  const getRatingDistribution = (rating, reviewsCount, reviewsList) => {
+  const getRatingDistribution = (rating, reviewsCount) => {
     const avgRating = rating || 5;
-    const totalCount = reviewsCount || (reviewsList ? reviewsList.length : 0);
+    const totalCount = reviewsCount || 0;
     
     if (totalCount === 0) {
       return [
@@ -3438,68 +3468,56 @@ function DashboardContent() {
       ];
     }
     
-    const actualCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    if (reviewsList && reviewsList.length > 0) {
-      reviewsList.forEach(r => {
-        const roundedRating = Math.round(r.rating || 5);
-        if (actualCounts[roundedRating] !== undefined) {
-          actualCounts[roundedRating]++;
-        }
-      });
+    const anchors = [
+      { r: 5.0, p: [1.00, 0.00, 0.00, 0.00, 0.00] },
+      { r: 4.8, p: [0.85, 0.11, 0.03, 0.01, 0.00] },
+      { r: 4.5, p: [0.70, 0.18, 0.07, 0.03, 0.02] },
+      { r: 4.0, p: [0.45, 0.25, 0.18, 0.07, 0.05] },
+      { r: 3.5, p: [0.25, 0.30, 0.25, 0.12, 0.08] },
+      { r: 3.0, p: [0.15, 0.20, 0.30, 0.20, 0.15] },
+      { r: 2.0, p: [0.05, 0.10, 0.15, 0.35, 0.35] },
+      { r: 1.0, p: [0.00, 0.00, 0.00, 0.00, 1.00] }
+    ];
+    
+    let low = anchors[anchors.length - 1];
+    let high = anchors[0];
+    
+    for (let i = 0; i < anchors.length - 1; i++) {
+      if (avgRating <= anchors[i].r && avgRating >= anchors[i + 1].r) {
+        high = anchors[i];
+        low = anchors[i + 1];
+        break;
+      }
     }
     
-    const listSum = Object.values(actualCounts).reduce((a, b) => a + b, 0);
-    let finalCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    let t = 0;
+    if (high.r !== low.r) {
+      t = (avgRating - low.r) / (high.r - low.r);
+    }
     
-    if (listSum > 0) {
-      let currentSum = 0;
-      [5, 4, 3, 2, 1].forEach(star => {
-        const share = actualCounts[star] / listSum;
-        const calculated = Math.round(share * totalCount);
-        finalCounts[star] = calculated;
-        currentSum += calculated;
-      });
-      
-      let diff = totalCount - currentSum;
-      if (diff !== 0) {
-        let maxStar = 5;
-        let maxCount = -1;
-        [5, 4, 3, 2, 1].forEach(star => {
-          if (finalCounts[star] > maxCount) {
-            maxCount = finalCounts[star];
-            maxStar = star;
-          }
-        });
-        finalCounts[maxStar] = Math.max(0, finalCounts[maxStar] + diff);
-      }
-    } else {
-      let p5 = 0, p4 = 0, p3 = 0, p2 = 0, p1 = 0;
-      if (avgRating >= 4.8) {
-        p5 = 0.85; p4 = 0.10; p3 = 0.03; p2 = 0.01; p1 = 0.01;
-      } else if (avgRating >= 4.5) {
-        p5 = 0.70; p4 = 0.20; p3 = 0.06; p2 = 0.02; p1 = 0.02;
-      } else if (avgRating >= 4.0) {
-        p5 = 0.50; p4 = 0.30; p3 = 0.12; p2 = 0.05; p1 = 0.03;
-      } else if (avgRating >= 3.5) {
-        p5 = 0.35; p4 = 0.35; p3 = 0.18; p2 = 0.08; p1 = 0.04;
-      } else if (avgRating >= 3.0) {
-        p5 = 0.25; p4 = 0.25; p3 = 0.30; p2 = 0.12; p1 = 0.08;
-      } else {
-        p5 = 0.10; p4 = 0.15; p3 = 0.25; p2 = 0.30; p1 = 0.20;
-      }
-      
-      let currentSum = 0;
-      [5, 4, 3, 2, 1].forEach(star => {
-        const share = star === 5 ? p5 : star === 4 ? p4 : star === 3 ? p3 : star === 2 ? p2 : p1;
-        const calculated = Math.round(share * totalCount);
-        finalCounts[star] = calculated;
-        currentSum += calculated;
-      });
-      
-      let diff = totalCount - currentSum;
-      if (diff !== 0) {
-        finalCounts[5] = Math.max(0, finalCounts[5] + diff);
-      }
+    const probs = [];
+    let sumProbs = 0;
+    for (let i = 0; i < 5; i++) {
+      const p = low.p[i] + t * (high.p[i] - low.p[i]);
+      probs.push(p);
+      sumProbs += p;
+    }
+    
+    const normalizedProbs = probs.map(p => sumProbs > 0 ? p / sumProbs : 0);
+    
+    const finalCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    let currentSum = 0;
+    
+    [5, 4, 3, 2, 1].forEach((star, idx) => {
+      const share = normalizedProbs[idx];
+      const calculated = Math.round(share * totalCount);
+      finalCounts[star] = calculated;
+      currentSum += calculated;
+    });
+    
+    let diff = totalCount - currentSum;
+    if (diff !== 0) {
+      finalCounts[5] = Math.max(0, finalCounts[5] + diff);
     }
     
     return [5, 4, 3, 2, 1].map(star => {
@@ -4035,9 +4053,6 @@ function DashboardContent() {
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Total Leads</span>
                     <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{leadsList.length}</span>
-                    <span className="text-[9px] font-extrabold text-emerald-600 flex items-center gap-0.5 mt-1.5">
-                      ↑ 18% this month
-                    </span>
                   </div>
                 </div>
 
@@ -4048,10 +4063,7 @@ function DashboardContent() {
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Call Clicks</span>
-                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.callClicks ?? 46}</span>
-                    <span className="text-[9px] font-extrabold text-emerald-600 flex items-center gap-0.5 mt-1.5">
-                      ↑ 12% this month
-                    </span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.callClicks ?? 0}</span>
                   </div>
                 </div>
 
@@ -4062,10 +4074,7 @@ function DashboardContent() {
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">WhatsApp Clicks</span>
-                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.whatsappClicks ?? 82}</span>
-                    <span className="text-[9px] font-extrabold text-emerald-600 flex items-center gap-0.5 mt-1.5">
-                      ↑ 22% this month
-                    </span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.whatsappClicks ?? 0}</span>
                   </div>
                 </div>
 
@@ -4076,10 +4085,7 @@ function DashboardContent() {
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Website Clicks</span>
-                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.websiteClicks ?? 24}</span>
-                    <span className="text-[9px] font-extrabold text-emerald-600 flex items-center gap-0.5 mt-1.5">
-                      ↑ 15% this month
-                    </span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.websiteClicks ?? 0}</span>
                   </div>
                 </div>
 
@@ -4091,10 +4097,7 @@ function DashboardContent() {
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Social Clicks</span>
                     <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">
-                      {((business.facebookClicks || 0) + (business.instagramClicks || 0)) || 56}
-                    </span>
-                    <span className="text-[9px] font-extrabold text-emerald-600 flex items-center gap-0.5 mt-1.5">
-                      ↑ 19% this month
+                      {((business.facebookClicks || 0) + (business.instagramClicks || 0)) || 0}
                     </span>
                   </div>
                 </div>
@@ -4106,9 +4109,11 @@ function DashboardContent() {
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Average Rating</span>
-                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">4.7</span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">
+                      {overallReviewsCount > 0 ? overallAvgRating.toFixed(1) : '0.0'}
+                    </span>
                     <span className="text-[9px] font-bold text-slate-400 mt-1.5 truncate">
-                      (68 Reviews)
+                      ({overallReviewsCount} Reviews)
                     </span>
                   </div>
                 </div>
@@ -4204,32 +4209,36 @@ function DashboardContent() {
 
                     {/* Leads list stream */}
                     <div className="flex flex-col divide-y divide-slate-100">
-                      {mockLeads.map((lead, idx) => (
-                        <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 first:pt-0 last:pb-0 gap-3">
-                          <div className="flex items-center gap-3.5">
-                            <div className={`h-9 w-9 rounded-full ${lead.color} flex items-center justify-center font-extrabold text-xs shadow-inner shrink-0 select-none`}>
-                              {lead.initial}
+                      {leadsList.length === 0 ? (
+                        <p className="text-slate-400 font-semibold italic text-xs py-5.5 text-center">No customer leads received yet</p>
+                      ) : (
+                        leadsList.slice(0, 5).map((lead, idx) => (
+                          <div key={lead._id || idx} className="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 first:pt-0 last:pb-0 gap-3">
+                            <div className="flex items-center gap-3.5">
+                              <div className={`h-9 w-9 rounded-full ${lead.color || 'bg-slate-100 text-slate-600'} flex items-center justify-center font-extrabold text-xs shadow-inner shrink-0 select-none`}>
+                                {lead.initial}
+                              </div>
+                              <div className="flex flex-col text-left min-w-0">
+                                <span className="font-extrabold text-slate-800 text-xs truncate leading-snug">{lead.name}</span>
+                                <span className="text-[10px] text-slate-400 font-semibold mt-0.5 leading-none">{lead.category}</span>
+                              </div>
                             </div>
-                            <div className="flex flex-col text-left min-w-0">
-                              <span className="font-extrabold text-slate-800 text-xs truncate leading-snug">{lead.name}</span>
-                              <span className="text-[10px] text-slate-400 font-semibold mt-0.5 leading-none">{lead.category}</span>
-                            </div>
-                          </div>
 
-                          <div className="flex items-center justify-between sm:justify-end gap-6 self-stretch sm:self-auto shrink-0 pl-12 sm:pl-0">
-                            <a 
-                              href={`tel:${lead.phone}`}
-                              className="text-[10.5px] font-bold text-slate-600 hover:text-emerald-600 flex items-center gap-1.5 transition-colors cursor-pointer group bg-slate-50 hover:bg-emerald-50 px-3 py-1.5 rounded-lg border border-slate-200/60"
-                            >
-                              <PhoneCall className="h-3 w-3 text-slate-400 group-hover:text-emerald-600" />
-                              <span>{lead.phone}</span>
-                            </a>
-                            <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-wide">
-                              {lead.time}
-                            </span>
+                            <div className="flex items-center justify-between sm:justify-end gap-6 self-stretch sm:self-auto shrink-0 pl-12 sm:pl-0">
+                              <a 
+                                href={`tel:${lead.phone}`}
+                                className="text-[10.5px] font-bold text-slate-600 hover:text-emerald-600 flex items-center gap-1.5 transition-colors cursor-pointer group bg-slate-50 hover:bg-emerald-50 px-3 py-1.5 rounded-lg border border-slate-200/60"
+                              >
+                                <PhoneCall className="h-3 w-3 text-slate-400 group-hover:text-emerald-600" />
+                                <span>{lead.phone}</span>
+                              </a>
+                              <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-wide font-sans">
+                                {lead.time}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
 
                     {/* Wide View All Leads CTA Button */}
@@ -4263,26 +4272,30 @@ function DashboardContent() {
                       <div className="grid grid-cols-2 gap-3 mb-4">
                         <div className="bg-[#F8FAFC] border border-slate-200/60 p-3 rounded-xl flex flex-col items-center justify-center text-center gap-1">
                           <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-wider">Your Rating</span>
-                          <span className="text-xl font-extrabold text-slate-800 mt-0.5">4.7</span>
+                          <span className="text-xl font-extrabold text-slate-800 mt-0.5">
+                            {localReviewsCount > 0 ? localAvgRating.toFixed(1) : '0.0'}
+                          </span>
                           <div className="flex items-center text-amber-400 mt-0.5">
                             {[...Array(5)].map((_, i) => (
-                              <Star key={i} className="h-2.5 w-2.5 fill-current" />
+                              <Star key={i} className={`h-2.5 w-2.5 ${i < Math.floor(localAvgRating) ? 'fill-current' : 'text-slate-200 fill-none'}`} />
                             ))}
                           </div>
-                          <span className="text-[8.5px] text-slate-400 font-semibold mt-0.5">Based on 68 reviews</span>
+                          <span className="text-[8.5px] text-slate-400 font-semibold mt-0.5">Based on {localReviewsCount} reviews</span>
                         </div>
 
                         <div className="bg-[#F8FAFC] border border-slate-200/60 p-3 rounded-xl flex flex-col items-center justify-center text-center gap-1">
                           <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-wider font-sans flex items-center gap-1">
                             <span className="text-blue-500">G</span>oogle Rating
                           </span>
-                          <span className="text-xl font-extrabold text-slate-800 mt-0.5">4.6</span>
+                          <span className="text-xl font-extrabold text-slate-800 mt-0.5">
+                            {googleReviewsCountVal > 0 ? googleAvgRatingVal.toFixed(1) : '0.0'}
+                          </span>
                           <div className="flex items-center text-amber-400 mt-0.5">
                             {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`h-2.5 w-2.5 fill-current ${i === 4 ? 'text-slate-200' : ''}`} />
+                              <Star key={i} className={`h-2.5 w-2.5 ${i < Math.floor(googleAvgRatingVal) ? 'fill-current' : 'text-slate-200 fill-none'}`} />
                             ))}
                           </div>
-                          <span className="text-[8.5px] text-slate-400 font-semibold mt-0.5">Based on 128 reviews</span>
+                          <span className="text-[8.5px] text-slate-400 font-semibold mt-0.5">Based on {googleReviewsCountVal} reviews</span>
                         </div>
                       </div>
 
@@ -4290,25 +4303,52 @@ function DashboardContent() {
                       <div className="flex flex-col gap-3.5 border-t border-slate-100 pt-4 text-left">
                         <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mb-1">Recent Reviews</span>
                         
-                        {[
-                          { author: 'Karthik M', r: 5, time: '2 days ago', body: 'Excellent service and very professional team.' },
-                          { author: 'Priya S', r: 5, time: '5 days ago', body: 'Quick response and quality work. Highly recommended!' }
-                        ].map((rev, idx) => (
-                          <div key={idx} className="flex flex-col gap-1 first:pt-0 last:pb-0">
-                            <div className="flex items-center justify-between text-[11px]">
-                              <span className="font-extrabold text-slate-700">{rev.author}</span>
-                              <span className="text-[9px] font-semibold text-slate-400">{rev.time}</span>
+                        {(() => {
+                          const sortedAll = [
+                            ...(localReviews || []).map(r => ({ ...r, isGoogle: false })),
+                            ...(business?.googleReviews || []).map(g => ({
+                              id: g._id || g.id || `google-${g.authorName}-${g.createdAt}`,
+                              authorName: g.authorName,
+                              rating: g.rating,
+                              text: g.text,
+                              createdAt: g.createdAt,
+                              isGoogle: true
+                            }))
+                          ];
+                          const unique = Array.from(new Map(sortedAll.map(item => [item.id || `${item.authorName}-${item.text}`, item])).values());
+                          unique.sort((a, b) => {
+                            const dateA = a.createdAt ? new Date(a.createdAt) : (a.time ? new Date(a.time) : new Date(0));
+                            const dateB = b.createdAt ? new Date(b.createdAt) : (b.time ? new Date(b.time) : new Date(0));
+                            return dateB - dateA;
+                          });
+                          const recent = unique.slice(0, 2);
+
+                          if (recent.length === 0) {
+                            return <p className="text-[10.5px] text-slate-400 font-semibold italic mt-1 text-center py-2">No reviews received yet</p>;
+                          }
+
+                          return recent.map((rev) => (
+                            <div key={rev.id} className="flex flex-col gap-1 first:pt-0 last:pb-0">
+                              <div className="flex items-center justify-between text-[11px]">
+                                <span className="font-extrabold text-slate-700">{rev.authorName}</span>
+                                <span className="text-[9px] font-semibold text-slate-400">
+                                  {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : rev.time || 'Recent'}
+                                </span>
+                              </div>
+                              <div className="flex items-center text-amber-400 gap-0.5">
+                                {[...Array(Math.round(Number(rev.rating) || 5))].map((_, i) => (
+                                  <Star key={i} className="h-2.5 w-2.5 fill-current" />
+                                ))}
+                                {[...Array(5 - Math.round(Number(rev.rating) || 5))].map((_, i) => (
+                                  <Star key={i} className="h-2.5 w-2.5 text-slate-200 fill-none" />
+                                ))}
+                              </div>
+                              <p className="text-[10.5px] text-slate-500 leading-normal font-semibold mt-0.5 line-clamp-2">
+                                "{rev.text}"
+                              </p>
                             </div>
-                            <div className="flex items-center text-amber-400 gap-0.5">
-                              {[...Array(rev.r)].map((_, i) => (
-                                <Star key={i} className="h-2.5 w-2.5 fill-current" />
-                              ))}
-                            </div>
-                            <p className="text-[10.5px] text-slate-500 leading-normal font-semibold mt-0.5">
-                              "{rev.body}"
-                            </p>
-                          </div>
-                        ))}
+                          ));
+                        })()}
                       </div>
 
                       <button 
@@ -4681,7 +4721,7 @@ function DashboardContent() {
                             ))}
                           </div>
                           <span className="font-black text-white ml-1">{(business.googleRating ?? 4.5).toFixed(1)}</span>
-                          <span className="text-[10px] text-slate-405">({localReviews.length} Reviews)</span>
+                          <span className="text-[10px] text-slate-405">({overallReviewsCount} Reviews)</span>
                         </div>
                         <span className="text-slate-600">•</span>
                         <span className="text-emerald-450 font-bold bg-emerald-500/5 border border-emerald-500/15 px-2.5 py-1 rounded-lg">{business.type}</span>
@@ -4776,7 +4816,7 @@ function DashboardContent() {
                       { id: 'overview', label: 'Overview' },
                       { id: 'services', label: 'Services' },
                       { id: 'photos', label: `Photos (${galleryCount})` },
-                      { id: 'reviews', label: `Reviews (${localReviews.length})` },
+                      { id: 'reviews', label: `Reviews (${overallReviewsCount})` },
                       { id: 'offers', label: `Offers (${offersList.length})` },
                       { id: 'about', label: 'About' },
                       ...((branches.length > 0) ? [{ id: 'branches', label: `Branches (${branches.length + 1})` }] : []),
@@ -5163,8 +5203,7 @@ function DashboardContent() {
 
                       const ratingDist = getRatingDistribution(
                         business?.googleRating || 0,
-                        business?.googleReviewsCount || uniqueReviews.length,
-                        uniqueReviews
+                        business?.googleReviewsCount || uniqueReviews.length
                       );
 
                       return (
@@ -5200,7 +5239,7 @@ function DashboardContent() {
                                     <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                                       <div className="h-full bg-amber-500" style={{ width: dist.pct }} />
                                     </div>
-                                    <span className="w-20 shrink-0 text-slate-400 text-right font-semibold">{dist.count} ({dist.pct})</span>
+                                    <span className="w-12 shrink-0 text-slate-400 text-right font-semibold">{dist.count}</span>
                                   </div>
                                 ))}
                               </div>
@@ -6024,16 +6063,16 @@ function DashboardContent() {
                 {/* Aggregate rating card */}
                 <div className="card-premium p-6 rounded-3xl flex items-center gap-4.5 bg-white">
                   <div className="h-14 w-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center font-extrabold text-[#001c41] text-2xl shadow-inner uppercase shrink-0">
-                    4.8
+                    {overallReviewsCount > 0 ? overallAvgRating.toFixed(1) : '0.0'}
                   </div>
                   <div className="flex flex-col text-left">
                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Overall Rating</span>
                     <div className="flex items-center text-amber-400 gap-0.5 mt-1">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-3.5 w-3.5 fill-current" />
+                        <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(overallAvgRating) ? 'fill-current' : 'text-slate-200 fill-none'}`} />
                       ))}
                     </div>
-                    <span className="text-[10.5px] text-slate-450 font-bold mt-1">Based on 68 local & Google reviews</span>
+                    <span className="text-[10.5px] text-slate-450 font-bold mt-1">Based on {overallReviewsCount} local & Google reviews</span>
                   </div>
                 </div>
 
@@ -6041,19 +6080,19 @@ function DashboardContent() {
                 <div className="card-premium p-6 rounded-3xl flex flex-col justify-center text-left gap-1 bg-white">
                   <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-500">
                     <span>Local platform reviews</span>
-                    <span className="text-slate-800">4.7 / 5.0 (24 reviews)</span>
+                    <span className="text-slate-800">{localReviewsCount > 0 ? localAvgRating.toFixed(1) : '0.0'} / 5.0 ({localReviewsCount} reviews)</span>
                   </div>
                   <div className="w-full bg-slate-100 h-2 rounded-full mt-1.5 overflow-hidden">
-                    <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: '94%' }} />
+                    <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${localReviewsCount > 0 ? (localAvgRating / 5) * 100 : 0}%` }} />
                   </div>
                   <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-500 mt-2.5">
                     <span className="flex items-center gap-1">
                       <span className="text-blue-500 font-bold">G</span>oogle synced reviews
                     </span>
-                    <span className="text-slate-800">4.8 / 5.0 (44 reviews)</span>
+                    <span className="text-slate-800">{googleReviewsCountVal > 0 ? googleAvgRatingVal.toFixed(1) : '0.0'} / 5.0 ({googleReviewsCountVal} reviews)</span>
                   </div>
                   <div className="w-full bg-slate-100 h-2 rounded-full mt-1.5 overflow-hidden">
-                    <div className="bg-blue-500 h-full rounded-full transition-all duration-500" style={{ width: '96%' }} />
+                    <div className="bg-blue-500 h-full rounded-full transition-all duration-500" style={{ width: `${googleReviewsCountVal > 0 ? (googleAvgRatingVal / 5) * 100 : 0}%` }} />
                   </div>
                 </div>
 
@@ -6062,11 +6101,19 @@ function DashboardContent() {
                   <div className="flex items-center justify-between text-[10px] font-extrabold text-slate-400">
                     <span className="uppercase tracking-wider">Reputation Level</span>
                     <span className="bg-emerald-55/15 text-[#027244] border border-emerald-100 px-2.5 py-0.5 rounded-full text-[8.5px] font-black uppercase">
-                      Excellent (Top 5%)
+                      {reputationLevel}
                     </span>
                   </div>
                   <p className="text-slate-550 text-[10.5px] font-semibold leading-relaxed mt-1">
-                    Your response rate is <strong>98%</strong> with an average response time of <strong>12 mins</strong>. Maintaining this boosts search ranking placement!
+                    {localReviewsCount > 0 ? (
+                      <>
+                        Your response rate is <strong>{responseRate}%</strong> on local platform reviews. Maintaining active customer replies boosts search ranking placement!
+                      </>
+                    ) : (
+                      <>
+                        No local reviews yet. Share your review link with customers to start collecting feedback!
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
@@ -6117,129 +6164,207 @@ function DashboardContent() {
 
                 {/* Reviews Stream Container */}
                 <div className="flex flex-col divide-y divide-slate-100 p-6">
-                  {localReviews
-                    .filter(r => {
-                      if (reviewFilter !== 'All') {
-                        const stars = Number(reviewFilter);
-                        if (stars === 5 && r.rating !== 5) return false;
-                        if (stars === 4 && r.rating < 4) return false;
-                        if (stars === 3 && r.rating > 3) return false;
-                      }
-                      if (reviewSourceFilter !== 'All' && r.source !== reviewSourceFilter) return false;
-                      if (reviewSearch && !r.text.toLowerCase().includes(reviewSearch.toLowerCase()) && !r.authorName.toLowerCase().includes(reviewSearch.toLowerCase())) return false;
-                      return true;
-                    })
-                    .map((rev) => (
-                      <div key={rev.id} className="py-5.5 first:pt-0 last:pb-0 flex flex-col md:flex-row gap-4 justify-between items-start text-left hover:bg-slate-50/20 px-2 rounded-2xl transition-colors">
-                        <div className="flex-1 flex gap-3.5">
-                          <div className="h-10.5 w-10.5 rounded-full bg-emerald-50 border border-emerald-150/60 flex items-center justify-center text-emerald-800 font-extrabold text-sm shadow-xs uppercase select-none shrink-0">
-                            {(rev.authorName || 'R').charAt(0)}
-                          </div>
-                          
-                          <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-extrabold text-slate-800 text-sm leading-tight">{rev.authorName}</span>
-                              <span className="text-[10px] font-semibold text-slate-400">{rev.time}</span>
+                  {(() => {
+                    const allReviewsList = [
+                      ...(localReviews || []).map(r => ({ ...r, source: 'local', isGoogle: false })),
+                      ...(business?.googleReviews || []).map(g => ({
+                        id: g._id || g.id || `google-${g.authorName}-${g.createdAt}`,
+                        authorName: g.authorName,
+                        rating: g.rating,
+                        text: g.text,
+                        createdAt: g.createdAt,
+                        time: g.createdAt ? new Date(g.createdAt).toLocaleDateString() : 'Synced from Google',
+                        source: 'google',
+                        isGoogle: true
+                      }))
+                    ];
+                    
+                    // Remove duplicate reviews if any
+                    const uniqueReviews = Array.from(
+                      new Map(allReviewsList.map(item => [item.id || `${item.authorName}-${item.text}`, item])).values()
+                    );
+                    
+                    // Sort reviews by date descending
+                    uniqueReviews.sort((a, b) => {
+                      const dateA = a.createdAt ? new Date(a.createdAt) : (a.time ? new Date(a.time) : new Date(0));
+                      const dateB = b.createdAt ? new Date(b.createdAt) : (b.time ? new Date(b.time) : new Date(0));
+                      return dateB - dateA;
+                    });
+
+                    return uniqueReviews
+                      .filter(r => {
+                        if (reviewFilter !== 'All') {
+                          const stars = Number(reviewFilter);
+                          if (stars === 5 && r.rating !== 5) return false;
+                          if (stars === 4 && r.rating < 4) return false;
+                          if (stars === 3 && r.rating > 3) return false;
+                        }
+                        if (reviewSourceFilter !== 'All' && r.source !== reviewSourceFilter) return false;
+                        if (reviewSearch && 
+                            !r.text.toLowerCase().includes(reviewSearch.toLowerCase()) && 
+                            !r.authorName.toLowerCase().includes(reviewSearch.toLowerCase())) return false;
+                        return true;
+                      })
+                      .map((rev) => {
+                        const ownerResponse = reviewResponses[rev.id] || rev.replyText;
+                        return (
+                          <div key={rev.id} className="py-5.5 first:pt-0 last:pb-0 flex flex-col md:flex-row gap-4 justify-between items-start text-left hover:bg-slate-50/20 px-2 rounded-2xl transition-colors">
+                            <div className="flex-1 flex gap-3.5">
+                              <div className="h-10.5 w-10.5 rounded-full bg-emerald-50 border border-emerald-150/60 flex items-center justify-center text-emerald-800 font-extrabold text-sm shadow-xs uppercase select-none shrink-0">
+                                {(rev.authorName || 'R').charAt(0)}
+                              </div>
                               
-                              {/* Source badge */}
-                              {rev.source === 'google' ? (
-                                <span className="bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded text-[8px] font-black uppercase flex items-center gap-0.5 select-none leading-none">
-                                  Google Sync
-                                </span>
-                              ) : (
-                                <span className="bg-emerald-50 text-[#027244] border border-emerald-100 px-1.5 py-0.5 rounded text-[8px] font-black uppercase flex items-center gap-0.5 select-none leading-none">
-                                  UBT Local
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Stars rating */}
-                            <div className="flex items-center text-amber-400 gap-0.5">
-                              {[...Array(Math.round(Number(rev.rating) || 5))].map((_, i) => (
-                                <Star key={i} className="h-3 w-3 fill-current" />
-                              ))}
-                              {[...Array(5 - Math.round(Number(rev.rating) || 5))].map((_, i) => (
-                                <Star key={i} className="h-3 w-3 text-slate-150" />
-                              ))}
-                            </div>
-
-                            <p className="text-slate-600 text-xs font-semibold leading-relaxed mt-1">
-                              "{rev.text}"
-                            </p>
-
-                            {/* Show administrative responses if exists */}
-                            {reviewResponses[rev.id] && (
-                              <div className="bg-slate-50 border border-slate-200/50 p-4 rounded-2xl mt-3 ml-2 flex gap-3 animate-fadeIn">
-                                <div className="h-6.5 w-6.5 rounded-full bg-emerald-600 flex items-center justify-center text-white text-[9.5px] font-black shrink-0 shadow-2xs">
-                                  R
+                              <div className="flex flex-col gap-1.5 w-full">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-extrabold text-slate-800 text-sm leading-tight">{rev.authorName}</span>
+                                  <span className="text-[10px] font-semibold text-slate-400">
+                                    {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : rev.time}
+                                  </span>
+                                  
+                                  {/* Source badge */}
+                                  {rev.source === 'google' ? (
+                                    <span className="bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded text-[8px] font-black uppercase flex items-center gap-0.5 select-none leading-none">
+                                      Google Sync
+                                    </span>
+                                  ) : (
+                                    <span className="bg-emerald-55/15 text-[#027244] border border-emerald-100 px-1.5 py-0.5 rounded text-[8px] font-black uppercase flex items-center gap-0.5 select-none leading-none">
+                                      UBT Local
+                                    </span>
+                                  )}
                                 </div>
-                                <div className="flex flex-col text-left">
-                                  <span className="text-[10px] font-extrabold text-[#001c41]">Owner Response</span>
-                                  <p className="text-slate-500 text-[11px] font-semibold mt-1 leading-relaxed">
-                                    {reviewResponses[rev.id]}
-                                  </p>
+
+                                {/* Stars rating */}
+                                <div className="flex items-center text-amber-400 gap-0.5">
+                                  {[...Array(Math.round(Number(rev.rating) || 5))].map((_, i) => (
+                                    <Star key={i} className="h-3 w-3 fill-current" />
+                                  ))}
+                                  {[...Array(5 - Math.round(Number(rev.rating) || 5))].map((_, i) => (
+                                    <Star key={i} className="h-3 w-3 text-slate-150" />
+                                  ))}
                                 </div>
+
+                                <p className="text-slate-650 text-xs font-semibold leading-relaxed mt-1">
+                                  "{rev.text}"
+                                </p>
+
+                                {/* Show administrative responses if exists */}
+                                {ownerResponse && (
+                                  <div className="bg-slate-50 border border-slate-200/50 p-4 rounded-2xl mt-3 ml-2 flex gap-3 animate-fadeIn">
+                                    <div className="h-6.5 w-6.5 rounded-full bg-emerald-600 flex items-center justify-center text-white text-[9.5px] font-black shrink-0 shadow-2xs">
+                                      R
+                                    </div>
+                                    <div className="flex flex-col text-left">
+                                      <span className="text-[10px] font-extrabold text-[#001c41]">Owner Response</span>
+                                      <p className="text-slate-500 text-[11px] font-semibold mt-1 leading-relaxed">
+                                        {ownerResponse}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Response textbox if active */}
+                                {replyingReviewId === rev.id && (
+                                  <div className="flex flex-col gap-2.5 mt-3 ml-2 w-full max-w-lg animate-fadeIn">
+                                    <textarea
+                                      placeholder="Type your reply to the customer..."
+                                      value={reviewReplyText}
+                                      onChange={(e) => setReviewReplyText(e.target.value)}
+                                      className="w-full border border-slate-200 rounded-xl p-3 text-xs bg-slate-50 focus:outline-emerald-600 font-semibold"
+                                      rows={3}
+                                    />
+                                    <div className="flex gap-2 justify-start">
+                                      <button
+                                        onClick={async () => {
+                                          if (reviewReplyText.trim()) {
+                                            const activeToken = token || localStorage.getItem('ubt_token');
+                                            try {
+                                              const res = await fetch(`http://localhost:5000/api/reviews/${rev.id}/reply`, {
+                                                method: 'PUT',
+                                                headers: {
+                                                  'Content-Type': 'application/json',
+                                                  Authorization: `Bearer ${activeToken}`
+                                                },
+                                                body: JSON.stringify({ replyText: reviewReplyText })
+                                              });
+                                              const data = await res.json();
+                                              if (data.success) {
+                                                setReviewResponses({ ...reviewResponses, [rev.id]: reviewReplyText });
+                                                setLocalReviews(prev => prev.map(r => r.id === rev.id ? { ...r, replyText: reviewReplyText, replied: true } : r));
+                                              } else {
+                                                alert(data.message || 'Failed to submit reply');
+                                              }
+                                            } catch (err) {
+                                              console.error('Error replying to review:', err);
+                                              alert('Error connecting to backend server');
+                                            }
+                                            setReviewReplyText('');
+                                            setReplyingReviewId(null);
+                                          }
+                                        }}
+                                        className="py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10.5px] rounded-xl shadow-xs cursor-pointer btn-active-press"
+                                      >
+                                        Submit Reply
+                                      </button>
+                                      <button
+                                        onClick={() => setReplyingReviewId(null)}
+                                        className="py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-550 font-extrabold text-[10.5px] rounded-xl cursor-pointer btn-active-press"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            )}
+                            </div>
 
-                            {/* Response textbox if active */}
-                            {replyingReviewId === rev.id && (
-                              <div className="flex flex-col gap-2.5 mt-3 ml-2 w-full max-w-lg animate-fadeIn">
-                                <textarea
-                                  placeholder="Type your reply to the customer..."
-                                  value={reviewReplyText}
-                                  onChange={(e) => setReviewReplyText(e.target.value)}
-                                  className="w-full border border-slate-200 rounded-xl p-3 text-xs bg-slate-50 focus:outline-emerald-600 font-semibold"
-                                  rows={3}
-                                />
-                                <div className="flex gap-2 justify-start">
-                                  <button
-                                    onClick={() => {
-                                      if (reviewReplyText.trim()) {
-                                        setReviewResponses({ ...reviewResponses, [rev.id]: reviewReplyText });
-                                        setReviewReplyText('');
-                                        setReplyingReviewId(null);
+                            {/* Moderation actions (only show for local reviews since we can't delete Google reviews) */}
+                            {rev.source === 'local' && (
+                              <div className="flex flex-row md:flex-col gap-1.5 shrink-0 self-end md:self-start mt-3 md:mt-0 pl-14 md:pl-0">
+                                {!ownerResponse && replyingReviewId !== rev.id && (
+                                  <button 
+                                    onClick={() => setReplyingReviewId(rev.id)}
+                                    className="py-1.5 px-3 border border-slate-200 text-slate-600 font-extrabold text-[10.5px] rounded-lg hover:bg-slate-50 transition-colors cursor-pointer flex items-center gap-1.5 hover:border-emerald-600 hover:text-emerald-700"
+                                  >
+                                    <MessageSquare className="h-3.5 w-3.5" /> Reply
+                                  </button>
+                                )}
+                                
+                                <button 
+                                  onClick={async () => {
+                                    const activeToken = token || localStorage.getItem('ubt_token');
+                                    if (confirm('Are you sure you want to flag this review as spam?')) {
+                                      try {
+                                        const res = await fetch(`http://localhost:5000/api/reviews/${rev.id}/moderate`, {
+                                          method: 'PUT',
+                                          headers: {
+                                            'Content-Type': 'application/json',
+                                            Authorization: `Bearer ${activeToken}`
+                                          },
+                                          body: JSON.stringify({ action: 'spam' })
+                                        });
+                                        const data = await res.json();
+                                        if (data.success) {
+                                          const updated = localReviews.filter(r => r.id !== rev.id);
+                                          setLocalReviews(updated);
+                                        } else {
+                                          alert(data.message || 'Failed to flag review');
+                                        }
+                                      } catch (err) {
+                                        console.error('Error flagging review:', err);
+                                        alert('Error connecting to backend server');
                                       }
-                                    }}
-                                    className="py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10.5px] rounded-xl shadow-xs cursor-pointer btn-active-press"
-                                  >
-                                    Submit Reply
-                                  </button>
-                                  <button
-                                    onClick={() => setReplyingReviewId(null)}
-                                    className="py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-550 font-extrabold text-[10.5px] rounded-xl cursor-pointer btn-active-press"
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
+                                    }
+                                  }}
+                                  className="py-1.5 px-3 border border-red-100 text-red-500 font-extrabold text-[10.5px] rounded-lg hover:bg-red-50 transition-colors cursor-pointer flex items-center gap-1.5"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" /> Spam
+                                </button>
                               </div>
                             )}
                           </div>
-                        </div>
-
-                        {/* Moderation actions */}
-                        <div className="flex flex-row md:flex-col gap-1.5 shrink-0 self-end md:self-start mt-3 md:mt-0 pl-14 md:pl-0">
-                          {!reviewResponses[rev.id] && replyingReviewId !== rev.id && (
-                            <button 
-                              onClick={() => setReplyingReviewId(rev.id)}
-                              className="py-1.5 px-3 border border-slate-200 text-slate-600 font-extrabold text-[10.5px] rounded-lg hover:bg-slate-50 transition-colors cursor-pointer flex items-center gap-1.5 hover:border-emerald-600 hover:text-emerald-700"
-                            >
-                              <MessageSquare className="h-3.5 w-3.5" /> Reply
-                            </button>
-                          )}
-                          
-                          <button 
-                            onClick={() => {
-                              const updated = localReviews.filter(r => r.id !== rev.id);
-                              setLocalReviews(updated);
-                            }}
-                            className="py-1.5 px-3 border border-red-100 text-red-500 font-extrabold text-[10.5px] rounded-lg hover:bg-red-50 transition-colors cursor-pointer flex items-center gap-1.5"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" /> Spam
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                        );
+                      });
+                  })()}
                 </div>
               </div>
             </div>

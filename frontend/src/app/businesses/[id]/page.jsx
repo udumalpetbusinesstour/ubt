@@ -1099,10 +1099,10 @@ Please confirm availability and delivery time.`;
   ];
   allReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  // Dynamic Rating Distribution calculation based on overall rating baseline
-  const getRatingDistribution = (rating, reviewsCount, reviewsList) => {
+  // Dynamic Rating Distribution calculation based on overall rating baseline using mathematical interpolation
+  const getRatingDistribution = (rating, reviewsCount) => {
     const avgRating = rating || 5;
-    const totalCount = reviewsCount || (reviewsList ? reviewsList.length : 0);
+    const totalCount = reviewsCount || 0;
     
     if (totalCount === 0) {
       return [
@@ -1114,68 +1114,56 @@ Please confirm availability and delivery time.`;
       ];
     }
     
-    const actualCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    if (reviewsList && reviewsList.length > 0) {
-      reviewsList.forEach(r => {
-        const roundedRating = Math.round(r.rating || 5);
-        if (actualCounts[roundedRating] !== undefined) {
-          actualCounts[roundedRating]++;
-        }
-      });
+    const anchors = [
+      { r: 5.0, p: [1.00, 0.00, 0.00, 0.00, 0.00] },
+      { r: 4.8, p: [0.85, 0.11, 0.03, 0.01, 0.00] },
+      { r: 4.5, p: [0.70, 0.18, 0.07, 0.03, 0.02] },
+      { r: 4.0, p: [0.45, 0.25, 0.18, 0.07, 0.05] },
+      { r: 3.5, p: [0.25, 0.30, 0.25, 0.12, 0.08] },
+      { r: 3.0, p: [0.15, 0.20, 0.30, 0.20, 0.15] },
+      { r: 2.0, p: [0.05, 0.10, 0.15, 0.35, 0.35] },
+      { r: 1.0, p: [0.00, 0.00, 0.00, 0.00, 1.00] }
+    ];
+    
+    let low = anchors[anchors.length - 1];
+    let high = anchors[0];
+    
+    for (let i = 0; i < anchors.length - 1; i++) {
+      if (avgRating <= anchors[i].r && avgRating >= anchors[i + 1].r) {
+        high = anchors[i];
+        low = anchors[i + 1];
+        break;
+      }
     }
     
-    const listSum = Object.values(actualCounts).reduce((a, b) => a + b, 0);
-    let finalCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    let t = 0;
+    if (high.r !== low.r) {
+      t = (avgRating - low.r) / (high.r - low.r);
+    }
     
-    if (listSum > 0) {
-      let currentSum = 0;
-      [5, 4, 3, 2, 1].forEach(star => {
-        const share = actualCounts[star] / listSum;
-        const calculated = Math.round(share * totalCount);
-        finalCounts[star] = calculated;
-        currentSum += calculated;
-      });
-      
-      let diff = totalCount - currentSum;
-      if (diff !== 0) {
-        let maxStar = 5;
-        let maxCount = -1;
-        [5, 4, 3, 2, 1].forEach(star => {
-          if (finalCounts[star] > maxCount) {
-            maxCount = finalCounts[star];
-            maxStar = star;
-          }
-        });
-        finalCounts[maxStar] = Math.max(0, finalCounts[maxStar] + diff);
-      }
-    } else {
-      let p5 = 0, p4 = 0, p3 = 0, p2 = 0, p1 = 0;
-      if (avgRating >= 4.8) {
-        p5 = 0.85; p4 = 0.10; p3 = 0.03; p2 = 0.01; p1 = 0.01;
-      } else if (avgRating >= 4.5) {
-        p5 = 0.70; p4 = 0.20; p3 = 0.06; p2 = 0.02; p1 = 0.02;
-      } else if (avgRating >= 4.0) {
-        p5 = 0.50; p4 = 0.30; p3 = 0.12; p2 = 0.05; p1 = 0.03;
-      } else if (avgRating >= 3.5) {
-        p5 = 0.35; p4 = 0.35; p3 = 0.18; p2 = 0.08; p1 = 0.04;
-      } else if (avgRating >= 3.0) {
-        p5 = 0.25; p4 = 0.25; p3 = 0.30; p2 = 0.12; p1 = 0.08;
-      } else {
-        p5 = 0.10; p4 = 0.15; p3 = 0.25; p2 = 0.30; p1 = 0.20;
-      }
-      
-      let currentSum = 0;
-      [5, 4, 3, 2, 1].forEach(star => {
-        const share = star === 5 ? p5 : star === 4 ? p4 : star === 3 ? p3 : star === 2 ? p2 : p1;
-        const calculated = Math.round(share * totalCount);
-        finalCounts[star] = calculated;
-        currentSum += calculated;
-      });
-      
-      let diff = totalCount - currentSum;
-      if (diff !== 0) {
-        finalCounts[5] = Math.max(0, finalCounts[5] + diff);
-      }
+    const probs = [];
+    let sumProbs = 0;
+    for (let i = 0; i < 5; i++) {
+      const p = low.p[i] + t * (high.p[i] - low.p[i]);
+      probs.push(p);
+      sumProbs += p;
+    }
+    
+    const normalizedProbs = probs.map(p => sumProbs > 0 ? p / sumProbs : 0);
+    
+    const finalCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    let currentSum = 0;
+    
+    [5, 4, 3, 2, 1].forEach((star, idx) => {
+      const share = normalizedProbs[idx];
+      const calculated = Math.round(share * totalCount);
+      finalCounts[star] = calculated;
+      currentSum += calculated;
+    });
+    
+    let diff = totalCount - currentSum;
+    if (diff !== 0) {
+      finalCounts[5] = Math.max(0, finalCounts[5] + diff);
     }
     
     return [5, 4, 3, 2, 1].map(star => {
@@ -1191,8 +1179,7 @@ Please confirm availability and delivery time.`;
 
   const ratingDistribution = getRatingDistribution(
     business.googleRating,
-    business.googleReviewsCount,
-    allReviews
+    business.googleReviewsCount
   );
 
   return (
@@ -2197,7 +2184,7 @@ Please confirm availability and delivery time.`;
                       <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
                         <div className="h-full bg-amber-500" style={{ width: dist.pct }} />
                       </div>
-                      <span className="w-20 shrink-0 text-slate-400 text-right font-semibold">{dist.count} ({dist.pct})</span>
+                      <span className="w-12 shrink-0 text-slate-400 text-right font-semibold">{dist.count}</span>
                     </div>
                   ))}
                 </div>
