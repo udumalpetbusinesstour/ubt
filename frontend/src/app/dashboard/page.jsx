@@ -8155,7 +8155,9 @@ function DashboardContent() {
                   <CreditCard className="h-7 w-7 text-amber-300 mb-1.5" />
                   <span className="text-[9px] uppercase font-black text-slate-300 tracking-wider">Status</span>
                   <span className={`text-xl font-black mt-1 uppercase ${business?.subscriptionStatus === 'active' ? 'text-emerald-300 animate-pulse' : 'text-red-300'}`}>
-                    {business?.subscriptionStatus === 'active' ? 'Active Pro' : 'Expired / Inactive'}
+                    {business?.subscriptionStatus === 'active' 
+                      ? (business?.subscriptionPlan?.toLowerCase().includes('year') ? 'Yearly Pro' : 'Monthly Pro') 
+                      : 'Expired / Inactive'}
                   </span>
                   {business?.subscriptionExpiry && (
                     <span className="text-[11px] font-bold text-slate-200 mt-1">
