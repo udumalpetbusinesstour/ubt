@@ -8190,10 +8190,16 @@ function DashboardContent() {
                         {business?.subscriptionExpiry ? new Date(business.subscriptionExpiry).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-2.5">
+                    <div className="flex justify-between items-center py-2.5 border-b border-slate-100">
                       <span className="text-xs font-semibold text-slate-500">Billing Interval</span>
                       <span className="text-xs font-extrabold text-slate-800">
                         {business?.subscriptionPlan?.toLowerCase().includes('year') ? 'Yearly' : 'Monthly'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-2.5">
+                      <span className="text-xs font-semibold text-slate-500">Autopay Status</span>
+                      <span className={`text-xs font-extrabold ${business?.isAutopayEnabled ? 'text-emerald-600' : 'text-slate-500'}`}>
+                        {business?.isAutopayEnabled ? 'Enabled' : 'Disabled'}
                       </span>
                     </div>
                   </div>

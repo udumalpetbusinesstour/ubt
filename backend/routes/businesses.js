@@ -766,6 +766,29 @@ router.get('/my-business', protect, async (req, res) => {
       business = listings[0];
     }
     
+    if (business) {
+      const Subscription = require('../models/Subscription');
+      const activeSub = await Subscription.findOne({
+        businessId: business._id,
+        status: 'active'
+      }).sort({ createdAt: -1 });
+
+      business = business.toObject();
+
+      if (activeSub) {
+        business.subscriptionStart = activeSub.startDate;
+        business.subscriptionExpiry = activeSub.endDate;
+        business.subscriptionPlan = activeSub.plan || activeSub.planName || 'PRO PLAN';
+        business.isAutopayEnabled = !!activeSub.razorpaySubscriptionId;
+      } else {
+        if (business.subscriptionStatus === 'active') {
+          business.subscriptionStart = business.createdAt || new Date();
+          business.subscriptionPlan = 'PRO PLAN';
+          business.isAutopayEnabled = false;
+        }
+      }
+    }
+    
     if (isAdminUser) {
       res.json({ success: true, data: business, allBusinesses: listings });
     } else {
