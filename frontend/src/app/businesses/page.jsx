@@ -1798,11 +1798,10 @@ function BusinessesList() {
                                     <span className="font-medium text-[#001c41] text-xs sm:text-sm md:text-[17px] leading-tight sm:leading-snug group-hover:text-[#027244] transition-colors duration-300 line-clamp-2">
                                       {cat.name}
                                     </span>
-                                    <span className="text-[9px] sm:text-[10px] text-slate-455 font-extrabold mt-1 uppercase tracking-wide leading-none flex items-center gap-1">
-                                      <span>{count} Listings</span>
-                                      <span>•</span>
-                                      <span className="text-emerald-600 font-bold hover:underline">Explore →</span>
-                                    </span>
+                                    <div className="flex items-center justify-between w-full mt-1.5 text-[9px] sm:text-[10px] text-slate-455 font-extrabold uppercase tracking-wide leading-none">
+                                      <span className="whitespace-nowrap">{count} Listings</span>
+                                      <span className="text-emerald-600 font-bold hover:underline whitespace-nowrap">Explore</span>
+                                    </div>
                                   </div>
                                 </div>
                               );
