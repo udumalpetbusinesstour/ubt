@@ -3773,7 +3773,7 @@ function DashboardContent() {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         
         {/* Top Header bar */}
-        <header className="bg-white border-b border-slate-200/80 px-6 py-4 flex items-center justify-between sticky top-0 z-40 shadow-xs">
+        <header className="bg-white border-b border-slate-200/80 px-3 sm:px-6 py-3 md:py-4 flex items-center justify-between sticky top-0 z-40 shadow-xs">
           
           {/* Breadcrumb Left Header block */}
           <div className="flex items-center gap-3">
@@ -3782,7 +3782,7 @@ function DashboardContent() {
             </button>
             <div className="flex flex-col text-left">
               <h2 className="text-[#001c41] text-base md:text-lg font-extrabold tracking-tight">Dashboard</h2>
-              <span className="text-slate-400 text-[10px] md:text-xs font-semibold tracking-wide mt-0.5">
+              <span className="text-slate-400 text-[10px] md:text-xs font-semibold tracking-wide mt-0.5 hidden sm:block">
                 Welcome back! Here's what's happening with your business.
               </span>
             </div>
@@ -3809,12 +3809,12 @@ function DashboardContent() {
           )}
 
           {/* Right Header tools */}
-          <div className="flex items-center gap-3 md:gap-4 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 shrink-0">
             {business && (
               <Link 
                 to={`/businesses/${business._id}`}
                 target="_blank"
-                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-extrabold text-emerald-600 hover:text-emerald-700 flex items-center gap-2 transition-all shadow-xs cursor-pointer"
+                className="px-2.5 sm:px-4 py-1.5 sm:py-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-extrabold text-emerald-600 hover:text-emerald-700 flex items-center gap-2 transition-all shadow-xs cursor-pointer"
               >
                 <Globe className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">
@@ -3867,7 +3867,7 @@ function DashboardContent() {
             </div>
 
             {/* User Profile Avatar dropdown summary */}
-            <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 pl-1.5 sm:pl-3 sm:border-l border-slate-200">
               {user?.profileImage ? (
                 <img 
                   src={user.profileImage} 
@@ -3893,7 +3893,7 @@ function DashboardContent() {
         </header>
 
         {/* Scrollable Workspace Panels */}
-        <main className="flex-grow overflow-y-auto px-6 py-6 max-w-[1440px] w-full mx-auto flex flex-col gap-6">
+        <main className="flex-grow overflow-y-auto px-3 md:px-6 py-4 md:py-6 max-w-[1440px] w-full mx-auto flex flex-col gap-4 md:gap-6">
           
           {/* Banner notification updates */}
           {successBanner && (
@@ -7961,7 +7961,7 @@ function DashboardContent() {
                 {/* Conversion Grid */}
                 <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4 text-left">
                   <h3 className="font-extrabold text-[#001c41] text-sm md:text-base tracking-tight">Referral Point Milestones</h3>
-                  <div className="overflow-hidden border border-slate-100 rounded-xl mt-1">
+                  <div className="overflow-x-auto border border-slate-100 rounded-xl mt-1">
                     <table className="w-full border-collapse text-xs font-semibold text-slate-650">
                       <thead className="bg-slate-50 border-b border-slate-100 text-[9.5px] uppercase font-black text-slate-400">
                         <tr>
@@ -8340,8 +8340,8 @@ function DashboardContent() {
       {(showRenewModal || isMandatorySubscription) && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-start justify-center p-4 overflow-y-auto">
           <div 
-            style={{ marginTop: `${modalMarginTop}px` }}
-            className="max-w-4xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-6 animate-scaleUp text-left max-h-[90vh] overflow-y-auto scrollbar-none relative"
+            style={{ '--modal-margin-top': `${modalMarginTop}px` }}
+            className="max-w-4xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-6 animate-scaleUp text-left max-h-[90vh] overflow-y-auto scrollbar-none relative mt-5 md:mt-[var(--modal-margin-top)]"
           >
             
             {/* Close button */}
@@ -8635,8 +8635,8 @@ function DashboardContent() {
       {showEditModal && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-start justify-center p-4 overflow-y-auto">
           <div 
-            style={{ marginTop: `${modalMarginTop}px` }}
-            className="max-w-2xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-5 animate-scaleUp text-left max-h-[85vh] overflow-y-auto scrollbar-none font-sans"
+            style={{ '--modal-margin-top': `${modalMarginTop}px` }}
+            className="max-w-2xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-5 animate-scaleUp text-left max-h-[85vh] overflow-y-auto scrollbar-none font-sans mt-5 md:mt-[var(--modal-margin-top)]"
           >
             <div className="flex justify-between items-start border-b border-slate-100 pb-3">
               <div>
@@ -8875,7 +8875,7 @@ function DashboardContent() {
               {/* TAB: CONTACT & LOCATION */}
               {editTab === 'contact' && (
                 <div className="flex flex-col gap-4 animate-fadeIn">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1">
                       <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Phone Number</label>
                       <input 
@@ -8900,7 +8900,7 @@ function DashboardContent() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1">
                       <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Email Address</label>
                       <input 
@@ -8924,7 +8924,7 @@ function DashboardContent() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1">
                       <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Facebook URL</label>
                       <input 
@@ -8960,7 +8960,7 @@ function DashboardContent() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1">
                       <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Locality</label>
                       <input 
@@ -8991,7 +8991,7 @@ function DashboardContent() {
               {/* TAB: SPECIFICATIONS & HOURS */}
               {editTab === 'specs' && (
                 <div className="flex flex-col gap-4 animate-fadeIn">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1">
                       <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Year of Establishment</label>
                       <input 
@@ -9015,7 +9015,7 @@ function DashboardContent() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1">
                       <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Languages Known</label>
                       <input 
@@ -9054,7 +9054,7 @@ function DashboardContent() {
                   <div className="flex flex-col gap-2.5 mt-2 border-t border-slate-100 pt-4">
                     <span className="text-[10px] font-extrabold text-slate-450 uppercase tracking-widest">Daily Operating Timings</span>
                     
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                       {[
                         { day: 'Mon', key: 'timingsMon' },
                         { day: 'Tue', key: 'timingsTue' },
@@ -9378,7 +9378,7 @@ function DashboardContent() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
                     <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Latitude</label>
                     <input 
@@ -9458,8 +9458,8 @@ function DashboardContent() {
       {showUploadModal && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-start justify-center p-4 overflow-y-auto">
           <div 
-            style={{ marginTop: `${modalMarginTop}px` }}
-            className="max-w-lg w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 flex flex-col gap-5 animate-scaleUp text-left"
+            style={{ '--modal-margin-top': `${modalMarginTop}px` }}
+            className="max-w-lg w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 flex flex-col gap-5 animate-scaleUp text-left mt-5 md:mt-[var(--modal-margin-top)]"
           >
             <div className="flex justify-between items-start border-b border-slate-100 pb-3">
               <div>
@@ -9502,7 +9502,7 @@ function DashboardContent() {
                   Currently Uploaded ({uploadedPhotosCount} Photos)
                 </span>
                 
-                <div className="grid grid-cols-4 gap-2.5">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
                   {photoGallery.map((img, i) => (
                     <div key={i} className="h-16 rounded-xl overflow-hidden border border-slate-200 relative group select-none">
                       <img src={img} alt="Store" className="w-full h-full object-cover" />
@@ -10328,7 +10328,7 @@ function DashboardContent() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Original Price (₹) *</label>
                   <input
@@ -10355,7 +10355,7 @@ function DashboardContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Menu Category *</label>
                   <select
