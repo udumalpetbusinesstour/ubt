@@ -9,7 +9,7 @@ const mockBlogs = [
     _id: 'blog_1',
     title: '10 Simple Habits for a Productive and Creative Life',
     content: 'Developing daily habits that support creativity and productivity can transform your personal and professional life. In this article, we explore actionable strategies like morning routines, mindful scheduling, time blocking, and minimizing digital distractions. Learn how small changes can lead to large shifts in focus, creative output, and overall mental well-being.',
-    coverImage: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&q=80',
+    coverImage: '/default_blog_cover.jpg',
     author: 'author_fallback_1',
     authorName: 'Ananth Sundar',
     status: 'Approved',
@@ -26,7 +26,7 @@ const mockBlogs = [
     _id: 'blog_2',
     title: 'The Art of Slow Living: Finding Peace in a Fast-Paced World',
     content: 'In a world that constantly encourages speed, choosing to slow down is a deliberate and rewarding act. Slow living is not about doing everything at a snail\'s pace; it is about doing things at the right pace. Discover how mindfulness, decluttering, appreciating nature, and taking periodic digital detoxes can help you reclaim your time, reduce stress, and savor the present moment.',
-    coverImage: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80',
+    coverImage: '/default_blog_cover.jpg',
     author: 'author_fallback_2',
     authorName: 'Senthil Kumar',
     status: 'Approved',
@@ -42,7 +42,7 @@ const mockBlogs = [
     _id: 'blog_3',
     title: 'A Beginner\'s Guide to Photography: Capturing Everyday Moments',
     content: 'Photography is more than just owning a camera; it is about learning how to see light, compose stories, and capture feelings. Whether you are using a smartphone or a professional DSLR, understanding basics like the rule of thirds, ambient light, and framing can elevate your shots. We share practical tips to help you capture everyday stories and preserve memories.',
-    coverImage: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80',
+    coverImage: '/default_blog_cover.jpg',
     author: 'author_fallback_3',
     authorName: 'Priya Ramesh',
     status: 'Approved',
@@ -339,9 +339,9 @@ export default function BlogDetail() {
         {/* Cover Landscape */}
         <div className="w-full h-[320px] md:h-[420px] rounded-3xl overflow-hidden border border-slate-200/60 shadow-md relative select-none">
           <img 
-            src={blog.coverImage || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80'} 
+            src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : blog.coverImage} 
             alt={blog.title} 
-            className="w-full h-full object-cover"
+            className={`w-full h-full ${(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-4' : 'object-cover'}`}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent pointer-events-none" />
         </div>

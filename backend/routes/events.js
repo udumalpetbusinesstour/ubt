@@ -19,7 +19,7 @@ const seedDefaultEvents = async () => {
           organizer: 'FitLife Club Udumalpet',
           phone: '+91 98945 67890',
           price: 99,
-          coverImageUrl: 'https://images.unsplash.com/photo-1502224562085-639556652f33?w=500&q=80',
+          coverImageUrl: '',
           status: 'Approved',
           isCompleted: true,
           paymentStatus: 'Paid'
@@ -35,7 +35,7 @@ const seedDefaultEvents = async () => {
           organizer: 'Temple Committee',
           phone: '+91 97500 12345',
           price: 99,
-          coverImageUrl: 'https://images.unsplash.com/photo-1608958416755-22d7d566f1ea?w=500&q=80',
+          coverImageUrl: '',
           status: 'Approved',
           isCompleted: true,
           paymentStatus: 'Paid'
@@ -51,7 +51,7 @@ const seedDefaultEvents = async () => {
           organizer: 'Udumalpet Startup Hub',
           phone: '+91 90035 67890',
           price: 99,
-          coverImageUrl: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=500&q=80',
+          coverImageUrl: '',
           status: 'Approved',
           isCompleted: true,
           paymentStatus: 'Paid'
@@ -67,7 +67,7 @@ const seedDefaultEvents = async () => {
           organizer: 'Sangeetha Sabha',
           phone: '+91 98422 33445',
           price: 99,
-          coverImageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&q=80',
+          coverImageUrl: '',
           status: 'Approved',
           isCompleted: true,
           paymentStatus: 'Paid'

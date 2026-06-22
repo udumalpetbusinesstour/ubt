@@ -38,7 +38,7 @@ const mockBlogs = [
     _id: 'blog_1',
     title: '10 Marketing Tips for Small Businesses in Udumalpet',
     content: 'Developing daily habits that support creativity and productivity can transform your personal and professional life. In this article, we explore actionable strategies like morning routines, mindful scheduling, time blocking, and minimizing digital distractions. Learn how small changes can lead to large shifts in focus, creative output, and overall mental well-being.',
-    coverImage: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&q=80',
+    coverImage: '/default_blog_cover.jpg',
     authorName: 'Ananth Sundar',
     status: 'Approved',
     category: 'Business Tips',
@@ -55,7 +55,7 @@ const mockBlogs = [
     _id: 'blog_2',
     title: 'Top Places to Visit in Udumalpet This Weekend',
     content: 'In a world that constantly encourages speed, choosing to slow down is a deliberate and rewarding act. Slow living is not about doing everything at a snail\'s pace; it is about doing things at the right pace. Discover how mindfulness, decluttering, appreciating nature, and taking periodic digital detoxes can help you reclaim your time, reduce stress, and savor the present moment.',
-    coverImage: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80',
+    coverImage: '/default_blog_cover.jpg',
     authorName: 'Senthil Kumar',
     status: 'Approved',
     category: 'Local Guide',
@@ -71,7 +71,7 @@ const mockBlogs = [
     _id: 'blog_3',
     title: 'Upcoming Events in Udumalpet – June 2026',
     content: 'Photography is more than just owning a camera; it is about learning how to see light, compose stories, and capture feelings. Whether you are using a smartphone or a professional DSLR, understanding basics like the rule of thirds, ambient light, and framing can elevate your shots. We share practical tips to help you capture everyday stories and preserve memories.',
-    coverImage: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80',
+    coverImage: '/default_blog_cover.jpg',
     authorName: 'Priya Ramesh',
     status: 'Approved',
     category: 'Events',
@@ -85,7 +85,7 @@ const mockBlogs = [
     _id: 'blog_4',
     title: 'How to Build a Strong Brand Identity for Your Business',
     content: 'Learn the essential steps to create a brand identity that stands out and builds trust with customers. Discover target audience research, logo guidelines, typography parameters, and communication guidelines that set your merchant profile apart from competitors in town.',
-    coverImage: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80',
+    coverImage: '/default_blog_cover.jpg',
     authorName: 'Suresh Raina',
     status: 'Approved',
     category: 'Business Tips',
@@ -101,7 +101,7 @@ const mockBlogs = [
     _id: 'blog_5',
     title: 'Best Shopping Spots in Udumalpet',
     content: 'From traditional markets to modern department stores, explore the best spots in town to purchase authentic silks, home goods, and fresh agricultural produce straight from nearby farms.',
-    coverImage: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80',
+    coverImage: '/default_blog_cover.jpg',
     authorName: 'Meena Devi',
     status: 'Approved',
     category: 'Local Guide',
@@ -258,7 +258,7 @@ export default function BlogsPage() {
     } catch (err) {
       console.error('Upload error:', err);
       setImageError('Network error uploading image. Using a premium placeholder instead.');
-      setCoverImage('https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80');
+      setCoverImage('/default_blog_cover.jpg');
     } finally {
       setImageUploading(false);
     }
@@ -323,7 +323,7 @@ export default function BlogsPage() {
         _id: 'mock_b_' + Date.now(),
         title,
         content,
-        coverImage: coverImage || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80',
+        coverImage: coverImage || '/default_blog_cover.jpg',
         authorName: user?.fullName || 'Guest Writer',
         status: 'Approved', // Auto approve in mock mode for instant user review
         category: finalCategory,
@@ -545,7 +545,7 @@ export default function BlogsPage() {
                 return (
                   <article key={blog._id} className="bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col cursor-pointer" onClick={() => navigate(`/blogs/${blog._id}`)}>
                     <div className="h-48 overflow-hidden bg-slate-100">
-                      <img src={blog.coverImage || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80'} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" alt={blog.title} />
+                      <img src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : blog.coverImage} className={`w-full h-full ${(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-2' : 'object-cover'} hover:scale-105 transition-transform duration-500`} alt={blog.title} />
                     </div>
                     <div className="p-5 flex-1 flex flex-col justify-between gap-4">
                       <div className="flex flex-col gap-2">
@@ -690,9 +690,9 @@ export default function BlogsPage() {
                       {/* Left side Image */}
                       <div className="w-full md:w-56 h-36 rounded-2xl overflow-hidden shrink-0 bg-slate-100 border border-slate-100 relative">
                         <img 
-                          src={blog.coverImage || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80'} 
+                          src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : blog.coverImage} 
                           alt={blog.title} 
-                          className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
+                          className={`w-full h-full ${(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-1' : 'object-cover'} group-hover:scale-103 transition-transform duration-500`}
                         />
                       </div>
 
@@ -887,7 +887,7 @@ export default function BlogsPage() {
                 {popularBlogs.map(blog => (
                   <div key={blog._id} className="flex gap-3 cursor-pointer group" onClick={() => navigate(`/blogs/${blog._id}`)}>
                     <div className="h-12 w-12 rounded-lg overflow-hidden shrink-0 bg-slate-50 border border-slate-100">
-                      <img src={blog.coverImage || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="" />
+                      <img src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : blog.coverImage} className={`w-full h-full ${(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-1' : 'object-cover'} group-hover:scale-105 transition-transform duration-500`} alt="" />
                     </div>
                     <div className="flex flex-col gap-0.5 min-w-0">
                       <h4 className="text-xs font-extrabold text-slate-700 leading-snug line-clamp-2 group-hover:text-[#027244] transition-colors">

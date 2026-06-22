@@ -738,11 +738,6 @@ router.get('/draft', protect, async (req, res) => {
 // @access  Private
 router.get('/my-business', protect, async (req, res) => {
   try {
-    // Restrict access: Allow business owners, admins, and visitors/writers to view
-    if (req.user.role !== 'owner' && req.user.role !== 'merchant' && req.user.role !== 'admin' && req.user.role !== 'visitor') {
-      return res.status(403).json({ success: false, message: 'Access denied: Authorized role required' });
-    }
-
     // Merge/Clean duplicate entries for this owner (only for primary listings, not branches)
     const listings = await Business.find({
       ownerId: req.user._id,
@@ -825,7 +820,16 @@ router.get('/google-autocomplete', async (req, res) => {
       },
       body: JSON.stringify({
         input: q,
-        includedRegionCodes: ['in']
+        includedRegionCodes: ['in'],
+        locationBias: {
+          circle: {
+            center: {
+              latitude: 10.5891,
+              longitude: 77.2412
+            },
+            radius: 35000.0
+          }
+        }
       })
     });
     

@@ -50,7 +50,7 @@ const BlogSchema = new mongoose.Schema({
   },
   coverImage: {
     type: String,
-    default: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80'
+    default: ''
   },
   thumbnail: {
     type: String,

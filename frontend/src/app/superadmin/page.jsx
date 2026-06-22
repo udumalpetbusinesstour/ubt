@@ -4450,11 +4450,13 @@ export default function SuperAdminDashboard() {
                         }`}
                       >
                         <div className="flex gap-4">
-                          {b.coverImage && (
-                            <div className="h-16 w-20 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 shrink-0 select-none">
-                              <img src={b.coverImage} className="w-full h-full object-cover" alt="Blog Cover" />
-                            </div>
-                          )}
+                          <div className="h-16 w-20 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 shrink-0 select-none bg-slate-50">
+                            <img 
+                              src={(!b.coverImage || b.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : b.coverImage} 
+                              className={`w-full h-full ${(!b.coverImage || b.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-1' : 'object-cover'}`} 
+                              alt="Blog Cover" 
+                            />
+                          </div>
                           <div className="flex flex-col min-w-0 text-left">
                             <span className="font-extrabold text-xs sm:text-[13px] leading-snug truncate group-hover:text-[#027244] transition-colors">{b.title}</span>
                             <span className="text-[9.5px] text-slate-400 font-bold mt-1">Author: {b.authorName} • {new Date(b.createdAt).toLocaleDateString()}</span>
@@ -7502,7 +7504,11 @@ export default function SuperAdminDashboard() {
               <div className="md:col-span-6 flex flex-col gap-5">
                 {/* Event Cover Image */}
                 <div className="w-full h-44 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shrink-0 select-none shadow-3xs relative bg-slate-100">
-                  <img src={editingEvent.coverImageUrl || editingEvent.bannerImage || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&q=80'} className="w-full h-full object-cover" alt="Event Cover" />
+                  <img 
+                    src={(!editingEvent.coverImageUrl || editingEvent.coverImageUrl.includes('unsplash.com')) ? '/default_event_cover.jpg' : editingEvent.coverImageUrl} 
+                    className={`w-full h-full ${(!editingEvent.coverImageUrl || editingEvent.coverImageUrl.includes('unsplash.com')) ? 'object-contain bg-white p-2' : 'object-cover'}`} 
+                    alt="Event Cover" 
+                  />
                   <span className={`absolute top-3 right-3 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wide border shadow-sm ${
                     editingEvent.status === 'Approved' ? 'bg-emerald-500 border-emerald-600 text-white' : 'bg-amber-500 border-amber-600 text-white animate-pulse'
                   }`}>
@@ -7867,11 +7873,13 @@ export default function SuperAdminDashboard() {
               </div>
 
               {/* Cover Image */}
-              {selectedBlogModal.coverImage && (
-                <div className="w-full h-64 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shrink-0 select-none shadow-3xs">
-                  <img src={selectedBlogModal.coverImage} className="w-full h-full object-cover" alt="Full Blog Cover" />
-                </div>
-              )}
+              <div className="w-full h-64 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shrink-0 select-none shadow-3xs bg-slate-50">
+                <img 
+                  src={(!selectedBlogModal.coverImage || selectedBlogModal.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : selectedBlogModal.coverImage} 
+                  className={`w-full h-full ${(!selectedBlogModal.coverImage || selectedBlogModal.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-4' : 'object-cover'}`} 
+                  alt="Full Blog Cover" 
+                />
+              </div>
 
               {/* Article Content */}
               <div className="flex flex-col gap-2">

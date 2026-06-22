@@ -434,7 +434,7 @@ export default function BusinessDetail() {
       }
     } catch (err) {
       console.warn('Failed to load branches from server. Using mock branches if mock business.');
-      if (businessId === 'biz_4' || businessId === 'UBT-10024') {
+      if (businessId === 'biz_1' || businessId === 'UBT-10024') {
         setBranches([
           {
             _id: 'mock_branch_1',
@@ -483,7 +483,7 @@ export default function BusinessDetail() {
     } catch (err) {
       console.warn('Using mock menu items due to error or mock business id:', err.message);
       // Dynamic mock menu items based on business
-      if (businessId === 'biz_2') {
+      if (businessId === 'biz_7') {
         setMenuItems([
           {
             _id: 'menu_mock_1',
@@ -614,8 +614,102 @@ export default function BusinessDetail() {
       const mockBizList = {
         biz_1: {
           _id: 'biz_1',
+          name: 'Sri Murugan Stores',
+          category: 'Shopping',
+          type: 'Departmental Stores',
+          description: 'Sri Murugan Stores is a premium departmental store in Gandhi Nagar, Udumalpet offering fresh organic grocery items, dry fruits, fresh pulses and household commodities.',
+          yearEstablished: 1998,
+          employeeCount: '20 - 50',
+          gstNumber: '33AAACM1234F1Z1',
+          services: ['Organic Groceries', 'Dry Fruits Import', 'Household Commodities', 'Free Home Delivery', 'Special Festival Gift Packs'],
+          brands: ['Tata', 'Aashirvaad', 'Rin', 'Surf Excel', 'Dhoni Tea'],
+          phone: '+91 94430 12345',
+          whatsapp: '+91 94430 12345',
+          email: 'contact@muruganstores.com',
+          website: '',
+          address: 'Gandhi Nagar Main Road, Udumalpet - 642126',
+          locality: 'Gandhi Nagar',
+          pincode: '642126',
+          isAddressVerified: true,
+          logoUrl: '',
+          coverImageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
+          galleryUrls: [
+            'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80',
+            'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500&q=80',
+            'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=500&q=80'
+          ],
+          googlePlaceId: 'ChIJSriMuruganStores10024',
+          googleRating: 4.6,
+          googleReviewsCount: 128,
+          googleReviews: [
+            { authorName: 'Mano R.', rating: 5, text: 'Very competitive prices and excellent grocery packing quality.' },
+            { authorName: 'Renuka Devi', rating: 4, text: 'Best department store in Gandhi Nagar area. Door delivery is very prompt.' }
+          ],
+          coordinates: { lat: 10.5898, lng: 77.2448 },
+          timings: {
+            Monday: '9:00 AM - 9:00 PM',
+            Tuesday: '9:00 AM - 9:00 PM',
+            Wednesday: '9:00 AM - 9:00 PM',
+            Thursday: '9:00 AM - 9:00 PM',
+            Friday: '9:00 AM - 9:00 PM',
+            Saturday: '9:00 AM - 9:00 PM',
+            Sunday: '9:00 AM - 1:00 PM'
+          },
+          languagesKnown: 'Tamil, English',
+          serviceArea: 'Gandhi Nagar, Udumalpet Town',
+          subscriptionStatus: 'active'
+        },
+        biz_2: {
+          _id: 'biz_2',
+          name: 'Green Valley Hotel',
+          category: 'Food & Restaurants',
+          type: 'Vegetarian Restaurant',
+          description: 'Green Valley Hotel is one of the most popular vegetarian restaurants on Pollachi Road in Udumalpet, offering delicious South Indian meals, tiffin items, and premium accommodation facilities.',
+          yearEstablished: 2010,
+          employeeCount: '10 - 20',
+          gstNumber: '33ABCDE1234F1Z8',
+          services: ['South Indian Meals', 'North Indian Dishes', 'Tiffin Items', 'Air Conditioned Dining', 'Spacious Parking', 'Party Hall'],
+          brands: [],
+          phone: '+91 98945 99999',
+          whatsapp: '+91 98945 99999',
+          email: 'greenvalleyhotel@gmail.com',
+          website: 'www.greenvalleyhotel.in',
+          address: 'Pollachi Road, Udumalpet - 642128',
+          locality: 'Pollachi Road',
+          pincode: '642128',
+          isAddressVerified: true,
+          logoUrl: '',
+          coverImageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
+          galleryUrls: [
+            'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&q=80',
+            'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500&q=80',
+            'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&q=80'
+          ],
+          googlePlaceId: 'ChIJGreenValleyHotelUdt',
+          googleRating: 4.8,
+          googleReviewsCount: 98,
+          googleReviews: [
+            { authorName: 'Subramanian K.', rating: 5, text: 'Delicious vegetarian food! The Ghee Roast was exceptionally crispy and flavorful.' },
+            { authorName: 'Deepak Raj', rating: 4, text: 'Great place for family dining. Ample parking space is a big plus.' }
+          ],
+          coordinates: { lat: 10.5891, lng: 77.2412 },
+          timings: {
+            Monday: '6:00 AM - 10:30 PM',
+            Tuesday: '6:00 AM - 10:30 PM',
+            Wednesday: '6:00 AM - 10:30 PM',
+            Thursday: '6:00 AM - 10:30 PM',
+            Friday: '6:00 AM - 10:30 PM',
+            Saturday: '6:00 AM - 10:30 PM',
+            Sunday: '6:00 AM - 10:30 PM'
+          },
+          languagesKnown: 'Tamil, English, Malayalam',
+          serviceArea: 'Udumalpet Town',
+          subscriptionStatus: 'active'
+        },
+        biz_3: {
+          _id: 'biz_3',
           name: 'R.K. Electricals',
-          category: 'Services',
+          category: 'Home Services',
           type: 'Electrical Services',
           description: 'R.K. Electricals is a trusted electrical service provider in Udumalpet, offering a wide range of residential, commercial and industrial electrical solutions. We are known for our on-time service, expert technicians and affordable pricing.',
           yearEstablished: 2012,
@@ -661,8 +755,149 @@ export default function BusinessDetail() {
           serviceArea: 'Udumalpet, Pollachi, Palladam, Madathukulam and nearby areas',
           subscriptionStatus: 'active'
         },
-        biz_2: {
-          _id: 'biz_2',
+        biz_4: {
+          _id: 'biz_4',
+          name: 'City Hospital',
+          category: 'Health & Medical',
+          type: 'General Hospital',
+          description: 'City Hospital is a premier healthcare institution on Dharapuram Road, Udumalpet, offering 24/7 emergency services, expert doctors across multiple specialties, and state-of-the-art diagnostic facilities.',
+          yearEstablished: 2005,
+          employeeCount: '50 - 100',
+          gstNumber: '',
+          services: ['24x7 Emergency Care', 'Outpatient Services', 'Inpatient General Wards', 'Pharmacy', 'Diagnostic Lab', 'ICU Facility', 'Ambulance Service'],
+          brands: [],
+          phone: '+91 4252 223456',
+          whatsapp: '+91 98425 22345',
+          email: 'info@cityhospitaludt.com',
+          website: 'www.cityhospitaludt.com',
+          address: 'Dharapuram Road, Udumalpet - 642126',
+          locality: 'Dharapuram Road',
+          pincode: '642126',
+          isAddressVerified: false,
+          logoUrl: '',
+          coverImageUrl: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=800&q=80',
+          galleryUrls: [
+            'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=500&q=80',
+            'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=500&q=80',
+            'https://images.unsplash.com/photo-1504813184591-01557998c722?w=500&q=80'
+          ],
+          googlePlaceId: 'ChIJCityHospitalUdt',
+          googleRating: 4.5,
+          googleReviewsCount: 206,
+          googleReviews: [
+            { authorName: 'Ramesh Krishnan', rating: 5, text: 'Very quick emergency response. The doctors are highly experienced and caring.' },
+            { authorName: 'Divya N.', rating: 4, text: 'Clean hospital rooms and polite nursing staff. Waiting time at OPD is slightly long.' }
+          ],
+          coordinates: { lat: 10.5925, lng: 77.2485 },
+          timings: {
+            Monday: 'Open 24 Hours',
+            Tuesday: 'Open 24 Hours',
+            Wednesday: 'Open 24 Hours',
+            Thursday: 'Open 24 Hours',
+            Friday: 'Open 24 Hours',
+            Saturday: 'Open 24 Hours',
+            Sunday: 'Open 24 Hours'
+          },
+          languagesKnown: 'Tamil, English, Hindi',
+          serviceArea: 'Udumalpet Taluk and surrounding villages',
+          subscriptionStatus: 'active'
+        },
+        biz_5: {
+          _id: 'biz_5',
+          name: 'Siva Soft Solutions',
+          category: 'Professional Services',
+          type: 'Software Development & IT',
+          description: 'Siva Soft Solutions is an established software agency in Udumalpet specializing in high-quality web design, custom mobile app development, digital marketing, SEO, and IT support services for businesses.',
+          yearEstablished: 2018,
+          employeeCount: '5 - 10',
+          gstNumber: '',
+          services: ['Web Design & Dev', 'Mobile Application Dev', 'SEO Optimization', 'Social Media Marketing', 'Domain & Hosting Setup', 'IT Consultation'],
+          brands: [],
+          phone: '+91 97895 43210',
+          whatsapp: '+91 97895 43210',
+          email: 'info@sivasoftsolutions.com',
+          website: 'www.sivasoftsolutions.com',
+          address: 'Gandhi Nagar, Udumalpet - 642126',
+          locality: 'Gandhi Nagar',
+          pincode: '642126',
+          isAddressVerified: true,
+          logoUrl: '',
+          coverImageUrl: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&q=80',
+          galleryUrls: [
+            'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=500&q=80',
+            'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&q=80',
+            'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=500&q=80'
+          ],
+          googlePlaceId: 'ChIJSivaSoftSolutionsUdt',
+          googleRating: 4.6,
+          googleReviewsCount: 61,
+          googleReviews: [
+            { authorName: 'Arun Kumar', rating: 5, text: 'They developed our e-commerce website. Exceptional design and prompt support!' },
+            { authorName: 'Sujatha M.', rating: 4, text: 'Professional team. They handled our local business SEO and we are seeing great traffic results.' }
+          ],
+          coordinates: { lat: 10.5898, lng: 77.2448 },
+          timings: {
+            Monday: '9:00 AM - 6:30 PM',
+            Tuesday: '9:00 AM - 6:30 PM',
+            Wednesday: '9:00 AM - 6:30 PM',
+            Thursday: '9:00 AM - 6:30 PM',
+            Friday: '9:00 AM - 6:30 PM',
+            Saturday: '9:00 AM - 1:30 PM',
+            Sunday: 'Closed'
+          },
+          languagesKnown: 'Tamil, English',
+          serviceArea: 'Worldwide, Local division',
+          subscriptionStatus: 'active'
+        },
+        biz_6: {
+          _id: 'biz_6',
+          name: 'Glamour Ladies Salon',
+          category: 'Beauty & Wellness',
+          type: 'Beauty Parlour & Salon',
+          description: 'Glamour Ladies Salon is Udumalpet\'s trusted destination for premium beauty care, hair styling, bridal makeup, and skin treatment, serving our clients with style and care.',
+          yearEstablished: 2017,
+          employeeCount: '1 - 5',
+          gstNumber: '',
+          services: ['Bridal Makeup & Styling', 'Facial & Skin Care', 'Hair Cut & Styling', 'Pedicure & Manicure', 'Waxing & Threading', 'Hair Spa & Treatment'],
+          brands: ['Loreal', 'Matrix', 'VLCC', 'O3+'],
+          phone: '+91 98432 12345',
+          whatsapp: '+91 98432 12345',
+          email: 'glamoursalonudt@gmail.com',
+          website: '',
+          address: 'Coimbatore Road, Udumalpet - 642126',
+          locality: 'Coimbatore Road',
+          pincode: '642126',
+          isAddressVerified: true,
+          logoUrl: '',
+          coverImageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80',
+          galleryUrls: [
+            'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=500&q=80',
+            'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80',
+            'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=500&q=80'
+          ],
+          googlePlaceId: 'ChIJGlamourSalonUdt',
+          googleRating: 4.4,
+          googleReviewsCount: 53,
+          googleReviews: [
+            { authorName: 'Ramya S.', rating: 5, text: 'Awesome bridal makeup services. The staff is polite and they know what they are doing.' },
+            { authorName: 'Kiruthika B.', rating: 4, text: 'Great place for haircuts and facials. The ambience is clean and hygiene is maintained.' }
+          ],
+          coordinates: { lat: 10.5855, lng: 77.2405 },
+          timings: {
+            Monday: '9:30 AM - 7:30 PM',
+            Tuesday: '9:30 AM - 7:30 PM',
+            Wednesday: '9:30 AM - 7:30 PM',
+            Thursday: '9:30 AM - 7:30 PM',
+            Friday: '9:30 AM - 7:30 PM',
+            Saturday: '9:30 AM - 8:00 PM',
+            Sunday: '9:30 AM - 6:00 PM'
+          },
+          languagesKnown: 'Tamil, English',
+          serviceArea: 'Udumalpet Town',
+          subscriptionStatus: 'expired'
+        },
+        biz_7: {
+          _id: 'biz_7',
           name: 'Vibrant Bakery & Cafe',
           category: 'Food & Drinks',
           type: 'Bakery & Sweets',
@@ -710,8 +945,8 @@ export default function BusinessDetail() {
           serviceArea: 'Udumalpet town limits',
           subscriptionStatus: 'none'
         },
-        biz_3: {
-          _id: 'biz_3',
+        biz_8: {
+          _id: 'biz_8',
           name: 'Green Valley Resorts',
           category: 'Services',
           type: 'Resorts & Hotels',
@@ -757,55 +992,8 @@ export default function BusinessDetail() {
           serviceArea: 'Thirumoorthy hills & surrounding areas',
           subscriptionStatus: 'active'
         },
-        biz_4: {
-          _id: 'biz_4',
-          name: 'Sri Murugan Stores',
-          category: 'Shops',
-          type: 'Departmental Stores',
-          description: 'Sri Murugan Stores is a premium departmental store in Gandhi Nagar, Udumalpet offering fresh organic grocery items, dry fruits, fresh pulses and household commodities.',
-          yearEstablished: 1998,
-          employeeCount: '20 - 50',
-          gstNumber: '33AAACM1234F1Z1',
-          services: ['Organic Groceries', 'Dry Fruits Import', 'Household Commodities', 'Free Home Delivery', 'Special Festival Gift Packs'],
-          brands: ['Tata', 'Aashirvaad', 'Rin', 'Surf Excel', 'Dhoni Tea'],
-          phone: '+91 94430 12345',
-          whatsapp: '+91 94430 12345',
-          email: 'contact@muruganstores.com',
-          website: '',
-          address: 'Gandhi Nagar Main Road, Udumalpet - 642126',
-          locality: 'Gandhi Nagar',
-          pincode: '642126',
-          isAddressVerified: true,
-          logoUrl: '',
-          coverImageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
-          galleryUrls: [
-            'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80',
-            'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500&q=80',
-            'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=500&q=80'
-          ],
-          googlePlaceId: 'ChIJSriMuruganStores10024',
-          googleRating: 4.6,
-          googleReviewsCount: 128,
-          googleReviews: [
-            { authorName: 'Mano R.', rating: 5, text: 'Very competitive prices and excellent grocery packing quality.' },
-            { authorName: 'Renuka Devi', rating: 4, text: 'Best department store in Gandhi Nagar area. Door delivery is very prompt.' }
-          ],
-          coordinates: { lat: 10.5898, lng: 77.2448 },
-          timings: {
-            Monday: '9:00 AM - 9:00 PM',
-            Tuesday: '9:00 AM - 9:00 PM',
-            Wednesday: '9:00 AM - 9:00 PM',
-            Thursday: '9:00 AM - 9:00 PM',
-            Friday: '9:00 AM - 9:00 PM',
-            Saturday: '9:00 AM - 9:00 PM',
-            Sunday: '9:00 AM - 1:00 PM'
-          },
-          languagesKnown: 'Tamil, English',
-          serviceArea: 'Gandhi Nagar, Udumalpet Town',
-          subscriptionStatus: 'active'
-        },
-        biz_5: {
-          _id: 'biz_5',
+        biz_9: {
+          _id: 'biz_9',
           name: 'Amaravathi Wind Farms office',
           category: 'Services',
           type: 'Windmill Maintenance',
@@ -851,7 +1039,7 @@ export default function BusinessDetail() {
         }
       };
 
-      const targetId = params.id === 'UBT-10024' ? 'biz_4' : params.id;
+      const targetId = params.id === 'UBT-10024' ? 'biz_1' : params.id;
       const mockDetails = mockBizList[targetId];
       if (mockDetails) {
         let next = Number(localStorage.getItem(`ubt_views_${targetId}`) || 0);

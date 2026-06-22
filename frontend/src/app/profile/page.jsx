@@ -295,11 +295,13 @@ export default function UserProfile() {
                     className="bg-white border border-slate-200/80 hover:border-slate-350 hover:shadow-md rounded-[24px] p-5 shadow-2xs transition-all flex flex-col justify-between gap-4 cursor-pointer group"
                   >
                     <div className="flex gap-4">
-                      {b.coverImage && (
-                        <div className="h-16 w-20 rounded-xl overflow-hidden border border-slate-100 shrink-0 select-none bg-slate-50">
-                          <img src={b.coverImage} className="w-full h-full object-cover" alt="Blog Cover" />
-                        </div>
-                      )}
+                      <div className="h-16 w-20 rounded-xl overflow-hidden border border-slate-100 shrink-0 select-none bg-slate-50">
+                        <img 
+                          src={(!b.coverImage || b.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : b.coverImage} 
+                          className={`w-full h-full ${(!b.coverImage || b.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-1' : 'object-cover'}`} 
+                          alt="Blog Cover" 
+                        />
+                      </div>
                       <div className="flex flex-col min-w-0">
                         <span className="font-extrabold text-[#001c41] text-xs sm:text-[13px] leading-snug truncate group-hover:text-[#027244] transition-colors">{b.title}</span>
                         <div className="flex items-center gap-3 text-[9.5px] text-slate-400 font-bold mt-2">

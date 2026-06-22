@@ -2392,11 +2392,13 @@ export default function AdminDashboard() {
                       {blogs.filter(b => b.status === 'Pending Approval').map(b => (
                         <div key={b._id} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col justify-between gap-5 hover:shadow-md transition-shadow">
                           <div className="flex gap-4">
-                            {b.coverImage && (
-                              <div className="h-16 w-20 rounded-2xl overflow-hidden border border-slate-200 shrink-0">
-                                <img src={b.coverImage} className="w-full h-full object-cover" alt="Blog Cover" />
-                              </div>
-                            )}
+                            <div className="h-16 w-20 rounded-2xl overflow-hidden border border-slate-200 shrink-0 bg-slate-50">
+                              <img 
+                                src={(!b.coverImage || b.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : b.coverImage} 
+                                className={`w-full h-full ${(!b.coverImage || b.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-1' : 'object-cover'}`} 
+                                alt="Blog Cover" 
+                              />
+                            </div>
                             <div className="flex flex-col gap-1 text-left min-w-0 flex-1">
                               <h4 className="font-extrabold text-sm text-[#001c41] truncate leading-none">{b.title}</h4>
                               <span className="text-xs text-emerald-655 font-bold mt-1 leading-none">
@@ -2690,11 +2692,13 @@ export default function AdminDashboard() {
                         className="bg-white border border-slate-200 hover:border-slate-350 hover:shadow-md rounded-[24px] p-5 shadow-2xs transition-all flex flex-col justify-between gap-4 cursor-pointer text-left group"
                       >
                         <div className="flex gap-4">
-                          {b.coverImage && (
-                            <div className="h-16 w-20 rounded-xl overflow-hidden border border-slate-100 shrink-0 select-none">
-                              <img src={b.coverImage} className="w-full h-full object-cover" alt="Blog Cover" />
-                            </div>
-                          )}
+                          <div className="h-16 w-20 rounded-xl overflow-hidden border border-slate-100 shrink-0 select-none bg-slate-50">
+                            <img 
+                              src={(!b.coverImage || b.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : b.coverImage} 
+                              className={`w-full h-full ${(!b.coverImage || b.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-1' : 'object-cover'}`} 
+                              alt="Blog Cover" 
+                            />
+                          </div>
                           <div className="flex flex-col min-w-0 text-left">
                             <span className="font-extrabold text-[#001c41] text-xs sm:text-[13px] leading-snug truncate group-hover:text-[#027244] transition-colors">{b.title}</span>
                             <span className="text-[9.5px] text-slate-455 font-bold mt-1">
@@ -4888,11 +4892,14 @@ export default function AdminDashboard() {
               </div>
 
               {/* Cover Image */}
-              {selectedBlogModal.coverImage && (
-                <div className="w-full h-64 rounded-2xl overflow-hidden border border-slate-100 shrink-0 select-none shadow-3xs">
-                  <img src={selectedBlogModal.coverImage} className="w-full h-full object-cover" alt="Full Blog Cover" />
-                </div>
-              )}
+              {/* Cover Image */}
+              <div className="w-full h-64 rounded-2xl overflow-hidden border border-slate-100 shrink-0 select-none shadow-3xs bg-slate-50">
+                <img 
+                  src={(!selectedBlogModal.coverImage || selectedBlogModal.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : selectedBlogModal.coverImage} 
+                  className={`w-full h-full ${(!selectedBlogModal.coverImage || selectedBlogModal.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-4' : 'object-cover'}`} 
+                  alt="Full Blog Cover" 
+                />
+              </div>
 
               {/* Article Content */}
               <div className="flex flex-col gap-2">

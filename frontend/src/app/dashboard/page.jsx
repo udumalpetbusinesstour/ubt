@@ -99,7 +99,7 @@ const availableCategories = [
 ];
 
 const getEventDefaultImage = (category) => {
-  return 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500&q=80';
+  return '/default_event_cover.jpg';
 };
 
 function DashboardContent() {
@@ -1959,7 +1959,7 @@ function DashboardContent() {
           _id: 'blog_1',
           title: 'A Local’s Ultimate Guide to Thirumoorthy Hills & Dam',
           content: 'Thirumoorthy Hills, located about 20 km from Udumalpet, is a pristine tourism spot...',
-          coverImage: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&q=80',
+          coverImage: '/default_blog_cover.jpg',
           authorName: user?.fullName || 'Ananth Sundar',
           status: 'Approved',
           showLikes: true,
@@ -2125,7 +2125,7 @@ function DashboardContent() {
     } catch (err) {
       console.error('Upload error:', err);
       setBlogImageError('Network error uploading image. Using a premium placeholder instead.');
-      setBlogCover('https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80');
+      setBlogCover('/default_blog_cover.jpg');
     } finally {
       setBlogImageUploading(false);
     }
@@ -2209,7 +2209,7 @@ function DashboardContent() {
           _id: 'mock_dashboard_' + Math.random().toString(36).substr(2, 9),
           title: blogTitle,
           content: blogContent,
-          coverImage: blogCover || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80',
+          coverImage: blogCover || '/default_blog_cover.jpg',
           authorName: user?.fullName || 'UBT Writer',
           category: finalCategory,
           status: 'Pending Approval',
@@ -2296,7 +2296,7 @@ function DashboardContent() {
           organizer: 'Sri Murugan Stores',
           phone: '+91 94430 12345',
           price: 0,
-          coverImageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80',
+          coverImageUrl: '/default_event_cover.jpg',
           duration: '1 Day'
         }
       ];
@@ -5685,8 +5685,8 @@ function DashboardContent() {
                   {displayEvents.map((evt) => (
                     <div key={evt._id} className="card-premium rounded-3xl overflow-hidden bg-white flex flex-col border border-slate-200 shadow-sm">
                       <div 
-                        className="h-36 bg-cover bg-center shrink-0 relative"
-                        style={{ backgroundImage: `url('${evt.coverImageUrl || getEventDefaultImage(evt.category)}')` }}
+                        className={`h-36 bg-center shrink-0 relative ${(!evt.coverImageUrl || evt.coverImageUrl.includes('unsplash.com')) ? 'bg-contain bg-no-repeat bg-white p-1' : 'bg-cover'}`}
+                        style={{ backgroundImage: `url('${(!evt.coverImageUrl || evt.coverImageUrl.includes('unsplash.com')) ? getEventDefaultImage(evt.category) : evt.coverImageUrl}')` }}
                       >
                         <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs border border-slate-100 px-2 py-0.5 rounded text-[8px] font-black uppercase text-slate-700 shadow-2xs">
                           {evt.category}
@@ -7165,10 +7165,10 @@ function DashboardContent() {
                           
                           {/* Inner core info */}
                           <div className="flex gap-4">
-                            <div className="h-16 w-16 rounded-2xl overflow-hidden shrink-0 border border-slate-100 select-none">
+                            <div className="h-16 w-16 rounded-2xl overflow-hidden shrink-0 border border-slate-100 select-none bg-slate-50">
                               <img 
-                                src={blog.coverImage || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80'} 
-                                className="w-full h-full object-cover" 
+                                src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : blog.coverImage} 
+                                className={`w-full h-full ${(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-1' : 'object-cover'}`} 
                                 alt={blog.title} 
                               />
                             </div>

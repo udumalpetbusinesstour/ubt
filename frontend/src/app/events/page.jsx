@@ -18,7 +18,7 @@ const availableCategories = [
 ];
 
 export const getEventDefaultImage = (category) => {
-  return 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500&q=80';
+  return '/default_event_cover.jpg';
 };
 
 const mockEvents = [
@@ -33,7 +33,7 @@ const mockEvents = [
     organizer: 'FitLife Club Udumalpet',
     phone: '+91 98945 67890',
     price: 99,
-    coverImageUrl: 'https://images.unsplash.com/photo-1502224562085-639556652f33?w=500&q=80',
+    coverImageUrl: '/default_event_cover.jpg',
     paymentLink: 'https://tickets.udumalpetmarathon.in',
     duration: '1 Day'
   },
@@ -49,7 +49,7 @@ const mockEvents = [
     organizer: 'Temple Committee',
     phone: '+91 97500 12345',
     price: 0,
-    coverImageUrl: 'https://images.unsplash.com/photo-1608958416755-22d7d566f1ea?w=500&q=80',
+    coverImageUrl: '/default_event_cover.jpg',
     paymentLink: '',
     duration: '7 Days'
   },
@@ -64,7 +64,7 @@ const mockEvents = [
     organizer: 'Udumalpet Startup Hub',
     phone: '+91 90035 67890',
     price: 99,
-    coverImageUrl: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=500&q=80',
+    coverImageUrl: '/default_event_cover.jpg',
     paymentLink: 'https://startupmeet.in/register',
     duration: '1 Day'
   },
@@ -79,7 +79,7 @@ const mockEvents = [
     organizer: 'Sangeetha Sabha',
     phone: '+91 98422 33445',
     price: 0,
-    coverImageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&q=80',
+    coverImageUrl: '/default_event_cover.jpg',
     paymentLink: '',
     duration: '4 Hours'
   },
@@ -94,7 +94,7 @@ const mockEvents = [
     organizer: 'Udumalpet Sports Academy',
     phone: '+91 99432 10987',
     price: 99,
-    coverImageUrl: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=500&q=80',
+    coverImageUrl: '/default_event_cover.jpg',
     paymentLink: '',
     duration: '2 Days'
   },
@@ -109,7 +109,7 @@ const mockEvents = [
     organizer: 'Kaniyur Sports Club',
     phone: '+91 98765 43210',
     price: 0,
-    coverImageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=500&q=80',
+    coverImageUrl: '/default_event_cover.jpg',
     paymentLink: '',
     duration: '3 Days'
   },
@@ -125,7 +125,7 @@ const mockEvents = [
     organizer: 'Tamil Cultural Association',
     phone: '+91 94433 55667',
     price: 0,
-    coverImageUrl: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=500&q=80',
+    coverImageUrl: '/default_event_cover.jpg',
     paymentLink: '',
     duration: '4 Days'
   },
@@ -140,7 +140,7 @@ const mockEvents = [
     organizer: 'Temple Festival Committee',
     phone: '+91 95000 98765',
     price: 0,
-    coverImageUrl: 'https://images.unsplash.com/photo-1545128485-c400e7702796?w=500&q=80',
+    coverImageUrl: '/default_event_cover.jpg',
     paymentLink: '',
     duration: '1 Day'
   },
@@ -155,7 +155,7 @@ const mockEvents = [
     organizer: 'Retailers Welfare League',
     phone: '+91 90420 11223',
     price: 0,
-    coverImageUrl: 'https://images.unsplash.com/photo-1605847429054-9fa29c5a17ed?w=500&q=80',
+    coverImageUrl: '/default_event_cover.jpg',
     paymentLink: '',
     duration: '1 Evening'
   },
@@ -171,7 +171,7 @@ const mockEvents = [
     organizer: 'Coimbatore Farmers Forum',
     phone: '+91 93600 22334',
     price: 99,
-    coverImageUrl: 'https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?w=500&q=80',
+    coverImageUrl: '/default_event_cover.jpg',
     paymentLink: 'https://tickets.udumalpetagriexpo.in',
     duration: '3 Days'
   },
@@ -186,7 +186,7 @@ const mockEvents = [
     organizer: 'Udumal Musicians Trust',
     phone: '+91 99944 88822',
     price: 99,
-    coverImageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&q=80',
+    coverImageUrl: '/default_event_cover.jpg',
     paymentLink: '',
     duration: '4 Hours'
   },
@@ -201,7 +201,7 @@ const mockEvents = [
     organizer: 'Rotary Club of Udumalpet',
     phone: '+91 98650 33445',
     price: 0,
-    coverImageUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=500&q=80',
+    coverImageUrl: '/default_event_cover.jpg',
     paymentLink: '',
     duration: '1 Day'
   },
@@ -216,7 +216,7 @@ const mockEvents = [
     organizer: 'Ganga Hospitals & Lions Club',
     phone: '+91 94420 88990',
     price: 0,
-    coverImageUrl: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=500&q=80',
+    coverImageUrl: '/default_event_cover.jpg',
     duration: '1 Day'
   },
   {
@@ -230,7 +230,7 @@ const mockEvents = [
     organizer: 'Udumal Horti League',
     phone: '+91 91760 44332',
     price: 0,
-    coverImageUrl: 'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=500&q=80',
+    coverImageUrl: '/default_event_cover.jpg',
     duration: '1 Day'
   }
 ];
@@ -1903,8 +1903,8 @@ export default function EventsPage() {
                       {/* Cover Image Container */}
                       <div className="shrink-0 overflow-hidden relative h-40 w-full md:w-52 rounded-2xl bg-slate-50 border border-slate-100">
                         <div 
-                          className="h-full w-full bg-cover bg-center"
-                          style={{ backgroundImage: `url('${evt.coverImageUrl || getEventDefaultImage(evt.category)}')` }}
+                          className={`h-full w-full bg-center ${(!evt.coverImageUrl || evt.coverImageUrl.includes('unsplash.com')) ? 'bg-contain bg-no-repeat bg-white p-1' : 'bg-cover'}`}
+                          style={{ backgroundImage: `url('${(!evt.coverImageUrl || evt.coverImageUrl.includes('unsplash.com')) ? getEventDefaultImage(evt.category) : evt.coverImageUrl}')` }}
                         />
                       </div>
 
