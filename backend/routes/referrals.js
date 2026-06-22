@@ -17,6 +17,16 @@ router.get('/my-stats', protect, async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
+    // Check if the user is subscribed (has an active business listing or is admin)
+    const activeBusiness = await Business.findOne({ ownerId: user._id, subscriptionStatus: 'active' });
+    const isSubscribed = !!activeBusiness || user.role === 'admin' || user.role === 'superadmin';
+
+    // Calculate available points (points excluding pending redemptions)
+    const Redemption = require('../models/Redemption');
+    const pendingRedemptions = await Redemption.find({ userId: user._id, status: 'Pending Approval' });
+    const pendingPoints = pendingRedemptions.reduce((sum, r) => sum + r.points, 0);
+    const availablePoints = Math.max(0, (user.referralPoints || 0) - pendingPoints);
+
     // Find all referrals made by this user
     const referrals = await Referral.find({ referrerId: user._id })
       .populate('referredUserId', 'fullName name email phone mobileNumber')
@@ -27,9 +37,9 @@ router.get('/my-stats', protect, async (req, res, next) => {
       success: true,
       data: {
         referralCode: user.referralCode,
-        referralPoints: user.referralPoints || 0,
-        referralCredits: (user.referralPoints || 0) / 10, // 100 points = ₹10 credit
-        referralLink: `http://localhost:5173/register?ref=${user.referralCode}`,
+        referralPoints: availablePoints,
+        referralCredits: availablePoints / 10, // 100 points = ₹10 credit
+        referralLink: isSubscribed ? `http://localhost:5173/register?ref=${user.referralCode}` : '',
         referrals
       }
     });
@@ -201,21 +211,22 @@ router.post('/redeem', protect, async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    if ((user.referralPoints || 0) < 1000) {
-      return res.status(400).json({ success: false, message: 'Minimum 1000 points required to redeem' });
+    // Calculate pending points
+    const Redemption = require('../models/Redemption');
+    const pendingRedemptions = await Redemption.find({ userId: user._id, status: 'Pending Approval' });
+    const pendingPoints = pendingRedemptions.reduce((sum, r) => sum + r.points, 0);
+    const availablePoints = (user.referralPoints || 0) - pendingPoints;
+
+    if (availablePoints < 1000) {
+      return res.status(400).json({ success: false, message: 'Minimum 1000 available points (excluding pending requests) required to redeem' });
     }
 
-    const Redemption = require('../models/Redemption');
     // Create redemption request
     const redemption = await Redemption.create({
       userId: user._id,
       points: 1000,
       status: 'Pending Approval'
     });
-
-    // Deduct points from user
-    user.referralPoints = Math.max(0, (user.referralPoints || 0) - 1000);
-    await user.save();
 
     // Notify admin & superadmin
     try {
@@ -237,7 +248,7 @@ router.post('/redeem', protect, async (req, res, next) => {
       success: true,
       message: 'Redemption request submitted successfully. Admin has been notified.',
       data: redemption,
-      newPoints: user.referralPoints
+      newPoints: Math.max(0, availablePoints - 1000)
     });
   } catch (error) {
     next(error);
@@ -302,6 +313,14 @@ router.put('/admin/redemptions/:id/refund', protect, admin, async (req, res, nex
     redemption.status = 'Refunded';
     redemption.remarks = remarks || 'Refund completed by administrator';
     await redemption.save();
+
+    // Deduct points from the referrer now
+    const user = await User.findById(redemption.userId);
+    if (user) {
+      user.referralPoints = Math.max(0, (user.referralPoints || 0) - redemption.points);
+      await user.save();
+      console.log(`[Redemption Success] Deducted ${redemption.points} points from user ${user.email}. Remaining points: ${user.referralPoints}`);
+    }
 
     // Create notification for the merchant user
     try {

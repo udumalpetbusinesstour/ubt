@@ -4,6 +4,30 @@ const Business = require('../models/Business');
 const Notification = require('../models/Notification');
 
 /**
+ * Checks all pending referrals where the given userId is the referrer.
+ * Called when a user's subscription becomes active, allowing them to claim
+ * any pending referral points for invitees who already subscribed.
+ */
+const checkPendingReferralsForReferrer = async (referrerId) => {
+  try {
+    const pendingReferrals = await Referral.find({
+      referrerId: referrerId,
+      status: 'pending'
+    });
+
+    for (const ref of pendingReferrals) {
+      // Find the referred user's business
+      const referredBusiness = await Business.findOne({ ownerId: ref.referredUserId });
+      if (referredBusiness) {
+        await checkAndCompleteReferralByBusiness(referredBusiness._id);
+      }
+    }
+  } catch (error) {
+    console.error(`[Referral Error] failed checkPendingReferralsForReferrer:`, error);
+  }
+};
+
+/**
  * Checks if all referral criteria are met for a business listing.
  * If yes, updates the referral status to completed and credits points to the referrer.
  * 
@@ -11,6 +35,7 @@ const Notification = require('../models/Notification');
  * - Business is Approved
  * - Business subscriptionStatus is active
  * - Referral is currently in 'pending' status
+ * - Referrer itself has an active subscription
  */
 const checkAndCompleteReferralByBusiness = async (businessId) => {
   try {
@@ -27,6 +52,9 @@ const checkAndCompleteReferralByBusiness = async (businessId) => {
     });
 
     if (!referral) {
+      // If there is no pending referral for this business, it might be that this business owner
+      // is a referrer who just activated their subscription. Check if they have pending referrals to claim!
+      await checkPendingReferralsForReferrer(business.ownerId);
       return null;
     }
 
@@ -46,26 +74,40 @@ const checkAndCompleteReferralByBusiness = async (businessId) => {
     });
 
     if (isBusinessApproved && isSubscriptionActive && hasPaid) {
+      // Credit points to the referrer only if the referrer is subscribed
+      const referrer = await User.findById(referral.referrerId);
+      if (!referrer) {
+        return null;
+      }
+
+      // Referrer must be admin/superadmin OR have an active subscribed business
+      const referrerBusiness = await Business.findOne({ ownerId: referrer._id, subscriptionStatus: 'active' });
+      const isReferrerSubscribed = referrer.role === 'admin' || referrer.role === 'superadmin' || !!referrerBusiness;
+
+      if (!isReferrerSubscribed) {
+        console.log(`[Referral Check] Referrer ${referrer.email} is not subscribed. Skipping completion.`);
+        return null;
+      }
+
       // Complete referral
       referral.status = 'completed';
       await referral.save();
 
-      // Credit points to the referrer
-      const referrer = await User.findById(referral.referrerId);
-      if (referrer) {
-        referrer.referralPoints = (referrer.referralPoints || 0) + referral.points;
-        await referrer.save();
+      referrer.referralPoints = (referrer.referralPoints || 0) + referral.points;
+      await referrer.save();
 
-        // Create platform notification for referrer
-        await Notification.create({
-          userId: referrer._id,
-          title: 'Referral Points Awarded!',
-          message: `Congratulations! Your referral for "${business.name}" is successful. You have earned ${referral.points} points.`,
-          type: 'referral_bonus'
-        });
+      // Create platform notification for referrer
+      await Notification.create({
+        userId: referrer._id,
+        title: 'Referral Points Awarded!',
+        message: `Congratulations! Your referral for "${business.name}" is successful. You have earned ${referral.points} points.`,
+        type: 'referral_bonus'
+      });
 
-        console.log(`[Referral Success] Referrer ${referrer.email} awarded ${referral.points} points for business ${business.name}`);
-      }
+      console.log(`[Referral Success] Referrer ${referrer.email} awarded ${referral.points} points for business ${business.name}`);
+
+      // Now trigger check for the newly activated referred business owner as a referrer
+      await checkPendingReferralsForReferrer(business.ownerId);
 
       return referral;
     }
@@ -78,5 +120,6 @@ const checkAndCompleteReferralByBusiness = async (businessId) => {
 };
 
 module.exports = {
-  checkAndCompleteReferralByBusiness
+  checkAndCompleteReferralByBusiness,
+  checkPendingReferralsForReferrer
 };

@@ -7850,16 +7850,17 @@ function DashboardContent() {
                     <input 
                       type="text" 
                       readOnly 
-                      value={referralStats?.referralLink || ''} 
+                      value={business?.subscriptionStatus === 'active' ? (referralStats?.referralLink || '') : 'Active subscription required to get link'} 
                       className="flex-grow border border-slate-200 px-4 py-3 rounded-xl text-xs font-extrabold text-slate-700 bg-slate-50 focus:outline-none"
                     />
                     <button 
+                      disabled={business?.subscriptionStatus !== 'active'}
                       onClick={() => {
                         navigator.clipboard.writeText(referralStats?.referralLink || '');
                         setCopiedLink(true);
                         setTimeout(() => setCopiedLink(false), 2000);
                       }}
-                      className="px-4 py-3 bg-[#027244] hover:bg-[#005934] text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+                      className="px-4 py-3 bg-[#027244] hover:bg-[#005934] disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
                     >
                       {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                       <span>{copiedLink ? 'Copied' : 'Copy Link'}</span>
@@ -7869,16 +7870,34 @@ function DashboardContent() {
                   {/* Social quick share links */}
                   <div className="flex items-center gap-4 mt-2">
                     <span className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wide">Quick Share:</span>
-                    <a 
-                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent("Grow your business! Register on Udumalpet Business Trust (UBT) and get listed in the premium local directory. Use my link to register: " + (referralStats?.referralLink || ""))}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-1.5 border border-emerald-250 bg-emerald-50/50 hover:bg-emerald-55/20 rounded-lg text-xs font-black text-emerald-600 transition-colors"
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                      <span>Share on WhatsApp</span>
-                    </a>
+                    {business?.subscriptionStatus === 'active' ? (
+                      <a 
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent("Grow your business! Register on Udumalpet Business Trust (UBT) and get listed in the premium local directory. Use my link to register: " + (referralStats?.referralLink || ""))}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 border border-emerald-250 bg-emerald-50/50 hover:bg-emerald-55/20 rounded-lg text-xs font-black text-emerald-600 transition-colors"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        <span>Share on WhatsApp</span>
+                      </a>
+                    ) : (
+                      <span className="text-xs text-slate-400 font-bold flex items-center gap-1 select-none">
+                        <Lock className="h-3 w-3 text-slate-400" /> Share locked
+                      </span>
+                    )}
                   </div>
+
+                  {business?.subscriptionStatus !== 'active' && (
+                    <div className="bg-amber-55/20 border border-amber-200/60 rounded-2xl p-3.5 flex items-start gap-2.5 mt-1">
+                      <Lock className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="flex flex-col text-left">
+                        <span className="text-[11.5px] font-extrabold text-amber-800">Referral Code Locked</span>
+                        <p className="text-[10px] text-slate-500 mt-0.5 leading-normal font-semibold">
+                          Only premium members can share their referral link. Please navigate to the <b>Subscription</b> tab to activate or renew your subscription first!
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Rewards Summary panel */}
