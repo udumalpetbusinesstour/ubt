@@ -478,28 +478,28 @@ export default function BlogsPage() {
       
       {/* 1. Header Banner */}
       <section 
-        className="w-full relative py-8 md:py-16 px-4 md:px-8 bg-[#001c41] text-white overflow-hidden shadow-md"
+        className="w-full relative py-4 md:py-16 px-4 md:px-8 bg-[#001c41] text-white overflow-hidden shadow-md"
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent opacity-60 pointer-events-none" />
         
-        <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 text-center">
+        <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 text-center w-full">
           
           {/* Breadcrumbs */}
-          <div className="flex items-center gap-1.5 text-xs text-slate-300/80 font-bold mt-2">
+          <div className="flex items-center gap-1.5 text-xs text-slate-300/80 font-bold mt-1 md:mt-2 order-1">
             <Link to="/" className="hover:text-emerald-400 transition-colors">Home</Link>
             <span className="text-slate-500">&gt;</span>
             <span className="text-white">Blog</span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mt-5 font-sans">
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight text-white mt-3 md:mt-5 font-sans order-2">
             Blog & Insights
           </h1>
           
-          <p className="text-slate-300 text-sm font-semibold mt-2.5 leading-relaxed max-w-2xl">
+          <p className="hidden sm:block text-slate-300 text-sm font-semibold mt-2.5 leading-relaxed max-w-2xl order-3">
             Discover helpful stories, local insights, business tips and updates from Udumalpet and beyond.
           </p>
 
-          <form onSubmit={handleSearchSubmit} className="mt-8 w-full bg-white border border-slate-200 shadow-xl rounded-2xl p-2.5 flex flex-col sm:flex-row gap-2.5 max-w-3xl">
+          <form onSubmit={handleSearchSubmit} className="mt-4 md:mt-8 w-full bg-white border border-slate-200 shadow-xl rounded-2xl p-2.5 flex flex-col sm:flex-row gap-2.5 max-w-3xl order-4 text-slate-700">
             <div className="flex-1 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
               <Search className="h-5 w-5 text-slate-400 shrink-0" />
               <input

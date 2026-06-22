@@ -1742,27 +1742,27 @@ export default function EventsPage() {
     <div className="w-full flex flex-col items-center bg-[#F8FAFC]">
       {/* 1. Header Scenic Banner Overlay */}
       <section 
-        className="w-full relative min-h-[200px] md:min-h-[260px] bg-[#001c41] text-white py-6 md:py-10 px-4 md:px-8 border-b border-slate-800"
+        className="w-full relative min-h-0 md:min-h-[260px] bg-[#001c41] text-white py-4 md:py-10 px-4 md:px-8 border-b border-slate-800"
       >
-        <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10">
+        <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 w-full">
           {/* Breadcrumbs */}
-          <div className="flex items-center gap-1.5 text-xs text-slate-355 font-bold self-start mt-2">
+          <div className="flex items-center gap-1.5 text-xs text-slate-355 font-bold self-start mt-1 md:mt-2 order-1">
             <Link to="/" className="hover:text-emerald-455 transition-colors">Home</Link>
             <span className="text-slate-500">&gt;</span>
             <span className="text-white">Events</span>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mt-4 self-start font-sans">
+          <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white mt-3 md:mt-4 self-start font-sans order-2">
             Events in Udumalpet
           </h1>
-          <p className="text-slate-350 text-xs font-semibold self-start mt-1.5 leading-relaxed">
+          <p className="hidden sm:block text-slate-350 text-xs font-semibold self-start mt-1.5 leading-relaxed order-3">
             Discover exciting events happening around Udumalpet
           </p>
 
           {/* Search filters inside white ribbon bar */}
           <form 
             onSubmit={(e) => e.preventDefault()} 
-            className="mt-8 w-full bg-white border border-slate-200 shadow-xl rounded-2xl p-2 flex flex-col md:flex-row gap-2 max-w-5xl text-slate-700"
+            className="mt-4 md:mt-8 w-full bg-white border border-slate-200 shadow-xl rounded-2xl p-2 flex flex-col md:flex-row gap-2 max-w-5xl text-slate-700 order-4"
           >
             <div className="flex-1 flex items-center justify-between gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
               <input
@@ -1838,7 +1838,7 @@ export default function EventsPage() {
             </button>
           </div>
 
-          <div className="flex justify-between items-center mt-2 pb-1.5 border-b border-slate-100">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-2 pb-2.5 sm:pb-1.5 border-b border-slate-100 gap-3">
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-[#001c41] text-sm">
                 {activeTab === 'upcoming' ? 'Upcoming Events' : 'Past Events'}
@@ -1848,13 +1848,13 @@ export default function EventsPage() {
               </span>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-650 relative">
+            <div className="flex items-center justify-between sm:justify-end gap-2 text-xs font-bold text-slate-650 relative w-full sm:w-auto">
               <span>Sort by:</span>
-              <div className="relative">
+              <div className="relative flex-1 sm:flex-initial">
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="py-1 px-3.5 pr-8 border border-slate-200 bg-white rounded-lg cursor-pointer focus:outline-none font-bold text-slate-700 appearance-none bg-transparent"
+                  className="w-full sm:w-auto py-1 px-3.5 pr-8 border border-slate-200 bg-white rounded-lg cursor-pointer focus:outline-none font-bold text-slate-700 appearance-none"
                 >
                   <option>Date (Soonest)</option>
                   <option>Date (Latest)</option>

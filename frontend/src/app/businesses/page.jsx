@@ -1667,23 +1667,23 @@ function BusinessesList() {
       <div className="w-full flex flex-col items-center bg-[#F8FAFC]">
         {/* Header Banner */}
         <section 
-          className="w-full relative min-h-[200px] md:min-h-[260px] bg-[#001c41] text-white py-6 md:py-10 px-4 md:px-8 border-b border-slate-800"
+          className="w-full relative min-h-0 md:min-h-[260px] bg-[#001c41] text-white py-4 md:py-10 px-4 md:px-8 border-b border-slate-800"
         >
-          <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 text-left">
-            <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-2">
+          <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 text-left w-full">
+            <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-1 md:mt-2 order-1">
               <Link to="/" className="hover:text-emerald-450 transition-colors">Home</Link>
               <span className="text-slate-505">&gt;</span>
               <span className="text-slate-100">Categories</span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mt-4 self-start font-sans">
+            <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white mt-3 md:mt-4 self-start font-sans order-2">
               Explore Categories
             </h1>
-            <p className="text-slate-350 text-xs font-semibold self-start mt-1.5 leading-relaxed">
+            <p className="hidden sm:block text-slate-350 text-xs font-semibold self-start mt-1.5 leading-relaxed order-3">
               Find local businesses and specialized services in Udumalpet
             </p>
 
-            <form onSubmit={(e) => e.preventDefault()} className="mt-8 w-full bg-white border border-slate-200 shadow-xl rounded-2xl p-2 flex gap-2 max-w-3xl">
+            <form onSubmit={(e) => e.preventDefault()} className="mt-4 md:mt-8 w-full bg-white border border-slate-200 shadow-xl rounded-2xl p-2 flex gap-2 max-w-3xl order-4 text-slate-700">
               <div className="flex-1 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
                 <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
                 <input
@@ -1732,23 +1732,23 @@ function BusinessesList() {
                       const count = allBusinesses.filter(b => b.category?.toLowerCase() === cat.categoryName.toLowerCase()).length;
                       return (
                         <div 
-                          key={cat._id}
-                          onClick={() => handleCategoryClick(cat.categoryName)}
-                          className="card-premium group rounded-3xl p-4 sm:p-6 cursor-pointer flex flex-col justify-between h-32 sm:h-36 relative overflow-hidden bg-white border border-slate-200/65 hover:border-[#027244]"
-                        >
-                          <div className="absolute -right-6 -bottom-6 w-16 h-16 bg-slate-50 rounded-full group-hover:bg-emerald-50/40 transition-colors duration-500 pointer-events-none" />
-                          <div className="h-10 w-10 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0 shadow-2xs transition-transform duration-500 group-hover:scale-110">
-                            {renderCategoryIcon(cat.icon, "h-4.5 w-4.5 text-[#027244]")}
-                          </div>
-                          <div className="flex flex-col z-10 mt-3">
-                            <span className="font-medium text-[#001c41] text-sm sm:text-[17px] leading-snug group-hover:text-[#027244] transition-colors duration-300 truncate">
-                              {cat.categoryName}
-                            </span>
-                            <span className="text-[9px] sm:text-[10px] text-slate-400 font-extrabold mt-1 uppercase tracking-wide leading-none">
-                              {count} Business{count !== 1 ? 'es' : ''}
-                            </span>
-                          </div>
-                        </div>
+                           key={cat._id}
+                           onClick={() => handleCategoryClick(cat.categoryName)}
+                           className="card-premium group rounded-3xl p-4 sm:p-6 cursor-pointer flex flex-col justify-between min-h-[7.5rem] sm:h-36 h-auto relative overflow-hidden bg-white border border-slate-200/65 hover:border-[#027244]"
+                         >
+                           <div className="absolute -right-6 -bottom-6 w-16 h-16 bg-slate-50 rounded-full group-hover:bg-emerald-50/40 transition-colors duration-500 pointer-events-none" />
+                           <div className="h-10 w-10 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0 shadow-2xs transition-transform duration-500 group-hover:scale-110">
+                             {renderCategoryIcon(cat.icon, "h-4.5 w-4.5 text-[#027244]")}
+                           </div>
+                           <div className="flex flex-col z-10 mt-3">
+                             <span className="font-medium text-[#001c41] text-xs sm:text-sm md:text-[17px] leading-tight sm:leading-snug group-hover:text-[#027244] transition-colors duration-300 line-clamp-2">
+                               {cat.categoryName}
+                             </span>
+                             <span className="text-[9px] sm:text-[10px] text-slate-400 font-extrabold mt-1 uppercase tracking-wide leading-none">
+                               {count} Business{count !== 1 ? 'es' : ''}
+                             </span>
+                           </div>
+                         </div>
                       );
                     })}
                   </div>
@@ -1788,14 +1788,14 @@ function BusinessesList() {
                                     } catch (e) {}
                                     navigate(`/businesses?focus=categories&category=${encodeURIComponent(cat.name)}`);
                                   }}
-                                  className="card-premium group rounded-3xl p-4 sm:p-6 cursor-pointer flex flex-col justify-between h-32 sm:h-36 relative overflow-hidden bg-white border border-slate-200/65 hover:border-[#027244] transition-all"
+                                  className="card-premium group rounded-3xl p-4 sm:p-6 cursor-pointer flex flex-col justify-between min-h-[7.5rem] sm:h-36 h-auto relative overflow-hidden bg-white border border-slate-200/65 hover:border-[#027244] transition-all"
                                 >
                                   <div className="absolute -right-6 -bottom-6 w-16 h-16 bg-slate-50 rounded-full group-hover:bg-emerald-50/40 transition-colors duration-500 pointer-events-none" />
                                   <div className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full ${cat.bg} flex items-center justify-center shrink-0 shadow-2xs transition-transform duration-500 group-hover:scale-110`}>
                                     {cat.icon}
                                   </div>
                                   <div className="flex flex-col z-10 mt-3">
-                                    <span className="font-medium text-[#001c41] text-sm sm:text-[17px] leading-snug group-hover:text-[#027244] transition-colors duration-300 truncate">
+                                    <span className="font-medium text-[#001c41] text-xs sm:text-sm md:text-[17px] leading-tight sm:leading-snug group-hover:text-[#027244] transition-colors duration-300 line-clamp-2">
                                       {cat.name}
                                     </span>
                                     <span className="text-[9px] sm:text-[10px] text-slate-455 font-extrabold mt-1 uppercase tracking-wide leading-none flex items-center gap-1">
@@ -1872,7 +1872,7 @@ function BusinessesList() {
                                 {renderCategoryIcon(parentIconStr, "h-4 w-4 text-[#027244]")}
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-sm sm:text-[17px] font-medium text-slate-700 group-hover:text-[#027244] transition-colors truncate">
+                                <span className="text-xs sm:text-sm md:text-[17px] font-medium text-slate-700 group-hover:text-[#027244] transition-colors line-clamp-2 leading-tight">
                                   All {selectedCategoryInExplore}
                                 </span>
                                 <span className="text-[8px] sm:text-[9px] text-slate-400 font-semibold mt-0.5 leading-none">
@@ -1915,7 +1915,7 @@ function BusinessesList() {
                                 {renderCategoryIcon(cat.icon, "h-4 w-4 text-[#027244]")}
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-sm sm:text-[17px] font-medium text-slate-700 group-hover:text-[#027244] transition-colors truncate">
+                                <span className="text-xs sm:text-sm md:text-[17px] font-medium text-slate-700 group-hover:text-[#027244] transition-colors line-clamp-2 leading-tight">
                                   {cat.categoryName}
                                 </span>
                                 <span className="text-[8px] sm:text-[9px] text-slate-400 font-semibold mt-0.5 leading-none">
@@ -2520,25 +2520,25 @@ function BusinessesList() {
     <div className="w-full flex flex-col items-center bg-[#F8FAFC]">
       {/* Search Header Banner */}
       <section 
-        className="w-full relative min-h-[200px] md:min-h-[260px] bg-[#001c41] text-white py-6 md:py-10 px-4 md:px-8 border-b border-slate-800"
+        className="w-full relative min-h-0 md:min-h-[260px] bg-[#001c41] text-white py-4 md:py-10 px-4 md:px-8 border-b border-slate-800"
       >
-        <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10">
+        <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 w-full">
           
           {/* Breadcrumbs */}
-          <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-2">
+          <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-1 md:mt-2 order-1">
             <Link to="/" className="hover:text-[#f97316] transition-colors">Home</Link>
             <span>&gt;</span>
             <span className="text-slate-100">Businesses</span>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mt-4 self-start font-sans">
+          <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white mt-3 md:mt-4 self-start font-sans order-2">
             Businesses in Udumalpet
           </h1>
-          <p className="text-slate-350 text-xs font-semibold self-start mt-1.5 leading-relaxed">
+          <p className="hidden sm:block text-slate-350 text-xs font-semibold self-start mt-1.5 leading-relaxed order-3">
             Discover, compare and connect with the best local businesses.
           </p>
           
-          <form onSubmit={handleSearchSubmit} className="mt-8 w-full bg-white border border-slate-200 shadow-xl rounded-2xl p-2 flex flex-col md:flex-row gap-2 max-w-5xl">
+          <form onSubmit={handleSearchSubmit} className="mt-4 md:mt-8 w-full bg-white border border-slate-200 shadow-xl rounded-2xl p-2 flex flex-col md:flex-row gap-2 max-w-5xl order-4 text-slate-700">
             <div className="flex-1 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100 relative">
               <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
               <input
@@ -2670,33 +2670,33 @@ function BusinessesList() {
         {/* Right Main Results Grid */}
         <main className="lg:col-span-3 flex flex-col gap-6">
           {/* Filters summary and sorting bar */}
-          <div className="bg-white border border-slate-200 shadow-sm p-4.5 rounded-3xl flex justify-between items-center text-xs font-semibold text-slate-600">
+          <div className="bg-white border border-slate-200 shadow-sm p-3.5 sm:p-4.5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs font-semibold text-slate-600">
             <span>
               Showing {businesses.length} result{businesses.length !== 1 ? 's' : ''} in Udumalpet
             </span>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 w-full sm:w-auto">
               <div className="flex items-center gap-1.5">
                 <span>Sort by:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => { setSortBy(e.target.value); triggerQueryUpdate(); }}
-                  className="py-1 px-2 border border-slate-300 bg-white rounded cursor-pointer font-semibold focus:outline-none"
+                  className="py-1 px-2 border border-slate-300 bg-white rounded cursor-pointer font-semibold focus:outline-none max-w-[130px] sm:max-w-none truncate"
                 >
                   <option>Most Relevant</option>
                   <option>Highest Rating</option>
                   <option>Newest</option>
                 </select>
               </div>
-              <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+              <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50 shrink-0">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2.5 cursor-pointer transition-colors ${viewMode === 'grid' ? 'bg-[#027244] text-white' : 'text-slate-400 hover:text-slate-600'}`}
+                  className={`p-2 sm:p-2.5 cursor-pointer transition-colors ${viewMode === 'grid' ? 'bg-[#027244] text-white' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                   <Grid className="h-4.5 w-4.5" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2.5 cursor-pointer transition-colors ${viewMode === 'list' ? 'bg-[#027244] text-white' : 'text-slate-400 hover:text-slate-600'}`}
+                  className={`p-2 sm:p-2.5 cursor-pointer transition-colors ${viewMode === 'list' ? 'bg-[#027244] text-white' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                   <List className="h-4.5 w-4.5" />
                 </button>
