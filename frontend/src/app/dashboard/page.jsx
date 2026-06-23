@@ -237,6 +237,13 @@ function DashboardContent() {
   const [monthlyPrice, setMonthlyPrice] = useState(99);
   const [yearlyPrice, setYearlyPrice] = useState(999);
   
+  // Support Queries states
+  const [supportQueries, setSupportQueries] = useState([]);
+  const [newQueryMessage, setNewQueryMessage] = useState('');
+  const [supportLoading, setSupportLoading] = useState(false);
+  const [supportError, setSupportError] = useState('');
+  const [supportSuccess, setSupportSuccess] = useState('');
+  
   // My Payment History states
   const [myPayments, setMyPayments] = useState([]);
   const [myPaymentsLoading, setMyPaymentsLoading] = useState(false);
@@ -1017,12 +1024,84 @@ function DashboardContent() {
     }
   };
 
+  const fetchSupportQueries = async (authToken) => {
+    const activeToken = authToken || token || localStorage.getItem('ubt_token');
+    if (!activeToken) return;
+    try {
+      setSupportLoading(true);
+      setSupportError('');
+      const res = await fetch('http://localhost:5000/api/queries/my-queries', {
+        headers: { Authorization: `Bearer ${activeToken}` }
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setSupportQueries(data.data);
+      }
+    } catch (err) {
+      console.warn('Failed to load support queries:', err);
+    } finally {
+      setSupportLoading(false);
+    }
+  };
+
+  const handleSupportQuerySubmit = async (e) => {
+    e.preventDefault();
+    if (!newQueryMessage.trim()) return;
+    const activeToken = token || localStorage.getItem('ubt_token');
+    if (!activeToken) return;
+
+    try {
+      setSupportLoading(true);
+      setSupportError('');
+      setSupportSuccess('');
+
+      const res = await fetch('http://localhost:5000/api/queries/merchant-query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ message: newQueryMessage })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSupportSuccess('Support ticket submitted successfully! Admin has been notified.');
+        setNewQueryMessage('');
+        fetchSupportQueries(activeToken);
+      } else {
+        setSupportError(data.message || 'Failed to submit query.');
+      }
+    } catch (err) {
+      setSupportError('Network connection failure. Please try again.');
+    } finally {
+      setSupportLoading(false);
+    }
+  };
+
   useEffect(() => {
     const activeToken = token || localStorage.getItem('ubt_token');
     if (activeToken && activeTab === 'Subscription & Billing') {
       fetchMyPayments();
     }
   }, [token, activeTab]);
+
+  useEffect(() => {
+    const activeToken = token || localStorage.getItem('ubt_token');
+    if (activeToken && activeTab === 'Help & Support') {
+      fetchSupportQueries(activeToken);
+    }
+  }, [token, activeTab]);
+
+  useEffect(() => {
+    if (!showRenewModal || isMandatorySubscription) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowRenewModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showRenewModal, isMandatorySubscription]);
 
   useEffect(() => {
     const businessTabs = [
@@ -2982,6 +3061,13 @@ function DashboardContent() {
           theme: {
             color: '#027244',
           },
+          modal: {
+            ondismiss: function() {
+              setCompleteEventLoading(false);
+            },
+            backdropclose: true,
+            escape: true
+          }
         };
  
         const rzp1 = new window.Razorpay(options);
@@ -3477,9 +3563,9 @@ function DashboardContent() {
           }
         },
         prefill: {
-          name: user.fullName || '',
-          email: user.email || '',
-          contact: user.phone || user.mobileNumber || '',
+          name: user?.fullName || '',
+          email: user?.email || '',
+          contact: user?.phone || user?.mobileNumber || '',
         },
         theme: {
           color: '#027244', 
@@ -3488,7 +3574,9 @@ function DashboardContent() {
           ondismiss: function() {
             setPaymentLoading(false);
             setCheckoutPlan(null);
-          }
+          },
+          backdropclose: true,
+          escape: true
         }
       };
 
@@ -3630,19 +3718,36 @@ function DashboardContent() {
   };
 
   const copyReviewLink = () => {
-    navigator.clipboard.writeText('https://g.page/r/CfLKj12345ABC/review');
+    if (!business || !business._id) return;
+    const url = `${window.location.origin}/businesses/${business._id}?tab=reviews`;
+    navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const copyProfileLink = () => {
+  const copyProfileLink = async () => {
     if (!business || !business._id) {
       alert("Business details not loaded yet.");
       return;
     }
     const url = `${window.location.origin}/businesses/${business._id}`;
-    navigator.clipboard.writeText(url);
-    alert("Business profile link copied to clipboard!");
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: business.name,
+          text: `Check out our business profile on Udumalpet Business Tour: ${business.name}`,
+          url: url
+        });
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          navigator.clipboard.writeText(url);
+          alert("Business profile link copied to clipboard!");
+        }
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      alert("Business profile link copied to clipboard!");
+    }
   };
 
   if (loading) {
@@ -4498,17 +4603,6 @@ function DashboardContent() {
                           </span>
                           <ExternalLink className="h-3 w-3 text-slate-450" />
                         </a>
-
-                        <button 
-                          onClick={() => setShowUploadModal(true)}
-                          className="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 hover:border-emerald-500 rounded-xl text-slate-700 hover:text-[#001c41] text-[10.5px] font-extrabold flex items-center justify-between transition-all cursor-pointer text-left"
-                        >
-                          <span className="flex items-center gap-2">
-                            <span className="h-5 w-5 bg-white shadow-xs border border-slate-200 rounded flex items-center justify-center text-amber-500 text-[11px]">★</span>
-                            Get More Reviews
-                          </span>
-                          <ExternalLink className="h-3 w-3 text-slate-450" />
-                        </button>
                       </div>
 
                       {/* Review Link Sync input and copy clip */}
@@ -4518,7 +4612,7 @@ function DashboardContent() {
                           <input 
                             type="text" 
                             readOnly
-                            value="https://g.page/r/CfLKj12345ABC/review"
+                            value={business ? `${window.location.origin}/businesses/${business._id}?tab=reviews` : ''}
                             className="w-full bg-transparent text-[11px] font-semibold text-slate-600 px-2 focus:outline-none"
                           />
                           <button 
@@ -7472,23 +7566,114 @@ function DashboardContent() {
           {/* ========================================================================= */}
           {/* TAB: HELP & SUPPORT PANEL */}
           {/* ========================================================================= */}
+          {/* ========================================================================= */}
+          {/* TAB: HELP & SUPPORT PANEL */}
+          {/* ========================================================================= */}
           {activeTab === 'Help & Support' && (
-            <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 text-center flex flex-col items-center gap-5 max-w-md mx-auto my-12 animate-fadeIn text-left">
-              <div className="h-14 w-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center border border-blue-150">
-                <Info className="h-6 w-6" />
+            <div className="flex flex-col lg:flex-row gap-8 animate-fadeIn text-left font-sans text-[#001c41]">
+              {/* Left Column: Submit Query Form */}
+              <div className="flex-1 bg-white border border-slate-200 shadow-sm rounded-3xl p-6 md:p-8 flex flex-col gap-5">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 bg-emerald-50 text-[#027244] rounded-2xl flex items-center justify-center border border-emerald-100 shadow-inner">
+                    <MessageSquare className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-slate-800 text-base">Submit a Support Ticket</h3>
+                    <p className="text-xs text-slate-450 font-semibold mt-0.5">Need help? Send a query directly to the platform admin inbox</p>
+                  </div>
+                </div>
+
+                {supportSuccess && (
+                  <div className="bg-emerald-50 border border-emerald-250 text-[#027244] rounded-xl p-3.5 text-xs font-bold flex items-center gap-2 animate-fadeIn">
+                    <CheckCircle className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
+                    <span>{supportSuccess}</span>
+                  </div>
+                )}
+
+                {supportError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3.5 text-xs font-bold flex items-center gap-2 animate-fadeIn">
+                    <AlertCircle className="h-4.5 w-4.5 shrink-0" />
+                    <span>{supportError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSupportQuerySubmit} className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Your Inquiry / Support Message</span>
+                    <textarea
+                      placeholder="Type details of your issue, subscription billing queries, or feature requests..."
+                      value={newQueryMessage}
+                      onChange={(e) => setNewQueryMessage(e.target.value)}
+                      required
+                      rows={5}
+                      className="w-full border border-slate-200 rounded-2xl p-4 text-xs bg-slate-50/30 focus:outline-[#027244] font-semibold leading-relaxed"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={supportLoading || !newQueryMessage.trim()}
+                    className="py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer w-full sm:w-fit px-6"
+                  >
+                    {supportLoading ? 'Submitting...' : 'Submit Support Ticket'}
+                  </button>
+                </form>
+
+                <div className="border-t border-dashed border-slate-200 my-2" />
+
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/50 p-4 rounded-2xl">
+                  <Info className="h-5 w-5 text-slate-400 shrink-0" />
+                  <p className="text-[10.5px] text-slate-500 font-semibold leading-normal">
+                    You can also reach us via standard email client protocols at{' '}
+                    <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-[#027244] hover:underline font-extrabold">
+                      udumalpetbusinesstour@gmail.com
+                    </a>{' '}
+                    for emergency account access.
+                  </p>
+                </div>
               </div>
-              <div className="text-center">
-                <h3 className="font-extrabold text-slate-800 text-base">Help & Support Panel</h3>
-                <p className="text-xs text-slate-500 font-semibold leading-relaxed mt-2">
-                  Configure your email alerts, manage subscription cycles, or contact the UBT helpdesk for dedicated assistance.
-                </p>
+
+              {/* Right Column: Support Tickets History */}
+              <div className="w-full lg:w-96 bg-white border border-slate-200 shadow-sm rounded-3xl p-6 md:p-8 flex flex-col gap-5">
+                <div className="border-b border-slate-100 pb-3">
+                  <h3 className="font-extrabold text-slate-800 text-sm md:text-base">Support History</h3>
+                  <p className="text-xs text-slate-455 font-semibold mt-0.5">Track status of queries sent to administrators</p>
+                </div>
+
+                {supportQueries.length === 0 ? (
+                  <div className="py-12 text-center text-slate-400 font-semibold italic text-xs flex flex-col items-center justify-center gap-2">
+                    <span>No queries submitted yet.</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4 overflow-y-auto max-h-[50vh] pr-1.5 scrollbar-thin">
+                    {supportQueries.map((q) => (
+                      <div key={q._id} className="border border-slate-200 rounded-2xl p-4.5 flex flex-col gap-3 text-xs bg-slate-50/20">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[9.5px] font-extrabold text-slate-400 uppercase">
+                            {new Date(q.createdAt).toLocaleDateString()}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase border ${
+                            q.status === 'Replied'
+                              ? 'bg-emerald-50 text-[#027244] border-emerald-100'
+                              : 'bg-amber-50 text-amber-700 border-amber-250/60 animate-pulse'
+                          }`}>
+                            {q.status}
+                          </span>
+                        </div>
+                        <p className="text-slate-705 font-bold leading-normal italic">
+                          "{q.message}"
+                        </p>
+                        {q.status === 'Replied' && q.replyMessage && (
+                          <div className="bg-[#E6F7F0] border border-[#C3E6CB] rounded-xl p-3.5 mt-1.5 text-emerald-850">
+                            <span className="text-[9px] font-extrabold text-emerald-700 uppercase tracking-widest block mb-1">Admin Response</span>
+                            <p className="font-bold leading-relaxed">{q.replyMessage}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <a 
-                href="mailto:udumalpetbusinesstour@gmail.com"
-                className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md text-center transition-transform hover:-translate-y-0.5"
-              >
-                Contact Administrator via Mail
-              </a>
             </div>
           )}
 
@@ -8023,7 +8208,14 @@ function DashboardContent() {
 
       {/* MODAL 1: Subscription Renewal with Razorpay */}
       {(showRenewModal || isMandatorySubscription) && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center md:items-start justify-center p-4 overflow-y-auto">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isMandatorySubscription) {
+              setShowRenewModal(false);
+            }
+          }}
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center md:items-start justify-center p-4 overflow-y-auto"
+        >
           <div 
             style={{ '--modal-margin-top': `${modalMarginTop}px` }}
             className="max-w-4xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-6 animate-scaleUp text-left max-h-[90vh] overflow-y-auto scrollbar-none relative my-auto md:my-0 md:mt-[var(--modal-margin-top)]"

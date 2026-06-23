@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { 
   MapPin, Phone, Mail, Clock, ShieldCheck, HeartHandshake, Star, Share2, Heart, Award, 
   ArrowLeft, Send, CheckCircle2, MessageSquare, AlertCircle, RefreshCw, Calendar, Globe, Sparkles,
@@ -74,6 +74,7 @@ const viewedBusinesses = new Set();
 export default function BusinessDetail() {
   const params = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Inject parent listing into history stack on direct entry
   useEffect(() => {
@@ -86,6 +87,14 @@ export default function BusinessDetail() {
   }, []);
 
   const [activeTab, setActiveTab] = useState('overview'); // overview | services | photos | reviews | offers | about | map
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
   const [business, setBusiness] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);

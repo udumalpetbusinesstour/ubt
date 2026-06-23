@@ -1,10 +1,12 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User');
 const Business = require('../models/Business');
 const Blog = require('../models/Blog');
 const Event = require('../models/Event');
 const { registerSchema, loginSchema } = require('../validations/userValidation');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
+const { sendEmail } = require('../utils/emailHelper');
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -375,12 +377,119 @@ const googleLogin = async (req, res, next) => {
   }
 };
 
+/**
+ * Request password reset token
+ */
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email, origin } = req.body;
+    if (!email) {
+      return sendError(res, 400, 'Please provide an email address');
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return sendError(res, 404, 'No account found with this email address');
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(20).toString('hex');
+
+    // Hash token and set expire fields in DB (1 hour validity)
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpire = Date.now() + 3600000; // 1 hour
+
+    await user.save();
+
+    // Reset url (fallback to req.headers.origin or localhost frontend)
+    const clientOrigin = origin || req.headers.origin || 'http://localhost:5173';
+    const resetUrl = `${clientOrigin}/reset-password?token=${resetToken}`;
+
+    const textMessage = `You are receiving this email because you (or someone else) have requested the reset of a password. Please click on the following link or paste it into your browser to complete the process:\n\n${resetUrl}\n\nThis link will expire in 1 hour. If you did not request this, please ignore this email.`;
+
+    const htmlMessage = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <h2 style="color: #027244;">Password Reset Request</h2>
+        <p>You requested a password reset for your Udumalpet Business Tour (UBT) account.</p>
+        <p>Please click the button below to reset your password. This link is valid for <strong>1 hour</strong>.</p>
+        <div style="margin: 24px 0;">
+          <a href="${resetUrl}" style="background-color: #027244; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Reset Password</a>
+        </div>
+        <p style="color: #64748b; font-size: 12px;">If the button above doesn't work, copy and paste this URL into your browser:</p>
+        <p style="color: #027244; font-size: 12px; word-break: break-all;">${resetUrl}</p>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+        <p style="color: #64748b; font-size: 12px;">If you did not request a password reset, please ignore this email. Your password will remain unchanged.</p>
+      </div>
+    `;
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Password Reset Request - Udumalpet Business Tour',
+        text: textMessage,
+        html: htmlMessage
+      });
+      return sendSuccess(res, 200, 'Password reset email sent successfully');
+    } catch (mailErr) {
+      // Clear token fields on email dispatch failure
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save();
+      return sendError(res, 500, 'Email could not be sent. Please try again.');
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Reset password using token
+ */
+const resetPassword = async (req, res, next) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      return sendError(res, 400, 'Token and password are required');
+    }
+
+    if (password.length < 6) {
+      return sendError(res, 400, 'Password must be at least 6 characters');
+    }
+
+    // Hash incoming token to match stored hash
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return sendError(res, 400, 'Invalid or expired reset token');
+    }
+
+    // Set new password
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    return sendSuccess(res, 200, 'Password reset successful. You can now login with your new password.');
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getMe,
   updateProfile,
   deleteAccount,
-  googleLogin
+  googleLogin,
+  forgotPassword,
+  resetPassword
 };
 

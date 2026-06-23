@@ -321,23 +321,34 @@ export default function EventsPage() {
   useEffect(() => {
     // Check local storage for auth
     const storedUser = localStorage.getItem('ubt_user');
+    const isListFlow = searchParams.get('list') === 'true';
+
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
         setCurrentUser(parsedUser);
         checkUserSubscription(parsedUser._id);
         setWizardStep('info_stage_1');
-        if (searchParams.get('list') === 'true') {
+        if (isListFlow) {
           setShowListingWizard(true);
         }
       } catch (err) {
         console.error('Failed to parse ubt_user details from localStorage:', err);
         localStorage.removeItem('ubt_user');
         localStorage.removeItem('ubt_token');
+        if (isListFlow) {
+          navigate(`/login?redirect=${encodeURIComponent('/events?list=true')}&from=events`);
+          return;
+        }
+      }
+    } else {
+      if (isListFlow) {
+        navigate(`/login?redirect=${encodeURIComponent('/events?list=true')}&from=events`);
+        return;
       }
     }
     fetchEvents();
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   const checkUserSubscription = async (userId) => {
     try {
@@ -810,6 +821,13 @@ export default function EventsPage() {
           theme: {
             color: '#027244',
           },
+          modal: {
+            ondismiss: function() {
+              setSubmitLoading(false);
+            },
+            backdropclose: true,
+            escape: true
+          }
         };
 
         const rzp1 = new window.Razorpay(options);

@@ -79,6 +79,12 @@ const UserSchema = new mongoose.Schema({
   isFoundingMember: {
     type: Boolean,
     default: false,
+  },
+  resetPasswordToken: {
+    type: String,
+  },
+  resetPasswordExpire: {
+    type: Date,
   }
 }, {
   timestamps: true
