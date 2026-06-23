@@ -70,6 +70,7 @@ app.use('/api/plans', require('./routes/plans'));
 app.use('/api/newsletter', require('./routes/newsletter'));
 app.use('/api/leads', require('./routes/leads'));
 app.use('/api/menu', require('./routes/menu'));
+app.use('/api/blood-donors', require('./routes/bloodDonors'));
 
 // Root & Health Status Check
 app.get('/', (req, res) => {

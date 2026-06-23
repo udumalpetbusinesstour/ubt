@@ -531,6 +531,19 @@ export default function Home() {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    if (!isTestimonialModalOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsTestimonialModalOpen(false);
+        setSubmitSuccess('');
+        setSubmitError('');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isTestimonialModalOpen]);
+
   const handlePrevTestimonial = () => {
     if (testimonials.length === 0) return;
     setTestimonialIdx(prev => (prev === 0 ? testimonials.length - 1 : prev - 1));
@@ -1260,10 +1273,22 @@ export default function Home() {
       <section className="w-full bg-slate-50/50 py-8 md:py-16 px-4 border-t border-slate-200/50 relative">
         <div className="max-w-6xl mx-auto flex flex-col items-center gap-6 md:gap-10 relative">
           
-          <div className="w-full flex justify-between items-end">
-            <div className="text-left">
-              <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">What People Say</h2>
-              <p className="text-sm text-slate-500 font-medium mt-1">Real experiences shared by our core community member creators</p>
+          <div className="w-full flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="text-left flex flex-col gap-1.5">
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">What People Say</h2>
+                <a 
+                  href="https://g.page/r/Ca2-Khy1EIWLEBM/review" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="inline-flex items-center gap-1 bg-[#4285F4]/10 hover:bg-[#4285F4]/15 text-[#4285F4] px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer border border-[#4285F4]/20 hover:scale-102"
+                >
+                  <Star className="h-3 w-3 fill-current text-[#F4B400] border-none" />
+                  <span>See or write a review on Google</span>
+                  <ArrowRight className="h-3 w-3" />
+                </a>
+              </div>
+              <p className="text-sm text-slate-500 font-medium">Real experiences shared by our core community member creators</p>
             </div>
             
             {/* Scroll Navigation Arrows */}
@@ -1535,8 +1560,18 @@ export default function Home() {
 
       {/* Testimonials Submission Modal */}
       {isTestimonialModalOpen && (
-        <div className="fixed inset-0 bg-[#001c41]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-opacity animate-fadeIn text-left">
-          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl relative border border-slate-100 flex flex-col gap-5 animate-scaleUp">
+        <div 
+          onClick={() => {
+            setIsTestimonialModalOpen(false);
+            setSubmitSuccess('');
+            setSubmitError('');
+          }}
+          className="fixed inset-0 bg-[#001c41]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-opacity animate-fadeIn text-left"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl relative border border-slate-100 flex flex-col gap-5 animate-scaleUp"
+          >
             
             {/* Close Button */}
             <button

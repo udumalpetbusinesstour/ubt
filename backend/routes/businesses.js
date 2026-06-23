@@ -3,6 +3,7 @@ const router = express.Router();
 const Business = require('../models/Business');
 const Review = require('../models/Review');
 const Category = require('../models/Category');
+const Lead = require('../models/Lead');
 const { protect } = require('../middleware/auth');
 
 // Synchronize branches as child Business documents
@@ -2067,32 +2068,78 @@ router.post('/draft', protect, async (req, res) => {
 const { syncGoogleBusiness } = require('../controllers/businessController');
 router.post('/:id/sync-google', protect, syncGoogleBusiness);
 
-// @desc    Increment click count for a business by action type
+// @desc    Increment click count for a business by action type and record as Lead log
 // @route   POST /api/businesses/:id/click
 // @access  Public
 router.post('/:id/click', async (req, res) => {
   const { type } = req.body;
-  const validTypes = ['call', 'whatsapp', 'website', 'instagram', 'facebook'];
+  const validTypes = ['call', 'whatsapp', 'website', 'instagram', 'facebook', 'email', 'directions', 'phonebook'];
   if (!validTypes.includes(type)) {
     return res.status(400).json({ success: false, message: 'Invalid click type' });
   }
 
   try {
     const updateField = `${type}Clicks`;
-    const business = await Business.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { [updateField]: 1 } },
-      { new: true }
-    );
+    const schemaClicks = ['call', 'whatsapp', 'website', 'instagram', 'facebook'];
+    
+    let business;
+    if (schemaClicks.includes(type)) {
+      business = await Business.findByIdAndUpdate(
+        req.params.id,
+        { $inc: { [updateField]: 1 } },
+        { new: true }
+      );
+    } else {
+      business = await Business.findById(req.params.id);
+    }
 
     if (!business) {
       return res.status(404).json({ success: false, message: 'Business not found' });
     }
 
-    res.json({ success: true, clicks: business[updateField] });
+    // Create a new Lead document for this touch interaction
+    let leadName = 'Customer (Click)';
+    let leadPhone = '+91 00000 00000';
+    let leadMessage = `Clicked '${type.charAt(0).toUpperCase() + type.slice(1)}' button on your profile.`;
+
+    if (type === 'call') {
+      leadName = 'Customer (Call)';
+      leadMessage = 'Initiated a phone call from your listing profile.';
+    } else if (type === 'whatsapp') {
+      leadName = 'Customer (WhatsApp)';
+      leadMessage = 'Opened WhatsApp chat from your listing profile.';
+    } else if (type === 'website') {
+      leadName = 'Customer (Website)';
+      leadMessage = 'Visited your website link from your listing profile.';
+    } else if (type === 'facebook') {
+      leadName = 'Customer (Facebook)';
+      leadMessage = 'Visited your Facebook page from your listing profile.';
+    } else if (type === 'instagram') {
+      leadName = 'Customer (Instagram)';
+      leadMessage = 'Visited your Instagram profile from your listing profile.';
+    } else if (type === 'email') {
+      leadName = 'Customer (Email)';
+      leadMessage = 'Initiated an email draft from your listing profile.';
+    } else if (type === 'directions') {
+      leadName = 'Customer (Map Directions)';
+      leadMessage = 'Requested navigation directions to your business locality in Google Maps.';
+    } else if (type === 'phonebook') {
+      leadName = 'Customer (Saved Contact)';
+      leadMessage = 'Downloaded your business contact card to save to their phonebook.';
+    }
+
+    await Lead.create({
+      businessId: req.params.id,
+      name: leadName,
+      phone: leadPhone,
+      message: leadMessage,
+      status: 'Pending'
+    });
+
+    res.json({ success: true, clicks: schemaClicks.includes(type) ? business[updateField] : 0 });
   } catch (error) {
-    console.error(`Error incrementing ${type} clicks:`, error);
-    res.status(505).json({ success: false, message: error.message });
+    console.error(`Error processing click lead for ${type}:`, error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

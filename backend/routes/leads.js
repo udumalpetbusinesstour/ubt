@@ -95,4 +95,43 @@ router.put('/:id/reply', protect, async (req, res) => {
   }
 });
 
+// @desc    Update a lead status
+// @route   PUT /api/leads/:id/status
+// @access  Private (Owner or Admin)
+router.put('/:id/status', protect, async (req, res) => {
+  const { status } = req.body;
+
+  if (!status || !['Pending', 'Responded', 'Rectified'].includes(status)) {
+    return res.status(400).json({ success: false, message: 'Please provide a valid status (Pending, Responded, Rectified)' });
+  }
+
+  try {
+    const lead = await Lead.findById(req.params.id);
+    if (!lead) {
+      return res.status(404).json({ success: false, message: 'Lead not found' });
+    }
+
+    const business = await Business.findById(lead.businessId);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found for this lead' });
+    }
+
+    // Verify ownership
+    if (business.ownerId.toString() !== req.user._id.toString() && req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Not authorized to update this lead' });
+    }
+
+    lead.status = status;
+    if (status === 'Responded' || status === 'Rectified') {
+      lead.respondedAt = Date.now();
+    }
+    await lead.save();
+
+    res.json({ success: true, data: lead });
+  } catch (error) {
+    console.error('Error updating lead status:', error);
+    res.status(500).json({ success: false, message: 'Server error updating lead status' });
+  }
+});
+
 module.exports = router;

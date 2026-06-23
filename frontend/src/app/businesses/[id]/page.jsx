@@ -74,6 +74,17 @@ const viewedBusinesses = new Set();
 export default function BusinessDetail() {
   const params = useParams();
   const navigate = useNavigate();
+
+  // Inject parent listing into history stack on direct entry
+  useEffect(() => {
+    if (window.__spa_nav_count === 1) {
+      const currentPath = window.location.pathname + window.location.search + window.location.hash;
+      window.history.replaceState(null, '', '/businesses');
+      window.history.pushState(null, '', currentPath);
+      window.__spa_nav_count++;
+    }
+  }, []);
+
   const [activeTab, setActiveTab] = useState('overview'); // overview | services | photos | reviews | offers | about | map
   const [business, setBusiness] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -106,6 +117,20 @@ export default function BusinessDetail() {
       setMenuUrlsState(business.menuUrls);
     }
   }, [business, showMenuModal]);
+
+  useEffect(() => {
+    if (!showVerifyModal) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowVerifyModal(false);
+        setVerifyError('');
+        setVerifySuccess('');
+        setVerifyPlaceId('');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showVerifyModal]);
 
   const handleMenuUpload = async (e) => {
     const files = e.target.files;
@@ -1063,6 +1088,7 @@ export default function BusinessDetail() {
 
   const handleAddToPhonebook = () => {
     if (!business) return;
+    trackClick('phonebook');
 
     const cleanPhone = business.phone ? business.phone.trim() : '';
     const cleanWhatsapp = business.whatsapp ? business.whatsapp.trim() : '';
@@ -1160,10 +1186,11 @@ export default function BusinessDetail() {
       console.error('Failed to submit enquiry:', err);
     }
   };
-  const trackClick = async (type) => {
-    if (!business || !business._id) return;
+  const trackClick = async (type, customId) => {
+    const id = customId || (business ? business._id : null);
+    if (!id) return;
     try {
-      await fetch(`http://localhost:5000/api/businesses/${business._id}/click`, {
+      await fetch(`http://localhost:5000/api/businesses/${id}/click`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type })
@@ -1213,13 +1240,7 @@ Please confirm availability and delivery time.`;
     return (
       <div className="w-full max-w-4xl mx-auto px-4 py-8 flex flex-col gap-6 text-left font-sans">
         <button 
-          onClick={() => {
-            if (window.history.length > 1) {
-              navigate(-1);
-            } else {
-              window.close();
-            }
-          }}
+          onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 text-xs font-extrabold text-slate-500 hover:text-[#027244] transition-colors cursor-pointer w-fit py-1.5 hover:-translate-x-0.5 transition-transform"
         >
           <ArrowLeft className="h-4 w-4" /> Go Back
@@ -1235,13 +1256,7 @@ Please confirm availability and delivery time.`;
           </div>
           <div className="flex gap-3 mt-2">
             <button 
-              onClick={() => {
-                if (window.history.length > 1) {
-                  navigate(-1);
-                } else {
-                  window.close();
-                }
-              }} 
+              onClick={() => navigate(-1)} 
               className="py-2.5 px-5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-extrabold rounded-xl transition-all shadow-sm cursor-pointer"
             >
               Go Back
@@ -1419,13 +1434,7 @@ Please confirm availability and delivery time.`;
           <div className="flex flex-col gap-3 w-full">
             {/* Go Back button with Left Arrow */}
             <button 
-              onClick={() => {
-                if (window.history.length > 1) {
-                  navigate(-1);
-                } else {
-                  window.close();
-                }
-              }}
+              onClick={() => navigate(-1)}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-emerald-400 transition-colors w-fit cursor-pointer py-1 mb-1.5 hover:-translate-x-0.5 transition-transform"
             >
               <ArrowLeft className="h-4 w-4" /> Go Back
@@ -1555,6 +1564,7 @@ Please confirm availability and delivery time.`;
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Open Directions in Google Maps"
+                onClick={() => trackClick('directions')}
                 className="flex items-center gap-1.5 text-slate-350 hover:text-emerald-450 transition-colors cursor-pointer"
               >
                 <MapPin className="h-4 w-4 text-emerald-500" />
@@ -1586,6 +1596,7 @@ Please confirm availability and delivery time.`;
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Open Directions in Google Maps"
+                  onClick={() => trackClick('directions')}
                   className="h-10 w-10 bg-rose-500/10 border border-rose-500/25 hover:bg-rose-500/25 text-rose-400 hover:scale-105 active:scale-95 transition-all cursor-pointer rounded-xl flex items-center justify-center shadow-sm"
                 >
                   <MapPin className="h-4.5 w-4.5" />
@@ -1596,6 +1607,7 @@ Please confirm availability and delivery time.`;
                   <a 
                     href={`mailto:${business.email}`}
                     title="Send Email"
+                    onClick={() => trackClick('email')}
                     className="h-10 w-10 bg-blue-500/10 border border-blue-500/25 hover:bg-blue-500/25 text-blue-400 hover:scale-105 active:scale-95 transition-all cursor-pointer rounded-xl flex items-center justify-center shadow-sm"
                   >
                     <Mail className="h-4.5 w-4.5" />
@@ -1744,6 +1756,7 @@ Please confirm availability and delivery time.`;
                               href={business.website.startsWith('http') ? business.website : `https://${business.website}`}
                               target="_blank"
                               rel="noopener noreferrer"
+                              onClick={() => trackClick('website')}
                               className="font-extrabold text-emerald-600 hover:text-emerald-700 text-sm mt-2 break-all"
                             >
                               {business.website}
@@ -1761,6 +1774,7 @@ Please confirm availability and delivery time.`;
                             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Contact Phone</span>
                             <a 
                               href={`tel:${business.phone}`}
+                              onClick={() => trackClick('call')}
                               className="font-extrabold text-slate-800 hover:text-emerald-600 text-sm mt-2"
                             >
                               {business.phone}
@@ -1778,6 +1792,7 @@ Please confirm availability and delivery time.`;
                             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Official Email</span>
                             <a 
                               href={`mailto:${business.email}`}
+                              onClick={() => trackClick('email')}
                               className="font-extrabold text-slate-800 hover:text-emerald-600 text-sm mt-2 break-all"
                             >
                               {business.email}
@@ -2656,11 +2671,26 @@ Please confirm availability and delivery time.`;
                       <MapPin className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Branch Address</span>
-                        <span className="text-slate-605 font-medium leading-relaxed mt-1">
+                        <a 
+                          href={
+                            selectedBranch === null
+                              ? directionsUrl
+                              : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selectedBranch.name}, ${selectedBranch.address}`)}`
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => {
+                            const id = selectedBranch === null
+                              ? (business.parentBusiness ? business.parentBusiness._id : business._id)
+                              : selectedBranch._id;
+                            trackClick('directions', id);
+                          }}
+                          className="text-slate-605 font-medium leading-relaxed mt-1 hover:text-emerald-600 transition-colors"
+                        >
                           {selectedBranch === null 
                             ? (business.parentBusiness ? business.parentBusiness.address : business.address) 
                             : selectedBranch.address}
-                        </span>
+                        </a>
                       </div>
                     </div>
 
@@ -2669,11 +2699,24 @@ Please confirm availability and delivery time.`;
                       <Phone className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-widest">Contact Number</span>
-                        <span className="text-slate-800 font-extrabold mt-1">
+                        <a 
+                          href={`tel:${
+                            selectedBranch === null 
+                              ? (business.parentBusiness ? business.parentBusiness.phone : business.phone) 
+                              : selectedBranch.phone
+                          }`}
+                          onClick={() => {
+                            const id = selectedBranch === null
+                              ? (business.parentBusiness ? business.parentBusiness._id : business._id)
+                              : selectedBranch._id;
+                            trackClick('call', id);
+                          }}
+                          className="text-slate-800 font-extrabold mt-1 hover:text-emerald-650 transition-colors"
+                        >
                           {selectedBranch === null 
                             ? (business.parentBusiness ? business.parentBusiness.phone : business.phone) 
                             : selectedBranch.phone}
-                        </span>
+                        </a>
                       </div>
                     </div>
 
@@ -2735,6 +2778,12 @@ Please confirm availability and delivery time.`;
                     }
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => {
+                      const id = selectedBranch === null
+                        ? (business.parentBusiness ? business.parentBusiness._id : business._id)
+                        : selectedBranch._id;
+                      trackClick('directions', id);
+                    }}
                     className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-800/10 cursor-pointer text-center uppercase tracking-wider mt-2"
                   >
                     <MapPin className="h-4 w-4" />
@@ -2754,6 +2803,7 @@ Please confirm availability and delivery time.`;
                   href={directionsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackClick('directions')}
                   className="py-2.5 px-5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-md shadow-emerald-800/10 uppercase tracking-wider"
                 >
                   <MapPin className="h-4 w-4" /> Get Directions
@@ -2785,6 +2835,7 @@ Please confirm availability and delivery time.`;
                     href={directionsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackClick('directions')}
                     className="mt-1 py-2 px-4 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl text-center uppercase tracking-wider transition-colors shadow-sm self-start"
                   >
                     Get Directions

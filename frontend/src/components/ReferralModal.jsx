@@ -24,6 +24,17 @@ export default function ReferralModal({ isOpen, onClose }) {
 
   useEffect(() => {
     if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
 
     const fetchTopReferrers = async () => {
       try {
@@ -66,9 +77,15 @@ export default function ReferralModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div 
+      onClick={onClose}
+      className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+    >
       {/* Modal Dialog */}
-      <div className="max-w-6xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-10 flex flex-col gap-8 animate-scaleUp text-left max-h-[90vh] overflow-y-auto scrollbar-none relative">
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="max-w-6xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-10 flex flex-col gap-8 animate-scaleUp text-left max-h-[90vh] overflow-y-auto scrollbar-none relative"
+      >
         
         {/* Close Button */}
         <button 

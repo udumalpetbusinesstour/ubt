@@ -574,7 +574,7 @@ export default function Register() {
         {renderSidebar()}
 
         {/* Right Side Panel: Form Card Panel */}
-        <div className="order-1 lg:order-2 lg:w-[55%] p-8 md:p-12 flex flex-col justify-center bg-white font-sans">
+        <div className="order-1 lg:order-2 lg:w-[55%] p-5 sm:p-8 md:p-12 flex flex-col justify-center bg-white font-sans">
           <div className="w-full flex flex-col gap-6 max-w-sm mx-auto">
             
             {/* Header text */}
@@ -585,6 +585,17 @@ export default function Register() {
               <p className="text-xs text-slate-500 font-semibold mt-1.5">
                 {fromParam === 'events' ? 'Fill in the details below to list and manage your events' : (fromParam === 'blogs' ? 'Fill in the details below to write and publish blogs' : 'Fill in the details below to get started')}
               </p>
+            </div>
+
+            {/* Already have an account? Login row */}
+            <div className="flex items-center justify-between gap-2.5 border-b border-slate-100 pb-4 font-sans w-full">
+              <span className="text-[11px] sm:text-xs font-semibold text-slate-600 whitespace-nowrap">Already have an account?</span>
+              <Link 
+                to={`/login?${searchParams.toString()}`} 
+                className="py-1.5 px-3.5 sm:px-4.5 border border-[#027244] hover:bg-emerald-50/50 text-[#027244] font-extrabold text-[11px] sm:text-xs rounded-xl transition-colors shrink-0 text-center whitespace-nowrap"
+              >
+                Login
+              </Link>
             </div>
 
             {/* Message banners */}
@@ -735,6 +746,7 @@ export default function Register() {
                 <span>Sign Up</span>
               </button>
             </form>
+
 
             {/* Social logins */}
             <div className="flex flex-col gap-3 mt-1 border-t border-slate-100 pt-4">

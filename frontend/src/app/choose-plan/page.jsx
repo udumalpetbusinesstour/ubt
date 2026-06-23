@@ -17,6 +17,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
   
   const [loading, setLoading] = useState(true);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState(null);
   const [error, setError] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
@@ -207,6 +208,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
       return;
     }
 
+    setCheckoutPlan(planToUse);
     setPaymentLoading(true);
     setError('');
 
@@ -251,6 +253,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
         setError('Admin free activation failed.');
       } finally {
         setPaymentLoading(false);
+        setCheckoutPlan(null);
       }
       return;
     }
@@ -275,6 +278,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
       if (!orderData.success) {
         setError('Failed to initialize Razorpay checkout.');
         setPaymentLoading(false);
+        setCheckoutPlan(null);
         return;
       }
 
@@ -312,6 +316,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
           setError(verifyData.message || 'Points redemption failed.');
         }
         setPaymentLoading(false);
+        setCheckoutPlan(null);
         return;
       }
 
@@ -385,6 +390,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
         modal: {
           ondismiss: function() {
             setPaymentLoading(false);
+            setCheckoutPlan(null);
           }
         }
       };
@@ -442,6 +448,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
         setError('Sandbox verification failed.');
       } finally {
         setPaymentLoading(false);
+        setCheckoutPlan(null);
       }
     }
   };
@@ -778,7 +785,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                         : 'bg-white hover:bg-emerald-50 border border-[#027244] text-[#027244] hover:text-[#005934]'
                     }`}
                   >
-                    {paymentLoading && selectedPlan === p.name 
+                    {paymentLoading && checkoutPlan === p.name 
                       ? 'Activating...' 
                       : (user && (user.role === 'admin' || user.role === 'superadmin') 
                           ? 'Activate Free Admin Plan' 

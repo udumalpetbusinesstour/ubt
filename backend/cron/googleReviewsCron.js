@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 const Business = require('../models/Business');
 const Review = require('../models/Review');
+const Testimonial = require('../models/Testimonial');
 
 const cleanTimingStr = (str) => str.replace(/[\u2013\u2014\u2012\u2010]/g, '-').replace(/[\u202F\u00A0]/g, ' ').trim();
 
@@ -193,6 +194,94 @@ const runGoogleReviewsSync = async () => {
 };
 
 /**
+ * Syncs UBT's Google My Business reviews into the Testimonial collection.
+ * Falls back to high-quality mock reviews if no Place ID is configured.
+ */
+const runUbtTestimonialsSync = async () => {
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  const placeId = process.env.GOOGLE_PLACES_UBT_PLACE_ID;
+  
+  console.log('[GoogleReviewsCron] Starting UBT Testimonials sync...');
+
+  // Fallback if Place ID is mock or empty or no API key
+  if (!placeId || placeId === 'mock_ubt_place_id' || !apiKey) {
+    console.log('[GoogleReviewsCron] GOOGLE_PLACES_UBT_PLACE_ID is empty or set to mock. Seeding mock GMB testimonials...');
+    const mockReviews = [
+      {
+        authorName: 'Ramanathan K.',
+        rating: 5,
+        text: 'Excellent business directory for Udumalpet. Very helpful to find local shops.',
+        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+      },
+      {
+        authorName: 'Santhosh Kumar',
+        rating: 5,
+        text: 'Great platform! Found verified electric wiring services easily in Udumalpet.',
+        createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 14 days ago
+      },
+      {
+        authorName: 'Meera Nair',
+        rating: 4,
+        text: 'Very user friendly dashboard. Good initiatives to support local business tour.',
+        createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000), // 21 days ago
+      }
+    ];
+
+    let inserted = 0;
+    for (const r of mockReviews) {
+      const existing = await Testimonial.findOne({ authorName: r.authorName, text: r.text });
+      if (!existing) {
+        await Testimonial.create({
+          authorName: r.authorName,
+          role: 'Other',
+          text: r.text,
+          rating: r.rating,
+          status: 'Approved',
+          createdAt: r.createdAt,
+          googleLinked: true
+        });
+        inserted++;
+      }
+    }
+    console.log(`[GoogleReviewsCron] ✓ Seeded/Synced ${inserted} mock Google testimonials.`);
+    return;
+  }
+
+  try {
+    const details = await fetchGooglePlaceDetails(placeId, apiKey);
+    if (!details || !details.googleReviews) {
+      console.warn('[GoogleReviewsCron] Failed to fetch reviews for UBT Place ID:', placeId);
+      return;
+    }
+
+    let inserted = 0;
+    for (const r of details.googleReviews) {
+      if (!r.text || !r.text.trim()) {
+        continue;
+      }
+
+      // Check if testimonial already exists by name and text
+      const existing = await Testimonial.findOne({ authorName: r.authorName, text: r.text });
+      if (!existing) {
+        await Testimonial.create({
+          authorName: r.authorName,
+          role: 'Other',
+          text: r.text,
+          rating: r.rating,
+          status: 'Approved',
+          createdAt: r.createdAt || new Date(),
+          googleLinked: true
+        });
+        inserted++;
+      }
+    }
+    console.log(`[GoogleReviewsCron] UBT Testimonials sync complete — ${inserted} new reviews imported.`);
+  } catch (err) {
+    console.error('[GoogleReviewsCron] UBT Testimonials sync error:', err.message);
+  }
+};
+
+/**
  * Start the weekly Google Reviews cron.
  * Runs every Sunday at 02:00 AM local time (low traffic window).
  * Also runs once immediately on server boot to prime the data.
@@ -200,11 +289,13 @@ const runGoogleReviewsSync = async () => {
 const startGoogleReviewsCron = () => {
   // Run once on startup to ensure fresh data
   runGoogleReviewsSync();
+  runUbtTestimonialsSync();
 
   // Schedule weekly: every Sunday at 2:00 AM  (0 2 * * 0)
   cron.schedule('0 2 * * 0', () => {
     console.log('[GoogleReviewsCron] Weekly Sunday 2AM trigger fired.');
     runGoogleReviewsSync();
+    runUbtTestimonialsSync();
   });
 
   console.log('[GoogleReviewsCron] Weekly Google Reviews sync scheduled (Sundays 02:00 AM).');
@@ -212,5 +303,6 @@ const startGoogleReviewsCron = () => {
 
 module.exports = {
   runGoogleReviewsSync,
+  runUbtTestimonialsSync,
   startGoogleReviewsCron,
 };

@@ -39,6 +39,10 @@ const TestimonialSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  googleLinked: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 module.exports = mongoose.model('Testimonial', TestimonialSchema);

@@ -338,6 +338,18 @@ function BusinessesList() {
     setIsAnonCustomSub(false);
   };
 
+  useEffect(() => {
+    if (!showAnonymousAddModal) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowAnonymousAddModal(false);
+        resetAnonForm();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAnonymousAddModal]);
+
   const handleAnonLinkAutofill = async () => {
     if (!anonGmbLink.trim()) return;
     setAnonAutofillLoading(true);
@@ -2224,8 +2236,14 @@ function BusinessesList() {
         </section>
 
         {showAnonymousAddModal && (
-          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-end p-0">
-            <div className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between animate-slideLeft text-left font-sans">
+          <div 
+            onClick={() => { setShowAnonymousAddModal(false); resetAnonForm(); }}
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-end p-0"
+          >
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between animate-slideLeft text-left font-sans"
+            >
               
               {/* Modal Header */}
               <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">

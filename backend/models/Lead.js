@@ -23,7 +23,7 @@ const LeadSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Pending', 'Responded'],
+    enum: ['Pending', 'Responded', 'Rectified'],
     default: 'Pending',
   },
   reply: {

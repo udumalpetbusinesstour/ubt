@@ -56,6 +56,17 @@ export default function UpdatePopup() {
     sessionStorage.setItem('ubt_popup_next_show', snoozeTime.toString());
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && status !== 'success') {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, status]);
+
   // Form submission handler
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -120,8 +131,14 @@ export default function UpdatePopup() {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 max-h-[calc(100vh-2rem)] overflow-y-auto p-5 xs:p-6 sm:p-8 flex flex-col items-center animate-scale-up">
+    <div 
+      onClick={() => status !== 'success' && handleClose()}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 max-h-[calc(100vh-2rem)] overflow-y-auto p-5 xs:p-6 sm:p-8 flex flex-col items-center animate-scale-up"
+      >
         
         {/* Close Button */}
         {status !== 'success' && (

@@ -6,8 +6,9 @@ import {
   MessageSquare, CreditCard as CardIcon, Bell, BarChart3, Settings, LogOut, Search, User, 
   MapPin, ChevronRight, Landmark, Trash2, Mail, Globe, Award, ShieldAlert, CheckCircle2,
   Clock, Plus, Filter, ShieldCheck as ShieldOk, Activity, Cpu, Database, Terminal, Gift, Smile,
-  Upload
+  Upload, Heart
 } from 'lucide-react';
+import BloodDonorsTab from '../../components/BloodDonorsTab';
 
 const availableCategories = [
   'Automotive',
@@ -168,6 +169,7 @@ export default function AdminDashboard() {
   const [auditSubTab, setAuditSubTab] = useState('Businesses'); // Businesses | Blogs | Testimonials
   const [pendingSubTab, setPendingSubTab] = useState('Businesses'); // Businesses | Blogs | Events
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -1502,7 +1504,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-800 text-left">
       
       {/* 1. SIDEBAR CONTAINER */}
-      <aside className={`bg-[#001c41] text-white flex flex-col justify-between transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'} shrink-0 relative overflow-hidden z-20 h-screen sticky top-0`}>
+      <aside className={`bg-[#001c41] text-white flex flex-col justify-between transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'} shrink-0 relative overflow-hidden z-20 h-screen sticky top-0 hidden md:flex`}>
         <div className="flex flex-col gap-8 py-6 flex-1 overflow-y-auto">
           {/* Logo Brand */}
           <div className="px-6 flex items-center justify-start py-2">
@@ -1530,7 +1532,8 @@ export default function AdminDashboard() {
               { id: 'Notifications', label: 'Notifications Hub', icon: <Bell className="h-5 w-5" /> },
               { id: 'Reports', label: 'Reports & Trends', icon: <BarChart3 className="h-5 w-5" /> },
               { id: 'Queries', label: 'Queries Inbox', icon: <Mail className="h-5 w-5" /> },
-              { id: 'Referral Moderation', label: 'Referrals & Refunds', icon: <Gift className="h-5 w-5" /> }
+              { id: 'Referral Moderation', label: 'Referrals & Refunds', icon: <Gift className="h-5 w-5" /> },
+              { id: 'Blood Donors', label: 'Blood Donors', icon: <Heart className="h-5 w-5" /> }
             ].map(item => (
               <button
                 key={item.id}
@@ -1566,11 +1569,88 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
+      {/* Mobile top header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#001c41] text-white flex items-center justify-between px-4 z-50 shadow-md">
+        <div className="flex items-center gap-2">
+          <img src="/logo-dark.png" alt="UBT" className="h-8 w-auto object-contain" />
+          <div className="flex items-center gap-1 bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 rounded px-1.5 py-0.5 text-[8px] font-extrabold uppercase tracking-wider select-none">
+            AD
+          </div>
+          <span className="text-xs font-bold text-slate-200 border-l border-slate-700 pl-2 max-w-[120px] truncate">{activeTab}</span>
+        </div>
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="h-10 w-10 flex items-center justify-center text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+        >
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Mobile Sidebar Overlay / Drawer */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-x-0 top-16 bottom-0 z-40 bg-slate-950/80 backdrop-blur-xs flex animate-fadeIn">
+          <div className="w-64 h-full bg-[#001c41] border-r border-slate-800 flex flex-col justify-between py-6 px-4 animate-slideRight">
+            <div className="flex flex-col gap-5 overflow-y-auto max-h-[85vh]">
+              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest pl-4">Admin Dashboard</span>
+              <nav className="flex flex-col gap-1">
+                {[
+                  { id: 'Dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
+                  { id: 'Businesses', label: 'Businesses', icon: <Store className="h-5 w-5" /> },
+                  { id: 'Category Management', label: 'Categories', icon: <Grid className="h-5 w-5" /> },
+                  { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" /> },
+                  { id: 'Blogs', label: 'Blogs Moderation', icon: <BookOpen className="h-5 w-5" /> },
+                  { id: 'Events', label: 'Events Moderation', icon: <Calendar className="h-5 w-5" /> },
+                  { id: 'Reviews', label: 'Reviews Feed', icon: <MessageSquare className="h-5 w-5" /> },
+                  { id: 'Testimonials', label: 'Testimonials Moderation', icon: <Smile className="h-5 w-5" /> },
+                  { id: 'Subscriptions', label: 'Subscriptions', icon: <CardIcon className="h-5 w-5" /> },
+                  { id: 'Notifications', label: 'Notifications Hub', icon: <Bell className="h-5 w-5" /> },
+                  { id: 'Reports', label: 'Reports & Trends', icon: <BarChart3 className="h-5 w-5" /> },
+                  { id: 'Queries', label: 'Queries Inbox', icon: <Mail className="h-5 w-5" /> },
+                  { id: 'Referral Moderation', label: 'Referrals & Refunds', icon: <Gift className="h-5 w-5" /> },
+                  { id: 'Blood Donors', label: 'Blood Donors', icon: <Heart className="h-5 w-5" /> }
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setActiveTab(item.id);
+                    }}
+                    className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left w-full ${
+                      activeTab === item.id 
+                        ? 'bg-[#027244] text-white shadow-md shadow-emerald-950/15' 
+                        : 'text-slate-350 hover:bg-slate-900/40 hover:text-white'
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </nav>
+            </div>
+            <div className="p-3 border-t border-slate-900 flex flex-col gap-1">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="flex items-center gap-3.5 px-4 py-3 w-full rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-950/15 hover:text-rose-350 cursor-pointer text-left"
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+          <div className="flex-1" onClick={() => setMobileMenuOpen(false)} />
+        </div>
+      )}
+
       {/* 2. MAIN APP SPACE */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto max-h-screen">
+      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto max-h-screen pt-16 md:pt-0">
         
         {/* Topbar navigation panel */}
-        <header className="h-[76px] bg-white border-b border-slate-200/80 px-6 md:px-8 flex items-center justify-between z-10 sticky top-0 shrink-0">
+        <header className="h-[76px] bg-white border-b border-slate-200/80 px-6 md:px-8 hidden md:flex items-center justify-between z-10 sticky top-0 shrink-0">
           {/* Left: tab name / Search */}
           <div className="flex items-center gap-6 flex-1 max-w-md">
             <h2 className="font-extrabold text-slate-800 text-lg hidden sm:block">{activeTab}</h2>
@@ -1643,7 +1723,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* Workspace views content */}
-        <div className="p-6 md:p-8 flex-1">
+        <div className="p-4 md:p-8 flex-1">
           {loading ? (
             <div className="py-24 flex flex-col items-center justify-center gap-3 text-slate-400">
               <RefreshCw className="h-8 w-8 text-emerald-600 animate-spin" />
@@ -4534,6 +4614,10 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {activeTab === 'Blood Donors' && (
+                <BloodDonorsTab />
+              )}
+
             </div>
           )}
         </div>
@@ -4754,18 +4838,18 @@ export default function AdminDashboard() {
                   <span className="text-xs font-bold text-slate-700">Award "Founding Member" Badge upon approval</span>
                 </label>
               )}
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button 
                   onClick={() => { handleAction(selectedBiz._id, 'reject'); setShowBizModal(false); }}
                   disabled={selectedBiz.status === 'Rejected'}
-                  className="flex-1 py-3 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 text-center"
+                  className="w-full sm:flex-1 py-3 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 text-center"
                 >
                   Reject Listing
                 </button>
                 <button 
                   onClick={() => { handleAction(selectedBiz._id, 'approve'); setShowBizModal(false); }}
                   disabled={selectedBiz.status === 'Approved'}
-                  className="flex-1 py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 text-center shadow shadow-emerald-800/10"
+                  className="w-full sm:flex-1 py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 text-center shadow shadow-emerald-800/10"
                 >
                   Approve & Publish
                 </button>

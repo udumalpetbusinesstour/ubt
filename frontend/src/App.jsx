@@ -20,6 +20,7 @@ import AboutPage from './app/about/page';
 import UserProfile from './app/profile/page';
 import ReferralModal from './components/ReferralModal';
 import UpdatePopup from './components/UpdatePopup';
+import BloodDonorsPage from './app/blood-donors/page';
 
 function AppContent() {
   const location = useLocation();
@@ -46,6 +47,15 @@ function AppContent() {
     }
   }, [location.pathname, location.hash]);
 
+  // Track navigation within the SPA session
+  useEffect(() => {
+    if (window.__spa_nav_count === undefined) {
+      window.__spa_nav_count = 0;
+    }
+    window.__spa_nav_count++;
+  }, [location.pathname]);
+
+
   const hideNavAndFooter = location.pathname.startsWith('/dashboard') || 
                            location.pathname.startsWith('/admin') || 
                            location.pathname.startsWith('/superadmin');
@@ -71,6 +81,7 @@ function AppContent() {
           <Route path="/blogs/:id" element={<BlogDetail />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/profile/:id" element={<UserProfile />} />
+          <Route path="/blood-donors" element={<BloodDonorsPage />} />
         </Routes>
       </main>
       {!hideNavAndFooter && <Footer />}

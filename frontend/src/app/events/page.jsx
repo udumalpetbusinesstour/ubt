@@ -1076,8 +1076,20 @@ export default function EventsPage() {
                   <div className="border-b border-slate-100 pb-3">
                     <h2 className="text-2xl font-black text-[#001c41]">Welcome Back!</h2>
                     <p className="text-slate-450 text-xs font-semibold mt-1.5 leading-relaxed">
-                      Login to your account and manage your events in Udumalpet.
+                      Login to your account and manage your events in Udumalpet easily.
                     </p>
+                  </div>
+
+                  {/* Don't have an account? Sign Up row */}
+                  <div className="flex items-center justify-between gap-2.5 border-b border-slate-100 pb-4 font-sans w-full">
+                    <span className="text-[11px] sm:text-xs font-semibold text-slate-600 whitespace-nowrap">Don't have an account?</span>
+                    <button 
+                      type="button"
+                      onClick={() => { setAuthView('register'); setAuthError(''); }}
+                      className="py-1.5 px-3.5 sm:px-4.5 border border-[#027244] hover:bg-emerald-50/50 text-[#027244] font-extrabold text-[11px] sm:text-xs rounded-xl transition-colors shrink-0 text-center whitespace-nowrap bg-transparent cursor-pointer"
+                    >
+                      Sign Up
+                    </button>
                   </div>
 
                   {/* Auth Type selection tabs */}
@@ -1183,15 +1195,6 @@ export default function EventsPage() {
                     <span>Continue with Google</span>
                   </button>
 
-                  <div className="text-xs text-slate-550 font-bold text-center mt-3 border-t border-slate-100 pt-4">
-                    <span>Don't have an account? </span>
-                    <button 
-                      onClick={() => { setAuthView('register'); setAuthError(''); }}
-                      className="text-[#027244] font-black hover:underline cursor-pointer bg-transparent border-none"
-                    >
-                      Create Account
-                    </button>
-                  </div>
                 </div>
               ) : (
                 /* SEPARATED REGISTER SCREEN */
@@ -1201,6 +1204,18 @@ export default function EventsPage() {
                     <p className="text-slate-450 text-xs font-semibold mt-1.5 leading-relaxed">
                       Join our platform and start promoting your events in Udumalpet.
                     </p>
+                  </div>
+
+                  {/* Already have an account? Login row */}
+                  <div className="flex items-center justify-between gap-2.5 border-b border-slate-100 pb-4 font-sans w-full">
+                    <span className="text-[11px] sm:text-xs font-semibold text-slate-600 whitespace-nowrap">Already have an account?</span>
+                    <button 
+                      type="button"
+                      onClick={() => { setAuthView('login'); setAuthError(''); }}
+                      className="py-1.5 px-3.5 sm:px-4.5 border border-[#027244] hover:bg-emerald-50/50 text-[#027244] font-extrabold text-[11px] sm:text-xs rounded-xl transition-colors shrink-0 text-center whitespace-nowrap bg-transparent cursor-pointer"
+                    >
+                      Login
+                    </button>
                   </div>
 
                   {authError && (
@@ -1306,15 +1321,6 @@ export default function EventsPage() {
                     <span>Sign up with Google</span>
                   </button>
 
-                  <div className="text-xs text-slate-550 font-bold text-center mt-3 border-t border-slate-100 pt-4">
-                    <span>Already have an account? </span>
-                    <button 
-                      onClick={() => { setAuthView('login'); setAuthError(''); }}
-                      className="text-[#027244] font-black hover:underline cursor-pointer bg-transparent border-none"
-                    >
-                      Login
-                    </button>
-                  </div>
                 </div>
               )}
 

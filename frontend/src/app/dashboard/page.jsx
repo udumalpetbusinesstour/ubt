@@ -1,6 +1,8 @@
 import { useState, useEffect, Suspense, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import MockGoogleMaps from '@/components/MockGoogleMaps';
+import LeadsEnquiriesTab from '@/components/LeadsEnquiriesTab';
+import ReviewsReputationTab from '@/components/ReviewsReputationTab';
 import { 
   ShieldCheck, Sparkles, AlertTriangle, AlertCircle, Edit3, Image as ImageIcon, 
   RefreshCw, Star, CreditCard, ChevronRight, ChevronLeft, ArrowLeft, Activity, PhoneCall, 
@@ -199,6 +201,7 @@ function DashboardContent() {
   const [selectedPlan, setSelectedPlan] = useState('Monthly');
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState(null);
   const [monthlyPrice, setMonthlyPrice] = useState(99);
   const [yearlyPrice, setYearlyPrice] = useState(999);
   
@@ -1285,7 +1288,8 @@ function DashboardContent() {
             initial: (lead.name || 'L').charAt(0).toUpperCase(),
             color: colors[idx % colors.length],
             reply: lead.reply || '',
-            responded: lead.status === 'Responded' || !!lead.reply
+            responded: lead.status === 'Responded' || lead.status === 'Rectified' || !!lead.reply,
+            status: lead.status || 'Pending'
           };
         });
         setLeadsList(formatted);
@@ -1293,12 +1297,62 @@ function DashboardContent() {
     } catch (err) {
       console.warn('Using fallback mock leads due to error or mock business id:', err.message);
       setLeadsList([
-        { name: 'Suresh Kumar', category: 'Electrical Wiring', phone: '+91 97865 43210', time: '2 mins ago', initial: 'S', color: 'bg-blue-100 text-blue-600', reply: '', responded: false },
-        { name: 'Ramesh Babu', category: 'Switch Board Repair', phone: '+91 94423 56789', time: '15 mins ago', initial: 'R', color: 'bg-green-100 text-green-600', reply: '', responded: false },
-        { name: 'Kavin Prakash', category: 'Inverter Installation', phone: '+91 91500 67890', time: '1 hour ago', initial: 'K', color: 'bg-purple-100 text-purple-600', reply: '', responded: false },
-        { name: 'Vijay Anand', category: 'Fan Installation', phone: '+91 95678 12345', time: '2 hours ago', initial: 'V', color: 'bg-amber-100 text-amber-600', reply: '', responded: false },
-        { name: 'Meena Devi', category: 'General Service', phone: '+91 99945 67890', time: '3 hours ago', initial: 'M', color: 'bg-slate-100 text-slate-600', reply: '', responded: false }
+        { name: 'Suresh Kumar', category: 'Electrical Wiring', phone: '+91 97865 43210', time: '2 mins ago', initial: 'S', color: 'bg-blue-100 text-blue-600', reply: '', responded: false, status: 'Pending' },
+        { name: 'Ramesh Babu', category: 'Switch Board Repair', phone: '+91 94423 56789', time: '15 mins ago', initial: 'R', color: 'bg-green-100 text-green-600', reply: '', responded: false, status: 'Pending' },
+        { name: 'Kavin Prakash', category: 'Inverter Installation', phone: '+91 91500 67890', time: '1 hour ago', initial: 'K', color: 'bg-purple-100 text-purple-600', reply: '', responded: false, status: 'Pending' },
+        { name: 'Vijay Anand', category: 'Fan Installation', phone: '+91 95678 12345', time: '2 hours ago', initial: 'V', color: 'bg-amber-100 text-amber-600', reply: '', responded: false, status: 'Pending' },
+        { name: 'Meena Devi', category: 'General Service', phone: '+91 99945 67890', time: '3 hours ago', initial: 'M', color: 'bg-slate-100 text-slate-600', reply: '', responded: false, status: 'Pending' }
       ]);
+    }
+  };
+
+  const handleUpdateLeadStatus = async (leadId, newStatus, leadIndex) => {
+    if (!leadId) {
+      const updatedList = [...leadsList];
+      if (updatedList[leadIndex]) {
+        updatedList[leadIndex] = {
+          ...updatedList[leadIndex],
+          status: newStatus,
+          responded: newStatus === 'Responded' || newStatus === 'Rectified' || !!updatedList[leadIndex].reply
+        };
+        setLeadsList(updatedList);
+      }
+      return;
+    }
+
+    const activeToken = token || localStorage.getItem('ubt_token');
+    try {
+      const res = await fetch(`http://localhost:5000/api/leads/${leadId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const updatedList = [...leadsList];
+        if (updatedList[leadIndex]) {
+          updatedList[leadIndex] = {
+            ...updatedList[leadIndex],
+            status: newStatus,
+            responded: newStatus === 'Responded' || newStatus === 'Rectified' || !!updatedList[leadIndex].reply
+          };
+          setLeadsList(updatedList);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to update lead status, applying local fallback:', err);
+      const updatedList = [...leadsList];
+      if (updatedList[leadIndex]) {
+        updatedList[leadIndex] = {
+          ...updatedList[leadIndex],
+          status: newStatus,
+          responded: newStatus === 'Responded' || newStatus === 'Rectified' || !!updatedList[leadIndex].reply
+        };
+        setLeadsList(updatedList);
+      }
     }
   };
 
@@ -3273,6 +3327,7 @@ function DashboardContent() {
     if (!business) return;
 
     const planToUse = planOverride || selectedPlan;
+    setCheckoutPlan(planToUse);
     setPaymentLoading(true);
     setError('');
 
@@ -3296,6 +3351,7 @@ function DashboardContent() {
       if (!orderData.success) {
         setError('Failed to initialize Razorpay checkout.');
         setPaymentLoading(false);
+        setCheckoutPlan(null);
         return;
       }
 
@@ -3328,6 +3384,7 @@ function DashboardContent() {
           setError(verifyData.message || 'Points redemption failed.');
         }
         setPaymentLoading(false);
+        setCheckoutPlan(null);
         return;
       }
 
@@ -3384,6 +3441,7 @@ function DashboardContent() {
             setError('Payment verification server error.');
           } finally {
             setPaymentLoading(false);
+            setCheckoutPlan(null);
           }
         },
         prefill: {
@@ -3397,6 +3455,7 @@ function DashboardContent() {
         modal: {
           ondismiss: function() {
             setPaymentLoading(false);
+            setCheckoutPlan(null);
           }
         }
       };
@@ -3450,6 +3509,7 @@ function DashboardContent() {
         setError('Sandbox verification failed.');
       } finally {
         setPaymentLoading(false);
+        setCheckoutPlan(null);
       }
     }
   };
@@ -3590,7 +3650,7 @@ function DashboardContent() {
       ] : []),
       { label: 'Photos & Media', icon: <ImageIcon className="h-4 w-4" /> },
       { label: 'Reviews & Reputation', icon: <Star className="h-4 w-4" /> },
-      { label: 'Leads & Enquiries', icon: <Mail className="h-4 w-4" />, badge: 18 },
+      { label: 'Leads & Enquiries', icon: <Mail className="h-4 w-4" />, badge: (leadsList || []).filter(l => l.status !== 'Rectified').length },
       { label: 'Subscription & Billing', icon: <CreditCard className="h-4 w-4" /> },
       { label: 'Offers & Promotions', icon: <Sparkles className="h-4 w-4" /> },
       { label: 'Referral & Rewards', icon: <Gift className="h-4 w-4" /> }
@@ -3613,10 +3673,10 @@ function DashboardContent() {
     <div className="w-full min-h-screen bg-[#F8FAFC] flex font-sans leading-relaxed selection:bg-emerald-500 selection:text-white">
       
       {/* 1. LEFT NAVIGATION SIDEBAR */}
-      <aside className={`w-[270px] bg-[#001c41] text-slate-300 flex flex-col shrink-0 border-r border-slate-800 transition-transform duration-300 z-50 fixed lg:static inset-y-0 left-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-0 hidden lg:flex'}`}>
+      <aside className={`w-[270px] bg-[#001c41] text-slate-300 flex flex-col shrink-0 border-r border-slate-800 transition-transform duration-300 z-50 fixed lg:static inset-y-0 left-0 overflow-hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full hidden lg:flex'}`}>
         
         {/* Logo block */}
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-6 border-b border-slate-800 flex items-center justify-between shrink-0">
           <Link to="/" className="flex items-center select-none py-1 overflow-hidden shrink-0">
             <img src="/logo-dark.png" alt="Udumalpet Business Tour" className="h-10.5 w-auto object-contain" />
           </Link>
@@ -3627,7 +3687,7 @@ function DashboardContent() {
 
         {/* Business Identity Card */}
         {business && (
-          <div className="p-4.5 bg-slate-900/40 border border-slate-800/60 rounded-2xl m-4.5 flex flex-col gap-3">
+          <div className="p-4.5 bg-slate-900/40 border border-slate-800/60 rounded-2xl m-4.5 flex flex-col gap-3 shrink-0">
             <div className="flex items-center gap-3 w-full">
               <div className="h-10 w-10 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center font-extrabold text-[#001c41] text-sm shadow-inner uppercase select-none shrink-0">
                 {(business.name || 'B').charAt(0)}
@@ -3690,7 +3750,7 @@ function DashboardContent() {
         )}
 
         {/* Navigation list */}
-        <nav className="flex-1 px-3 py-2 flex flex-col gap-0.5 overflow-y-auto">
+        <nav className="flex-1 px-3 py-2 flex flex-col gap-0.5 overflow-y-auto min-h-0">
           {sidebarLinks.map((link, idx) => (
             <button
               key={idx}
@@ -3722,7 +3782,7 @@ function DashboardContent() {
                 </span>
                 <span>{link.label}</span>
               </div>
-              {link.badge && (
+              {typeof link.badge === 'number' && link.badge > 0 && (
                 <span className="bg-red-500 text-white font-extrabold text-[9px] px-1.5 py-0.5 rounded-full select-none">
                   {link.badge}
                 </span>
@@ -3733,7 +3793,7 @@ function DashboardContent() {
 
         {/* Upgrade Plan Callout Widget */}
         {business && (
-          <div className="m-4.5 p-4 bg-slate-900/40 border border-slate-850 rounded-2xl flex flex-col gap-2 relative overflow-hidden shadow-sm">
+          <div className="m-4.5 p-4 bg-slate-900/40 border border-slate-850 rounded-2xl flex flex-col gap-2 relative overflow-hidden shadow-sm hidden lg:flex">
             <div className="absolute -right-8 -top-8 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
             <h5 className="text-[11px] font-extrabold text-amber-400 flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5 fill-current" /> Upgrade Your Plan
@@ -3751,7 +3811,7 @@ function DashboardContent() {
         )}
 
         {/* Need Help Helpline Card */}
-        <div className="px-4.5 pb-6 border-t border-slate-800 pt-4 flex flex-col gap-1.5 shrink-0 bg-slate-950/20">
+        <div className="px-4.5 pb-6 border-t border-slate-800 pt-4 flex flex-col gap-1.5 shrink-0 bg-slate-950/20 hidden lg:flex">
           <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
             <PhoneCall className="h-3 w-3" /> Need Help?
           </span>
@@ -3790,7 +3850,7 @@ function DashboardContent() {
 
           {/* Active Business/Branch Switcher */}
           {primaryBusiness && branches && branches.length > 0 && (
-            <div className="flex items-center gap-2 bg-emerald-50/50 border border-emerald-150 rounded-xl px-2.5 py-1.5 shadow-3xs animate-fadeIn max-w-[150px] sm:max-w-none">
+            <div className="hidden sm:flex items-center gap-2 bg-emerald-50/50 border border-emerald-150 rounded-xl px-2.5 py-1.5 shadow-3xs animate-fadeIn max-w-[150px] sm:max-w-none">
               <span className="text-[9.5px] text-[#027244] font-black uppercase tracking-wider font-sans hidden md:inline">Active Office:</span>
               <select
                 value={business?._id || ''}
@@ -3895,6 +3955,26 @@ function DashboardContent() {
         {/* Scrollable Workspace Panels */}
         <main className="flex-grow overflow-y-auto px-3 md:px-6 py-4 md:py-6 max-w-[1440px] w-full mx-auto flex flex-col gap-4 md:gap-6">
           
+          {/* Mobile Branch Switcher */}
+          {primaryBusiness && branches && branches.length > 0 && (
+            <div className="sm:hidden flex items-center justify-between gap-3 bg-emerald-50/50 border border-emerald-150 rounded-2xl px-4 py-2.5 shadow-3xs animate-fadeIn shrink-0">
+              <span className="text-[10px] text-[#027244] font-black uppercase tracking-wider font-sans whitespace-nowrap">Active Office:</span>
+              <select
+                value={business?._id || ''}
+                onChange={(e) => {
+                  handleSwitchBusiness(e.target.value);
+                  setActiveTab('Business Details');
+                }}
+                className="bg-transparent border-none text-xs font-black text-[#001c41] outline-none cursor-pointer pr-3 font-sans max-w-full text-right"
+              >
+                <option value={primaryBusiness._id}>{primaryBusiness.name} (Main)</option>
+                {branches.map((br) => (
+                  <option key={br._id} value={br._id}>{br.name} (Branch)</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Banner notification updates */}
           {successBanner && (
             <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-3xl p-5 shadow-sm flex items-start gap-4 animate-fadeIn">
@@ -4042,11 +4122,11 @@ function DashboardContent() {
                   </div>
                 </div>
               )}
-              {/* 3. KPI CARDS ROW (6 Horizontal premium aligned widgets) */}
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+              {/* 3. KPI CARDS ROW (8 Horizontal premium aligned widgets) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 sm:gap-4">
                 
                 {/* Total Leads */}
-                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
                   <div className="h-10.5 w-10.5 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                     <Plus className="h-5 w-5" />
                   </div>
@@ -4057,7 +4137,7 @@ function DashboardContent() {
                 </div>
 
                 {/* Call Clicks */}
-                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
                   <div className="h-10.5 w-10.5 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                     <PhoneCall className="h-4.5 w-4.5" />
                   </div>
@@ -4068,7 +4148,7 @@ function DashboardContent() {
                 </div>
 
                 {/* WhatsApp Clicks */}
-                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
                   <div className="h-10.5 w-10.5 rounded-xl bg-emerald-55/15 text-emerald-600 flex items-center justify-center shrink-0">
                     <MessageSquare className="h-4.5 w-4.5" />
                   </div>
@@ -4079,7 +4159,7 @@ function DashboardContent() {
                 </div>
 
                 {/* Website Clicks */}
-                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
                   <div className="h-10.5 w-10.5 rounded-xl bg-teal-50 text-teal-650 flex items-center justify-center shrink-0">
                     <Globe className="h-4.5 w-4.5" />
                   </div>
@@ -4090,7 +4170,7 @@ function DashboardContent() {
                 </div>
 
                 {/* Social Clicks */}
-                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
                   <div className="h-10.5 w-10.5 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center shrink-0">
                     <Users className="h-4.5 w-4.5" />
                   </div>
@@ -4103,12 +4183,12 @@ function DashboardContent() {
                 </div>
 
                 {/* Average Rating */}
-                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
                   <div className="h-10.5 w-10.5 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
                     <Star className="h-4.5 w-4.5 fill-current" />
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Average Rating</span>
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Avg Rating</span>
                     <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">
                       {overallReviewsCount > 0 ? overallAvgRating.toFixed(1) : '0.0'}
                     </span>
@@ -4119,7 +4199,7 @@ function DashboardContent() {
                 </div>
 
                 {/* Listing Status */}
-                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
                   <div className={`h-10.5 w-10.5 rounded-xl flex items-center justify-center shrink-0 ${
                     isGmbVerified ? 'bg-emerald-50 text-emerald-600' :
                     business.status === 'Approved' ? 'bg-blue-50 text-blue-600' :
@@ -4139,8 +4219,8 @@ function DashboardContent() {
                     )}
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Listing Status</span>
-                    <span className={`text-[15px] font-extrabold leading-none mt-1.5 truncate ${
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Status</span>
+                    <span className={`text-[12.5px] font-extrabold leading-none mt-1.5 truncate ${
                       isGmbVerified ? 'text-[#027244]' :
                       business.status === 'Approved' ? 'text-blue-650' :
                       business.status === 'Under Review' ? 'text-blue-650' :
@@ -4153,36 +4233,18 @@ function DashboardContent() {
                        business.status === 'Suspended' ? 'Suspended' : 
                        business.status === 'Rejected' ? 'Rejected' : 'Pending'}
                     </span>
-                    <span className="text-[9px] font-bold text-slate-400 mt-1.5 truncate">
-                      {isGmbVerified ? 'Your listing is verified' :
-                       business.status === 'Approved' ? 'Your business is live' :
-                       business.status === 'Under Review' ? 'Auditing in progress' :
-                       business.status === 'Suspended' ? 'Profile locked' :
-                       business.status === 'Rejected' ? 'Needs modifications' : 'Awaiting verification'}
-                    </span>
-                    {!isGmbVerified && (
-                      <button
-                        onClick={() => setShowVerifyModal(true)}
-                        className="mt-2 text-[9px] bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-2.5 py-1 rounded-lg transition-all shadow-sm shadow-emerald-700/10 cursor-pointer inline-flex items-center gap-1 self-start select-none"
-                      >
-                        Verify Now
-                      </button>
-                    )}
                   </div>
                 </div>
 
                 {/* Plan Renewal */}
-                <div className="card-premium p-4.5 rounded-2xl flex items-center gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
                   <div className="h-10.5 w-10.5 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
                     <CreditCard className="h-4.5 w-4.5" />
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Plan Renewal</span>
-                    <span className={`text-sm md:text-[13px] font-extrabold mt-1 leading-none truncate ${isExpired ? 'text-red-600' : 'text-slate-800'}`}>
-                      {isExpired ? 'Expired' : `${daysLeft} Days left`}
-                    </span>
-                    <span className="text-[8.5px] font-bold text-slate-400 mt-1.5 truncate">
-                      {business.subscriptionExpiry ? new Date(business.subscriptionExpiry).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}) : 'N/A'}
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Renewal</span>
+                    <span className={`text-xs sm:text-[11px] font-extrabold mt-1 leading-none truncate ${isExpired ? 'text-red-600' : 'text-slate-800'}`}>
+                      {isExpired ? 'Expired' : `${daysLeft}d left`}
                     </span>
                   </div>
                 </div>
@@ -6041,574 +6103,52 @@ function DashboardContent() {
           {/* TAB: REVIEWS & REPUTATION DASHBOARD */}
           {/* ========================================================================= */}
           {activeTab === 'Reviews & Reputation' && (
-            <div className="flex flex-col gap-6 text-left animate-fadeIn">
-              
-              {/* Header card with subtle gradient background */}
-              <div className="bg-gradient-to-r from-white via-white to-emerald-50/15 border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="flex flex-col">
-                  <h3 className="font-extrabold text-[#001c41] text-base md:text-lg tracking-tight font-sans">Reviews & Reputation Management</h3>
-                  <span className="text-[11px] text-slate-450 font-semibold mt-1">Audit local platform feedback, monitor rating metrics, sync Google Reviews, and reply to customers</span>
-                </div>
-                <button 
-                  onClick={copyReviewLink}
-                  className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-6 rounded-xl transition-all shadow-md hover:shadow-emerald-700/10 shrink-0 flex items-center gap-2 cursor-pointer border border-emerald-700/10 btn-active-press"
-                >
-                  <Star className="h-4.5 w-4.5 fill-current" /> Get More Reviews
-                </button>
-              </div>
-
-              {/* Stats overview cards grid using card-premium class */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
-                {/* Aggregate rating card */}
-                <div className="card-premium p-6 rounded-3xl flex items-center gap-4.5 bg-white">
-                  <div className="h-14 w-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center font-extrabold text-[#001c41] text-2xl shadow-inner uppercase shrink-0">
-                    {overallReviewsCount > 0 ? overallAvgRating.toFixed(1) : '0.0'}
-                  </div>
-                  <div className="flex flex-col text-left">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Overall Rating</span>
-                    <div className="flex items-center text-amber-400 gap-0.5 mt-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(overallAvgRating) ? 'fill-current' : 'text-slate-200 fill-none'}`} />
-                      ))}
-                    </div>
-                    <span className="text-[10.5px] text-slate-450 font-bold mt-1">Based on {overallReviewsCount} local & Google reviews</span>
-                  </div>
-                </div>
-
-                {/* Local vs Google rating card */}
-                <div className="card-premium p-6 rounded-3xl flex flex-col justify-center text-left gap-1 bg-white">
-                  <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-500">
-                    <span>Local platform reviews</span>
-                    <span className="text-slate-800">{localReviewsCount > 0 ? localAvgRating.toFixed(1) : '0.0'} / 5.0 ({localReviewsCount} reviews)</span>
-                  </div>
-                  <div className="w-full bg-slate-100 h-2 rounded-full mt-1.5 overflow-hidden">
-                    <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${localReviewsCount > 0 ? (localAvgRating / 5) * 100 : 0}%` }} />
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-500 mt-2.5">
-                    <span className="flex items-center gap-1">
-                      <span className="text-blue-500 font-bold">G</span>oogle synced reviews
-                    </span>
-                    <span className="text-slate-800">{googleReviewsCountVal > 0 ? googleAvgRatingVal.toFixed(1) : '0.0'} / 5.0 ({googleReviewsCountVal} reviews)</span>
-                  </div>
-                  <div className="w-full bg-slate-100 h-2 rounded-full mt-1.5 overflow-hidden">
-                    <div className="bg-blue-500 h-full rounded-full transition-all duration-500" style={{ width: `${googleReviewsCountVal > 0 ? (googleAvgRatingVal / 5) * 100 : 0}%` }} />
-                  </div>
-                </div>
-
-                {/* Rating breakdown metrics */}
-                <div className="card-premium p-6 rounded-3xl flex flex-col justify-center gap-1.5 bg-white text-left">
-                  <div className="flex items-center justify-between text-[10px] font-extrabold text-slate-400">
-                    <span className="uppercase tracking-wider">Reputation Level</span>
-                    <span className="bg-emerald-55/15 text-[#027244] border border-emerald-100 px-2.5 py-0.5 rounded-full text-[8.5px] font-black uppercase">
-                      {reputationLevel}
-                    </span>
-                  </div>
-                  <p className="text-slate-550 text-[10.5px] font-semibold leading-relaxed mt-1">
-                    {localReviewsCount > 0 ? (
-                      <>
-                        Your response rate is <strong>{responseRate}%</strong> on local platform reviews. Maintaining active customer replies boosts search ranking placement!
-                      </>
-                    ) : (
-                      <>
-                        No local reviews yet. Share your review link with customers to start collecting feedback!
-                      </>
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              {/* Reviews Table/Feed List with filters */}
-              <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden flex flex-col">
-                
-                {/* Header Filter Actions */}
-                <div className="p-5 border-b border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-55/40">
-                  <div className="flex flex-wrap items-center gap-2">
-                    
-                    {/* Rating filters */}
-                    <select 
-                      value={reviewFilter} 
-                      onChange={(e) => setReviewFilter(e.target.value)}
-                      className="border border-slate-200 bg-white rounded-xl py-2 px-3 text-xs font-bold text-slate-600 focus:outline-emerald-600 focus:ring-1 focus:ring-emerald-100 cursor-pointer"
-                    >
-                      <option value="All">All Ratings</option>
-                      <option value="5">5 Stars only</option>
-                      <option value="4">4 Stars & Above</option>
-                      <option value="3">3 Stars & Below</option>
-                    </select>
-
-                    {/* Source filters */}
-                    <select 
-                      value={reviewSourceFilter} 
-                      onChange={(e) => setReviewSourceFilter(e.target.value)}
-                      className="border border-slate-200 bg-white rounded-xl py-2 px-3 text-xs font-bold text-slate-600 focus:outline-emerald-600 focus:ring-1 focus:ring-emerald-100 cursor-pointer"
-                    >
-                      <option value="All">All Sources</option>
-                      <option value="local">Local Platform</option>
-                      <option value="google">Google Reviews</option>
-                    </select>
-                  </div>
-
-                  {/* Search reviews bar */}
-                  <div className="w-full md:w-68 relative">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                    <input 
-                      type="text"
-                      placeholder="Search review text..."
-                      value={reviewSearch}
-                      onChange={(e) => setReviewSearch(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-xs bg-white focus:outline-emerald-600 font-semibold"
-                    />
-                  </div>
-                </div>
-
-                {/* Reviews Stream Container */}
-                <div className="flex flex-col divide-y divide-slate-100 p-6">
-                  {(() => {
-                    const allReviewsList = [
-                      ...(localReviews || []).map(r => ({ ...r, source: 'local', isGoogle: false })),
-                      ...(business?.googleReviews || []).map(g => ({
-                        id: g._id || g.id || `google-${g.authorName}-${g.createdAt}`,
-                        authorName: g.authorName,
-                        rating: g.rating,
-                        text: g.text,
-                        createdAt: g.createdAt,
-                        time: g.createdAt ? new Date(g.createdAt).toLocaleDateString() : 'Synced from Google',
-                        source: 'google',
-                        isGoogle: true
-                      }))
-                    ];
-                    
-                    // Remove duplicate reviews if any
-                    const uniqueReviews = Array.from(
-                      new Map(allReviewsList.map(item => [item.id || `${item.authorName}-${item.text}`, item])).values()
-                    );
-                    
-                    // Sort reviews by date descending
-                    uniqueReviews.sort((a, b) => {
-                      const dateA = a.createdAt ? new Date(a.createdAt) : (a.time ? new Date(a.time) : new Date(0));
-                      const dateB = b.createdAt ? new Date(b.createdAt) : (b.time ? new Date(b.time) : new Date(0));
-                      return dateB - dateA;
-                    });
-
-                    return uniqueReviews
-                      .filter(r => {
-                        if (reviewFilter !== 'All') {
-                          const stars = Number(reviewFilter);
-                          if (stars === 5 && r.rating !== 5) return false;
-                          if (stars === 4 && r.rating < 4) return false;
-                          if (stars === 3 && r.rating > 3) return false;
-                        }
-                        if (reviewSourceFilter !== 'All' && r.source !== reviewSourceFilter) return false;
-                        if (reviewSearch && 
-                            !r.text.toLowerCase().includes(reviewSearch.toLowerCase()) && 
-                            !r.authorName.toLowerCase().includes(reviewSearch.toLowerCase())) return false;
-                        return true;
-                      })
-                      .map((rev) => {
-                        const ownerResponse = reviewResponses[rev.id] || rev.replyText;
-                        return (
-                          <div key={rev.id} className="py-5.5 first:pt-0 last:pb-0 flex flex-col md:flex-row gap-4 justify-between items-start text-left hover:bg-slate-50/20 px-2 rounded-2xl transition-colors">
-                            <div className="flex-1 flex gap-3.5">
-                              <div className="h-10.5 w-10.5 rounded-full bg-emerald-50 border border-emerald-150/60 flex items-center justify-center text-emerald-800 font-extrabold text-sm shadow-xs uppercase select-none shrink-0">
-                                {(rev.authorName || 'R').charAt(0)}
-                              </div>
-                              
-                              <div className="flex flex-col gap-1.5 w-full">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-extrabold text-slate-800 text-sm leading-tight">{rev.authorName}</span>
-                                  <span className="text-[10px] font-semibold text-slate-400">
-                                    {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : rev.time}
-                                  </span>
-                                  
-                                  {/* Source badge */}
-                                  {rev.source === 'google' ? (
-                                    <span className="bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded text-[8px] font-black uppercase flex items-center gap-0.5 select-none leading-none">
-                                      Google Sync
-                                    </span>
-                                  ) : (
-                                    <span className="bg-emerald-55/15 text-[#027244] border border-emerald-100 px-1.5 py-0.5 rounded text-[8px] font-black uppercase flex items-center gap-0.5 select-none leading-none">
-                                      UBT Local
-                                    </span>
-                                  )}
-                                </div>
-
-                                {/* Stars rating */}
-                                <div className="flex items-center text-amber-400 gap-0.5">
-                                  {[...Array(Math.round(Number(rev.rating) || 5))].map((_, i) => (
-                                    <Star key={i} className="h-3 w-3 fill-current" />
-                                  ))}
-                                  {[...Array(5 - Math.round(Number(rev.rating) || 5))].map((_, i) => (
-                                    <Star key={i} className="h-3 w-3 text-slate-150" />
-                                  ))}
-                                </div>
-
-                                <p className="text-slate-650 text-xs font-semibold leading-relaxed mt-1">
-                                  "{rev.text}"
-                                </p>
-
-                                {/* Show administrative responses if exists */}
-                                {ownerResponse && (
-                                  <div className="bg-slate-50 border border-slate-200/50 p-4 rounded-2xl mt-3 ml-2 flex gap-3 animate-fadeIn">
-                                    <div className="h-6.5 w-6.5 rounded-full bg-emerald-600 flex items-center justify-center text-white text-[9.5px] font-black shrink-0 shadow-2xs">
-                                      R
-                                    </div>
-                                    <div className="flex flex-col text-left">
-                                      <span className="text-[10px] font-extrabold text-[#001c41]">Owner Response</span>
-                                      <p className="text-slate-500 text-[11px] font-semibold mt-1 leading-relaxed">
-                                        {ownerResponse}
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Response textbox if active */}
-                                {replyingReviewId === rev.id && (
-                                  <div className="flex flex-col gap-2.5 mt-3 ml-2 w-full max-w-lg animate-fadeIn">
-                                    <textarea
-                                      placeholder="Type your reply to the customer..."
-                                      value={reviewReplyText}
-                                      onChange={(e) => setReviewReplyText(e.target.value)}
-                                      className="w-full border border-slate-200 rounded-xl p-3 text-xs bg-slate-50 focus:outline-emerald-600 font-semibold"
-                                      rows={3}
-                                    />
-                                    <div className="flex gap-2 justify-start">
-                                      <button
-                                        onClick={async () => {
-                                          if (reviewReplyText.trim()) {
-                                            const activeToken = token || localStorage.getItem('ubt_token');
-                                            try {
-                                              const res = await fetch(`http://localhost:5000/api/reviews/${rev.id}/reply`, {
-                                                method: 'PUT',
-                                                headers: {
-                                                  'Content-Type': 'application/json',
-                                                  Authorization: `Bearer ${activeToken}`
-                                                },
-                                                body: JSON.stringify({ replyText: reviewReplyText })
-                                              });
-                                              const data = await res.json();
-                                              if (data.success) {
-                                                setReviewResponses({ ...reviewResponses, [rev.id]: reviewReplyText });
-                                                setLocalReviews(prev => prev.map(r => r.id === rev.id ? { ...r, replyText: reviewReplyText, replied: true } : r));
-                                              } else {
-                                                alert(data.message || 'Failed to submit reply');
-                                              }
-                                            } catch (err) {
-                                              console.error('Error replying to review:', err);
-                                              alert('Error connecting to backend server');
-                                            }
-                                            setReviewReplyText('');
-                                            setReplyingReviewId(null);
-                                          }
-                                        }}
-                                        className="py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10.5px] rounded-xl shadow-xs cursor-pointer btn-active-press"
-                                      >
-                                        Submit Reply
-                                      </button>
-                                      <button
-                                        onClick={() => setReplyingReviewId(null)}
-                                        className="py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-550 font-extrabold text-[10.5px] rounded-xl cursor-pointer btn-active-press"
-                                      >
-                                        Cancel
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Moderation actions (only show for local reviews since we can't delete Google reviews) */}
-                            {rev.source === 'local' && (
-                              <div className="flex flex-row md:flex-col gap-1.5 shrink-0 self-end md:self-start mt-3 md:mt-0 pl-14 md:pl-0">
-                                {!ownerResponse && replyingReviewId !== rev.id && (
-                                  <button 
-                                    onClick={() => setReplyingReviewId(rev.id)}
-                                    className="py-1.5 px-3 border border-slate-200 text-slate-600 font-extrabold text-[10.5px] rounded-lg hover:bg-slate-50 transition-colors cursor-pointer flex items-center gap-1.5 hover:border-emerald-600 hover:text-emerald-700"
-                                  >
-                                    <MessageSquare className="h-3.5 w-3.5" /> Reply
-                                  </button>
-                                )}
-                                
-                                <button 
-                                  onClick={async () => {
-                                    const activeToken = token || localStorage.getItem('ubt_token');
-                                    if (confirm('Are you sure you want to flag this review as spam?')) {
-                                      try {
-                                        const res = await fetch(`http://localhost:5000/api/reviews/${rev.id}/moderate`, {
-                                          method: 'PUT',
-                                          headers: {
-                                            'Content-Type': 'application/json',
-                                            Authorization: `Bearer ${activeToken}`
-                                          },
-                                          body: JSON.stringify({ action: 'spam' })
-                                        });
-                                        const data = await res.json();
-                                        if (data.success) {
-                                          const updated = localReviews.filter(r => r.id !== rev.id);
-                                          setLocalReviews(updated);
-                                        } else {
-                                          alert(data.message || 'Failed to flag review');
-                                        }
-                                      } catch (err) {
-                                        console.error('Error flagging review:', err);
-                                        alert('Error connecting to backend server');
-                                      }
-                                    }
-                                  }}
-                                  className="py-1.5 px-3 border border-red-100 text-red-500 font-extrabold text-[10.5px] rounded-lg hover:bg-red-50 transition-colors cursor-pointer flex items-center gap-1.5"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" /> Spam
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      });
-                  })()}
-                </div>
-              </div>
-            </div>
+            <ReviewsReputationTab
+              business={business}
+              token={token}
+              overallReviewsCount={overallReviewsCount}
+              overallAvgRating={overallAvgRating}
+              localReviewsCount={localReviewsCount}
+              localAvgRating={localAvgRating}
+              googleReviewsCountVal={googleReviewsCountVal}
+              googleAvgRatingVal={googleAvgRatingVal}
+              reputationLevel={reputationLevel}
+              responseRate={responseRate}
+              reviewFilter={reviewFilter}
+              setReviewFilter={setReviewFilter}
+              reviewSourceFilter={reviewSourceFilter}
+              setReviewSourceFilter={setReviewSourceFilter}
+              reviewSearch={reviewSearch}
+              setReviewSearch={setReviewSearch}
+              localReviews={localReviews}
+              setLocalReviews={setLocalReviews}
+              reviewResponses={reviewResponses}
+              setReviewResponses={setReviewResponses}
+              replyingReviewId={replyingReviewId}
+              setReplyingReviewId={setReplyingReviewId}
+              reviewReplyText={reviewReplyText}
+              setReviewReplyText={setReviewReplyText}
+              copyReviewLink={copyReviewLink}
+            />
           )}
 
              {/* ========================================================================= */}
           {/* TAB: LEADS & ENQUIRIES DASHBOARD */}
           {/* ========================================================================= */}
           {activeTab === 'Leads & Enquiries' && (
-            <div className="flex flex-col gap-6 text-left animate-fadeIn">
-              
-              {/* Header card with UBT premium soft gradient */}
-              <div className="bg-gradient-to-r from-white via-white to-emerald-50/15 border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="flex flex-col">
-                  <h3 className="font-extrabold text-[#001c41] text-base md:text-lg tracking-tight font-sans">Customer Leads & Enquiries Inbox</h3>
-                  <span className="text-[11px] text-slate-450 font-semibold mt-1">Aggregate direct customer inquiries, receive phone callback requests, and initiate instant WhatsApp replies</span>
-                </div>
-                <div className="bg-emerald-55/15 text-[#027244] border border-emerald-100 px-3.5 py-1.5 rounded-2xl text-[11px] font-black uppercase inline-flex items-center gap-1.5 shrink-0 select-none shadow-xs font-sans">
-                  <Mail className="h-3.5 w-3.5" /> 18 Active Enquiries
-                </div>
-              </div>
-
-              {/* Main List-Detail Inbox Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[500px]">
-                
-                {/* Left Panel: Leads Inbox List (col-span-5) */}
-                <div className="lg:col-span-5 bg-white border border-slate-200 shadow-sm rounded-3xl flex flex-col overflow-hidden max-h-[600px]">
-                  <div className="p-4 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between">
-                    <span className="text-[10.5px] font-extrabold text-slate-550 uppercase tracking-wider">Inbox Stream</span>
-                    
-                    {/* Inbox Filters */}
-                    <div className="flex gap-1.5">
-                      {['All', 'Urgent', 'Responded'].map((filter) => (
-                        <button
-                          key={filter}
-                          onClick={() => setLeadFilter(filter)}
-                          className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer btn-active-press ${leadFilter === filter ? 'bg-slate-800 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}
-                        >
-                          {filter}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Leads stream scrolling list */}
-                  <div className="flex-grow overflow-y-auto divide-y divide-slate-100">
-                    {leadsList
-                      .filter(l => {
-                        if (leadFilter === 'Urgent' && l.name !== 'Suresh Kumar' && l.name !== 'Kavin Prakash') return false;
-                        if (leadFilter === 'Responded' && !l.responded) return false;
-                        return true;
-                      })
-                      .map((lead) => {
-                        const originalIdx = leadsList.findIndex(l => l.name === lead.name);
-                        const isSelected = selectedLeadIdx === originalIdx;
-                        
-                        return (
-                          <button
-                            key={lead.name}
-                            onClick={() => setSelectedLeadIdx(originalIdx)}
-                            className={`w-full p-4 flex items-center gap-3.5 text-left border-l-4 transition-all hover:bg-slate-50/70 border-r-0 border-y-0 cursor-pointer ${isSelected ? 'bg-emerald-55/5 border-l-[#027244] border-r-0 border-y-0 shadow-2xs' : 'border-l-transparent'}`}
-                          >
-                            <div className={`h-10 w-10 rounded-full flex items-center justify-center font-extrabold text-xs shadow-xs shrink-0 select-none uppercase ${lead.color || 'bg-slate-100 text-slate-600'}`}>
-                              {lead.initial}
-                            </div>
-                            
-                            <div className="flex-grow flex flex-col overflow-hidden">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="font-extrabold text-slate-800 truncate leading-snug">{lead.name}</span>
-                                <span className="text-[9px] font-semibold text-slate-400 shrink-0">{lead.time}</span>
-                              </div>
-                              <span className="text-[10px] text-slate-500 font-semibold truncate mt-0.5">{lead.category}</span>
-                              
-                              <div className="flex items-center gap-1.5 mt-1.5">
-                                {lead.name === 'Suresh Kumar' || lead.name === 'Kavin Prakash' ? (
-                                  <span className="bg-rose-50 text-rose-600 border border-rose-100/60 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide leading-none">
-                                    Urgent Callback
-                                  </span>
-                                ) : (
-                                  <span className="bg-blue-50 text-blue-600 border border-blue-100/60 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide leading-none">
-                                    General Query
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                  </div>
-
-                </div>
-
-                {/* Right Panel: Lead Full Detail View (col-span-7) */}
-                <div className="lg:col-span-7 bg-white border border-slate-200 shadow-sm rounded-3xl flex flex-col overflow-hidden min-h-[400px]">
-                  
-                  {selectedLeadIdx !== null && leadsList[selectedLeadIdx] ? (
-                    (() => {
-                      const activeLead = leadsList[selectedLeadIdx];
-                      return (
-                        <div className="flex flex-col h-full divide-y divide-slate-100">
-                          
-                          {/* Lead Profile Header */}
-                          <div className="p-6 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div className="flex items-center gap-4">
-                              <div className={`h-12 w-12 rounded-full flex items-center justify-center font-extrabold text-sm shadow-xs shrink-0 select-none uppercase ${activeLead.color}`}>
-                                {activeLead.initial}
-                              </div>
-                              <div className="flex flex-col text-left font-sans">
-                                <h4 className="font-extrabold text-slate-800 text-sm md:text-base leading-snug">{activeLead.name}</h4>
-                                <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Enquiry Category: {activeLead.category}</span>
-                                <span className="text-[9.5px] text-slate-400 font-bold mt-0.5">Received via Website Link • {activeLead.time}</span>
-                              </div>
-                            </div>
-
-                            {/* Direct Contact WhatsApp with spring Tactile press */}
-                            <a 
-                              href={`https://wa.me/${activeLead.phone.replace(/[^0-9]/g, '')}`} 
-                              target="_blank" 
-                              rel="noreferrer"
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10.5px] py-2.5 px-4.5 rounded-xl shadow-md hover:shadow-emerald-700/10 transition-all shrink-0 flex items-center gap-1.5 cursor-pointer btn-active-press border border-emerald-700/10"
-                            >
-                              <MessageSquare className="h-3.5 w-3.5 fill-current" /> WhatsApp Contact
-                            </a>
-                          </div>
-
-                          {/* Enquiry Text Details */}
-                          <div className="p-6 flex-grow flex flex-col gap-5 text-left">
-                            <div className="flex flex-col gap-1.5">
-                              <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Customer Message</span>
-                              <div className="bg-[#F8FAFC] border border-slate-200/60 p-4.5 rounded-2xl mt-1.5 relative overflow-hidden shadow-3xs">
-                                <div className="absolute top-0 left-0 w-1 h-full bg-[#027244]" />
-                                <p className="text-slate-600 text-xs font-semibold leading-relaxed">
-                                  "Hello! I saw your shop profile on Udumalpet Business Tour. I am looking to get service support for <strong>{activeLead.category}</strong>. Please reach out to me callback immediately or text back on WhatsApp. My details are verified."
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Callback details grid */}
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="border border-slate-200 p-3.5 rounded-2xl flex flex-col gap-0.5 text-left bg-slate-50/30">
-                                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Mobile Number</span>
-                                <span className="text-xs font-extrabold text-slate-800">{activeLead.phone}</span>
-                              </div>
-                              <div className="border border-slate-200 p-3.5 rounded-2xl flex flex-col gap-0.5 text-left bg-slate-50/30">
-                                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Status Tracker</span>
-                                <span className="text-xs font-extrabold text-rose-500 flex items-center gap-1.5 mt-0.5">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" /> Pending Response
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Show simulated replies if exists */}
-                            {activeLead.reply && (
-                              <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-4 mt-2 animate-fadeIn">
-                                <span className="text-[9.5px] font-extrabold text-[#027244] uppercase tracking-widest leading-none">Your Reply</span>
-                                <div className="bg-emerald-50/30 border border-emerald-100 p-4 rounded-2xl mt-1 flex gap-2.5">
-                                  <div className="h-6 w-6 rounded-full bg-[#027244] text-white flex items-center justify-center text-[9px] font-black shrink-0 shadow-2xs">
-                                    R
-                                  </div>
-                                  <p className="text-slate-600 text-xs font-semibold leading-normal">
-                                    {activeLead.reply}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-
-                          </div>
-
-                          {/* Quick reply action box with premium button tactile feedback */}
-                          {!activeLead.reply && (
-                            <div className="p-6 bg-slate-50/40 flex flex-col gap-3">
-                              <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest leading-none text-left">Quick Response Box</span>
-                              <div className="flex gap-2">
-                                <input
-                                  type="text"
-                                  placeholder="Type your response email or text..."
-                                  value={leadReplyText}
-                                  onChange={(e) => setLeadReplyText(e.target.value)}
-                                  className="flex-grow border border-slate-200 rounded-xl px-4 py-3 text-xs bg-white focus:outline-emerald-600 font-semibold shadow-3xs"
-                                />
-                                <button
-                                  onClick={async () => {
-                                    if (!leadReplyText.trim()) return;
-                                    if (activeLead._id) {
-                                      const activeToken = token || localStorage.getItem('ubt_token');
-                                      try {
-                                        const res = await fetch(`http://localhost:5000/api/leads/${activeLead._id}/reply`, {
-                                          method: 'PUT',
-                                          headers: {
-                                            'Content-Type': 'application/json',
-                                            Authorization: `Bearer ${activeToken}`
-                                          },
-                                          body: JSON.stringify({ reply: leadReplyText })
-                                        });
-                                        const data = await res.json();
-                                        if (data.success) {
-                                          const updatedList = [...leadsList];
-                                          updatedList[selectedLeadIdx] = {
-                                            ...activeLead,
-                                            reply: leadReplyText,
-                                            responded: true
-                                          };
-                                          setLeadsList(updatedList);
-                                          setLeadReplyText('');
-                                          return;
-                                        }
-                                      } catch (err) {
-                                        console.warn('Failed to reply via API, applying offline fallback updates', err);
-                                      }
-                                    }
-                                    
-                                    // Offline fallback update
-                                    const updatedList = [...leadsList];
-                                    updatedList[selectedLeadIdx] = {
-                                      ...activeLead,
-                                      reply: leadReplyText,
-                                      responded: true
-                                    };
-                                    setLeadsList(updatedList);
-                                    setLeadReplyText('');
-                                  }}
-                                  className="py-3 px-5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer transition-all border border-slate-800 btn-active-press"
-                                >
-                                  Submit
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    <div className="flex-grow flex flex-col items-center justify-center gap-3.5 text-slate-450 p-8 my-12 animate-fadeIn">
-                      <Mail className="h-8 w-8 text-slate-300" />
-                      <span className="text-xs font-extrabold tracking-wide max-w-xs text-center leading-relaxed">Select a customer lead from the inbox to begin instant WhatsApp responses.</span>
-                    </div>
-                  )}
-
-                </div>
-
-              </div>
-
-            </div>
+            <LeadsEnquiriesTab
+              business={business}
+              leadsList={leadsList}
+              setLeadsList={setLeadsList}
+              selectedLeadIdx={selectedLeadIdx}
+              setSelectedLeadIdx={setSelectedLeadIdx}
+              leadFilter={leadFilter}
+              setLeadFilter={setLeadFilter}
+              leadReplyText={leadReplyText}
+              setLeadReplyText={setLeadReplyText}
+              handleUpdateLeadStatus={handleUpdateLeadStatus}
+              token={token}
+            />
           )}
 
           {/* ========================================================================= */}
@@ -8511,7 +8051,7 @@ function DashboardContent() {
                           : 'bg-white hover:bg-emerald-50 border border-[#027244] text-[#027244] hover:text-[#005934]'
                       }`}
                     >
-                      {paymentLoading && selectedPlan === p.name ? 'Initializing...' : `Start ${p.type} Plan`}
+                      {paymentLoading && checkoutPlan === p.name ? 'Initializing...' : `Start ${p.type} Plan`}
                     </button>
                   </div>
                 );

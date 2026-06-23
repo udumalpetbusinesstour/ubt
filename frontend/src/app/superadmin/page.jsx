@@ -7,8 +7,9 @@ import {
   MapPin, ChevronRight, Landmark, Trash2, Mail, Globe, Award, ShieldAlert, CheckCircle2,
   Clock, Plus, Filter, Activity, Cpu, Database, Terminal, Users, BarChart, FileText, Ban,
   Play, Square, Layers, Sparkles, HelpCircle, Key, Lock, Phone, UserCheck, ShieldOff, CheckSquare,
-  Utensils, Dumbbell, Plane, GraduationCap, Camera, Leaf, Building, Coins, ShoppingBag, Wrench, Gift
+  Utensils, Dumbbell, Plane, GraduationCap, Camera, Leaf, Building, Coins, ShoppingBag, Wrench, Gift, Heart
 } from 'lucide-react';
+import BloodDonorsTab from '../../components/BloodDonorsTab';
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
@@ -1697,7 +1698,8 @@ export default function SuperAdminDashboard() {
         { id: 'Reviews Moderation', label: 'Reviews', icon: <MessageSquare className="h-4.5 w-4.5" /> },
         { id: 'Referrals', label: 'Referrals', icon: <Gift className="h-4.5 w-4.5" /> },
         { id: 'Support Tickets', label: 'Leads / Enquiries', icon: <FileText className="h-4.5 w-4.5" /> },
-        { id: 'Reports', label: 'Reports & Trends', icon: <BarChart3 className="h-4.5 w-4.5" /> }
+        { id: 'Reports', label: 'Reports & Trends', icon: <BarChart3 className="h-4.5 w-4.5" /> },
+        { id: 'Blood Donors', label: 'Blood Donors', icon: <Heart className="h-4.5 w-4.5" /> }
       ]
     },
     {
@@ -1895,12 +1897,13 @@ export default function SuperAdminDashboard() {
       </aside>
 
       {/* MOBILE HEADER & DRAWER */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#001c41] text-white flex items-center justify-between px-4 z-30 shadow-md">
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#001c41] text-white flex items-center justify-between px-4 z-50 shadow-md">
         <div className="flex items-center gap-2">
           <img src="/logo-dark.png" alt="UBT" className="h-8 w-auto" />
           <div className="flex items-center gap-1 bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 rounded px-1.5 py-0.5 text-[8px] font-extrabold uppercase tracking-wider select-none">
             SA
           </div>
+          <span className="text-xs font-bold text-slate-200 border-l border-slate-700 pl-2 max-w-[120px] truncate">{activeTab}</span>
         </div>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -1913,7 +1916,7 @@ export default function SuperAdminDashboard() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-20 bg-slate-950/80 backdrop-blur-xs flex pt-16 animate-fadeIn">
+        <div className="md:hidden fixed inset-x-0 top-16 bottom-0 z-20 bg-slate-950/80 backdrop-blur-xs flex animate-fadeIn">
           <div className={`w-64 h-full flex flex-col justify-between py-6 px-4 animate-slideRight border-r ${
             themeMode === 'dark' 
               ? 'bg-gradient-to-b from-[#060a13] to-[#03060b] border-slate-800' 
@@ -1968,7 +1971,7 @@ export default function SuperAdminDashboard() {
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto max-h-screen pt-16 md:pt-0">
         
         {/* Topbar navigation panel */}
-        <header className={`h-[76px] border-b px-6 md:px-8 flex items-center justify-between z-10 sticky top-0 shrink-0 backdrop-blur-md transition-colors ${
+        <header className={`h-[76px] border-b px-6 md:px-8 hidden md:flex items-center justify-between z-10 sticky top-0 shrink-0 backdrop-blur-md transition-colors ${
           themeMode === 'dark' ? 'bg-[#090D1C]/90 border-slate-800' : 'bg-white/90 border-slate-200'
         }`}>
           <div className="flex items-center gap-6 flex-1 max-w-md">
@@ -2133,7 +2136,7 @@ export default function SuperAdminDashboard() {
         </header>
 
         {/* Workspace views content */}
-        <div className="p-6 md:p-8 flex-grow">
+        <div className="p-4 md:p-8 flex-grow">
           {loading ? (
             <div className="py-32 flex flex-col items-center justify-center gap-3 text-slate-400">
               <RefreshCw className="h-8 w-8 text-emerald-600 animate-spin" />
@@ -2288,8 +2291,7 @@ export default function SuperAdminDashboard() {
                           <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#8B5CF6]" /> Revenue (₹)</span>
                         </div>
                       </div>
-                      
-                      <div className="flex-1 flex items-center gap-4 py-4">
+                      <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 py-4">
                         {/* Custom Rendered SVG Line Chart */}
                         <div className="flex-1 h-full relative">
                           <svg className="w-full h-full" viewBox="0 0 400 150">
@@ -2320,7 +2322,7 @@ export default function SuperAdminDashboard() {
                         </div>
                         
                         {/* Metrics Table on the Right */}
-                        <div className="w-36 shrink-0 border-l border-slate-800/40 pl-4 flex flex-col justify-center gap-3">
+                        <div className="w-full sm:w-36 shrink-0 border-t sm:border-t-0 sm:border-l pt-4 sm:pt-0 sm:pl-4 border-slate-800/40 flex flex-row sm:flex-col justify-between sm:justify-center gap-3">
                           {[
                             { label: 'Total Views', val: Math.round((dashboardStats?.totalCallClicks || 0) + (dashboardStats?.totalWhatsappClicks || 0) + (dashboardStats?.totalWebsiteClicks || 0) + (dashboardStats?.totalInstagramClicks || 0) + (dashboardStats?.totalFacebookClicks || 0) + (dashboardStats?.totalLeads || 0) * 2.5 + 148).toLocaleString('en-IN'), pct: '▲ 23.1%', color: 'text-[#027244]' },
                             { label: 'Total Leads', val: (dashboardStats?.totalLeads || 0).toLocaleString('en-IN'), pct: '▲ 17.7%', color: 'text-emerald-450' },
@@ -2503,7 +2505,7 @@ export default function SuperAdminDashboard() {
                       </div>
                       
                       {/* Tabs inside Registrations */}
-                      <div className="flex gap-2 py-3 border-b border-slate-800/20 text-[9.5px] font-black uppercase tracking-widest">
+                      <div className="flex gap-2 py-3 border-b border-slate-800/20 text-[9.5px] font-black uppercase tracking-widest overflow-x-auto whitespace-nowrap shrink-0 scrollbar-none">
                         {['Businesses', 'Users', 'Events', 'Blog Posts'].map((tabName, tabIdx) => (
                           <span 
                             key={tabIdx} 
@@ -6350,6 +6352,10 @@ export default function SuperAdminDashboard() {
                 </div>
               )}
 
+              {activeTab === 'Blood Donors' && (
+                <BloodDonorsTab />
+              )}
+
 
             </div>
           )}
@@ -6725,7 +6731,7 @@ export default function SuperAdminDashboard() {
             <div className={`p-6 border-t flex flex-col gap-2 shrink-0 ${
               themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-200'
             }`}>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <button 
                   onClick={() => { handleAction(selectedBiz._id, 'reject'); setShowBizModal(false); }}
                   disabled={selectedBiz.status === 'Rejected'}

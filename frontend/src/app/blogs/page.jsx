@@ -350,6 +350,17 @@ export default function BlogsPage() {
     }
   };
 
+  useEffect(() => {
+    if (!showWriteModal) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowWriteModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showWriteModal]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setSearchQuery(searchTyped);
@@ -957,8 +968,14 @@ export default function BlogsPage() {
       {/* WRITE A BLOG WIZARD MODAL */}
       {/* ========================================================================= */}
       {showWriteModal && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="max-w-xl w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 flex flex-col gap-5 animate-scaleUp text-left max-h-[90vh] overflow-y-auto">
+        <div 
+          onClick={() => setShowWriteModal(false)}
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-xl w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 flex flex-col gap-5 animate-scaleUp text-left max-h-[90vh] overflow-y-auto"
+          >
             
             <div className="flex justify-between items-start border-b border-slate-100 pb-3">
               <div>

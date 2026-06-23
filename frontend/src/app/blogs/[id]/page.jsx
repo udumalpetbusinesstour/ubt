@@ -60,6 +60,16 @@ export default function BlogDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // Inject parent listing into history stack on direct entry
+  useEffect(() => {
+    if (window.__spa_nav_count === 1) {
+      const currentPath = window.location.pathname + window.location.search + window.location.hash;
+      window.history.replaceState(null, '', '/blogs');
+      window.history.pushState(null, '', currentPath);
+      window.__spa_nav_count++;
+    }
+  }, []);
+
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');

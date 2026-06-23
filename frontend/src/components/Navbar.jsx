@@ -132,22 +132,22 @@ export default function Navbar() {
       <header className="w-full bg-white py-4.5 px-4 md:px-8 border-b border-slate-100 z-50">
         <div className="max-w-[1440px] mx-auto flex justify-between items-center">
           <Link to="/" className="flex items-center select-none group py-1">
-            <img src="/logo.png" alt="Udumalpet Business Tour" className="h-13 w-auto object-contain" />
+            <img src="/logo.png" alt="Udumalpet Business Tour" className="h-9 sm:h-13 w-auto object-contain" />
           </Link>
 
           {/* Right auth navigation button */}
-          <div className="flex items-center gap-3.5 text-xs font-semibold text-slate-500">
+          <div className="flex items-center gap-2 sm:gap-3.5 text-[10.5px] sm:text-xs font-semibold text-slate-500 select-none">
             {pathname === '/login' ? (
               <>
-                <span>Don't have an account?</span>
-                <Link to={getAuthTogglePath('/register')} className="border border-[#027244] text-[#027244] hover:bg-emerald-50 font-black py-2 px-5 rounded-lg transition-colors">
+                <span className="hidden sm:inline whitespace-nowrap">Don't have an account?</span>
+                <Link to={getAuthTogglePath('/register')} className="border border-[#027244] text-[#027244] hover:bg-emerald-50 font-black py-1.5 px-3.5 sm:py-2 sm:px-5 rounded-lg transition-colors whitespace-nowrap">
                   Sign Up
                 </Link>
               </>
             ) : (
               <>
-                <span>Already have an account?</span>
-                <Link to={getAuthTogglePath('/login')} className="border border-[#027244] text-[#027244] hover:bg-emerald-50 font-black py-2 px-5 rounded-lg transition-colors">
+                <span className="hidden sm:inline whitespace-nowrap">Already have an account?</span>
+                <Link to={getAuthTogglePath('/login')} className="border border-[#027244] text-[#027244] hover:bg-emerald-50 font-black py-1.5 px-3.5 sm:py-2 sm:px-5 rounded-lg transition-colors whitespace-nowrap">
                   Login
                 </Link>
               </>
