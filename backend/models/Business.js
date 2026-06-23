@@ -216,12 +216,12 @@ const BusinessSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Pending Verification', 'Under Review', 'Approved', 'Rejected', 'Suspended'],
+    enum: ['Pending Verification', 'Under Review', 'Approved', 'Rejected', 'Suspended', 'Hidden'],
     default: 'Pending Verification',
   },
   verificationStatus: {
     type: String,
-    enum: ['pending', 'under_review', 'approved', 'rejected', 'suspended'],
+    enum: ['pending', 'under_review', 'approved', 'rejected', 'suspended', 'hidden'],
     default: 'pending',
   },
   subscriptionStatus: {

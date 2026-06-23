@@ -380,7 +380,7 @@ router.put('/:id/comment/:commentId/approve', protect, async (req, res) => {
 router.put('/:id/status', protect, admin, async (req, res) => {
   try {
     const { status } = req.body;
-    if (!['Approved', 'Rejected', 'Pending Approval'].includes(status)) {
+    if (!['Approved', 'Rejected', 'Pending Approval', 'Hidden'].includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status value' });
     }
 

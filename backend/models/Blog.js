@@ -74,7 +74,7 @@ const BlogSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Pending Approval', 'Approved', 'Rejected', 'Needs Revision'],
+    enum: ['Pending Approval', 'Approved', 'Rejected', 'Needs Revision', 'Hidden'],
     default: 'Pending Approval'
   },
   revisionSuggestions: {

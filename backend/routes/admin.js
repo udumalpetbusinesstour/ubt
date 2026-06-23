@@ -183,6 +183,8 @@ router.put('/businesses/:id/status', async (req, res, next) => {
       business.subscriptionStatus = 'active';
     } else if (status === 'Rejected') {
       business.verificationStatus = 'rejected';
+    } else if (status === 'Hidden') {
+      business.verificationStatus = 'hidden';
     }
 
     if (typeof isFoundingMember === 'boolean') {
@@ -199,13 +201,14 @@ router.put('/businesses/:id/status', async (req, res, next) => {
     
     // Sync status of all branches of this business
     try {
-      const branchStatus = status === 'Approved' ? 'Approved' : (status === 'Suspended' ? 'Suspended' : (status === 'Rejected' ? 'Rejected' : 'Pending Verification'));
+      const branchStatus = status === 'Approved' ? 'Approved' : (status === 'Suspended' ? 'Suspended' : (status === 'Rejected' ? 'Rejected' : (status === 'Hidden' ? 'Hidden' : 'Pending Verification')));
       const statusMap = {
         'Pending Verification': 'pending',
         'Under Review': 'under_review',
         'Approved': 'approved',
         'Rejected': 'rejected',
-        'Suspended': 'suspended'
+        'Suspended': 'suspended',
+        'Hidden': 'hidden'
       };
       await Business.updateMany(
         { parentBusinessId: business._id },

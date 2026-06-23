@@ -175,6 +175,9 @@ export default function AdminDashboard() {
 
   // Datasets states
   const [businesses, setBusinesses] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersError, setUsersError] = useState('');
   const [blogs, setBlogs] = useState([]);
   const [events, setEvents] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -1051,6 +1054,17 @@ export default function AdminDashboard() {
         setBusinesses(activeBiz);
       }
 
+      // Fetch signups
+      try {
+        const usersRes = await fetch('http://localhost:5000/api/users', { headers });
+        const usersData = await usersRes.json();
+        if (usersData.success) {
+          setUsers(usersData.data);
+        }
+      } catch (userErr) {
+        console.error('Error fetching users:', userErr);
+      }
+
       // 2. Fetch blogs
       const blogsRes = await fetch('http://localhost:5000/api/blogs/admin/all', { headers });
       const blogsData = await blogsRes.json();
@@ -1223,6 +1237,8 @@ export default function AdminDashboard() {
     if (type === 'approve') nextStatus = 'Approved';
     if (type === 'reject') nextStatus = 'Rejected';
     if (type === 'suspend') nextStatus = 'Suspended';
+    if (type === 'hide') nextStatus = 'Hidden';
+    if (type === 'unhide') nextStatus = 'Approved';
     
     try {
       const res = await fetch(`http://localhost:5000/api/admin/businesses/${bizId}/status`, {
@@ -1497,8 +1513,62 @@ export default function AdminDashboard() {
     navigate('/login');
   };
 
+  const handleDeleteSignup = async (userId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this user signup? This will permanently delete the user registration and cascade-delete all their businesses, blogs, events, reviews, and subscriptions.')) {
+      return;
+    }
+    try {
+      const storedToken = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${storedToken}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('User registration deleted successfully.');
+        setUsers(prev => prev.filter(u => u._id !== userId));
+        loadPlatformRealData(); // refresh everything to update cascades
+      } else {
+        alert(data.message || 'Failed to delete signup.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred while deleting user registration.');
+    }
+  };
+
   // Filtered lists
-  const filteredBusinesses = businesses.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredBusinesses = businesses.filter(b => 
+    b.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (b.ownerName && b.ownerName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (b.ownerEmail && b.ownerEmail.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (b.locality && b.locality.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+  
+  const filteredBlogs = blogs.filter(b => 
+    b.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (b.authorName && b.authorName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (b.category && b.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    b.status.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredEvents = events.filter(e => 
+    e.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (e.organizer && e.organizer.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (e.category && e.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (e.venue && e.venue.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    e.status.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredUsers = users.filter(u => 
+    (u.fullName && u.fullName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (u.email && u.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (u.mobileNumber && u.mobileNumber.includes(searchQuery)) ||
+    (u.phone && u.phone.includes(searchQuery)) ||
+    (u.role && u.role.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (u.status && u.status.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-800 text-left">
@@ -1522,6 +1592,7 @@ export default function AdminDashboard() {
             {[
               { id: 'Dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
               { id: 'Businesses', label: 'Businesses', icon: <Store className="h-5 w-5" /> },
+              { id: 'Signups', label: 'Signups', icon: <User className="h-5 w-5" /> },
               { id: 'Category Management', label: 'Categories', icon: <Grid className="h-5 w-5" /> },
               { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" /> },
               { id: 'Blogs', label: 'Blogs Moderation', icon: <BookOpen className="h-5 w-5" /> },
@@ -1598,6 +1669,7 @@ export default function AdminDashboard() {
                 {[
                   { id: 'Dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
                   { id: 'Businesses', label: 'Businesses', icon: <Store className="h-5 w-5" /> },
+                  { id: 'Signups', label: 'Signups', icon: <User className="h-5 w-5" /> },
                   { id: 'Category Management', label: 'Categories', icon: <Grid className="h-5 w-5" /> },
                   { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" /> },
                   { id: 'Blogs', label: 'Blogs Moderation', icon: <BookOpen className="h-5 w-5" /> },
@@ -1648,6 +1720,19 @@ export default function AdminDashboard() {
 
       {/* 2. MAIN APP SPACE */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto max-h-screen pt-16 md:pt-0">
+        {/* Mobile Search Bar */}
+        <div className="md:hidden px-4 pt-4 pb-2 bg-[#F8FAFC] border-b border-slate-200">
+          <div className="relative flex items-center">
+            <Search className="h-4 w-4 text-slate-400 absolute left-3" />
+            <input
+              type="text"
+              placeholder={`Search in ${activeTab}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full border border-slate-200 px-4 py-2 pl-9.5 rounded-xl text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 placeholder-slate-400 shadow-2xs"
+            />
+          </div>
+        </div>
         
         {/* Topbar navigation panel */}
         <header className="h-[76px] bg-white border-b border-slate-200/80 px-6 md:px-8 hidden md:flex items-center justify-between z-10 sticky top-0 shrink-0">
@@ -2029,6 +2114,16 @@ export default function AdminDashboard() {
                             
                             <div className="flex justify-end gap-2 border-t border-slate-200/50 pt-3">
                               <button 
+                                onClick={() => handleBlogAction(b._id, b.status === 'Hidden' ? 'Approved' : 'Hidden')}
+                                className={`px-3 py-1.5 border font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors ${
+                                  b.status === 'Hidden'
+                                    ? 'bg-amber-500/10 border-amber-500/25 text-amber-500 hover:bg-amber-500/20'
+                                    : 'border-slate-200 hover:bg-slate-50 text-slate-650'
+                                }`}
+                              >
+                                {b.status === 'Hidden' ? 'Unhide' : 'Hide'}
+                              </button>
+                              <button 
                                 onClick={() => handleBlogAction(b._id, 'Rejected')}
                                 disabled={b.status === 'Rejected'}
                                 className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-2xs"
@@ -2038,7 +2133,7 @@ export default function AdminDashboard() {
                               <button 
                                 onClick={() => handleBlogAction(b._id, 'Approved')}
                                 disabled={b.status === 'Approved'}
-                                className="px-4 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-sm shadow-emerald-800/10"
+                                className="px-4.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-sm shadow-emerald-800/10"
                               >
                                 Approve & Publish
                               </button>
@@ -2275,7 +2370,9 @@ export default function AdminDashboard() {
                                     ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
                                     : b.status === 'Rejected'
                                       ? 'bg-red-50 border-red-200 text-red-650'
-                                      : 'bg-amber-50 border-amber-250 text-amber-600 animate-pulse'
+                                      : b.status === 'Hidden'
+                                        ? 'bg-amber-50 border-amber-200 text-amber-750'
+                                        : 'bg-amber-50 border-amber-250 text-amber-600 animate-pulse'
                                 }`}>
                                   {b.status}
                                 </span>
@@ -2305,6 +2402,16 @@ export default function AdminDashboard() {
                                     className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer disabled:opacity-40"
                                   >
                                     Approve
+                                  </button>
+                                  <button 
+                                    onClick={() => handleAction(b._id, b.status === 'Hidden' ? 'unhide' : 'hide')}
+                                    className={`px-2.5 py-1.5 rounded-lg text-[10.5px] font-extrabold cursor-pointer transition-colors shadow-2xs ${
+                                      b.status === 'Hidden' 
+                                        ? 'bg-amber-100 hover:bg-amber-250 text-amber-750' 
+                                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                                    }`}
+                                  >
+                                    {b.status === 'Hidden' ? 'Unhide' : 'Hide'}
                                   </button>
                                   <button 
                                     onClick={() => handleAction(b._id, 'reject')}
@@ -2501,6 +2608,16 @@ export default function AdminDashboard() {
                             </button>
                             
                             <div className="flex gap-2">
+                              <button 
+                                onClick={() => handleBlogAction(b._id, b.status === 'Hidden' ? 'Approved' : 'Hidden')}
+                                className={`px-3 py-2 border font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors ${
+                                  b.status === 'Hidden'
+                                    ? 'bg-amber-500/10 border-amber-500/25 text-amber-500 hover:bg-amber-500/20'
+                                    : 'border-slate-200 hover:bg-slate-50 text-slate-650'
+                                }`}
+                              >
+                                {b.status === 'Hidden' ? 'Unhide' : 'Hide'}
+                              </button>
                               <button 
                                 onClick={() => handleBlogAction(b._id, 'Rejected')}
                                 className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
@@ -2763,7 +2880,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {[...blogs]
+                    {[...filteredBlogs]
                       .sort((a, b) => getStatusWeight(a.status) - getStatusWeight(b.status) || new Date(b.createdAt) - new Date(a.createdAt))
                       .map(b => (
                       <div 
@@ -2824,7 +2941,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {[...events]
+                    {[...filteredEvents]
                       .sort((a, b) => getEventSortWeight(a) - getEventSortWeight(b) || new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
                       .map(e => {
                         const isExpired = new Date(e.endDate || e.date) < new Date();
@@ -2842,7 +2959,11 @@ export default function AdminDashboard() {
                                   </span>
                                 )}
                                 <span className={`px-2 py-0.5 rounded text-[8.5px] font-black border ${
-                                  e.status === 'Approved' ? 'bg-emerald-50 border-emerald-250 text-emerald-700' : 'bg-amber-50 border-amber-250 text-amber-600'
+                                  e.status === 'Approved' 
+                                    ? 'bg-emerald-50 border-emerald-250 text-emerald-700' 
+                                    : e.status === 'Hidden'
+                                      ? 'bg-amber-100 border-amber-300 text-amber-800'
+                                      : 'bg-amber-50 border-amber-250 text-amber-600'
                                 }`}>
                                   {e.status}
                                 </span>
@@ -2858,14 +2979,24 @@ export default function AdminDashboard() {
                             <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
                               <button 
                                 onClick={() => handleEventDelete(e._id)}
-                                className="mr-auto px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                                className="mr-auto px-3 py-1.5 bg-rose-550/10 border border-rose-550/20 hover:bg-rose-550/20 text-rose-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors"
                               >
                                 Delete
                               </button>
                               <button 
+                                onClick={() => handleEventAction(e._id, e.status === 'Hidden' ? 'Approved' : 'Hidden')}
+                                className={`px-3 py-1.5 border font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors ${
+                                  e.status === 'Hidden'
+                                    ? 'bg-amber-100 hover:bg-amber-250 border-amber-300 text-amber-800'
+                                    : 'bg-slate-50 hover:bg-slate-150 border-slate-200 text-slate-600'
+                                }`}
+                              >
+                                {e.status === 'Hidden' ? 'Unhide' : 'Hide'}
+                              </button>
+                              <button 
                                 onClick={() => handleEventAction(e._id, 'Rejected')}
                                 disabled={e.status === 'Rejected'}
-                                className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40"
+                                className="px-3 py-1.5 bg-red-550/10 hover:bg-red-550/20 border border-red-550/20 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 transition-colors"
                               >
                                 Reject
                               </button>
@@ -4618,6 +4749,89 @@ export default function AdminDashboard() {
                 <BloodDonorsTab />
               )}
 
+              {activeTab === 'Signups' && (
+                <div className="flex flex-col gap-6 text-left animate-fadeIn">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex flex-col text-left">
+                      <h3 className="font-extrabold text-[#001c41] text-base leading-tight font-sans">User Registrations & Signups</h3>
+                      <span className="text-[10px] text-slate-455 font-semibold mt-1 block">
+                        Audit community members, manage user signups, and purge accounts along with their directory listings.
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto border border-slate-200 rounded-[28px] bg-white">
+                    <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                      <thead className="uppercase text-[9px] font-black tracking-wider border-b bg-slate-50 border-slate-200 text-slate-455">
+                        <tr>
+                          <th className="p-4.5">User Name</th>
+                          <th className="p-4.5">Email Address</th>
+                          <th className="p-4.5">Mobile / Phone</th>
+                          <th className="p-4.5">Access Role</th>
+                          <th className="p-4.5">Joined Date</th>
+                          <th className="p-4.5 text-center">Status</th>
+                          <th className="p-4.5 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-medium">
+                        {filteredUsers.map(u => (
+                          <tr key={u._id} className="transition-colors hover:bg-slate-50/50">
+                            <td className="p-4.5 flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-emerald-50 text-[#027244] border border-emerald-100 flex items-center justify-center font-black text-xs shrink-0 select-none">
+                                {u.fullName ? u.fullName.charAt(0).toUpperCase() : (u.name ? u.name.charAt(0).toUpperCase() : 'U')}
+                              </div>
+                              <div className="flex flex-col text-left">
+                                <span className="font-extrabold text-xs sm:text-[13px] text-slate-800">
+                                  {u.fullName || u.name || 'Anonymous User'}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-4.5 text-slate-600 font-mono text-[11px]">{u.email}</td>
+                            <td className="p-4.5 text-slate-500 font-semibold">{u.mobileNumber || u.phone || 'N/A'}</td>
+                            <td className="p-4.5 text-slate-600 uppercase text-[10px] font-bold">
+                              <span className={`px-2 py-0.5 rounded-md text-[9px] font-extrabold select-none ${
+                                u.role === 'admin' || u.role === 'superadmin'
+                                  ? 'bg-purple-100 text-purple-700'
+                                  : u.role === 'merchant' || u.role === 'owner'
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-slate-100 text-slate-700'
+                              }`}>
+                                {u.role}
+                              </span>
+                            </td>
+                            <td className="p-4.5 text-slate-405 text-[10.5px]">
+                              {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
+                            </td>
+                            <td className="p-4.5 text-center">
+                              <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border select-none ${
+                                u.status === 'Active' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 'bg-red-500/10 border-red-500/20 text-red-500'
+                              }`}>
+                                {u.status || 'Active'}
+                              </span>
+                            </td>
+                            <td className="p-4.5 text-right">
+                              <button 
+                                onClick={() => handleDeleteSignup(u._id)}
+                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors shadow-2xs"
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {filteredUsers.length === 0 && (
+                          <tr>
+                            <td colSpan="7" className="p-16 text-center text-slate-400 font-semibold">
+                              No matching user registrations found.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
             </div>
           )}
         </div>
@@ -5080,6 +5294,19 @@ export default function AdminDashboard() {
                   className="px-4.5 py-2.5 border border-slate-200 text-slate-700 font-extrabold text-xs rounded-xl cursor-pointer hover:bg-slate-100 transition-colors"
                 >
                   Cancel
+                </button>
+                <button 
+                  onClick={() => {
+                    handleBlogAction(selectedBlogModal._id, selectedBlogModal.status === 'Hidden' ? 'Approved' : 'Hidden');
+                    setSelectedBlogModal(null);
+                  }}
+                  className={`px-4.5 py-2.5 border font-extrabold text-xs rounded-xl cursor-pointer transition-colors ${
+                    selectedBlogModal.status === 'Hidden'
+                      ? 'bg-amber-100 hover:bg-amber-200 border-amber-300 text-amber-800'
+                      : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+                  }`}
+                >
+                  {selectedBlogModal.status === 'Hidden' ? 'Unhide' : 'Hide'}
                 </button>
                 <button 
                   onClick={() => {

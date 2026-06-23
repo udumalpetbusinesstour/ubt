@@ -264,7 +264,7 @@ router.put('/:id', protect, async (req, res) => {
     }
 
     // Check ownership
-    if (event.ownerId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (event.ownerId.toString() !== req.user._id.toString() && !['admin', 'superadmin'].includes(req.user.role)) {
       return res.status(403).json({ success: false, message: 'Not authorized to update this event' });
     }
 
@@ -300,7 +300,7 @@ router.delete('/:id', protect, async (req, res) => {
     }
 
     // Check ownership
-    if (event.ownerId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (event.ownerId.toString() !== req.user._id.toString() && !['admin', 'superadmin'].includes(req.user.role)) {
       return res.status(403).json({ success: false, message: 'Not authorized to delete this event' });
     }
 

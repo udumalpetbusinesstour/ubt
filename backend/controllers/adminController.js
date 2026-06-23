@@ -43,6 +43,12 @@ const moderateBusiness = async (req, res, next) => {
     } else if (action === 'reactivate') {
       nextStatus = 'Approved';
       nextVerification = 'approved';
+    } else if (action === 'hide') {
+      nextStatus = 'Hidden';
+      nextVerification = 'hidden';
+    } else if (action === 'unhide') {
+      nextStatus = 'Approved';
+      nextVerification = 'approved';
     }
 
     business.status = nextStatus;

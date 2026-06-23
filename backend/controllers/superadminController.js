@@ -386,6 +386,9 @@ const updateBusinessStatus = async (req, res, next) => {
       actionWord = 'suspend';
       business.subscriptionStatus = 'none';
       business.isPremium = false;
+    } else if (status === 'Hidden') {
+      verification = 'hidden';
+      actionWord = 'hide';
     }
 
     business.status = status;
@@ -620,16 +623,39 @@ const deleteUser = async (req, res, next) => {
     }
 
     const email = user.email;
+    const userId = user._id;
 
-    // Cascade purge all directory content
-    await Business.deleteMany({ ownerId: user._id });
-    await Blog.deleteMany({ author: user._id });
-    await Event.deleteMany({ ownerId: user._id });
-    await Review.deleteMany({ userId: user._id });
-    await Subscription.deleteMany({ ownerId: user._id });
-    await SupportTicket.deleteMany({ userId: user._id });
-    
-    await User.deleteOne({ _id: user._id });
+    // Find all businesses owned by this user
+    const userBusinesses = await Business.find({ ownerId: userId }).select('_id');
+    const businessIds = userBusinesses.map(b => b._id);
+
+    // Dynamic requires for cascade collections
+    const Review = require('../models/Review');
+    const Subscription = require('../models/Subscription');
+    const Payment = require('../models/Payment');
+
+    // Cascade deletes associated with the user's businesses
+    if (businessIds.length > 0) {
+      await Review.deleteMany({ businessId: { $in: businessIds } });
+      await Event.deleteMany({ businessId: { $in: businessIds } });
+      await Blog.deleteMany({ businessId: { $in: businessIds } });
+      await Subscription.deleteMany({ businessId: { $in: businessIds } });
+      await Payment.deleteMany({ businessId: { $in: businessIds } });
+      await Business.deleteMany({ _id: { $in: businessIds } });
+    }
+
+    // Cascade deletes of user's directly owned blogs, events, support tickets, and reviews
+    await Blog.deleteMany({ $or: [{ author: userId }, { authorId: userId }] });
+    await Event.deleteMany({ $or: [{ ownerId: userId }, { authorId: userId }] });
+    await SupportTicket.deleteMany({ userId: userId });
+    await Review.deleteMany({ userId: userId });
+    await Subscription.deleteMany({ ownerId: userId });
+
+    // Delete user's own business listings (just to be safe)
+    await Business.deleteMany({ ownerId: userId });
+
+    // Finally delete the user account itself
+    await User.deleteOne({ _id: userId });
 
     // Log admin action
     await AdminAction.create({

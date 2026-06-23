@@ -219,6 +219,7 @@ export default function SuperAdminDashboard() {
     { _id: 'adm_2', fullName: 'Ananth S. (Moderator)', email: 'ananth@ubt.com', role: 'admin', status: 'Active', permissions: 'Moderation Only', createdAt: new Date('2025-02-15') },
     { _id: 'adm_3', fullName: 'Local Clerk', email: 'clerk@ubt.com', role: 'admin', status: 'Suspended', permissions: 'Read Only', createdAt: new Date('2025-03-20') }
   ]);
+  const [signups, setSignups] = useState([]);
 
   // Queries inbox state
   const [queries, setQueries] = useState([]);
@@ -598,6 +599,7 @@ export default function SuperAdminDashboard() {
       const usersData = await usersRes.json();
       if (usersData.success) {
         const allUsers = usersData.data;
+        setSignups(allUsers);
         setMerchants(allUsers.filter(u => u.role === 'merchant' || u.role === 'owner'));
         setRegularUsers(allUsers.filter(u => u.role === 'visitor' || u.role === 'user'));
         setAdmins(allUsers.filter(u => u.role === 'admin' || u.role === 'superadmin'));
@@ -1032,6 +1034,8 @@ export default function SuperAdminDashboard() {
     if (type === 'approve') nextStatus = 'Approved';
     if (type === 'reject') nextStatus = 'Rejected';
     if (type === 'suspend') nextStatus = 'Suspended';
+    if (type === 'hide') nextStatus = 'Hidden';
+    if (type === 'unhide') nextStatus = 'Approved';
     try {
       const res = await fetch(`http://localhost:5000/api/superadmin/businesses/${bizId}/status`, {
         method: 'PUT',
@@ -1078,6 +1082,51 @@ export default function SuperAdminDashboard() {
       } catch (err) {
         console.error(err);
       }
+    }
+  };
+
+  const handleDeleteSignup = async (userId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this user signup? This will permanently delete the user registration and cascade-delete all their businesses, blogs, events, reviews, and subscriptions.')) {
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5000/api/superadmin/users/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` }
+      });
+      const data = await res.json();
+      if (data.success || res.ok) {
+        alert('User registration deleted successfully.');
+        setSignups(prev => prev.filter(u => u._id !== userId));
+        loadPlatformRealData(); // refresh everything to update cascades
+      } else {
+        alert(data.message || 'Failed to delete signup.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred while deleting user registration.');
+    }
+  };
+
+  const handleEventDelete = async (eventId) => {
+    if (!window.confirm("Are you sure you want to permanently delete this event? This action cannot be undone.")) {
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5000/api/superadmin/events/${eventId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` }
+      });
+      const data = await res.json();
+      if (data.success || res.ok) {
+        alert("Event successfully deleted.");
+        setEvents(prev => prev.filter(item => item._id !== eventId));
+      } else {
+        alert(data.message || "Failed to delete event.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while deleting event.");
     }
   };
 
@@ -1679,6 +1728,17 @@ export default function SuperAdminDashboard() {
     return true;
   });
 
+  const filteredSignups = signups.filter(u => {
+    const matchesSearch = (u.fullName && u.fullName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                          (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                          (u.email && u.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                          (u.mobileNumber && u.mobileNumber.includes(searchQuery)) ||
+                          (u.phone && u.phone.includes(searchQuery)) ||
+                          (u.role && u.role.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                          (u.status && u.status.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesSearch;
+  });
+
   // 19 nav menu grouped specifications matching the reference dashboard exactly
   const sidebarSections = [
     {
@@ -1705,6 +1765,7 @@ export default function SuperAdminDashboard() {
     {
       group: 'USER MANAGEMENT',
       items: [
+        { id: 'Signups', label: 'Signups', icon: <User className="h-4.5 w-4.5" /> },
         { id: 'Merchants', label: 'Users', icon: <User className="h-4.5 w-4.5" /> },
         { id: 'Access Control', label: 'Roles & Permissions', icon: <Key className="h-4.5 w-4.5" /> },
         { id: 'Admin Management', label: 'Admins', icon: <Shield className="h-4.5 w-4.5" /> }
@@ -1969,6 +2030,23 @@ export default function SuperAdminDashboard() {
 
       {/* 2. MAIN APP SPACE */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto max-h-screen pt-16 md:pt-0">
+        {/* Mobile search bar */}
+        <div className={`md:hidden px-4 pt-4 pb-2 border-b transition-colors ${
+          themeMode === 'dark' ? 'bg-[#090D1C] border-slate-800' : 'bg-slate-50 border-slate-200'
+        }`}>
+          <div className="relative flex items-center">
+            <Search className="h-4 w-4 text-slate-400 absolute left-3" />
+            <input
+              type="text"
+              placeholder={`Search in ${activeTab}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`w-full border px-4 py-2 pl-9.5 rounded-xl text-xs font-semibold placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-colors ${
+                themeMode === 'dark' ? 'bg-slate-900/60 border-slate-800 text-slate-200' : 'bg-white border-slate-200 text-slate-700'
+              }`}
+            />
+          </div>
+        </div>
         
         {/* Topbar navigation panel */}
         <header className={`h-[76px] border-b px-6 md:px-8 hidden md:flex items-center justify-between z-10 sticky top-0 shrink-0 backdrop-blur-md transition-colors ${
@@ -3142,7 +3220,13 @@ export default function SuperAdminDashboard() {
                                   </span>
                                 )}
                                 <span className={`text-[8.5px] font-black uppercase px-2 py-0.5 rounded-lg shadow-sm select-none ${
-                                  b.status === 'Approved' ? 'bg-[#027244] text-white' : (b.status === 'Rejected' ? 'bg-rose-650 text-white' : 'bg-amber-550 text-white')
+                                  b.status === 'Approved' 
+                                    ? 'bg-[#027244] text-white' 
+                                    : b.status === 'Rejected' 
+                                      ? 'bg-rose-650 text-white' 
+                                      : b.status === 'Hidden' 
+                                        ? 'bg-amber-600 text-white' 
+                                        : 'bg-amber-550 text-white'
                                 }`}>
                                   {b.status}
                                 </span>
@@ -3248,6 +3332,19 @@ export default function SuperAdminDashboard() {
                                 }`}
                               >
                                 {b.status === 'Suspended' ? 'Reactivate' : 'Suspend'}
+                              </button>
+                              
+                              <button 
+                                onClick={() => handleAction(b._id, b.status === 'Hidden' ? 'unhide' : 'hide')}
+                                className={`py-2 text-[10.5px] font-extrabold rounded-xl cursor-pointer text-center transition-colors border ${
+                                  b.status === 'Hidden'
+                                    ? 'bg-amber-500/10 border-amber-500/25 text-amber-500 hover:bg-amber-500/20'
+                                    : themeMode === 'dark'
+                                      ? 'border-slate-800 hover:bg-slate-800/40 text-slate-350'
+                                      : 'border-slate-205 hover:bg-slate-50 text-slate-600'
+                                }`}
+                              >
+                                {b.status === 'Hidden' ? 'Unhide' : 'Hide'}
                               </button>
                               
                               {/* Direct Approve/Reject for non-approved states */}
@@ -4586,20 +4683,15 @@ export default function SuperAdminDashboard() {
                               {e.featured ? 'Un-Feature' : 'Feature Event'}
                             </button>
                             <button 
-                                onClick={() => { setEditingEvent(e); setShowEditEventModal(true); }}
-                                className={`px-3 py-1.5 border rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors ${
-                                  themeMode === 'dark' ? 'border-slate-800 text-slate-400 hover:bg-slate-800/40' : 'border-slate-200 text-slate-600 hover:bg-slate-100'
-                                }`}
-                              >
+                              onClick={() => { setEditingEvent(e); setShowEditEventModal(true); }}
+                              className={`px-3 py-1.5 border rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors ${
+                                themeMode === 'dark' ? 'border-slate-800 text-slate-400 hover:bg-slate-800/40' : 'border-slate-200 text-slate-600 hover:bg-slate-100'
+                              }`}
+                            >
                               Edit Info
                             </button>
                             <button 
-                              onClick={() => {
-                                if (window.confirm("Permanently delete this event?")) {
-                                  setEvents(prev => prev.filter(item => item._id !== e._id));
-                                  alert("Event deleted.");
-                                }
-                              }}
+                              onClick={() => handleEventDelete(e._id)}
                               className="px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-500 rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors"
                             >
                               Delete
@@ -4607,6 +4699,18 @@ export default function SuperAdminDashboard() {
                           </div>
 
                           <div className="flex gap-2">
+                            <button 
+                              onClick={() => handleEventAction(e._id, e.status === 'Hidden' ? 'Approved' : 'Hidden')}
+                              className={`px-3 py-1.5 border font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors ${
+                                e.status === 'Hidden'
+                                  ? 'bg-amber-500/10 border-amber-500/25 text-amber-500 hover:bg-amber-500/20'
+                                  : themeMode === 'dark'
+                                    ? 'border-slate-800 hover:bg-slate-800 text-slate-350'
+                                    : 'border-slate-205 hover:bg-slate-100 text-slate-700'
+                              }`}
+                            >
+                              {e.status === 'Hidden' ? 'Unhide' : 'Hide'}
+                            </button>
                             <button 
                               onClick={() => handleEventAction(e._id, 'Rejected')}
                               disabled={e.status === 'Rejected'}
@@ -6356,6 +6460,101 @@ export default function SuperAdminDashboard() {
                 <BloodDonorsTab />
               )}
 
+              {activeTab === 'Signups' && (
+                <div className="flex flex-col gap-6 text-left animate-fadeIn">
+                  <div className={`border shadow-sm rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors ${
+                    themeMode === 'dark' ? 'bg-[#111827] border-slate-800' : 'bg-white border-slate-200'
+                  }`}>
+                    <div className="flex flex-col text-left">
+                      <h3 className={`font-extrabold text-base leading-tight font-sans ${
+                        themeMode === 'dark' ? 'text-slate-100' : 'text-[#001c41]'
+                      }`}>User Registrations & Signups</h3>
+                      <span className="text-[10px] text-slate-455 font-semibold mt-1 block">
+                        Audit community members, manage user signups, and purge accounts along with their directory listings.
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={`overflow-x-auto border rounded-[28px] transition-colors ${
+                    themeMode === 'dark' ? 'bg-[#111827] border-slate-800' : 'bg-white border-slate-200'
+                  }`}>
+                    <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                      <thead className={`uppercase text-[9px] font-black tracking-wider border-b transition-colors ${
+                        themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-455'
+                      }`}>
+                        <tr>
+                          <th className="p-4.5">User Name</th>
+                          <th className="p-4.5">Email Address</th>
+                          <th className="p-4.5">Mobile / Phone</th>
+                          <th className="p-4.5">Access Role</th>
+                          <th className="p-4.5">Joined Date</th>
+                          <th className="p-4.5 text-center">Status</th>
+                          <th className="p-4.5 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                        {filteredSignups.map(u => (
+                          <tr key={u._id} className={`transition-colors ${
+                            themeMode === 'dark' ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50/50'
+                          }`}>
+                            <td className="p-4.5 flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-emerald-50 text-[#027244] border border-emerald-100 flex items-center justify-center font-black text-xs shrink-0 select-none">
+                                {u.fullName ? u.fullName.charAt(0).toUpperCase() : (u.name ? u.name.charAt(0).toUpperCase() : 'U')}
+                              </div>
+                              <div className="flex flex-col text-left">
+                                <span className={`font-extrabold text-xs sm:text-[13px] ${
+                                  themeMode === 'dark' ? 'text-slate-200' : 'text-slate-800'
+                                }`}>
+                                  {u.fullName || u.name || 'Anonymous User'}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-4.5 text-slate-500 dark:text-slate-400 font-mono text-[11px]">{u.email}</td>
+                            <td className="p-4.5 text-slate-500 dark:text-slate-400 font-semibold">{u.mobileNumber || u.phone || 'N/A'}</td>
+                            <td className="p-4.5 text-slate-600 uppercase text-[10px] font-bold">
+                              <span className={`px-2 py-0.5 rounded-md text-[9px] font-extrabold select-none ${
+                                u.role === 'admin' || u.role === 'superadmin'
+                                  ? 'bg-purple-100 text-purple-700'
+                                  : u.role === 'merchant' || u.role === 'owner'
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-slate-100 text-slate-700'
+                              }`}>
+                                {u.role}
+                              </span>
+                            </td>
+                            <td className="p-4.5 text-slate-405 text-[10.5px]">
+                              {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
+                            </td>
+                            <td className="p-4.5 text-center">
+                              <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border select-none ${
+                                u.status === 'Active' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 'bg-red-500/10 border-red-500/20 text-red-500'
+                              }`}>
+                                {u.status || 'Active'}
+                              </span>
+                            </td>
+                            <td className="p-4.5 text-right">
+                              <button 
+                                onClick={() => handleDeleteSignup(u._id)}
+                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors shadow-2xs"
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {filteredSignups.length === 0 && (
+                          <tr>
+                            <td colSpan="7" className="p-16 text-center text-slate-400 font-semibold">
+                              No matching user registrations found.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
 
             </div>
           )}
@@ -8004,12 +8203,27 @@ export default function SuperAdminDashboard() {
                 </button>
                 <button 
                   onClick={() => {
+                    handleBlogAction(selectedBlogModal._id, selectedBlogModal.status === 'Hidden' ? 'Approved' : 'Hidden');
+                    setSelectedBlogModal(null);
+                  }}
+                  className={`px-4.5 py-2.5 border font-extrabold text-xs rounded-xl cursor-pointer transition-colors ${
+                    selectedBlogModal.status === 'Hidden'
+                      ? 'bg-amber-500/10 border-amber-500/25 text-amber-500 hover:bg-amber-500/20'
+                      : themeMode === 'dark'
+                        ? 'border-slate-800 hover:bg-slate-800 text-slate-350'
+                        : 'border-slate-200 hover:bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  {selectedBlogModal.status === 'Hidden' ? 'Unhide' : 'Hide'}
+                </button>
+                <button 
+                  onClick={() => {
                     handleBlogAction(selectedBlogModal._id, 'Rejected');
                     setSelectedBlogModal(null);
                   }}
                   disabled={selectedBlogModal.status === 'Rejected'}
                   className={`px-4.5 py-2.5 border font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 transition-colors ${
-                    themeMode === 'dark' ? 'border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-850' : 'border-slate-200 bg-slate-100 text-slate-750 hover:bg-slate-200'
+                    themeMode === 'dark' ? 'border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-850' : 'border-slate-200 bg-slate-100 text-slate-755 hover:bg-slate-200'
                   }`}
                 >
                   Reject & Hide

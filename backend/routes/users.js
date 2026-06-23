@@ -162,17 +162,48 @@ router.put('/:id/role', superadmin, async (req, res, next) => {
   }
 });
 
-// DELETE /api/users/:id - Super Admin only: permanently delete user and cascades
-router.delete('/:id', superadmin, async (req, res, next) => {
+// DELETE /api/users/:id - Admin or Super Admin: permanently delete user and cascades
+router.delete('/:id', admin, async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
       return sendError(res, 404, 'User not found');
     }
 
-    // Cascade deletes
-    await Business.deleteMany({ ownerId: user._id });
-    await User.deleteOne({ _id: user._id });
+    const userId = user._id;
+
+    // Find all businesses owned by this user
+    const userBusinesses = await Business.find({ ownerId: userId }).select('_id');
+    const businessIds = userBusinesses.map(b => b._id);
+
+    // Dynamic requires for cascade collections
+    const Review = require('../models/Review');
+    const Subscription = require('../models/Subscription');
+    const Payment = require('../models/Payment');
+
+    // Cascade deletes associated with the user's businesses
+    if (businessIds.length > 0) {
+      await Review.deleteMany({ businessId: { $in: businessIds } });
+      await Event.deleteMany({ businessId: { $in: businessIds } });
+      await Blog.deleteMany({ businessId: { $in: businessIds } });
+      await Subscription.deleteMany({ businessId: { $in: businessIds } });
+      await Payment.deleteMany({ businessId: { $in: businessIds } });
+      await Business.deleteMany({ _id: { $in: businessIds } });
+    }
+
+    // Cascade deletes of user's directly owned blogs and events (where businessId might be empty)
+    await Blog.deleteMany({ $or: [{ author: userId }, { authorId: userId }] });
+    await Event.deleteMany({ $or: [{ ownerId: userId }, { authorId: userId }] });
+
+    // Cascade deletes of reviews and subscriptions directly linked to this user
+    await Review.deleteMany({ userId: userId });
+    await Subscription.deleteMany({ ownerId: userId });
+
+    // Delete user's own business listings (just to be safe)
+    await Business.deleteMany({ ownerId: userId });
+
+    // Finally delete the user account itself
+    await User.deleteOne({ _id: userId });
 
     return sendSuccess(res, 200, 'User account and all owned assets permanently purged from database.');
   } catch (err) {
