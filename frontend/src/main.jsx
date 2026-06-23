@@ -8,6 +8,30 @@ const API_URL = import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD && typeof window !== 'undefined' 
     ? window.location.origin 
     : 'http://localhost:5000');
+
+// Global Image URL Resolver to dynamically prepend correct backend domain
+if (typeof window !== 'undefined') {
+  window.getImageUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('data:image')) return url;
+    
+    const backendBase = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+
+    // Replace old local references on production/staging environments
+    if (url.startsWith('http://localhost:5000')) {
+      return url.replace('http://localhost:5000', backendBase);
+    }
+    
+    // Prefix relative paths with correct backend origin
+    if (url.startsWith('/uploads') || url.startsWith('uploads')) {
+      const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+      return `${backendBase}${cleanUrl}`;
+    }
+    
+    return url;
+  };
+}
+
 if (API_URL !== 'http://localhost:5000') {
   const originalFetch = window.fetch;
   window.fetch = async function (input, init) {

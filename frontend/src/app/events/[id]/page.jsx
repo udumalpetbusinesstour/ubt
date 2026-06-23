@@ -573,7 +573,7 @@ export default function EventDetail() {
         {/* Cover Landscape */}
         <div className="w-full h-[320px] md:h-[420px] rounded-3xl overflow-hidden border border-slate-200/60 shadow-md relative select-none">
           <img 
-            src={(!event.coverImageUrl || event.coverImageUrl.includes('unsplash.com')) ? '/default_event_cover.jpg' : event.coverImageUrl} 
+            src={(!event.coverImageUrl || event.coverImageUrl.includes('unsplash.com')) ? '/default_event_cover.jpg' : window.getImageUrl(event.coverImageUrl)} 
             alt={event.title} 
             className={`w-full h-full ${(!event.coverImageUrl || event.coverImageUrl.includes('unsplash.com')) ? 'object-contain bg-white p-4' : 'object-cover'}`}
           />

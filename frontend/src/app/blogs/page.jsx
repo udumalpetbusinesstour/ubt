@@ -556,7 +556,7 @@ export default function BlogsPage() {
                 return (
                   <article key={blog._id} className="bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col cursor-pointer" onClick={() => navigate(`/blogs/${blog._id}`)}>
                     <div className="h-48 overflow-hidden bg-slate-100">
-                      <img src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : blog.coverImage} className={`w-full h-full ${(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-2' : 'object-cover'} hover:scale-105 transition-transform duration-500`} alt={blog.title} />
+                      <img src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : window.getImageUrl(blog.coverImage)} className={`w-full h-full ${(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-2' : 'object-cover'} hover:scale-105 transition-transform duration-500`} alt={blog.title} />
                     </div>
                     <div className="p-5 flex-1 flex flex-col justify-between gap-4">
                       <div className="flex flex-col gap-2">
@@ -701,7 +701,7 @@ export default function BlogsPage() {
                       {/* Left side Image */}
                       <div className="w-full md:w-56 h-36 rounded-2xl overflow-hidden shrink-0 bg-slate-100 border border-slate-100 relative">
                         <img 
-                          src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : blog.coverImage} 
+                          src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : window.getImageUrl(blog.coverImage)} 
                           alt={blog.title} 
                           className={`w-full h-full ${(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-1' : 'object-cover'} group-hover:scale-103 transition-transform duration-500`}
                         />

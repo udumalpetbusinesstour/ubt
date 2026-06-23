@@ -1890,7 +1890,7 @@ export default function EventsPage() {
                       <div className="shrink-0 overflow-hidden relative h-40 w-full md:w-52 rounded-2xl bg-slate-50 border border-slate-100">
                         <div 
                           className={`h-full w-full bg-center ${(!evt.coverImageUrl || evt.coverImageUrl.includes('unsplash.com')) ? 'bg-contain bg-no-repeat bg-white p-1' : 'bg-cover'}`}
-                          style={{ backgroundImage: `url('${(!evt.coverImageUrl || evt.coverImageUrl.includes('unsplash.com')) ? getEventDefaultImage(evt.category) : evt.coverImageUrl}')` }}
+                          style={{ backgroundImage: `url('${(!evt.coverImageUrl || evt.coverImageUrl.includes('unsplash.com')) ? getEventDefaultImage(evt.category) : window.getImageUrl(evt.coverImageUrl)}')` }}
                         />
                       </div>
 

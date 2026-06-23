@@ -349,7 +349,7 @@ export default function BlogDetail() {
         {/* Cover Landscape */}
         <div className="w-full h-[320px] md:h-[420px] rounded-3xl overflow-hidden border border-slate-200/60 shadow-md relative select-none">
           <img 
-            src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : blog.coverImage} 
+            src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : window.getImageUrl(blog.coverImage)} 
             alt={blog.title} 
             className={`w-full h-full ${(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-4' : 'object-cover'}`}
           />

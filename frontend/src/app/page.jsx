@@ -980,7 +980,7 @@ export default function Home() {
                   <div 
                     className="h-full w-full bg-cover bg-center transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[15px]"
                     style={{ 
-                      backgroundImage: `url('${biz.coverImageUrl}')`,
+                      backgroundImage: `url('${window.getImageUrl(biz.coverImageUrl)}')`,
                       filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
                     }}
                   />
@@ -1128,7 +1128,7 @@ export default function Home() {
                     {/* Logo/Image */}
                     {biz.logoUrl ? (
                       <div className="h-14 w-14 rounded-xl border border-slate-100 overflow-hidden bg-white shrink-0">
-                        <img src={biz.logoUrl} alt={biz.name} className="h-full w-full object-cover" />
+                        <img src={window.getImageUrl(biz.logoUrl)} alt={biz.name} className="h-full w-full object-cover" />
                       </div>
                     ) : (
                       <div className="h-14 w-14 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-650 text-white font-extrabold text-lg flex items-center justify-center shrink-0 uppercase select-none">

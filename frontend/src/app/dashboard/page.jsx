@@ -3942,7 +3942,7 @@ function DashboardContent() {
             <div className="flex items-center gap-1.5 sm:gap-2.5 pl-1.5 sm:pl-3 sm:border-l border-slate-200">
               {user?.profileImage ? (
                 <img 
-                  src={user.profileImage} 
+                  src={window.getImageUrl(user.profileImage)} 
                   alt={user.fullName || 'User'} 
                   className="h-8.5 w-8.5 rounded-full border border-slate-200 object-cover bg-slate-50"
                 />
@@ -4633,9 +4633,9 @@ function DashboardContent() {
                     ? business.galleryUrls.split(',').map(s => s.trim()).filter(Boolean) 
                     : business.galleryUrls)
                 : []
-            )).filter(Boolean);
+            )).filter(Boolean).map(url => window.getImageUrl(url));
             const galleryCount = displayGallery.length;
-            const mainImage = business.coverImageUrl || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80";
+            const mainImage = window.getImageUrl(business.coverImageUrl) || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80";
             const remainingCount = Math.max(0, galleryCount - 5);
             const isExpired = business.subscriptionStatus === 'expired';
 
@@ -4693,7 +4693,7 @@ function DashboardContent() {
                   {/* Sleek dark gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/45 to-slate-950/15" />
                   
-                  <div className="relative flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10 animate-fadeIn">
+                  <div className={`relative flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10 transition-opacity duration-300 ${isRepositioning ? 'opacity-10 pointer-events-none' : 'opacity-100'}`}>
                     <div className="flex flex-col gap-3 text-left w-full">
                       {/* Breadcrumbs */}
                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -4708,7 +4708,7 @@ function DashboardContent() {
                       <div className="flex items-center gap-4 mt-2 flex-wrap text-left">
                         {business.logoUrl ? (
                           <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-white shadow-md shrink-0 flex items-center justify-center relative group">
-                            <img src={business.logoUrl} alt={`${business.name} Logo`} className="h-full w-full object-cover" />
+                            <img src={window.getImageUrl(business.logoUrl)} alt={`${business.name} Logo`} className="h-full w-full object-cover" />
                             <label className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity text-white text-[9px] font-black uppercase tracking-wider select-none text-center p-1">
                               <Upload className="h-4 w-4 mb-1 animate-bounce" />
                               <span>Change Logo</span>
@@ -4845,7 +4845,7 @@ function DashboardContent() {
 
                   {/* Reposition Slider Overlay */}
                   {isRepositioning && (
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-slate-950/90 border border-slate-700/80 rounded-2xl py-3 px-5 z-20 flex items-center gap-4 shadow-xl backdrop-blur-md w-full max-w-sm">
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-slate-950/95 border border-slate-700/80 rounded-2xl py-3 px-5 z-20 flex items-center gap-4 shadow-xl backdrop-blur-md w-[calc(100%-2rem)] max-w-sm">
                       <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider shrink-0 flex items-center gap-1">
                         <Move className="h-3.5 w-3.5 text-emerald-550" /> Reposition
                       </span>
@@ -4859,7 +4859,7 @@ function DashboardContent() {
                           setTempOffset(val);
                           setBusiness(prev => ({ ...prev, coverImageOffset: val }));
                         }}
-                        className="flex-1 accent-emerald-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none"
+                        className="flex-1 accent-emerald-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-emerald-500 [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-emerald-500 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md"
                       />
                       <span className="text-xs font-black text-white w-8 text-right">{tempOffset}%</span>
                       <div className="flex gap-1.5 shrink-0">
@@ -5902,7 +5902,7 @@ function DashboardContent() {
                   <div className="flex items-center gap-4">
                     <div className="h-20 w-20 rounded-2xl border border-slate-200 bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
                       {editFields.logoUrl ? (
-                        <img src={editFields.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                        <img src={window.getImageUrl(editFields.logoUrl)} alt="Logo" className="w-full h-full object-cover" />
                       ) : (
                         <ImageIcon className="h-8 w-8 text-slate-300" />
                       )}
@@ -5943,7 +5943,7 @@ function DashboardContent() {
                   <div className="flex flex-col gap-3">
                     {editFields.coverImageUrl ? (
                       <div className="h-32 rounded-2xl overflow-hidden border border-slate-200 relative group">
-                        <img src={editFields.coverImageUrl} alt="Cover" className="w-full h-full object-cover" />
+                        <img src={window.getImageUrl(editFields.coverImageUrl)} alt="Cover" className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                           <button
                             type="button"
@@ -6006,7 +6006,7 @@ function DashboardContent() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean).map((url, idx) => (
                       <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border border-slate-200 shadow-3xs bg-slate-100">
-                        <img src={url} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                        <img src={window.getImageUrl(url)} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/40 transition-colors flex items-center justify-center">
                           <button
                             type="button"
@@ -6238,7 +6238,7 @@ function DashboardContent() {
                         <div className="relative border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 p-2 flex items-center justify-between gap-3 group">
                           <div className="flex items-center gap-3 flex-1 min-w-0">
                             <img 
-                              src={newOfferFields.banner} 
+                              src={window.getImageUrl(newOfferFields.banner)} 
                               alt="Banner preview" 
                               className="h-14 w-20 object-cover rounded-lg border border-slate-200/60 shadow-2xs"
                             />
@@ -6334,7 +6334,7 @@ function DashboardContent() {
                   <div key={campaign.id} className="card-premium rounded-3xl overflow-hidden flex flex-col relative bg-white">
                     <div 
                       className="h-36 bg-cover bg-center shrink-0 relative smooth-img-container"
-                      style={{ backgroundImage: `url('${campaign.banner}')` }}
+                      style={{ backgroundImage: `url('${window.getImageUrl(campaign.banner)}')` }}
                     >
                       <div className="absolute inset-0 bg-slate-950/20" />
                       <div className="absolute top-4 left-4 bg-rose-600 text-white px-3 py-1 rounded-xl text-xs font-black uppercase shadow-md select-none tracking-wide">
@@ -6719,7 +6719,7 @@ function DashboardContent() {
                           <div className="flex gap-4">
                             <div className="h-16 w-16 rounded-2xl overflow-hidden shrink-0 border border-slate-100 select-none bg-slate-50">
                               <img 
-                                src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : blog.coverImage} 
+                                src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : window.getImageUrl(blog.coverImage)} 
                                 className={`w-full h-full ${(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-1' : 'object-cover'}`} 
                                 alt={blog.title} 
                               />
@@ -7890,10 +7890,10 @@ function DashboardContent() {
 
       {/* MODAL 1: Subscription Renewal with Razorpay */}
       {(showRenewModal || isMandatorySubscription) && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center md:items-start justify-center p-4 overflow-y-auto">
           <div 
             style={{ '--modal-margin-top': `${modalMarginTop}px` }}
-            className="max-w-4xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-6 animate-scaleUp text-left max-h-[90vh] overflow-y-auto scrollbar-none relative mt-5 md:mt-[var(--modal-margin-top)]"
+            className="max-w-4xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-6 animate-scaleUp text-left max-h-[90vh] overflow-y-auto scrollbar-none relative my-auto md:my-0 md:mt-[var(--modal-margin-top)]"
           >
             
             {/* Close button */}
@@ -8185,12 +8185,12 @@ function DashboardContent() {
 
       {/* MODAL 2: Edit Profile Details Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center md:items-start justify-center p-4 overflow-y-auto">
           <div 
             style={{ '--modal-margin-top': `${modalMarginTop}px` }}
-            className="max-w-2xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-5 animate-scaleUp text-left max-h-[85vh] overflow-y-auto scrollbar-none font-sans mt-5 md:mt-[var(--modal-margin-top)]"
+            className="max-w-2xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] flex flex-col animate-scaleUp text-left h-[85vh] max-h-[85vh] overflow-hidden font-sans my-auto md:my-0 md:mt-[var(--modal-margin-top)]"
           >
-            <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+            <div className="p-6 md:p-8 pb-3 md:pb-3 flex justify-between items-start border-b border-slate-100 shrink-0">
               <div>
                 <h3 className="font-extrabold text-slate-800 text-base">Edit Business Details</h3>
                 <p className="text-slate-400 text-[10px] font-semibold mt-1">Keep your entire business profile up-to-date.</p>
@@ -8201,7 +8201,7 @@ function DashboardContent() {
             </div>
 
             {/* Nested Subtabs inside the modal */}
-            <div className="flex border-b border-slate-200 gap-2 overflow-x-auto">
+            <div className="px-6 md:px-8 flex border-b border-slate-200 gap-2 overflow-x-auto shrink-0">
               {[
                 { id: 'general', label: 'General Info' },
                 { id: 'about', label: 'About & Highlights' },
@@ -8222,7 +8222,8 @@ function DashboardContent() {
               ))}
             </div>
 
-            <form onSubmit={handleEditSubmit} className="flex flex-col gap-5 mt-2">
+            <form onSubmit={handleEditSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 pt-4 md:pt-4 flex flex-col gap-5 scrollbar-none">
               
               {/* TAB: GENERAL */}
               {editTab === 'general' && (
@@ -8671,7 +8672,7 @@ function DashboardContent() {
                     <div className="flex items-center gap-4.5">
                       <div className="h-16 w-16 rounded-2xl border-2 border-slate-200 overflow-hidden shrink-0 bg-slate-55 flex items-center justify-center relative group">
                         <img 
-                          src={editFields.logoUrl || "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150&q=80"} 
+                          src={window.getImageUrl(editFields.logoUrl) || "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150&q=80"} 
                           alt="Logo Preview" 
                           className="h-full w-full object-cover"
                         />
@@ -8704,7 +8705,7 @@ function DashboardContent() {
                     <div className="flex flex-col gap-3">
                       <div className="h-32 w-full rounded-2xl border border-slate-200 overflow-hidden bg-slate-55 relative flex items-center justify-center">
                         <img 
-                          src={editFields.coverImageUrl || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80"} 
+                          src={window.getImageUrl(editFields.coverImageUrl) || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80"} 
                           alt="Cover Preview" 
                           className="w-full h-full object-cover"
                         />
@@ -8739,7 +8740,7 @@ function DashboardContent() {
                       {editFields.galleryUrls 
                         ? editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean).map((url, idx) => (
                           <div key={idx} className="h-20 rounded-xl border border-slate-200 overflow-hidden bg-slate-55 relative group">
-                            <img src={url} alt="Gallery item" className="w-full h-full object-cover" />
+                            <img src={window.getImageUrl(url)} alt="Gallery item" className="w-full h-full object-cover" />
                             <button
                               type="button"
                               onClick={() => {
@@ -8777,16 +8778,17 @@ function DashboardContent() {
                         />
                       </label>
                     </div>
-                    <span className="text-[9.5px] text-slate-400 font-semibold mt-1">Select one or more store images to upload directly (Max 5MB per file)</span>
+                    <span className="text-[9.5px] text-slate-400 font-semibold mt-1">Select one or more store image to upload directly (Max 5MB per file)</span>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
-              <div className="flex items-center justify-between mt-4 border-t border-slate-100 pt-4">
+              <div className="px-6 md:px-8 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between shrink-0 rounded-b-[32px]">
                 <button 
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-[11px] rounded-xl cursor-pointer uppercase tracking-wide transition-colors"
+                  className="py-3 px-5 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 font-extrabold text-[11px] rounded-xl cursor-pointer uppercase tracking-wide transition-colors"
                 >
                   Cancel
                 </button>
@@ -8800,7 +8802,7 @@ function DashboardContent() {
                       const idx = tabs.indexOf(editTab);
                       if (idx > 0) setEditTab(tabs[idx - 1]);
                     }}
-                    className="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-[11px] rounded-xl cursor-pointer uppercase tracking-wide transition-all flex items-center gap-1"
+                    className="py-3 px-4 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-[11px] rounded-xl cursor-pointer uppercase tracking-wide transition-all flex items-center gap-1"
                   >
                     <ChevronLeft className="h-3.5 w-3.5" /> Back
                   </button>
@@ -8813,7 +8815,7 @@ function DashboardContent() {
                       const idx = tabs.indexOf(editTab);
                       if (idx < tabs.length - 1) setEditTab(tabs[idx + 1]);
                     }}
-                    className="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-[11px] rounded-xl cursor-pointer uppercase tracking-wide transition-all flex items-center gap-1"
+                    className="py-3 px-4 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-[11px] rounded-xl cursor-pointer uppercase tracking-wide transition-all flex items-center gap-1"
                   >
                     Next <ChevronRight className="h-3.5 w-3.5" />
                   </button>
@@ -9008,10 +9010,10 @@ function DashboardContent() {
 
       {/* MODAL 3: Photos Gallery & Upload Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center md:items-start justify-center p-4 overflow-y-auto">
           <div 
             style={{ '--modal-margin-top': `${modalMarginTop}px` }}
-            className="max-w-lg w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 flex flex-col gap-5 animate-scaleUp text-left mt-5 md:mt-[var(--modal-margin-top)]"
+            className="max-w-lg w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 flex flex-col gap-5 animate-scaleUp text-left my-auto md:my-0 md:mt-[var(--modal-margin-top)]"
           >
             <div className="flex justify-between items-start border-b border-slate-100 pb-3">
               <div>
@@ -9057,7 +9059,7 @@ function DashboardContent() {
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
                   {photoGallery.map((img, i) => (
                     <div key={i} className="h-16 rounded-xl overflow-hidden border border-slate-200 relative group select-none">
-                      <img src={img} alt="Store" className="w-full h-full object-cover" />
+                      <img src={window.getImageUrl(img)} alt="Store" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
                         <button 
                           type="button"
@@ -9255,7 +9257,7 @@ function DashboardContent() {
                     <div className="relative border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 p-2 flex items-center justify-between gap-3 group">
                       <div className="flex items-center gap-3">
                         <img 
-                          src={blogCover} 
+                          src={window.getImageUrl(blogCover)} 
                           alt="Cover preview" 
                           className="h-14 w-20 object-cover rounded-lg border border-slate-200/60 shadow-2xs"
                         />
@@ -9730,7 +9732,7 @@ function DashboardContent() {
                     <div className="relative border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 p-2 flex items-center justify-between gap-3 group">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <img 
-                          src={completeEventCoverUrl} 
+                          src={window.getImageUrl(completeEventCoverUrl)} 
                           alt="Cover preview" 
                           className="h-14 w-20 object-cover rounded-lg border border-slate-200/60 shadow-2xs"
                         />

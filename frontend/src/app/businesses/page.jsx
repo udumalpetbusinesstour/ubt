@@ -1988,7 +1988,7 @@ function BusinessesList() {
                                 <div 
                                   className="h-full w-full bg-cover bg-center transition-transform duration-750 ease-out-expo group-hover:scale-105 rounded-l-[23px]"
                                   style={{
-                                    backgroundImage: `url('${biz.coverImageUrl || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"}')`,
+                                    backgroundImage: `url('${window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"}')`,
                                     filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
                                   }}
                                 />
@@ -2768,7 +2768,7 @@ function BusinessesList() {
                           viewMode === 'list' ? 'rounded-l-[23px]' : 'rounded-t-[23px]'
                         }`}
                         style={{
-                          backgroundImage: `url('${biz.coverImageUrl || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"}')`,
+                          backgroundImage: `url('${window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"}')`,
                           filter: !isSubscribed ? 'blur(4px) grayscale(30%)' : 'none'
                         }}
                       />

@@ -1284,9 +1284,9 @@ Please confirm availability and delivery time.`;
     (!business.ownerId && !business.owner)
   );
   const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin');
-  const displayGallery = Array.from(new Set(business.galleryUrls || [])).filter(Boolean);
+  const displayGallery = Array.from(new Set(business.galleryUrls || [])).filter(Boolean).map(url => window.getImageUrl(url));
   const galleryCount = displayGallery.length;
-  const mainImage = business.coverImageUrl || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80";
+  const mainImage = window.getImageUrl(business.coverImageUrl) || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80";
   const remainingCount = Math.max(0, galleryCount - 5);
 
   const allReviews = [
@@ -1454,7 +1454,7 @@ Please confirm availability and delivery time.`;
             <div className="flex items-center gap-4 mt-2 flex-wrap text-left">
               {business.logoUrl ? (
                 <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-white shadow-md shrink-0 flex items-center justify-center">
-                  <img src={business.logoUrl} alt={`${business.name} Logo`} className="h-full w-full object-cover" />
+                  <img src={window.getImageUrl(business.logoUrl)} alt={`${business.name} Logo`} className="h-full w-full object-cover" />
                 </div>
               ) : (
                 <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-gradient-to-tr from-emerald-500 to-teal-650 shadow-md shrink-0 flex items-center justify-center font-extrabold text-white text-xl uppercase">
