@@ -3662,12 +3662,8 @@ function DashboardContent() {
     ] : []),
     { label: 'Events', icon: <Calendar className="h-4 w-4" /> },
     { label: 'My Blogs', icon: <FileEdit className="h-4 w-4" /> },
-  ];
-
-  const footerLinks = [
     { label: 'Settings', icon: <Settings className="h-4 w-4" /> },
     { label: 'Help & Support', icon: <HelpCircle className="h-4 w-4" /> },
-    { label: 'Logout', icon: <LogOut className="h-4 w-4" />, onClick: handleLogout },
   ];
 
   const displayEvents = userEvents.filter(evt => evt.paymentStatus !== 'Pending');
@@ -3678,7 +3674,10 @@ function DashboardContent() {
       {/* 1. LEFT NAVIGATION SIDEBAR */}
       <aside className={`w-[270px] bg-[#001c41] text-slate-300 flex flex-col shrink-0 border-r border-slate-800 transition-transform duration-300 z-50 fixed lg:static inset-y-0 left-0 overflow-hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full hidden lg:flex'}`}>
         
-        {/* Logo block */}
+        {/* Scrollable Container (like admin page) */}
+        <div className="flex-1 flex flex-col overflow-y-auto min-h-0">
+          
+          {/* Logo block */}
         <div className="p-6 border-b border-slate-800 flex items-center justify-between shrink-0">
           <Link to="/" className="flex items-center select-none py-1 overflow-hidden shrink-0">
             <img src="/logo-dark.png" alt="Udumalpet Business Tour" className="h-10.5 w-auto object-contain" />
@@ -3752,8 +3751,8 @@ function DashboardContent() {
           </div>
         )}
 
-        <nav className="flex-1 px-3 py-2 flex flex-col gap-0.5 overflow-y-auto min-h-0">
-          {sidebarLinks.map((link, idx) => (
+          <nav className="px-3 py-2 flex flex-col gap-0.5">
+            {sidebarLinks.map((link, idx) => (
             <button
               key={idx}
               onClick={() => {
@@ -3821,41 +3820,17 @@ function DashboardContent() {
           </a>
         </div>
 
-        {/* Sidebar Footer with Settings, Help & Support, and Logout */}
-        <div className="p-3 border-t border-slate-800/80 bg-slate-950/20 flex flex-col gap-0.5 shrink-0">
-          {footerLinks.map((link, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                if (link.onClick) {
-                  link.onClick();
-                } else {
-                  setSearchParams({ tab: link.label });
-                }
-                setSidebarOpen(false);
-              }}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[11.5px] font-extrabold transition-all hover:bg-slate-800/40 hover:text-white cursor-pointer ${
-                activeTab === link.label && !link.onClick
-                  ? 'bg-[#027244] text-white shadow-md shadow-emerald-950/20' 
-                  : link.label === 'Logout'
-                    ? 'text-rose-455 hover:bg-rose-950/20 hover:text-rose-350'
-                    : 'text-slate-400 hover:bg-slate-800/30'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <span className={
-                  activeTab === link.label && !link.onClick 
-                    ? 'text-emerald-300' 
-                    : link.label === 'Logout'
-                      ? 'text-rose-455 group-hover:text-rose-350'
-                      : 'text-slate-500 group-hover:text-slate-300'
-                }>
-                  {link.icon}
-                </span>
-                <span>{link.label}</span>
-              </div>
-            </button>
-          ))}
+        </div>
+
+        {/* Sidebar Footer with Logout (like admin page) */}
+        <div className="p-3 border-t border-slate-800/80 bg-slate-950/20 flex flex-col gap-1 shrink-0">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3.5 px-4 py-3 w-full rounded-xl text-xs font-bold text-rose-455 hover:bg-rose-950/15 hover:text-rose-350 cursor-pointer text-left"
+          >
+            <LogOut className="h-5 w-5 shrink-0 text-rose-455" />
+            <span>Logout</span>
+          </button>
         </div>
       </aside>
 
