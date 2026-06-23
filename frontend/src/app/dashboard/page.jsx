@@ -3672,7 +3672,7 @@ function DashboardContent() {
     <div className="w-full min-h-screen bg-[#F8FAFC] flex font-sans leading-relaxed selection:bg-emerald-500 selection:text-white">
       
       {/* 1. LEFT NAVIGATION SIDEBAR */}
-      <aside className={`w-[270px] bg-[#001c41] text-slate-300 flex flex-col shrink-0 border-r border-slate-800 transition-transform duration-300 z-50 fixed lg:static inset-y-0 left-0 overflow-hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full hidden lg:flex'}`}>
+      <aside className={`w-[270px] bg-[#001c41] text-slate-300 flex flex-col shrink-0 border-r border-slate-800 transition-transform duration-300 z-50 fixed lg:static inset-y-0 h-[100dvh] lg:h-auto left-0 overflow-hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full hidden lg:flex'}`}>
         
         {/* Scrollable Container (like admin page) */}
         <div className="flex-1 flex flex-col overflow-y-auto min-h-0">
