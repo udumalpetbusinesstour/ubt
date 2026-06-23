@@ -18,10 +18,8 @@ router.post('/', protect, upload.single('image'), (req, res) => {
     if (req.file.path && (req.file.path.startsWith('http://') || req.file.path.startsWith('https://'))) {
       fileUrl = req.file.path;
     } else if (req.file.filename) {
-      // Disk storage fallback: Construct the local web URL
-      const host = req.get('host');
-      const protocol = req.protocol;
-      fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+      // Disk storage fallback: Construct the relative web URL to avoid mixed-content or localhost mismatches
+      fileUrl = `/uploads/${req.file.filename}`;
     }
 
     if (!fileUrl) {

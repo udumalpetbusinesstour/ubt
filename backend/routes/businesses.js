@@ -184,6 +184,14 @@ async function validateAddressAndBoundary(address, pincode, userLat, userLng) {
   let lat = parseFloat(userLat) || udtCenter.lat;
   let lng = parseFloat(userLng) || udtCenter.lng;
 
+  if (!address || !address.trim()) {
+    return {
+      isValid: true,
+      lat,
+      lng
+    };
+  }
+
   if (apiKey) {
     try {
       const fullAddressQuery = `${address}, Tamil Nadu, India, ${pincode}`;
@@ -1410,6 +1418,16 @@ router.post('/validate-address', async (req, res) => {
       isAddressValid: false,
       isWithinBoundary: false,
       message: `Pincode "${pincode}" is outside Udumalpet operational boundaries.`
+    });
+  }
+
+  if (!address || !address.trim()) {
+    return res.json({
+      success: true,
+      isAddressValid: true,
+      isWithinBoundary: true,
+      distanceFromCenter: 0,
+      message: "Valid pincode selected."
     });
   }
 

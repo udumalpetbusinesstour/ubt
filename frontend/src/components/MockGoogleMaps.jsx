@@ -139,16 +139,39 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
     }
  
     if (val.length > 2) {
+      let predictions = [];
       try {
         const query = pincode ? `?q=${encodeURIComponent(val)}&types=geocode&pincode=${pincode}` : `?q=${encodeURIComponent(val)}&types=geocode`;
         const res = await fetch(`http://localhost:5000/api/businesses/google-autocomplete${query}`);
         const data = await res.json();
-        if (data.success && data.predictions) {
-          setSuggestions(data.predictions);
+        if (data.success && data.predictions && data.predictions.length > 0) {
+          predictions = data.predictions;
         }
       } catch (err) {
         console.error('Error fetching address autocomplete:', err);
       }
+
+      if (predictions.length === 0 && pincode && mockAddressesByPincode[pincode]) {
+        const queryClean = val.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const mockList = mockAddressesByPincode[pincode];
+        const filteredMocks = mockList.filter(item => 
+          item.text.toLowerCase().replace(/[^a-z0-9]/g, '').includes(queryClean) ||
+          item.locality.toLowerCase().replace(/[^a-z0-9]/g, '').includes(queryClean)
+        );
+        predictions = filteredMocks.map((item, idx) => ({
+          place_id: `mock_addr_${pincode}_${idx}`,
+          description: item.text,
+          isMock: true,
+          locality: item.locality,
+          coords: item.coords,
+          structured_formatting: {
+            main_text: item.locality,
+            secondary_text: item.text
+          }
+        }));
+      }
+
+      setSuggestions(predictions);
     } else {
       setSuggestions([]);
     }
@@ -158,6 +181,22 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
     setSuggestions([]);
     setError('');
  
+    if (sug.isMock) {
+      setAddressInput(sug.description);
+      setIsVerified(true);
+      if (onAddressSelect) {
+        onAddressSelect({
+          address: sug.description,
+          locality: sug.locality || 'Udumalpet',
+          pincode: pincode || '',
+          coordinates: sug.coords || { lat: 10.585, lng: 77.251 },
+          isVerified: true,
+          googlePlaceId: sug.place_id,
+        });
+      }
+      return;
+    }
+
     try {
       const res = await fetch('http://localhost:5000/api/businesses/google-autofill', {
         method: 'POST',
@@ -196,9 +235,9 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
         <input
           type="text"
           value={addressInput}
-          readOnly
-          placeholder="Address populated automatically via Google Import Autofill..."
-          className={`w-full py-2.5 pl-3 pr-28 text-sm bg-slate-50 border rounded shadow-sm focus:outline-none cursor-not-allowed ${
+          onChange={handleInputChange}
+          placeholder="Enter street address or search..."
+          className={`w-full py-2.5 pl-3 pr-28 text-sm bg-white border rounded shadow-sm focus:outline-none ${
             isVerified 
               ? 'border-emerald-500' 
               : 'border-slate-200'

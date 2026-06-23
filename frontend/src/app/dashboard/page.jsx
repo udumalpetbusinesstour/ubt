@@ -3672,7 +3672,7 @@ function DashboardContent() {
     <div className="w-full min-h-screen bg-[#F8FAFC] flex font-sans leading-relaxed selection:bg-emerald-500 selection:text-white">
       
       {/* 1. LEFT NAVIGATION SIDEBAR */}
-      <aside className={`w-[270px] bg-[#001c41] text-slate-300 flex flex-col shrink-0 border-r border-slate-800 transition-transform duration-300 z-50 fixed lg:static inset-y-0 h-[100dvh] lg:h-auto left-0 overflow-hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full hidden lg:flex'}`}>
+      <aside className={`w-[270px] bg-[#001c41] text-slate-300 flex flex-col shrink-0 border-r border-slate-800 transition-transform duration-300 z-50 fixed lg:static inset-y-0 h-[100dvh] lg:h-auto left-0 overflow-hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 hidden lg:flex'}`}>
         
         {/* Scrollable Container (like admin page) */}
         <div className="flex-1 flex flex-col overflow-y-auto min-h-0">
@@ -3786,6 +3786,19 @@ function DashboardContent() {
               )}
             </button>
           ))}
+
+          {/* Logout button below Help & Support */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-[11.5px] font-extrabold text-rose-400 hover:bg-rose-950/15 hover:text-rose-300 transition-all cursor-pointer text-left mt-2 border-t border-slate-800/40 pt-2"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-rose-400">
+                <LogOut className="h-4.5 w-4.5" />
+              </span>
+              <span>Logout</span>
+            </div>
+          </button>
         </nav>
 
         {/* Upgrade Plan Callout Widget */}
@@ -3820,17 +3833,6 @@ function DashboardContent() {
           </a>
         </div>
 
-        </div>
-
-        {/* Sidebar Footer with Logout (like admin page) */}
-        <div className="p-2 border-t border-slate-800/80 bg-slate-950/20 flex flex-col gap-1 shrink-0">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2 w-full rounded-xl text-xs font-bold text-rose-455 hover:bg-rose-950/15 hover:text-rose-350 cursor-pointer text-left"
-          >
-            <LogOut className="h-5 w-5 shrink-0 text-rose-455" />
-            <span>Logout</span>
-          </button>
         </div>
       </aside>
 

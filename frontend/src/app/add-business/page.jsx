@@ -1306,7 +1306,11 @@ export default function AddBusiness() {
     } else {
       if (validateStep()) {
         saveDraft(formData);
-        setCurrentStep((prev) => prev + 1);
+        if (currentStep === 4 && formData.subscriptionStatus === 'active') {
+          setCurrentStep(6);
+        } else {
+          setCurrentStep((prev) => prev + 1);
+        }
       }
     }
   };
@@ -1321,7 +1325,11 @@ export default function AddBusiness() {
       }
     } else {
       saveDraft(formData);
-      setCurrentStep((prev) => prev - 1);
+      if (currentStep === 6 && formData.subscriptionStatus === 'active') {
+        setCurrentStep(4);
+      } else {
+        setCurrentStep((prev) => prev - 1);
+      }
     }
   };
 
@@ -1487,6 +1495,8 @@ export default function AddBusiness() {
                       }
                       setError("");
                       setIsPincodeVerified(true);
+                      sessionStorage.setItem('ubt_from_overlay', 'true');
+                      setCurrentStep(5);
                       saveDraft({ ...formData });
                     }}
                     className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow"
@@ -1677,6 +1687,8 @@ export default function AddBusiness() {
                           setGmbAutofillSuccess(true);
                           setToastMessage("Business information imported from link successfully.");
                           setTimeout(() => setToastMessage(''), 4000);
+                          sessionStorage.setItem('ubt_from_overlay', 'true');
+                          setCurrentStep(5);
                           saveDraft(updated);
                         } else {
                           setError(data.message || "Could not autofill from link. Please enter details manually.");
@@ -3184,7 +3196,13 @@ export default function AddBusiness() {
                         subscriptionStatus: updatedBiz?.subscriptionStatus || 'active',
                         isPremium: updatedBiz?.isPremium !== undefined ? updatedBiz.isPremium : true
                       }));
-                      setCurrentStep(6);
+                      const fromOverlay = sessionStorage.getItem('ubt_from_overlay') === 'true';
+                      if (fromOverlay) {
+                        sessionStorage.removeItem('ubt_from_overlay');
+                        setCurrentStep(1);
+                      } else {
+                        setCurrentStep(6);
+                      }
                     }}
                   />
                 </div>

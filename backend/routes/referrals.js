@@ -39,7 +39,25 @@ router.get('/my-stats', protect, async (req, res, next) => {
         referralCode: user.referralCode,
         referralPoints: availablePoints,
         referralCredits: availablePoints / 10, // 100 points = ₹10 credit
-        referralLink: isSubscribed ? `http://localhost:5173/register?ref=${user.referralCode}` : '',
+        referralLink: (() => {
+          if (!isSubscribed) return '';
+          let frontendOrigin = 'https://udumalpet.business';
+          const host = req.get('host') || '';
+          if (host.includes('staging')) {
+            frontendOrigin = 'https://staging.udumalpet.business';
+          }
+          if (req.headers.origin) {
+            frontendOrigin = req.headers.origin;
+          } else if (req.headers.referer) {
+            try {
+              const refUrl = new URL(req.headers.referer);
+              frontendOrigin = refUrl.origin;
+            } catch (err) {
+              // ignore invalid URL
+            }
+          }
+          return `${frontendOrigin}/register?ref=${user.referralCode}`;
+        })(),
         referrals
       }
     });
