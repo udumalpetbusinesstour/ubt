@@ -3664,7 +3664,6 @@ function DashboardContent() {
     { label: 'My Blogs', icon: <FileEdit className="h-4 w-4" /> },
     { label: 'Settings', icon: <Settings className="h-4 w-4" /> },
     { label: 'Help & Support', icon: <HelpCircle className="h-4 w-4" /> },
-    { label: 'Logout', icon: <LogOut className="h-4 w-4" />, onClick: handleLogout },
   ];
 
   const displayEvents = userEvents.filter(evt => evt.paymentStatus !== 'Pending');
@@ -3749,7 +3748,6 @@ function DashboardContent() {
           </div>
         )}
 
-        {/* Navigation list */}
         <nav className="flex-1 px-3 py-2 flex flex-col gap-0.5 overflow-y-auto min-h-0">
           {sidebarLinks.map((link, idx) => (
             <button
@@ -3765,18 +3763,14 @@ function DashboardContent() {
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[11.5px] font-extrabold transition-all hover:bg-slate-800/40 hover:text-white cursor-pointer ${
                 activeTab === link.label && !link.onClick
                   ? 'bg-[#027244] text-white shadow-md shadow-emerald-900/20' 
-                  : link.label === 'Logout'
-                    ? 'text-rose-400 hover:bg-rose-950/20 hover:text-rose-350'
-                    : 'text-slate-400 hover:bg-slate-800/30'
+                  : 'text-slate-400 hover:bg-slate-800/30'
               }`}
             >
               <div className="flex items-center gap-3">
                 <span className={
                   activeTab === link.label && !link.onClick 
                     ? 'text-emerald-300' 
-                    : link.label === 'Logout'
-                      ? 'text-rose-455 group-hover:text-rose-350'
-                      : 'text-slate-500 group-hover:text-slate-300'
+                    : 'text-slate-500 group-hover:text-slate-300'
                 }>
                   {link.icon}
                 </span>
@@ -3821,6 +3815,17 @@ function DashboardContent() {
           <a href="tel:+918925728260" className="text-xs text-emerald-400 hover:text-emerald-300 font-extrabold flex items-center gap-1 transition-colors mt-0.5">
             +91 89257 28260
           </a>
+        </div>
+
+        {/* Sidebar Footer with Logout */}
+        <div className="p-3.5 border-t border-slate-800/80 bg-slate-950/20 flex flex-col gap-1 shrink-0">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 w-full rounded-xl text-[11.5px] font-extrabold text-rose-455 hover:bg-rose-950/20 hover:text-rose-350 transition-all cursor-pointer text-left"
+          >
+            <LogOut className="h-4 w-4 shrink-0 text-rose-455" />
+            <span>Logout</span>
+          </button>
         </div>
       </aside>
 

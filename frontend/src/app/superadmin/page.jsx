@@ -6084,14 +6084,14 @@ export default function SuperAdminDashboard() {
                     </div>
 
                     {/* Filter controls */}
-                    <div className={`p-1 rounded-xl flex items-center shrink-0 border ${
+                    <div className={`w-full sm:w-auto p-1 rounded-xl flex items-center shrink-0 border overflow-x-auto whitespace-nowrap scrollbar-thin ${
                       themeMode === 'dark' ? 'bg-slate-950 border-slate-800' : 'bg-slate-100/60 border-slate-200/30'
                     }`}>
                       {['All', 'Pending', 'Completed', 'Rejected'].map(status => (
                         <button
                           key={status}
                           onClick={() => setReferralFilter(status)}
-                          className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                          className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                             referralFilter === status
                               ? 'bg-[#027244] text-white shadow-sm shadow-emerald-950/15'
                               : themeMode === 'dark'

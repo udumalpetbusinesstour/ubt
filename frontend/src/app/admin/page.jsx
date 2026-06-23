@@ -3604,7 +3604,7 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Sub-tab navigation */}
-                    <div className="bg-slate-100/60 p-1 rounded-xl flex items-center shrink-0 border border-slate-200/30">
+                    <div className="w-full sm:w-auto bg-slate-100/60 p-1 rounded-xl flex items-center shrink-0 border border-slate-200/30 overflow-x-auto whitespace-nowrap scrollbar-thin">
                       {[
                         { id: 'queue', label: 'Referrals Queue' },
                         { id: 'refunds', label: 'Cashback Refunds' },
@@ -3613,7 +3613,7 @@ export default function AdminDashboard() {
                         <button
                           key={sub.id}
                           onClick={() => setReferralSubTab(sub.id)}
-                          className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                          className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                             referralSubTab === sub.id
                               ? 'bg-[#027244] text-white shadow-sm shadow-emerald-950/15'
                               : 'text-slate-500 hover:text-slate-800'
@@ -3628,16 +3628,16 @@ export default function AdminDashboard() {
                   {referralSubTab === 'queue' && (
                     <>
                       {/* Filter controls */}
-                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 flex justify-between items-center gap-4">
+                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div className="flex flex-col text-left">
                           <span className="text-xs font-extrabold text-slate-700">Filter Referrals</span>
                         </div>
-                        <div className="bg-slate-100/60 p-1 rounded-xl flex items-center shrink-0 border border-slate-200/30">
+                        <div className="w-full sm:w-auto bg-slate-100/60 p-1 rounded-xl flex items-center shrink-0 border border-slate-200/30 overflow-x-auto whitespace-nowrap scrollbar-thin">
                           {['All', 'Pending', 'Completed', 'Rejected'].map(status => (
                             <button
                               key={status}
                               onClick={() => setReferralFilter(status)}
-                              className={`px-3 py-1.5 rounded-lg text-[10.5px] font-black transition-all cursor-pointer ${
+                              className={`px-3 py-1.5 rounded-lg text-[10.5px] font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                                 referralFilter === status
                                   ? 'bg-[#027244] text-white shadow-sm'
                                   : 'text-slate-500 hover:text-slate-800'
