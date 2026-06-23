@@ -4629,21 +4629,21 @@ export default function AdminDashboard() {
           <div className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between animate-slideLeft text-left font-sans">
             
             {/* Modal Header */}
-            <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
-              <div className="flex flex-col text-left">
+            <div className="p-4 sm:p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+              <div className="flex flex-col text-left min-w-0 flex-1 pr-3">
                 <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest">Vetting Workspace</span>
-                <h3 className="font-extrabold text-slate-800 text-base mt-1">{selectedBiz.name}</h3>
+                <h3 className="font-extrabold text-slate-800 text-base mt-1 truncate">{selectedBiz.name}</h3>
               </div>
               <button 
                 onClick={() => { setShowBizModal(false); setSelectedBiz(null); }}
-                className="h-8.5 w-8.5 rounded-xl hover:bg-slate-200/80 flex items-center justify-center text-slate-450 hover:text-slate-700 transition-colors cursor-pointer"
+                className="h-8.5 w-8.5 rounded-xl hover:bg-slate-200/80 flex items-center justify-center text-slate-450 hover:text-slate-700 transition-colors cursor-pointer shrink-0"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Modal Scrollable Body */}
-            <div className="p-6 flex-grow overflow-y-auto flex flex-col gap-6">
+            <div className="p-4 sm:p-6 flex-grow overflow-y-auto flex flex-col gap-6">
               
               {/* Cover Image */}
               <div className="h-44 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-2xs relative bg-slate-50 shrink-0">
@@ -4677,22 +4677,22 @@ export default function AdminDashboard() {
                 <span className="font-extrabold text-xs text-slate-800 border-b border-slate-100 pb-1.5 uppercase tracking-wider">Contact & Registration</span>
                 
                 <div className="flex flex-col gap-2.5 text-xs font-semibold text-slate-500">
-                  <div className="flex justify-between border-b border-slate-50 pb-1.5">
-                    <span>Merchant Full Name</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
+                    <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Merchant Full Name</span>
                     <span className="font-bold text-slate-800">{selectedBiz.ownerName}</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-50 pb-1.5">
-                    <span>Mobile Phone</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
+                    <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Mobile Phone</span>
                     <span className="font-bold text-slate-800">{selectedBiz.phone}</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-50 pb-1.5">
-                    <span>Email Address</span>
-                    <span className="font-bold text-slate-800">{selectedBiz.email || 'N/A'}</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
+                    <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Email Address</span>
+                    <span className="font-bold text-slate-800 break-all">{selectedBiz.email || 'N/A'}</span>
                   </div>
                   {selectedBiz.website && (
-                    <div className="flex justify-between border-b border-slate-50 pb-1.5">
-                      <span>Website</span>
-                      <span className="font-bold text-emerald-700">{selectedBiz.website}</span>
+                    <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
+                      <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Website</span>
+                      <span className="font-bold text-emerald-700 break-all">{selectedBiz.website}</span>
                     </div>
                   )}
                 </div>
@@ -4703,16 +4703,16 @@ export default function AdminDashboard() {
                 <span className="font-extrabold text-xs text-slate-800 border-b border-slate-100 pb-1.5 uppercase tracking-wider">Location Parameters</span>
                 
                 <div className="flex flex-col gap-2.5 text-xs font-semibold text-slate-500">
-                  <div className="flex justify-between border-b border-slate-50 pb-1.5">
-                    <span>Street Address</span>
-                    <span className="font-bold text-slate-805 text-right">{selectedBiz.address}</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
+                    <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Street Address</span>
+                    <span className="font-bold text-slate-805 text-left sm:text-right">{selectedBiz.address}</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-50 pb-1.5">
-                    <span>Locality</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
+                    <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Locality</span>
                     <span className="font-bold text-slate-805">{selectedBiz.locality}</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-50 pb-1.5">
-                    <span>Pincode Boundary</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
+                    <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Pincode Boundary</span>
                     <span className="font-bold text-slate-800">{selectedBiz.pincode}</span>
                   </div>
                 </div>
@@ -4723,21 +4723,21 @@ export default function AdminDashboard() {
                 <span className="font-extrabold text-xs text-slate-800 border-b border-slate-100 pb-1.5 uppercase tracking-wider">Vetting Parameters</span>
                 
                 <div className="flex flex-col gap-2.5 text-xs font-semibold text-slate-500">
-                  <div className="flex justify-between border-b border-slate-50 pb-1.5">
-                    <span>GST Number (Taxation)</span>
-                    <span className="font-extrabold text-slate-800 tracking-wider">{selectedBiz.gstNumber || 'N/A (Cottage/Unregistered)'}</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
+                    <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">GST Number (Taxation)</span>
+                    <span className="font-extrabold text-slate-800 tracking-wider break-all">{selectedBiz.gstNumber || 'N/A (Cottage/Unregistered)'}</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-50 pb-1.5">
-                    <span>Established Year</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
+                    <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Established Year</span>
                     <span className="font-bold text-slate-800">{selectedBiz.yearEstablished || '2012'}</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-50 pb-1.5">
-                    <span>Staff count</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
+                    <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Staff count</span>
                     <span className="font-bold text-slate-800">{selectedBiz.employeeCount || '10 - 20'}</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-50 pb-1.5">
-                    <span>Maps Connection PlaceId</span>
-                    <span className="font-bold text-blue-650 truncate max-w-[150px]">{selectedBiz.googlePlaceId || 'Not connected'}</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
+                    <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Maps Connection PlaceId</span>
+                    <span className="font-bold text-blue-650 truncate max-w-[200px]">{selectedBiz.googlePlaceId || 'Not connected'}</span>
                   </div>
                 </div>
               </div>
@@ -4758,7 +4758,7 @@ export default function AdminDashboard() {
                     {selectedBizBranches.map((br) => (
                       <div key={br._id} className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4 flex flex-col gap-2.5 text-xs text-slate-600">
                         <div className="flex justify-between items-start gap-2">
-                          <span className="font-extrabold text-slate-850 text-xs leading-tight">{br.name}</span>
+                          <span className="font-extrabold text-slate-850 text-xs leading-tight break-words">{br.name}</span>
                           <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase shrink-0 border ${
                             br.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-250' :
                             br.status === 'Pending Verification' ? 'bg-amber-50 text-amber-700 border-amber-250 animate-pulse' :
@@ -4826,7 +4826,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Modal Action Footer */}
-            <div className="p-6 border-t border-slate-200 bg-slate-50 flex flex-col gap-4 shrink-0">
+            <div className="p-4 sm:p-6 border-t border-slate-200 bg-slate-50 flex flex-col gap-4 shrink-0">
               {selectedBiz.status !== 'Approved' && (
                 <label className="flex items-center gap-2 px-1 cursor-pointer select-none">
                   <input
@@ -4842,7 +4842,7 @@ export default function AdminDashboard() {
                 <button 
                   onClick={() => { handleAction(selectedBiz._id, 'reject'); setShowBizModal(false); }}
                   disabled={selectedBiz.status === 'Rejected'}
-                  className="w-full sm:flex-1 py-3 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 text-center"
+                  className="w-full sm:flex-1 py-3 bg-red-550/10 border border-red-550/20 hover:bg-red-550/20 text-red-650 font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 text-center"
                 >
                   Reject Listing
                 </button>
@@ -4859,6 +4859,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
 
       {/* 4. REPLY TO QUERY MODAL */}
       {showReplyModal && selectedQuery && (

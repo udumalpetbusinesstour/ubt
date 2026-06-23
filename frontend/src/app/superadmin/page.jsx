@@ -6370,12 +6370,12 @@ export default function SuperAdminDashboard() {
           }`}>
             
             {/* Modal Header */}
-            <div className={`p-6 border-b flex justify-between items-center shrink-0 ${
+            <div className={`p-4 sm:p-6 border-b flex justify-between items-center shrink-0 ${
               themeMode === 'dark' ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'
             }`}>
-              <div className="flex flex-col text-left">
+              <div className="flex flex-col text-left min-w-0 flex-1 pr-3">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vetting Workspace</span>
-                <h3 className={`font-extrabold text-base leading-tight mt-1 ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>
+                <h3 className={`font-extrabold text-base leading-tight mt-1 truncate ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>
                   {selectedBiz.name}
                 </h3>
               </div>
@@ -6390,7 +6390,7 @@ export default function SuperAdminDashboard() {
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 font-sans">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 font-sans">
               
               {/* Cover Image & Gallery Grid */}
               <div className="flex flex-col gap-2">
@@ -6649,24 +6649,24 @@ export default function SuperAdminDashboard() {
               {/* Address Validation & Coordinates */}
               <div className="flex flex-col gap-2.5">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none border-b border-slate-200/20 pb-1">Coordinates & Address Validation</span>
-                <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
-                  <div className="flex justify-between">
-                    <span>Validation Status</span>
+                <div className="flex flex-col gap-2.5 text-xs font-semibold text-slate-500">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-4">
+                    <span className="text-[10px] sm:text-xs text-slate-450 uppercase sm:normal-case font-bold sm:font-semibold">Validation Status</span>
                     <span className="bg-emerald-500/15 text-emerald-500 text-[8px] font-black uppercase px-2 py-0.5 rounded-lg border border-emerald-500/25">
                       Coordinates Match Verified
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Locality Boundary</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-4">
+                    <span className="text-[10px] sm:text-xs text-slate-450 uppercase sm:normal-case font-bold sm:font-semibold">Locality Boundary</span>
                     <span className={themeMode === 'dark' ? 'text-slate-200' : 'text-slate-700'}>{selectedBiz.locality} (Pincode {selectedBiz.pincode})</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Map Coordinates</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-4">
+                    <span className="text-[10px] sm:text-xs text-slate-450 uppercase sm:normal-case font-bold sm:font-semibold">Map Coordinates</span>
                     <span className="font-mono text-[10.5px] text-blue-500 font-bold">10.5844° N, 77.2474° E (Udumalpet)</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Street Address</span>
-                    <span className={`text-right max-w-[200px] leading-tight ${themeMode === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4">
+                    <span className="text-[10px] sm:text-xs text-slate-450 uppercase sm:normal-case font-bold sm:font-semibold">Street Address</span>
+                    <span className={`text-left sm:text-right max-w-[200px] leading-tight ${themeMode === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>
                       {selectedBiz.address}
                     </span>
                   </div>
@@ -6676,15 +6676,15 @@ export default function SuperAdminDashboard() {
               {/* GST & Year Established */}
               <div className="flex flex-col gap-2.5">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none border-b border-slate-200/20 pb-1">Taxation & Registration</span>
-                <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
-                  <div className="flex justify-between">
-                    <span>GSTIN Details</span>
+                <div className="flex flex-col gap-2.5 text-xs font-semibold text-slate-500">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-4">
+                    <span className="text-[10px] sm:text-xs text-slate-450 uppercase sm:normal-case font-bold sm:font-semibold">GSTIN Details</span>
                     <span className={`font-mono font-bold tracking-wider ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>
                       {selectedBiz.gstNumber || '33ABCDE1234F1Z5'}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Year Established</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-4">
+                    <span className="text-[10px] sm:text-xs text-slate-450 uppercase sm:normal-case font-bold sm:font-semibold">Year Established</span>
                     <span className={themeMode === 'dark' ? 'text-slate-200' : 'text-slate-700'}>{selectedBiz.yearEstablished || '2012'}</span>
                   </div>
                 </div>
@@ -6693,14 +6693,14 @@ export default function SuperAdminDashboard() {
               {/* Working Hours */}
               <div className="flex flex-col gap-2.5">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none border-b border-slate-200/20 pb-1">Daily Operations Timings</span>
-                <div className={`p-4.5 rounded-2xl border flex flex-col gap-2 text-xs font-semibold ${
+                <div className={`p-4.5 rounded-2xl border flex flex-col gap-2.5 text-xs font-semibold ${
                   themeMode === 'dark' ? 'bg-slate-900/30 border-slate-800' : 'bg-slate-50 border-slate-200'
                 }`}>
-                  <div className="flex justify-between border-b border-slate-200/10 pb-1.5">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-4 border-b border-slate-200/10 pb-1.5">
                     <span>Monday - Saturday</span>
                     <span className="text-emerald-500">9:00 AM - 8:00 PM</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-4">
                     <span>Sunday</span>
                     <span className="text-amber-500">9:00 AM - 1:00 PM (Half Day)</span>
                   </div>
@@ -6728,7 +6728,7 @@ export default function SuperAdminDashboard() {
             </div>
 
             {/* Modal Action Footer */}
-            <div className={`p-6 border-t flex flex-col gap-2 shrink-0 ${
+            <div className={`p-4 sm:p-6 border-t flex flex-col gap-2 shrink-0 ${
               themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-200'
             }`}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
