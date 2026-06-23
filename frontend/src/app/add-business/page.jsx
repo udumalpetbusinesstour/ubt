@@ -5,11 +5,11 @@ import MockGoogleMaps from '@/components/MockGoogleMaps';
 import ChoosePlan from '../choose-plan/page';
 
 const steps = [
-  { id: 1, name: 'Basic Info' },
-  { id: 2, name: 'Business Details' },
-  { id: 3, name: 'Contact & Location' },
-  { id: 4, name: 'Photos & Media' },
-  { id: 5, name: 'Choose Plan' },
+  { id: 1, name: 'Choose Plan' },
+  { id: 2, name: 'Basic Info' },
+  { id: 3, name: 'Business Details' },
+  { id: 4, name: 'Contact & Location' },
+  { id: 5, name: 'Photos & Media' },
   { id: 6, name: 'Review & Submit' },
 ];
 
@@ -528,7 +528,7 @@ export default function AddBusiness() {
 
         // Read step parameter if any
         const stepParam = parseInt(searchParams.get('step'));
-        if (stepParam >= 1 && stepParam <= 5) {
+        if (stepParam >= 1 && stepParam <= 6) {
           setCurrentStep(stepParam);
         }
 
@@ -564,6 +564,12 @@ export default function AddBusiness() {
       }
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (currentStep === 1 && formData.subscriptionStatus === 'active' && !isBranchMode) {
+      setCurrentStep(2);
+    }
+  }, [currentStep, formData.subscriptionStatus, isBranchMode]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -1002,7 +1008,7 @@ export default function AddBusiness() {
 
   // Debounced address and boundary validation via Geocoding API
   useEffect(() => {
-    if (currentStep !== 3 || !formData.pincode) return;
+    if (currentStep !== 4 || !formData.pincode) return;
 
     const timer = setTimeout(async () => {
       try {
@@ -1207,7 +1213,7 @@ export default function AddBusiness() {
 
   const validateStep = () => {
     setError('');
-    if (currentStep === 1) {
+    if (currentStep === 2) {
       if (!formData.name || !formData.description) {
         setError('Business Name and description are mandatory.');
         return false;
@@ -1228,12 +1234,12 @@ export default function AddBusiness() {
         setError('Please specify your custom subcategory name.');
         return false;
       }
-    } else if (currentStep === 3) {
+    } else if (currentStep === 4) {
       if (!formData.phone || !formData.whatsapp) {
         setError('Phone number and WhatsApp are mandatory.');
         return false;
       }
-    } else if (currentStep === 4) {
+    } else if (currentStep === 5) {
       // Validate photos: logo, cover, and gallery. Minimum 3 gallery/photos required.
       const totalPhotos = (logoFile ? 1 : 0) + (coverFile ? 1 : 0) + galleryFiles.length;
       if (totalPhotos < 3) {
@@ -1306,11 +1312,7 @@ export default function AddBusiness() {
     } else {
       if (validateStep()) {
         saveDraft(formData);
-        if (currentStep === 4 && formData.subscriptionStatus === 'active') {
-          setCurrentStep(6);
-        } else {
-          setCurrentStep((prev) => prev + 1);
-        }
+        setCurrentStep((prev) => prev + 1);
       }
     }
   };
@@ -1325,8 +1327,8 @@ export default function AddBusiness() {
       }
     } else {
       saveDraft(formData);
-      if (currentStep === 6 && formData.subscriptionStatus === 'active') {
-        setCurrentStep(4);
+      if (currentStep === 2 && formData.subscriptionStatus === 'active') {
+        setIsPincodeVerified(false);
       } else {
         setCurrentStep((prev) => prev - 1);
       }
@@ -1496,7 +1498,7 @@ export default function AddBusiness() {
                       setError("");
                       setIsPincodeVerified(true);
                       sessionStorage.setItem('ubt_from_overlay', 'true');
-                      setCurrentStep(5);
+                      setCurrentStep(1);
                       saveDraft({ ...formData });
                     }}
                     className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow"
@@ -1688,7 +1690,7 @@ export default function AddBusiness() {
                           setToastMessage("Business information imported from link successfully.");
                           setTimeout(() => setToastMessage(''), 4000);
                           sessionStorage.setItem('ubt_from_overlay', 'true');
-                          setCurrentStep(5);
+                          setCurrentStep(1);
                           saveDraft(updated);
                         } else {
                           setError(data.message || "Could not autofill from link. Please enter details manually.");
@@ -2097,13 +2099,13 @@ export default function AddBusiness() {
 
             {/* Form Body Card */}
             <div className="bg-white border border-slate-200 rounded-3xl p-8 md:p-10 shadow-sm flex flex-col gap-6">
-              {/* STEP 1: Basic Info */}
-              {currentStep === 1 && !isBranchMode && (
+              {/* STEP 2: Basic Info */}
+              {currentStep === 2 && !isBranchMode && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
 
                   <div className="flex flex-col gap-5">
                     <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
-                      <h3 className="text-lg font-extrabold text-slate-805">1. Basic Information</h3>
+                      <h3 className="text-lg font-extrabold text-slate-805">2. Basic Information</h3>
                       <p className="text-slate-400 text-xs font-semibold">Tell us the basic details about your business.</p>
                     </div>
                     
@@ -2350,11 +2352,11 @@ export default function AddBusiness() {
                 </div>
               )}
 
-              {/* STEP 2: Business Details */}
-              {currentStep === 2 && !isBranchMode && (
+              {/* STEP 3: Business Details */}
+              {currentStep === 3 && !isBranchMode && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
                   <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
-                    <h3 className="text-lg font-extrabold text-slate-800">2. Business Details</h3>
+                    <h3 className="text-lg font-extrabold text-slate-800">3. Business Details</h3>
                     <p className="text-slate-400 text-xs font-semibold">Provide more information about your business.</p>
                   </div>
                   
@@ -2461,11 +2463,11 @@ export default function AddBusiness() {
                 </div>
               )}
 
-              {/* STEP 3: Contact & Location */}
-              {currentStep === 3 && !isBranchMode && (
+              {/* STEP 4: Contact & Location */}
+              {currentStep === 4 && !isBranchMode && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
                   <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
-                    <h3 className="text-lg font-extrabold text-slate-800">3. Contact & Location</h3>
+                    <h3 className="text-lg font-extrabold text-slate-800">4. Contact & Location</h3>
                     <p className="text-slate-400 text-xs font-semibold">Help customers find and contact you easily.</p>
                   </div>
                   
@@ -2668,11 +2670,11 @@ export default function AddBusiness() {
                 </div>
               )}
 
-              {/* STEP 4: Photos & Media */}
-              {currentStep === 4 && !isBranchMode && (
+              {/* STEP 5: Photos & Media */}
+              {currentStep === 5 && !isBranchMode && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
                   <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
-                    <h3 className="text-lg font-extrabold text-slate-800">4. Photos & Brand Media</h3>
+                    <h3 className="text-lg font-extrabold text-slate-800">5. Photos & Brand Media</h3>
                     <p className="text-slate-400 text-xs font-semibold">Upload high-quality photos of your shop storefront, logo, products, and services.</p>
                   </div>
                   
@@ -3184,8 +3186,8 @@ export default function AddBusiness() {
                   )}
                 </div>
               )}
-              {/* STEP 5: Choose Plan Inline */}
-              {currentStep === 5 && !isBranchMode && (
+              {/* STEP 1: Choose Plan Inline */}
+              {currentStep === 1 && !isBranchMode && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
                   <ChoosePlan
                     isStep={true}
@@ -3196,13 +3198,7 @@ export default function AddBusiness() {
                         subscriptionStatus: updatedBiz?.subscriptionStatus || 'active',
                         isPremium: updatedBiz?.isPremium !== undefined ? updatedBiz.isPremium : true
                       }));
-                      const fromOverlay = sessionStorage.getItem('ubt_from_overlay') === 'true';
-                      if (fromOverlay) {
-                        sessionStorage.removeItem('ubt_from_overlay');
-                        setCurrentStep(1);
-                      } else {
-                        setCurrentStep(6);
-                      }
+                      setCurrentStep(2);
                     }}
                   />
                 </div>
@@ -3317,7 +3313,7 @@ export default function AddBusiness() {
                       {branchStep < 4 ? 'Save & Continue' : 'Save Branch'} <ArrowRight className="h-4 w-4" />
                     </button>
                   ) : currentStep < steps.length ? (
-                    currentStep !== 5 && (
+                    currentStep !== 1 && (
                       <button 
                         onClick={handleNext}
                         className="py-3.5 px-6 bg-[#027244] hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow shadow-emerald-700/20 cursor-pointer"
