@@ -89,3 +89,6 @@ backend/seed_active_subscriptions.js
 backend/check_blogs.js
 backend/scratch/
 
+# Temporary backend scraper, maps outputs, and debug text logs
+backend/*.html
+backend/*.txt
