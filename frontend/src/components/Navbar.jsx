@@ -136,18 +136,18 @@ export default function Navbar() {
           </Link>
 
           {/* Right auth navigation button */}
-          <div className="flex items-center gap-2 sm:gap-3.5 text-[10.5px] sm:text-xs font-semibold text-slate-500 select-none">
+          <div className="flex items-center gap-1.5 sm:gap-3.5 text-[10px] sm:text-xs font-semibold text-slate-500 select-none">
             {pathname === '/login' ? (
               <>
-                <span className="hidden sm:inline whitespace-nowrap">Don't have an account?</span>
-                <Link to={getAuthTogglePath('/register')} className="border border-[#027244] text-[#027244] hover:bg-emerald-50 font-black py-1.5 px-3.5 sm:py-2 sm:px-5 rounded-lg transition-colors whitespace-nowrap">
+                <span className="whitespace-nowrap">Don't have an account?</span>
+                <Link to={getAuthTogglePath('/register')} className="border border-[#027244] text-[#027244] hover:bg-emerald-50 font-black py-1 px-2.5 sm:py-2 sm:px-5 rounded-lg transition-colors whitespace-nowrap">
                   Sign Up
                 </Link>
               </>
             ) : (
               <>
-                <span className="hidden sm:inline whitespace-nowrap">Already have an account?</span>
-                <Link to={getAuthTogglePath('/login')} className="border border-[#027244] text-[#027244] hover:bg-emerald-50 font-black py-1.5 px-3.5 sm:py-2 sm:px-5 rounded-lg transition-colors whitespace-nowrap">
+                <span className="whitespace-nowrap">Already have an account?</span>
+                <Link to={getAuthTogglePath('/login')} className="border border-[#027244] text-[#027244] hover:bg-emerald-50 font-black py-1 px-2.5 sm:py-2 sm:px-5 rounded-lg transition-colors whitespace-nowrap">
                   Login
                 </Link>
               </>

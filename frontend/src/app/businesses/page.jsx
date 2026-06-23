@@ -1343,7 +1343,7 @@ function BusinessesList() {
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mt-4 self-start font-sans">
               {docTitle}
             </h1>
-            <p className="text-slate-350 text-xs font-semibold self-start mt-1.5 leading-relaxed max-w-2xl">
+            <p className="text-slate-400 text-xs font-semibold self-start mt-1.5 leading-relaxed max-w-2xl">
               {docSub}
             </p>
           </div>
@@ -1451,7 +1451,7 @@ function BusinessesList() {
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mt-4 self-start font-sans">
               Contact Support
             </h1>
-            <p className="text-slate-350 text-xs font-semibold self-start mt-1.5 leading-relaxed max-w-2xl">
+            <p className="text-slate-400 text-xs font-semibold self-start mt-1.5 leading-relaxed max-w-2xl">
               Have questions about registration, verified badges, or advertising options? We are here to help.
             </p>
           </div>
@@ -1691,7 +1691,7 @@ function BusinessesList() {
             <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white mt-3 md:mt-4 self-start font-sans order-2">
               Explore Categories
             </h1>
-            <p className="hidden sm:block text-slate-350 text-xs font-semibold self-start mt-1.5 leading-relaxed order-3">
+            <p className="hidden sm:block text-slate-400 text-xs font-semibold self-start mt-1.5 leading-relaxed order-3">
               Find local businesses and specialized services in Udumalpet
             </p>
 
@@ -1732,7 +1732,7 @@ function BusinessesList() {
 
                 {searchResults.length === 0 ? (
                   <div className="bg-white border border-slate-200/60 rounded-3xl py-14 px-6 text-center shadow-sm flex flex-col items-center justify-center gap-4 text-slate-400">
-                    <AlertCircle className="h-10 w-10 text-slate-350" />
+                    <AlertCircle className="h-10 w-10 text-slate-400" />
                     <div>
                       <h4 className="font-extrabold text-slate-700 text-base leading-none">No categories found</h4>
                       <p className="text-xs text-slate-400 font-semibold mt-2">Try searching with other keywords or browse our catalog.</p>
@@ -1966,7 +1966,7 @@ function BusinessesList() {
 
                     {filteredExploreBusinesses.length === 0 ? (
                       <div className="bg-white border border-slate-200/60 rounded-3xl py-16 px-6 text-center shadow-sm flex flex-col items-center justify-center gap-4 text-slate-400">
-                        <AlertCircle className="h-10 w-10 text-slate-350" />
+                        <AlertCircle className="h-10 w-10 text-slate-400" />
                         <div>
                           <h4 className="font-extrabold text-slate-700 text-base leading-none">No listings found</h4>
                           <p className="text-xs text-slate-400 font-semibold mt-2">There are currently no registered businesses under this subcategory.</p>
@@ -2551,7 +2551,7 @@ function BusinessesList() {
           <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white mt-3 md:mt-4 self-start font-sans order-2">
             Businesses in Udumalpet
           </h1>
-          <p className="hidden sm:block text-slate-350 text-xs font-semibold self-start mt-1.5 leading-relaxed order-3">
+          <p className="hidden sm:block text-slate-400 text-xs font-semibold self-start mt-1.5 leading-relaxed order-3">
             Discover, compare and connect with the best local businesses.
           </p>
           
@@ -3034,7 +3034,7 @@ function BusinessesList() {
                 {item.icon}
               </div>
               <span className="font-extrabold text-white text-xs leading-none">{item.title}</span>
-              <span className="text-[10px] text-slate-350 font-semibold leading-normal mt-1 max-w-[130px]">{item.desc}</span>
+              <span className="text-[10px] text-slate-400 font-semibold leading-normal mt-1 max-w-[130px]">{item.desc}</span>
             </div>
           ))}
         </div>

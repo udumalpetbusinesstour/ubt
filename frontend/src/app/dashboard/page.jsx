@@ -4064,7 +4064,7 @@ function DashboardContent() {
                       </p>
                     </div>
                   </div>
-                  <button onClick={() => setShowEditModal(true)} className="bg-slate-100 hover:bg-slate-200 border border-slate-350 text-slate-700 font-extrabold text-[10.5px] py-2 px-5 rounded-xl transition-all shadow-sm shrink-0 uppercase tracking-wide">
+                  <button onClick={() => setShowEditModal(true)} className="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-extrabold text-[10.5px] py-2 px-5 rounded-xl transition-all shadow-sm shrink-0 uppercase tracking-wide">
                     Edit Profile
                   </button>
                 </div>
@@ -4788,7 +4788,7 @@ function DashboardContent() {
                         <span className="text-slate-600">•</span>
                         <span className="text-emerald-450 font-bold bg-emerald-500/5 border border-emerald-500/15 px-2.5 py-1 rounded-lg">{business.type}</span>
                         <span className="text-slate-600">•</span>
-                        <div className="flex items-center gap-1.5 text-slate-350">
+                        <div className="flex items-center gap-1.5 text-slate-400">
                           <MapPin className="h-4 w-4 text-emerald-550" />
                           <span>{business.locality}, Udumalpet, Tamil Nadu - {business.pincode}</span>
                         </div>
@@ -5648,10 +5648,10 @@ function DashboardContent() {
                     <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-6 flex flex-col gap-3.5 text-left">
                       <span className="font-extrabold text-sm text-slate-805">Share Profile</span>
                       <div className="flex items-center gap-3 mt-1.5 justify-start">
-                        <button className="h-8 w-8 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
+                        <button className="h-8 w-8 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
                           <Facebook className="h-4 w-4" />
                         </button>
-                        <button className="h-8 w-8 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
+                        <button className="h-8 w-8 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
                           <MessageSquare className="h-4 w-4 text-slate-650" />
                         </button>
                         <button 
@@ -5660,7 +5660,7 @@ function DashboardContent() {
                             navigator.clipboard.writeText(`http://localhost:3000/businesses/${business._id}`);
                             alert("Profile link copied!");
                           }}
-                          className="h-8 w-8 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer font-bold text-xs"
+                          className="h-8 w-8 border border-slate-200 hover:border-slate-300 hover:bg-slate-55 flex items-center justify-center text-slate-600 transition-colors cursor-pointer font-bold text-xs"
                         >
                           <Globe className="h-4 w-4" />
                         </button>
@@ -5725,7 +5725,7 @@ function DashboardContent() {
                   <span className="text-xs font-bold">Retrieving your listed events...</span>
                 </div>
               ) : displayEvents.length === 0 ? (
-                <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-450 flex flex-col items-center gap-4 shadow-sm max-w-md mx-auto my-6 animate-fadeIn">
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-12 text-center text-slate-450 flex flex-col items-center gap-4 shadow-sm max-w-md mx-auto my-6 animate-fadeIn">
                   <div className="h-15 w-15 bg-emerald-50 text-[#027244] rounded-2xl flex items-center justify-center border border-emerald-100 animate-pulse">
                     <Calendar className="h-7 w-7" />
                   </div>
@@ -6031,7 +6031,7 @@ function DashboardContent() {
                   </div>
                 ) : (
                   <label className="cursor-pointer block">
-                    <div className="border-2 border-dashed border-slate-200 rounded-2xl p-12 flex flex-col items-center gap-4 bg-slate-50 hover:bg-slate-100 transition-colors text-center">
+                    <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 sm:p-12 flex flex-col items-center gap-4 bg-slate-50 hover:bg-slate-100 transition-colors text-center">
                       <div className="h-14 w-14 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center">
                         <ImageIcon className="h-7 w-7 text-blue-500" />
                       </div>
@@ -6397,7 +6397,7 @@ function DashboardContent() {
                   <span className="text-xs font-bold">Synchronizing your food menu desk...</span>
                 </div>
               ) : menuItems.length === 0 ? (
-                <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-455 flex flex-col items-center gap-4 shadow-sm max-w-md mx-auto my-6">
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-12 text-center text-slate-455 flex flex-col items-center gap-4 shadow-sm max-w-md mx-auto my-6">
                   <div className="h-14 w-14 bg-emerald-55/15 text-[#027244] rounded-2xl flex items-center justify-center border border-emerald-100/50 animate-pulse">
                     <Utensils className="h-6 w-6" />
                   </div>
@@ -6489,7 +6489,7 @@ function DashboardContent() {
                                       <button
                                         type="button"
                                         onClick={() => handleOpenMenuItemModal(item)}
-                                        className="p-1.5 border border-slate-200 hover:border-slate-350 text-slate-600 hover:text-emerald-700 bg-slate-50/50 hover:bg-slate-100/50 rounded-xl transition-all cursor-pointer"
+                                        className="p-1.5 border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-emerald-700 bg-slate-50/50 hover:bg-slate-100/50 rounded-xl transition-all cursor-pointer"
                                         title="Edit Item"
                                       >
                                         <Edit3 className="h-3.5 w-3.5" />
@@ -6628,7 +6628,7 @@ function DashboardContent() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleOpenBranchModal(branch)}
-                            className="flex-1 py-2 border border-slate-200 hover:border-slate-350 text-slate-700 hover:bg-slate-50 font-extrabold text-[11px] rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1"
+                            className="flex-1 py-2 border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50 font-extrabold text-[11px] rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1"
                           >
                             <Edit3 className="h-3 w-3" /> Edit
                           </button>
@@ -6960,7 +6960,7 @@ function DashboardContent() {
                           <p className="text-xs text-slate-400 font-semibold mt-1.5 leading-relaxed">Update your full name, email contact address, and personal identifier information.</p>
                         </div>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-slate-350 group-hover:text-[#027244] group-hover:translate-x-1.5 transition-all shrink-0 ml-4" />
+                      <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-[#027244] group-hover:translate-x-1.5 transition-all shrink-0 ml-4" />
                     </button>
 
                     {/* Option 2: Change Password */}
@@ -6978,7 +6978,7 @@ function DashboardContent() {
                           <p className="text-xs text-slate-400 font-semibold mt-1.5 leading-relaxed">Update your secure login credentials, password fields, and validation safety.</p>
                         </div>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-slate-350 group-hover:text-blue-600 group-hover:translate-x-1.5 transition-all shrink-0 ml-4" />
+                      <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1.5 transition-all shrink-0 ml-4" />
                     </button>
 
                     {/* Option 3: Manage Content */}
@@ -6996,7 +6996,7 @@ function DashboardContent() {
                           <p className="text-xs text-slate-400 font-semibold mt-1.5 leading-relaxed">Moderate your submitted community events, comments feedback, and blog stories.</p>
                         </div>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-slate-350 group-hover:text-purple-650 group-hover:translate-x-1.5 transition-all shrink-0 ml-4" />
+                      <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-purple-650 group-hover:translate-x-1.5 transition-all shrink-0 ml-4" />
                     </button>
 
                     {/* Option 4: Danger Zone */}
@@ -7014,7 +7014,7 @@ function DashboardContent() {
                           <p className="text-xs text-slate-400 font-semibold mt-1.5 leading-relaxed">Deregister and permanently terminate your UBT membership and business listings.</p>
                         </div>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-slate-350 group-hover:text-red-600 group-hover:translate-x-1.5 transition-all shrink-0 ml-4" />
+                      <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-red-600 group-hover:translate-x-1.5 transition-all shrink-0 ml-4" />
                     </button>
 
                   </div>

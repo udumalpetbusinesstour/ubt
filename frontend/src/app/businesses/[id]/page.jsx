@@ -1497,7 +1497,7 @@ Please confirm availability and delivery time.`;
 
             {/* Website and Social Media links below Business Name */}
             {(business.website || business.facebook || business.instagram) && (
-              <div className="mt-2.5 flex flex-wrap items-center gap-4 text-xs font-black text-slate-350">
+              <div className="mt-2.5 flex flex-wrap items-center gap-4 text-xs font-black text-slate-400">
                 {business.website && !isGovernmentalOrPublic(business) && (
                   <a 
                     href={business.website.startsWith('http') ? business.website : `https://${business.website}`} 
@@ -1551,7 +1551,7 @@ Please confirm availability and delivery time.`;
                 <span className="text-[10px] text-slate-400">({business.googleReviewsCount || 0} Reviews)</span>
               </div>
               <span className="text-slate-600">•</span>
-              <div className="flex items-center gap-1 bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg text-slate-350">
+              <div className="flex items-center gap-1 bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg text-slate-400">
                 <Eye className="h-3.5 w-3.5 text-emerald-400" />
                 <span className="font-black text-white ml-1">{business.views || 0}</span>
                 <span className="text-[10px] text-slate-400">Views</span>
@@ -1565,7 +1565,7 @@ Please confirm availability and delivery time.`;
                 rel="noopener noreferrer"
                 title="Open Directions in Google Maps"
                 onClick={() => trackClick('directions')}
-                className="flex items-center gap-1.5 text-slate-350 hover:text-emerald-450 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 text-slate-400 hover:text-emerald-450 transition-colors cursor-pointer"
               >
                 <MapPin className="h-4 w-4 text-emerald-500" />
                 <span>{business.locality}, Udumalpet, Tamil Nadu - {business.pincode}</span>
@@ -2605,7 +2605,7 @@ Please confirm availability and delivery time.`;
                     className={`w-full p-4 rounded-2xl border text-left font-bold text-xs flex flex-col gap-1.5 transition-all cursor-pointer ${
                       selectedBranch === null
                         ? 'bg-emerald-50/40 border-emerald-600 text-emerald-850 shadow-sm'
-                        : 'bg-white border-slate-200 hover:border-slate-350 text-slate-500'
+                        : 'bg-white border-slate-200 hover:border-slate-400 text-slate-500'
                     }`}
                   >
                     <span className="font-extrabold text-xs uppercase tracking-wide">
@@ -2624,7 +2624,7 @@ Please confirm availability and delivery time.`;
                       className={`w-full p-4 rounded-2xl border text-left font-bold text-xs flex flex-col gap-1.5 transition-all cursor-pointer ${
                         selectedBranch?._id === branch._id
                           ? 'bg-emerald-50/40 border-emerald-600 text-emerald-850 shadow-sm'
-                          : 'bg-white border-slate-200 hover:border-slate-350 text-slate-500'
+                          : 'bg-white border-slate-200 hover:border-slate-400 text-slate-500'
                       }`}
                     >
                       <span className="font-extrabold text-xs leading-snug">{branch.name}</span>
@@ -2973,13 +2973,13 @@ Please confirm availability and delivery time.`;
             <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-6 flex flex-col gap-3.5 text-left">
               <span className="font-extrabold text-sm text-slate-800">Share This Business</span>
               <div className="flex items-center gap-3.5 mt-1 justify-center">
-                <button className="h-10 w-10 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
+                <button className="h-10 w-10 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
                   <Facebook className="h-4.5 w-4.5" />
                 </button>
-                <button className="h-10 w-10 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
+                <button className="h-10 w-10 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
                   <MessageSquare className="h-4.5 w-4.5 fill-current text-slate-600" />
                 </button>
-                <button className="h-10 w-10 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
+                <button className="h-10 w-10 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
                   <Twitter className="h-4.5 w-4.5" />
                 </button>
                 <button 
@@ -2987,7 +2987,7 @@ Please confirm availability and delivery time.`;
                     navigator.clipboard.writeText(window.location.href);
                     alert("Business profile link copied to clipboard!");
                   }}
-                  className="h-10 w-10 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer font-bold text-xs"
+                  className="h-10 w-10 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer font-bold text-xs"
                 >
                   <Globe className="h-4.5 w-4.5" />
                 </button>
@@ -3109,7 +3109,7 @@ Please confirm availability and delivery time.`;
                   placeholder="e.g. ChIJnUv03E3NqTsRHR_zk-gs78w"
                   value={verifyPlaceId}
                   onChange={(e) => setVerifyPlaceId(e.target.value)}
-                  className="py-3 px-4 bg-white border border-slate-350 rounded-xl shadow-sm text-sm font-semibold w-full focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 text-slate-800"
+                  className="py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold w-full focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 text-slate-800"
                 />
               </div>
 

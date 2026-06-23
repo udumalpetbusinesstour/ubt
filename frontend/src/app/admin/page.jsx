@@ -1541,7 +1541,7 @@ export default function AdminDashboard() {
                 className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeTab === item.id 
                     ? 'bg-[#027244] text-white shadow-md shadow-emerald-950/15' 
-                    : 'text-slate-350 hover:bg-slate-900/40 hover:text-white'
+                    : 'text-slate-400 hover:bg-slate-900/40 hover:text-white'
                 }`}
               >
                 {item.icon}
@@ -1620,7 +1620,7 @@ export default function AdminDashboard() {
                     className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left w-full ${
                       activeTab === item.id 
                         ? 'bg-[#027244] text-white shadow-md shadow-emerald-950/15' 
-                        : 'text-slate-350 hover:bg-slate-900/40 hover:text-white'
+                        : 'text-slate-400 hover:bg-slate-900/40 hover:text-white'
                     }`}
                   >
                     {item.icon}
@@ -1671,7 +1671,7 @@ export default function AdminDashboard() {
             <div className="relative">
               <button 
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
-                className="h-10 w-10 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-500 relative cursor-pointer"
+                className="h-10 w-10 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-500 relative cursor-pointer"
               >
                 <Bell className="h-5 w-5" />
                 {notifications.length > 0 && (
@@ -1823,10 +1823,10 @@ export default function AdminDashboard() {
                       </div>
 
                       {/* Pill tabs container */}
-                      <div className="bg-slate-100/60 p-1 rounded-xl flex items-center self-start md:self-center overflow-x-auto shrink-0 border border-slate-200/30">
+                      <div className="bg-slate-100/60 p-1 rounded-xl flex items-center self-start md:self-center overflow-x-auto shrink-0 border border-slate-200/30 w-full max-w-full scrollbar-none">
                         <button
                           onClick={() => setAuditSubTab('Businesses')}
-                          className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                          className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center shrink-0 ${
                             auditSubTab === 'Businesses'
                               ? 'bg-[#027244] text-white shadow-sm shadow-emerald-950/15'
                               : 'text-slate-500 hover:text-slate-800'
@@ -1836,7 +1836,7 @@ export default function AdminDashboard() {
                         </button>
                         <button
                           onClick={() => setAuditSubTab('Blogs')}
-                          className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                          className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                             auditSubTab === 'Blogs'
                               ? 'bg-[#027244] text-white shadow-sm shadow-emerald-950/15'
                               : 'text-slate-500 hover:text-slate-800'
@@ -1851,7 +1851,7 @@ export default function AdminDashboard() {
                         </button>
                         <button
                           onClick={() => setAuditSubTab('Events')}
-                          className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                          className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                             auditSubTab === 'Events'
                               ? 'bg-[#027244] text-white shadow-sm shadow-emerald-950/15'
                               : 'text-slate-500 hover:text-slate-800'
@@ -1866,7 +1866,7 @@ export default function AdminDashboard() {
                         </button>
                         <button
                           onClick={() => setAuditSubTab('Testimonials')}
-                          className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                          className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                             auditSubTab === 'Testimonials'
                               ? 'bg-[#027244] text-white shadow-sm shadow-emerald-950/15'
                               : 'text-slate-500 hover:text-slate-800'
@@ -2769,7 +2769,7 @@ export default function AdminDashboard() {
                       <div 
                         key={b._id} 
                         onClick={() => { setSelectedBlogModal(b); setSuggestionText(b.revisionSuggestions || ''); }}
-                        className="bg-white border border-slate-200 hover:border-slate-350 hover:shadow-md rounded-[24px] p-5 shadow-2xs transition-all flex flex-col justify-between gap-4 cursor-pointer text-left group"
+                        className="bg-white border border-slate-200 hover:border-slate-400 hover:shadow-md rounded-[24px] p-5 shadow-2xs transition-all flex flex-col justify-between gap-4 cursor-pointer text-left group"
                       >
                         <div className="flex gap-4">
                           <div className="h-16 w-20 rounded-xl overflow-hidden border border-slate-100 shrink-0 select-none bg-slate-50">
@@ -4118,7 +4118,7 @@ export default function AdminDashboard() {
                                 </div>
                                 
                                 <div className="flex flex-col gap-4 mt-2 bg-slate-100/50 p-4 rounded-2xl w-full font-sans">
-                                  <div className="flex gap-2 border-b border-slate-200 pb-2.5">
+                                  <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-2.5">
                                     {[
                                       { id: 'assign', label: 'Map to Existing' },
                                       { id: 'create_main', label: 'Add as New Main Category' },
@@ -4316,7 +4316,7 @@ export default function AdminDashboard() {
                                       if (!newName || newName === cat.categoryName) return;
                                       updatePresetCategory(cat._id, { categoryName: newName });
                                     }}
-                                    className="h-7 w-7 rounded-lg border border-slate-355 hover:bg-slate-100 flex items-center justify-center cursor-pointer text-slate-550 font-extrabold text-[10px]"
+                                    className="h-7 w-7 rounded-lg border border-slate-200 hover:bg-slate-100 flex items-center justify-center cursor-pointer text-slate-550 font-extrabold text-[10px]"
                                     title="Edit Category Name"
                                   >
                                     Edit
@@ -5450,7 +5450,7 @@ export default function AdminDashboard() {
                 <div className="flex flex-col gap-1.5 text-left border-t border-slate-100 pt-4 mt-2">
                   <label className="text-[10.5px] font-black text-slate-700 uppercase">Logo Image</label>
                   <div className="flex items-center gap-4">
-                    <div className="relative h-20 w-20 rounded-full border-2 border-dashed border-slate-350 flex items-center justify-center bg-slate-50 overflow-hidden shrink-0 group">
+                    <div className="relative h-20 w-20 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50 overflow-hidden shrink-0 group">
                       {dirForm.logoUrl ? (
                         <>
                           <img src={dirForm.logoUrl} alt="Logo" className="h-full w-full object-cover" />
@@ -5490,7 +5490,7 @@ export default function AdminDashboard() {
                 {/* Cover Image Upload */}
                 <div className="flex flex-col gap-1.5 text-left">
                   <label className="text-[10.5px] font-black text-slate-700 uppercase">Cover Image</label>
-                  <div className="relative h-36 w-full rounded-2xl border-2 border-dashed border-slate-350 flex items-center justify-center bg-slate-50 overflow-hidden group">
+                  <div className="relative h-36 w-full rounded-2xl border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50 overflow-hidden group">
                     {dirForm.coverImageUrl ? (
                       <>
                         <img src={dirForm.coverImageUrl} alt="Cover Banner" className="h-full w-full object-cover" />
@@ -5533,7 +5533,7 @@ export default function AdminDashboard() {
                   <label className="text-[10.5px] font-black text-slate-700 uppercase">Gallery Images</label>
                   <div className="grid grid-cols-3 gap-3">
                     {/* Upload button card */}
-                    <label className="h-20 border-2 border-dashed border-slate-350 rounded-xl bg-slate-50 hover:bg-slate-100 flex flex-col items-center justify-center text-slate-400 hover:text-[#027244] transition-colors cursor-pointer p-2 shrink-0">
+                    <label className="h-20 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 flex flex-col items-center justify-center text-slate-400 hover:text-[#027244] transition-colors cursor-pointer p-2 shrink-0">
                       {galleryUploading ? (
                         <RefreshCw className="h-5 w-5 animate-spin text-[#027244]" />
                       ) : (

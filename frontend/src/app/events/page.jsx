@@ -1080,17 +1080,7 @@ export default function EventsPage() {
                     </p>
                   </div>
 
-                  {/* Don't have an account? Sign Up row */}
-                  <div className="flex items-center justify-between gap-2.5 border-b border-slate-100 pb-4 font-sans w-full">
-                    <span className="text-[11px] sm:text-xs font-semibold text-slate-600 whitespace-nowrap">Don't have an account?</span>
-                    <button 
-                      type="button"
-                      onClick={() => { setAuthView('register'); setAuthError(''); }}
-                      className="py-1.5 px-3.5 sm:px-4.5 border border-[#027244] hover:bg-emerald-50/50 text-[#027244] font-extrabold text-[11px] sm:text-xs rounded-xl transition-colors shrink-0 text-center whitespace-nowrap bg-transparent cursor-pointer"
-                    >
-                      Sign Up
-                    </button>
-                  </div>
+
 
                   {/* Auth Type selection tabs */}
                   <div className="flex gap-6 border-b border-slate-100 text-xs font-black">
@@ -1120,7 +1110,7 @@ export default function EventsPage() {
                       <div className="flex flex-col gap-1.5">
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Mobile Number</span>
                         <div className="flex gap-2">
-                          <div className="h-10 px-3 border border-slate-350 rounded-xl bg-slate-50 flex items-center gap-1.5 text-xs font-bold text-slate-700 shrink-0">
+                          <div className="h-10 px-3 border border-slate-300 rounded-xl bg-slate-50 flex items-center gap-1.5 text-xs font-bold text-slate-700 shrink-0">
                             <span className="text-base">🇮🇳</span>
                             <span>+91</span>
                           </div>
@@ -1130,7 +1120,7 @@ export default function EventsPage() {
                             value={loginMobile}
                             onChange={(e) => setLoginMobile(e.target.value)}
                             required
-                            className="h-10 px-3.5 border border-slate-350 rounded-xl flex-1 text-xs font-semibold focus:outline-none focus:border-[#027244]"
+                            className="h-10 px-3.5 border border-slate-300 rounded-xl flex-1 text-xs font-semibold focus:outline-none focus:border-[#027244]"
                           />
                         </div>
                       </div>
@@ -1143,7 +1133,7 @@ export default function EventsPage() {
                           value={loginEmail}
                           onChange={(e) => setLoginEmail(e.target.value)}
                           required
-                          className="h-10 px-3.5 border border-slate-350 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
+                          className="h-10 px-3.5 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
                         />
                       </div>
                     )}
@@ -1156,7 +1146,7 @@ export default function EventsPage() {
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         required
-                        className="h-10 px-3.5 border border-slate-350 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
+                        className="h-10 px-3.5 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
                       />
                     </div>
 
@@ -1206,17 +1196,7 @@ export default function EventsPage() {
                     </p>
                   </div>
 
-                  {/* Already have an account? Login row */}
-                  <div className="flex items-center justify-between gap-2.5 border-b border-slate-100 pb-4 font-sans w-full">
-                    <span className="text-[11px] sm:text-xs font-semibold text-slate-600 whitespace-nowrap">Already have an account?</span>
-                    <button 
-                      type="button"
-                      onClick={() => { setAuthView('login'); setAuthError(''); }}
-                      className="py-1.5 px-3.5 sm:px-4.5 border border-[#027244] hover:bg-emerald-50/50 text-[#027244] font-extrabold text-[11px] sm:text-xs rounded-xl transition-colors shrink-0 text-center whitespace-nowrap bg-transparent cursor-pointer"
-                    >
-                      Login
-                    </button>
-                  </div>
+
 
                   {authError && (
                     <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
@@ -1234,14 +1214,14 @@ export default function EventsPage() {
                         value={regFullName}
                         onChange={(e) => setRegFullName(e.target.value)}
                         required
-                        className="h-10 px-3.5 border border-slate-350 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
+                        className="h-10 px-3.5 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
                       />
                     </div>
 
                     <div className="flex flex-col gap-1.5">
                       <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Mobile Number</span>
                       <div className="flex gap-2">
-                        <div className="h-10 px-3 border border-slate-350 rounded-xl bg-slate-50 flex items-center gap-1.5 text-xs font-bold text-slate-700 shrink-0">
+                        <div className="h-10 px-3 border border-slate-300 rounded-xl bg-slate-50 flex items-center gap-1.5 text-xs font-bold text-slate-700 shrink-0">
                           <span className="text-base">🇮🇳</span>
                           <span>+91</span>
                         </div>
@@ -1251,7 +1231,7 @@ export default function EventsPage() {
                           value={regMobile}
                           onChange={(e) => setRegMobile(e.target.value)}
                           required
-                          className="h-10 px-3.5 border border-slate-350 rounded-xl flex-1 text-xs font-semibold focus:outline-none focus:border-[#027244]"
+                          className="h-10 px-3.5 border border-slate-300 rounded-xl flex-1 text-xs font-semibold focus:outline-none focus:border-[#027244]"
                         />
                       </div>
                     </div>
@@ -1264,7 +1244,7 @@ export default function EventsPage() {
                         value={regEmail}
                         onChange={(e) => setRegEmail(e.target.value)}
                         required
-                        className="h-10 px-3.5 border border-slate-350 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
+                        className="h-10 px-3.5 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
                       />
                     </div>
 
@@ -1276,7 +1256,7 @@ export default function EventsPage() {
                         value={regPassword}
                         onChange={(e) => setRegPassword(e.target.value)}
                         required
-                        className="h-10 px-3.5 border border-slate-350 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
+                        className="h-10 px-3.5 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
                       />
                     </div>
 
@@ -1288,7 +1268,7 @@ export default function EventsPage() {
                         value={regConfirmPassword}
                         onChange={(e) => setRegConfirmPassword(e.target.value)}
                         required
-                        className="h-10 px-3.5 border border-slate-350 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
+                        className="h-10 px-3.5 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
                       />
                     </div>
 
@@ -1549,7 +1529,7 @@ export default function EventsPage() {
                 <button 
                   type="button"
                   onClick={() => setWizardStep('info_stage_1')}
-                  className="h-11 px-4 border border-slate-350 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  className="h-11 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="h-4 w-4" /> Back
                 </button>
@@ -1752,7 +1732,7 @@ export default function EventsPage() {
       >
         <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 w-full">
           {/* Breadcrumbs */}
-          <div className="flex items-center gap-1.5 text-xs text-slate-355 font-bold self-start mt-1 md:mt-2 order-1">
+          <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-1 md:mt-2 order-1">
             <Link to="/" className="hover:text-emerald-455 transition-colors">Home</Link>
             <span className="text-slate-500">&gt;</span>
             <span className="text-white">Events</span>
@@ -1761,7 +1741,7 @@ export default function EventsPage() {
           <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white mt-3 md:mt-4 self-start font-sans order-2">
             Events in Udumalpet
           </h1>
-          <p className="hidden sm:block text-slate-350 text-xs font-semibold self-start mt-1.5 leading-relaxed order-3">
+          <p className="hidden sm:block text-slate-300 text-xs font-semibold self-start mt-1.5 leading-relaxed order-3">
             Discover exciting events happening around Udumalpet
           </p>
 
@@ -2248,7 +2228,7 @@ export default function EventsPage() {
                     {categoryCounts['All Categories'] || 0}
                   </span>
                   <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-200 ${
-                    filterCategory === 'All Categories' ? 'text-[#027244] translate-x-0.5' : 'text-slate-355'
+                    filterCategory === 'All Categories' ? 'text-[#027244] translate-x-0.5' : 'text-slate-400'
                   }`} />
                 </div>
               </div>
@@ -2276,7 +2256,7 @@ export default function EventsPage() {
                       {categoryCounts[c] || 0}
                     </span>
                     <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-200 ${
-                      filterCategory === c ? 'text-[#027244] translate-x-0.5' : 'text-slate-355'
+                      filterCategory === c ? 'text-[#027244] translate-x-0.5' : 'text-slate-400'
                     }`} />
                   </div>
                 </div>

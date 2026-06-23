@@ -376,7 +376,7 @@ export default function BloodDonorsPage() {
                 {filteredDonors.map((donor) => (
                   <div 
                     key={donor._id}
-                    className="bg-white border border-slate-200/80 hover:border-slate-350 hover:shadow-md rounded-[24px] p-5 shadow-2xs transition-all flex justify-between items-center gap-4 group"
+                    className="bg-white border border-slate-200/80 hover:border-slate-400 hover:shadow-md rounded-[24px] p-5 shadow-2xs transition-all flex justify-between items-center gap-4 group"
                   >
                     <div className="flex items-center gap-4 min-w-0">
                       

@@ -927,7 +927,7 @@ export default function BlogsPage() {
                 
                 <div>
                   <h3 className="font-extrabold text-sm text-white leading-tight">Subscribe to Our Newsletter</h3>
-                  <span className="text-[10px] text-slate-350 font-bold mt-1.5 block leading-relaxed">
+                  <span className="text-[10px] text-slate-300 font-bold mt-1.5 block leading-relaxed">
                     Get the latest articles and community insights delivered directly to your inbox.
                   </span>
                 </div>

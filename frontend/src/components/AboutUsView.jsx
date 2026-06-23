@@ -408,7 +408,7 @@ export default function AboutUsView() {
           <div className="flex flex-col gap-3.5 relative z-10 max-w-xl">
             <span className="text-[10px] font-extrabold text-emerald-450 uppercase tracking-widest leading-none">Register Today</span>
             <h2 className="text-xl md:text-3xl font-extrabold tracking-tight">Put Your Business on the Digital Map</h2>
-            <p className="text-slate-350 text-xs md:text-sm leading-relaxed font-semibold">
+            <p className="text-slate-400 text-xs md:text-sm leading-relaxed font-semibold">
               It takes less than 5 minutes to submit your details. Verified badge reviews are processed daily by local coordinators.
             </p>
           </div>

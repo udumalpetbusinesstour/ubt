@@ -587,16 +587,7 @@ export default function Register() {
               </p>
             </div>
 
-            {/* Already have an account? Login row */}
-            <div className="flex items-center justify-between gap-2.5 border-b border-slate-100 pb-4 font-sans w-full">
-              <span className="text-[11px] sm:text-xs font-semibold text-slate-600 whitespace-nowrap">Already have an account?</span>
-              <Link 
-                to={`/login?${searchParams.toString()}`} 
-                className="py-1.5 px-3.5 sm:px-4.5 border border-[#027244] hover:bg-emerald-50/50 text-[#027244] font-extrabold text-[11px] sm:text-xs rounded-xl transition-colors shrink-0 text-center whitespace-nowrap"
-              >
-                Login
-              </Link>
-            </div>
+
 
             {/* Message banners */}
             {error && (

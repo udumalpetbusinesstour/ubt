@@ -340,7 +340,7 @@ export default function BloodDonorsTab() {
             {filteredDonors.map(donor => (
               <div 
                 key={donor._id}
-                className="bg-white border border-slate-200 hover:border-slate-350 hover:shadow-md rounded-3xl p-5 shadow-3xs transition-all flex flex-col justify-between gap-4.5 text-left group"
+                className="bg-white border border-slate-200 hover:border-slate-400 hover:shadow-md rounded-3xl p-5 shadow-3xs transition-all flex flex-col justify-between gap-4.5 text-left group"
               >
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex items-center gap-3.5 min-w-0">

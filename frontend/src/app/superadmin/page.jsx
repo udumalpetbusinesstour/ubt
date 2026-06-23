@@ -1876,7 +1876,7 @@ export default function SuperAdminDashboard() {
             <div className="mx-3 my-4 p-3 bg-slate-900/60 border border-slate-800/80 rounded-xl flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[9px] font-extrabold text-slate-350 uppercase tracking-wider leading-none">System Status</span>
+                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider leading-none">System Status</span>
               </div>
               <div className="text-[11px] font-bold text-emerald-450 pl-4">All Systems Operational</div>
               <button
@@ -2045,7 +2045,7 @@ export default function SuperAdminDashboard() {
               <button 
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
                 className={`h-10 w-10 border rounded-full flex items-center justify-center relative transition-colors cursor-pointer ${
-                  themeMode === 'dark' ? 'border-slate-800 text-slate-350 bg-slate-900/60 hover:bg-slate-800' : 'border-slate-200 text-slate-550 hover:bg-slate-50'
+                  themeMode === 'dark' ? 'border-slate-800 text-slate-400 bg-slate-900/60 hover:bg-slate-800' : 'border-slate-200 text-slate-550 hover:bg-slate-50'
                 }`}
               >
                 <Bell className="h-4.5 w-4.5" />
@@ -2166,7 +2166,7 @@ export default function SuperAdminDashboard() {
                       <button 
                         onClick={() => setShowDatePicker(!showDatePicker)}
                         className={`flex items-center gap-2 rounded-xl px-3 py-1.5 shadow-sm text-xs font-bold w-fit shrink-0 cursor-pointer border hover:opacity-90 transition-all ${
-                          themeMode === 'dark' ? 'bg-slate-900/60 border-slate-800 text-slate-350 hover:bg-slate-800/40' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                          themeMode === 'dark' ? 'bg-slate-900/60 border-slate-800 text-slate-400 hover:bg-slate-800/40' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                         }`}
                       >
                         <Calendar className="h-4 w-4 text-slate-400" />
@@ -3020,7 +3020,7 @@ export default function SuperAdminDashboard() {
                                 ? 'text-emerald-400 font-bold' 
                                 : log.type === 'warning' 
                                   ? 'text-amber-400 font-bold' 
-                                  : 'text-slate-350'
+                                  : 'text-slate-400'
                             }>
                               {log.type === 'system' ? '⚙ SYSTEM: ' : (log.type === 'warning' ? '⚠ WARNING: ' : 'ℹ INFO: ')}
                               {log.event}
@@ -3416,7 +3416,7 @@ export default function SuperAdminDashboard() {
                                 </div>
                                 
                                 <div className="flex flex-col gap-4 mt-2 bg-slate-100/50 dark:bg-slate-900/30 p-4 rounded-2xl w-full">
-                                  <div className="flex gap-2 border-b border-slate-200/50 dark:border-slate-850 pb-2.5">
+                                  <div className="flex flex-wrap gap-2 border-b border-slate-200/50 dark:border-slate-850 pb-2.5">
                                     {[
                                       { id: 'assign', label: 'Map to Existing' },
                                       { id: 'create_main', label: 'Add as New Main Category' },
@@ -3637,7 +3637,7 @@ export default function SuperAdminDashboard() {
                                       if (!newName || newName === cat.categoryName) return;
                                       updatePresetCategory(cat._id, { categoryName: newName });
                                     }}
-                                    className="h-7 w-7 rounded-lg border border-slate-350 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[10px]"
+                                    className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[10px]"
                                     title="Edit Category Name"
                                   >
                                     Edit
@@ -3681,7 +3681,7 @@ export default function SuperAdminDashboard() {
                             className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer text-center ${
                               presetTypeMode === 'main'
                                 ? 'bg-[#027244] text-white shadow-xs'
-                                : 'text-slate-400 hover:text-slate-500 dark:hover:text-slate-350 bg-transparent'
+                                : 'text-slate-400 hover:text-slate-500 dark:hover:text-slate-300 bg-transparent'
                             }`}
                           >
                             Add Main Category
@@ -3692,7 +3692,7 @@ export default function SuperAdminDashboard() {
                             className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer text-center ${
                               presetTypeMode === 'sub'
                                 ? 'bg-[#027244] text-white shadow-xs'
-                                : 'text-slate-400 hover:text-slate-500 dark:hover:text-slate-350 bg-transparent'
+                                : 'text-slate-400 hover:text-slate-500 dark:hover:text-slate-300 bg-transparent'
                             }`}
                           >
                             Add Subcategory
@@ -4346,7 +4346,7 @@ export default function SuperAdminDashboard() {
                                   <div className="flex flex-col gap-0.5">
                                     <span className={`font-bold text-xs ${themeMode === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>Admin Desk</span>
                                     <span className={`text-[9.5px] font-extrabold uppercase mt-1 tracking-wider border px-2 py-0.5 rounded-full w-fit ${
-                                      themeMode === 'dark' ? 'bg-slate-850 border-slate-800 text-slate-350' : 'bg-slate-100 border-slate-200 text-slate-500'
+                                      themeMode === 'dark' ? 'bg-slate-800 border-slate-800 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-500'
                                     }`}>
                                       {a.permissions}
                                     </span>
@@ -4448,7 +4448,7 @@ export default function SuperAdminDashboard() {
                         key={b._id} 
                         onClick={() => { setSelectedBlogModal(b); setSuggestionText(b.revisionSuggestions || ''); }}
                         className={`border rounded-[24px] p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between gap-4 cursor-pointer text-left group ${
-                          themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white hover:border-slate-700' : 'bg-white border-slate-200 text-[#001c41] hover:border-slate-350'
+                          themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white hover:border-slate-700' : 'bg-white border-slate-200 text-[#001c41] hover:border-slate-400'
                         }`}
                       >
                         <div className="flex gap-4">
@@ -4586,11 +4586,11 @@ export default function SuperAdminDashboard() {
                               {e.featured ? 'Un-Feature' : 'Feature Event'}
                             </button>
                             <button 
-                              onClick={() => { setEditingEvent(e); setShowEditEventModal(true); }}
-                              className={`px-3 py-1.5 border rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors ${
-                                themeMode === 'dark' ? 'border-slate-800 text-slate-350 hover:bg-slate-800/40' : 'border-slate-200 text-slate-600 hover:bg-slate-550'
-                              }`}
-                            >
+                                onClick={() => { setEditingEvent(e); setShowEditEventModal(true); }}
+                                className={`px-3 py-1.5 border rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors ${
+                                  themeMode === 'dark' ? 'border-slate-800 text-slate-400 hover:bg-slate-800/40' : 'border-slate-200 text-slate-600 hover:bg-slate-100'
+                                }`}
+                              >
                               Edit Info
                             </button>
                             <button 
@@ -4685,7 +4685,7 @@ export default function SuperAdminDashboard() {
                                 </span>
                               </div>
                               <p className={`text-[11.5px] font-semibold mt-2.5 max-w-2xl leading-relaxed ${
-                                themeMode === 'dark' ? 'text-slate-350' : 'text-slate-550'
+                                themeMode === 'dark' ? 'text-slate-400' : 'text-slate-600'
                               }`}>{r.text}</p>
                             </div>
                           </div>
@@ -4712,7 +4712,7 @@ export default function SuperAdminDashboard() {
                               }}
                               className={`px-3 py-1.5 border rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors ${
                                 isSpam
-                                  ? 'bg-rose-500/10 border border-rose-500/20 text-rose-500 font-bold'
+                                  ? 'bg-rose-500/10 border-rose-500/20 text-rose-500 font-bold'
                                   : themeMode === 'dark' ? 'border-slate-800 text-slate-400 hover:bg-slate-800/40' : 'border-slate-200 text-slate-600 hover:bg-slate-550'
                               }`}
                             >
@@ -4829,7 +4829,7 @@ export default function SuperAdminDashboard() {
                             <td className={`p-4.5 font-extrabold text-xs sm:text-[13px] ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{s.businessName}</td>
                             <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{s.planType} Plan</td>
                             <td className={`p-4.5 font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>₹{s.amount}</td>
-                            <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-350' : 'text-slate-600'}`}>{new Date(s.expiryDate).toLocaleDateString()}</td>
+                            <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{new Date(s.expiryDate).toLocaleDateString()}</td>
                             <td className="p-4.5">
                               <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
                                 s.paymentStatus === 'Paid' 
@@ -5644,7 +5644,7 @@ export default function SuperAdminDashboard() {
                             ? 'text-emerald-455 font-semibold' 
                             : log.type === 'warning' 
                               ? 'text-amber-400 font-semibold' 
-                              : 'text-slate-350'
+                              : 'text-slate-400'
                         }>
                           {log.type === 'system' ? '⚙ SYSTEM: ' : (log.type === 'warning' ? '⚠ WARNING: ' : 'ℹ INFO: ')}
                           {log.event}
@@ -5833,7 +5833,7 @@ export default function SuperAdminDashboard() {
                           {dateFilteredSupportTickets.map(t => (
                             <tr key={t._id} className={`transition-colors ${themeMode === 'dark' ? 'hover:bg-slate-900/30' : 'hover:bg-slate-50/50'}`}>
                               <td className={`p-4.5 font-extrabold text-xs sm:text-[13px] ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{t._id}</td>
-                              <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-350' : 'text-slate-600'}`}>{t.user}</td>
+                              <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{t.user}</td>
                               <td className={`p-4.5 font-bold ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{t.issueType}</td>
                               <td className="p-4.5">
                                 <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase ${
@@ -5948,7 +5948,7 @@ export default function SuperAdminDashboard() {
 
                                   <div className="text-left flex flex-col gap-1.5 font-sans">
                                     <span className={`font-extrabold text-[13px] ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{q.subject}</span>
-                                    <p className={`text-xs font-semibold leading-relaxed mt-1 text-justify max-w-4xl ${themeMode === 'dark' ? 'text-slate-350' : 'text-slate-505'}`}>{q.message}</p>
+                                    <p className={`text-xs font-semibold leading-relaxed mt-1 text-justify max-w-4xl ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{q.message}</p>
                                   </div>
 
                                   {!isPending && q.replyMessage && (
@@ -6295,7 +6295,7 @@ export default function SuperAdminDashboard() {
                             <tr>
                               <td colSpan="6" className="text-center py-16 text-slate-400">
                                 <div className="flex flex-col items-center gap-2">
-                                  <Gift className="h-8 w-8 text-slate-350" />
+                                  <Gift className="h-8 w-8 text-slate-400" />
                                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300">No Referrals Recorded</span>
                                   <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed max-w-xs font-semibold">No referrals have been recorded or submitted on the platform yet.</p>
                                 </div>
@@ -7140,7 +7140,7 @@ export default function SuperAdminDashboard() {
                     const checked = e.target.checked;
                     setEditingPlan(prev => ({ ...prev, isOffer: checked }));
                   }}
-                  className="h-4.5 w-4.5 border-slate-350 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                  className="h-4.5 w-4.5 border-slate-200 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                 />
                 <label htmlFor="editIsOffer" className="text-xs font-bold text-slate-700 cursor-pointer select-none flex-grow">Mark as Promotional Special Offer</label>
               </div>
@@ -7530,7 +7530,7 @@ export default function SuperAdminDashboard() {
                   <h4 className={`font-extrabold text-base leading-snug mt-1 ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>
                     {editingEvent.title}
                   </h4>
-                  <p className={`text-xs font-semibold leading-relaxed mt-2 text-justify ${themeMode === 'dark' ? 'text-slate-350' : 'text-slate-550'}`}>
+                  <p className={`text-xs font-semibold leading-relaxed mt-2 text-justify ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
                     {editingEvent.description || 'Join this exciting local gathering at Udumalpet. Reach out to the organizers using the verified contact coordinates for ticketing options and event details.'}
                   </p>
                 </div>
@@ -7592,7 +7592,7 @@ export default function SuperAdminDashboard() {
                               <span className="font-extrabold text-[9px] text-[#027244] truncate">{comment.userName}</span>
                               <span className="text-[8px] text-slate-450 font-bold">{new Date(comment.createdAt).toLocaleDateString()}</span>
                             </div>
-                            <p className="text-[10.5px] font-semibold mt-0.5 text-slate-600 dark:text-slate-350 leading-snug">{comment.text}</p>
+                            <p className="text-[10.5px] font-semibold mt-0.5 text-slate-600 dark:text-slate-400 leading-snug">{comment.text}</p>
                           </div>
                           <button 
                             type="button"
@@ -8154,7 +8154,7 @@ export default function SuperAdminDashboard() {
                 <button 
                   onClick={() => { setSelectedReview(null); setShowReviewModal(false); }}
                   className={`px-4 py-2 border rounded-xl font-extrabold text-xs cursor-pointer transition-colors ${
-                    themeMode === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-slate-355' : 'border-slate-200 hover:bg-slate-100 text-slate-600'
+                    themeMode === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-slate-400' : 'border-slate-200 hover:bg-slate-100 text-slate-600'
                   }`}
                 >
                   Close

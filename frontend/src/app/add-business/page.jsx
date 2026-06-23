@@ -2284,7 +2284,7 @@ export default function AddBusiness() {
                             className={`flex items-center gap-2.5 p-3.5 border rounded-2xl cursor-pointer text-xs font-bold transition-all ${
                               formData.type === typeOption 
                                 ? 'bg-emerald-50/40 border-emerald-600 text-emerald-850 shadow-sm' 
-                                : 'bg-white border-slate-200 hover:border-slate-350 text-slate-500'
+                                : 'bg-white border-slate-200 hover:border-slate-400 text-slate-500'
                             }`}
                           >
                             <input
@@ -3272,7 +3272,7 @@ export default function AddBusiness() {
                       setIsPincodeVerified(false);
                       setFormData(prev => ({ ...prev, pincode: '' }));
                     }}
-                    className="py-3.5 px-5 border border-slate-350 hover:bg-slate-50 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer text-slate-700 bg-white"
+                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer text-slate-700 bg-white"
                   >
                     <ArrowLeft className="h-4 w-4" /> Change Pincode
                   </button>
