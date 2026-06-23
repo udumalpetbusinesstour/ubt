@@ -176,6 +176,7 @@ export default function AdminDashboard() {
   // Datasets states
   const [businesses, setBusinesses] = useState([]);
   const [users, setUsers] = useState([]);
+  const [selectedSignups, setSelectedSignups] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState('');
   const [blogs, setBlogs] = useState([]);
@@ -1534,6 +1535,42 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error(err);
       alert('An error occurred while deleting user registration.');
+    }
+  };
+
+  const handleDeleteSelectedSignups = async () => {
+    if (selectedSignups.length === 0) return;
+    if (!window.confirm(`Are you sure you want to permanently delete the ${selectedSignups.length} selected user registrations? This will cascade-delete ALL their businesses, blogs, events, reviews, and subscriptions. This action is irreversible!`)) {
+      return;
+    }
+    try {
+      let deletedCount = 0;
+      let failedCount = 0;
+      const storedToken = localStorage.getItem('ubt_token');
+      
+      await Promise.all(selectedSignups.map(async (userId) => {
+        try {
+          const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${storedToken}` }
+          });
+          if (res.ok) {
+            deletedCount++;
+          } else {
+            failedCount++;
+          }
+        } catch (err) {
+          console.error(err);
+          failedCount++;
+        }
+      }));
+      
+      alert(`Bulk delete complete. Successfully deleted: ${deletedCount} users. Failed: ${failedCount}.`);
+      setSelectedSignups([]);
+      loadPlatformRealData();
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred during bulk deletion.');
     }
   };
 
@@ -4758,12 +4795,34 @@ export default function AdminDashboard() {
                         Audit community members, manage user signups, and purge accounts along with their directory listings.
                       </span>
                     </div>
+                    {selectedSignups.length > 0 && (
+                      <button
+                        onClick={handleDeleteSelectedSignups}
+                        className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5 border-none"
+                      >
+                        Delete Selected ({selectedSignups.length})
+                      </button>
+                    )}
                   </div>
 
                   <div className="overflow-x-auto border border-slate-200 rounded-[28px] bg-white">
                     <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
                       <thead className="uppercase text-[9px] font-black tracking-wider border-b bg-slate-50 border-slate-200 text-slate-455">
                         <tr>
+                          <th className="p-4.5 w-12 text-center">
+                            <input
+                              type="checkbox"
+                              checked={filteredUsers.length > 0 && selectedSignups.length === filteredUsers.length}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedSignups(filteredUsers.map(u => u._id));
+                                } else {
+                                  setSelectedSignups([]);
+                                }
+                              }}
+                              className="h-4 w-4 rounded text-[#027244] border-slate-350 focus:ring-[#027244] cursor-pointer"
+                            />
+                          </th>
                           <th className="p-4.5">User Name</th>
                           <th className="p-4.5">Email Address</th>
                           <th className="p-4.5">Mobile / Phone</th>
@@ -4776,6 +4835,20 @@ export default function AdminDashboard() {
                       <tbody className="divide-y divide-slate-100 font-medium">
                         {filteredUsers.map(u => (
                           <tr key={u._id} className="transition-colors hover:bg-slate-50/50">
+                            <td className="p-4.5 text-center w-12">
+                              <input
+                                type="checkbox"
+                                checked={selectedSignups.includes(u._id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedSignups(prev => [...prev, u._id]);
+                                  } else {
+                                    setSelectedSignups(prev => prev.filter(id => id !== u._id));
+                                  }
+                                }}
+                                className="h-4 w-4 rounded text-[#027244] border-slate-350 focus:ring-[#027244] cursor-pointer"
+                              />
+                            </td>
                             <td className="p-4.5 flex items-center gap-3">
                               <div className="h-9 w-9 rounded-full bg-emerald-50 text-[#027244] border border-emerald-100 flex items-center justify-center font-black text-xs shrink-0 select-none">
                                 {u.fullName ? u.fullName.charAt(0).toUpperCase() : (u.name ? u.name.charAt(0).toUpperCase() : 'U')}
@@ -4812,7 +4885,7 @@ export default function AdminDashboard() {
                             <td className="p-4.5 text-right">
                               <button 
                                 onClick={() => handleDeleteSignup(u._id)}
-                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors shadow-2xs"
+                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors shadow-2xs border-none"
                               >
                                 Delete
                               </button>

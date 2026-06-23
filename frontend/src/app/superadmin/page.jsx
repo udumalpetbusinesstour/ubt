@@ -220,6 +220,7 @@ export default function SuperAdminDashboard() {
     { _id: 'adm_3', fullName: 'Local Clerk', email: 'clerk@ubt.com', role: 'admin', status: 'Suspended', permissions: 'Read Only', createdAt: new Date('2025-03-20') }
   ]);
   const [signups, setSignups] = useState([]);
+  const [selectedSignups, setSelectedSignups] = useState([]);
 
   // Queries inbox state
   const [queries, setQueries] = useState([]);
@@ -1090,7 +1091,7 @@ export default function SuperAdminDashboard() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5000/api/superadmin/users/${userId}`, {
+      const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` }
       });
@@ -1105,6 +1106,42 @@ export default function SuperAdminDashboard() {
     } catch (err) {
       console.error(err);
       alert('An error occurred while deleting user registration.');
+    }
+  };
+
+  const handleDeleteSelectedSignups = async () => {
+    if (selectedSignups.length === 0) return;
+    if (!window.confirm(`Are you sure you want to permanently delete the ${selectedSignups.length} selected user registrations? This will cascade-delete ALL their businesses, blogs, events, reviews, and subscriptions. This action is irreversible!`)) {
+      return;
+    }
+    try {
+      let deletedCount = 0;
+      let failedCount = 0;
+      const storedToken = localStorage.getItem('ubt_token');
+      
+      await Promise.all(selectedSignups.map(async (userId) => {
+        try {
+          const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${storedToken}` }
+          });
+          if (res.ok) {
+            deletedCount++;
+          } else {
+            failedCount++;
+          }
+        } catch (err) {
+          console.error(err);
+          failedCount++;
+        }
+      }));
+      
+      alert(`Bulk delete complete. Successfully deleted: ${deletedCount} users. Failed: ${failedCount}.`);
+      setSelectedSignups([]);
+      loadPlatformRealData();
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred during bulk deletion.');
     }
   };
 
@@ -6473,6 +6510,14 @@ export default function SuperAdminDashboard() {
                         Audit community members, manage user signups, and purge accounts along with their directory listings.
                       </span>
                     </div>
+                    {selectedSignups.length > 0 && (
+                      <button
+                        onClick={handleDeleteSelectedSignups}
+                        className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5 border-none"
+                      >
+                        Delete Selected ({selectedSignups.length})
+                      </button>
+                    )}
                   </div>
 
                   <div className={`overflow-x-auto border rounded-[28px] transition-colors ${
@@ -6483,6 +6528,20 @@ export default function SuperAdminDashboard() {
                         themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-455'
                       }`}>
                         <tr>
+                          <th className="p-4.5 w-12 text-center">
+                            <input
+                              type="checkbox"
+                              checked={filteredSignups.length > 0 && selectedSignups.length === filteredSignups.length}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedSignups(filteredSignups.map(u => u._id));
+                                } else {
+                                  setSelectedSignups([]);
+                                }
+                              }}
+                              className="h-4 w-4 rounded text-[#027244] border-slate-350 focus:ring-[#027244] cursor-pointer"
+                            />
+                          </th>
                           <th className="p-4.5">User Name</th>
                           <th className="p-4.5">Email Address</th>
                           <th className="p-4.5">Mobile / Phone</th>
@@ -6497,6 +6556,20 @@ export default function SuperAdminDashboard() {
                           <tr key={u._id} className={`transition-colors ${
                             themeMode === 'dark' ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50/50'
                           }`}>
+                            <td className="p-4.5 text-center w-12">
+                              <input
+                                type="checkbox"
+                                checked={selectedSignups.includes(u._id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedSignups(prev => [...prev, u._id]);
+                                  } else {
+                                    setSelectedSignups(prev => prev.filter(id => id !== u._id));
+                                  }
+                                }}
+                                className="h-4 w-4 rounded text-[#027244] border-slate-350 focus:ring-[#027244] cursor-pointer"
+                              />
+                            </td>
                             <td className="p-4.5 flex items-center gap-3">
                               <div className="h-9 w-9 rounded-full bg-emerald-50 text-[#027244] border border-emerald-100 flex items-center justify-center font-black text-xs shrink-0 select-none">
                                 {u.fullName ? u.fullName.charAt(0).toUpperCase() : (u.name ? u.name.charAt(0).toUpperCase() : 'U')}
@@ -6535,7 +6608,7 @@ export default function SuperAdminDashboard() {
                             <td className="p-4.5 text-right">
                               <button 
                                 onClick={() => handleDeleteSignup(u._id)}
-                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors shadow-2xs"
+                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors shadow-2xs border-none"
                               >
                                 Delete
                               </button>
