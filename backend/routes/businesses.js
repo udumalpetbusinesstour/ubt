@@ -6,6 +6,21 @@ const Category = require('../models/Category');
 const Lead = require('../models/Lead');
 const { protect } = require('../middleware/auth');
 
+// Helper to dynamically check and auto-expire a business subscription in the database
+const checkAndExpireBusiness = async (business) => {
+  if (!business) return business;
+  const now = new Date();
+  if (business.subscriptionExpiry && new Date(business.subscriptionExpiry) < now && business.subscriptionStatus === 'active') {
+    business.subscriptionStatus = 'expired';
+    business.isPremium = false;
+    business.whatsapp = ''; // Clear WhatsApp contact link
+    business.featured = false; // Turn off featured badges
+    await business.save();
+    console.log(`[Auto-Expire] Automatically cancelled subscription for business "${business.name}" (expired on ${business.subscriptionExpiry})`);
+  }
+  return business;
+};
+
 // Synchronize branches as child Business documents
 async function syncBranches(parentBusiness, branchesData, userRole) {
   if (!branchesData || !Array.isArray(branchesData)) return;
@@ -636,6 +651,7 @@ router.get('/', async (req, res) => {
     // Update active vs expired subscriptions on the fly, inherit parent subscription for branches, and attach branchCount
     const now = new Date();
     const businessesWithCounts = await Promise.all(businesses.map(async (b) => {
+      await checkAndExpireBusiness(b);
       let bObj = b.toObject();
 
       // Inherit subscription details from parent if it is a branch
@@ -648,9 +664,6 @@ router.get('/', async (req, res) => {
         }
       }
 
-      if (bObj.subscriptionExpiry && new Date(bObj.subscriptionExpiry) < now) {
-        bObj.subscriptionStatus = 'expired';
-      }
       bObj.branchCount = await Business.countDocuments({ parentBusinessId: b._id, status: 'Approved' });
       return bObj;
     }));
@@ -776,6 +789,8 @@ router.get('/my-business', protect, async (req, res) => {
     }
     
     if (business) {
+      await checkAndExpireBusiness(business);
+      
       const Subscription = require('../models/Subscription');
       const activeSub = await Subscription.findOne({
         businessId: business._id,
@@ -1517,6 +1532,8 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Business not found' });
     }
 
+    await checkAndExpireBusiness(business);
+
     let bObj = business.toObject();
 
     // Inject the Google Maps API key from backend environment
@@ -1533,12 +1550,6 @@ router.get('/:id', async (req, res) => {
         bObj.isPremium = parent.isPremium;
         parentId = parent._id;
       }
-    }
-
-    // Check expiry
-    const now = new Date();
-    if (bObj.subscriptionExpiry && new Date(bObj.subscriptionExpiry) < now) {
-      bObj.subscriptionStatus = 'expired';
     }
 
     // Get reviews for this business
