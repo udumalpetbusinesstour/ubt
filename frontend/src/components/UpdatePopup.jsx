@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { X, Bell, ShieldCheck, MapPin, Phone, User, Loader, Sparkles } from 'lucide-react';
 
 export default function UpdatePopup() {
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/signup';
+
   const [isOpen, setIsOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [name, setName] = useState('');
@@ -20,16 +24,36 @@ export default function UpdatePopup() {
       return;
     }
 
-    // Retrieve or establish the next show timestamp
+    // Do not show the popup on authentication pages (login, registration/signup)
+    if (isAuthPage) {
+      setIsOpen(false);
+      return;
+    }
+
+    // Initialize session start time if not present
+    let sessionStart = sessionStorage.getItem('ubt_session_start');
+    if (!sessionStart) {
+      sessionStart = Date.now().toString();
+      sessionStorage.setItem('ubt_session_start', sessionStart);
+    }
+    const startTime = parseInt(sessionStart, 10);
+
+    // Retrieve or establish the next show timestamp (1st minute and 10th minute only)
     let nextShow = sessionStorage.getItem('ubt_popup_next_show');
     if (!nextShow) {
-      const initialShowTime = Date.now() + 60 * 1000; // 1 minute delay
-      sessionStorage.setItem('ubt_popup_next_show', initialShowTime.toString());
-      nextShow = initialShowTime.toString();
+      const firstShowTime = startTime + 60 * 1000; // 1st minute delay
+      sessionStorage.setItem('ubt_popup_next_show', firstShowTime.toString());
+      nextShow = firstShowTime.toString();
     }
 
     const interval = setInterval(() => {
-      const currentNextShow = parseInt(sessionStorage.getItem('ubt_popup_next_show') || '0', 10);
+      const currentNextShowStr = sessionStorage.getItem('ubt_popup_next_show');
+      if (currentNextShowStr === 'never') {
+        clearInterval(interval);
+        return;
+      }
+
+      const currentNextShow = parseInt(currentNextShowStr || '0', 10);
       const isDone = localStorage.getItem('ubt_subscribed') === 'true';
 
       if (isDone) {
@@ -39,21 +63,32 @@ export default function UpdatePopup() {
         return;
       }
 
-      // If the scheduled time has arrived and the popup is closed, open it
+      // If the scheduled time has arrived and the popup is closed, open it (unless on auth page)
       if (!isOpen && currentNextShow && Date.now() >= currentNextShow) {
-        setIsOpen(true);
+        if (!isAuthPage) {
+          setIsOpen(true);
+        }
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isOpen, isSubscribed]);
+  }, [isOpen, isSubscribed, isAuthPage]);
 
   // Handle popup closure/dismissal
   const handleClose = () => {
     setIsOpen(false);
-    // Schedule the next show for 5 minutes (300,000 ms) in the future
-    const snoozeTime = Date.now() + 5 * 60 * 1000;
-    sessionStorage.setItem('ubt_popup_next_show', snoozeTime.toString());
+    
+    const sessionStart = sessionStorage.getItem('ubt_session_start');
+    const startTime = sessionStart ? parseInt(sessionStart, 10) : Date.now();
+    const secondShowTime = startTime + 10 * 60 * 1000; // 10th minute
+    
+    if (Date.now() < secondShowTime) {
+      // If we haven't reached the 10th minute yet, schedule the 2nd show for the 10th minute
+      sessionStorage.setItem('ubt_popup_next_show', secondShowTime.toString());
+    } else {
+      // Otherwise (both shows completed), stop showing the popup in this session
+      sessionStorage.setItem('ubt_popup_next_show', 'never');
+    }
   };
 
   useEffect(() => {
@@ -128,7 +163,7 @@ export default function UpdatePopup() {
     }
   };
 
-  if (!isOpen) return null;
+  if (isAuthPage || !isOpen) return null;
 
   return (
     <div 
