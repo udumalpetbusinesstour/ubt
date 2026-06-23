@@ -2136,7 +2136,7 @@ export default function SuperAdminDashboard() {
         </header>
 
         {/* Workspace views content */}
-        <div className="p-4 md:p-8 flex-grow">
+        <div className="p-4 md:p-8 flex-grow w-full max-w-full min-w-0 overflow-x-hidden">
           {loading ? (
             <div className="py-32 flex flex-col items-center justify-center gap-3 text-slate-400">
               <RefreshCw className="h-8 w-8 text-emerald-600 animate-spin" />

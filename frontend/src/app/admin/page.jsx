@@ -1723,7 +1723,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* Workspace views content */}
-        <div className="p-4 md:p-8 flex-1">
+        <div className="p-4 md:p-8 flex-1 w-full max-w-full min-w-0 overflow-x-hidden">
           {loading ? (
             <div className="py-24 flex flex-col items-center justify-center gap-3 text-slate-400">
               <RefreshCw className="h-8 w-8 text-emerald-600 animate-spin" />
@@ -1811,7 +1811,7 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Listings Audit & Approval Desk Card */}
-                  <div className="bg-white border border-slate-200/80 shadow-sm rounded-3xl p-6 md:p-8 flex flex-col gap-6 text-left">
+                  <div className="bg-white border border-slate-200/80 shadow-sm rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col gap-6 text-left w-full max-w-full overflow-hidden">
                     <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b border-slate-100 pb-5">
                       <div className="flex flex-col">
                         <h3 className="font-extrabold text-[#001c41] text-base leading-tight font-sans">
@@ -2333,7 +2333,7 @@ export default function AdminDashboard() {
               {/* TAB: PENDING APPROVALS LIST */}
               {activeTab === 'Pending Approvals' && (
                 <div className="flex flex-col gap-6 text-left">
-                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 sm:p-6 flex flex-col md:flex-row justify-between md:items-center gap-4 w-full max-w-full overflow-hidden">
                     <div className="flex flex-col">
                       <h3 className="font-extrabold text-[#001c41] text-base">Pending Approvals Desk</h3>
                       <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Showcasing listings, community blogs, and events waiting for administrative approval</span>
