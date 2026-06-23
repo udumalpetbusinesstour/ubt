@@ -3678,8 +3678,8 @@ function DashboardContent() {
         <div className="flex-1 flex flex-col overflow-y-auto min-h-0">
           
           {/* Logo block */}
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between shrink-0">
-          <Link to="/" className="flex items-center select-none py-1 overflow-hidden shrink-0">
+        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between shrink-0">
+          <Link to="/" className="flex items-center select-none py-0.5 overflow-hidden shrink-0">
             <img src="/logo-dark.png" alt="Udumalpet Business Tour" className="h-10.5 w-auto object-contain" />
           </Link>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white p-1 rounded-lg">
@@ -3689,7 +3689,7 @@ function DashboardContent() {
 
         {/* Business Identity Card */}
         {business && (
-          <div className="p-4.5 bg-slate-900/40 border border-slate-800/60 rounded-2xl m-4.5 flex flex-col gap-3 shrink-0">
+          <div className="p-3 bg-slate-900/40 border border-slate-800/60 rounded-xl mx-4 my-2.5 flex flex-col gap-2 shrink-0">
             <div className="flex items-center gap-3 w-full">
               <div className="h-10 w-10 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center font-extrabold text-[#001c41] text-sm shadow-inner uppercase select-none shrink-0">
                 {(business.name || 'B').charAt(0)}
@@ -3738,7 +3738,7 @@ function DashboardContent() {
                     const selected = allBusinesses.find(b => b._id === e.target.value);
                     if (selected) handleSwitchBusiness(selected);
                   }}
-                  className="w-full bg-slate-800/80 border border-slate-700/80 text-white rounded-xl py-2 px-3 text-[11px] font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                  className="w-full bg-slate-800/80 border border-slate-700/80 text-white rounded-xl py-1.5 px-2.5 text-[11px] font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
                 >
                   {allBusinesses.map((b) => (
                     <option key={b._id} value={b._id} className="bg-slate-900 text-white font-semibold">
@@ -3763,7 +3763,7 @@ function DashboardContent() {
                 }
                 setSidebarOpen(false);
               }}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[11.5px] font-extrabold transition-all hover:bg-slate-800/40 hover:text-white cursor-pointer ${
+              className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-[11.5px] font-extrabold transition-all hover:bg-slate-800/40 hover:text-white cursor-pointer ${
                 activeTab === link.label && !link.onClick
                   ? 'bg-[#027244] text-white shadow-md shadow-emerald-900/20' 
                   : 'text-slate-400 hover:bg-slate-800/30'
@@ -3823,10 +3823,10 @@ function DashboardContent() {
         </div>
 
         {/* Sidebar Footer with Logout (like admin page) */}
-        <div className="p-3 border-t border-slate-800/80 bg-slate-950/20 flex flex-col gap-1 shrink-0">
+        <div className="p-2 border-t border-slate-800/80 bg-slate-950/20 flex flex-col gap-1 shrink-0">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3.5 px-4 py-3 w-full rounded-xl text-xs font-bold text-rose-455 hover:bg-rose-950/15 hover:text-rose-350 cursor-pointer text-left"
+            className="flex items-center gap-3 px-3 py-2 w-full rounded-xl text-xs font-bold text-rose-455 hover:bg-rose-950/15 hover:text-rose-350 cursor-pointer text-left"
           >
             <LogOut className="h-5 w-5 shrink-0 text-rose-455" />
             <span>Logout</span>
