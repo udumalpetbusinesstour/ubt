@@ -4,7 +4,13 @@ import { X, Bell, ShieldCheck, MapPin, Phone, User, Loader, Sparkles } from 'luc
 
 export default function UpdatePopup() {
   const location = useLocation();
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/signup';
+  const path = location.pathname.replace(/\/$/, '');
+  const isAuthPage = 
+    path === '/login' || 
+    path === '/register' || 
+    path === '/signup' || 
+    path === '/add-business' || 
+    path === '/choose-plan';
 
   const [isOpen, setIsOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -24,30 +30,36 @@ export default function UpdatePopup() {
       return;
     }
 
-    // Do not show the popup on authentication pages (login, registration/signup)
+    // Check shown count
+    const shownCount = parseInt(localStorage.getItem('ubt_popup_shown_count') || '0', 10);
+    if (shownCount >= 2) {
+      return;
+    }
+
+    // Do not show the popup on authentication and registration pages (login, register/signup, add-business, choose-plan)
     if (isAuthPage) {
       setIsOpen(false);
       return;
     }
 
-    // Initialize session start time if not present
-    let sessionStart = sessionStorage.getItem('ubt_session_start');
+    // Initialize session/visit start time in localStorage if not present
+    let sessionStart = localStorage.getItem('ubt_session_start');
     if (!sessionStart) {
       sessionStart = Date.now().toString();
-      sessionStorage.setItem('ubt_session_start', sessionStart);
+      localStorage.setItem('ubt_session_start', sessionStart);
     }
     const startTime = parseInt(sessionStart, 10);
 
     // Retrieve or establish the next show timestamp (1st minute and 10th minute only)
-    let nextShow = sessionStorage.getItem('ubt_popup_next_show');
+    let nextShow = localStorage.getItem('ubt_popup_next_show');
     if (!nextShow) {
-      const firstShowTime = startTime + 60 * 1000; // 1st minute delay
-      sessionStorage.setItem('ubt_popup_next_show', firstShowTime.toString());
+      const firstShowTime = startTime + 60 * 1000; // 1st minute delay (60 seconds)
+      localStorage.setItem('ubt_popup_next_show', firstShowTime.toString());
       nextShow = firstShowTime.toString();
     }
 
     const interval = setInterval(() => {
-      const currentNextShowStr = sessionStorage.getItem('ubt_popup_next_show');
+      const currentNextShowStr = localStorage.getItem('ubt_popup_next_show');
       if (currentNextShowStr === 'never') {
         clearInterval(interval);
         return;
@@ -55,15 +67,16 @@ export default function UpdatePopup() {
 
       const currentNextShow = parseInt(currentNextShowStr || '0', 10);
       const isDone = localStorage.getItem('ubt_subscribed') === 'true';
+      const currentShownCount = parseInt(localStorage.getItem('ubt_popup_shown_count') || '0', 10);
 
-      if (isDone) {
+      if (isDone || currentShownCount >= 2) {
         setIsSubscribed(true);
         setIsOpen(false);
         clearInterval(interval);
         return;
       }
 
-      // If the scheduled time has arrived and the popup is closed, open it (unless on auth page)
+      // If the scheduled time has arrived and the popup is closed, open it (unless on auth/registration page)
       if (!isOpen && currentNextShow && Date.now() >= currentNextShow) {
         if (!isAuthPage) {
           setIsOpen(true);
@@ -78,16 +91,26 @@ export default function UpdatePopup() {
   const handleClose = () => {
     setIsOpen(false);
     
-    const sessionStart = sessionStorage.getItem('ubt_session_start');
+    // Increment the shown count
+    const currentCount = parseInt(localStorage.getItem('ubt_popup_shown_count') || '0', 10);
+    const newCount = currentCount + 1;
+    localStorage.setItem('ubt_popup_shown_count', newCount.toString());
+
+    if (newCount >= 2) {
+      localStorage.setItem('ubt_popup_next_show', 'never');
+      return;
+    }
+
+    const sessionStart = localStorage.getItem('ubt_session_start');
     const startTime = sessionStart ? parseInt(sessionStart, 10) : Date.now();
-    const secondShowTime = startTime + 10 * 60 * 1000; // 10th minute
+    const secondShowTime = startTime + 10 * 60 * 1000; // 10th minute (10 minutes)
     
     if (Date.now() < secondShowTime) {
       // If we haven't reached the 10th minute yet, schedule the 2nd show for the 10th minute
-      sessionStorage.setItem('ubt_popup_next_show', secondShowTime.toString());
+      localStorage.setItem('ubt_popup_next_show', secondShowTime.toString());
     } else {
-      // Otherwise (both shows completed), stop showing the popup in this session
-      sessionStorage.setItem('ubt_popup_next_show', 'never');
+      // Otherwise (both shows completed or missed), stop showing the popup
+      localStorage.setItem('ubt_popup_next_show', 'never');
     }
   };
 
