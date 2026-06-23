@@ -376,12 +376,12 @@ export default function BloodDonorsTab() {
                 </div>
 
                 {/* Footer Info details */}
-                <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-center justify-between text-xs font-semibold text-slate-500">
-                  <div className="flex items-center gap-1">
-                    <Phone className="h-3.5 w-3.5 text-slate-400" />
+                <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between text-xs font-semibold text-slate-500 gap-2">
+                  <div className="flex items-center gap-1 whitespace-nowrap shrink-0">
+                    <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                     <span>{donor.contactNum}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                  <div className="flex items-center gap-1 text-[10px] text-slate-400 whitespace-nowrap shrink-0">
                     <span>Registered: {new Date(donor.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>

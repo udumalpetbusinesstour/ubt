@@ -3416,7 +3416,7 @@ export default function SuperAdminDashboard() {
                                 </div>
                                 
                                 <div className="flex flex-col gap-4 mt-2 bg-slate-100/50 dark:bg-slate-900/30 p-4 rounded-2xl w-full">
-                                  <div className="flex flex-wrap gap-2 border-b border-slate-200/50 dark:border-slate-850 pb-2.5">
+                                  <div className="flex flex-col sm:flex-row gap-2 border-b border-slate-200/50 dark:border-slate-850 pb-2.5">
                                     {[
                                       { id: 'assign', label: 'Map to Existing' },
                                       { id: 'create_main', label: 'Add as New Main Category' },
@@ -3428,7 +3428,7 @@ export default function SuperAdminDashboard() {
                                           key={opt.id}
                                           type="button"
                                           onClick={() => setResolutionActionMap(prev => ({ ...prev, [biz._id]: opt.id }))}
-                                          className={`px-3 py-1.5 rounded-lg text-[10px] font-black tracking-wide border transition-all cursor-pointer ${
+                                          className={`px-3 py-2 rounded-lg text-[10px] font-black tracking-wide border transition-all cursor-pointer w-full sm:w-auto text-center ${
                                             isSelected 
                                               ? 'bg-[#027244] border-[#027244] text-white shadow-xs' 
                                               : 'border-slate-200 dark:border-slate-800 text-slate-550 hover:bg-slate-200/40 dark:text-slate-400'
@@ -3612,19 +3612,19 @@ export default function SuperAdminDashboard() {
                             return (
                               <div 
                                 key={cat._id} 
-                                className={`border rounded-2xl p-4 flex justify-between items-center transition-all ${
+                                className={`border rounded-2xl p-4 flex justify-between items-center transition-all min-w-0 gap-3 ${
                                   themeMode === 'dark' ? 'bg-slate-950/20 border-slate-800 hover:border-slate-700' : 'bg-slate-50/50 border-slate-200 hover:bg-slate-50'
                                 }`}
                               >
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
                                   <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-black shrink-0 ${
                                     themeMode === 'dark' ? 'bg-slate-900 text-emerald-455 border border-slate-800' : 'bg-emerald-50 text-[#027244] border-emerald-100'
                                   }`}>
                                     <Store className="h-4.5 w-4.5" />
                                   </div>
-                                  <div className="flex flex-col text-left min-w-0">
+                                  <div className="flex flex-col text-left min-w-0 flex-1">
                                     <span className={`font-extrabold text-xs truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{cat.categoryName}</span>
-                                    <span className="text-[9.5px] text-slate-450 dark:text-slate-400 font-bold mt-1 leading-none">Main: {cat.parentCategory || 'Others'}</span>
+                                    <span className="text-[9.5px] text-slate-450 dark:text-slate-400 font-bold mt-1 leading-none truncate">Main: {cat.parentCategory || 'Others'}</span>
                                     <span className="text-[9px] text-slate-400 mt-1.5 font-semibold truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
                                     <span className="text-[9.5px] text-emerald-650 font-black mt-2 leading-none">{count} active businesses</span>
                                   </div>
@@ -5884,12 +5884,12 @@ export default function SuperAdminDashboard() {
                           <h3 className="font-extrabold text-sm uppercase tracking-wider">User Queries Inbox</h3>
                           <span className="text-[10px] text-slate-400 font-semibold mt-1">Filter and view specific visitor messages and inquiries.</span>
                         </div>
-                        <div className="bg-slate-100/60 dark:bg-slate-950/60 p-1 rounded-xl flex items-center shrink-0 border border-slate-200/30">
+                        <div className="bg-slate-100/60 dark:bg-slate-950/60 p-1 rounded-xl flex items-center shrink-0 border border-slate-200/30 max-w-full overflow-x-auto whitespace-nowrap scrollbar-thin">
                           {['All', 'Pending', 'Replied'].map(status => (
                             <button
                               key={status}
                               onClick={() => setQueryFilter(status)}
-                              className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                              className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                                 queryFilter === status
                                   ? 'bg-[#027244] text-white shadow-sm'
                                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
