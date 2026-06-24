@@ -41,6 +41,9 @@ export default function PartnerRegister() {
       if (user.role === 'partner' && user.isPartnerRegistered) {
         navigate('/dashboard');
       }
+      if (user.partnerStatus === 'rejected') {
+        setError('Your previous registration request was not approved by administration. Please review your details and resubmit.');
+      }
     } catch (err) {
       navigate('/login?from=partner');
     }
@@ -109,6 +112,8 @@ export default function PartnerRegister() {
           aadhaarNumber: data.data.aadhaarNumber,
           address: data.data.address,
           isPartnerRegistered: true,
+          isPartnerApproved: data.data.isPartnerApproved || false,
+          partnerStatus: data.data.partnerStatus || 'pending',
         };
         localStorage.setItem('ubt_user', JSON.stringify(updatedUser));
 

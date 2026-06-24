@@ -74,7 +74,7 @@ router.get('/admin/all', protect, admin, async (req, res, next) => {
     const referrals = await Referral.find()
       .populate('referrerId', 'fullName name email phone mobileNumber')
       .populate('referredUserId', 'fullName name email phone mobileNumber')
-      .populate('referredBusinessId', 'name businessName status subscriptionStatus verificationStatus gstNumber')
+      .populate('referredBusinessId')
       .sort({ createdAt: -1 });
 
     res.json({

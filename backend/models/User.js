@@ -97,6 +97,21 @@ const UserSchema = new mongoose.Schema({
   isPartnerRegistered: {
     type: Boolean,
     default: false,
+  },
+  isPartnerApproved: {
+    type: Boolean,
+    default: false,
+  },
+  partnerStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending',
+  },
+  partnerApprovedAt: {
+    type: Date,
+  },
+  partnerRejectedAt: {
+    type: Date,
   }
 }, {
   timestamps: true

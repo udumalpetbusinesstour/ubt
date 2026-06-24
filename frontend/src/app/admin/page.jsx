@@ -220,6 +220,8 @@ export default function AdminDashboard() {
   // Slide-over Modal State
   const [selectedBiz, setSelectedBiz] = useState(null);
   const [showBizModal, setShowBizModal] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState(null);
+  const [showPartnerModal, setShowPartnerModal] = useState(false);
   const [isFoundingMemberCheck, setIsFoundingMemberCheck] = useState(false);
 
   useEffect(() => {
@@ -292,7 +294,8 @@ export default function AdminDashboard() {
   const [redemptions, setRedemptions] = useState([]);
   const [redemptionsLoading, setRedemptionsLoading] = useState(false);
   const [redemptionsError, setRedemptionsError] = useState('');
-  const [referralSubTab, setReferralSubTab] = useState('queue'); // queue | refunds | points
+  const [referralSubTab, setReferralSubTab] = useState('partners_list'); // queue | partners_list | approvals_list | rejected_list
+  const [redemptionStatusFilter, setRedemptionStatusFilter] = useState('All'); // All | Pending | Processed
 
   // Partners Portal states
   const [partners, setPartners] = useState([]);
@@ -778,6 +781,11 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleViewPartner = (partner) => {
+    setSelectedPartner(partner);
+    setShowPartnerModal(true);
+  };
+
   const handleRedemptionRefund = async (redemptionId, remarks = '') => {
     try {
       const activeToken = localStorage.getItem('ubt_token');
@@ -1030,12 +1038,10 @@ export default function AdminDashboard() {
   }, [token]);
 
   useEffect(() => {
-    if (activeTab === 'Referral Moderation' || activeTab === 'Partners') {
+    if (activeTab === 'Referral Moderation' || activeTab === 'Partners' || activeTab === 'Pending Approvals') {
       fetchReferrals();
       fetchRedemptions();
-      if (activeTab === 'Partners') {
-        fetchPartners();
-      }
+      fetchPartners();
     }
   }, [activeTab]);
 
@@ -1373,6 +1379,38 @@ export default function AdminDashboard() {
       if (selectedBiz && selectedBiz._id === bizId) {
         setSelectedBiz(prev => ({ ...prev, status: nextStatus, isFoundingMember: type === 'approve' ? isFoundingMemberCheck : prev.isFoundingMember }));
       }
+    }
+  };
+
+  const handlePartnerAction = async (partnerId, action) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/admin/partners/approve', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token || localStorage.getItem('ubt_token')}`
+        },
+        body: JSON.stringify({ partnerId, action })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`Partner registration successfully ${action}d!`);
+        fetchPartners(); // Refresh partners list
+      } else {
+        alert(data.message || `Failed to ${action} partner.`);
+      }
+    } catch (err) {
+      console.error(err);
+      setPartners(prev => prev.map(p => {
+        if (p._id === partnerId) {
+          if (action === 'approve') {
+            return { ...p, isPartnerApproved: true, partnerStatus: 'approved' };
+          } else {
+            return { ...p, isPartnerApproved: false, partnerStatus: 'rejected', isPartnerRegistered: false };
+          }
+        }
+        return p;
+      }));
     }
   };
 
@@ -1739,6 +1777,7 @@ export default function AdminDashboard() {
               { id: 'Signups', label: 'Signups', icon: <User className="h-5 w-5" /> },
               { id: 'Category Management', label: 'Categories', icon: <Grid className="h-5 w-5" /> },
               { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" /> },
+              { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-5 w-5" /> },
               { id: 'Blogs', label: 'Blogs Moderation', icon: <BookOpen className="h-5 w-5" /> },
               { id: 'Events', label: 'Events Moderation', icon: <Calendar className="h-5 w-5" /> },
               { id: 'Reviews', label: 'Reviews Feed', icon: <MessageSquare className="h-5 w-5" /> },
@@ -1748,7 +1787,6 @@ export default function AdminDashboard() {
               { id: 'Reports', label: 'Reports & Trends', icon: <BarChart3 className="h-5 w-5" /> },
               { id: 'Queries', label: 'Queries Inbox', icon: <Mail className="h-5 w-5" /> },
               { id: 'Referral Moderation', label: 'Referrals & Refunds', icon: <Gift className="h-5 w-5" /> },
-              { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-5 w-5" /> },
               { id: 'Blood Donors', label: 'Blood Donors', icon: <Heart className="h-5 w-5" /> }
             ].map(item => (
               <button
@@ -1817,6 +1855,7 @@ export default function AdminDashboard() {
                   { id: 'Signups', label: 'Signups', icon: <User className="h-5 w-5" /> },
                   { id: 'Category Management', label: 'Categories', icon: <Grid className="h-5 w-5" /> },
                   { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" /> },
+                  { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-5 w-5" /> },
                   { id: 'Blogs', label: 'Blogs Moderation', icon: <BookOpen className="h-5 w-5" /> },
                   { id: 'Events', label: 'Events Moderation', icon: <Calendar className="h-5 w-5" /> },
                   { id: 'Reviews', label: 'Reviews Feed', icon: <MessageSquare className="h-5 w-5" /> },
@@ -1826,7 +1865,6 @@ export default function AdminDashboard() {
                   { id: 'Reports', label: 'Reports & Trends', icon: <BarChart3 className="h-5 w-5" /> },
                   { id: 'Queries', label: 'Queries Inbox', icon: <Mail className="h-5 w-5" /> },
                   { id: 'Referral Moderation', label: 'Referrals & Refunds', icon: <Gift className="h-5 w-5" /> },
-                  { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-5 w-5" /> },
                   { id: 'Blood Donors', label: 'Blood Donors', icon: <Heart className="h-5 w-5" /> }
                 ].map(item => (
                   <button
@@ -2646,6 +2684,16 @@ export default function AdminDashboard() {
                       >
                         Categories ({pendingCategories.length})
                       </button>
+                      <button
+                        onClick={() => setPendingSubTab('Partners')}
+                        className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                          pendingSubTab === 'Partners'
+                            ? 'bg-[#027244] text-white shadow-sm shadow-emerald-950/15'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        Partners ({partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length})
+                      </button>
                     </div>
                   </div>
 
@@ -3018,6 +3066,62 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                           ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Sub-tab view: Partners */}
+                  {pendingSubTab === 'Partners' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).map(p => (
+                        <div key={p._id} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col justify-between gap-5 hover:shadow-md transition-shadow">
+                          <div className="flex gap-4">
+                            <div className="h-14 w-14 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center font-extrabold text-[#027244] uppercase select-none text-[16px] shrink-0">
+                              {(p.fullName || p.name || 'P').charAt(0)}
+                            </div>
+                            <div className="flex flex-col gap-1 text-left min-w-0 flex-1">
+                              <h4 className="font-extrabold text-sm text-[#001c41] truncate leading-none">{p.fullName || p.name}</h4>
+                              <span className="text-xs text-emerald-655 font-bold mt-1 leading-none">Joined on {new Date(p.createdAt).toLocaleDateString()}</span>
+                              <span className="text-[10px] text-slate-400 mt-1 font-semibold">Email: {p.email}</span>
+                              <span className="text-[10px] text-slate-400 mt-0.5 font-semibold">Phone: {p.phone || p.mobileNumber || 'N/A'}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2 text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 p-3.5 rounded-2xl">
+                            <div className="flex justify-between items-center border-b border-slate-200/50 pb-2">
+                              <span className="text-[9px] text-slate-400 font-extrabold uppercase">Aadhaar Number</span>
+                              <span className="font-bold text-slate-800 font-mono">{p.aadhaarNumber || 'N/A'}</span>
+                            </div>
+                            <div className="flex flex-col gap-0.5 pt-1">
+                              <span className="text-[9px] text-slate-400 font-extrabold uppercase">Address</span>
+                              <span className="font-bold text-slate-850 leading-relaxed text-[11px]">{p.address || 'N/A'}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end items-center border-t border-slate-100 pt-3.5 gap-2">
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => handlePartnerAction(p._id, 'reject')}
+                                className="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-655 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors"
+                              >
+                                Reject
+                              </button>
+                              <button 
+                                onClick={() => handlePartnerAction(p._id, 'approve')}
+                                className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow shadow-emerald-800/10 transition-colors"
+                              >
+                                Approve Partner
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length === 0 && (
+                        <div className="col-span-2 bg-white border border-slate-200 rounded-3xl p-16 text-center text-slate-400 flex flex-col items-center gap-3">
+                          <CheckCircle2 className="h-10 w-10 text-emerald-600 animate-bounce" />
+                          <span className="text-sm font-bold text-slate-800 font-sans">Queue Empty!</span>
+                          <p className="text-xs text-slate-400 font-semibold leading-relaxed max-w-xs">There are no pending partner registrations waiting for administrative approval today.</p>
                         </div>
                       )}
                     </div>
@@ -3918,18 +4022,33 @@ export default function AdminDashboard() {
                       />
                     </div>
                     
-                    <div className="flex items-center gap-2">
-                      {['queue', 'partners_list'].map(subTab => (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {[
+                        { id: 'partners_list', label: 'Partners Directory' },
+                        { id: 'approvals_list', label: 'Pending Approvals' },
+                        { id: 'rejected_list', label: 'Rejected Partners' },
+                        { id: 'queue', label: 'Points Redemption Queue' }
+                      ].map(subTab => (
                         <button
-                          key={subTab}
-                          onClick={() => setReferralSubTab(subTab)}
-                          className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                            referralSubTab === subTab
+                          key={subTab.id}
+                          onClick={() => setReferralSubTab(subTab.id)}
+                          className={`px-4.5 py-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center ${
+                            referralSubTab === subTab.id
                               ? 'bg-[#027244] text-white shadow-xs'
                               : 'text-slate-500 hover:bg-slate-100'
                           }`}
                         >
-                          {subTab === 'queue' ? 'Redemption Payouts Queue' : 'Partners Directory'}
+                          {subTab.label}
+                          {subTab.id === 'approvals_list' && partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length > 0 && (
+                            <span className="bg-amber-500 text-white rounded-full px-1.5 py-0.5 text-[8px] font-black ml-1.5 leading-none">
+                              {partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length}
+                            </span>
+                          )}
+                          {subTab.id === 'queue' && redemptions.filter(r => r.status === 'Pending Approval').length > 0 && (
+                            <span className="bg-emerald-600 text-white rounded-full px-1.5 py-0.5 text-[8px] font-black ml-1.5 leading-none">
+                              {redemptions.filter(r => r.status === 'Pending Approval').length}
+                            </span>
+                          )}
                         </button>
                       ))}
                     </div>
@@ -3976,7 +4095,7 @@ export default function AdminDashboard() {
                                   p.referralCode?.toLowerCase().includes(referralSearch.toLowerCase())
                                 )
                                 .map((partner) => (
-                                  <tr key={partner._id} className="hover:bg-slate-50/50 transition-colors">
+                                  <tr key={partner._id} onClick={() => handleViewPartner(partner)} className="hover:bg-slate-50/50 transition-colors cursor-pointer">
                                     <td className="py-4 px-6 flex items-center gap-3">
                                       <div className="h-9 w-9 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center font-extrabold text-[#027244] uppercase select-none text-[12px]">
                                         {(partner.fullName || partner.name || 'P').charAt(0)}
@@ -4010,13 +4129,21 @@ export default function AdminDashboard() {
                                       <span className="text-[9.5px] text-slate-400 block mt-0.5">₹{partner.referralPoints || 0} Value</span>
                                     </td>
                                     <td className="py-4 px-4 text-center">
-                                      {partner.isPartnerRegistered ? (
-                                        <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase inline-block">
-                                          Onboarded
+                                      {!partner.isPartnerRegistered ? (
+                                        <span className="bg-slate-100 text-slate-600 border border-slate-200/60 px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase inline-block">
+                                          Draft User
+                                        </span>
+                                      ) : partner.isPartnerApproved ? (
+                                        <span className="bg-emerald-50 text-emerald-700 border border-emerald-250 text-emerald-800 px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase inline-block">
+                                          Approved Partner
+                                        </span>
+                                      ) : partner.partnerStatus === 'rejected' ? (
+                                        <span className="bg-red-50 text-red-705 border border-red-200 px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase inline-block">
+                                          Rejected
                                         </span>
                                       ) : (
-                                        <span className="bg-amber-50 text-amber-700 border border-amber-200/50 px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase inline-block animate-pulse">
-                                          Draft User
+                                        <span className="bg-amber-50 text-amber-705 border border-amber-200 px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase inline-block animate-pulse">
+                                          Pending Approval
                                         </span>
                                       )}
                                     </td>
@@ -4029,9 +4156,199 @@ export default function AdminDashboard() {
                     </div>
                   )}
 
-                  {/* Redemption Payouts Queue Sub-tab */}
-                  {referralSubTab === 'queue' && (
+                  {/* Pending Approvals Sub-tab */}
+                  {referralSubTab === 'approvals_list' && (
                     <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                          <thead>
+                            <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[9px]">
+                              <th className="py-3.5 px-6">Partner Identity</th>
+                              <th className="py-3.5 px-4">Contact Details</th>
+                              <th className="py-3.5 px-4">Aadhaar Number</th>
+                              <th className="py-3.5 px-4">Address</th>
+                              <th className="py-3.5 px-4">Submitted Time</th>
+                              <th className="py-3.5 px-4 text-center">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-50">
+                            {partnersLoading ? (
+                              <tr>
+                                <td colSpan={6} className="py-12 text-center text-slate-400">
+                                  <RefreshCw className="h-6 w-6 animate-spin text-emerald-600 mx-auto" />
+                                  <span className="block mt-2 font-bold text-xs">Loading pending partners...</span>
+                                </td>
+                              </tr>
+                            ) : partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length === 0 ? (
+                              <tr>
+                                <td colSpan={6} className="py-16 text-center text-slate-400 font-sans font-bold">
+                                  No pending partner registrations awaiting approval.
+                                </td>
+                              </tr>
+                            ) : (
+                              partners
+                                .filter(p => p.isPartnerRegistered && !p.isPartnerApproved)
+                                .filter(p => 
+                                  p.fullName?.toLowerCase().includes(referralSearch.toLowerCase()) ||
+                                  p.email?.toLowerCase().includes(referralSearch.toLowerCase()) ||
+                                  p.referralCode?.toLowerCase().includes(referralSearch.toLowerCase())
+                                )
+                                .map((partner) => (
+                                  <tr key={partner._id} onClick={(e) => { if (!e.target.closest('button')) handleViewPartner(partner); }} className="hover:bg-slate-50/50 transition-colors cursor-pointer">
+                                    <td className="py-4 px-6 flex items-center gap-3">
+                                      <div className="h-9 w-9 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center font-extrabold text-[#027244] uppercase select-none text-[12px]">
+                                        {(partner.fullName || partner.name || 'P').charAt(0)}
+                                      </div>
+                                      <div className="flex flex-col text-left">
+                                        <span className="font-extrabold text-slate-800 text-xs leading-none">
+                                          {partner.fullName || partner.name}
+                                        </span>
+                                        <span className="text-[9.5px] text-slate-400 mt-1 block font-medium">
+                                          Joined UBT on {new Date(partner.createdAt).toLocaleDateString()}
+                                        </span>
+                                      </div>
+                                    </td>
+                                    <td className="py-4 px-4 text-left leading-relaxed">
+                                      <div className="text-slate-700 text-xs leading-none">{partner.email}</div>
+                                      <div className="text-slate-405 text-[10px] mt-1">{partner.phone || partner.mobileNumber || 'No Phone'}</div>
+                                    </td>
+                                    <td className="py-4 px-4 text-left">
+                                      <div className="text-slate-800 font-extrabold leading-none">{partner.aadhaarNumber || 'N/A'}</div>
+                                    </td>
+                                    <td className="py-4 px-4 text-left">
+                                      <div className="text-slate-400 text-[9.5px] truncate max-w-[180px] font-semibold" title={partner.address}>
+                                        {partner.address || 'Address pending'}
+                                      </div>
+                                    </td>
+                                    <td className="py-4 px-4 text-left font-medium text-slate-400">
+                                      {new Date(partner.updatedAt || partner.createdAt).toLocaleString()}
+                                    </td>
+                                    <td className="py-4 px-4 text-center">
+                                      <div className="flex items-center justify-center gap-2">
+                                        <button
+                                          onClick={() => handlePartnerAction(partner._id, 'reject')}
+                                          className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10px] rounded-lg cursor-pointer transition-colors"
+                                        >
+                                          Reject
+                                        </button>
+                                        <button
+                                          onClick={() => handlePartnerAction(partner._id, 'approve')}
+                                          className="px-3 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10px] rounded-lg cursor-pointer shadow-xs transition-colors"
+                                        >
+                                          Approve
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rejected Partners Sub-tab */}
+                  {referralSubTab === 'rejected_list' && (
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                          <thead>
+                            <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[9px]">
+                              <th className="py-3.5 px-6">Partner Identity</th>
+                              <th className="py-3.5 px-4">Contact Details</th>
+                              <th className="py-3.5 px-4">Aadhaar Number</th>
+                              <th className="py-3.5 px-4">Address</th>
+                              <th className="py-3.5 px-4">Rejection Time</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-50">
+                            {partnersLoading ? (
+                              <tr>
+                                <td colSpan={5} className="py-12 text-center text-slate-400">
+                                  <RefreshCw className="h-6 w-6 animate-spin text-emerald-600 mx-auto" />
+                                  <span className="block mt-2 font-bold text-xs">Loading rejected partners...</span>
+                                </td>
+                              </tr>
+                            ) : partners.filter(p => p.partnerStatus === 'rejected').length === 0 ? (
+                              <tr>
+                                <td colSpan={5} className="py-16 text-center text-slate-400 font-sans font-bold">
+                                  No rejected partner registrations found.
+                                </td>
+                              </tr>
+                            ) : (
+                              partners
+                                .filter(p => p.partnerStatus === 'rejected')
+                                .filter(p => 
+                                  p.fullName?.toLowerCase().includes(referralSearch.toLowerCase()) ||
+                                  p.email?.toLowerCase().includes(referralSearch.toLowerCase()) ||
+                                  p.referralCode?.toLowerCase().includes(referralSearch.toLowerCase())
+                                )
+                                .map((partner) => (
+                                  <tr key={partner._id} onClick={() => handleViewPartner(partner)} className="hover:bg-slate-50/50 transition-colors cursor-pointer">
+                                    <td className="py-4 px-6 flex items-center gap-3">
+                                      <div className="h-9 w-9 rounded-full bg-red-50 border border-red-100 flex items-center justify-center font-extrabold text-red-655 uppercase select-none text-[12px]">
+                                        {(partner.fullName || partner.name || 'P').charAt(0)}
+                                      </div>
+                                      <div className="flex flex-col text-left">
+                                        <span className="font-extrabold text-slate-850 text-xs leading-none">
+                                          {partner.fullName || partner.name}
+                                        </span>
+                                        <span className="text-[9.5px] text-slate-400 mt-1 block font-medium">
+                                          Joined UBT on {new Date(partner.createdAt).toLocaleDateString()}
+                                        </span>
+                                      </div>
+                                    </td>
+                                    <td className="py-4 px-4 text-left leading-relaxed">
+                                      <div className="text-slate-700 text-xs leading-none">{partner.email}</div>
+                                      <div className="text-slate-405 text-[10px] mt-1">{partner.phone || partner.mobileNumber || 'No Phone'}</div>
+                                    </td>
+                                    <td className="py-4 px-4 text-left">
+                                      <div className="text-slate-800 font-extrabold leading-none">{partner.aadhaarNumber || 'N/A'}</div>
+                                    </td>
+                                    <td className="py-4 px-4 text-left">
+                                      <div className="text-slate-400 text-[9.5px] truncate max-w-[180px] font-semibold" title={partner.address}>
+                                        {partner.address || 'Address pending'}
+                                      </div>
+                                    </td>
+                                    <td className="py-4 px-4 text-left font-medium text-red-600">
+                                      {partner.partnerRejectedAt ? new Date(partner.partnerRejectedAt).toLocaleString() : new Date(partner.updatedAt).toLocaleString()}
+                                    </td>
+                                  </tr>
+                                ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Points Redemption Queue Sub-tab */}
+                  {referralSubTab === 'queue' && (
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden flex flex-col gap-2">
+                      <div className="flex items-center gap-2 mb-2 px-6 pt-5">
+                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider mr-2">Filter status:</span>
+                        {['All', 'Pending', 'Processed'].map(f => (
+                          <button
+                            key={f}
+                            onClick={() => setRedemptionStatusFilter(f)}
+                            className={`px-3 py-1 rounded-lg text-[10px] font-black cursor-pointer transition-all border ${
+                              redemptionStatusFilter === f
+                                ? 'bg-slate-855 text-white border-slate-855 shadow-2xs'
+                                : 'bg-slate-50 text-slate-550 border-slate-205 hover:bg-slate-100'
+                            }`}
+                          >
+                            {f} ({
+                              f === 'Pending' 
+                                ? redemptions.filter(r => r.status === 'Pending Approval').length 
+                                : f === 'Processed' 
+                                  ? redemptions.filter(r => r.status === 'Refunded' || r.status === 'Rejected').length 
+                                  : redemptions.length
+                            })
+                          </button>
+                        ))}
+                      </div>
+
                       <div className="overflow-x-auto">
                         <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
                           <thead>
@@ -4052,68 +4369,87 @@ export default function AdminDashboard() {
                                   <span className="block mt-2 font-bold text-xs">Loading payout requests...</span>
                                 </td>
                               </tr>
-                            ) : redemptions.length === 0 ? (
+                            ) : redemptions.filter(r => {
+                              if (redemptionStatusFilter === 'Pending') return r.status === 'Pending Approval';
+                              if (redemptionStatusFilter === 'Processed') return r.status === 'Refunded' || r.status === 'Rejected';
+                              return true;
+                            }).length === 0 ? (
                               <tr>
-                                <td colSpan={6} className="py-16 text-center text-slate-400">
-                                  No reward points redemption payout requests raised yet.
+                                <td colSpan={6} className="py-16 text-center text-slate-400 font-bold">
+                                  No matching redemption requests found.
                                 </td>
                               </tr>
                             ) : (
-                              redemptions.map((req) => (
-                                <tr key={req._id} className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="py-4 px-6 text-left leading-relaxed">
-                                    <div className="font-extrabold text-slate-800 text-xs">{req.userId?.fullName || req.userId?.name || 'Partner Account'}</div>
-                                    <div className="text-slate-405 text-[10px]">{req.userId?.email || 'No email'} • {req.userId?.phone || req.userId?.mobileNumber || 'No Phone'}</div>
-                                  </td>
-                                  <td className="py-4 px-4 text-left font-sans">
-                                    <span className="text-xs font-black text-slate-700">{req.points} Points</span>
-                                  </td>
-                                  <td className="py-4 px-4 text-left font-sans">
-                                    <span className="text-xs font-black text-[#027244]">₹{req.points} Cashback</span>
-                                  </td>
-                                  <td className="py-4 px-4 text-left">
-                                    <div className="text-xs font-semibold text-slate-600 leading-normal max-w-xs truncate" title={req.remarks}>
-                                      {req.remarks || <span className="text-slate-400 italic">No notes added</span>}
-                                    </div>
-                                    <div className="text-[9.5px] text-slate-400 mt-1 block">
-                                      Status: <span className={`font-black ${req.status === 'Refunded' ? 'text-emerald-600' : req.status === 'Rejected' ? 'text-rose-600' : 'text-amber-600'}`}>{req.status}</span>
-                                    </div>
-                                  </td>
-                                  <td className="py-4 px-4 text-left font-medium text-slate-400">
-                                    {new Date(req.createdAt).toLocaleString()}
-                                  </td>
-                                  <td className="py-4 px-4 text-center">
-                                    {req.status === 'Pending Approval' ? (
-                                      <div className="flex items-center justify-center gap-1.5">
-                                        <button
-                                          onClick={() => {
-                                            const remarks = prompt('Enter payout transaction details / remarks for the partner:');
-                                            if (remarks !== null) {
-                                              handleRedemptionRefund(req._id, remarks);
-                                            }
-                                          }}
-                                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] py-1.5 px-3 rounded-lg cursor-pointer transition-all shadow-xs"
-                                        >
-                                          Arrange Refund
-                                        </button>
-                                        <button
-                                          onClick={() => {
-                                            const remarks = prompt('Enter rejection reason remarks for the partner:');
-                                            if (remarks !== null && remarks.trim()) {
-                                              handleRedemptionReject(req._id, remarks);
-                                            }
-                                          }}
-                                          className="bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[10px] py-1.5 px-3 rounded-lg cursor-pointer transition-all shadow-xs"
-                                        >
-                                          Reject
-                                        </button>
+                              redemptions
+                                .filter(r => {
+                                  if (redemptionStatusFilter === 'Pending') return r.status === 'Pending Approval';
+                                  if (redemptionStatusFilter === 'Processed') return r.status === 'Refunded' || r.status === 'Rejected';
+                                  return true;
+                                })
+                                .filter(r => 
+                                  r.userId?.fullName?.toLowerCase().includes(referralSearch.toLowerCase()) ||
+                                  r.userId?.email?.toLowerCase().includes(referralSearch.toLowerCase())
+                                )
+                                .map((req) => (
+                                  <tr key={req._id} onClick={(e) => {
+                                    if (!e.target.closest('button')) {
+                                      const partner = partners.find(p => p._id === (req.userId?._id || req.userId));
+                                      if (partner) handleViewPartner(partner);
+                                    }
+                                  }} className="hover:bg-slate-50/50 transition-colors cursor-pointer">
+                                    <td className="py-4 px-6 text-left leading-relaxed">
+                                      <div className="font-extrabold text-slate-800 text-xs">{req.userId?.fullName || req.userId?.name || 'Partner Account'}</div>
+                                      <div className="text-slate-405 text-[10px]">{req.userId?.email || 'No email'} • {req.userId?.phone || req.userId?.mobileNumber || 'No Phone'}</div>
+                                    </td>
+                                    <td className="py-4 px-4 text-left font-sans">
+                                      <span className="text-xs font-black text-slate-700">{req.points} Points</span>
+                                    </td>
+                                    <td className="py-4 px-4 text-left font-sans">
+                                      <span className="text-xs font-black text-[#027244]">₹{req.points} Cashback</span>
+                                    </td>
+                                    <td className="py-4 px-4 text-left">
+                                      <div className="text-xs font-semibold text-slate-600 leading-normal max-w-xs truncate" title={req.remarks}>
+                                        {req.remarks || <span className="text-slate-400 italic">No notes added</span>}
                                       </div>
-                                    ) : (
-                                      <span className="text-slate-400 font-bold text-[10.5px]">Processed</span>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))
+                                      <div className="text-[9.5px] text-slate-400 mt-1 block">
+                                        Status: <span className={`font-black ${req.status === 'Refunded' ? 'text-emerald-600' : req.status === 'Rejected' ? 'text-rose-600' : 'text-amber-600'}`}>{req.status}</span>
+                                      </div>
+                                    </td>
+                                    <td className="py-4 px-4 text-left font-medium text-slate-405">
+                                      {new Date(req.createdAt).toLocaleString()}
+                                    </td>
+                                    <td className="py-4 px-4 text-center">
+                                      {req.status === 'Pending Approval' ? (
+                                        <div className="flex items-center justify-center gap-1.5">
+                                          <button
+                                            onClick={() => {
+                                              const remarks = prompt('Enter payout transaction details / remarks for the partner:');
+                                              if (remarks !== null) {
+                                                handleRedemptionRefund(req._id, remarks);
+                                              }
+                                            }}
+                                            className="bg-emerald-650 hover:bg-emerald-600 text-white font-extrabold text-[10px] py-1.5 px-3 rounded-lg cursor-pointer transition-all shadow-xs"
+                                          >
+                                            Arrange Refund
+                                          </button>
+                                          <button
+                                            onClick={() => {
+                                              const remarks = prompt('Enter rejection reason remarks for the partner:');
+                                              if (remarks !== null && remarks.trim()) {
+                                                handleRedemptionReject(req._id, remarks);
+                                              }
+                                            }}
+                                            className="bg-rose-650 hover:bg-rose-600 text-white font-extrabold text-[10px] py-1.5 px-3 rounded-lg cursor-pointer transition-all shadow-xs"
+                                          >
+                                            Reject
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <span className="text-slate-400 font-bold text-[10.5px]">Processed</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))
                             )}
                           </tbody>
                         </table>
@@ -5516,6 +5852,239 @@ export default function AdminDashboard() {
                   Approve & Publish
                 </button>
               </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* PARTNER DETAIL REVIEW SLIDE-OVER MODAL */}
+      {showPartnerModal && selectedPartner && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-end p-0">
+          <div className="w-full max-w-2xl h-full shadow-2xl flex flex-col justify-between animate-slideLeft text-left font-sans bg-white text-[#001c41] border-l border-slate-200">
+            
+            {/* Modal Header */}
+            <div className="p-4 sm:p-6 border-b flex justify-between items-center shrink-0 bg-slate-50 border-slate-200">
+              <div className="flex flex-col text-left min-w-0 flex-1 pr-3">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Partner Workspace</span>
+                <h3 className="font-extrabold text-base leading-tight mt-1 truncate text-[#001c41]">
+                  {selectedPartner.fullName || selectedPartner.name}
+                </h3>
+              </div>
+              <button 
+                onClick={() => { setSelectedPartner(null); setShowPartnerModal(false); }}
+                className="h-8.5 w-8.5 rounded-full border border-slate-200 text-slate-550 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 font-sans">
+              
+              {/* Partner Identity Card */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-emerald-50/40 border border-emerald-100/50 rounded-2xl">
+                <div className="h-16 w-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center font-extrabold text-[#027244] uppercase select-none text-[24px] shrink-0">
+                  {(selectedPartner.fullName || selectedPartner.name || 'P').charAt(0)}
+                </div>
+                <div className="flex-1 flex flex-col gap-1 min-w-0 text-center sm:text-left">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <span className="font-extrabold text-slate-800 text-sm leading-tight">
+                      {selectedPartner.fullName || selectedPartner.name}
+                    </span>
+                    {!selectedPartner.isPartnerRegistered ? (
+                      <span className="bg-slate-100 text-slate-600 border border-slate-200/60 px-2 py-0.5 rounded text-[8px] font-black uppercase">
+                        Draft User
+                      </span>
+                    ) : selectedPartner.isPartnerApproved ? (
+                      <span className="bg-emerald-50 text-emerald-700 border border-emerald-250 px-2 py-0.5 rounded text-[8px] font-black uppercase">
+                        Approved Partner
+                      </span>
+                    ) : selectedPartner.partnerStatus === 'rejected' ? (
+                      <span className="bg-red-50 text-red-705 border border-red-200 px-2 py-0.5 rounded text-[8px] font-black uppercase">
+                        Rejected
+                      </span>
+                    ) : (
+                      <span className="bg-amber-50 text-amber-705 border border-amber-200 px-2 py-0.5 rounded text-[8px] font-black uppercase animate-pulse">
+                        Pending Approval
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[9.5px] text-slate-400 font-bold leading-none">
+                    Joined UBT on {new Date(selectedPartner.createdAt).toLocaleString()}
+                  </span>
+                  <div className="mt-1.5 flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs font-bold text-slate-500">
+                    <span className="bg-white border border-slate-200 px-2 py-0.5 rounded font-mono text-[10px] text-slate-700">
+                      Code: {selectedPartner.referralCode}
+                    </span>
+                    <span className="text-[#027244]">
+                      {selectedPartner.referralPoints || 0} Points (₹{selectedPartner.referralPoints || 0})
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Registration and Verification Log */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-2.5">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Contact Details</span>
+                  <div className="flex flex-col gap-2 text-xs font-semibold text-slate-600">
+                    <div>
+                      <span className="text-slate-400 text-[10px] block font-bold">Email Address</span>
+                      <span className="break-all">{selectedPartner.email}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[10px] block font-bold">Mobile Phone</span>
+                      <span>{selectedPartner.phone || selectedPartner.mobileNumber || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-2.5">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Identity Proof</span>
+                  <div className="flex flex-col gap-2 text-xs font-semibold text-slate-600">
+                    <div>
+                      <span className="text-slate-400 text-[10px] block font-bold">Aadhaar Card Number</span>
+                      <span>{selectedPartner.aadhaarNumber || 'Not Onboarded'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[10px] block font-bold">Residential Address</span>
+                      <span className="truncate block" title={selectedPartner.address}>{selectedPartner.address || 'Address pending'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Log Timestamps */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-2.5">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Administrative Logs</span>
+                <div className="grid grid-cols-2 gap-4 text-xs font-semibold text-slate-600">
+                  <div>
+                    <span className="text-slate-400 text-[10px] block font-bold">Approved Timestamp</span>
+                    <span className="text-emerald-700">
+                      {selectedPartner.partnerApprovedAt ? new Date(selectedPartner.partnerApprovedAt).toLocaleString() : 'Not approved yet'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 text-[10px] block font-bold">Rejected Timestamp</span>
+                    <span className="text-rose-700">
+                      {selectedPartner.partnerRejectedAt ? new Date(selectedPartner.partnerRejectedAt).toLocaleString() : 'No rejection logs'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Referrals Section */}
+              <div className="flex flex-col gap-3">
+                <span className="text-[10.5px] font-black text-slate-450 uppercase tracking-widest border-b border-slate-100 pb-2">
+                  Referred Listings ({
+                    referrals.filter(r => {
+                      const rId = r.referrerId?._id || r.referrerId;
+                      return rId === selectedPartner._id;
+                    }).length
+                  })
+                </span>
+
+                <div className="flex flex-col gap-3.5">
+                  {referrals.filter(r => {
+                    const rId = r.referrerId?._id || r.referrerId;
+                    return rId === selectedPartner._id;
+                  }).length === 0 ? (
+                    <div className="text-center py-6 text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl border border-slate-100 border-dashed">
+                      This partner has not referred any businesses yet.
+                    </div>
+                  ) : (
+                    referrals
+                      .filter(r => {
+                        const rId = r.referrerId?._id || r.referrerId;
+                        return rId === selectedPartner._id;
+                      })
+                      .map((ref) => {
+                        const biz = ref.referredBusinessId;
+                        return (
+                          <div key={ref._id} className="p-4 rounded-2xl border border-slate-200/80 bg-white shadow-3xs flex flex-col gap-3 text-xs">
+                            <div className="flex justify-between items-start gap-2">
+                              <div>
+                                <h4 className="font-extrabold text-slate-800 text-sm leading-tight">
+                                  {biz?.businessName || biz?.name || 'Unnamed Business'}
+                                </h4>
+                                <span className="text-[9.5px] text-slate-400 block font-semibold mt-0.5">
+                                  Referred Owner: {ref.referredUserId?.fullName || ref.referredUserId?.name || 'N/A'} ({ref.referredUserId?.phone || ref.referredUserId?.mobileNumber || 'No Phone'})
+                                </span>
+                              </div>
+                              <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${
+                                ref.status === 'completed' 
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                  : ref.status === 'rejected'
+                                    ? 'bg-red-50 text-red-700 border border-red-100'
+                                    : 'bg-amber-50 text-amber-700 border border-amber-100'
+                              }`}>
+                                {ref.status}
+                              </span>
+                            </div>
+
+                            {biz && (
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] font-semibold text-slate-500 border-t border-slate-100 pt-2.5">
+                                <div>
+                                  <span className="text-slate-400 text-[8px] block font-bold uppercase">GST Number</span>
+                                  <span className="text-slate-700">{biz.gstNumber || 'N/A'}</span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-400 text-[8px] block font-bold uppercase">Verification Status</span>
+                                  <span className={`font-bold ${biz.verificationStatus === 'Approved' ? 'text-emerald-600' : 'text-slate-700'}`}>
+                                    {biz.verificationStatus || biz.status || 'Pending'}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-400 text-[8px] block font-bold uppercase">Subscription Tier</span>
+                                  <span className="text-slate-700 font-extrabold uppercase text-[10px]">
+                                    {biz.subscriptionStatus === 'active' ? 'Premium Active' : 'Basic Tier'}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-400 text-[8px] block font-bold uppercase">Locality / Contact</span>
+                                  <span className="text-slate-700 block truncate" title={biz.address}>{biz.locality || biz.address || 'N/A'}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {ref.rejectionReason && (
+                              <div className="bg-red-50/50 p-2.5 rounded-xl border border-red-100 text-red-750 text-[11px]">
+                                <span className="font-extrabold">Rejection Reason:</span> {ref.rejectionReason}
+                              </div>
+                            )}
+
+                            {biz && (
+                              <div className="flex justify-end border-t border-slate-100 pt-2.5 mt-0.5">
+                                <button
+                                  onClick={() => {
+                                    setSelectedBiz(biz);
+                                    setShowBizModal(true);
+                                  }}
+                                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-205 text-slate-700 font-extrabold text-[10.5px] rounded-lg cursor-pointer transition-all"
+                                >
+                                  View Vetting Profile
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                  )}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 sm:p-6 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
+              <span className="text-[10px] font-bold text-slate-400">UID: {selectedPartner._id}</span>
+              <button 
+                onClick={() => { setSelectedPartner(null); setShowPartnerModal(false); }}
+                className="px-4.5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-xs rounded-xl cursor-pointer transition-all"
+              >
+                Close Profile
+              </button>
             </div>
 
           </div>

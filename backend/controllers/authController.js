@@ -113,6 +113,8 @@ const registerUser = async (req, res, next) => {
         instagram: user.instagram,
         facebook: user.facebook,
         isPartnerRegistered: user.isPartnerRegistered || false,
+        isPartnerApproved: user.isPartnerApproved || false,
+        partnerStatus: user.partnerStatus || 'pending',
         aadhaarNumber: user.aadhaarNumber || '',
         address: user.address || '',
         referralCode: user.referralCode || '',
@@ -175,6 +177,8 @@ const loginUser = async (req, res, next) => {
           instagram: user.instagram,
           facebook: user.facebook,
           isPartnerRegistered: user.isPartnerRegistered || false,
+          isPartnerApproved: user.isPartnerApproved || false,
+          partnerStatus: user.partnerStatus || 'pending',
           aadhaarNumber: user.aadhaarNumber || '',
           address: user.address || '',
           referralCode: user.referralCode || '',
@@ -257,6 +261,10 @@ const updateProfile = async (req, res, next) => {
 
     if (req.body.isPartnerRegistered !== undefined) {
       user.isPartnerRegistered = req.body.isPartnerRegistered;
+      if (req.body.isPartnerRegistered === true) {
+        user.isPartnerApproved = false;
+        user.partnerStatus = 'pending';
+      }
     }
 
     // Handle password update securely
@@ -286,6 +294,8 @@ const updateProfile = async (req, res, next) => {
       instagram: user.instagram,
       facebook: user.facebook,
       isPartnerRegistered: user.isPartnerRegistered || false,
+      isPartnerApproved: user.isPartnerApproved || false,
+      partnerStatus: user.partnerStatus || 'pending',
       aadhaarNumber: user.aadhaarNumber || '',
       address: user.address || ''
     });
@@ -396,6 +406,8 @@ const googleLogin = async (req, res, next) => {
         profileImage: user.profileImage,
         isFoundingMember: user.isFoundingMember || false,
         isPartnerRegistered: user.isPartnerRegistered || false,
+        isPartnerApproved: user.isPartnerApproved || false,
+        partnerStatus: user.partnerStatus || 'pending',
         aadhaarNumber: user.aadhaarNumber || '',
         address: user.address || ''
       }

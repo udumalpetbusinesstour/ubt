@@ -1173,6 +1173,24 @@ function DashboardContent() {
       return;
     }
 
+    const refreshProfile = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${storedToken}`
+          }
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('ubt_user', JSON.stringify(data.data));
+          setUser(data.data);
+        }
+      } catch (err) {
+        console.warn('Failed to refresh user profile status', err);
+      }
+    };
+    refreshProfile();
+
     try {
       const parsedUser = JSON.parse(storedUser);
       // Allow merchant, owner, admin, superadmin, and visitor roles
@@ -3853,8 +3871,10 @@ function DashboardContent() {
   // Partner role gets a dedicated minimal nav
   const sidebarLinks = user?.role === 'partner' ? [
     { label: 'Dashboard', icon: <Briefcase className="h-4 w-4" /> },
-    { label: 'Queries', icon: <HelpCircle className="h-4 w-4" /> },
-    { label: 'Settings', icon: <Settings className="h-4 w-4" /> },
+    ...(user?.isPartnerApproved ? [
+      { label: 'Queries', icon: <HelpCircle className="h-4 w-4" /> },
+      { label: 'Settings', icon: <Settings className="h-4 w-4" /> },
+    ] : [])
   ] : [
     ...(registrationComplete ? [
       { label: 'Dashboard', icon: <Briefcase className="h-4 w-4" /> },
@@ -4455,7 +4475,66 @@ function DashboardContent() {
           {/* TAB: PARTNER DASHBOARD (KPI CARDS, REFERRALS, AND REDEMPTIONS) */}
           {/* ========================================================================= */}
           {activeTab === 'Dashboard' && user?.role === 'partner' && (
-            <div className="flex flex-col gap-6 text-left animate-fadeIn font-sans text-slate-800">
+            !user?.isPartnerApproved ? (
+              <div className="flex flex-col gap-6 text-left animate-fadeIn font-sans text-slate-800 p-6 bg-white border border-slate-200 shadow-sm rounded-3xl max-w-2xl mx-auto mt-6 w-full">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="h-16 w-16 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 animate-pulse shrink-0">
+                    <Clock className="h-8 w-8" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="bg-amber-50 text-amber-700 border border-amber-100 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider w-fit mx-auto">
+                      Pending Verification
+                    </span>
+                    <h2 className="font-extrabold text-[#001c41] text-sm sm:text-base tracking-tight">Partnership Awaiting Approval</h2>
+                    <p className="text-xs text-slate-400 font-semibold max-w-md leading-relaxed">
+                      Thank you for submitting your partnership details! Our administrative team is currently verifying your credentials. You will get full access to dashboard tools and referral links immediately once approved.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 pt-6 mt-2">
+                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Submitted Credentials</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold text-slate-700">
+                    <div className="flex flex-col gap-1 bg-slate-50 border border-slate-200/60 p-3.5 rounded-xl">
+                      <span className="text-[9px] text-slate-400 font-extrabold uppercase">Full Name</span>
+                      <span className="font-bold text-slate-800">{user?.fullName || user?.name || 'N/A'}</span>
+                    </div>
+                    <div className="flex flex-col gap-1 bg-slate-50 border border-slate-200/60 p-3.5 rounded-xl">
+                      <span className="text-[9px] text-slate-400 font-extrabold uppercase">Email Address</span>
+                      <span className="font-bold text-slate-800">{user?.email || 'N/A'}</span>
+                    </div>
+                    <div className="flex flex-col gap-1 bg-slate-50 border border-slate-200/60 p-3.5 rounded-xl">
+                      <span className="text-[9px] text-slate-400 font-extrabold uppercase">Mobile Number</span>
+                      <span className="font-bold text-slate-800">{user?.phone || user?.mobileNumber || 'N/A'}</span>
+                    </div>
+                    <div className="flex flex-col gap-1 bg-slate-50 border border-slate-200/60 p-3.5 rounded-xl">
+                      <span className="text-[9px] text-slate-400 font-extrabold uppercase">Aadhaar Number</span>
+                      <span className="font-bold text-slate-800 font-mono">
+                        XXXX XXXX {user?.aadhaarNumber ? user.aadhaarNumber.slice(-4) : 'XXXX'}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1 bg-slate-50 border border-slate-200/60 p-3.5 rounded-xl sm:col-span-2">
+                      <span className="text-[9px] text-slate-400 font-extrabold uppercase">Residential Address</span>
+                      <span className="font-bold text-slate-800">{user?.address || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 pt-6 flex justify-center">
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('ubt_token');
+                      localStorage.removeItem('ubt_user');
+                      navigate('/login');
+                    }}
+                    className="px-5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-655 font-black text-[11px] rounded-xl cursor-pointer transition-colors"
+                  >
+                    Logout Account
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-6 text-left animate-fadeIn font-sans text-slate-800">
               
               {/* Header card with welcome message */}
               <div className="bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
@@ -4742,7 +4821,8 @@ function DashboardContent() {
                 </div>
               </div>
             </div>
-          )}
+          )
+        )}
 
           {activeTab === 'Queries' && user?.role === 'partner' && (
             <div className="flex flex-col lg:flex-row gap-8 animate-fadeIn text-left font-sans text-slate-800">

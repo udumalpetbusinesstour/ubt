@@ -619,4 +619,33 @@ router.get('/partners', async (req, res, next) => {
   }
 });
 
+// @desc    Approve or reject a partner
+// @route   POST /api/admin/partners/approve
+// @access  Private/Admin
+router.post('/partners/approve', async (req, res, next) => {
+  try {
+    const { partnerId, action } = req.body; // action: 'approve' or 'reject'
+    const partner = await User.findOne({ _id: partnerId, role: 'partner' });
+    if (!partner) {
+      return res.status(404).json({ success: false, message: 'Partner not found' });
+    }
+    if (action === 'approve') {
+      partner.isPartnerApproved = true;
+      partner.partnerStatus = 'approved';
+      partner.partnerApprovedAt = new Date();
+    } else if (action === 'reject') {
+      partner.isPartnerApproved = false;
+      partner.partnerStatus = 'rejected';
+      partner.partnerRejectedAt = new Date();
+      partner.isPartnerRegistered = false; // Reset so they must register again
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid action. Must be "approve" or "reject".' });
+    }
+    await partner.save();
+    res.json({ success: true, message: `Partner registration ${action}d successfully.`, data: partner });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;
