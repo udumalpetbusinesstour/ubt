@@ -10,6 +10,21 @@ import {
 } from 'lucide-react';
 import BloodDonorsTab from '../../components/BloodDonorsTab';
 
+const isBizDraft = (b) => {
+  if (!b) return false;
+  const totalPhotos = (b.galleryUrls ? (Array.isArray(b.galleryUrls) ? b.galleryUrls.length : (typeof b.galleryUrls === 'string' ? b.galleryUrls.split(',').filter(Boolean).length : 0)) : 0) + (b.logoUrl ? 1 : 0) + (b.coverImageUrl ? 1 : 0);
+  return (
+    (Array.isArray(b.tags) && b.tags.includes('draft')) ||
+    !b.name ||
+    !b.category ||
+    !b.description ||
+    !b.phone ||
+    !b.pincode ||
+    !b.address ||
+    totalPhotos < 3
+  );
+};
+
 const availableCategories = [
   'Automotive',
   'Beauty & Wellness',
@@ -2051,9 +2066,16 @@ export default function AdminDashboard() {
                                     <img src={b.coverImageUrl} className="h-full w-full object-cover" alt={b.name} />
                                   </div>
                                   <div className="flex flex-col text-left min-w-0">
-                                    <span className="font-extrabold text-slate-800 text-xs sm:text-[13px] leading-tight truncate">
-                                      {b.name}
-                                    </span>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-extrabold text-slate-800 text-xs sm:text-[13px] leading-tight truncate">
+                                        {b.name}
+                                      </span>
+                                      {isBizDraft(b) && (
+                                        <span className="bg-amber-100 border border-amber-250 text-amber-850 text-[7.5px] font-black px-1.5 py-0.5 rounded-md uppercase shrink-0 leading-none">
+                                          Incomplete Reg
+                                        </span>
+                                      )}
+                                    </div>
                                     <span className="text-[10px] text-slate-405 font-semibold mt-1 font-sans">
                                       Owner: {b.ownerName}
                                     </span>
@@ -2400,7 +2422,14 @@ export default function AdminDashboard() {
                                   <img src={b.coverImageUrl} className="h-full w-full object-cover" alt={b.name} />
                                 </div>
                                 <div className="flex flex-col text-left">
-                                  <span className="font-extrabold text-slate-800 text-xs leading-none">{b.name}</span>
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="font-extrabold text-slate-800 text-xs leading-none">{b.name}</span>
+                                    {isBizDraft(b) && (
+                                      <span className="bg-amber-100 border border-amber-250 text-amber-850 text-[7.5px] font-black px-1.5 py-0.5 rounded-md uppercase shrink-0 leading-none">
+                                        Incomplete Reg
+                                      </span>
+                                    )}
+                                  </div>
                                   <span className="text-[9.5px] text-slate-400 font-bold mt-1 leading-none">Owner: {b.ownerName}</span>
                                 </div>
                               </td>
@@ -2561,9 +2590,14 @@ export default function AdminDashboard() {
                               <img src={b.coverImageUrl} className="h-full w-full object-cover" alt={b.name} />
                             </div>
                             <div className="flex flex-col gap-1 text-left min-w-0 flex-1">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <h4 className="font-extrabold text-sm text-[#001c41] truncate leading-none">{b.name}</h4>
                                 {b.googlePlaceId && <span className="bg-blue-50 border border-blue-150 text-blue-600 text-[8px] font-black px-1.5 py-0.5 rounded uppercase shrink-0">Google</span>}
+                                {isBizDraft(b) && (
+                                  <span className="bg-amber-100 border border-amber-250 text-amber-850 text-[8px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 leading-none">
+                                    Registration Incomplete
+                                  </span>
+                                )}
                               </div>
                               <span className="text-xs text-emerald-650 font-bold mt-1 leading-none">{b.type}</span>
                               <span className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 font-semibold">
@@ -4959,6 +4993,18 @@ export default function AdminDashboard() {
               >
                 Open Entire Profile Page ↗
               </a>
+
+              {isBizDraft(selectedBiz) && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-2xl p-4.5 font-semibold flex items-start gap-2.5 shadow-3xs shrink-0 select-none text-left">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-extrabold text-amber-800">Registration Incomplete</span>
+                    <p className="text-[11px] text-amber-700 font-medium leading-relaxed mt-0.5">
+                      This business listing is still in draft mode. The merchant has confirmed payment but has not yet completed all steps of registration.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Status details indicators */}
               <div className="grid grid-cols-2 gap-3.5">

@@ -11,6 +11,21 @@ import {
 } from 'lucide-react';
 import BloodDonorsTab from '../../components/BloodDonorsTab';
 
+const isBizDraft = (b) => {
+  if (!b) return false;
+  const totalPhotos = (b.galleryUrls ? (Array.isArray(b.galleryUrls) ? b.galleryUrls.length : (typeof b.galleryUrls === 'string' ? b.galleryUrls.split(',').filter(Boolean).length : 0)) : 0) + (b.logoUrl ? 1 : 0) + (b.coverImageUrl ? 1 : 0);
+  return (
+    (Array.isArray(b.tags) && b.tags.includes('draft')) ||
+    !b.name ||
+    !b.category ||
+    !b.description ||
+    !b.phone ||
+    !b.pincode ||
+    !b.address ||
+    totalPhotos < 3
+  );
+};
+
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
 
@@ -3295,10 +3310,15 @@ export default function SuperAdminDashboard() {
 
                           <div className="p-5 flex-1 flex flex-col justify-between gap-4">
                             <div className="flex flex-col gap-1.5">
-                              <div className="flex justify-between items-start gap-2">
+                              <div className="flex flex-col gap-0.5 text-left min-w-0">
                                 <h4 className={`font-black text-sm leading-tight truncate ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>
                                   {b.name}
                                 </h4>
+                                {isBizDraft(b) && (
+                                  <span className="bg-amber-100 border border-amber-250 text-amber-850 text-[8px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 leading-none mt-1 w-fit">
+                                    Registration Incomplete
+                                  </span>
+                                )}
                               </div>
                               <span className="text-[10px] text-slate-400 font-extrabold uppercase leading-none">
                                 {b.category || 'Local Services'} • {b.type}
@@ -3433,7 +3453,14 @@ export default function SuperAdminDashboard() {
                             <img src={b.coverImageUrl} className="h-full w-full object-cover" alt={b.name} />
                           </div>
                           <div className="flex flex-col gap-1 text-left min-w-0 flex-1">
-                            <h4 className={`font-extrabold text-sm truncate leading-none ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{b.name}</h4>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h4 className={`font-extrabold text-sm truncate leading-none ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{b.name}</h4>
+                              {isBizDraft(b) && (
+                                <span className="bg-amber-100 border border-amber-250 text-amber-850 text-[8px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 leading-none">
+                                  Registration Incomplete
+                                </span>
+                              )}
+                            </div>
                             <span className="text-xs text-emerald-500 font-bold mt-1 leading-none">{b.type}</span>
                             <span className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1 font-semibold leading-relaxed">
                               <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" /> {b.address}
@@ -4213,7 +4240,7 @@ export default function SuperAdminDashboard() {
                                           }`}
                                           title={`Click to view business profile: ${b.name}`}
                                         >
-                                          {b.name}
+                                          {b.name}{isBizDraft(b) ? ' (Draft)' : ''}
                                         </span>
                                       ))}
                                     </div>
@@ -6682,6 +6709,20 @@ export default function SuperAdminDashboard() {
                 </div>
                 <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider text-right">Uploaded Shop Photos (3)</span>
               </div>
+
+              {isBizDraft(selectedBiz) && (
+                <div className={`p-4 rounded-2xl border flex items-start gap-3 select-none text-left ${
+                  themeMode === 'dark' ? 'bg-amber-950/20 border-amber-900/40 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'
+                }`}>
+                  <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5 animate-pulse" />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-extrabold text-xs">Registration Incomplete (Draft Listing)</span>
+                    <p className="text-[10px] text-slate-400 font-bold leading-relaxed mt-0.5">
+                      This business has confirmed payment but has not finalized the remaining setup steps. Do not approve until details are complete.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Owner Contact */}
               <div className={`p-4 rounded-2xl border flex flex-col gap-3 ${
