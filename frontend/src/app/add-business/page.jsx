@@ -409,7 +409,7 @@ export default function AddBusiness() {
             if (parsedLocal._id === biz._id) {
               populateDraft(parsedLocal);
               if (biz.subscriptionStatus === 'active') {
-                setIsEditing(true);
+                setIsEditing(biz.status === 'Approved');
                 setIsPincodeVerified(true);
               }
               return;
@@ -421,7 +421,7 @@ export default function AddBusiness() {
 
         populateDraft(biz);
         if (biz.subscriptionStatus === 'active') {
-          setIsEditing(true);
+          setIsEditing(biz.status === 'Approved');
           setIsPincodeVerified(true);
         }
       }
@@ -1071,6 +1071,10 @@ export default function AddBusiness() {
   const handleLogoUpload = async (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Logo file size must be less than 5MB.');
+        return;
+      }
       setLogoFile(file.name);
       setUploadingLogo(true);
       try {
@@ -1089,6 +1093,10 @@ export default function AddBusiness() {
   const handleCoverUpload = async (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Cover image file size must be less than 5MB.');
+        return;
+      }
       setCoverFile(file.name);
       setUploadingCover(true);
       try {
@@ -1107,6 +1115,11 @@ export default function AddBusiness() {
   const handleGalleryUpload = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const files = Array.from(e.target.files);
+      const oversized = files.find(f => f.size > 5 * 1024 * 1024);
+      if (oversized) {
+        setError(`Gallery photo "${oversized.name}" exceeds the 5MB size limit.`);
+        return;
+      }
       setGalleryFiles(prev => [...prev, ...files.map(f => f.name)]);
       setUploadingGallery(true);
       try {
@@ -1130,6 +1143,10 @@ export default function AddBusiness() {
   const handleBranchLogoUpload = async (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Branch logo file size must be less than 5MB.');
+        return;
+      }
       setBranchLogoFile(file.name);
       setUploadingBranchLogo(true);
       try {
@@ -1146,6 +1163,10 @@ export default function AddBusiness() {
   const handleBranchCoverUpload = async (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Branch cover image file size must be less than 5MB.');
+        return;
+      }
       setBranchCoverFile(file.name);
       setUploadingBranchCover(true);
       try {
@@ -1162,6 +1183,11 @@ export default function AddBusiness() {
   const handleBranchGalleryUpload = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const files = Array.from(e.target.files);
+      const oversized = files.find(f => f.size > 5 * 1024 * 1024);
+      if (oversized) {
+        setError(`Branch gallery photo "${oversized.name}" exceeds the 5MB size limit.`);
+        return;
+      }
       setBranchGalleryFiles(prev => [...prev, ...files.map(f => f.name)]);
       setUploadingBranchGallery(true);
       try {
@@ -1241,7 +1267,17 @@ export default function AddBusiness() {
       }
     } else if (currentStep === 5) {
       // Validate photos: logo, cover, and gallery. Minimum 3 gallery/photos required.
-      const totalPhotos = (logoFile ? 1 : 0) + (coverFile ? 1 : 0) + galleryFiles.length;
+      const hasLogo = !!(formData.logoUrl || logoFile);
+      const hasCover = !!(formData.coverImageUrl || coverFile);
+      const galleryCount = Math.max(
+        galleryFiles.length,
+        Array.isArray(formData.galleryUrls)
+          ? formData.galleryUrls.length
+          : typeof formData.galleryUrls === 'string'
+            ? formData.galleryUrls.split(',').map(s => s.trim()).filter(Boolean).length
+            : 0
+      );
+      const totalPhotos = (hasLogo ? 1 : 0) + (hasCover ? 1 : 0) + galleryCount;
       if (totalPhotos < 3) {
         setError('Minimum 3 images are required for profile (Logo + Cover + Gallery). Please upload more photos.');
         return false;
@@ -2696,14 +2732,14 @@ export default function AddBusiness() {
                             {uploadingLogo ? (
                               <div className="h-5 w-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                             ) : formData.logoUrl ? (
-                              <img src={formData.logoUrl} alt="Logo" className="h-full w-full object-cover rounded-2xl" />
+                              <img src={window.getImageUrl(formData.logoUrl)} alt="Logo" className="h-full w-full object-cover rounded-2xl" />
                             ) : 'Logo'}
                           </div>
                           <label className="py-2.5 px-4 border border-slate-300 hover:bg-slate-50 font-bold text-xs rounded-xl cursor-pointer transition-colors shadow-sm text-slate-700">
                             {uploadingLogo ? 'Uploading...' : logoFile ? 'Change File' : 'Choose File'}
                             <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" disabled={uploadingLogo} />
                           </label>
-                          {logoFile && !uploadingLogo && <span className="text-xs text-emerald-600 font-bold">✓ Uploaded</span>}
+                          {formData.logoUrl && !uploadingLogo && <span className="text-xs text-emerald-600 font-bold">✓ Uploaded</span>}
                         </div>
                       </div>
 
@@ -2715,14 +2751,14 @@ export default function AddBusiness() {
                             {uploadingCover ? (
                               <div className="h-5 w-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                             ) : formData.coverImageUrl ? (
-                              <img src={formData.coverImageUrl} alt="Cover" className="h-full w-full object-cover rounded-2xl" />
+                              <img src={window.getImageUrl(formData.coverImageUrl)} alt="Cover" className="h-full w-full object-cover rounded-2xl" />
                             ) : 'Cover'}
                           </div>
                           <label className="py-2.5 px-4 border border-slate-300 hover:bg-slate-50 font-bold text-xs rounded-xl cursor-pointer transition-colors shadow-sm text-slate-700">
                             {uploadingCover ? 'Uploading...' : coverFile ? 'Change File' : 'Choose File'}
                             <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" disabled={uploadingCover} />
                           </label>
-                          {coverFile && !uploadingCover && <span className="text-xs text-emerald-600 font-bold">✓ Uploaded</span>}
+                          {formData.coverImageUrl && !uploadingCover && <span className="text-xs text-emerald-600 font-bold">✓ Uploaded</span>}
                         </div>
                       </div>
                     </div>
@@ -2756,7 +2792,7 @@ export default function AddBusiness() {
                         <div className="grid grid-cols-3 gap-2">
                           {formData.galleryUrls.map((url, i) => (
                             <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200">
-                              <img src={url} alt={`Gallery ${i + 1}`} className="h-full w-full object-cover" />
+                              <img src={window.getImageUrl(url)} alt={`Gallery ${i + 1}`} className="h-full w-full object-cover" />
                               <button
                                 type="button"
                                 onClick={() => {
@@ -2778,7 +2814,7 @@ export default function AddBusiness() {
                       <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs text-slate-600 font-semibold">
                         <span className="font-bold">Total uploaded photos:</span>
                         <span className="bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded-full">
-                          {(logoFile ? 1 : 0) + (coverFile ? 1 : 0) + galleryFiles.length}
+                          {(formData.logoUrl ? 1 : 0) + (formData.coverImageUrl ? 1 : 0) + (formData.galleryUrls ? formData.galleryUrls.length : 0)}
                         </span>
                       </div>
                     </div>

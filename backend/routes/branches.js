@@ -73,7 +73,10 @@ router.post('/', protect, async (req, res) => {
       branchManagerName,
       latitude,
       longitude,
-      isPrimary
+      isPrimary,
+      logoUrl,
+      coverImageUrl,
+      galleryUrls
     } = req.body;
 
     if (!businessId || !name || !address || !phone) {
@@ -115,6 +118,9 @@ router.post('/', protect, async (req, res) => {
       googleBusinessLink,
       workingHours: workingHours || '9:00 AM - 8:00 PM',
       branchManagerName,
+      logoUrl: logoUrl || '',
+      coverImageUrl: coverImageUrl || '',
+      galleryUrls: galleryUrls || [],
       latitude: latitude || 10.5891,
       longitude: longitude || 77.2412,
       coordinates: {

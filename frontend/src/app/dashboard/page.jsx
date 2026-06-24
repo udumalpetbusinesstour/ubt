@@ -196,13 +196,24 @@ function DashboardContent() {
   // (created when the user navigates away mid-registration). We detect this by
   // checking whether the essential required fields are missing. Only a properly
   // submitted listing (step 6 / handleFormSubmit) will have all of these.
+  const totalPhotosCount = business
+    ? (business.logoUrl ? 1 : 0) +
+      (business.coverImageUrl ? 1 : 0) +
+      (Array.isArray(business.galleryUrls)
+        ? business.galleryUrls.length
+        : typeof business.galleryUrls === 'string'
+          ? business.galleryUrls.split(',').map(s => s.trim()).filter(Boolean).length
+          : 0)
+    : 0;
+
   const isRegistrationDraft = business && (
     !business.name ||
     !business.category ||
     !business.description ||
     !business.phone ||
     !business.pincode ||
-    !business.address
+    !business.address ||
+    totalPhotosCount < 3
   );
 
   // Determine which registration step to resume at (so the CTA links to the right step)
@@ -216,7 +227,7 @@ function DashboardContent() {
     if (!business.description) return 3;
     // Step 4 (Contact & Location): has description but no phone or address
     if (!business.phone || !business.address) return 4;
-    // Step 5 (Photos & Media): all info but no images
+    // Step 5 (Photos & Media): all info but no images (or less than 3 total)
     return 5;
   })();
 
@@ -719,8 +730,8 @@ function DashboardContent() {
   const handleDashboardLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      setUploadError('Logo photo size is too large (max 2MB).');
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('Logo photo size is too large (max 5MB).');
       return;
     }
     const formData = new FormData();
@@ -1116,8 +1127,9 @@ function DashboardContent() {
       'Offers & Promotions', 
       'Referral & Rewards'
     ];
-    if (!loading && !registrationComplete && businessTabs.includes(activeTab)) {
-      setActiveTab('My Business');
+    const businessTabsWithoutDashboard = businessTabs.filter(t => t !== 'Dashboard');
+    if (!loading && !registrationComplete && (businessTabsWithoutDashboard.includes(activeTab) || activeTab === 'My Business')) {
+      setActiveTab('Dashboard');
     }
   }, [registrationComplete, activeTab, loading]);
 
@@ -1273,7 +1285,7 @@ function DashboardContent() {
         } else {
           setBusiness(null);
           if (!searchParams.get('tab')) {
-            setActiveTab('My Business');
+            setActiveTab('Dashboard');
           }
         }
       } else {
@@ -3816,7 +3828,7 @@ function DashboardContent() {
       { label: 'Offers & Promotions', icon: <Sparkles className="h-4 w-4" /> },
       { label: 'Referral & Rewards', icon: <Gift className="h-4 w-4" /> }
     ] : [
-      { label: 'My Business', icon: <Briefcase className="h-4 w-4" /> }
+      { label: 'Dashboard', icon: <Briefcase className="h-4 w-4" /> }
     ]),
     ...((user?.role === 'admin' || user?.role === 'superadmin') ? [
       { label: 'Add New Listing', icon: <Plus className="h-4 w-4" />, onClick: () => navigate('/add-business?new=true') }
@@ -5954,127 +5966,7 @@ function DashboardContent() {
             );
           })()}
 
-          {/* ========================================================================= */}
-          {/* TAB: DASHBOARD NOT LISTED YET (INLINE BUSINESS OWNER CTA) */}
-          {/* ========================================================================= */}
-          {activeTab === 'My Business' && !registrationComplete && (
-            <div className="max-w-xl w-full bg-white border border-slate-200 shadow-xl rounded-[28px] p-8 text-center flex flex-col items-center gap-6 mx-auto my-12 animate-fadeIn text-left">
-              {isRegistrationDraft ? (
-                <div className="w-full flex flex-col gap-6">
-                  {/* Header */}
-                  <div className="flex flex-col items-center text-center gap-3 animate-fadeIn">
-                    <div className="h-16 w-16 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center border border-amber-100 shadow-inner">
-                      <Sparkles className="h-7 w-7 animate-pulse" />
-                    </div>
-                    <div className="flex flex-col gap-1 items-center">
-                      <h3 className="font-extrabold text-slate-800 text-lg leading-tight">Complete Your Business Listing</h3>
-                      <p className="text-xs text-slate-500 font-semibold max-w-sm mt-1 leading-relaxed">
-                        You have an incomplete registration draft for <strong className="text-slate-700">"{business?.name || 'Your Business'}"</strong>. Complete the remaining steps to list your business and start receiving customer leads.
-                      </p>
-                    </div>
-                  </div>
 
-                  {/* Progress Bar & Steps Checklist */}
-                  <div className="bg-slate-50/60 border border-slate-100 rounded-2xl p-5 flex flex-col gap-4 w-full">
-                    <div className="flex justify-between items-center text-xs font-black">
-                      <span className="text-slate-500 uppercase tracking-wider">Registration Progress</span>
-                      <span className="text-[#027244] bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-full">
-                        Step {resumeStep} of 6
-                      </span>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="h-2 w-full bg-slate-200/85 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
-                        style={{ width: `${(resumeStep / 6) * 100}%` }}
-                      />
-                    </div>
-
-                    {/* Step Checklist */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2 text-left">
-                      {[
-                        { id: 1, name: 'Choose Plan' },
-                        { id: 2, name: 'Basic Info' },
-                        { id: 3, name: 'Business Details' },
-                        { id: 4, name: 'Contact & Location' },
-                        { id: 5, name: 'Photos & Media' },
-                        { id: 6, name: 'Review & Submit' }
-                      ].map((s) => {
-                        const isCompleted = s.id < resumeStep;
-                        const isCurrent = s.id === resumeStep;
-                        return (
-                          <div 
-                            key={s.id} 
-                            className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border text-xs font-extrabold transition-all ${
-                              isCompleted 
-                                ? 'bg-emerald-50/30 border-emerald-100 text-emerald-700' 
-                                : isCurrent 
-                                  ? 'bg-amber-50/40 border-amber-200 text-amber-700 shadow-sm shadow-amber-100/50' 
-                                  : 'bg-white border-slate-100 text-slate-400'
-                            }`}
-                          >
-                            <span className={`h-4.5 w-4.5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${
-                              isCompleted 
-                                ? 'bg-emerald-100 text-emerald-700' 
-                                : isCurrent 
-                                  ? 'bg-amber-100 text-amber-700 animate-pulse' 
-                                  : 'bg-slate-100 text-slate-400'
-                            }`}>
-                              {isCompleted ? '✓' : s.id}
-                            </span>
-                            <span className="truncate">{s.name}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex flex-col sm:flex-row gap-3 mt-2 w-full">
-                    <button 
-                      onClick={() => navigate(`/add-business?step=${resumeStep}`)}
-                      className="flex-grow py-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md shadow-emerald-900/10 transition-all flex items-center justify-center gap-2 cursor-pointer border-none"
-                    >
-                      <span>Resume Registration</span>
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                    {(user?.role === 'admin' || user?.role === 'superadmin') && (
-                      <button 
-                        onClick={() => {
-                          if (window.confirm("Are you sure you want to discard this draft and start a new business registration?")) {
-                            localStorage.removeItem('ubt_draft_business');
-                            navigate('/add-business?new=true');
-                          }
-                        }}
-                        className="py-3.5 px-5 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-600 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white"
-                      >
-                        Start New
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center text-center gap-6 w-full">
-                  <div className="h-15 w-15 bg-emerald-50 text-[#027244] rounded-2xl flex items-center justify-center border border-emerald-100 animate-pulse">
-                    <Briefcase className="h-7 w-7" />
-                  </div>
-                  <div className="flex flex-col gap-1.5 items-center">
-                    <h3 className="font-extrabold text-slate-800 text-base leading-tight">Still no business registered!</h3>
-                    <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                      Hello, {user?.fullName || 'Writer'}! You have not registered any business listing on Udumalpet Business Tour (UBT) yet. Register now to list your business and unlock customer leads.
-                    </p>
-                  </div>
-                  <button 
-                    onClick={() => navigate('/add-business')}
-                    className="w-full py-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all shadow-emerald-700/10 cursor-pointer"
-                  >
-                    Register Business Now
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* ========================================================================= */}
           {/* TAB: EVENTS MANAGEMENT DASHBOARD */}

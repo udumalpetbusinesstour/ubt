@@ -47,6 +47,9 @@ async function syncBranches(parentBusiness, branchesData, userRole) {
       googleBusinessLink: b.googleBusinessLink,
       workingHours: b.workingHours,
       branchManagerName: b.branchManagerName,
+      logoUrl: b.logoUrl || '',
+      coverImageUrl: b.coverImageUrl || '',
+      galleryUrls: b.galleryUrls || [],
       latitude: b.latitude || b.coordinates?.lat || 10.5891,
       longitude: b.longitude || b.coordinates?.lng || 77.2412,
       coordinates: {
