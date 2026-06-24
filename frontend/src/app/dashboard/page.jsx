@@ -1197,8 +1197,13 @@ function DashboardContent() {
         instagram: parsedUser.instagram || '',
         facebook: parsedUser.facebook || ''
       });
-      fetchUserBusiness(storedToken);
-      fetchPaymentPlans();
+      if (parsedUser.role === 'partner') {
+        // Partners don't own businesses - load referral data directly
+        setLoading(false);
+      } else {
+        fetchUserBusiness(storedToken);
+        fetchPaymentPlans();
+      }
       fetchNotifications(storedToken);
     } catch (err) {
       navigate('/login');
@@ -2746,11 +2751,11 @@ function DashboardContent() {
   };
 
   useEffect(() => {
-    if (token && activeTab === 'Referral & Rewards') {
+    if (token && (activeTab === 'Referral & Rewards' || (activeTab === 'Dashboard' && user?.role === 'partner'))) {
       fetchReferralStats();
       fetchMyRedemptions();
     }
-  }, [token, activeTab]);
+  }, [token, activeTab, user?.role]);
 
   useEffect(() => {
     if (token && activeTab === 'Events') {
@@ -3845,7 +3850,12 @@ function DashboardContent() {
   ];
 
   // Dynamic sidebarLinks based on whether they have fully submitted a business listing
-  const sidebarLinks = [
+  // Partner role gets a dedicated minimal nav
+  const sidebarLinks = user?.role === 'partner' ? [
+    { label: 'Dashboard', icon: <Briefcase className="h-4 w-4" /> },
+    { label: 'Queries', icon: <HelpCircle className="h-4 w-4" /> },
+    { label: 'Settings', icon: <Settings className="h-4 w-4" /> },
+  ] : [
     ...(registrationComplete ? [
       { label: 'Dashboard', icon: <Briefcase className="h-4 w-4" /> },
       { label: 'Business Details', icon: <Edit3 className="h-4 w-4" /> },
@@ -4333,7 +4343,7 @@ function DashboardContent() {
           {/* Shows the complete-registration card when user lands on Dashboard tab   */}
           {/* but has not yet finished the registration form (draft state).           */}
           {/* ========================================================================= */}
-          {activeTab === 'Dashboard' && !registrationComplete && !loading && (
+          {activeTab === 'Dashboard' && !registrationComplete && !loading && user?.role !== 'partner' && (
             <div className="max-w-xl w-full bg-white border border-slate-200 shadow-xl rounded-[28px] p-8 text-center flex flex-col items-center gap-6 mx-auto my-12 animate-fadeIn text-left">
               {isRegistrationDraft ? (
                 <div className="w-full flex flex-col gap-6">
