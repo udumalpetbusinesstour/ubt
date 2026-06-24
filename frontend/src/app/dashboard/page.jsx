@@ -7873,10 +7873,10 @@ function DashboardContent() {
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {[
-                          { refs: '1 Business', pts: '10 Points', val: 'Accumulate' },
-                          { refs: '10 Businesses', pts: '100 Points', val: 'Accumulate' },
-                          { refs: '50 Businesses', pts: '500 Points', val: 'Accumulate' },
-                          { refs: '100 Businesses', pts: '1000 Points', val: 'Redeem for ₹1,000 Cashback' }
+                          { refs: '1 Business', pts: '99 Points', val: 'Accumulate' },
+                          { refs: '5 Businesses', pts: '495 Points', val: 'Accumulate' },
+                          { refs: '10 Businesses', pts: '990 Points', val: 'Accumulate' },
+                          { refs: '11 Businesses', pts: '1089 Points', val: 'Redeem for ₹1,000 Cashback' }
                         ].map((row, idx) => (
                           <tr key={idx} className="hover:bg-slate-50/50">
                             <td className="p-3 font-extrabold text-slate-800">{row.refs}</td>
