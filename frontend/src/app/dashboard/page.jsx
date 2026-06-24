@@ -4458,12 +4458,12 @@ function DashboardContent() {
             <div className="flex flex-col gap-6 text-left animate-fadeIn font-sans text-slate-800">
               
               {/* Header card with welcome message */}
-              <div className="bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div className="bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                 <div className="flex flex-col">
-                  <h2 className="font-extrabold text-[#001c41] text-2xl md:text-3xl tracking-tight">Partner Dashboard</h2>
-                  <p className="text-xs sm:text-sm md:text-base text-slate-455 font-semibold mt-1">Welcome back, {user?.fullName || user?.name || 'Partner'}. Monitor your referrals, earnings, and redeem rewards.</p>
+                  <h2 className="font-extrabold text-[#001c41] text-xl tracking-tight">Partner Dashboard</h2>
+                  <p className="text-xs text-slate-455 font-semibold mt-1">Welcome back, {user?.fullName || user?.name || 'Partner'}. Monitor your referrals, earnings, and redeem rewards.</p>
                 </div>
-                <div className="flex items-center gap-2 bg-[#E6F2ED] text-[#027244] border border-emerald-100 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-bold shrink-0">
+                <div className="flex items-center gap-2 bg-[#E6F2ED] text-[#027244] border border-emerald-100 rounded-xl px-3 py-1.5 text-xs font-bold shrink-0">
                   <Sparkles className="h-4 w-4 fill-current animate-pulse" /> Active Platform Partner
                 </div>
               </div>
@@ -4476,11 +4476,11 @@ function DashboardContent() {
                     <Gift className="h-6 w-6" />
                   </div>
                   <div className="flex flex-col overflow-hidden min-w-0">
-                    <span className="text-[11px] md:text-xs font-extrabold text-slate-400 uppercase tracking-wider">Available Points</span>
-                    <span className="text-xl md:text-2xl lg:text-3xl font-black text-[#027244] leading-tight mt-0.5">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Available Points</span>
+                    <span className="text-lg font-black text-[#027244] leading-tight mt-0.5">
                       {referralsLoading ? '...' : (referralStats?.referralPoints || 0)} pts
                     </span>
-                    <span className="text-[11px] md:text-xs text-slate-455 font-bold mt-0.5">₹{referralsLoading ? '0' : (referralStats?.referralPoints || 0)} Value</span>
+                    <span className="text-[10px] text-slate-455 font-bold mt-0.5">₹{referralsLoading ? '0' : (referralStats?.referralPoints || 0)} Value</span>
                   </div>
                 </div>
 
@@ -4490,11 +4490,11 @@ function DashboardContent() {
                     <Users className="h-6 w-6" />
                   </div>
                   <div className="flex flex-col overflow-hidden min-w-0">
-                    <span className="text-[11px] md:text-xs font-extrabold text-slate-400 uppercase tracking-wider">Total Referrals</span>
-                    <span className="text-xl md:text-2xl lg:text-3xl font-black text-[#001c41] leading-tight mt-0.5">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Total Referrals</span>
+                    <span className="text-lg font-black text-[#001c41] leading-tight mt-0.5">
                       {referralsLoading ? '...' : (referralStats?.referrals?.length || 0)}
                     </span>
-                    <span className="text-[11px] md:text-xs text-slate-455 font-bold mt-0.5">Invited Traders</span>
+                    <span className="text-[10px] text-slate-455 font-bold mt-0.5">Invited Traders</span>
                   </div>
                 </div>
 
@@ -4504,11 +4504,11 @@ function DashboardContent() {
                     <CheckCircle className="h-6 w-6" />
                   </div>
                   <div className="flex flex-col overflow-hidden min-w-0">
-                    <span className="text-[11px] md:text-xs font-extrabold text-slate-400 uppercase tracking-wider">Completed Referrals</span>
-                    <span className="text-xl md:text-2xl lg:text-3xl font-black text-purple-600 leading-tight mt-0.5">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Completed Referrals</span>
+                    <span className="text-lg font-black text-purple-600 leading-tight mt-0.5">
                       {referralsLoading ? '...' : (referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0)}
                     </span>
-                    <span className="text-[11px] md:text-xs text-slate-455 font-bold mt-0.5">Earned 99 pts each</span>
+                    <span className="text-[10px] text-slate-455 font-bold mt-0.5">Earned 99 pts each</span>
                   </div>
                 </div>
 
@@ -4518,11 +4518,11 @@ function DashboardContent() {
                     <CreditCard className="h-6 w-6" />
                   </div>
                   <div className="flex flex-col overflow-hidden min-w-0">
-                    <span className="text-[11px] md:text-xs font-extrabold text-slate-400 uppercase tracking-wider">Redeemed Requests</span>
-                    <span className="text-xl md:text-2xl lg:text-3xl font-black text-amber-600 leading-tight mt-0.5">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Redeemed Requests</span>
+                    <span className="text-lg font-black text-amber-600 leading-tight mt-0.5">
                       {redemptionsLoading ? '...' : (redemptionRequests?.length || 0)}
                     </span>
-                    <span className="text-[11px] md:text-xs text-slate-455 font-bold mt-0.5">Refund Payouts</span>
+                    <span className="text-[10px] text-slate-455 font-bold mt-0.5">Refund Payouts</span>
                   </div>
                 </div>
               </div>
@@ -4530,20 +4530,19 @@ function DashboardContent() {
               {/* Referral Link & Redemption Section */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
-                {/* Referral Tracking: Link and Instructions */}
-                <div className="bg-white border border-slate-200 shadow-xs rounded-[24px] p-6 flex flex-col gap-4 text-left">
-                  <h3 className="font-extrabold text-slate-800 text-lg md:text-xl border-b border-slate-100 pb-2">Referral Tracking & Link</h3>
-                  <p className="text-xs sm:text-sm md:text-base text-slate-500 font-semibold leading-relaxed">
+                <div className="bg-white border border-slate-200 shadow-xs rounded-[24px] p-5 flex flex-col gap-3 text-left">
+                  <h3 className="font-extrabold text-slate-800 text-sm border-b border-slate-100 pb-2">Referral Tracking & Link</h3>
+                  <p className="text-xs text-slate-500 font-semibold leading-relaxed">
                     Share your unique referral link with local businesses in Udumalpet. You will earn <span className="text-[#027244] font-bold">99 points</span> immediately once they register and their business is verified/approved by the admin.
                   </p>
                   
                   {referralStats?.referralLink ? (
-                    <div className="flex flex-col gap-3 mt-2">
-                      <label className="text-xs md:text-sm font-black text-slate-400 uppercase tracking-widest">Your Referral Link</label>
+                    <div className="flex flex-col gap-2.5 mt-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your Referral Link</label>
                       
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full">
-                        <div className="flex-grow border border-slate-200 bg-slate-50 rounded-xl p-3 flex items-center min-w-0">
-                          <span className="text-xs sm:text-sm md:text-base font-semibold text-slate-600 truncate text-left w-full">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
+                        <div className="flex-grow border border-slate-200 bg-slate-50 rounded-xl p-2.5 flex items-center min-w-0">
+                          <span className="text-xs font-semibold text-slate-600 truncate text-left w-full">
                             {referralStats.referralLink}
                           </span>
                         </div>
@@ -4553,51 +4552,48 @@ function DashboardContent() {
                               navigator.clipboard.writeText(referralStats.referralLink);
                               alert('Referral link copied to clipboard!');
                             }}
-                            className="flex-grow sm:flex-initial bg-[#027244] hover:bg-[#005934] text-white text-xs sm:text-sm md:text-base font-extrabold py-2.5 px-4.5 rounded-xl cursor-pointer transition-all shadow-xs flex items-center justify-center gap-1.5"
+                            className="flex-grow sm:flex-initial bg-[#027244] hover:bg-[#005934] text-white text-xs font-extrabold py-2 px-3.5 rounded-xl cursor-pointer transition-all shadow-xs flex items-center justify-center gap-1.5"
                           >
-                            <Copy className="h-4 w-4" /> Copy
+                            <Copy className="h-3.5 w-3.5" /> Copy
                           </button>
                           <button
                             onClick={() => handleShareReferralLink(referralStats.referralLink)}
-                            className="flex-grow sm:flex-initial bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm md:text-base font-extrabold py-2.5 px-4.5 rounded-xl cursor-pointer transition-all shadow-xs flex items-center justify-center gap-1.5"
+                            className="flex-grow sm:flex-initial bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold py-2 px-3.5 rounded-xl cursor-pointer transition-all shadow-xs flex items-center justify-center gap-1.5"
                           >
-                            <Share2 className="h-4 w-4" /> Share
+                            <Share2 className="h-3.5 w-3.5" /> Share
                           </button>
                         </div>
                       </div>
 
-                      <span className="text-xs sm:text-sm md:text-base text-slate-455 font-bold text-left mt-1">
-                        Referral Code: <span className="text-slate-800 text-sm sm:text-base md:text-lg font-black">{referralStats.referralCode}</span>
+                      <span className="text-xs text-slate-455 font-bold text-left">
+                        Referral Code: <span className="text-slate-800 text-xs font-black">{referralStats.referralCode}</span>
                       </span>
                     </div>
                   ) : (
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-xs sm:text-sm font-semibold text-slate-455">
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center text-xs font-semibold text-slate-455">
                       Generating your partner referral code details...
                     </div>
                   )}
                 </div>
 
-                {/* Points Summary & Redemption Requests */}
-                <div className="bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-6 flex flex-col gap-4 justify-between text-left">
+                <div className="bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-5 flex flex-col gap-3 justify-between text-left">
                   <div>
-                    <h3 className="font-extrabold text-slate-800 text-lg md:text-xl border-b border-slate-100 pb-2">Points Summary & Payouts</h3>
-                    <p className="text-xs sm:text-sm md:text-base text-slate-500 font-semibold leading-relaxed mt-2.5">
+                    <h3 className="font-extrabold text-slate-800 text-sm border-b border-slate-100 pb-2">Points Summary & Payouts</h3>
+                    <p className="text-xs text-slate-500 font-semibold leading-relaxed mt-2">
                       Earned points can be redeemed for cashback payouts when you reach a minimum balance of <span className="font-bold text-[#001c41]">1,000 points</span>. 1 Point = ₹1 credit.
                     </p>
-                    <div className="flex justify-between items-center bg-slate-50 rounded-xl p-4 mt-3">
-                      <div className="flex justify-between items-center bg-slate-50 rounded-xl p-4 mt-3 w-full">
-                        <div className="flex flex-col text-left">
-                          <span className="text-xs md:text-sm text-slate-455 font-bold">Redeemable Balance</span>
-                          <span className="text-lg md:text-xl lg:text-2xl font-black text-[#027244] mt-0.5">
-                            {referralsLoading ? '...' : (referralStats?.referralPoints || 0)} Points
-                          </span>
-                        </div>
-                        <div className="flex flex-col text-right">
-                          <span className="text-xs md:text-sm text-slate-455 font-bold">Cash Equivalency</span>
-                          <span className="text-lg md:text-xl lg:text-2xl font-black text-slate-800 mt-0.5">
-                            ₹{referralsLoading ? '...' : (referralStats?.referralPoints || 0)}
-                          </span>
-                        </div>
+                    <div className="flex justify-between items-center bg-slate-50 rounded-xl p-3.5 mt-3 w-full">
+                      <div className="flex flex-col text-left">
+                        <span className="text-xs text-slate-455 font-bold">Redeemable Balance</span>
+                        <span className="text-base font-black text-[#027244] mt-0.5">
+                          {referralsLoading ? '...' : (referralStats?.referralPoints || 0)} Points
+                        </span>
+                      </div>
+                      <div className="flex flex-col text-right">
+                        <span className="text-xs text-slate-455 font-bold">Cash Equivalency</span>
+                        <span className="text-base font-black text-slate-800 mt-0.5">
+                          ₹{referralsLoading ? '...' : (referralStats?.referralPoints || 0)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -4605,11 +4601,11 @@ function DashboardContent() {
                   <button
                     onClick={handleRedeemPoints}
                     disabled={redemptionSubmitting || !referralStats || (referralStats?.referralPoints || 0) < 1000}
-                    className="w-full py-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs sm:text-sm md:text-base uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer mt-3"
+                    className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer mt-2"
                   >
                     {redemptionSubmitting ? (
                       <>
-                        <RefreshCw className="h-4.5 w-4.5 animate-spin" /> Submitting Request...
+                        <RefreshCw className="h-4 w-4 animate-spin" /> Submitting Request...
                       </>
                     ) : (
                       'Request Cashback Refund (₹1,000)'
@@ -4622,10 +4618,10 @@ function DashboardContent() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
                 
                 {/* Referral History List */}
-                <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-6 flex flex-col gap-4 text-left">
+                <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-5 flex flex-col gap-3 text-left">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <h3 className="font-extrabold text-slate-800 text-lg md:text-xl">Referral History</h3>
-                    <span className="text-xs md:text-sm bg-slate-50 border border-slate-200 text-slate-500 rounded px-2 py-0.5 font-bold">
+                    <h3 className="font-extrabold text-slate-800 text-sm">Referral History</h3>
+                    <span className="text-xs bg-slate-50 border border-slate-200 text-slate-500 rounded px-2 py-0.5 font-bold">
                       {referralStats?.referrals?.length || 0} Total
                     </span>
                   </div>
@@ -4639,17 +4635,17 @@ function DashboardContent() {
                       No referrals made yet. Share your link to start earning!
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-3 max-h-[350px] overflow-y-auto pr-1">
+                    <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-1">
                       {referralStats.referrals.map((ref) => (
-                        <div key={ref._id} className="border border-slate-100 rounded-xl p-3.5 bg-slate-50/20 hover:bg-slate-50/50 transition-all flex justify-between items-center gap-4">
+                        <div key={ref._id} className="border border-slate-100 rounded-xl p-3 bg-slate-50/20 hover:bg-slate-50/50 transition-all flex justify-between items-center gap-3">
                           <div className="flex flex-col min-w-0 text-left">
-                            <span className="font-extrabold text-slate-755 text-sm sm:text-base truncate leading-snug">
+                            <span className="font-extrabold text-slate-755 text-xs truncate leading-snug">
                               {ref.referredUserId?.fullName || ref.referredUserId?.name || 'New Trader User'}
                             </span>
-                            <span className="text-xs sm:text-sm text-slate-455 font-bold mt-1">
+                            <span className="text-[11px] text-slate-455 font-bold mt-0.5">
                               {ref.referredBusinessId?.name || 'Business details pending'}
                             </span>
-                            <span className="text-[10px] sm:text-xs text-slate-400 mt-1 block font-semibold">
+                            <span className="text-[10px] text-slate-400 mt-0.5 block font-semibold">
                               Invited on {new Date(ref.createdAt).toLocaleDateString()}
                             </span>
                           </div>
@@ -4657,26 +4653,26 @@ function DashboardContent() {
                           <div className="flex flex-col items-end shrink-0 leading-normal">
                             {ref.status === 'completed' ? (
                               <>
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-black uppercase">
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase">
                                   Earned
                                 </span>
-                                <span className="text-xs sm:text-sm md:text-base font-extrabold text-emerald-600 mt-1">+{ref.points} pts</span>
+                                <span className="text-xs font-extrabold text-emerald-600 mt-0.5">+{ref.points} pts</span>
                               </>
                             ) : ref.status === 'rejected' ? (
                               <>
-                                <span className="bg-rose-50 text-rose-700 border border-rose-200/50 px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-black uppercase">
+                                <span className="bg-rose-50 text-rose-700 border border-rose-200/50 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase">
                                   Flagged
                                 </span>
-                                <span className="text-[10px] sm:text-xs text-rose-455 font-bold mt-1 text-right max-w-[120px] truncate" title={ref.rejectionReason}>
+                                <span className="text-[10px] text-rose-455 font-bold mt-0.5 text-right max-w-[120px] truncate" title={ref.rejectionReason}>
                                   {ref.rejectionReason || 'Duplicate / Void'}
                                 </span>
                               </>
                             ) : (
                               <>
-                                <span className="bg-amber-50 text-amber-700 border border-amber-200/50 px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-black uppercase">
+                                <span className="bg-amber-50 text-amber-700 border border-amber-200/50 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase">
                                   Pending
                                 </span>
-                                <span className="text-[10px] sm:text-xs text-slate-400 font-semibold mt-1">Waiting register</span>
+                                <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Waiting register</span>
                               </>
                             )}
                           </div>
@@ -4687,10 +4683,10 @@ function DashboardContent() {
                 </div>
 
                 {/* Reward Status / Redemption Requests History */}
-                <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-6 flex flex-col gap-4 text-left">
+                <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-5 flex flex-col gap-3 text-left">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <h3 className="font-extrabold text-slate-800 text-lg md:text-xl">Redemption Requests</h3>
-                    <span className="text-xs md:text-sm bg-slate-50 border border-slate-200 text-slate-500 rounded px-2 py-0.5 font-bold">
+                    <h3 className="font-extrabold text-slate-800 text-sm">Redemption Requests</h3>
+                    <span className="text-xs bg-slate-50 border border-slate-200 text-slate-500 rounded px-2 py-0.5 font-bold">
                       {redemptionRequests?.length || 0} Requests
                     </span>
                   </div>
@@ -4704,22 +4700,22 @@ function DashboardContent() {
                       No redemption payout requests submitted yet.
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-3 max-h-[350px] overflow-y-auto pr-1">
+                    <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-1">
                       {redemptionRequests.map((req) => (
-                        <div key={req._id} className="border border-slate-100 rounded-xl p-3.5 bg-slate-50/20 hover:bg-slate-50/50 transition-all flex justify-between items-center gap-4">
+                        <div key={req._id} className="border border-slate-100 rounded-xl p-3 bg-slate-50/20 hover:bg-slate-50/50 transition-all flex justify-between items-center gap-3">
                           <div className="flex flex-col min-w-0 text-left">
-                            <span className="font-extrabold text-slate-755 text-sm sm:text-base truncate leading-snug">
+                            <span className="font-extrabold text-slate-755 text-xs truncate leading-snug">
                               Redeemed {req.points} Points
                             </span>
-                            <span className="text-xs sm:text-sm text-slate-455 font-bold mt-1">
+                            <span className="text-[11px] text-slate-455 font-bold mt-0.5">
                               Equivalent Payout: ₹{req.points} Cashback
                             </span>
                             {req.remarks && (
-                              <span className="text-[10px] sm:text-xs md:text-sm text-slate-455 font-semibold bg-slate-100 p-1.5 rounded-lg mt-1 block">
+                              <span className="text-[10px] text-slate-455 font-semibold bg-slate-100 p-1.5 rounded-lg mt-0.5 block">
                                 Remarks: {req.remarks}
                               </span>
                             )}
-                            <span className="text-[10px] sm:text-xs text-slate-400 mt-1 block font-semibold">
+                            <span className="text-[10px] text-slate-400 mt-0.5 block font-semibold">
                               Requested on {new Date(req.createdAt).toLocaleDateString()}
                             </span>
                           </div>
