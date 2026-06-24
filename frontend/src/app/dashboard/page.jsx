@@ -1181,7 +1181,8 @@ function DashboardContent() {
         parsedUser.role !== 'owner' &&
         parsedUser.role !== 'admin' &&
         parsedUser.role !== 'superadmin' &&
-        parsedUser.role !== 'visitor'
+        parsedUser.role !== 'visitor' &&
+        parsedUser.role !== 'partner'
       ) {
         // Access Denied: Redirect non-registered users to login with an error code
         navigate('/login?error=unauthorized');

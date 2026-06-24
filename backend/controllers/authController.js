@@ -114,7 +114,9 @@ const registerUser = async (req, res, next) => {
         facebook: user.facebook,
         isPartnerRegistered: user.isPartnerRegistered || false,
         aadhaarNumber: user.aadhaarNumber || '',
-        address: user.address || ''
+        address: user.address || '',
+        referralCode: user.referralCode || '',
+        referralPoints: user.referralPoints || 0
       }
     });
   } catch (err) {
@@ -174,7 +176,9 @@ const loginUser = async (req, res, next) => {
           facebook: user.facebook,
           isPartnerRegistered: user.isPartnerRegistered || false,
           aadhaarNumber: user.aadhaarNumber || '',
-          address: user.address || ''
+          address: user.address || '',
+          referralCode: user.referralCode || '',
+          referralPoints: user.referralPoints || 0
         },
         draftBusiness
       });
