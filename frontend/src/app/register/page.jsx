@@ -324,7 +324,7 @@ export default function Register() {
             </svg>
           </div>
 
-          <div className="z-10 mt-10 p-4 sm:p-5 rounded-2xl bg-white/70 border border-emerald-100 flex items-start gap-4 shadow-sm text-left">
+          <div className="hidden lg:flex z-10 mt-10 p-4 sm:p-5 rounded-2xl bg-white/70 border border-emerald-100 items-start gap-4 shadow-sm text-left">
             <div className="bg-[#E6F2ED] p-2.5 rounded-xl text-[#027244] border border-emerald-100/50 shrink-0">
               <Headset className="h-5 w-5" />
             </div>
@@ -426,7 +426,7 @@ export default function Register() {
             </svg>
           </div>
 
-          <div className="z-10 mt-10 p-4 sm:p-5 rounded-2xl bg-white/70 border border-emerald-100 flex items-start gap-4 shadow-sm text-left">
+          <div className="hidden lg:flex z-10 mt-10 p-4 sm:p-5 rounded-2xl bg-white/70 border border-emerald-100 items-start gap-4 shadow-sm text-left">
             <div className="bg-[#E6F2ED] p-2.5 rounded-xl text-[#027244] border border-emerald-100/50 shrink-0">
               <Headset className="h-5 w-5" />
             </div>
@@ -539,7 +539,7 @@ export default function Register() {
           </svg>
         </div>
 
-        <div className="z-10 mt-10 p-4 sm:p-5 rounded-2xl bg-white/70 border border-emerald-100 flex items-start gap-4 shadow-sm text-left">
+        <div className="hidden lg:flex z-10 mt-10 p-4 sm:p-5 rounded-2xl bg-white/70 border border-emerald-100 items-start gap-4 shadow-sm text-left">
           <div className="bg-[#E6F2ED] p-2.5 rounded-xl text-[#027244] border border-emerald-100/50 shrink-0">
             <Headset className="h-5 w-5" />
           </div>
@@ -774,6 +774,24 @@ export default function Register() {
             <div className="flex items-center gap-1.5 text-[10.5px] text-slate-400 font-semibold leading-none mt-2 justify-center text-center">
               <Lock className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
               <span>We respect your privacy. Your data is safe with us.</span>
+            </div>
+
+            {/* Need Help? Panel for mobile views */}
+            <div className="lg:hidden mt-2 p-4 rounded-xl bg-[#F0FDF4]/50 border border-emerald-100/80 flex items-start gap-4 text-left shadow-sm">
+              <div className="bg-[#E6F2ED] p-2 rounded-lg text-[#027244] border border-emerald-100/50 shrink-0">
+                <Headset className="h-5 w-5" />
+              </div>
+              <div className="flex flex-col gap-0.5 text-left">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Need Help?</span>
+                <span className="text-xs text-[#001c41] font-extrabold mt-1 leading-normal">
+                  {fromParam === 'events' ? 'Our events support desk is here for you.' : (fromParam === 'blogs' ? 'Our editor assistance team is here to help.' : 'Our support team is here to help you.')}
+                </span>
+                {fromParam === 'blogs' ? (
+                  <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Email: udumalpetbusinesstour@gmail.com</a>
+                ) : (
+                  <a href="tel:+918925728260" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 89257 28260</a>
+                )}
+              </div>
             </div>
 
           </div>

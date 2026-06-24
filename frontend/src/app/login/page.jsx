@@ -106,7 +106,7 @@ export default function Login() {
             </svg>
           </div>
           
-          <div className="z-10 mt-10 p-4 sm:p-5 rounded-2xl bg-white/70 border border-emerald-100 flex items-start gap-4 shadow-sm text-left">
+          <div className="hidden lg:flex z-10 mt-10 p-4 sm:p-5 rounded-2xl bg-white/70 border border-emerald-100 items-start gap-4 shadow-sm text-left">
             <div className="bg-[#E6F2ED] p-2.5 rounded-xl text-[#027244] border border-emerald-100/50 shrink-0">
               <Headset className="h-5 w-5" />
             </div>
@@ -193,7 +193,7 @@ export default function Login() {
             </svg>
           </div>
 
-          <div className="z-10 mt-10 p-4 sm:p-5 rounded-2xl bg-white/70 border border-emerald-100 flex items-start gap-4 shadow-sm text-left">
+          <div className="hidden lg:flex z-10 mt-10 p-4 sm:p-5 rounded-2xl bg-white/70 border border-emerald-100 items-start gap-4 shadow-sm text-left">
             <div className="bg-[#E6F2ED] p-2.5 rounded-xl text-[#027244] border border-emerald-100/50 shrink-0">
               <Headset className="h-5 w-5" />
             </div>
@@ -304,6 +304,17 @@ export default function Login() {
             <rect x="230" y="78" width="14" height="11" fill="#d1e7dd" />
             <polygon points="227,78 237,70 247,78" fill="#0f5132" />
           </svg>
+        </div>
+
+        <div className="hidden lg:flex z-10 mt-10 p-4 sm:p-5 rounded-2xl bg-white/70 border border-emerald-100 items-start gap-4 shadow-sm text-left">
+          <div className="bg-[#E6F2ED] p-2.5 rounded-xl text-[#027244] border border-emerald-100/50 shrink-0">
+            <Headset className="h-5 w-5" />
+          </div>
+          <div className="flex flex-col gap-0.5 text-left">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Need Help?</span>
+            <span className="text-xs text-[#001c41] font-extrabold mt-1 leading-normal">Our support team is here to help you.</span>
+            <a href="tel:+918925728260" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 89257 28260</a>
+          </div>
         </div>
       </div>
     );
@@ -748,6 +759,24 @@ export default function Login() {
                 and{' '}
                 <Link to="/businesses?focus=privacy" className="text-[#027244] hover:underline font-extrabold">Privacy Policy</Link>.
               </span>
+            </div>
+
+            {/* Need Help? Panel for mobile views */}
+            <div className="lg:hidden mt-2 p-4 rounded-xl bg-[#F0FDF4]/50 border border-emerald-100/80 flex items-start gap-4 text-left shadow-sm">
+              <div className="bg-[#E6F2ED] p-2 rounded-lg text-[#027244] border border-emerald-100/50 shrink-0">
+                <Headset className="h-5 w-5" />
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Need Help?</span>
+                <span className="text-xs text-[#001c41] font-extrabold mt-1 leading-normal">
+                  {fromParam === 'events' ? 'Our events support desk is here for you.' : (fromParam === 'blogs' ? 'Our editor assistance team is here to help.' : 'Our support team is here to help you.')}
+                </span>
+                {fromParam === 'blogs' ? (
+                  <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Email: udumalpetbusinesstour@gmail.com</a>
+                ) : (
+                  <a href="tel:+918925728260" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 89257 28260</a>
+                )}
+              </div>
             </div>
 
           </div>
