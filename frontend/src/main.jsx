@@ -3,12 +3,13 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './app/globals.css';
 
-// Centralized API URL Routing Interceptor for Production (Render)
+// Centralized API URL Routing Interceptor for Production (Nginx / same-origin deployment)
+// In development (VITE_DEV_SERVER), the Vite proxy forwards /api → localhost:5000.
+// In production, the built frontend is served by Nginx on the same origin as the backend,
+// so we use window.location.origin (same host/port). VITE_API_URL can override this.
 const API_URL = import.meta.env.VITE_API_URL || 
   (import.meta.env.PROD && typeof window !== 'undefined' 
-    ? (window.location.hostname.includes('staging') 
-        ? 'https://staging-api.udumalpet.business' 
-        : 'https://api.udumalpet.business') 
+    ? window.location.origin
     : 'http://localhost:5000');
 
 // Global Image URL Resolver to dynamically prepend correct backend domain

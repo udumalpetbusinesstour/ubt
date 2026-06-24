@@ -1,24 +1,38 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const upload = require('../middleware/uploadMiddleware');
 const { protect } = require('../middleware/auth');
+
+// Helper: Calls multer middleware and catches ALL errors (including Cloudinary / file filter)
+// as JSON instead of letting them bubble up to Express''s default HTML error handler.
+const runUpload = (middleware) => (req, res, next) => {
+  middleware(req, res, (err) => {
+    if (!err) return next();
+    if (err instanceof multer.MulterError) {
+      // e.g. "File too large", "Unexpected field"
+      return res.status(400).json({ success: false, message: err.message });
+    }
+    // Custom fileFilter rejections, Cloudinary API errors, etc.
+    return res.status(500).json({ success: false, message: err.message || 'File upload failed' });
+  });
+};
 
 // @desc    Upload an image
 // @route   POST /api/upload
 // @access  Private
-router.post('/', protect, upload.single('image'), (req, res) => {
+router.post('/', protect, runUpload(upload.single('image')), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'Please upload an image file' });
     }
 
     let fileUrl = '';
-    // If Cloudinary is active, req.file.path will be a remote HTTP(S) URL.
-    // If local disk storage fallback is active, req.file.path is a local filesystem path.
     if (req.file.path && (req.file.path.startsWith('http://') || req.file.path.startsWith('https://'))) {
+      // Cloudinary — path is the remote CDN URL
       fileUrl = req.file.path;
     } else if (req.file.filename) {
-      // Disk storage fallback: Construct the relative web URL to avoid mixed-content or localhost mismatches
+      // Local disk fallback
       fileUrl = `/uploads/${req.file.filename}`;
     }
 
@@ -26,21 +40,16 @@ router.post('/', protect, upload.single('image'), (req, res) => {
       return res.status(500).json({ success: false, message: 'Failed to retrieve uploaded file URL' });
     }
 
-    res.status(200).json({
-      success: true,
-      message: 'Image uploaded successfully',
-      url: fileUrl,
-      fileUrl: fileUrl
-    });
+    return res.status(200).json({ success: true, message: 'Image uploaded successfully', url: fileUrl, fileUrl });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// @desc    Upload an image publicly
+// @desc    Upload an image publicly (no auth required)
 // @route   POST /api/upload/public
 // @access  Public
-router.post('/public', upload.single('image'), (req, res) => {
+router.post('/public', runUpload(upload.single('image')), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'Please upload an image file' });
@@ -57,14 +66,9 @@ router.post('/public', upload.single('image'), (req, res) => {
       return res.status(500).json({ success: false, message: 'Failed to retrieve uploaded file URL' });
     }
 
-    res.status(200).json({
-      success: true,
-      message: 'Image uploaded successfully',
-      url: fileUrl,
-      fileUrl: fileUrl
-    });
+    return res.status(200).json({ success: true, message: 'Image uploaded successfully', url: fileUrl, fileUrl });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 });
 
