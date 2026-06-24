@@ -332,6 +332,44 @@ function BusinessesList() {
   const [isAnonCustomSub, setIsAnonCustomSub] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
 
+  // Draft business state — shown when user is logged in but hasn't completed registration
+  const [draftBusiness, setDraftBusiness] = useState(null);
+  const [showDraftBanner, setShowDraftBanner] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('ubt_token');
+    if (!token) return;
+    (async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/businesses/my-business', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success && data.data) {
+          const biz = data.data;
+          // Check if it's a draft (missing required fields)
+          const isDraft = !biz.name || !biz.category || !biz.description || !biz.phone || !biz.pincode || !biz.address;
+          if (isDraft) {
+            setDraftBusiness(biz);
+            setShowDraftBanner(true);
+          }
+        }
+      } catch (err) {
+        // Silently ignore errors — this is a non-critical enhancement
+      }
+    })();
+  }, []);
+
+  const getDraftResumeStep = (biz) => {
+    if (!biz) return 1;
+    if (!biz.pincode) return 1;
+    if (!biz.name || !biz.category) return 2;
+    if (!biz.description) return 3;
+    if (!biz.phone || !biz.address) return 4;
+    return 5;
+  };
+
   const resetAnonForm = () => {
     setAnonForm(initialAnonForm);
     setAnonGmbLink('');
@@ -2643,6 +2681,42 @@ function BusinessesList() {
         </div>
       </section>
 
+      {/* Continue Registration Banner (only shown when user has a draft business) */}
+      {showDraftBanner && draftBusiness && (
+        <div className="w-full max-w-[1440px] px-4 md:px-8 pt-6 pb-0 mx-auto animate-fadeIn">
+          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm shadow-amber-100/50">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="h-10 w-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center shrink-0 border border-amber-200">
+                <Briefcase className="h-5 w-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-extrabold text-amber-900 text-xs leading-tight">
+                  You have an incomplete business registration!
+                </span>
+                <span className="text-amber-700 text-[11px] font-semibold mt-0.5 leading-relaxed">
+                  {draftBusiness.name ? `"${draftBusiness.name}"` : 'Your business'} — step {getDraftResumeStep(draftBusiness)} of 6 not yet completed. Your payment is confirmed.
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+              <button
+                onClick={() => setShowDraftBanner(false)}
+                className="text-amber-500 hover:text-amber-700 text-[10px] font-bold px-2 py-1 cursor-pointer border-none bg-transparent"
+              >
+                Dismiss
+              </button>
+              <button
+                onClick={() => navigate(`/add-business?step=${getDraftResumeStep(draftBusiness)}`)}
+                className="bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[11px] py-2 px-4 rounded-xl shadow transition-all cursor-pointer border-none flex items-center gap-1.5"
+              >
+                Continue Registration
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Two-column Content Grid */}
       <section className="max-w-[1440px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
         
@@ -3046,15 +3120,27 @@ function BusinessesList() {
           <div className="flex flex-col gap-1 text-left">
             <span className="font-black text-[#001c41] text-sm">Are you a business owner?</span>
             <span className="text-slate-500 text-[10.5px] font-semibold leading-relaxed max-w-[200px]">
-              List your business and reach thousands of local customers.
+              {showDraftBanner && draftBusiness
+                ? 'You have an incomplete registration. Resume to publish your listing.'
+                : 'List your business and reach thousands of local customers.'}
             </span>
           </div>
-          <Link 
-            to="/add-business" 
-            className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-2.5 px-6 rounded-xl transition-all shadow shrink-0"
-          >
-            List Your Business
-          </Link>
+          {showDraftBanner && draftBusiness ? (
+            <button
+              onClick={() => navigate(`/add-business?step=${getDraftResumeStep(draftBusiness)}`)}
+              className="bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs py-2.5 px-6 rounded-xl transition-all shadow shrink-0 cursor-pointer border-none flex items-center gap-2"
+            >
+              Continue Registration
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          ) : (
+            <Link 
+              to="/add-business" 
+              className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-2.5 px-6 rounded-xl transition-all shadow shrink-0"
+            >
+              List Your Business
+            </Link>
+          )}
         </div>
 
       </div>
