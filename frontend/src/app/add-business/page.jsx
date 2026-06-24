@@ -202,6 +202,9 @@ export default function AddBusiness() {
     gstNumber: '',
     services: '',
     brands: '',
+    languagesKnown: 'Tamil, English',
+    serviceArea: 'Udumalpet Town',
+    highlights: 'On-time Service, Expert Technicians, Quality Materials, Affordable Pricing',
     phone: '',
     whatsapp: '',
     email: '',
@@ -244,6 +247,9 @@ export default function AddBusiness() {
     gstNumber: '',
     services: '',
     brands: '',
+    languagesKnown: 'Tamil, English',
+    serviceArea: 'Udumalpet Town',
+    highlights: 'On-time Service, Expert Technicians, Quality Materials, Affordable Pricing',
     phone: '',
     whatsapp: '',
     email: '',
@@ -436,6 +442,7 @@ export default function AddBusiness() {
       ...draft,
       services: Array.isArray(draft.services) ? draft.services.join(', ') : (draft.services || ''),
       brands: Array.isArray(draft.brands) ? draft.brands.join(', ') : (draft.brands || ''),
+      highlights: Array.isArray(draft.highlights) ? draft.highlights.join(', ') : (draft.highlights || ''),
     }));
     if (draft.category) {
       if (draft.category === 'Others') {
@@ -461,12 +468,16 @@ export default function AddBusiness() {
     const brandsList = updatedData.brands && typeof updatedData.brands === 'string'
       ? updatedData.brands.split(',').map(b => b.trim()).filter(Boolean)
       : (updatedData.brands || []);
+    const highlightsList = updatedData.highlights && typeof updatedData.highlights === 'string'
+      ? updatedData.highlights.split(',').map(h => h.trim()).filter(Boolean)
+      : (updatedData.highlights || []);
 
     const formattedBranches = updatedData.branches
       ? updatedData.branches.map(b => ({
           ...b,
           services: typeof b.services === 'string' ? b.services.split(',').map(s => s.trim()).filter(Boolean) : (b.services || []),
           brands: typeof b.brands === 'string' ? b.brands.split(',').map(br => br.trim()).filter(Boolean) : (b.brands || []),
+          highlights: typeof b.highlights === 'string' ? b.highlights.split(',').map(h => h.trim()).filter(Boolean) : (b.highlights || []),
           latitude: b.coordinates?.lat || b.latitude || 10.5891,
           longitude: b.coordinates?.lng || b.longitude || 77.2412,
         }))
@@ -476,6 +487,7 @@ export default function AddBusiness() {
       ...updatedData,
       services: servicesList,
       brands: brandsList,
+      highlights: highlightsList,
       branches: formattedBranches,
       latitude: updatedData.coordinates?.lat,
       longitude: updatedData.coordinates?.lng,
@@ -2465,6 +2477,45 @@ export default function AddBusiness() {
                     />
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5 text-left">
+                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Service Area Limits</label>
+                      <input
+                        type="text"
+                        name="serviceArea"
+                        value={formData.serviceArea}
+                        onChange={handleInputChange}
+                        placeholder="e.g. Udumalpet Town, Gandhi Nagar, nearby areas"
+                        className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5 text-left">
+                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Languages Known</label>
+                      <input
+                        type="text"
+                        name="languagesKnown"
+                        value={formData.languagesKnown}
+                        onChange={handleInputChange}
+                        placeholder="e.g. Tamil, English, Malayalam"
+                        className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Green Tick Badges)</label>
+                    <input
+                      type="text"
+                      name="highlights"
+                      value={formData.highlights}
+                      onChange={handleInputChange}
+                      placeholder="e.g. On-time Service, Expert Technicians, Quality Materials, Affordable Pricing"
+                      className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                    />
+                    <span className="text-[10px] text-slate-400 font-bold -mt-1 block">Enter comma-separated highlights to display as green badges under your description.</span>
+                  </div>
+
                   <div className="flex flex-col gap-3 mt-4 border-t border-slate-100 pt-5 text-left">
                     <label className="text-xs font-bold text-slate-700 tracking-wide uppercase flex items-center gap-1.5">
                       <Clock className="h-4 w-4 text-[#027244]" /> Business Hours (Monday - Sunday)
@@ -2963,6 +3014,45 @@ export default function AddBusiness() {
                           placeholder="e.g. Havells, LG, Samsung (Comma Separated)"
                           className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
                         />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Service Area Limits</label>
+                          <input
+                            type="text"
+                            name="serviceArea"
+                            value={branchForm.serviceArea}
+                            onChange={handleBranchInputChange}
+                            placeholder="e.g. Udumalpet Town, Gandhi Nagar, nearby areas"
+                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Languages Known</label>
+                          <input
+                            type="text"
+                            name="languagesKnown"
+                            value={branchForm.languagesKnown}
+                            onChange={handleBranchInputChange}
+                            placeholder="e.g. Tamil, English, Malayalam"
+                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Green Tick Badges)</label>
+                        <input
+                          type="text"
+                          name="highlights"
+                          value={branchForm.highlights}
+                          onChange={handleBranchInputChange}
+                          placeholder="e.g. On-time Service, Expert Technicians, Quality Materials, Affordable Pricing"
+                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                        />
+                        <span className="text-[10px] text-slate-400 font-bold -mt-1 block">Enter comma-separated highlights to display as green badges under your description.</span>
                       </div>
 
                       <div className="flex flex-col gap-3 mt-4 border-t border-slate-100 pt-5 text-left">

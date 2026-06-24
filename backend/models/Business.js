@@ -82,6 +82,14 @@ const BusinessSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
+  languagesKnown: {
+    type: String,
+    trim: true,
+  },
+  serviceArea: {
+    type: String,
+    trim: true,
+  },
   phone: {
     type: String,
     trim: true,

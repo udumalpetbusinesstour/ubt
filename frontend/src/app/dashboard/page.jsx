@@ -3992,8 +3992,8 @@ function DashboardContent() {
               Get more visibility, leads and grow your business faster.
             </p>
             <button 
-              onClick={(e) => openModalAtClickLevel(e, setShowRenewModal, 650)}
-              className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-extrabold rounded-xl transition-all shadow-md shadow-emerald-950/20 cursor-pointer mt-1"
+              onClick={() => setShowRenewModal(true)}
+              className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-extrabold rounded-xl transition-all shadow-md shadow-emerald-955/20 cursor-pointer mt-1"
             >
               Upgrade Now
             </button>
@@ -4285,7 +4285,7 @@ function DashboardContent() {
                 </div>
               </div>
               <button 
-                onClick={(e) => openModalAtClickLevel(e, setShowRenewModal, 650)} 
+                onClick={() => setShowRenewModal(true)} 
                 className="bg-white text-red-700 font-extrabold text-[10.5px] py-2 px-5 rounded-xl hover:bg-slate-100 transition-colors uppercase shrink-0 cursor-pointer shadow-sm"
               >
                 Renew Subscription
@@ -4803,8 +4803,8 @@ function DashboardContent() {
 
                     <div className="flex flex-col gap-2.5">
                       {[
-                        { label: 'Edit Business Details', icon: <Edit3 className="h-4 w-4 text-emerald-600" />, desc: 'Update your business information', action: (e) => { setEditTab('general'); openModalAtClickLevel(e, setShowEditModal, 650); } },
-                        { label: 'Upload Photos', icon: <ImageIcon className="h-4 w-4 text-blue-600" />, desc: 'Add or update photos & videos', action: (e) => openModalAtClickLevel(e, setShowUploadModal, 400) },
+                        { label: 'Edit Business Details', icon: <Edit3 className="h-4 w-4 text-emerald-600" />, desc: 'Update your business information', action: () => { setEditTab('general'); setShowEditModal(true); } },
+                        { label: 'Upload Photos', icon: <ImageIcon className="h-4 w-4 text-blue-600" />, desc: 'Add or update photos & videos', action: () => setShowUploadModal(true) },
                         { label: 'Add Offer / Promotion', icon: <Sparkles className="h-4 w-4 text-amber-500" />, desc: 'Create new offers for customers', action: () => { setSearchParams({ tab: 'Offers & Promotions' }); setShowAddOffer(true); } },
                         { label: 'Share Your Profile', icon: <Globe className="h-4 w-4 text-purple-600" />, desc: 'Share your profile with customers', action: copyProfileLink }
                       ].map((act, idx) => (
@@ -4882,7 +4882,7 @@ function DashboardContent() {
                     </div>
 
                     <button 
-                      onClick={(e) => openModalAtClickLevel(e, setShowRenewModal, 650)}
+                      onClick={() => setShowRenewModal(true)}
                       className="w-full mt-2 py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all shadow-emerald-700/10 cursor-pointer"
                     >
                       Manage Subscription
@@ -4983,6 +4983,13 @@ function DashboardContent() {
                   {/* Sleek dark gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/45 to-slate-950/15" />
                   
+                  {coverUploading && (
+                    <div className="absolute inset-0 bg-slate-955/65 backdrop-blur-xs flex flex-col items-center justify-center z-20 gap-3 animate-fadeIn">
+                      <RefreshCw className="h-8 w-8 text-emerald-450 animate-spin" />
+                      <span className="text-sm font-extrabold text-emerald-450 tracking-wide uppercase">Uploading Cover Image...</span>
+                    </div>
+                  )}
+                  
                   <div className={`relative flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10 transition-opacity duration-300 ${isRepositioning ? 'opacity-10 pointer-events-none' : 'opacity-100'}`}>
                     <div className="flex flex-col gap-3 text-left w-full">
                       {/* Breadcrumbs */}
@@ -4996,7 +5003,7 @@ function DashboardContent() {
                       
                       {/* Title Block with Logo and Verified Badge */}
                       <div className="flex items-center gap-4 mt-2 flex-wrap text-left">
-                        {business.logoUrl ? (
+                        {business.logoUrl && !logoUploading ? (
                           <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-white shadow-md shrink-0 flex items-center justify-center relative group">
                             <img src={window.getImageUrl(business.logoUrl)} alt={`${business.name} Logo`} className="h-full w-full object-cover" />
                             <label className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity text-white text-[9px] font-black uppercase tracking-wider select-none text-center p-1">
@@ -5004,6 +5011,11 @@ function DashboardContent() {
                               <span>Change Logo</span>
                               <input type="file" accept="image/*" onChange={handleDashboardLogoUpload} className="hidden" />
                             </label>
+                          </div>
+                        ) : logoUploading ? (
+                          <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-slate-900 shadow-md shrink-0 flex flex-col items-center justify-center relative text-white gap-1 select-none">
+                            <RefreshCw className="h-5 w-5 text-emerald-400 animate-spin" />
+                            <span className="text-[8px] font-black text-slate-350 uppercase">Uploading...</span>
                           </div>
                         ) : (
                           <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-gradient-to-tr from-emerald-500 to-teal-650 shadow-md shrink-0 flex items-center justify-center font-extrabold text-white text-xl uppercase relative group">
@@ -8158,7 +8170,7 @@ function DashboardContent() {
                     </p>
                   </div>
                   <button 
-                    onClick={(e) => openModalAtClickLevel(e, setShowRenewModal, 650)}
+                    onClick={() => setShowRenewModal(true)}
                     className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white text-xs font-extrabold rounded-xl transition-all shadow-sm cursor-pointer active:scale-98 text-center flex items-center justify-center gap-2"
                   >
                     <CreditCard className="h-4 w-4" />
@@ -8263,11 +8275,10 @@ function DashboardContent() {
               setShowRenewModal(false);
             }
           }}
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center md:items-start justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto"
         >
           <div 
-            style={{ '--modal-margin-top': `${modalMarginTop}px` }}
-            className="max-w-4xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-6 animate-scaleUp text-left max-h-[90vh] overflow-y-auto scrollbar-none relative my-auto md:my-0 md:mt-[var(--modal-margin-top)]"
+            className="max-w-4xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-6 animate-scaleUp text-left max-h-[90vh] overflow-y-auto scrollbar-none relative my-auto"
           >
             
             {/* Close button */}
@@ -8559,10 +8570,9 @@ function DashboardContent() {
 
       {/* MODAL 2: Edit Profile Details Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center md:items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div 
-            style={{ '--modal-margin-top': `${modalMarginTop}px` }}
-            className="max-w-2xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] flex flex-col animate-scaleUp text-left h-[85vh] max-h-[85vh] overflow-hidden font-sans my-auto md:my-0 md:mt-[var(--modal-margin-top)]"
+            className="max-w-2xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] flex flex-col animate-scaleUp text-left h-[85vh] max-h-[85vh] overflow-hidden font-sans my-auto"
           >
             <div className="p-6 md:p-8 pb-3 md:pb-3 flex justify-between items-start border-b border-slate-100 shrink-0">
               <div>
@@ -9384,10 +9394,9 @@ function DashboardContent() {
 
       {/* MODAL 3: Photos Gallery & Upload Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center md:items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div 
-            style={{ '--modal-margin-top': `${modalMarginTop}px` }}
-            className="max-w-lg w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 flex flex-col gap-5 animate-scaleUp text-left my-auto md:my-0 md:mt-[var(--modal-margin-top)]"
+            className="max-w-lg w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 flex flex-col gap-5 animate-scaleUp text-left my-auto"
           >
             <div className="flex justify-between items-start border-b border-slate-100 pb-3">
               <div>
