@@ -104,6 +104,12 @@ const getEventDefaultImage = (category) => {
   return '/default_event_cover.jpg';
 };
 
+const getDaysRemaining = (expiryDate) => {
+  if (!expiryDate) return 0;
+  const diff = new Date(expiryDate).getTime() - new Date().getTime();
+  return Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 0);
+};
+
 function DashboardContent() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -233,6 +239,14 @@ function DashboardContent() {
 
   // The effective "registered business" — null when just a draft
   const registrationComplete = isRegistrationDraft ? false : !!business;
+
+  // Safe defaults if business is null (standard user has no listing)
+  const isExpired = business ? business.subscriptionStatus === 'expired' : false;
+  const daysLeft = business ? getDaysRemaining(business.subscriptionExpiry) : 0;
+  const isMandatorySubscription = business && business.status === 'Approved' && business.subscriptionStatus !== 'active' && !(
+    ['governmental organisations', 'government organisations', 'governmental organisation', 'government organisation'].includes((business.requestedParentCategory || '').toLowerCase()) ||
+    ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'].includes((business.category || '').toLowerCase())
+  );
 
   // Notifications states
   const [notifications, setNotifications] = useState([]);
@@ -3723,11 +3737,7 @@ function DashboardContent() {
     });
   };
 
-  const getDaysRemaining = (expiryDate) => {
-    if (!expiryDate) return 0;
-    const diff = new Date(expiryDate).getTime() - new Date().getTime();
-    return Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 0);
-  };
+  // getDaysRemaining moved outside component to prevent TDZ error
 
   const copyReviewLink = () => {
     if (!business || !business._id) return;
@@ -3793,13 +3803,7 @@ function DashboardContent() {
     );
   }
 
-  // Safe defaults if business is null (standard user has no listing)
-  const isExpired = business ? business.subscriptionStatus === 'expired' : false;
-  const daysLeft = business ? getDaysRemaining(business.subscriptionExpiry) : 0;
-  const isMandatorySubscription = business && business.status === 'Approved' && business.subscriptionStatus !== 'active' && !(
-    ['governmental organisations', 'government organisations', 'governmental organisation', 'government organisation'].includes((business.requestedParentCategory || '').toLowerCase()) ||
-    ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'].includes((business.category || '').toLowerCase())
-  );
+  // isExpired, daysLeft, and isMandatorySubscription moved to the top of component to prevent TDZ error
 
   // Registration complete flag (already computed at the top)
 
@@ -4401,7 +4405,7 @@ function DashboardContent() {
           {/* ========================================================================= */}
           {/* TAB: BUSINESS OWNER DASHBOARD (KPI CARDS, LEADS, AND AUDITS) */}
           {/* ========================================================================= */}
-          {activeTab === 'Dashboard' && business && (
+          {activeTab === 'Dashboard' && business && registrationComplete && (
 
             <>
               {(user?.isFoundingMember || business?.isFoundingMember) && (
