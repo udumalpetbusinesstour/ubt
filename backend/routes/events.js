@@ -245,7 +245,25 @@ router.post('/', protect, async (req, res) => {
       likes: [],
       comments: [],
     });
- 
+
+    // Notify all admins and superadmins of new event submission
+    try {
+      const User = require('../models/User');
+      const Notification = require('../models/Notification');
+      const adminUsers = await User.find({ role: { $in: ['admin', 'superadmin'] } });
+      const notifications = adminUsers.map(adminUser => ({
+        userId: adminUser._id,
+        title: 'New Event Review Pending',
+        message: `A new event listing "${event.title}" has been submitted and is pending review.`,
+        type: 'approval_status'
+      }));
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+      }
+    } catch (notifError) {
+      console.error('Failed to notify admins of new event creation:', notifError);
+    }
+
     res.status(201).json({ success: true, data: event });
   } catch (error) {
     console.error('Error creating event:', error.message);

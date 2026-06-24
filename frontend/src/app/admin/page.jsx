@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   ShieldCheck, ToggleLeft, RefreshCw, Star, HelpCircle, Check, X, AlertCircle, AlertTriangle, 
@@ -187,6 +187,7 @@ export default function AdminDashboard() {
   const [subscriptionTab, setSubscriptionTab] = useState('override');
   const [notifications, setNotifications] = useState([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const notificationsRef = useRef(null);
   const [reportsData, setReportsData] = useState({});
   const [pendingCategories, setPendingCategories] = useState([]);
   const [presetCategories, setPresetCategories] = useState([]);
@@ -205,6 +206,30 @@ export default function AdminDashboard() {
   const [selectedBiz, setSelectedBiz] = useState(null);
   const [showBizModal, setShowBizModal] = useState(false);
   const [isFoundingMemberCheck, setIsFoundingMemberCheck] = useState(false);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setNotificationsOpen(false);
+      }
+    }
+    
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setNotificationsOpen(false);
+      }
+    }
+
+    if (notificationsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [notificationsOpen]);
 
   useEffect(() => {
     if (selectedBiz) {
@@ -1790,7 +1815,7 @@ export default function AdminDashboard() {
 
           {/* Right: profile dropdown notification bar */}
           <div className="flex items-center gap-4">
-            <div className="relative">
+            <div className="relative" ref={notificationsRef}>
               <button 
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
                 className="h-10 w-10 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-500 relative cursor-pointer"
@@ -2015,7 +2040,6 @@ export default function AdminDashboard() {
                               <th className="p-4.5">Branches</th>
                               <th className="p-4.5">Status</th>
                               <th className="p-4.5">Sub Expiry</th>
-                              <th className="p-4.5">Premium Boost</th>
                               <th className="p-4.5 text-right">Actions</th>
                             </tr>
                           </thead>
@@ -2066,17 +2090,6 @@ export default function AdminDashboard() {
                                 </td>
                                 <td className="p-4.5 font-bold text-slate-500">
                                   {b.subscriptionExpiry ? new Date(b.subscriptionExpiry).toLocaleDateString() : 'N/A'}
-                                </td>
-                                <td className="p-4.5">
-                                  {b.subscriptionStatus === 'active' ? (
-                                    <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-[8.5px] font-black px-2 py-0.5 rounded uppercase flex items-center gap-1 w-fit">
-                                      <Check className="h-3 w-3" /> Boosted
-                                    </span>
-                                  ) : (
-                                    <span className="bg-slate-50 border border-slate-200 text-slate-400 text-[8.5px] font-bold px-2 py-0.5 rounded uppercase w-fit">
-                                      Standard
-                                    </span>
-                                  )}
                                 </td>
                                 <td className="p-4.5 text-right">
                                   <div className="flex items-center justify-end gap-2">

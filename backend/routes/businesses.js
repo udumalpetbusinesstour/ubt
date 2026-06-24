@@ -1673,6 +1673,25 @@ router.post('/anonymous-add', async (req, res) => {
       galleryImages: galleryUrls || []
     });
 
+    // Notify all admins and superadmins of new anonymous business submission
+    try {
+      const User = require('../models/User');
+      const Notification = require('../models/Notification');
+      const adminUsers = await User.find({ role: { $in: ['admin', 'superadmin'] } });
+      const notifications = adminUsers.map(adminUser => ({
+        userId: adminUser._id,
+        businessId: business._id,
+        title: 'New Anonymous Listing Pending',
+        message: `A new anonymous business "${business.name}" has been submitted and is pending verification.`,
+        type: 'approval_status'
+      }));
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+      }
+    } catch (notifError) {
+      console.error('Failed to notify admins of anonymous business addition:', notifError);
+    }
+
     res.status(201).json({ success: true, data: business });
   } catch (error) {
     console.error('Error in anonymous-add route:', error);
@@ -1916,6 +1935,25 @@ router.post('/', protect, async (req, res) => {
         ownerId: req.user._id,
         ...updateData,
       });
+
+      // Notify all admins and superadmins of new business submission
+      try {
+        const User = require('../models/User');
+        const Notification = require('../models/Notification');
+        const adminUsers = await User.find({ role: { $in: ['admin', 'superadmin'] } });
+        const notifications = adminUsers.map(adminUser => ({
+          userId: adminUser._id,
+          businessId: business._id,
+          title: 'New Business Pending Verification',
+          message: `A new business listing "${business.name}" has been submitted by "${req.user.fullName || req.user.name}" and is pending verification.`,
+          type: 'approval_status'
+        }));
+        if (notifications.length > 0) {
+          await Notification.insertMany(notifications);
+        }
+      } catch (notifError) {
+        console.error('Failed to notify admins of new business registration:', notifError);
+      }
     }
 
     // Save link to referral
