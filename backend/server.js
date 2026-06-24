@@ -23,6 +23,7 @@ app.use('/api/testimonials', require('./routes/testimonials'));
 app.use('/api/newsletter', require('./routes/newsletter'));
 app.use('/api/update-subscribers', require('./routes/updateSubscribers'));
 app.use('/api/menu', require('./routes/menu'));
+app.use('/api/queries', require('./routes/queries'));
 
 // Seeder routine for UBT administrative credentials
 const seedAdministrativeCredentials = async () => {

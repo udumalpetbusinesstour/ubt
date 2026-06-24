@@ -3750,6 +3750,28 @@ function DashboardContent() {
     }
   };
 
+  const handleDashboardShare = async (biz) => {
+    if (!biz || !biz._id) return;
+    const url = `${window.location.origin}/businesses/${biz._id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: biz.name || 'Check out my business on UBT',
+          text: `Check out our business profile on Udumalpet Business Tour: ${biz.name}`,
+          url: url
+        });
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          navigator.clipboard.writeText(url);
+          alert("Profile link copied!");
+        }
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      alert("Profile link copied!");
+    }
+  };
+
   if (loading) {
     return (
       <div className="py-32 flex flex-col items-center justify-center gap-3 text-slate-400 min-h-screen bg-slate-50">
@@ -5788,18 +5810,23 @@ function DashboardContent() {
                     <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-6 flex flex-col gap-3.5 text-left">
                       <span className="font-extrabold text-sm text-slate-805">Share Profile</span>
                       <div className="flex items-center gap-3 mt-1.5 justify-start">
-                        <button className="h-8 w-8 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
+                        <button 
+                          type="button"
+                          onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin + '/businesses/' + business._id)}`, '_blank')}
+                          className="h-8 w-8 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
+                        >
                           <Facebook className="h-4 w-4" />
                         </button>
-                        <button className="h-8 w-8 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
+                        <button 
+                          type="button"
+                          onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent('Check out my business on UBT: ' + window.location.origin + '/businesses/' + business._id)}`, '_blank')}
+                          className="h-8 w-8 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
+                        >
                           <MessageSquare className="h-4 w-4 text-slate-650" />
                         </button>
                         <button 
                           type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(`http://localhost:3000/businesses/${business._id}`);
-                            alert("Profile link copied!");
-                          }}
+                          onClick={() => handleDashboardShare(business)}
                           className="h-8 w-8 border border-slate-200 hover:border-slate-300 hover:bg-slate-55 flex items-center justify-center text-slate-600 transition-colors cursor-pointer font-bold text-xs"
                         >
                           <Globe className="h-4 w-4" />

@@ -6,7 +6,7 @@ import {
   ChevronDown, ChevronUp, Users, Car, GraduationCap, Tv, Utensils, 
   HeartPulse, Home as HomeIcon, Building, ShoppingBag, Factory, Compass, 
   Wrench, Sprout, CreditCard, Dumbbell, Briefcase, Mail, Info, Clock,
-  Activity, Leaf, Coins, Camera, Plane, Landmark, Store, X, Globe
+  Activity, Leaf, Coins, Camera, Plane, Landmark, Store, X, Globe, Upload
 } from 'lucide-react';
 import AboutUsView from '../../components/AboutUsView';
 
@@ -16,7 +16,7 @@ const lucideIcons = {
   ChevronDown, ChevronUp, Users, Car, GraduationCap, Tv, Utensils, 
   HeartPulse, HomeIcon, Building, ShoppingBag, Factory, Compass, 
   Wrench, Sprout, CreditCard, Dumbbell, Briefcase, Mail, Info, Clock,
-  Activity, Leaf, Coins, Camera, Plane, Landmark, Store, X, Globe
+  Activity, Leaf, Coins, Camera, Plane, Landmark, Store, X, Globe, Upload
 };
 
 const renderCategoryIcon = (iconName, className = "h-4.5 w-4.5") => {
@@ -330,12 +330,14 @@ function BusinessesList() {
   const [anonAutofillSuccess, setAnonAutofillSuccess] = useState(false);
   const [anonSubmitLoading, setAnonSubmitLoading] = useState(false);
   const [isAnonCustomSub, setIsAnonCustomSub] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
 
   const resetAnonForm = () => {
     setAnonForm(initialAnonForm);
     setAnonGmbLink('');
     setAnonAutofillSuccess(false);
     setIsAnonCustomSub(false);
+    setImageUploading(false);
   };
 
   useEffect(() => {
@@ -409,23 +411,47 @@ function BusinessesList() {
     }
   };
 
+  const handleAnonImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image file size must be less than 5MB.');
+      return;
+    }
+
+    setImageUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/upload/public', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setAnonForm(prev => ({ ...prev, coverImageUrl: data.url }));
+      } else {
+        alert(data.message || 'Failed to upload image.');
+      }
+    } catch (err) {
+      console.error('Image upload error:', err);
+      alert('Network error uploading image.');
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
   const handlePublishAnonListing = async () => {
-    if (!anonForm.name || !anonForm.category || !anonForm.address || !anonForm.locality || !anonForm.phone) {
-      alert('Please fill in all required fields');
-      return;
-    }
-    if (anonForm.category === 'Others' && (!anonForm.customCategoryName || !anonForm.customCategoryName.trim())) {
-      alert('Please specify your custom subcategory name');
-      return;
-    }
-    
     setAnonSubmitLoading(true);
     try {
       const payload = {
-        name: anonForm.name,
+        name: anonForm.name || 'Unnamed Public Listing',
         requestedParentCategory: 'Public Sector',
-        category: anonForm.category,
-        customCategoryName: anonForm.category === 'Others' ? anonForm.customCategoryName : '',
+        category: anonForm.category || 'Others',
+        customCategoryName: anonForm.category === 'Others' ? (anonForm.customCategoryName || 'Others') : '',
         address: anonForm.address,
         locality: anonForm.locality,
         phone: anonForm.phone,
@@ -1549,8 +1575,7 @@ function BusinessesList() {
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[10px] font-extrabold text-slate-450 uppercase leading-none">Call Us</span>
-                  <a href="tel:+919443512345" className="text-xs text-slate-800 font-extrabold hover:underline mt-1 leading-normal">+91 94435 12345</a>
-                  <a href="tel:+914252223456" className="text-xs text-slate-800 font-extrabold hover:underline leading-none">+91 4252 223456</a>
+                  <a href="tel:+918925728260" className="text-xs text-slate-800 font-extrabold hover:underline mt-1 leading-normal">+91 89257 28260</a>
                 </div>
               </div>
 
@@ -1562,30 +1587,6 @@ function BusinessesList() {
                   <span className="text-[10px] font-extrabold text-slate-500 uppercase leading-none">Email Us</span>
                   <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-xs text-slate-800 font-extrabold hover:underline mt-1 leading-normal">udumalpetbusinesstour@gmail.com</a>
                 </div>
-              </div>
-
-              <div className="flex gap-3.5 items-start">
-                <div className="h-8.5 w-8.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100/50 flex items-center justify-center shrink-0 shadow-2xs">
-                  <Clock className="h-4.5 w-4.5" />
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[10px] font-extrabold text-slate-500 uppercase leading-none">Office Hours</span>
-                  <span className="text-xs text-slate-600 font-semibold mt-1 leading-normal">Mon - Sat: 9:00 AM - 6:00 PM</span>
-                  <span className="text-[10px] text-slate-500 font-bold leading-none">Sunday Closed</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4">
-              <h3 className="font-extrabold text-slate-800 text-sm border-b border-slate-100 pb-2.5">Office Address</h3>
-              <div className="flex gap-3 items-start">
-                <MapPin className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-                <p className="text-slate-600 text-xs leading-relaxed font-semibold">
-                  12, Bazaar Street,<br />
-                  Near Head Post Office,<br />
-                  Udumalpet - 642126,<br />
-                  Tamil Nadu, India.
-                </p>
               </div>
             </div>
           </div>
@@ -2308,10 +2309,9 @@ function BusinessesList() {
                   
                   {/* Business Name */}
                   <div className="flex flex-col gap-1.5 text-left">
-                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Business Name *</label>
+                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Business Name</label>
                     <input
                       type="text"
-                      required
                       value={anonForm.name}
                       onChange={(e) => setAnonForm({ ...anonForm, name: e.target.value })}
                       className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
@@ -2333,7 +2333,7 @@ function BusinessesList() {
                   {/* Subcategory Selection */}
                   <div className="flex flex-col gap-1.5 text-left">
                     <div className="flex justify-between items-center">
-                      <label className="text-[10.5px] font-black text-slate-700 uppercase">Sub Category *</label>
+                      <label className="text-[10.5px] font-black text-slate-700 uppercase">Sub Category</label>
                       {anonForm.category === 'Others' && (
                         <button
                           type="button"
@@ -2354,7 +2354,6 @@ function BusinessesList() {
                       <input
                         type="text"
                         placeholder="Specify Custom Subcategory (e.g. Govt Library, Fire Station)"
-                        required
                         value={anonForm.customCategoryName || ''}
                         onChange={(e) => {
                           setAnonForm({
@@ -2366,7 +2365,6 @@ function BusinessesList() {
                       />
                     ) : (
                       <select
-                        required
                         value={anonForm.category}
                         onChange={(e) => {
                           const subVal = e.target.value;
@@ -2393,10 +2391,9 @@ function BusinessesList() {
 
                   {/* Phone */}
                   <div className="flex flex-col gap-1.5 text-left">
-                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Phone Number *</label>
+                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Phone Number</label>
                     <input
                       type="text"
-                      required
                       value={anonForm.phone}
                       onChange={(e) => setAnonForm({ ...anonForm, phone: e.target.value })}
                       className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
@@ -2419,10 +2416,9 @@ function BusinessesList() {
                   {/* Location / Locality */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="flex flex-col gap-1.5 text-left">
-                      <label className="text-[10.5px] font-black text-slate-700 uppercase">Location / Locality *</label>
+                      <label className="text-[10.5px] font-black text-slate-700 uppercase">Location / Locality</label>
                       <input
                         type="text"
-                        required
                         value={anonForm.locality}
                         onChange={(e) => setAnonForm({ ...anonForm, locality: e.target.value })}
                         className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
@@ -2443,9 +2439,8 @@ function BusinessesList() {
 
                   {/* Address */}
                   <div className="flex flex-col gap-1.5 text-left">
-                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Address *</label>
+                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Address</label>
                     <textarea
-                      required
                       rows={2}
                       value={anonForm.address}
                       onChange={(e) => setAnonForm({ ...anonForm, address: e.target.value })}
@@ -2466,34 +2461,41 @@ function BusinessesList() {
                     />
                   </div>
 
-                  {/* Google Ratings and Reviews */}
-                  <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 mt-2">
-                    <div className="flex flex-col gap-1.5 text-left">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-450" />
-                        <label className="text-[10.5px] font-black text-slate-700 uppercase">Google Rating</label>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        max="5"
-                        value={anonForm.googleRating || ''}
-                        onChange={(e) => setAnonForm({ ...anonForm, googleRating: parseFloat(e.target.value) || 0 })}
-                        className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
-                        placeholder="e.g. 4.5"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5 text-left">
-                      <label className="text-[10.5px] font-black text-slate-700 uppercase">Reviews Count</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={anonForm.googleReviewsCount || ''}
-                        onChange={(e) => setAnonForm({ ...anonForm, googleReviewsCount: parseInt(e.target.value) || 0 })}
-                        className="w-full px-3 py-2 border border-slate-205 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-[#027244]"
-                        placeholder="e.g. 48"
-                      />
+                  {/* Image Upload Option */}
+                  <div className="flex flex-col gap-1.5 text-left border-t border-slate-100 pt-4 mt-2">
+                    <label className="text-[10.5px] font-black text-slate-700 uppercase">Upload Business Image (Optional)</label>
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-205 rounded-xl text-xs font-semibold cursor-pointer hover:bg-slate-100 transition-colors">
+                        <Upload className="h-4 w-4 text-slate-505" />
+                        <span>Choose File</span>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleAnonImageUpload} 
+                          className="hidden" 
+                        />
+                      </label>
+                      {imageUploading && (
+                        <span className="text-[10px] text-[#027244] font-bold flex items-center gap-1">
+                          <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Uploading...
+                        </span>
+                      )}
+                      {anonForm.coverImageUrl && (
+                        <div className="relative h-12 w-16 border border-slate-200 rounded-lg overflow-hidden shrink-0">
+                          <img 
+                            src={window.getImageUrl(anonForm.coverImageUrl)} 
+                            alt="Preview" 
+                            className="h-full w-full object-cover" 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setAnonForm(prev => ({ ...prev, coverImageUrl: '' }))}
+                            className="absolute top-0.5 right-0.5 bg-rose-500 text-white rounded-full p-0.5 hover:bg-rose-600 transition-colors border-none flex items-center justify-center cursor-pointer"
+                          >
+                            <X className="h-2.5 w-2.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 

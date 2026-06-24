@@ -390,10 +390,22 @@ export default function EventDetail() {
     }
   };
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setShareCopied(true);
-    setTimeout(() => setShareCopied(false), 2000);
+  const handleShare = async () => {
+    const shareUrl = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: event?.title || 'Check out this event on UBT',
+          url: shareUrl
+        });
+      } catch (err) {
+        console.warn('Web Share failed or cancelled:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    }
   };
 
   const handleCommentSubmit = async (e) => {
@@ -563,12 +575,12 @@ export default function EventDetail() {
       <div className="max-w-4xl w-full px-4 md:px-8 mt-8 flex flex-col gap-6 text-left">
         
         {/* Back Link */}
-        <Link 
-          to={backPath} 
-          className="inline-flex items-center gap-1.5 text-xs font-extrabold text-slate-500 hover:text-[#027244] transition-colors py-1 hover:-translate-x-0.5 transition-transform"
+        <button 
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-1.5 text-xs font-extrabold text-slate-500 hover:text-[#027244] transition-colors py-1 hover:-translate-x-0.5 transition-transform bg-transparent border-none cursor-pointer p-0"
         >
           <ArrowLeft className="h-4 w-4" /> {backLabel}
-        </Link>
+        </button>
 
         {/* Cover Landscape */}
         <div className="w-full h-[320px] md:h-[420px] rounded-3xl overflow-hidden border border-slate-200/60 shadow-md relative select-none">

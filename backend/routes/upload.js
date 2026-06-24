@@ -37,4 +37,35 @@ router.post('/', protect, upload.single('image'), (req, res) => {
   }
 });
 
+// @desc    Upload an image publicly
+// @route   POST /api/upload/public
+// @access  Public
+router.post('/public', upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Please upload an image file' });
+    }
+
+    let fileUrl = '';
+    if (req.file.path && (req.file.path.startsWith('http://') || req.file.path.startsWith('https://'))) {
+      fileUrl = req.file.path;
+    } else if (req.file.filename) {
+      fileUrl = `/uploads/${req.file.filename}`;
+    }
+
+    if (!fileUrl) {
+      return res.status(500).json({ success: false, message: 'Failed to retrieve uploaded file URL' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Image uploaded successfully',
+      url: fileUrl,
+      fileUrl: fileUrl
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;

@@ -1602,11 +1602,14 @@ router.post('/anonymous-add', async (req, res) => {
       galleryUrls
     } = req.body;
 
-    if (!name || !requestedParentCategory || !category || !phone || !address || !locality) {
-      return res.status(400).json({ success: false, message: 'Name, Main Category, Subcategory, Phone, Address, and Locality are required' });
-    }
+    const resolvedName = (name && name.trim()) ? name.trim() : 'Unnamed Public Listing';
+    const resolvedParentCategory = requestedParentCategory || 'Public Sector';
+    const resolvedCategory = category || 'Others';
+    const resolvedPhone = phone || '';
+    const resolvedAddress = address || '';
+    const resolvedLocality = locality || 'Udumalpet';
 
-    if (requestedParentCategory !== 'Public Sector') {
+    if (resolvedParentCategory !== 'Public Sector') {
       return res.status(400).json({ success: false, message: 'Anonymous directory addition is restricted to Public Sector category listings only.' });
     }
 
@@ -1615,7 +1618,7 @@ router.post('/anonymous-add', async (req, res) => {
     const lng = longitude || 77.2412;
 
     const geoValidation = await validateAddressAndBoundary(
-      `${address || ''} ${locality || ''}`,
+      `${resolvedAddress} ${resolvedLocality}`.trim(),
       resolvedPincode,
       lat,
       lng
@@ -1635,19 +1638,19 @@ router.post('/anonymous-add', async (req, res) => {
 
     const business = await Business.create({
       ownerId: adminUser._id,
-      name,
-      businessName: name,
-      requestedParentCategory,
-      category,
-      type: category,
-      customCategoryName: category === 'Others' ? customCategoryName : '',
-      categoryStatus: (category === 'Others') ? 'Pending Review' : 'Normal',
-      address: address || `${locality}, Udumalpet`,
-      locality: locality || 'Udumalpet',
-      phone,
-      whatsapp: phone,
+      name: resolvedName,
+      businessName: resolvedName,
+      requestedParentCategory: resolvedParentCategory,
+      category: resolvedCategory,
+      type: resolvedCategory,
+      customCategoryName: resolvedCategory === 'Others' ? customCategoryName : '',
+      categoryStatus: (resolvedCategory === 'Others') ? 'Pending Review' : 'Normal',
+      address: resolvedAddress || `${resolvedLocality}, Udumalpet`,
+      locality: resolvedLocality || 'Udumalpet',
+      phone: resolvedPhone,
+      whatsapp: resolvedPhone,
       website: website || '',
-      description: description || `${name} is listed in the Udumalpet Business Tour local directory.`,
+      description: description || `${resolvedName} is listed in the Udumalpet Business Tour local directory.`,
       googleBusinessLink: googleMapsLocation || '',
       googleMapsLocation: googleMapsLocation || '',
       googlePlaceId: googlePlaceId || '',

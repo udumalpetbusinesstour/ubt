@@ -296,7 +296,9 @@ export default function EventsPage() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterCategory, setFilterCategory] = useState('All Categories');
   const [filterDate, setFilterDate] = useState('');
-  const [activeTab, setActiveTab] = useState('upcoming'); // upcoming | past
+  const [activeTab, setActiveTab] = useState(() => {
+    return searchParams.get('tab') || 'upcoming';
+  }); // upcoming | past
   const [sortBy, setSortBy] = useState('Date (Soonest)');
 
   const [events, setEvents] = useState([]);
@@ -317,6 +319,13 @@ export default function EventsPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchKeyword, filterCategory, filterDate, activeTab]);
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && (tabParam === 'upcoming' || tabParam === 'past')) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     // Check local storage for auth
@@ -477,13 +486,24 @@ export default function EventsPage() {
     }
   };
 
-  const handleShareClick = (e, eventId) => {
+  const handleShareClick = async (e, eventId) => {
     e.preventDefault();
     e.stopPropagation();
     const shareUrl = `${window.location.origin}/events/${eventId}`;
-    navigator.clipboard.writeText(shareUrl);
-    setCopiedEventId(eventId);
-    setTimeout(() => setCopiedEventId(null), 2000);
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Check out this event on UBT',
+          url: shareUrl
+        });
+      } catch (err) {
+        console.warn('Web Share failed or cancelled:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      setCopiedEventId(eventId);
+      setTimeout(() => setCopiedEventId(null), 2000);
+    }
   };
 
   const isLikedByUser = (evt) => {
@@ -1829,13 +1849,23 @@ export default function EventsPage() {
           {/* Sub Navigation tabs */}
           <div className="flex border-b border-slate-200/80 gap-6 text-xs font-black select-none">
             <button
-              onClick={() => setActiveTab('upcoming')}
+              onClick={() => {
+                setActiveTab('upcoming');
+                const newParams = new URLSearchParams(window.location.search);
+                newParams.set('tab', 'upcoming');
+                navigate(`/events?${newParams.toString()}`, { replace: true });
+              }}
               className={`pb-3.5 uppercase tracking-wider cursor-pointer border-b-2 ${activeTab === 'upcoming' ? 'border-[#027244] text-[#027244]' : 'border-transparent text-slate-400'}`}
             >
               Upcoming Events
             </button>
             <button
-              onClick={() => setActiveTab('past')}
+              onClick={() => {
+                setActiveTab('past');
+                const newParams = new URLSearchParams(window.location.search);
+                newParams.set('tab', 'past');
+                navigate(`/events?${newParams.toString()}`, { replace: true });
+              }}
               className={`pb-3.5 uppercase tracking-wider cursor-pointer border-b-2 ${activeTab === 'past' ? 'border-[#027244] text-[#027244]' : 'border-transparent text-slate-400'}`}
             >
               Past Events

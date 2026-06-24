@@ -403,7 +403,31 @@ const forgotPassword = async (req, res, next) => {
     await user.save();
 
     // Reset url (fallback to req.headers.origin or localhost frontend)
-    const clientOrigin = origin || req.headers.origin || 'http://localhost:5173';
+    let clientOrigin = origin || req.headers.origin;
+    if (!clientOrigin && req.headers.referer) {
+      try {
+        clientOrigin = new URL(req.headers.referer).origin;
+      } catch (err) {
+        // ignore invalid referer urls
+      }
+    }
+
+    const requestHost = req.get('host') || '';
+    if (requestHost.includes('staging.udumalpet.business') || requestHost.includes('staging-api.udumalpet.business')) {
+      clientOrigin = 'https://staging.udumalpet.business';
+    } else if (requestHost.includes('udumalpet.business') || requestHost.includes('api.udumalpet.business')) {
+      clientOrigin = 'https://udumalpet.business';
+    }
+
+    if (!clientOrigin || clientOrigin.includes('localhost') || clientOrigin.includes('127.0.0.1')) {
+      if (requestHost.includes('staging')) {
+        clientOrigin = 'https://staging.udumalpet.business';
+      } else if (requestHost.includes('udumalpet') || requestHost.includes('business')) {
+        clientOrigin = 'https://udumalpet.business';
+      } else {
+        clientOrigin = 'http://localhost:5173';
+      }
+    }
     const resetUrl = `${clientOrigin}/reset-password?token=${resetToken}`;
 
     const textMessage = `You are receiving this email because you (or someone else) have requested the reset of a password. Please click on the following link or paste it into your browser to complete the process:\n\n${resetUrl}\n\nThis link will expire in 1 hour. If you did not request this, please ignore this email.`;

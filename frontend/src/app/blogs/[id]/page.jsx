@@ -184,10 +184,22 @@ export default function BlogDetail() {
     }
   };
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setShareCopied(true);
-    setTimeout(() => setShareCopied(false), 2000);
+  const handleShare = async () => {
+    const shareUrl = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: blog?.title || 'Check out this blog post on UBT',
+          url: shareUrl
+        });
+      } catch (err) {
+        console.warn('Web Share failed or cancelled:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    }
   };
 
   const handleCommentSubmit = async (e) => {

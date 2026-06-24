@@ -1002,9 +1002,9 @@ export default function Home() {
                   )}
                 </div>
                 <div 
-                  className="p-5 flex-grow flex flex-col justify-between gap-3.5 bg-white"
+                  className={`p-5 flex-grow flex flex-col justify-between gap-3.5 bg-white ${!isSubscribed ? 'select-none pointer-events-none' : ''}`}
                   style={{
-                    filter: !isSubscribed ? 'blur-[3.5px] select-none pointer-events-none' : 'none'
+                    filter: !isSubscribed ? 'blur(3.5px)' : 'none'
                   }}
                 >
                   <div className="flex flex-col gap-1.5 text-left">
@@ -1119,25 +1119,43 @@ export default function Home() {
               className="flex overflow-x-auto gap-6 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
             >
               {topViewedBusinesses.map((biz) => {
+                const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
                 return (
                   <div 
                     key={biz._id}
                     onClick={() => navigate(`/businesses/${biz._id}`)}
-                    className="w-[260px] sm:w-[285px] shrink-0 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 text-left snap-start"
+                    className="w-[260px] sm:w-[285px] shrink-0 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 text-left snap-start relative overflow-hidden"
                   >
                     {/* Logo/Image */}
                     {biz.logoUrl ? (
                       <div className="h-14 w-14 rounded-xl border border-slate-100 overflow-hidden bg-white shrink-0">
-                        <img src={window.getImageUrl(biz.logoUrl)} alt={biz.name} className="h-full w-full object-cover" />
+                        <img 
+                          src={window.getImageUrl(biz.logoUrl)} 
+                          alt={biz.name} 
+                          className="h-full w-full object-cover" 
+                          style={{
+                            filter: !isSubscribed ? 'blur(3px) grayscale(30%)' : 'none'
+                          }}
+                        />
                       </div>
                     ) : (
-                      <div className="h-14 w-14 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-650 text-white font-extrabold text-lg flex items-center justify-center shrink-0 uppercase select-none">
+                      <div 
+                        className="h-14 w-14 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-650 text-white font-extrabold text-lg flex items-center justify-center shrink-0 uppercase select-none"
+                        style={{
+                          filter: !isSubscribed ? 'blur(3px) grayscale(30%)' : 'none'
+                        }}
+                      >
                         {biz.name ? biz.name.charAt(0) : 'B'}
                       </div>
                     )}
                     
                     {/* Content details */}
-                    <div className="flex flex-col justify-between overflow-hidden">
+                    <div 
+                      className={`flex flex-col justify-between overflow-hidden flex-grow ${!isSubscribed ? 'select-none pointer-events-none' : ''}`}
+                      style={{
+                        filter: !isSubscribed ? 'blur(3px)' : 'none'
+                      }}
+                    >
                       <div className="flex flex-col gap-0.5">
                         <h4 className="font-extrabold text-sm text-[#001c41] truncate" title={biz.name}>{biz.name}</h4>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide truncate">{biz.category}</span>
@@ -1154,6 +1172,14 @@ export default function Home() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Glassmorphism Lock Overlay for Inactive Subscriptions */}
+                    {!isSubscribed && (
+                      <div 
+                        onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz._id}`); }}
+                        className="absolute inset-0 bg-slate-900/10 backdrop-blur-xs z-20 transition-all duration-300 hover:bg-slate-900/15 cursor-pointer"
+                      />
+                    )}
                   </div>
                 );
               })}

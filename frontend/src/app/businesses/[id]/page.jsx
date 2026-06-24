@@ -1220,6 +1220,25 @@ export default function BusinessDetail() {
     window.open(`https://wa.me/${cleanNum}?text=Hello%20${encodeURIComponent(name)},%20I%20saw%2520your%20listing%20on%20UBT.`);
   };
 
+  const handleShare = async () => {
+    trackClick('share');
+    const shareUrl = window.location.href;
+    const shareTitle = business?.name || 'Udumalpet Business Tour';
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          url: shareUrl
+        });
+      } catch (err) {
+        console.warn('Web Share failed or cancelled:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      alert("Business profile link copied to clipboard!");
+    }
+  };
+
   const handleWhatsAppOrder = (item) => {
     trackClick('whatsapp');
     let number = business.whatsapp || business.phone || '';
@@ -1647,7 +1666,10 @@ Please confirm availability and delivery time.`;
 
           {/* Banner Action Buttons */}
           <div className="flex items-center gap-3 shrink-0 mt-4 md:mt-0 flex-wrap">
-            <button className="h-10 px-4 bg-white/5 border border-white/10 hover:border-white/20 rounded-xl flex items-center justify-center gap-2 text-slate-300 hover:text-white transition-all cursor-pointer font-bold text-xs">
+            <button 
+              onClick={handleShare}
+              className="h-10 px-4 bg-white/5 border border-white/10 hover:border-white/20 rounded-xl flex items-center justify-center gap-2 text-slate-300 hover:text-white transition-all cursor-pointer font-bold text-xs"
+            >
               <Share2 className="h-4 w-4" /> Share
             </button>
             <button className="h-10 px-4 bg-white/5 border border-white/10 hover:border-white/20 rounded-xl flex items-center justify-center gap-2 text-slate-300 hover:text-white transition-all cursor-pointer font-bold text-xs">
@@ -2982,20 +3004,26 @@ Please confirm availability and delivery time.`;
             <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-6 flex flex-col gap-3.5 text-left">
               <span className="font-extrabold text-sm text-slate-800">Share This Business</span>
               <div className="flex items-center gap-3.5 mt-1 justify-center">
-                <button className="h-10 w-10 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
+                <button 
+                  onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')}
+                  className="h-10 w-10 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
+                >
                   <Facebook className="h-4.5 w-4.5" />
                 </button>
-                <button className="h-10 w-10 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
+                <button 
+                  onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent('Check out ' + (business?.name || 'this business') + ' on UBT: ' + window.location.href)}`, '_blank')}
+                  className="h-10 w-10 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
+                >
                   <MessageSquare className="h-4.5 w-4.5 fill-current text-slate-600" />
                 </button>
-                <button className="h-10 w-10 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer">
+                <button 
+                  onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent('Check out ' + (business?.name || 'this business') + ' on UBT')}`, '_blank')}
+                  className="h-10 w-10 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
+                >
                   <Twitter className="h-4.5 w-4.5" />
                 </button>
                 <button 
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    alert("Business profile link copied to clipboard!");
-                  }}
+                  onClick={handleShare}
                   className="h-10 w-10 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer font-bold text-xs"
                 >
                   <Globe className="h-4.5 w-4.5" />

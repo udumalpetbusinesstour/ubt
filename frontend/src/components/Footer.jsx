@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Youtube, Send, Phone, Mail, Clock, MapPin, Gift } from 'lucide-react';
+import { Facebook, Instagram, Phone, Mail, Clock, MapPin, Gift } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -20,12 +20,6 @@ export default function Footer() {
             </a>
             <a href="https://www.instagram.com/udumalpet.co.in/" target="_blank" rel="noopener noreferrer" className="h-8 w-8 rounded-full border border-slate-700 hover:border-emerald-500 flex items-center justify-center hover:bg-[#027244] hover:text-white transition-all text-slate-400">
               <Instagram className="h-4 w-4" />
-            </a>
-            <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer" className="h-8 w-8 rounded-full border border-slate-700 hover:border-emerald-500 flex items-center justify-center hover:bg-[#027244] hover:text-white transition-all text-slate-400">
-              <Send className="h-4 w-4" />
-            </a>
-            <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="h-8 w-8 rounded-full border border-slate-700 hover:border-emerald-500 flex items-center justify-center hover:bg-[#027244] hover:text-white transition-all text-slate-400">
-              <Youtube className="h-4 w-4" />
             </a>
           </div>
         </div>
