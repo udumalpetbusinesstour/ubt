@@ -291,15 +291,15 @@ function DashboardContent() {
     setVerifyError('');
     setVerifySuccess('');
     try {
-      // 1. Fetch place details using autofill endpoint
-      const autofillRes = await fetch('http://localhost:5000/api/businesses/google-autofill', {
+      // 1. Fetch place details using Google Business Profile URL (same as registration flow)
+      const autofillRes = await fetch('http://localhost:5000/api/businesses/google-autofill-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ placeId: verifyPlaceId })
+        body: JSON.stringify({ link: verifyPlaceId })
       });
       const autofillData = await autofillRes.json();
       if (!autofillData.success || !autofillData.data) {
-        setVerifyError(autofillData.message || 'Failed to fetch details for the provided Place ID.');
+        setVerifyError(autofillData.message || 'Failed to fetch details for the provided Google Business URL.');
         setVerifyLoading(false);
         return;
       }
@@ -4206,7 +4206,7 @@ function DashboardContent() {
                             onClick={() => setShowVerifyModal(true)}
                             className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1.5 px-3 rounded-lg transition-all shadow-sm cursor-pointer border-none"
                           >
-                            Link Google Place ID to speed up verification
+                            Link Google Business URL to speed up verification
                           </button>
                         </div>
                       )}
@@ -8514,16 +8514,16 @@ function DashboardContent() {
               </div>
               <h3 className="text-xl font-extrabold text-slate-800 tracking-tight mt-2">Verify Your Business Listing</h3>
               <p className="text-slate-550 text-xs font-semibold leading-relaxed">
-                Provide your Google Place ID to link your Google Business Profile. We will check that the addresses match and instantly verify your profile.
+                Paste your Google Business Profile URL (the share link from Google Maps). We will verify your address and instantly link your profile.
               </p>
             </div>
 
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Google Place ID</label>
+                <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Google Business Profile URL</label>
                 <input
                   type="text"
-                  placeholder="e.g. ChIJnUv03E3NqTsRHR_zk-gs78w"
+                  placeholder="e.g. https://share.google/... or https://maps.app.goo.gl/..."
                   value={verifyPlaceId}
                   onChange={(e) => setVerifyPlaceId(e.target.value)}
                   className="py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold w-full focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
