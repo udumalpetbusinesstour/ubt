@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Search, MessageSquare, Trash2 } from 'lucide-react';
+import { Star, Search, MessageSquare, Trash2, RefreshCw } from 'lucide-react';
 
 export default function ReviewsReputationTab({
   business,
@@ -26,8 +26,62 @@ export default function ReviewsReputationTab({
   setReplyingReviewId,
   reviewReplyText,
   setReviewReplyText,
-  copyReviewLink
+  copyReviewLink,
+  onLinkGoogleClick,
+  onBusinessUpdate
 }) {
+  const [syncLoading, setSyncLoading] = React.useState(false);
+  const [syncError, setSyncError] = React.useState('');
+  const [syncSuccess, setSyncSuccess] = React.useState('');
+
+  const handleSyncGoogle = async () => {
+    if (!business || !business.googlePlaceId) return;
+    setSyncLoading(true);
+    setSyncError('');
+    setSyncSuccess('');
+    try {
+      const autofillRes = await fetch('http://localhost:5000/api/businesses/google-autofill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ placeId: business.googlePlaceId })
+      });
+      const autofillData = await autofillRes.json();
+      if (!autofillData.success || !autofillData.data) {
+        setSyncError(autofillData.message || 'Failed to fetch details from Google.');
+        return;
+      }
+      const googlePlace = autofillData.data;
+      const storedToken = token || localStorage.getItem('ubt_token');
+      const syncRes = await fetch(`http://localhost:5000/api/businesses/${business._id}/sync-google`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`
+        },
+        body: JSON.stringify({
+          googlePlaceId: googlePlace.googlePlaceId,
+          googleRating: googlePlace.googleRating,
+          googleReviewsCount: googlePlace.googleReviewsCount,
+          googleReviews: googlePlace.googleReviews
+        })
+      });
+      const syncData = await syncRes.json();
+      if (syncData.success) {
+        setSyncSuccess('Google reviews synced successfully!');
+        if (onBusinessUpdate) {
+          onBusinessUpdate(syncData.data);
+        }
+        setTimeout(() => setSyncSuccess(''), 3000);
+      } else {
+        setSyncError(syncData.message || 'Failed to sync Google reviews.');
+      }
+    } catch (err) {
+      setSyncError('Connection failed. Server might be offline.');
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 text-left animate-fadeIn">
       
@@ -44,6 +98,58 @@ export default function ReviewsReputationTab({
           <Star className="h-4.5 w-4.5 fill-current" /> Get More Reviews
         </button>
       </div>
+
+      {/* Google Business Profile Sync Alert */}
+      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${business?.googlePlaceId ? 'bg-blue-50 text-blue-650' : 'bg-slate-50 text-slate-400'}`}>
+            <svg className="h-5.5 w-5.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <div className="flex flex-col">
+            <span className="font-extrabold text-xs text-slate-800">
+              {business?.googlePlaceId ? 'Google Business Profile Linked' : 'Google Business Profile Not Linked'}
+            </span>
+            <p className="text-[11px] text-slate-500 font-semibold leading-relaxed mt-0.5">
+              {business?.googlePlaceId 
+                ? `Sync your Google reviews directly from Google Maps (Linked ID: ${business.googlePlaceId})` 
+                : 'Connect your business to fetch reviews, show rating aggregates, and build trust.'}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          {business?.googlePlaceId ? (
+            <button
+              onClick={handleSyncGoogle}
+              disabled={syncLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs py-2.5 px-5 rounded-xl transition-all shadow-md hover:shadow-blue-700/10 cursor-pointer disabled:opacity-50 text-center border-none flex items-center justify-center gap-2"
+            >
+              {syncLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+              {syncLoading ? 'Syncing...' : 'Sync Google Reviews'}
+            </button>
+          ) : (
+            <button
+              onClick={onLinkGoogleClick}
+              className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-2.5 px-5 rounded-xl transition-all shadow-md hover:shadow-emerald-700/10 cursor-pointer text-center border-none"
+            >
+              Link Google Business
+            </button>
+          )}
+        </div>
+      </div>
+
+      {syncError && (
+        <div className="bg-red-50 border border-red-200 text-red-650 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-sm animate-shake">
+          <span>{syncError}</span>
+        </div>
+      )}
+
+      {syncSuccess && (
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-sm animate-fadeIn">
+          <span>{syncSuccess}</span>
+        </div>
+      )}
 
       {/* Stats overview cards grid using card-premium class */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

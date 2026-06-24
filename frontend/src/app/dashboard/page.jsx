@@ -213,6 +213,7 @@ function DashboardContent() {
     : 0;
 
   const isRegistrationDraft = business && (
+    (Array.isArray(business.tags) && business.tags.includes('draft')) ||
     !business.name ||
     !business.category ||
     !business.description ||
@@ -234,7 +235,9 @@ function DashboardContent() {
     // Step 4 (Contact & Location): has description but no phone or address
     if (!business.phone || !business.address) return 4;
     // Step 5 (Photos & Media): all info but no images (or less than 3 total)
-    return 5;
+    if (totalPhotosCount < 3) return 5;
+    // Step 6 (Review & Submit): everything is filled but not submitted yet (has draft tag)
+    return 6;
   })();
 
   // The effective "registered business" — null when just a draft
@@ -4190,12 +4193,21 @@ function DashboardContent() {
                       <p className="text-[11px] text-slate-600 font-semibold leading-relaxed">
                         Your listing is successfully submitted. It will become live globally in the directory as soon as the administrators verify your business details.
                       </p>
-                      {business.googlePlaceId && (
+                      {business.googlePlaceId ? (
                         <div className="flex items-center gap-1.5 mt-1.5">
                           <span className="bg-blue-100 text-blue-700 border border-blue-200 text-[8.5px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-0.5 shadow-2xs">
                             ⚡ Google Connected — Faster Approval Active
                           </span>
                           <span className="text-[9.5px] font-extrabold text-slate-450">High-trust priority queue active!</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <button
+                            onClick={() => setShowVerifyModal(true)}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1.5 px-3 rounded-lg transition-all shadow-sm cursor-pointer border-none"
+                          >
+                            Link Google Place ID to speed up verification
+                          </button>
                         </div>
                       )}
                     </div>
@@ -6403,6 +6415,8 @@ function DashboardContent() {
               reviewReplyText={reviewReplyText}
               setReviewReplyText={setReviewReplyText}
               copyReviewLink={copyReviewLink}
+              onLinkGoogleClick={() => setShowVerifyModal(true)}
+              onBusinessUpdate={setBusiness}
             />
           )}
 

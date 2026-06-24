@@ -1836,6 +1836,7 @@ router.post('/', protect, async (req, res) => {
       services: services || [],
       brands: brands || [],
       highlights: highlights || [],
+      tags: (req.body.tags || []).filter(t => t !== 'draft'),
       phone,
       whatsapp,
       email,
@@ -1932,6 +1933,9 @@ router.post('/', protect, async (req, res) => {
         });
       }
       Object.assign(business, updateData);
+      if (Array.isArray(business.tags)) {
+        business.tags = business.tags.filter(t => t !== 'draft');
+      }
       await business.save();
     } else {
       business = await Business.create({
@@ -2053,6 +2057,9 @@ router.put('/:id', protect, async (req, res) => {
     delete req.body.subscriptionStatus;
     delete req.body.subscriptionExpiry;
     delete req.body.isPremium;
+    if (req.body.tags && Array.isArray(req.body.tags)) {
+      req.body.tags = req.body.tags.filter(t => t !== 'draft');
+    }
 
     business = await Business.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -2105,12 +2112,19 @@ router.post('/draft', protect, async (req, res) => {
       // Update existing draft, excluding metadata/version/owner fields to prevent VersionError
       const { _id, __v, ownerId, createdAt, updatedAt, ...updateFields } = fields;
       Object.assign(business, updateFields);
+      if (!Array.isArray(business.tags)) {
+        business.tags = [];
+      }
+      if (!business.tags.includes('draft')) {
+        business.tags.push('draft');
+      }
       await business.save();
     } else {
       // Create new draft
       business = new Business({
         ownerId: req.user._id,
         ...fields,
+        tags: ['draft'],
         status: fields.status || 'Pending Verification',
         subscriptionStatus: fields.subscriptionStatus || 'none',
         isPremium: fields.isPremium !== undefined ? fields.isPremium : false,
