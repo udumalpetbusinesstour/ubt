@@ -67,7 +67,7 @@ router.post('/create-order', protect, async (req, res) => {
 
     // Business Rule #2: Max 10% deduction of plan value
     const maxDiscountRupees = Math.round(planPrice * 0.1);
-    const maxPointsAllowed = maxDiscountRupees * 10; // 10 points = 1 Rupee
+    const maxPointsAllowed = maxDiscountRupees; // 1 point = 1 Rupee
 
     let discountAmountRupees = 0;
     let pointsUsed = 0;
@@ -270,7 +270,7 @@ router.post('/verify-payment', protect, async (req, res) => {
     
     // Business Rule #2: Max 10% deduction of plan value
     const maxDiscountRupees = Math.round(baseAmount * 0.1);
-    const maxPointsAllowed = maxDiscountRupees * 10;
+    const maxPointsAllowed = maxDiscountRupees; // 1 point = 1 Rupee
 
     let discountAmountRupees = 0;
     let pointsUsed = 0;

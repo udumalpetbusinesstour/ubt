@@ -7721,7 +7721,7 @@ function DashboardContent() {
                     Refer. Earn. Redeem.
                   </h2>
                   <p className="text-xs md:text-sm text-slate-200 font-medium leading-relaxed mt-1">
-                    Refer new businesses to UBT and earn referral points. Once you reach 1,000 points, request a manual cash refund! (1 Referral = 10 Points)
+                    Refer new businesses to UBT and earn referral points. Once you reach 1,000 points, request a manual cash refund! (1 Referral = 99 Points)
                   </p>
                 </div>
                 
@@ -7730,7 +7730,7 @@ function DashboardContent() {
                   <Gift className="h-7 w-7 text-amber-300 animate-pulse mb-1.5" />
                   <span className="text-[9px] uppercase font-black text-slate-300 tracking-wider">Available Points Balance</span>
                   <span className="text-2xl font-black mt-1 text-white">{referralStats?.referralPoints || 0} POINTS</span>
-                  <span className="text-[11px] font-bold text-emerald-300 mt-1">1 Business Referral = 10 Points</span>
+                  <span className="text-[11px] font-bold text-emerald-300 mt-1">1 Business Referral = 99 Points</span>
                 </div>
               </div>
 
@@ -7740,7 +7740,7 @@ function DashboardContent() {
                 <div className="lg:col-span-2 bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4 text-left">
                   <h3 className="font-extrabold text-[#001c41] text-sm md:text-base tracking-tight">Your Unique Referral Link</h3>
                   <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                    Share your invite link with other local merchants in Udumalpet. When they register, complete their subscription payment, and get approved, you'll earn 10 points!
+                    Share your invite link with other local merchants in Udumalpet. When they register, complete their subscription payment, and get approved, you'll earn 99 points!
                   </p>
 
                   <div className="flex gap-2.5 items-center mt-2">

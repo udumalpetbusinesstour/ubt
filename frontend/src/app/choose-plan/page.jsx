@@ -157,7 +157,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
       // Limit to max 10% of selected plan value in Rupees
       const planPrice = getSelectedPlanPrice();
       const maxDiscountRupees = Math.round(planPrice * 0.1);
-      const maxPointsAllowed = maxDiscountRupees * 10;
+      const maxPointsAllowed = maxDiscountRupees; // 1 point = 1 Rupee
       
       const maxRedeem = Math.min(
         referralStats.referralPoints,
@@ -174,7 +174,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
     if (referralStats) {
       const planPrice = getSelectedPlanPrice();
       const maxDiscountRupees = Math.round(planPrice * 0.1);
-      const maxPointsAllowed = maxDiscountRupees * 10;
+      const maxPointsAllowed = maxDiscountRupees; // 1 point = 1 Rupee
 
       const maxRedeem = Math.min(
         referralStats.referralPoints,
@@ -193,7 +193,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
   const getDiscountedPrice = (originalPrice) => {
     if (user && (user.role === 'admin' || user.role === 'superadmin')) return 0;
     if (!applyReferralPoints) return originalPrice;
-    const discount = Number(redeemPointsAmount || 0) * 0.10; // 1 point = 10 paise (₹0.10)
+    const discount = Number(redeemPointsAmount || 0) * 1.0; // 1 point = 1 Rupee (₹1.00)
     const finalPrice = Math.max(0, originalPrice - discount);
     return finalPrice.toFixed(2);
   };

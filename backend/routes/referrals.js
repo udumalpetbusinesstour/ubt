@@ -38,7 +38,7 @@ router.get('/my-stats', protect, async (req, res, next) => {
       data: {
         referralCode: user.referralCode,
         referralPoints: availablePoints,
-        referralCredits: availablePoints / 10, // 100 points = ₹10 credit
+        referralCredits: availablePoints, // 1 point = ₹1 credit
         referralLink: (() => {
           if (!isSubscribed) return '';
           let frontendOrigin = 'https://udumalpet.business';

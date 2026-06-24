@@ -104,7 +104,7 @@ export default function ReferralModal({ isOpen, onClose }) {
               Refer. Earn. <span className="text-[#027244]">Redeem.</span>
             </h1>
             <p className="text-slate-500 text-xs md:text-sm font-semibold leading-relaxed max-w-xl">
-              Refer new businesses to UBT and earn referral points. Accumulate 1,000 points (100 referrals) and request a direct ₹1,000 cashback refund.
+              Refer new businesses to UBT and earn referral points. Accumulate 1,000 points (11 referrals) and request a direct ₹1,000 cashback refund.
             </p>
 
             {/* Quick Steps Row */}
@@ -263,10 +263,10 @@ export default function ReferralModal({ isOpen, onClose }) {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {[
-                    { ref: '1 Business', pts: '10 Points', val: 'Accumulate' },
-                    { ref: '10 Businesses', pts: '100 Points', val: 'Accumulate' },
-                    { ref: '50 Businesses', pts: '500 Points', val: 'Accumulate' },
-                    { ref: '100 Businesses', pts: '1000 Points', val: 'Redeem for ₹1,000 Cashback' }
+                    { ref: '1 Business', pts: '99 Points', val: 'Accumulate' },
+                    { ref: '5 Businesses', pts: '495 Points', val: 'Accumulate' },
+                    { ref: '10 Businesses', pts: '990 Points', val: 'Accumulate' },
+                    { ref: '11 Businesses', pts: '1089 Points', val: 'Redeem for ₹1,000 Cashback' }
                   ].map((row, idx) => (
                     <tr key={idx} className="hover:bg-slate-50/50">
                       <td className="px-4 py-2 text-slate-800 font-extrabold">{row.ref}</td>
@@ -285,7 +285,7 @@ export default function ReferralModal({ isOpen, onClose }) {
               </div>
               <div className="flex flex-col gap-0.5 text-slate-700 leading-normal text-xs">
                 <span className="font-extrabold text-slate-800">Once you reach 1,000 points, redeem them on the merchant dashboard.</span>
-                <span className="text-[#027244] font-black mt-0.5">1 Referral = 10 Points</span>
+                <span className="text-[#027244] font-black mt-0.5">1 Referral = 99 Points</span>
               </div>
             </div>
           </div>
@@ -304,7 +304,7 @@ export default function ReferralModal({ isOpen, onClose }) {
               </div>
               <div className="flex justify-between border-b border-slate-100 pb-2 text-slate-500">
                 <span>Successful Referred Businesses</span>
-                <span className="font-extrabold text-slate-800">100 Businesses</span>
+                <span className="font-extrabold text-slate-800">11 Businesses</span>
               </div>
               <div className="flex justify-between pt-1.5 text-xs">
                 <span className="font-extrabold text-slate-800">Redeemable Value</span>
