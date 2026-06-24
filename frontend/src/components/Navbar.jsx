@@ -121,8 +121,7 @@ export default function Navbar() {
     { name: 'Categories', path: '/businesses?focus=categories' },
     { name: 'Events', path: '/events' },
     { name: 'Blogs', path: '/blogs' },
-    { name: 'About Us', path: '/about' },
-    { name: 'Contact Us', path: '/businesses?focus=contact' },
+    { name: 'Partner with Us', path: user ? (user.role === 'partner' ? '/dashboard' : '/register?from=partner') : '/register?from=partner' },
   ];
 
   const isAuthPage = pathname === '/login' || pathname === '/register';
@@ -165,8 +164,7 @@ export default function Navbar() {
       case 'Categories': return <LayoutGrid className="h-4.5 w-4.5" />;
       case 'Events': return <Calendar className="h-4.5 w-4.5" />;
       case 'Blogs': return <BookOpen className="h-4.5 w-4.5" />;
-      case 'About Us': return <Users className="h-4.5 w-4.5" />;
-      case 'Contact Us': return <Phone className="h-4.5 w-4.5" />;
+      case 'Partner with Us': return <Sparkles className="h-4.5 w-4.5" />;
       default: return null;
     }
   };

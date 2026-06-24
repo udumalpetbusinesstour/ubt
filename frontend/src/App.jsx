@@ -22,6 +22,7 @@ import UserProfile from './app/profile/page';
 import ReferralModal from './components/ReferralModal';
 import UpdatePopup from './components/UpdatePopup';
 import BloodDonorsPage from './app/blood-donors/page';
+import PartnerRegister from './app/partner-register/page';
 
 function AppContent() {
   const location = useLocation();
@@ -59,7 +60,8 @@ function AppContent() {
 
   const hideNavAndFooter = location.pathname.startsWith('/dashboard') || 
                            location.pathname.startsWith('/admin') || 
-                           location.pathname.startsWith('/superadmin');
+                           location.pathname.startsWith('/superadmin') ||
+                           location.pathname.startsWith('/partner-register');
 
   return (
     <div className="w-full min-h-screen flex flex-col justify-between bg-[#F8FAFC]">
@@ -84,6 +86,7 @@ function AppContent() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/profile/:id" element={<UserProfile />} />
           <Route path="/blood-donors" element={<BloodDonorsPage />} />
+          <Route path="/partner-register" element={<PartnerRegister />} />
         </Routes>
       </main>
       {!hideNavAndFooter && <Footer />}

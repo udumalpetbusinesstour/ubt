@@ -80,9 +80,9 @@ const checkAndCompleteReferralByBusiness = async (businessId) => {
         return null;
       }
 
-      // Referrer must be admin/superadmin OR have an active subscribed business
+      // Referrer must be admin/superadmin OR partner OR have an active subscribed business
       const referrerBusiness = await Business.findOne({ ownerId: referrer._id, subscriptionStatus: 'active' });
-      const isReferrerSubscribed = referrer.role === 'admin' || referrer.role === 'superadmin' || !!referrerBusiness;
+      const isReferrerSubscribed = referrer.role === 'admin' || referrer.role === 'superadmin' || referrer.role === 'partner' || !!referrerBusiness;
 
       if (!isReferrerSubscribed) {
         console.log(`[Referral Check] Referrer ${referrer.email} is not subscribed. Skipping completion.`);

@@ -23,7 +23,7 @@ const registerSchema = Joi.object({
     'string.min': 'Password must be at least 6 characters',
     'any.required': 'Password is required'
   }),
-  role: Joi.string().valid('visitor', 'merchant', 'owner', 'admin', 'superadmin').default('owner'),
+  role: Joi.string().valid('visitor', 'merchant', 'owner', 'admin', 'superadmin', 'partner').default('owner'),
   referralCode: Joi.string().trim().optional(),
   website: Joi.string().trim().allow('').optional(),
   instagram: Joi.string().trim().allow('').optional(),

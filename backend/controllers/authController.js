@@ -112,6 +112,9 @@ const registerUser = async (req, res, next) => {
         website: user.website,
         instagram: user.instagram,
         facebook: user.facebook,
+        isPartnerRegistered: user.isPartnerRegistered || false,
+        aadhaarNumber: user.aadhaarNumber || '',
+        address: user.address || ''
       }
     });
   } catch (err) {
@@ -169,6 +172,9 @@ const loginUser = async (req, res, next) => {
           website: user.website,
           instagram: user.instagram,
           facebook: user.facebook,
+          isPartnerRegistered: user.isPartnerRegistered || false,
+          aadhaarNumber: user.aadhaarNumber || '',
+          address: user.address || ''
         },
         draftBusiness
       });
@@ -237,6 +243,18 @@ const updateProfile = async (req, res, next) => {
       user.facebook = req.body.facebook;
     }
 
+    if (req.body.aadhaarNumber !== undefined) {
+      user.aadhaarNumber = req.body.aadhaarNumber;
+    }
+
+    if (req.body.address !== undefined) {
+      user.address = req.body.address;
+    }
+
+    if (req.body.isPartnerRegistered !== undefined) {
+      user.isPartnerRegistered = req.body.isPartnerRegistered;
+    }
+
     // Handle password update securely
     if (req.body.newPassword) {
       if (!req.body.currentPassword) {
@@ -262,7 +280,10 @@ const updateProfile = async (req, res, next) => {
       profileImage: user.profileImage,
       website: user.website,
       instagram: user.instagram,
-      facebook: user.facebook
+      facebook: user.facebook,
+      isPartnerRegistered: user.isPartnerRegistered || false,
+      aadhaarNumber: user.aadhaarNumber || '',
+      address: user.address || ''
     });
   } catch (err) {
     next(err);
@@ -343,7 +364,7 @@ const googleLogin = async (req, res, next) => {
         fullName: name,
         email: email.toLowerCase(),
         password: `oauth_pwd_${Math.random().toString(36).substring(2, 12)}`, // Secure dummy password
-        role: 'owner', // Default role for registering business owners
+        role: req.body.role || 'owner', // Default role for registering business owners
         isVerified: true,
         status: 'Active',
         profileImage: picture || ''
@@ -369,7 +390,10 @@ const googleLogin = async (req, res, next) => {
         mobileNumber: user.phone || user.mobileNumber,
         role: user.role,
         profileImage: user.profileImage,
-        isFoundingMember: user.isFoundingMember || false
+        isFoundingMember: user.isFoundingMember || false,
+        isPartnerRegistered: user.isPartnerRegistered || false,
+        aadhaarNumber: user.aadhaarNumber || '',
+        address: user.address || ''
       }
     });
   } catch (err) {

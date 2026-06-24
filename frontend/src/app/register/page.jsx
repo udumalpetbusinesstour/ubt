@@ -59,6 +59,7 @@ export default function Register() {
           mobileNumber, 
           email, 
           password,
+          role: fromParam === 'partner' ? 'partner' : 'owner',
           referralCode: refCode || undefined
         }),
       });
@@ -87,7 +88,11 @@ export default function Register() {
           if (redirect && redirect !== '/' && redirect !== '/login' && redirect !== '/register') {
             navigate(redirect);
           } else {
-            navigate('/add-business');
+            if (user && user.role === 'partner') {
+              navigate('/partner-register');
+            } else {
+              navigate('/add-business');
+            }
           }
         }, 1200);
       } else {
@@ -166,11 +171,13 @@ export default function Register() {
         isMock: true,
         email: `newgooglemember_${Date.now()}@udumalpet.in`,
         name: 'New Google Member',
-        action: 'signup'
+        action: 'signup',
+        role: fromParam === 'partner' ? 'partner' : 'owner'
       } : {
         isMock: false,
         credential: googleCredential,
-        action: 'signup'
+        action: 'signup',
+        role: fromParam === 'partner' ? 'partner' : 'owner'
       };
 
       const res = await fetch('http://localhost:5000/api/auth/google-login', {
@@ -198,7 +205,11 @@ export default function Register() {
           if (redirect && redirect !== '/' && redirect !== '/login' && redirect !== '/register') {
             navigate(redirect);
           } else {
-            navigate('/add-business');
+            if (user && user.role === 'partner') {
+              navigate('/partner-register');
+            } else {
+              navigate('/add-business');
+            }
           }
         }, 1200);
       } else {

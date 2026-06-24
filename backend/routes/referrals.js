@@ -17,9 +17,9 @@ router.get('/my-stats', protect, async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Check if the user is subscribed (has an active business listing or is admin)
+    // Check if the user is subscribed (has an active business listing or is admin or is a partner)
     const activeBusiness = await Business.findOne({ ownerId: user._id, subscriptionStatus: 'active' });
-    const isSubscribed = !!activeBusiness || user.role === 'admin' || user.role === 'superadmin';
+    const isSubscribed = !!activeBusiness || user.role === 'admin' || user.role === 'superadmin' || user.role === 'partner';
 
     // Calculate available points (points excluding pending redemptions)
     const Redemption = require('../models/Redemption');
@@ -355,6 +355,49 @@ router.put('/admin/redemptions/:id/refund', protect, admin, async (req, res, nex
     res.json({
       success: true,
       message: 'Redemption status updated to Refunded successfully',
+      data: redemption
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Reject redemption / Mark as Rejected (Admin/Superadmin only)
+// @route   PUT /api/referrals/admin/redemptions/:id/reject
+// @access  Private/Admin
+router.put('/admin/redemptions/:id/reject', protect, admin, async (req, res, next) => {
+  try {
+    const Redemption = require('../models/Redemption');
+    const { remarks } = req.body;
+
+    const redemption = await Redemption.findById(req.params.id);
+    if (!redemption) {
+      return res.status(404).json({ success: false, message: 'Redemption request not found' });
+    }
+
+    if (redemption.status !== 'Pending Approval') {
+      return res.status(400).json({ success: false, message: `Redemption is already ${redemption.status.toLowerCase()}` });
+    }
+
+    redemption.status = 'Rejected';
+    redemption.remarks = remarks || 'Redemption rejected by administrator';
+    await redemption.save();
+
+    // Create notification for the user
+    try {
+      await Notification.create({
+        userId: redemption.userId,
+        title: 'Points Redemption Rejected',
+        message: `Your referral points redemption request for ${redemption.points} points has been rejected. Remarks: ${redemption.remarks}`,
+        type: 'refund_update'
+      });
+    } catch (notifError) {
+      console.error('Failed to notify user of rejection:', notifError);
+    }
+
+    res.json({
+      success: true,
+      message: 'Redemption status updated to Rejected successfully',
       data: redemption
     });
   } catch (error) {

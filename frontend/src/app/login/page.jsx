@@ -366,7 +366,11 @@ export default function Login() {
           if (draftBusiness) {
             localStorage.setItem('ubt_draft_business', JSON.stringify(draftBusiness));
           }
-          navigate('/dashboard');
+          if (user.role === 'partner' && !user.isPartnerRegistered) {
+            navigate('/partner-register');
+          } else {
+            navigate('/dashboard');
+          }
         }
       } else {
         setError(data.message || 'Invalid credentials.');
@@ -509,7 +513,11 @@ export default function Login() {
           } else if (user.role === 'admin') {
             navigate('/admin');
           } else {
-            navigate('/dashboard');
+            if (user.role === 'partner' && !user.isPartnerRegistered) {
+              navigate('/partner-register');
+            } else {
+              navigate('/dashboard');
+            }
           }
         }, 1200);
       } else {

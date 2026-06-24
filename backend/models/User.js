@@ -32,7 +32,7 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['visitor', 'merchant', 'owner', 'admin', 'superadmin'],
+    enum: ['visitor', 'merchant', 'owner', 'admin', 'superadmin', 'partner'],
     default: 'visitor',
   },
   profileImage: {
@@ -85,6 +85,18 @@ const UserSchema = new mongoose.Schema({
   },
   resetPasswordExpire: {
     type: Date,
+  },
+  aadhaarNumber: {
+    type: String,
+    trim: true,
+  },
+  address: {
+    type: String,
+    trim: true,
+  },
+  isPartnerRegistered: {
+    type: Boolean,
+    default: false,
   }
 }, {
   timestamps: true

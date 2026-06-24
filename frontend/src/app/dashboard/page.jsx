@@ -7,7 +7,7 @@ import {
   ShieldCheck, Sparkles, AlertTriangle, AlertCircle, Edit3, Image as ImageIcon, 
   RefreshCw, Star, CreditCard, ChevronRight, ChevronLeft, ArrowLeft, Activity, PhoneCall, 
   MessageSquare, Plus, CheckCircle, Info, Bell, ExternalLink, Globe,
-  Copy, Check, Gift, Upload, HelpCircle, Briefcase, Mail, Settings, Menu, X, Trash2, Search, Lock,
+  Copy, Check, Share2, Gift, Upload, HelpCircle, Briefcase, Mail, Settings, Menu, X, Trash2, Search, Lock,
   FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin, LogOut, Facebook, Instagram, Phone, Users, Move, Utensils
 } from 'lucide-react';
 
@@ -2720,6 +2720,30 @@ function DashboardContent() {
     }
   };
 
+  const handleShareReferralLink = async (url) => {
+    if (!url) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Udumalpet Business Tour',
+          text: 'Grow your business! Register on Udumalpet Business Tour (UBT) and get listed in the premium local directory. Use my link:',
+          url: url,
+        });
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error('Error sharing:', error);
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        alert('Referral link copied to clipboard!');
+      } catch (err) {
+        console.error('Clipboard copy failed:', err);
+      }
+    }
+  };
+
   useEffect(() => {
     if (token && activeTab === 'Referral & Rewards') {
       fetchReferralStats();
@@ -3852,7 +3876,7 @@ function DashboardContent() {
     <div className="w-full min-h-screen bg-[#F8FAFC] flex font-sans leading-relaxed selection:bg-emerald-500 selection:text-white">
       
       {/* 1. LEFT NAVIGATION SIDEBAR */}
-      <aside className={`w-[270px] bg-[#001c41] text-slate-300 flex flex-col shrink-0 border-r border-slate-800 transition-transform duration-300 z-50 fixed lg:static inset-y-0 h-[100dvh] lg:h-auto left-0 overflow-hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 hidden lg:flex'}`}>
+      <aside className={`w-[300px] bg-[#001c41] text-slate-300 flex flex-col shrink-0 border-r border-slate-800 transition-transform duration-300 z-50 fixed lg:static inset-y-0 h-[100dvh] lg:h-auto left-0 overflow-hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 hidden lg:flex'}`}>
         
         {/* Scrollable Container (like admin page) */}
         <div className="flex-1 flex flex-col overflow-y-auto min-h-0">
@@ -4417,6 +4441,415 @@ function DashboardContent() {
           {/* ========================================================================= */}
           {/* TAB: BUSINESS OWNER DASHBOARD (KPI CARDS, LEADS, AND AUDITS) */}
           {/* ========================================================================= */}
+          {/* TAB: PARTNER DASHBOARD (KPI CARDS, REFERRALS, AND REDEMPTIONS) */}
+          {/* ========================================================================= */}
+          {activeTab === 'Dashboard' && user?.role === 'partner' && (
+            <div className="flex flex-col gap-6 text-left animate-fadeIn font-sans text-slate-800">
+              
+              {/* Header card with welcome message */}
+              <div className="bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex flex-col">
+                  <h2 className="font-extrabold text-[#001c41] text-2xl md:text-3xl tracking-tight">Partner Dashboard</h2>
+                  <p className="text-xs sm:text-sm md:text-base text-slate-455 font-semibold mt-1">Welcome back, {user?.fullName || user?.name || 'Partner'}. Monitor your referrals, earnings, and redeem rewards.</p>
+                </div>
+                <div className="flex items-center gap-2 bg-[#E6F2ED] text-[#027244] border border-emerald-100 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-bold shrink-0">
+                  <Sparkles className="h-4 w-4 fill-current animate-pulse" /> Active Platform Partner
+                </div>
+              </div>
+
+              {/* KPI Cards Row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Metric 1: Available Points */}
+                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-2xl flex items-center gap-3 sm:gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100/50">
+                    <Gift className="h-6 w-6" />
+                  </div>
+                  <div className="flex flex-col overflow-hidden min-w-0">
+                    <span className="text-[11px] md:text-xs font-extrabold text-slate-400 uppercase tracking-wider">Available Points</span>
+                    <span className="text-xl md:text-2xl lg:text-3xl font-black text-[#027244] leading-tight mt-0.5">
+                      {referralsLoading ? '...' : (referralStats?.referralPoints || 0)} pts
+                    </span>
+                    <span className="text-[11px] md:text-xs text-slate-455 font-bold mt-0.5">₹{referralsLoading ? '0' : (referralStats?.referralPoints || 0)} Value</span>
+                  </div>
+                </div>
+
+                {/* Metric 2: Total Referrals */}
+                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-2xl flex items-center gap-3 sm:gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/50">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <div className="flex flex-col overflow-hidden min-w-0">
+                    <span className="text-[11px] md:text-xs font-extrabold text-slate-400 uppercase tracking-wider">Total Referrals</span>
+                    <span className="text-xl md:text-2xl lg:text-3xl font-black text-[#001c41] leading-tight mt-0.5">
+                      {referralsLoading ? '...' : (referralStats?.referrals?.length || 0)}
+                    </span>
+                    <span className="text-[11px] md:text-xs text-slate-455 font-bold mt-0.5">Invited Traders</span>
+                  </div>
+                </div>
+
+                {/* Metric 3: Successful Conversions */}
+                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-2xl flex items-center gap-3 sm:gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100/50">
+                    <CheckCircle className="h-6 w-6" />
+                  </div>
+                  <div className="flex flex-col overflow-hidden min-w-0">
+                    <span className="text-[11px] md:text-xs font-extrabold text-slate-400 uppercase tracking-wider">Completed Referrals</span>
+                    <span className="text-xl md:text-2xl lg:text-3xl font-black text-purple-600 leading-tight mt-0.5">
+                      {referralsLoading ? '...' : (referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0)}
+                    </span>
+                    <span className="text-[11px] md:text-xs text-slate-455 font-bold mt-0.5">Earned 99 pts each</span>
+                  </div>
+                </div>
+
+                {/* Metric 4: Payouts requested */}
+                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-2xl flex items-center gap-3 sm:gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100/50">
+                    <CreditCard className="h-6 w-6" />
+                  </div>
+                  <div className="flex flex-col overflow-hidden min-w-0">
+                    <span className="text-[11px] md:text-xs font-extrabold text-slate-400 uppercase tracking-wider">Redeemed Requests</span>
+                    <span className="text-xl md:text-2xl lg:text-3xl font-black text-amber-600 leading-tight mt-0.5">
+                      {redemptionsLoading ? '...' : (redemptionRequests?.length || 0)}
+                    </span>
+                    <span className="text-[11px] md:text-xs text-slate-455 font-bold mt-0.5">Refund Payouts</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Referral Link & Redemption Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Referral Tracking: Link and Instructions */}
+                <div className="bg-white border border-slate-200 shadow-xs rounded-[24px] p-6 flex flex-col gap-4 text-left">
+                  <h3 className="font-extrabold text-slate-800 text-lg md:text-xl border-b border-slate-100 pb-2">Referral Tracking & Link</h3>
+                  <p className="text-xs sm:text-sm md:text-base text-slate-500 font-semibold leading-relaxed">
+                    Share your unique referral link with local businesses in Udumalpet. You will earn <span className="text-[#027244] font-bold">99 points</span> immediately once they register and their business is verified/approved by the admin.
+                  </p>
+                  
+                  {referralStats?.referralLink ? (
+                    <div className="flex flex-col gap-3 mt-2">
+                      <label className="text-xs md:text-sm font-black text-slate-400 uppercase tracking-widest">Your Referral Link</label>
+                      
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full">
+                        <div className="flex-grow border border-slate-200 bg-slate-50 rounded-xl p-3 flex items-center min-w-0">
+                          <span className="text-xs sm:text-sm md:text-base font-semibold text-slate-600 truncate text-left w-full">
+                            {referralStats.referralLink}
+                          </span>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(referralStats.referralLink);
+                              alert('Referral link copied to clipboard!');
+                            }}
+                            className="flex-grow sm:flex-initial bg-[#027244] hover:bg-[#005934] text-white text-xs sm:text-sm md:text-base font-extrabold py-2.5 px-4.5 rounded-xl cursor-pointer transition-all shadow-xs flex items-center justify-center gap-1.5"
+                          >
+                            <Copy className="h-4 w-4" /> Copy
+                          </button>
+                          <button
+                            onClick={() => handleShareReferralLink(referralStats.referralLink)}
+                            className="flex-grow sm:flex-initial bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm md:text-base font-extrabold py-2.5 px-4.5 rounded-xl cursor-pointer transition-all shadow-xs flex items-center justify-center gap-1.5"
+                          >
+                            <Share2 className="h-4 w-4" /> Share
+                          </button>
+                        </div>
+                      </div>
+
+                      <span className="text-xs sm:text-sm md:text-base text-slate-455 font-bold text-left mt-1">
+                        Referral Code: <span className="text-slate-800 text-sm sm:text-base md:text-lg font-black">{referralStats.referralCode}</span>
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-xs sm:text-sm font-semibold text-slate-455">
+                      Generating your partner referral code details...
+                    </div>
+                  )}
+                </div>
+
+                {/* Points Summary & Redemption Requests */}
+                <div className="bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-6 flex flex-col gap-4 justify-between text-left">
+                  <div>
+                    <h3 className="font-extrabold text-slate-800 text-lg md:text-xl border-b border-slate-100 pb-2">Points Summary & Payouts</h3>
+                    <p className="text-xs sm:text-sm md:text-base text-slate-500 font-semibold leading-relaxed mt-2.5">
+                      Earned points can be redeemed for cashback payouts when you reach a minimum balance of <span className="font-bold text-[#001c41]">1,000 points</span>. 1 Point = ₹1 credit.
+                    </p>
+                    <div className="flex justify-between items-center bg-slate-50 rounded-xl p-4 mt-3">
+                      <div className="flex justify-between items-center bg-slate-50 rounded-xl p-4 mt-3 w-full">
+                        <div className="flex flex-col text-left">
+                          <span className="text-xs md:text-sm text-slate-455 font-bold">Redeemable Balance</span>
+                          <span className="text-lg md:text-xl lg:text-2xl font-black text-[#027244] mt-0.5">
+                            {referralsLoading ? '...' : (referralStats?.referralPoints || 0)} Points
+                          </span>
+                        </div>
+                        <div className="flex flex-col text-right">
+                          <span className="text-xs md:text-sm text-slate-455 font-bold">Cash Equivalency</span>
+                          <span className="text-lg md:text-xl lg:text-2xl font-black text-slate-800 mt-0.5">
+                            ₹{referralsLoading ? '...' : (referralStats?.referralPoints || 0)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleRedeemPoints}
+                    disabled={redemptionSubmitting || !referralStats || (referralStats?.referralPoints || 0) < 1000}
+                    className="w-full py-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs sm:text-sm md:text-base uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer mt-3"
+                  >
+                    {redemptionSubmitting ? (
+                      <>
+                        <RefreshCw className="h-4.5 w-4.5 animate-spin" /> Submitting Request...
+                      </>
+                    ) : (
+                      'Request Cashback Refund (₹1,000)'
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Lists Section: Referral History & Redemptions */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
+                
+                {/* Referral History List */}
+                <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-6 flex flex-col gap-4 text-left">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <h3 className="font-extrabold text-slate-800 text-lg md:text-xl">Referral History</h3>
+                    <span className="text-xs md:text-sm bg-slate-50 border border-slate-200 text-slate-500 rounded px-2 py-0.5 font-bold">
+                      {referralStats?.referrals?.length || 0} Total
+                    </span>
+                  </div>
+
+                  {referralsLoading ? (
+                    <div className="py-8 flex justify-center text-slate-400">
+                      <RefreshCw className="h-5 w-5 animate-spin text-emerald-600" />
+                    </div>
+                  ) : !referralStats?.referrals || referralStats.referrals.length === 0 ? (
+                    <div className="py-12 bg-slate-50/50 border border-slate-200 border-dashed rounded-xl text-center text-xs sm:text-sm font-semibold text-slate-400">
+                      No referrals made yet. Share your link to start earning!
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3 max-h-[350px] overflow-y-auto pr-1">
+                      {referralStats.referrals.map((ref) => (
+                        <div key={ref._id} className="border border-slate-100 rounded-xl p-3.5 bg-slate-50/20 hover:bg-slate-50/50 transition-all flex justify-between items-center gap-4">
+                          <div className="flex flex-col min-w-0 text-left">
+                            <span className="font-extrabold text-slate-755 text-sm sm:text-base truncate leading-snug">
+                              {ref.referredUserId?.fullName || ref.referredUserId?.name || 'New Trader User'}
+                            </span>
+                            <span className="text-xs sm:text-sm text-slate-455 font-bold mt-1">
+                              {ref.referredBusinessId?.name || 'Business details pending'}
+                            </span>
+                            <span className="text-[10px] sm:text-xs text-slate-400 mt-1 block font-semibold">
+                              Invited on {new Date(ref.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          
+                          <div className="flex flex-col items-end shrink-0 leading-normal">
+                            {ref.status === 'completed' ? (
+                              <>
+                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-black uppercase">
+                                  Earned
+                                </span>
+                                <span className="text-xs sm:text-sm md:text-base font-extrabold text-emerald-600 mt-1">+{ref.points} pts</span>
+                              </>
+                            ) : ref.status === 'rejected' ? (
+                              <>
+                                <span className="bg-rose-50 text-rose-700 border border-rose-200/50 px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-black uppercase">
+                                  Flagged
+                                </span>
+                                <span className="text-[10px] sm:text-xs text-rose-455 font-bold mt-1 text-right max-w-[120px] truncate" title={ref.rejectionReason}>
+                                  {ref.rejectionReason || 'Duplicate / Void'}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="bg-amber-50 text-amber-700 border border-amber-200/50 px-2 py-0.5 rounded-lg text-[10px] md:text-xs font-black uppercase">
+                                  Pending
+                                </span>
+                                <span className="text-[10px] sm:text-xs text-slate-400 font-semibold mt-1">Waiting register</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Reward Status / Redemption Requests History */}
+                <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-6 flex flex-col gap-4 text-left">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <h3 className="font-extrabold text-slate-800 text-lg md:text-xl">Redemption Requests</h3>
+                    <span className="text-xs md:text-sm bg-slate-50 border border-slate-200 text-slate-500 rounded px-2 py-0.5 font-bold">
+                      {redemptionRequests?.length || 0} Requests
+                    </span>
+                  </div>
+
+                  {redemptionsLoading ? (
+                    <div className="py-8 flex justify-center text-slate-400">
+                      <RefreshCw className="h-5 w-5 animate-spin text-emerald-600" />
+                    </div>
+                  ) : !redemptionRequests || redemptionRequests.length === 0 ? (
+                    <div className="py-12 bg-slate-50/50 border border-slate-200 border-dashed rounded-xl text-center text-xs sm:text-sm font-semibold text-slate-400">
+                      No redemption payout requests submitted yet.
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3 max-h-[350px] overflow-y-auto pr-1">
+                      {redemptionRequests.map((req) => (
+                        <div key={req._id} className="border border-slate-100 rounded-xl p-3.5 bg-slate-50/20 hover:bg-slate-50/50 transition-all flex justify-between items-center gap-4">
+                          <div className="flex flex-col min-w-0 text-left">
+                            <span className="font-extrabold text-slate-755 text-sm sm:text-base truncate leading-snug">
+                              Redeemed {req.points} Points
+                            </span>
+                            <span className="text-xs sm:text-sm text-slate-455 font-bold mt-1">
+                              Equivalent Payout: ₹{req.points} Cashback
+                            </span>
+                            {req.remarks && (
+                              <span className="text-[10px] sm:text-xs md:text-sm text-slate-455 font-semibold bg-slate-100 p-1.5 rounded-lg mt-1 block">
+                                Remarks: {req.remarks}
+                              </span>
+                            )}
+                            <span className="text-[10px] sm:text-xs text-slate-400 mt-1 block font-semibold">
+                              Requested on {new Date(req.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          
+                          <div className="flex flex-col items-end shrink-0">
+                            {req.status === 'Refunded' ? (
+                              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-black uppercase">
+                                Paid Out
+                              </span>
+                            ) : req.status === 'Rejected' ? (
+                              <span className="bg-rose-50 text-rose-700 border border-rose-200/50 px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-black uppercase">
+                                Rejected
+                              </span>
+                            ) : (
+                              <span className="bg-amber-50 text-amber-700 border border-amber-200/50 px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-black uppercase animate-pulse">
+                                Under Audit
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'Queries' && user?.role === 'partner' && (
+            <div className="flex flex-col lg:flex-row gap-8 animate-fadeIn text-left font-sans text-slate-800">
+              
+              {/* Left Column: Submit Query Form */}
+              <div className="flex-1 bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-6 md:p-8 flex flex-col gap-5">
+                <div className="flex items-center gap-3 flex-row text-left">
+                  <div className="h-12 w-12 bg-emerald-50 text-[#027244] rounded-2xl flex items-center justify-center border border-emerald-100 shadow-inner shrink-0">
+                    <MessageSquare className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-slate-800 text-lg md:text-xl font-sans">Inquire Admin Desk</h3>
+                    <p className="text-xs sm:text-sm md:text-base text-slate-455 font-semibold mt-1">Partner Query Box: Communicate directly with the platform administration</p>
+                  </div>
+                </div>
+
+                {supportSuccess && (
+                  <div className="bg-emerald-50 border border-emerald-250 text-[#027244] rounded-xl p-3.5 text-xs sm:text-sm md:text-base font-bold flex items-center gap-2 animate-fadeIn text-left">
+                    <CheckCircle className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
+                    <span>{supportSuccess}</span>
+                  </div>
+                )}
+
+                {supportError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3.5 text-xs sm:text-sm md:text-base font-bold flex items-center gap-2 animate-fadeIn text-left">
+                    <AlertCircle className="h-4.5 w-4.5 shrink-0" />
+                    <span>{supportError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSupportQuerySubmit} className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <span className="text-xs md:text-sm font-bold text-slate-505 uppercase tracking-widest">Write message to Administrator</span>
+                    <textarea
+                      placeholder="Type details of your inquiry, redemption delays, account setup assistance, or portal suggestions..."
+                      value={newQueryMessage}
+                      onChange={(e) => setNewQueryMessage(e.target.value)}
+                      required
+                      rows={5}
+                      className="w-full border border-slate-200 rounded-2xl p-4 text-xs sm:text-sm md:text-base bg-slate-50/30 focus:outline-[#027244] font-semibold leading-relaxed text-left"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={supportLoading || !newQueryMessage.trim()}
+                    className="py-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs sm:text-sm md:text-base uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer w-full sm:w-fit px-6"
+                  >
+                    {supportLoading ? 'Sending message...' : 'Send Message to Admin'}
+                  </button>
+                </form>
+              </div>
+
+              {/* Right Column: Communications History */}
+              <div className="w-full lg:w-[48%] bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-6 md:p-8 flex flex-col gap-5 text-left">
+                <h3 className="font-extrabold text-slate-800 text-lg md:text-xl border-b border-slate-100 pb-2">Support Message Inbox</h3>
+                
+                {supportLoading && supportQueries.length === 0 ? (
+                  <div className="py-12 flex justify-center text-slate-400">
+                    <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" />
+                  </div>
+                ) : supportQueries.length === 0 ? (
+                  <div className="py-16 bg-slate-50/50 border border-slate-200 border-dashed rounded-[20px] text-center text-xs sm:text-sm md:text-base font-semibold text-slate-400">
+                    No communication logs found yet. Write a message above to contact our admin team.
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4 max-h-[450px] overflow-y-auto pr-1">
+                    {[...supportQueries].reverse().map((query) => (
+                      <div key={query._id} className="border border-slate-100 rounded-2xl p-4 bg-slate-50/20 flex flex-col gap-3 text-left">
+                        <div className="flex justify-between items-start gap-2 border-b border-slate-100/50 pb-2">
+                          <span className="font-extrabold text-slate-800 text-xs sm:text-sm md:text-base truncate max-w-[180px]">
+                            {query.subject}
+                          </span>
+                          {query.status === 'Replied' ? (
+                            <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 px-2 py-0.5 rounded text-[10px] md:text-xs font-black uppercase">
+                              Replied
+                            </span>
+                          ) : (
+                            <span className="bg-amber-50 text-amber-700 border border-amber-200/50 px-2 py-0.5 rounded text-[10px] md:text-xs font-black uppercase animate-pulse">
+                              Pending
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="flex flex-col gap-1 text-left">
+                          <span className="text-xs md:text-sm font-black text-slate-400 uppercase tracking-widest">Your Inquiry:</span>
+                          <p className="text-xs sm:text-sm md:text-base text-slate-550 leading-relaxed font-semibold">"{query.message}"</p>
+                          <span className="text-[10px] sm:text-xs text-slate-400 mt-0.5 block font-semibold">
+                            Sent on {new Date(query.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+
+                        {query.status === 'Replied' && (
+                          <div className="bg-emerald-50/30 border border-emerald-100/60 p-3.5 rounded-xl flex flex-col gap-1 mt-1 text-slate-700 text-left">
+                            <span className="text-xs md:text-sm font-black text-emerald-800 uppercase tracking-widest">Admin Response:</span>
+                            <p className="text-xs sm:text-sm md:text-base font-semibold leading-relaxed">
+                              {query.replyMessage}
+                            </p>
+                            {query.repliedAt && (
+                              <span className="text-[10px] sm:text-xs text-[#027244]/80 font-semibold block">
+                                Replied on {new Date(query.repliedAt).toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+          )}
+
           {activeTab === 'Dashboard' && business && registrationComplete && (
 
             <>
@@ -7777,25 +8210,35 @@ function DashboardContent() {
                     Share your invite link with other local merchants in Udumalpet. When they register, complete their subscription payment, and get approved, you'll earn 99 points!
                   </p>
 
-                  <div className="flex gap-2.5 items-center mt-2">
-                    <input 
-                      type="text" 
-                      readOnly 
-                      value={business?.subscriptionStatus === 'active' ? (referralStats?.referralLink || '') : 'Active subscription required to get link'} 
-                      className="flex-grow border border-slate-200 px-4 py-3 rounded-xl text-xs font-extrabold text-slate-700 bg-slate-50 focus:outline-none"
-                    />
-                    <button 
-                      disabled={business?.subscriptionStatus !== 'active'}
-                      onClick={() => {
-                        navigator.clipboard.writeText(referralStats?.referralLink || '');
-                        setCopiedLink(true);
-                        setTimeout(() => setCopiedLink(false), 2000);
-                      }}
-                      className="px-4 py-3 bg-[#027244] hover:bg-[#005934] disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
-                    >
-                      {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                      <span>{copiedLink ? 'Copied' : 'Copy Link'}</span>
-                    </button>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full mt-2">
+                    <div className="flex-grow border border-slate-200 bg-slate-50 rounded-xl p-3 flex items-center min-w-0">
+                      <span className="text-xs sm:text-sm md:text-base font-semibold text-slate-600 truncate text-left w-full text-left">
+                        {business?.subscriptionStatus === 'active' ? (referralStats?.referralLink || '') : 'Active subscription required to get link'}
+                      </span>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <button 
+                        disabled={business?.subscriptionStatus !== 'active'}
+                        onClick={() => {
+                          if (referralStats?.referralLink) {
+                            navigator.clipboard.writeText(referralStats.referralLink);
+                            setCopiedLink(true);
+                            setTimeout(() => setCopiedLink(false), 2000);
+                          }
+                        }}
+                        className="flex-grow sm:flex-initial bg-[#027244] hover:bg-[#005934] disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-xs sm:text-sm md:text-base font-extrabold py-2.5 px-4.5 rounded-xl cursor-pointer transition-all shadow-xs flex items-center justify-center gap-1.5"
+                      >
+                        {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        <span>{copiedLink ? 'Copied' : 'Copy'}</span>
+                      </button>
+                      <button 
+                        disabled={business?.subscriptionStatus !== 'active'}
+                        onClick={() => handleShareReferralLink(referralStats?.referralLink)}
+                        className="flex-grow sm:flex-initial bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-xs sm:text-sm md:text-base font-extrabold py-2.5 px-4.5 rounded-xl cursor-pointer transition-all shadow-xs flex items-center justify-center gap-1.5"
+                      >
+                        <Share2 className="h-4 w-4" /> Share
+                      </button>
+                    </div>
                   </div>
 
                   {/* Social quick share links */}

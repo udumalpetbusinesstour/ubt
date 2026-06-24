@@ -603,4 +603,20 @@ router.post('/category-review/resolve', resolveCategoryReview);
 router.post('/categories/merge', mergeCategories);
 
 
+// @desc    Get all partners
+// @route   GET /api/admin/partners
+// @access  Private/Admin
+router.get('/partners', async (req, res, next) => {
+  try {
+    const partners = await User.find({ role: 'partner' }).sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      count: partners.length,
+      data: partners
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;
