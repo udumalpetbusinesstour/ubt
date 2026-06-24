@@ -3404,14 +3404,9 @@ export default function AddBusiness() {
                 
                 <div className="flex items-center gap-3">
                   <Mail className="h-[18px] w-[18px] text-[#ea580c] shrink-0" />
-                  <a href="mailto:info@udumalpet.co.in" className="text-slate-700 font-bold text-xs hover:text-[#027244] transition-colors">
-                    info@udumalpet.co.in
+                  <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-slate-700 font-bold text-xs hover:text-[#027244] transition-colors">
+                    udumalpetbusinesstour@gmail.com
                   </a>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <Clock className="h-[18px] w-[18px] text-[#ea580c] shrink-0" />
-                  <span className="text-slate-700 font-bold text-xs">Mon - Sat: 9:00 AM - 8:00 PM</span>
                 </div>
               </div>
             </div>

@@ -6,7 +6,9 @@ import './app/globals.css';
 // Centralized API URL Routing Interceptor for Production (Render)
 const API_URL = import.meta.env.VITE_API_URL || 
   (import.meta.env.PROD && typeof window !== 'undefined' 
-    ? window.location.origin 
+    ? (window.location.hostname.includes('staging') 
+        ? 'https://staging-api.udumalpet.business' 
+        : 'https://api.udumalpet.business') 
     : 'http://localhost:5000');
 
 // Global Image URL Resolver to dynamically prepend correct backend domain
