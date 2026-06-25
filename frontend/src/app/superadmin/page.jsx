@@ -1971,7 +1971,6 @@ const handlePartnerAction = async (partnerId, action) => {
         { id: 'Reviews Moderation', label: 'Reviews', icon: <MessageSquare className="h-4.5 w-4.5" /> },
         { id: 'Referrals', label: 'Referrals', icon: <Gift className="h-4.5 w-4.5" /> },
         { id: 'Support Tickets', label: 'Leads / Enquiries', icon: <FileText className="h-4.5 w-4.5" /> },
-        { id: 'Reports', label: 'Reports & Trends', icon: <BarChart3 className="h-4.5 w-4.5" /> },
         { id: 'Blood Donors', label: 'Blood Donors', icon: <Heart className="h-4.5 w-4.5" /> }
       ]
     },
@@ -4961,11 +4960,11 @@ const handlePartnerAction = async (partnerId, action) => {
                         
                         <div 
                           onClick={(event) => event.stopPropagation()}
-                          className={`flex justify-between items-center border-t pt-3.5 gap-2 ${
+                          className={`flex flex-col sm:flex-row sm:justify-between sm:items-center border-t pt-3.5 gap-3.5 ${
                             themeMode === 'dark' ? 'border-slate-800' : 'border-slate-100'
                           }`}
                         >
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                             <button 
                               onClick={() => {
                                 setEvents(prev => prev.map(item => item._id === e._id ? { ...item, featured: !item.featured } : item));
@@ -4973,7 +4972,7 @@ const handlePartnerAction = async (partnerId, action) => {
                               className={`px-3 py-1.5 border rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors ${
                                 e.featured
                                   ? 'bg-amber-500/10 border-amber-500/20 text-amber-550'
-                                  : themeMode === 'dark' ? 'border-slate-800 text-slate-400 hover:bg-slate-800/40' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                                  : themeMode === 'dark' ? 'border-slate-800 text-slate-400 hover:bg-slate-800/40' : 'border-slate-200 text-slate-600 hover:bg-slate-55 hover:bg-slate-50'
                               }`}
                             >
                               {e.featured ? 'Un-Feature' : 'Feature Event'}
@@ -4994,7 +4993,7 @@ const handlePartnerAction = async (partnerId, action) => {
                             </button>
                           </div>
 
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:justify-end">
                             <button 
                               onClick={() => handleEventAction(e._id, e.status === 'Hidden' ? 'Approved' : 'Hidden')}
                               className={`px-3 py-1.5 border font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors ${
@@ -6135,47 +6134,7 @@ const handlePartnerAction = async (partnerId, action) => {
                 </div>
               )}
 
-              {/* TAB 16: REPORTS */}
-              {activeTab === 'Reports' && (
-                <div className="flex flex-col gap-6 text-left animate-fadeIn">
-                  <div className={`border shadow-xs rounded-[28px] p-6 ${
-                    themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                  }`}>
-                    <h3 className="font-extrabold text-base leading-tight font-sans">Growth & Audit Trends</h3>
-                    <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Overview of platform registration stats, ratings counts, and verified listing ratios.</span>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans">
-                    <div className={`border rounded-[20px] p-5 shadow-2xs flex flex-col gap-3 ${
-                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                    }`}>
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Business Vetting Ratio</span>
-                      <span className={`text-3xl font-black leading-none ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>80% Approved</span>
-                      <div className={`h-2 w-full rounded-full overflow-hidden mt-1 ${themeMode === 'dark' ? 'bg-slate-850' : 'bg-slate-100'}`}>
-                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: '80%' }} />
-                      </div>
-                    </div>
-                    <div className={`border rounded-[20px] p-5 shadow-2xs flex flex-col gap-3 ${
-                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                    }`}>
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Premium Conversion Rate</span>
-                      <span className={`text-3xl font-black leading-none ${themeMode === 'dark' ? 'text-emerald-450' : 'text-emerald-700'}`}>60% Boosted</span>
-                      <div className={`h-2 w-full rounded-full overflow-hidden mt-1 ${themeMode === 'dark' ? 'bg-slate-850' : 'bg-slate-100'}`}>
-                        <div className="h-full bg-blue-500 rounded-full" style={{ width: '60%' }} />
-                      </div>
-                    </div>
-                    <div className={`border rounded-[20px] p-5 shadow-2xs flex flex-col gap-3 ${
-                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                    }`}>
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">purged reviews rate</span>
-                      <span className={`text-3xl font-black leading-none ${themeMode === 'dark' ? 'text-purple-400' : 'text-purple-700'}`}>50% purges</span>
-                      <div className={`h-2 w-full rounded-full overflow-hidden mt-1 ${themeMode === 'dark' ? 'bg-slate-850' : 'bg-slate-100'}`}>
-                        <div className="h-full bg-purple-500 rounded-full" style={{ width: '50%' }} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* TAB 17: SUPPORT TICKETS */}
               {activeTab === 'Support Tickets' && (
