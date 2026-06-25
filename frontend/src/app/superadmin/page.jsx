@@ -9605,7 +9605,7 @@ const handlePartnerAction = async (partnerId, action) => {
                 <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
                   <span>Subscription Plan</span>
                   <span className={`text-sm font-extrabold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                    {selectedTx.planType ? `${selectedTx.planType} Plan` : 'Premium Listing'}
+                    {selectedTx.planType ? (selectedTx.planType.toLowerCase().includes('plan') ? selectedTx.planType : `${selectedTx.planType} Plan`) : 'Premium Listing'}
                   </span>
                 </div>
                 <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
@@ -9615,12 +9615,47 @@ const handlePartnerAction = async (partnerId, action) => {
                 <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
                   <span>Settlement status</span>
                   <span className={`text-[9.5px] font-black uppercase w-fit px-2 py-0.5 rounded border leading-none mt-1 ${
-                    (selectedTx.status === 'Success' || selectedTx.paymentStatus === 'Paid')
+                    (selectedTx.status === 'Success' || selectedTx.paymentStatus === 'Paid' || selectedTx.status === 'active')
                       ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
                       : 'bg-rose-500/10 border-rose-500/20 text-rose-500'
                   }`}>
                     {selectedTx.status || selectedTx.paymentStatus || 'Success'}
                   </span>
+                </div>
+              </div>
+
+              {/* Autopay Details Section */}
+              <div className="flex flex-col gap-2.5 border-t dark:border-slate-800 pt-4">
+                <span className="text-[10.5px] font-black text-slate-405 uppercase tracking-widest leading-none">Autopay Mandate Info</span>
+                <div className="grid grid-cols-2 gap-4 text-xs font-semibold text-slate-500">
+                  <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
+                    <span>Autopay Status</span>
+                    <span className={`text-[9.5px] font-black uppercase w-fit px-2 py-0.5 rounded border leading-none mt-1 ${
+                      (selectedTx.razorpaySubscriptionId || selectedTx.autoRenew)
+                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                        : 'bg-slate-500/10 border-slate-500/20 text-slate-500'
+                    }`}>
+                      {(selectedTx.razorpaySubscriptionId || selectedTx.autoRenew) ? 'Enabled (Active)' : 'Disabled'}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
+                    <span>Autopay Mandate ID</span>
+                    <span className={`text-[11px] font-mono font-bold ${selectedTx.razorpaySubscriptionId ? (themeMode === 'dark' ? 'text-white' : 'text-slate-800') : 'text-slate-400'}`}>
+                      {selectedTx.razorpaySubscriptionId || 'N/A (Standard Order)'}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
+                    <span>Mandate Billing Cycle</span>
+                    <span className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                      {selectedTx.razorpaySubscriptionId ? (selectedTx.planType?.toLowerCase().includes('year') ? 'Yearly Auto-Debit' : 'Monthly Auto-Debit') : 'One-Time Charge'}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
+                    <span>Mandate Expiry / Next Renewal</span>
+                    <span className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                      {selectedTx.expiryDate ? new Date(selectedTx.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -9643,14 +9678,24 @@ const handlePartnerAction = async (partnerId, action) => {
                 </div>
               </div>
 
-              {/* Mock Settlement Clearing logs */}
+              {/* Secure Payment Gateway Clearance logs */}
               <div className="flex flex-col gap-2 border-t dark:border-slate-800 pt-4">
                 <span className="text-[10.5px] font-black text-slate-405 uppercase tracking-widest leading-none">Secure Payment Gateway Clearance Logs</span>
                 <div className="bg-slate-950 text-slate-300 font-mono text-[9px] p-4.5 rounded-2xl leading-relaxed flex flex-col gap-1 border border-slate-850 max-h-36 overflow-y-auto">
-                  <span className="text-slate-550">[2026-06-01T12:00:01] INITIATING RAZORPAY BILLING HANDSHAKE...</span>
-                  <span className="text-slate-550">[2026-06-01T12:00:02] VALIDATING SIGNATURE HMAC KEY PARAMS...</span>
-                  <span className="text-slate-550">[2026-06-01T12:00:03] GATEWAY RESPONSE: SETTLEMENT CAPTURED (code: 200)</span>
-                  <span className="text-emerald-450 font-bold">[2026-06-01T12:00:03] TRANSACTION RECORD SUCCESSFUL. PROFILES UPGRADED.</span>
+                  <span className="text-slate-550">[{new Date(selectedTx.createdAt || Date.now()).toISOString()}] INITIATING RAZORPAY BILLING HANDSHAKE...</span>
+                  {selectedTx.razorpaySubscriptionId ? (
+                    <>
+                      <span className="text-slate-550">[{new Date(selectedTx.createdAt || Date.now()).toISOString()}] DETECTED AUTOPAY RECURRING MANDATE ID: {selectedTx.razorpaySubscriptionId}</span>
+                      <span className="text-slate-550">[{new Date(selectedTx.createdAt || Date.now()).toISOString()}] VALIDATING SUBSCRIPTION SIGNATURE HMAC PARAMS...</span>
+                      <span className="text-emerald-450 font-bold">[{new Date(selectedTx.createdAt || Date.now()).toISOString()}] AUTOPAY VERIFIED SUCCESSFULLY. NEXT DEBIT SCHEDULED.</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-slate-550">[{new Date(selectedTx.createdAt || Date.now()).toISOString()}] STANDARD CHECKOUT ORDER DETECTED. ORDER ID: {selectedTx.orderId || selectedTx.razorpayOrderId || 'N/A'}</span>
+                      <span className="text-slate-550">[{new Date(selectedTx.createdAt || Date.now()).toISOString()}] VALIDATING SIGNATURE HMAC KEY PARAMS...</span>
+                      <span className="text-emerald-450 font-bold">[{new Date(selectedTx.createdAt || Date.now()).toISOString()}] TRANSACTION CAPTURED SUCCESSFULLY. PROFILES UPGRADED.</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
