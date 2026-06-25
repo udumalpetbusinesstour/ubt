@@ -904,11 +904,9 @@ const handlePartnerAction = async (partnerId, action) => {
     if (activeTab === 'Referrals') {
       fetchReferrals();
     }
-    if (activeTab === 'Refunds' || activeTab === 'Partners') {
+    if (activeTab === 'Partners') {
       fetchRedemptions();
-      if (activeTab === 'Partners') {
-        fetchPartners();
-      }
+      fetchPartners();
     }
     if (activeTab === 'Revenue' || activeTab === 'Subscriptions') {
       fetchRevenueAnalytics();
@@ -2030,8 +2028,7 @@ const handlePartnerAction = async (partnerId, action) => {
       group: 'PAYMENTS & BILLING',
       items: [
         { id: 'Subscriptions', label: 'Subscriptions', icon: <CreditCard className="h-4.5 w-4.5" /> },
-        { id: 'Revenue', label: 'Transactions', icon: <RefreshCw className="h-4.5 w-4.5" /> },
-        { id: 'Refunds', label: 'Refunds', icon: <Ban className="h-4.5 w-4.5" /> }
+        { id: 'Revenue', label: 'Transactions', icon: <RefreshCw className="h-4.5 w-4.5" /> }
       ]
     },
     {
@@ -6960,84 +6957,7 @@ const handlePartnerAction = async (partnerId, action) => {
                 </div>
               )}
 
-              {/* TAB 20: REFUNDS */}
-              {activeTab === 'Refunds' && (
-                <div className="flex flex-col gap-6 text-left animate-fadeIn">
-                  <div className={`border shadow-xs rounded-[28px] p-6 ${
-                    themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                  }`}>
-                    <h3 className="font-extrabold text-base leading-tight font-sans">Payment Refunds & Reversals</h3>
-                    <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Audit payment disputes, manage cancellation requests, and dispatch mock refunds.</span>
-                  </div>
 
-                  <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-5 ${
-                    themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                  }`}>
-                    <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400">Refund Requests Queue</h4>
-                    <div className="overflow-x-auto w-full">
-                      <table className="w-full text-left font-sans text-xs border-collapse">
-                        <thead>
-                          <tr className={`border-b ${themeMode === 'dark' ? 'border-slate-800 text-slate-400' : 'border-slate-250 text-slate-500'}`}>
-                            <th className="pb-3.5 font-bold uppercase tracking-wider">Merchant</th>
-                            <th className="pb-3.5 font-bold uppercase tracking-wider">Payment ID</th>
-                            <th className="pb-3.5 font-bold uppercase tracking-wider">Amount</th>
-                            <th className="pb-3.5 font-bold uppercase tracking-wider">Reason</th>
-                            <th className="pb-3.5 font-bold uppercase tracking-wider">Status</th>
-                            <th className="pb-3.5 font-bold uppercase tracking-wider text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {redemptions.map(ref => (
-                             <tr key={ref._id} className={`border-b last:border-0 ${themeMode === 'dark' ? 'border-slate-850 hover:bg-slate-900/10' : 'border-slate-100 hover:bg-slate-50/50'}`}>
-                               <td className="py-4 font-extrabold">
-                                 <div className="flex flex-col text-left">
-                                   <span className="font-extrabold">{ref.userId?.fullName || ref.userId?.name || 'Unknown Merchant'}</span>
-                                   <span className="text-[10px] text-slate-400 font-semibold mt-0.5">{ref.userId?.email || ref.userId?.phone}</span>
-                                 </div>
-                               </td>
-                               <td className="py-4 text-slate-400 font-bold font-mono">1000 Pts</td>
-                               <td className="py-4 font-extrabold text-[#027244]">{ref.points} Pts</td>
-                               <td className="py-4 text-slate-450 pr-4 leading-normal">{ref.remarks || 'Refund redemption requested.'}</td>
-                               <td className="py-4">
-                                 <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
-                                   ref.status === 'Refunded' 
-                                     ? 'bg-emerald-50 dark:bg-emerald-950/20 text-[#027244]' 
-                                     : ref.status === 'Rejected'
-                                       ? 'bg-red-50 dark:bg-red-950/20 text-red-650'
-                                       : 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 animate-pulse'
-                                 }`}>
-                                   {ref.status}
-                                 </span>
-                               </td>
-                               <td className="py-4 text-right">
-                                 {ref.status === 'Pending Approval' ? (
-                                   <div className="flex gap-2 justify-end">
-                                     <button 
-                                       onClick={() => handleProcessRefund(ref._id)}
-                                       className="px-3 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-lg transition-colors cursor-pointer"
-                                     >
-                                       Initiate Refund & Mark Refunded
-                                     </button>
-                                   </div>
-                                 ) : (
-                                   <span className="text-[10px] text-slate-400 font-bold select-none">-</span>
-                                 )}
-                               </td>
-                             </tr>
-                           ))}
-                           {redemptions.length === 0 && (
-                             <tr>
-                               <td colSpan="6" className="py-8 text-center text-slate-400 font-bold">
-                                 No refund redemptions queue requests found.
-                               </td>
-                             </tr>
-                           )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* TAB: REFERRALS MODERATION */}
               {activeTab === 'Referrals' && (
