@@ -1907,6 +1907,33 @@ const handlePartnerAction = async (partnerId, action) => {
 
   const { segments: donutSegments, total: donutTotal } = getCategoryBreakdown();
 
+  const getLocalityBreakdown = () => {
+    const counts = {};
+    businesses.forEach(b => {
+      const loc = b.locality || 'Others';
+      counts[loc] = (counts[loc] || 0) + 1;
+    });
+
+    const sorted = Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+
+    const total = businesses.length || 1;
+    const colors = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EC4899', '#64748B'];
+
+    return sorted.map((item, idx) => {
+      const percentage = Math.round((item.count / total) * 100);
+      return {
+        name: item.name,
+        count: item.count,
+        percentage,
+        color: colors[idx % colors.length]
+      };
+    });
+  };
+
+  const localitySegments = getLocalityBreakdown();
+
   // Filtered resource search
   const filteredBusinesses = dateFilteredBusinesses.filter(b => {
     const matchesSearch = b.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -2580,10 +2607,10 @@ const handlePartnerAction = async (partnerId, action) => {
                     const blogsPct = blogsBeforeThisMonth > 0 ? ((blogsThisMonth / blogsBeforeThisMonth) * 100).toFixed(1) : '0';
 
                     // 6. Total Revenue
-                    const revenueThisMonth = (subscriptions || []).filter(s => s.createdAt && new Date(s.createdAt) >= startOfThisMonth).reduce((sum, s) => sum + (s.amount || 0), 0);
+                    const revenueThisMonthVal = dashboardStats?.revenueThisMonth !== undefined ? dashboardStats.revenueThisMonth : (subscriptions || []).filter(s => s.createdAt && new Date(s.createdAt) >= startOfThisMonth).reduce((sum, s) => sum + (s.amount || 0), 0);
+                    const revenuePctVal = dashboardStats?.revenuePct !== undefined ? dashboardStats.revenuePct : '0';
                     const totalRevenueCount = (subscriptions || []).reduce((sum, s) => sum + (s.amount || 0), 0);
-                    const revenueBeforeThisMonth = totalRevenueCount - revenueThisMonth;
-                    const revenuePct = revenueBeforeThisMonth > 0 ? ((revenueThisMonth / revenueBeforeThisMonth) * 100).toFixed(1) : '0';
+                    const revenueBeforeThisMonth = totalRevenueCount - revenueThisMonthVal;
 
                     const cards = [
                       { title: 'Total Businesses', val: dateFilteredBusinesses.length || 0, desc: `+${businessesThisMonth} this month`, pct: `+${businessesPct}%`, icon: <Store className="h-5 w-5" />, color: 'from-purple-500/10 border-purple-500/20 text-purple-500', tabId: 'Businesses' },
@@ -2591,7 +2618,7 @@ const handlePartnerAction = async (partnerId, action) => {
                       { title: 'Total Users', val: (dateFilteredMerchants.length + dateFilteredRegularUsers.length) || 0, desc: `+${usersThisMonth} this month`, pct: `+${usersPct}%`, icon: <User className="h-5 w-5" />, color: 'from-amber-500/10 border-amber-500/20 text-amber-500', tabId: 'Merchants' },
                       { title: 'Events Listed', val: dateFilteredEvents.length || 0, desc: `+${eventsThisMonth} this month`, pct: `+${eventsPct}%`, icon: <Calendar className="h-5 w-5" />, color: 'from-pink-500/10 border-pink-500/20 text-pink-500', tabId: 'Events Moderation' },
                       { title: 'Blog Posts', val: dateFilteredBlogs.length || 0, desc: `+${blogsThisMonth} this month`, pct: `+${blogsPct}%`, icon: <BookOpen className="h-5 w-5" />, color: 'from-blue-500/10 border-blue-500/20 text-blue-500', tabId: 'Blogs Moderation' },
-                      { title: 'Total Revenue', val: '₹' + (dashboardStats?.totalRevenue !== undefined ? dashboardStats.totalRevenue : dateFilteredSubscriptions.reduce((sum, s) => sum + (s.amount || 0), 0)).toLocaleString('en-IN'), desc: `+₹${revenueThisMonth.toLocaleString('en-IN')} this month`, pct: `+${revenuePct}%`, icon: <Coins className="h-5 w-5" />, color: 'from-cyan-500/10 border-cyan-500/20 text-cyan-500', tabId: 'Subscriptions' }
+                      { title: 'Total Revenue', val: '₹' + (dashboardStats?.totalRevenue !== undefined ? dashboardStats.totalRevenue : dateFilteredSubscriptions.reduce((sum, s) => sum + (s.amount || 0), 0)).toLocaleString('en-IN'), desc: `+₹${revenueThisMonthVal.toLocaleString('en-IN')} this month`, pct: `+${revenuePctVal}%`, icon: <Coins className="h-5 w-5" />, color: 'from-cyan-500/10 border-cyan-500/20 text-cyan-500', tabId: 'Subscriptions' }
                     ];
 
                     return (
@@ -5451,7 +5478,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     }`}>
                       <div className="flex justify-between items-center">
                         <span className="font-extrabold text-xs uppercase tracking-wider text-slate-400">Subscription Registrations (Plan ratio)</span>
-                        <span className="text-sm font-black text-blue-500">Active Premium: {dateFilteredSubscriptions.length}</span>
+                        <span className="text-sm font-black text-blue-500">Active Premium: {dateFilteredSubscriptions.filter(s => s.paymentStatus === 'Paid').length}</span>
                       </div>
 
                       <div className="w-full h-64 shrink-0 relative flex items-end justify-around pb-6 pt-4">
@@ -5566,24 +5593,22 @@ const handlePartnerAction = async (partnerId, action) => {
                     }`}>
                       <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400">Category breakdown ratio</h4>
                       <div className="flex flex-col gap-3.5 mt-2">
-                        {[
-                          { name: 'Food & Drinks', percentage: '60%', bg: 'bg-emerald-500' },
-                          { name: 'Home Services', percentage: '45%', bg: 'bg-blue-500' },
-                          { name: 'Resorts & Hotels', percentage: '30%', bg: 'bg-purple-500' },
-                          { name: 'Shops & Stores', percentage: '20%', bg: 'bg-amber-500' }
-                        ].map((cat, idx) => (
+                        {donutSegments.slice(0, 5).map((cat, idx) => (
                           <div key={idx} className="flex flex-col gap-1 text-[11px] font-bold">
                             <div className="flex justify-between">
                               <span>{cat.name}</span>
-                              <span className={themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}>{cat.percentage}</span>
+                              <span className={themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}>{cat.percentage}% ({cat.count})</span>
                             </div>
                             <div className={`h-1.5 w-full rounded-full overflow-hidden ${
                               themeMode === 'dark' ? 'bg-slate-800' : 'bg-slate-100'
                             }`}>
-                              <div className={`h-full ${cat.bg} rounded-full`} style={{ width: cat.percentage }} />
+                              <div className="h-full rounded-full" style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }} />
                             </div>
                           </div>
                         ))}
+                        {donutSegments.length === 0 && (
+                          <span className="text-xs text-slate-450 font-bold py-2">No category registrations recorded.</span>
+                        )}
                       </div>
                     </div>
 
@@ -5593,24 +5618,22 @@ const handlePartnerAction = async (partnerId, action) => {
                     }`}>
                       <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400">Locality view density</h4>
                       <div className="flex flex-col gap-3.5 mt-2">
-                        {[
-                          { name: 'Gandhi Nagar', percentage: '80%', bg: 'bg-emerald-500' },
-                          { name: 'Pollachi Road', percentage: '65%', bg: 'bg-blue-500' },
-                          { name: 'Dharapuram Road', percentage: '40%', bg: 'bg-purple-500' },
-                          { name: 'Dhali Town', percentage: '15%', bg: 'bg-amber-500' }
-                        ].map((loc, idx) => (
+                        {localitySegments.slice(0, 5).map((loc, idx) => (
                           <div key={idx} className="flex flex-col gap-1 text-[11px] font-bold">
                             <div className="flex justify-between">
                               <span>{loc.name}</span>
-                              <span className={themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}>{loc.percentage}</span>
+                              <span className={themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}>{loc.percentage}% ({loc.count})</span>
                             </div>
                             <div className={`h-1.5 w-full rounded-full overflow-hidden ${
                               themeMode === 'dark' ? 'bg-slate-800' : 'bg-slate-100'
                             }`}>
-                              <div className={`h-full ${loc.bg} rounded-full`} style={{ width: loc.percentage }} />
+                              <div className="h-full rounded-full" style={{ width: `${loc.percentage}%`, backgroundColor: loc.color }} />
                             </div>
                           </div>
                         ))}
+                        {localitySegments.length === 0 && (
+                          <span className="text-xs text-slate-450 font-bold py-2">No locality views registered.</span>
+                        )}
                       </div>
                     </div>
 

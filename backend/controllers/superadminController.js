@@ -173,6 +173,7 @@ const getRevenueAnalytics = async (req, res, next) => {
 
     // Dynamic stats mapping
     const planCounts = await Subscription.aggregate([
+      { $match: { status: 'active' } },
       { $group: { _id: '$planName', count: { $sum: 1 }, totalSales: { $sum: '$amountPaid' } } }
     ]);
 
@@ -251,6 +252,14 @@ const getSuperAdminStats = async (req, res, next) => {
     const totalReviews = await Review.countDocuments(reviewQuery);
     const payments = await Payment.find(paymentQuery);
     const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
+
+    const now = new Date();
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const revenueThisMonth = payments
+      .filter(p => p.paidAt && new Date(p.paidAt) >= startOfThisMonth)
+      .reduce((sum, p) => sum + p.amount, 0);
+    const revenueBeforeThisMonth = totalRevenue - revenueThisMonth;
+    const revenuePct = revenueBeforeThisMonth > 0 ? ((revenueThisMonth / revenueBeforeThisMonth) * 100).toFixed(1) : '0';
     
     const activeEvents = await Event.countDocuments(eventQuery);
     const pendingBlogs = await Blog.countDocuments(blogQuery);
@@ -325,6 +334,8 @@ const getSuperAdminStats = async (req, res, next) => {
         activeMerchants,
         totalReviews,
         totalRevenue,
+        revenueThisMonth,
+        revenuePct,
         activeEvents,
         pendingBlogs,
         suspendedAccounts,
