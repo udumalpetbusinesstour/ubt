@@ -9537,14 +9537,14 @@ const handlePartnerAction = async (partnerId, action) => {
 
             {/* Modal Body */}
             <div className="p-6 overflow-y-auto flex flex-col gap-6 text-left font-sans">
-              <div className="flex justify-between items-center">
-                <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                <div className="flex flex-col gap-1.5 text-left">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Transaction Identification</span>
-                  <span className={`text-sm font-mono font-bold uppercase ${themeMode === 'dark' ? 'text-emerald-450' : 'text-slate-800'}`}>
+                  <span className={`text-xs sm:text-sm font-mono font-bold uppercase break-all ${themeMode === 'dark' ? 'text-emerald-450' : 'text-slate-800'}`}>
                     {selectedTx.id || selectedTx._id || 'TXN12548'}
                   </span>
                 </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
+                <div className="flex flex-col sm:items-end gap-1 shrink-0 text-left sm:text-right">
                   <span className="text-[9px] font-black uppercase text-slate-400">Amount Cleared</span>
                   <span className="text-xl font-black text-[#027244]">
                     ₹{gross}
@@ -9553,7 +9553,7 @@ const handlePartnerAction = async (partnerId, action) => {
               </div>
 
               {/* Details table grid */}
-              <div className="grid grid-cols-2 gap-4 text-xs font-semibold text-slate-500">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold text-slate-500">
                 <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
                   <span>Merchant/Business</span>
                   <span className={`text-sm font-extrabold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
@@ -9563,7 +9563,15 @@ const handlePartnerAction = async (partnerId, action) => {
                 <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
                   <span>Subscription Plan</span>
                   <span className={`text-sm font-extrabold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                    {selectedTx.planType ? (selectedTx.planType.toLowerCase().includes('plan') ? selectedTx.planType : `${selectedTx.planType} Plan`) : 'Premium Listing'}
+                    {(() => {
+                      const pType = selectedTx.planType;
+                      if (!pType) return 'Premium Listing';
+                      const clean = pType.trim();
+                      if (/plan$/i.test(clean)) {
+                        return clean.replace(/\b\w/g, c => c.toUpperCase());
+                      }
+                      return `${clean.replace(/\b\w/g, c => c.toUpperCase())} Plan`;
+                    })()}
                   </span>
                 </div>
                 <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
@@ -9585,7 +9593,7 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* Autopay Details Section */}
               <div className="flex flex-col gap-2.5 border-t dark:border-slate-800 pt-4">
                 <span className="text-[10.5px] font-black text-slate-405 uppercase tracking-widest leading-none">Autopay Mandate Info</span>
-                <div className="grid grid-cols-2 gap-4 text-xs font-semibold text-slate-500">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold text-slate-500">
                   <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
                     <span>Autopay Status</span>
                     <span className={`text-[9.5px] font-black uppercase w-fit px-2 py-0.5 rounded border leading-none mt-1 ${
@@ -9598,7 +9606,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   </div>
                   <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
                     <span>Autopay Mandate ID</span>
-                    <span className={`text-[11px] font-mono font-bold ${selectedTx.razorpaySubscriptionId ? (themeMode === 'dark' ? 'text-white' : 'text-slate-800') : 'text-slate-400'}`}>
+                    <span className={`text-[11px] font-mono font-bold break-all ${selectedTx.razorpaySubscriptionId ? (themeMode === 'dark' ? 'text-white' : 'text-slate-800') : 'text-slate-400'}`}>
                       {selectedTx.razorpaySubscriptionId || 'N/A (Standard Order)'}
                     </span>
                   </div>
@@ -9639,7 +9647,7 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* Secure Payment Gateway Clearance logs */}
               <div className="flex flex-col gap-2 border-t dark:border-slate-800 pt-4">
                 <span className="text-[10.5px] font-black text-slate-405 uppercase tracking-widest leading-none">Secure Payment Gateway Clearance Logs</span>
-                <div className="bg-slate-950 text-slate-300 font-mono text-[9px] p-4.5 rounded-2xl leading-relaxed flex flex-col gap-1 border border-slate-850 max-h-36 overflow-y-auto">
+                <div className="bg-slate-950 text-slate-300 font-mono text-[9px] p-4.5 rounded-2xl leading-relaxed flex flex-col gap-1 border border-slate-850 max-h-36 overflow-y-auto break-all">
                   <span className="text-slate-550">[{new Date(selectedTx.createdAt || Date.now()).toISOString()}] INITIATING RAZORPAY BILLING HANDSHAKE...</span>
                   {selectedTx.razorpaySubscriptionId ? (
                     <>
