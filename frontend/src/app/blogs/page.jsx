@@ -504,7 +504,7 @@ export default function BlogsPage() {
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent opacity-60 pointer-events-none" />
         
-        <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 text-center w-full">
+        <div className="relative max-w-[1680px] 2xl:max-w-[1820px] mx-auto flex flex-col items-center z-10 text-center w-full">
           
           {/* Breadcrumbs */}
           <div className="flex items-center gap-1.5 text-xs text-slate-300/80 font-bold mt-1 md:mt-2 order-1">
@@ -552,7 +552,7 @@ export default function BlogsPage() {
       </section>
 
       {/* Main Content Wrap */}
-      <div className="max-w-[1440px] w-full px-4 md:px-8 mt-12 flex flex-col gap-12">
+      <div className="max-w-[1680px] 2xl:max-w-[1820px] w-full px-4 md:px-8 mt-12 flex flex-col gap-12">
         
         {/* 2. Featured Articles Section (Only shown when viewing all categories and no active search filter) */}
         {activeCategory === 'All' && !searchQuery && featuredBlogs.length > 0 && (

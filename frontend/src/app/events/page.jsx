@@ -1768,7 +1768,7 @@ export default function EventsPage() {
       <section 
         className="w-full relative min-h-0 md:min-h-[260px] bg-[#001c41] text-white py-4 md:py-10 px-4 md:px-8 border-b border-slate-800"
       >
-        <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 w-full">
+        <div className="relative max-w-[1680px] 2xl:max-w-[1820px] mx-auto flex flex-col items-center z-10 w-full">
           {/* Breadcrumbs */}
           <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-1 md:mt-2 order-1">
             <Link to="/" className="hover:text-emerald-455 transition-colors">Home</Link>
@@ -1841,7 +1841,7 @@ export default function EventsPage() {
       </section>
 
       {/* 2. Main content grids */}
-      <section className="max-w-[1440px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <section className="max-w-[1680px] 2xl:max-w-[1820px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* Left Column Listings (Col-span-3) */}
         <div className="lg:col-span-3 flex flex-col gap-6">

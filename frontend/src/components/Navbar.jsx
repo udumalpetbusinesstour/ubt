@@ -129,7 +129,7 @@ export default function Navbar() {
   if (isAuthPage) {
     return (
       <header className="w-full bg-white py-4.5 px-4 md:px-8 border-b border-slate-100 z-50">
-        <div className="max-w-[1440px] mx-auto flex justify-between items-center">
+        <div className="max-w-[1680px] 2xl:max-w-[1820px] mx-auto flex justify-between items-center">
           <Link to="/" className="flex items-center select-none group py-1">
             <img src="/logo.png" alt="Udumalpet Business Tour" className="h-9 sm:h-13 w-auto object-contain" />
           </Link>
@@ -271,7 +271,7 @@ export default function Navbar() {
             : 'relative border-b border-slate-100 bg-white'
         }`}
       >
-        <div className="max-w-[1440px] mx-auto flex justify-between items-center">
+        <div className="max-w-[1680px] 2xl:max-w-[1820px] mx-auto flex justify-between items-center">
           {/* Logo */}
           <Link to="/" className="flex items-center select-none group py-1">
             <img src="/logo.png" alt="Udumalpet Business Tour" className="h-13 w-auto object-contain" />

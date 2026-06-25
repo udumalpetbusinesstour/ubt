@@ -4200,7 +4200,7 @@ function DashboardContent() {
         </header>
 
         {/* Scrollable Workspace Panels */}
-        <main className="flex-grow overflow-y-auto px-3 md:px-6 py-4 md:py-6 max-w-[1440px] w-full mx-auto flex flex-col gap-4 md:gap-6">
+        <main className="flex-grow overflow-y-auto px-3 md:px-6 py-4 md:py-6 max-w-[1680px] 2xl:max-w-[1820px] w-full mx-auto flex flex-col gap-4 md:gap-6">
           
           {/* Mobile Branch Switcher */}
           {primaryBusiness && branches && branches.length > 0 && (

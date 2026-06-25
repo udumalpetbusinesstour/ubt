@@ -63,7 +63,7 @@ export default function AboutUsView() {
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(2,114,68,0.15),transparent_50%)]" />
         
-        <div className="relative max-w-[1440px] mx-auto w-full flex flex-col items-center z-10 text-center">
+        <div className="relative max-w-[1680px] 2xl:max-w-[1820px] mx-auto w-full flex flex-col items-center z-10 text-center">
           <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-extrabold uppercase tracking-widest bg-emerald-950/60 border border-emerald-800/60 px-3.5 py-1.5 rounded-full mb-5 shadow-inner">
             <MapPin className="h-3.5 w-3.5" /> Exclusively Udumalpet
           </div>
@@ -88,7 +88,7 @@ export default function AboutUsView() {
       </section>
 
       {/* 2. GEOGRAPHIC / EXCLUSIVELY UDUMALPET SECTION */}
-      <section className="max-w-[1440px] w-full px-4 md:px-8 py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <section className="max-w-[1680px] 2xl:max-w-[1820px] w-full px-4 md:px-8 py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
         <div className="lg:col-span-7 flex flex-col gap-5 text-left">
           <div className="inline-flex items-center gap-2 text-xs font-extrabold text-[#027244] uppercase tracking-widest bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full self-start">
             <Compass className="h-3.5 w-3.5" /> Geographic Exclusivity
@@ -193,7 +193,7 @@ export default function AboutUsView() {
       <section className="w-full bg-[#001c41] text-white py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(2,114,68,0.08),transparent_50%)]" />
         
-        <div className="max-w-[1440px] mx-auto px-4 md:px-8 relative z-10">
+        <div className="max-w-[1680px] 2xl:max-w-[1820px] mx-auto px-4 md:px-8 relative z-10">
           <div className="text-center flex flex-col items-center gap-4 mb-16">
             <div className="inline-flex items-center gap-2 text-xs font-extrabold text-emerald-300 uppercase tracking-widest bg-emerald-950/80 border border-emerald-800 px-3 py-1 rounded-full">
               <Info className="h-3.5 w-3.5" /> Our Mission
@@ -244,7 +244,7 @@ export default function AboutUsView() {
       </section>
 
       {/* 4. BENEFITS SECTION */}
-      <section className="max-w-[1440px] w-full px-4 md:px-8 py-20 text-left">
+      <section className="max-w-[1680px] 2xl:max-w-[1820px] w-full px-4 md:px-8 py-20 text-left">
         <div className="flex flex-col items-center text-center gap-4 mb-16">
           <div className="inline-flex items-center gap-2 text-xs font-extrabold text-[#027244] uppercase tracking-widest bg-emerald-50 border border-emerald-150 px-3 py-1 rounded-full">
             <Check className="h-3.5 w-3.5" /> Platform Advantages
@@ -345,7 +345,7 @@ export default function AboutUsView() {
 
       {/* 5. THE BUSINESS TOUR CONCEPT SECTION */}
       <section className="w-full bg-slate-50 py-20 border-y border-slate-200/80 text-left">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-8">
+        <div className="max-w-[1680px] 2xl:max-w-[1820px] mx-auto px-4 md:px-8">
           <div className="flex flex-col items-start gap-4 mb-16">
             <div className="inline-flex items-center gap-2 text-xs font-extrabold text-[#027244] uppercase tracking-widest bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full">
               <Sparkles className="h-3.5 w-3.5" /> Guided Ecosystem
@@ -401,7 +401,7 @@ export default function AboutUsView() {
       </section>
 
       {/* 6. CALL TO ACTION (CTA) SECTION */}
-      <section className="max-w-[1440px] w-full px-4 md:px-8 py-16">
+      <section className="max-w-[1680px] 2xl:max-w-[1820px] w-full px-4 md:px-8 py-16">
         <div className="bg-gradient-to-br from-[#001c41] to-[#001128] text-white rounded-3xl p-8 md:p-12 text-left flex flex-col md:flex-row justify-between items-center gap-10 shadow-lg relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(2,114,68,0.1),transparent_50%)]" />
           

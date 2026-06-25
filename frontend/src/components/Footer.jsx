@@ -4,7 +4,7 @@ import { Facebook, Instagram, Phone, Mail, Clock, MapPin, Gift } from 'lucide-re
 export default function Footer() {
   return (
     <footer className="w-full bg-[#001c41] text-slate-300 pt-16 pb-8 border-t border-slate-800 z-10 font-sans">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+      <div className="max-w-[1680px] 2xl:max-w-[1820px] mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
 
         {/* Column 1: Logo and Description */}
         <div className="flex flex-col gap-5">
@@ -101,7 +101,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="max-w-[1440px] mx-auto px-4 md:px-8 mt-12 pt-6 border-t border-slate-800/80 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500 font-semibold">
+      <div className="max-w-[1680px] 2xl:max-w-[1820px] mx-auto px-4 md:px-8 mt-12 pt-6 border-t border-slate-800/80 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500 font-semibold">
         <span>© 2025 Udumalpet Business Tour. All rights reserved.</span>
         <span>Made with <span className="text-red-500">❤️</span> for Udumalpet</span>
       </div>
