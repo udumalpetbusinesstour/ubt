@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { MapPin, Menu, X, User, LogOut, Bell, Home, Building2, LayoutGrid, Calendar, BookOpen, Users, Phone, Plus, Facebook, Instagram, Mail } from 'lucide-react';
+import { MapPin, Menu, X, User, LogOut, Bell, Home, Building2, LayoutGrid, Calendar, BookOpen, Users, Phone, Plus, Facebook, Instagram, Mail, Sparkles } from 'lucide-react';
 
 export default function Navbar() {
   const { pathname } = useLocation();

@@ -371,6 +371,16 @@ const googleLogin = async (req, res, next) => {
       return sendError(res, 400, 'Already signed up. Login to proceed.');
     }
     
+    const isPartnerTest = email.toLowerCase() === 'google_partner_test@udumalpet.in';
+
+    if (user && isPartnerTest) {
+      let updated = false;
+      if (user.role !== 'partner') { user.role = 'partner'; updated = true; }
+      if (!user.isPartnerRegistered) { user.isPartnerRegistered = true; updated = true; }
+      if (!user.isPartnerApproved) { user.isPartnerApproved = true; user.partnerStatus = 'approved'; updated = true; }
+      if (updated) { await user.save(); }
+    }
+
     if (!user) {
       // Register user dynamically
       user = await User.create({
@@ -378,10 +388,13 @@ const googleLogin = async (req, res, next) => {
         fullName: name,
         email: email.toLowerCase(),
         password: `oauth_pwd_${Math.random().toString(36).substring(2, 12)}`, // Secure dummy password
-        role: req.body.role || 'owner', // Default role for registering business owners
+        role: isPartnerTest ? 'partner' : (req.body.role || 'owner'), // Default role for registering business owners
         isVerified: true,
         status: 'Active',
-        profileImage: picture || ''
+        profileImage: picture || '',
+        isPartnerRegistered: isPartnerTest ? true : false,
+        isPartnerApproved: isPartnerTest ? true : false,
+        partnerStatus: isPartnerTest ? 'approved' : 'pending'
       });
     }
 

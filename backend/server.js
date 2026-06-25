@@ -63,6 +63,26 @@ const seedAdministrativeCredentials = async () => {
       });
       console.log('--- Seed SUCCESS: Admin console enabled (admin@gmail.com / 123456) ---');
     }
+
+    // 3. Seed Mock Partner: google_partner_test@udumalpet.in
+    const partnerExists = await User.findOne({ email: 'google_partner_test@udumalpet.in' });
+    if (!partnerExists) {
+      await User.create({
+        name: 'Google Partner Member',
+        fullName: 'Google Partner Member',
+        email: 'google_partner_test@udumalpet.in',
+        phone: '+91 77777 77777',
+        mobileNumber: '+91 77777 77777',
+        password: 'password123', // Automatically hashes pre-save
+        role: 'partner',
+        isVerified: true,
+        status: 'Active',
+        isPartnerRegistered: true,
+        isPartnerApproved: true,
+        partnerStatus: 'approved'
+      });
+      console.log('--- Seed SUCCESS: Google Partner mock console enabled (google_partner_test@udumalpet.in) ---');
+    }
   } catch (error) {
     console.error('Error during administrative seeder routine execution:', error.message);
   }
