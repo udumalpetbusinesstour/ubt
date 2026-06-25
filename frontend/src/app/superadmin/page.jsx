@@ -111,6 +111,21 @@ export default function SuperAdminDashboard() {
   const [selectedTx, setSelectedTx] = useState(null);
   const [showTxModal, setShowTxModal] = useState(false);
 
+  const getGrossAmount = () => {
+    if (!selectedTx) return 0;
+    if (selectedTx.amount !== undefined) {
+      return Number(selectedTx.amount);
+    }
+    if (selectedTx.amt) {
+      const val = parseFloat(selectedTx.amt.replace(/[^\d.]/g, ''));
+      if (!isNaN(val)) return val;
+    }
+    return 49;
+  };
+  const gross = getGrossAmount();
+  const gst = gross - (gross / 1.18);
+  const base = gross - gst;
+
   // Custom states for forms
   const [newNotice, setNewNotice] = useState({ title: '', message: '', type: 'announcement' });
   const [noticeSuccess, setNoticeSuccess] = useState(false);
@@ -9589,7 +9604,7 @@ const handlePartnerAction = async (partnerId, action) => {
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   <span className="text-[9px] font-black uppercase text-slate-400">Amount Cleared</span>
                   <span className="text-xl font-black text-[#027244]">
-                    {selectedTx.amt || (selectedTx.amount ? `₹${selectedTx.amount}` : '') || '₹49'}
+                    ₹{gross}
                   </span>
                 </div>
               </div>
@@ -9665,15 +9680,15 @@ const handlePartnerAction = async (partnerId, action) => {
                 <div className="flex flex-col gap-2 text-xs font-semibold text-slate-550 dark:text-slate-400">
                   <div className="flex justify-between">
                     <span>Base Amount listing fees</span>
-                    <span>{selectedTx.amt || (selectedTx.amount ? `₹${selectedTx.amount}` : '') || '₹49'}</span>
+                    <span>₹{base.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>GST Tax (18% inclusive)</span>
-                    <span>{selectedTx.amt ? '₹7.47' : `₹${((selectedTx.amount || 0) * 0.18).toFixed(2)}`}</span>
+                    <span>₹{gst.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between border-t dark:border-slate-800 pt-2 font-extrabold text-slate-800 dark:text-white">
                     <span>Gross Settlement Amount</span>
-                    <span className="text-[#027244]">{selectedTx.amt || (selectedTx.amount ? `₹${selectedTx.amount}` : '') || '₹49'}</span>
+                    <span className="text-[#027244]">₹{gross}</span>
                   </div>
                 </div>
               </div>
