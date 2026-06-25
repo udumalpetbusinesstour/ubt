@@ -634,10 +634,12 @@ router.post('/partners/approve', async (req, res, next) => {
       partner.partnerStatus = 'approved';
       partner.partnerApprovedAt = new Date();
     } else if (action === 'reject') {
+      const { rejectionReason } = req.body;
       partner.isPartnerApproved = false;
       partner.partnerStatus = 'rejected';
       partner.partnerRejectedAt = new Date();
       partner.isPartnerRegistered = false; // Reset so they must register again
+      partner.partnerRejectionReason = rejectionReason || '';
     } else {
       return res.status(400).json({ success: false, message: 'Invalid action. Must be "approve" or "reject".' });
     }

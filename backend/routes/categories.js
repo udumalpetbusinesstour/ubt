@@ -22,6 +22,24 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+// @desc    Autocomplete suggestions from existing categories while typing
+// @route   GET /api/categories/autocomplete/suggestions
+// @access  Public
+router.get('/autocomplete/suggestions', async (req, res, next) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const searchRegex = new RegExp(q, 'i');
+    const matched = await Category.find({ categoryName: searchRegex }).limit(10);
+    return res.json({ success: true, data: matched });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // @desc    Get category details by slug
 // @route   GET /api/categories/:slug
 // @access  Public
@@ -179,24 +197,6 @@ router.post('/check-duplicate', async (req, res, next) => {
       success: true,
       isDuplicate: false
     });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// @desc    Autocomplete suggestions from existing categories while typing
-// @route   GET /api/categories/suggestions
-// @access  Public
-router.get('/autocomplete/suggestions', async (req, res, next) => {
-  try {
-    const { q } = req.query;
-    if (!q) {
-      return res.json({ success: true, data: [] });
-    }
-
-    const searchRegex = new RegExp(q, 'i');
-    const matched = await Category.find({ categoryName: searchRegex }).limit(10);
-    return res.json({ success: true, data: matched });
   } catch (err) {
     next(err);
   }

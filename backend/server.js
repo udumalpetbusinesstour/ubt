@@ -9,22 +9,6 @@ const { startSubscriptionCron } = require('./cron/subscriptionCron');
 const { startGoogleReviewsCron } = require('./cron/googleReviewsCron');
 const { seedDefaultPlans } = require('./routes/plans');
 
-// Routes Mounts
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/businesses', require('./routes/businesses'));
-app.use('/api/branches', require('./routes/branches'));
-app.use('/api/payments', require('./routes/payments'));
-app.use('/api/reviews', require('./routes/reviews'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/notifications', require('./routes/notifications'));
-app.use('/api/events', require('./routes/events'));
-app.use('/api/blogs', require('./routes/blogs'));
-app.use('/api/testimonials', require('./routes/testimonials'));
-app.use('/api/newsletter', require('./routes/newsletter'));
-app.use('/api/update-subscribers', require('./routes/updateSubscribers'));
-app.use('/api/menu', require('./routes/menu'));
-app.use('/api/queries', require('./routes/queries'));
-
 // Seeder routine for UBT administrative credentials
 const seedAdministrativeCredentials = async () => {
   try {

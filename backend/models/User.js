@@ -112,6 +112,10 @@ const UserSchema = new mongoose.Schema({
   },
   partnerRejectedAt: {
     type: Date,
+  },
+  partnerRejectionReason: {
+    type: String,
+    default: '',
   }
 }, {
   timestamps: true

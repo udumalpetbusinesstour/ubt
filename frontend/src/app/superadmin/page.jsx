@@ -7,7 +7,8 @@ import {
   MapPin, ChevronRight, Landmark, Trash2, Mail, Globe, Award, ShieldAlert, CheckCircle2,
   Clock, Plus, Filter, Activity, Cpu, Database, Terminal, Users, BarChart, FileText, Ban,
   Play, Square, Layers, Sparkles, HelpCircle, Key, Lock, Phone, UserCheck, ShieldOff, CheckSquare,
-  Utensils, Dumbbell, Plane, GraduationCap, Camera, Leaf, Building, Coins, ShoppingBag, Wrench, Gift, Heart
+  Utensils, Dumbbell, Plane, GraduationCap, Camera, Leaf, Building, Coins, ShoppingBag, Wrench, Gift, Heart,
+  Copy, XCircle
 } from 'lucide-react';
 import BloodDonorsTab from '../../components/BloodDonorsTab';
 
@@ -1259,6 +1260,31 @@ const handlePartnerAction = async (partnerId, action) => {
     }
   };
 
+  const handleDeletePartner = async (partnerId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this partner and their entire registration? This will also cascade delete all their referrals, redemptions, and notifications.')) {
+      return;
+    }
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/users/${partnerId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${activeToken}` }
+      });
+      const data = await res.json();
+      if (data.success || res.ok) {
+        alert('Partner registration and all associated records deleted successfully.');
+        fetchPartners(); // Refresh partners list
+        setPartners(prev => prev.filter(p => p._id !== partnerId));
+      } else {
+        alert(data.message || 'Failed to delete partner.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred while deleting partner.');
+    }
+  };
+
+
   const handleDeleteSelectedSignups = async () => {
     if (selectedSignups.length === 0) return;
     if (!window.confirm(`Are you sure you want to permanently delete the ${selectedSignups.length} selected user registrations? This will cascade-delete ALL their businesses, blogs, events, reviews, and subscriptions. This action is irreversible!`)) {
@@ -1807,18 +1833,18 @@ const handlePartnerAction = async (partnerId, action) => {
       revPoints.push(revSum);
     });
 
-    const scaleLine = (points, defaultY) => {
+    const scaleLine = (points, defaultY, minY = 120, height = 100) => {
       const allEqual = points.every(val => val === points[0]);
       if (allEqual) {
         return points.map(() => defaultY);
       }
       const maxVal = Math.max(...points, 1);
-      return points.map(val => 120 - (val / maxVal) * 100);
+      return points.map(val => minY - (val / maxVal) * height);
     };
 
-    const bizY = scaleLine(bizPoints, 85);
-    const userY = scaleLine(userPoints, 55);
-    const revY = scaleLine(revPoints, 25);
+    const bizY = scaleLine(bizPoints, 85, 110, 80);
+    const userY = scaleLine(userPoints, 55, 115, 90);
+    const revY = scaleLine(revPoints, 25, 120, 100);
 
     return { bizY, userY, revY };
   };
@@ -2501,46 +2527,94 @@ const handlePartnerAction = async (partnerId, action) => {
                   </div>
 
                   {/* 6 HUD Summary Metric Cards Row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-                    {[
-                      { title: 'Total Businesses', val: dateFilteredBusinesses.length || 0, desc: '+196 this month', pct: '+ 18.6%', icon: <Store className="h-5 w-5" />, color: 'from-purple-500/10 border-purple-500/20 text-purple-500', tabId: 'Businesses' },
-                      { title: 'Active Businesses', val: dateFilteredBusinesses.filter(b => b.status === 'Approved').length || 0, desc: '86.7% of total', pct: '+ 16.3%', icon: <CheckCircle2 className="h-5 w-5" />, color: 'from-emerald-500/10 border-emerald-500/20 text-emerald-500', tabId: 'Businesses' },
-                      { title: 'Total Users', val: (dateFilteredMerchants.length + dateFilteredRegularUsers.length) || 0, desc: '+487 this month', pct: '+ 22.5%', icon: <User className="h-5 w-5" />, color: 'from-amber-500/10 border-amber-500/20 text-amber-500', tabId: 'Merchants' },
-                      { title: 'Events Listed', val: dateFilteredEvents.length || 0, desc: '+54 this month', pct: '+ 28.4%', icon: <Calendar className="h-5 w-5" />, color: 'from-pink-500/10 border-pink-500/20 text-pink-500', tabId: 'Events Moderation' },
-                      { title: 'Blog Posts', val: dateFilteredBlogs.length || 0, desc: '+37 this month', pct: '+ 31.2%', icon: <BookOpen className="h-5 w-5" />, color: 'from-blue-500/10 border-blue-500/20 text-blue-500', tabId: 'Blogs Moderation' },
-                      { title: 'Total Revenue', val: '₹' + (dashboardStats?.totalRevenue !== undefined ? dashboardStats.totalRevenue : dateFilteredSubscriptions.reduce((sum, s) => sum + (s.amount || 0), 0)).toLocaleString('en-IN'), desc: 'Platform billing summary', pct: '+ 19.8%', icon: <Coins className="h-5 w-5" />, color: 'from-cyan-500/10 border-cyan-500/20 text-cyan-500', tabId: 'Subscriptions' }
-                    ].map((card, idx) => (
-                      <div 
-                        key={idx} 
-                        onClick={() => {
-                          setActiveTab(card.tabId);
-                          if (card.title === 'Active Businesses') {
-                            setBizStatusFilter('Approved');
-                          } else if (card.title === 'Total Businesses') {
-                            setBizStatusFilter('All');
-                          }
-                        }}
-                        className={`rounded-2xl p-4 shadow-sm border bg-gradient-to-br flex flex-col justify-between h-28 relative overflow-hidden cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all duration-300 ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-slate-800'}`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 max-w-[100px] leading-tight">
-                            {card.title}
-                          </span>
-                          <span className={`h-8 w-8 rounded-xl flex items-center justify-center shadow-sm ${themeMode === 'dark' ? 'bg-slate-950/50' : 'bg-slate-50 border border-slate-100'} ${card.color.split(' ')[2]}`}>
+                  {(() => {
+                    const now = new Date();
+                    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-                            {card.icon}
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-0.5 mt-2">
-                          <div className="flex items-baseline gap-1.5">
-                            <span className={`text-lg font-black ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{card.val}</span>
-                            <span className={`text-[8.5px] font-black ${card.color.split(' ')[2]}`}>{card.pct}</span>
+                    // 1. Total Businesses
+                    const businessesThisMonth = (businesses || []).filter(b => b.createdAt && new Date(b.createdAt) >= startOfThisMonth).length;
+                    const totalBusinessesCount = (businesses || []).length;
+                    const businessesBeforeThisMonth = totalBusinessesCount - businessesThisMonth;
+                    const businessesPct = businessesBeforeThisMonth > 0 ? ((businessesThisMonth / businessesBeforeThisMonth) * 100).toFixed(1) : '0';
+
+                    // 2. Active Businesses
+                    const activeFilteredCount = (dateFilteredBusinesses || []).filter(b => b.status === 'Approved').length;
+                    const totalFiltered = (dateFilteredBusinesses || []).length;
+                    const activePercentOfTotal = totalFiltered > 0 ? ((activeFilteredCount / totalFiltered) * 100).toFixed(1) : '0';
+                    const activeApprovedThisMonth = (businesses || []).filter(b => b.status === 'Approved' && b.createdAt && new Date(b.createdAt) >= startOfThisMonth).length;
+                    const totalActiveApproved = (businesses || []).filter(b => b.status === 'Approved').length;
+                    const activeApprovedBeforeThisMonth = totalActiveApproved - activeApprovedThisMonth;
+                    const activeApprovedPct = activeApprovedBeforeThisMonth > 0 ? ((activeApprovedThisMonth / activeApprovedBeforeThisMonth) * 100).toFixed(1) : '0';
+
+                    // 3. Total Users
+                    const allUsers = [...(merchants || []), ...(regularUsers || [])];
+                    const usersThisMonth = allUsers.filter(u => u.createdAt && new Date(u.createdAt) >= startOfThisMonth).length;
+                    const totalUsersCount = allUsers.length;
+                    const usersBeforeThisMonth = totalUsersCount - usersThisMonth;
+                    const usersPct = usersBeforeThisMonth > 0 ? ((usersThisMonth / usersBeforeThisMonth) * 100).toFixed(1) : '0';
+
+                    // 4. Events Listed
+                    const eventsThisMonth = (events || []).filter(e => (e.createdAt || e.date) && new Date(e.createdAt || e.date) >= startOfThisMonth).length;
+                    const totalEventsCount = (events || []).length;
+                    const eventsBeforeThisMonth = totalEventsCount - eventsThisMonth;
+                    const eventsPct = eventsBeforeThisMonth > 0 ? ((eventsThisMonth / eventsBeforeThisMonth) * 100).toFixed(1) : '0';
+
+                    // 5. Blog Posts
+                    const blogsThisMonth = (blogs || []).filter(b => b.createdAt && new Date(b.createdAt) >= startOfThisMonth).length;
+                    const totalBlogsCount = (blogs || []).length;
+                    const blogsBeforeThisMonth = totalBlogsCount - blogsThisMonth;
+                    const blogsPct = blogsBeforeThisMonth > 0 ? ((blogsThisMonth / blogsBeforeThisMonth) * 100).toFixed(1) : '0';
+
+                    // 6. Total Revenue
+                    const revenueThisMonth = (subscriptions || []).filter(s => s.createdAt && new Date(s.createdAt) >= startOfThisMonth).reduce((sum, s) => sum + (s.amount || 0), 0);
+                    const totalRevenueCount = (subscriptions || []).reduce((sum, s) => sum + (s.amount || 0), 0);
+                    const revenueBeforeThisMonth = totalRevenueCount - revenueThisMonth;
+                    const revenuePct = revenueBeforeThisMonth > 0 ? ((revenueThisMonth / revenueBeforeThisMonth) * 100).toFixed(1) : '0';
+
+                    const cards = [
+                      { title: 'Total Businesses', val: dateFilteredBusinesses.length || 0, desc: `+${businessesThisMonth} this month`, pct: `+${businessesPct}%`, icon: <Store className="h-5 w-5" />, color: 'from-purple-500/10 border-purple-500/20 text-purple-500', tabId: 'Businesses' },
+                      { title: 'Active Businesses', val: activeFilteredCount || 0, desc: `${activePercentOfTotal}% of total`, pct: `+${activeApprovedPct}%`, icon: <CheckCircle2 className="h-5 w-5" />, color: 'from-emerald-500/10 border-emerald-500/20 text-emerald-500', tabId: 'Businesses' },
+                      { title: 'Total Users', val: (dateFilteredMerchants.length + dateFilteredRegularUsers.length) || 0, desc: `+${usersThisMonth} this month`, pct: `+${usersPct}%`, icon: <User className="h-5 w-5" />, color: 'from-amber-500/10 border-amber-500/20 text-amber-500', tabId: 'Merchants' },
+                      { title: 'Events Listed', val: dateFilteredEvents.length || 0, desc: `+${eventsThisMonth} this month`, pct: `+${eventsPct}%`, icon: <Calendar className="h-5 w-5" />, color: 'from-pink-500/10 border-pink-500/20 text-pink-500', tabId: 'Events Moderation' },
+                      { title: 'Blog Posts', val: dateFilteredBlogs.length || 0, desc: `+${blogsThisMonth} this month`, pct: `+${blogsPct}%`, icon: <BookOpen className="h-5 w-5" />, color: 'from-blue-500/10 border-blue-500/20 text-blue-500', tabId: 'Blogs Moderation' },
+                      { title: 'Total Revenue', val: '₹' + (dashboardStats?.totalRevenue !== undefined ? dashboardStats.totalRevenue : dateFilteredSubscriptions.reduce((sum, s) => sum + (s.amount || 0), 0)).toLocaleString('en-IN'), desc: `+₹${revenueThisMonth.toLocaleString('en-IN')} this month`, pct: `+${revenuePct}%`, icon: <Coins className="h-5 w-5" />, color: 'from-cyan-500/10 border-cyan-500/20 text-cyan-500', tabId: 'Subscriptions' }
+                    ];
+
+                    return (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+                        {cards.map((card, idx) => (
+                          <div 
+                            key={idx} 
+                            onClick={() => {
+                              setActiveTab(card.tabId);
+                              if (card.title === 'Active Businesses') {
+                                setBizStatusFilter('Approved');
+                              } else if (card.title === 'Total Businesses') {
+                                setBizStatusFilter('All');
+                              }
+                            }}
+                            className={`rounded-2xl p-4 shadow-sm border bg-gradient-to-br flex flex-col justify-between h-28 relative overflow-hidden cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all duration-300 ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-slate-800'}`}
+                          >
+                            <div className="flex justify-between items-start">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 max-w-[100px] leading-tight">
+                                {card.title}
+                              </span>
+                              <span className={`h-8 w-8 rounded-xl flex items-center justify-center shadow-sm ${themeMode === 'dark' ? 'bg-slate-950/50' : 'bg-slate-50 border border-slate-100'} ${card.color.split(' ')[2]}`}>
+                                {card.icon}
+                              </span>
+                            </div>
+                            <div className="flex flex-col gap-0.5 mt-2">
+                              <div className="flex items-baseline gap-1.5">
+                                <span className={`text-lg font-black ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{card.val}</span>
+                                <span className={`text-[8.5px] font-black ${card.color.split(' ')[2]}`}>{card.pct}</span>
+                              </div>
+                              <span className="text-[8.5px] text-slate-500 font-bold">{card.desc}</span>
+                            </div>
                           </div>
-                          <span className="text-[8.5px] text-slate-500 font-bold">{card.desc}</span>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })()}
 
                   {/* Analytics Dashboard Grid - Row 1 */}
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
@@ -2589,20 +2663,42 @@ const handlePartnerAction = async (partnerId, action) => {
                         
                         {/* Metrics Table on the Right */}
                         <div className="w-full sm:w-36 shrink-0 border-t sm:border-t-0 sm:border-l pt-4 sm:pt-0 sm:pl-4 border-slate-800/40 flex flex-row sm:flex-col justify-between sm:justify-center gap-3">
-                          {[
-                            { label: 'Total Views', val: Math.round((dashboardStats?.totalCallClicks || 0) + (dashboardStats?.totalWhatsappClicks || 0) + (dashboardStats?.totalWebsiteClicks || 0) + (dashboardStats?.totalInstagramClicks || 0) + (dashboardStats?.totalFacebookClicks || 0) + (dashboardStats?.totalLeads || 0) * 2.5 + 148).toLocaleString('en-IN'), pct: '▲ 23.1%', color: 'text-[#027244]' },
-                            { label: 'Total Leads', val: (dashboardStats?.totalLeads || 0).toLocaleString('en-IN'), pct: '▲ 17.7%', color: 'text-emerald-450' },
-                            { label: 'WhatsApp Clicks', val: (dashboardStats?.totalWhatsappClicks || 0).toLocaleString('en-IN'), pct: '▲ 21.4%', color: 'text-emerald-400' },
-                            { label: 'Call Clicks', val: (dashboardStats?.totalCallClicks || 0).toLocaleString('en-IN'), pct: '▲ 16.2%', color: 'text-amber-500' }
-                          ].map((metric, idx) => (
-                            <div key={idx} className="flex flex-col gap-0.5 text-left">
-                              <span className="text-[8.5px] font-black text-slate-500 uppercase tracking-widest">{metric.label}</span>
-                              <div className="flex items-baseline gap-1.5">
-                                <span className={`text-xs font-black ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{metric.val}</span>
-                                <span className={`text-[8px] font-bold ${metric.color}`}>{metric.pct}</span>
+                          {(() => {
+                            const viewsCount = (dashboardStats?.totalCallClicks || 0) + 
+                                               (dashboardStats?.totalWhatsappClicks || 0) + 
+                                               (dashboardStats?.totalWebsiteClicks || 0) + 
+                                               (dashboardStats?.totalInstagramClicks || 0) + 
+                                               (dashboardStats?.totalFacebookClicks || 0) + 
+                                               (dashboardStats?.totalLeads || 0);
+                            
+                            const leadConv = viewsCount > 0 ? ((dashboardStats?.totalLeads || 0) / viewsCount * 100).toFixed(1) : '0.0';
+                            const whatsappShare = viewsCount > 0 ? ((dashboardStats?.totalWhatsappClicks || 0) / viewsCount * 100).toFixed(1) : '0.0';
+                            const callShare = viewsCount > 0 ? ((dashboardStats?.totalCallClicks || 0) / viewsCount * 100).toFixed(1) : '0.0';
+                            
+                            const now = new Date();
+                            const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                            const businessesThisMonth = (businesses || []).filter(b => b.createdAt && new Date(b.createdAt) >= startOfThisMonth).length;
+                            const totalBusinessesCount = (businesses || []).length;
+                            const baseBiz = totalBusinessesCount - businessesThisMonth;
+                            const viewsGrowthPct = baseBiz > 0 ? ((businessesThisMonth / baseBiz) * 100).toFixed(1) : '0.0';
+
+                            const metrics = [
+                              { label: 'Total Views', val: viewsCount.toLocaleString('en-IN'), pct: `▲ ${viewsGrowthPct}%`, color: 'text-[#027244]' },
+                              { label: 'Total Leads', val: (dashboardStats?.totalLeads || 0).toLocaleString('en-IN'), pct: `${leadConv}% conv.`, color: 'text-emerald-450' },
+                              { label: 'WhatsApp Clicks', val: (dashboardStats?.totalWhatsappClicks || 0).toLocaleString('en-IN'), pct: `${whatsappShare}% click`, color: 'text-emerald-400' },
+                              { label: 'Call Clicks', val: (dashboardStats?.totalCallClicks || 0).toLocaleString('en-IN'), pct: `${callShare}% click`, color: 'text-amber-500' }
+                            ];
+
+                            return metrics.map((metric, idx) => (
+                              <div key={idx} className="flex flex-col gap-0.5 text-left">
+                                <span className="text-[8.5px] font-black text-slate-500 uppercase tracking-widest">{metric.label}</span>
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className={`text-xs font-black ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{metric.val}</span>
+                                  <span className={`text-[8px] font-bold ${metric.color}`}>{metric.pct}</span>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ));
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -6336,7 +6432,7 @@ const handlePartnerAction = async (partnerId, action) => {
                       <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
                       <input
                         type="text"
-                        placeholder="Search partners by name, email or code..."
+                        placeholder="Search partners by name or email..."
                         value={referralSearch}
                         onChange={(e) => setReferralSearch(e.target.value)}
                         className={`w-full bg-transparent border-none text-xs font-semibold focus:outline-none ${
@@ -6393,9 +6489,9 @@ const handlePartnerAction = async (partnerId, action) => {
                               <th className="py-3.5 px-6">Partner Identity</th>
                               <th className="py-3.5 px-4">Contact Info</th>
                               <th className="py-3.5 px-4">Aadhaar Card</th>
-                              <th className="py-3.5 px-4">Referral Code</th>
+                              <th className="py-3.5 px-4">Referral Link</th>
                               <th className="py-3.5 px-4">Rewards Balance</th>
-                              <th className="py-3.5 px-4 text-center">Status</th>
+                              <th className="py-3.5 px-4 text-center">Actions</th>
                             </tr>
                           </thead>
                           <tbody className={`divide-y ${themeMode === 'dark' ? 'divide-slate-850' : 'divide-slate-50'}`}>
@@ -6407,9 +6503,9 @@ const handlePartnerAction = async (partnerId, action) => {
                                 </td>
                               </tr>
                             ) : partners.filter(p => 
-                              p.fullName?.toLowerCase().includes(referralSearch.toLowerCase()) ||
-                              p.email?.toLowerCase().includes(referralSearch.toLowerCase()) ||
-                              p.referralCode?.toLowerCase().includes(referralSearch.toLowerCase())
+                              (p.fullName || '').toLowerCase().includes(referralSearch.toLowerCase()) ||
+                              (p.email || '').toLowerCase().includes(referralSearch.toLowerCase()) ||
+                              (p.referralCode || '').toLowerCase().includes(referralSearch.toLowerCase())
                             ).length === 0 ? (
                               <tr>
                                 <td colSpan={6} className="py-16 text-center text-slate-400 font-bold text-xs">
@@ -6419,9 +6515,9 @@ const handlePartnerAction = async (partnerId, action) => {
                             ) : (
                               partners
                                 .filter(p => 
-                                  p.fullName?.toLowerCase().includes(referralSearch.toLowerCase()) ||
-                                  p.email?.toLowerCase().includes(referralSearch.toLowerCase()) ||
-                                  p.referralCode?.toLowerCase().includes(referralSearch.toLowerCase())
+                                  (p.fullName || '').toLowerCase().includes(referralSearch.toLowerCase()) ||
+                                  (p.email || '').toLowerCase().includes(referralSearch.toLowerCase()) ||
+                                  (p.referralCode || '').toLowerCase().includes(referralSearch.toLowerCase())
                                 )
                                 .map((partner) => (
                                   <tr key={partner._id} onClick={() => handleViewPartner(partner)} className={`transition-colors cursor-pointer ${
@@ -6436,7 +6532,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                           {partner.fullName || partner.name}
                                         </span>
                                         <span className="text-[9.5px] text-slate-400 mt-1 block font-medium">
-                                          Joined UBT on {new Date(partner.createdAt).toLocaleDateString()}
+                                          Joined UBT on {partner.createdAt ? new Date(partner.createdAt).toLocaleDateString() : 'N/A'}
                                         </span>
                                       </div>
                                     </td>
@@ -6450,35 +6546,83 @@ const handlePartnerAction = async (partnerId, action) => {
                                         {partner.address || 'Address pending'}
                                       </div>
                                     </td>
-                                    <td className="py-4 px-4 text-left font-mono">
-                                      <span className={`border px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                                        themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-355' : 'bg-slate-100 border-slate-200 text-slate-700'
-                                      }`}>
-                                        {partner.referralCode}
-                                      </span>
+                                    <td className="py-4 px-4 text-left">
+                                      {partner.referralCode ? (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const link = `${window.location.origin}/register?ref=${partner.referralCode}`;
+                                            navigator.clipboard.writeText(link);
+                                            alert('Referral link copied to clipboard!');
+                                          }}
+                                          className={`border px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                                            themeMode === 'dark'
+                                              ? 'bg-emerald-950/20 border-emerald-900/30 text-emerald-455 hover:bg-emerald-950/30'
+                                              : 'bg-emerald-50 border-emerald-250 text-[#027244] hover:bg-emerald-100'
+                                          }`}
+                                          title="Copy Referral Link"
+                                        >
+                                          <Copy className="h-3 w-3" />
+                                          <span>Copy Link</span>
+                                        </button>
+                                      ) : (
+                                        <span className="text-[10px] text-slate-400 font-semibold">No Link</span>
+                                      )}
                                     </td>
                                     <td className="py-4 px-4 text-left font-sans">
                                       <span className="text-xs font-black text-[#027244]">{partner.referralPoints || 0} Points</span>
                                       <span className="text-[9.5px] text-slate-405 block mt-0.5">₹{partner.referralPoints || 0} Value</span>
                                     </td>
-                                    <td className="py-4 px-4 text-center">
-                                      {!partner.isPartnerRegistered ? (
-                                        <span className="bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase inline-block">
-                                          Draft User
-                                        </span>
-                                      ) : partner.isPartnerApproved ? (
-                                        <span className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase inline-block">
-                                          Approved Partner
-                                        </span>
-                                      ) : partner.partnerStatus === 'rejected' ? (
-                                        <span className="bg-red-500/10 text-red-500 border border-red-500/20 px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase inline-block">
-                                          Rejected
-                                        </span>
-                                      ) : (
-                                        <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase inline-block animate-pulse">
-                                          Pending Approval
-                                        </span>
-                                      )}
+                                    <td className="py-4 px-4 text-center" onClick={(e) => e.stopPropagation()}>
+                                       <div className="flex flex-col items-center justify-center gap-1.5">
+                                         <div className="flex flex-wrap items-center justify-center gap-1.5">
+                                           {partner.isPartnerApproved || partner.partnerStatus === 'approved' ? (
+                                             <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 select-none">
+                                               Approved
+                                             </span>
+                                           ) : (
+                                             <button
+                                               onClick={() => handlePartnerAction(partner._id, 'approve')}
+                                               className="px-2 py-1 bg-[#027244] hover:bg-[#005934] text-white font-black text-[9px] rounded-lg cursor-pointer transition-colors shadow-2xs"
+                                             >
+                                               Approve
+                                             </button>
+                                           )}
+
+                                           {partner.partnerStatus === 'rejected' ? (
+                                             <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20 select-none">
+                                               Rejected
+                                             </span>
+                                           ) : (
+                                             <button
+                                               onClick={() => handlePartnerAction(partner._id, 'reject')}
+                                               className={`px-2 py-1 font-black text-[9px] rounded-lg cursor-pointer transition-colors ${
+                                                 themeMode === 'dark'
+                                                   ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/10'
+                                                   : 'bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200'
+                                               }`}
+                                             >
+                                               Reject
+                                             </button>
+                                           )}
+
+                                           <button
+                                             onClick={() => handleDeletePartner(partner._id)}
+                                             className={`px-2 py-1 font-black text-[9px] rounded-lg cursor-pointer transition-colors ${
+                                               themeMode === 'dark'
+                                                 ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-450 border border-rose-500/10'
+                                                 : 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200'
+                                             }`}
+                                           >
+                                             Delete
+                                           </button>
+                                         </div>
+                                         {partner.partnerStatus === 'rejected' && partner.partnerRejectionReason && (
+                                           <div className="text-[10px] text-red-500 font-bold mt-1 text-center bg-red-55/20 border border-red-900/30 rounded-lg p-1.5 max-w-[150px] truncate" title={partner.partnerRejectionReason}>
+                                             Reason: {partner.partnerRejectionReason}
+                                           </div>
+                                         )}
+                                       </div>
                                     </td>
                                   </tr>
                                 ))
@@ -6526,9 +6670,9 @@ const handlePartnerAction = async (partnerId, action) => {
                               partners
                                 .filter(p => p.isPartnerRegistered && !p.isPartnerApproved)
                                 .filter(p => 
-                                  p.fullName?.toLowerCase().includes(referralSearch.toLowerCase()) ||
-                                  p.email?.toLowerCase().includes(referralSearch.toLowerCase()) ||
-                                  p.referralCode?.toLowerCase().includes(referralSearch.toLowerCase())
+                                  (p.fullName || '').toLowerCase().includes(referralSearch.toLowerCase()) ||
+                                  (p.email || '').toLowerCase().includes(referralSearch.toLowerCase()) ||
+                                  (p.referralCode || '').toLowerCase().includes(referralSearch.toLowerCase())
                                 )
                                 .map((partner) => (
                                   <tr key={partner._id} onClick={(e) => { if (!e.target.closest('button')) handleViewPartner(partner); }} className={`transition-colors cursor-pointer ${
@@ -6543,7 +6687,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                           {partner.fullName || partner.name}
                                         </span>
                                         <span className="text-[9.5px] text-slate-400 mt-1 block font-medium">
-                                          Joined UBT on {new Date(partner.createdAt).toLocaleDateString()}
+                                          Joined UBT on {partner.createdAt ? new Date(partner.createdAt).toLocaleDateString() : 'N/A'}
                                         </span>
                                       </div>
                                     </td>
@@ -6560,7 +6704,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                       </div>
                                     </td>
                                     <td className="py-4 px-4 text-left font-medium text-slate-400">
-                                      {new Date(partner.updatedAt || partner.createdAt).toLocaleString()}
+                                      {partner.updatedAt || partner.createdAt ? new Date(partner.updatedAt || partner.createdAt).toLocaleString() : 'N/A'}
                                     </td>
                                     <td className="py-4 px-4 text-center">
                                       <div className="flex items-center justify-center gap-2">
@@ -6627,9 +6771,9 @@ const handlePartnerAction = async (partnerId, action) => {
                               partners
                                 .filter(p => p.partnerStatus === 'rejected')
                                 .filter(p => 
-                                  p.fullName?.toLowerCase().includes(referralSearch.toLowerCase()) ||
-                                  p.email?.toLowerCase().includes(referralSearch.toLowerCase()) ||
-                                  p.referralCode?.toLowerCase().includes(referralSearch.toLowerCase())
+                                  (p.fullName || '').toLowerCase().includes(referralSearch.toLowerCase()) ||
+                                  (p.email || '').toLowerCase().includes(referralSearch.toLowerCase()) ||
+                                  (p.referralCode || '').toLowerCase().includes(referralSearch.toLowerCase())
                                 )
                                 .map((partner) => (
                                   <tr key={partner._id} onClick={() => handleViewPartner(partner)} className={`transition-colors cursor-pointer ${
@@ -6644,7 +6788,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                           {partner.fullName || partner.name}
                                         </span>
                                         <span className="text-[9.5px] text-slate-400 mt-1 block font-medium">
-                                          Joined UBT on {new Date(partner.createdAt).toLocaleDateString()}
+                                          Joined UBT on {partner.createdAt ? new Date(partner.createdAt).toLocaleDateString() : 'N/A'}
                                         </span>
                                       </div>
                                     </td>
@@ -6742,8 +6886,8 @@ const handlePartnerAction = async (partnerId, action) => {
                                   return true;
                                 })
                                 .filter(r => 
-                                  r.userId?.fullName?.toLowerCase().includes(referralSearch.toLowerCase()) ||
-                                  r.userId?.email?.toLowerCase().includes(referralSearch.toLowerCase())
+                                  (r.userId?.fullName || '').toLowerCase().includes(referralSearch.toLowerCase()) ||
+                                  (r.userId?.email || '').toLowerCase().includes(referralSearch.toLowerCase())
                                 )
                                 .map((req) => (
                                   <tr key={req._id} onClick={(e) => {
@@ -7819,11 +7963,26 @@ const handlePartnerAction = async (partnerId, action) => {
                     Joined UBT on {new Date(selectedPartner.createdAt).toLocaleString()}
                   </span>
                   <div className="mt-1.5 flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs font-bold text-slate-500">
-                    <span className={`border px-2 py-0.5 rounded font-mono text-[10px] ${
-                      themeMode === 'dark' ? 'bg-slate-950 border-slate-850 text-slate-355' : 'bg-white border-slate-200 text-slate-700'
-                    }`}>
-                      Code: {selectedPartner.referralCode}
-                    </span>
+                    {selectedPartner.referralCode ? (
+                      <button
+                        onClick={() => {
+                          const link = `${window.location.origin}/register?ref=${selectedPartner.referralCode}`;
+                          navigator.clipboard.writeText(link);
+                          alert('Referral link copied to clipboard!');
+                        }}
+                        className={`border px-2.5 py-0.5 rounded text-[10px] font-extrabold flex items-center gap-1 cursor-pointer transition-all ${
+                          themeMode === 'dark'
+                            ? 'bg-emerald-950/20 border-emerald-900/30 text-emerald-455 hover:bg-emerald-950/30'
+                            : 'bg-emerald-50 border-emerald-250 text-[#027244] hover:bg-emerald-100'
+                        }`}
+                        title="Copy Referral Link"
+                      >
+                        <Copy className="h-3 w-3" />
+                        <span>Copy Referral Link</span>
+                      </button>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 font-semibold">No Referral Link</span>
+                    )}
                     <span className="text-[#027244]">
                       {selectedPartner.referralPoints || 0} Points (₹{selectedPartner.referralPoints || 0})
                     </span>

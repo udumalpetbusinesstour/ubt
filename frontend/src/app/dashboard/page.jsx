@@ -4643,14 +4643,10 @@ function DashboardContent() {
                           </button>
                         </div>
                       </div>
-
-                      <span className="text-xs text-slate-455 font-bold text-left">
-                        Referral Code: <span className="text-slate-800 text-xs font-black">{referralStats.referralCode}</span>
-                      </span>
                     </div>
                   ) : (
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center text-xs font-semibold text-slate-455">
-                      Generating your partner referral code details...
+                      Generating your partner referral link details...
                     </div>
                   )}
                 </div>
@@ -8352,7 +8348,7 @@ function DashboardContent() {
                     <div className="bg-amber-55/20 border border-amber-200/60 rounded-2xl p-3.5 flex items-start gap-2.5 mt-1">
                       <Lock className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
                       <div className="flex flex-col text-left">
-                        <span className="text-[11.5px] font-extrabold text-amber-800">Referral Code Locked</span>
+                        <span className="text-[11.5px] font-extrabold text-amber-800">Referral Link Locked</span>
                         <p className="text-[10px] text-slate-500 mt-0.5 leading-normal font-semibold">
                           Only premium members can share their referral link. Please navigate to the <b>Subscription</b> tab to activate or renew your subscription first!
                         </p>
@@ -8401,7 +8397,7 @@ function DashboardContent() {
                   <h3 className="font-extrabold text-[#001c41] text-sm md:text-base tracking-tight">How It Works</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
                     {[
-                      { step: '01', title: 'Get Referral Link', desc: 'Login to your dashboard and get your unique referral link or code.' },
+                      { step: '01', title: 'Get Referral Link', desc: 'Login to your dashboard and get your unique referral link.' },
                       { step: '02', title: 'Share With Others', desc: 'Share your link with your friends, family or any business owner around you.' },
                       { step: '03', title: 'They Join UBT', desc: 'When they register, subscribe to a paid plan, and get approved by the admin.' },
                       { step: '04', title: 'Redeem points', desc: 'Once you accumulate 1,000 points, redeem them here for a ₹1,000 cashback refund.' }

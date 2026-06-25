@@ -63,26 +63,36 @@ const PaymentSchema = new mongoose.Schema({
   timestamps: true
 });
 
+function syncPaymentCompatFields(doc) {
+  if (!doc) return;
+
+  if (doc.orderId && !doc.razorpayOrderId) doc.razorpayOrderId = doc.orderId;
+  if (doc.razorpayOrderId && !doc.orderId) doc.orderId = doc.razorpayOrderId;
+  
+  if (doc.paymentId && !doc.razorpayPaymentId) doc.razorpayPaymentId = doc.paymentId;
+  if (doc.razorpayPaymentId && !doc.paymentId) doc.paymentId = doc.razorpayPaymentId;
+  
+  if (doc.status) {
+    if (doc.status === 'captured') doc.paymentStatus = 'Paid';
+    else if (doc.status === 'failed') doc.paymentStatus = 'Failed';
+    else doc.paymentStatus = doc.status;
+  }
+  if (doc.paymentStatus && !doc.status) {
+    doc.status = doc.paymentStatus;
+  }
+  
+  if (doc.paymentDate && !doc.paidAt) doc.paidAt = doc.paymentDate;
+  if (doc.paidAt && !doc.paymentDate) doc.paymentDate = doc.paidAt;
+}
+
+// Keep compatibility mirrors populated before validation.
+PaymentSchema.pre('validate', function() {
+  syncPaymentCompatFields(this);
+});
+
 // Pre-save syncing for compatibility between razorpay specific fields and requested general fields
 PaymentSchema.pre('save', async function() {
-  if (this.orderId && !this.razorpayOrderId) this.razorpayOrderId = this.orderId;
-  if (this.razorpayOrderId && !this.orderId) this.orderId = this.razorpayOrderId;
-  
-  if (this.paymentId && !this.razorpayPaymentId) this.razorpayPaymentId = this.paymentId;
-  if (this.razorpayPaymentId && !this.paymentId) this.paymentId = this.razorpayPaymentId;
-  
-  if (this.status) {
-    if (this.status === 'captured') this.paymentStatus = 'Paid';
-    else if (this.status === 'failed') this.paymentStatus = 'Failed';
-    else this.paymentStatus = this.status;
-  }
-  if (this.paymentStatus && !this.status) {
-    this.status = this.paymentStatus;
-  }
-  
-  if (this.paymentDate && !this.paidAt) this.paidAt = this.paymentDate;
-  if (this.paidAt && !this.paymentDate) this.paymentDate = this.paidAt;
+  syncPaymentCompatFields(this);
 });
 
 module.exports = mongoose.model('Payment', PaymentSchema);
-

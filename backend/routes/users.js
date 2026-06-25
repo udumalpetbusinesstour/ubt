@@ -144,7 +144,7 @@ router.put('/:id/status', admin, async (req, res, next) => {
 router.put('/:id/role', superadmin, async (req, res, next) => {
   try {
     const { role } = req.body;
-    if (!['visitor', 'merchant', 'owner', 'admin', 'superadmin'].includes(role)) {
+    if (!['visitor', 'merchant', 'owner', 'admin', 'superadmin', 'partner'].includes(role)) {
       return sendError(res, 400, 'Invalid role specification');
     }
 
@@ -180,6 +180,9 @@ router.delete('/:id', admin, async (req, res, next) => {
     const Review = require('../models/Review');
     const Subscription = require('../models/Subscription');
     const Payment = require('../models/Payment');
+    const Referral = require('../models/Referral');
+    const Redemption = require('../models/Redemption');
+    const Notification = require('../models/Notification');
 
     // Cascade deletes associated with the user's businesses
     if (businessIds.length > 0) {
@@ -198,6 +201,9 @@ router.delete('/:id', admin, async (req, res, next) => {
     // Cascade deletes of reviews and subscriptions directly linked to this user
     await Review.deleteMany({ userId: userId });
     await Subscription.deleteMany({ ownerId: userId });
+    await Referral.deleteMany({ $or: [{ referrerId: userId }, { referredUserId: userId }] });
+    await Redemption.deleteMany({ userId: userId });
+    await Notification.deleteMany({ userId: userId });
 
     // Delete user's own business listings (just to be safe)
     await Business.deleteMany({ ownerId: userId });

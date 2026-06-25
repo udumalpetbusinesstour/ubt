@@ -68,6 +68,7 @@ app.use('/api/testimonials', require('./routes/testimonials'));
 app.use('/api/queries', require('./routes/queries'));
 app.use('/api/plans', require('./routes/plans'));
 app.use('/api/newsletter', require('./routes/newsletter'));
+app.use('/api/update-subscribers', require('./routes/updateSubscribers'));
 app.use('/api/leads', require('./routes/leads'));
 app.use('/api/menu', require('./routes/menu'));
 app.use('/api/blood-donors', require('./routes/bloodDonors'));

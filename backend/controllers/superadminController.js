@@ -524,6 +524,7 @@ const extendSubscription = async (req, res, next) => {
 
     // Create a mock Subscription log for records
     const sub = await Subscription.create({
+      userId: business.ownerId,
       businessId: business._id,
       ownerId: business.ownerId,
       plan: 'Monthly Manual Extend',
@@ -539,6 +540,7 @@ const extendSubscription = async (req, res, next) => {
 
     // Create complementary Payment entry
     await Payment.create({
+      userId: business.ownerId,
       businessId: business._id,
       subscriptionId: sub._id,
       razorpayOrderId: sub.razorpayOrderId,

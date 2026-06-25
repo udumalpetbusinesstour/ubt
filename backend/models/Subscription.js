@@ -41,7 +41,7 @@ const SubscriptionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['active', 'expired', 'pending'],
+    enum: ['active', 'expired', 'pending', 'refunded'],
     default: 'pending',
   },
   razorpayOrderId: {
@@ -70,25 +70,35 @@ const SubscriptionSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Pre-save syncing for plan/planType and endDate/expiryDate and general compatibilities
-SubscriptionSchema.pre('save', async function() {
-  if (this.userId && !this.ownerId) this.ownerId = this.userId;
-  if (this.ownerId && !this.userId) this.userId = this.ownerId;
+function syncSubscriptionCompatFields(doc) {
+  if (!doc) return;
 
-  if (this.plan && !this.planName) this.planName = this.plan;
-  if (this.planName && !this.plan) this.plan = this.planName;
+  if (doc.userId && !doc.ownerId) doc.ownerId = doc.userId;
+  if (doc.ownerId && !doc.userId) doc.userId = doc.ownerId;
+
+  if (doc.plan && !doc.planName) doc.planName = doc.plan;
+  if (doc.planName && !doc.plan) doc.plan = doc.planName;
   
-  if (this.plan && !this.planType) this.planType = this.plan.toLowerCase();
-  if (this.planType && !this.plan) {
-    this.plan = this.planType.charAt(0).toUpperCase() + this.planType.slice(1);
+  if (doc.plan && !doc.planType) doc.planType = doc.plan.toLowerCase();
+  if (doc.planType && !doc.plan) {
+    doc.plan = doc.planType.charAt(0).toUpperCase() + doc.planType.slice(1);
   }
   
-  if (this.amount !== undefined && this.amountPaid === undefined) this.amountPaid = this.amount;
-  if (this.amountPaid !== undefined && this.amount === undefined) this.amount = this.amountPaid;
+  if (doc.amount !== undefined && doc.amountPaid === undefined) doc.amountPaid = doc.amount;
+  if (doc.amountPaid !== undefined && doc.amount === undefined) doc.amount = doc.amountPaid;
   
-  if (this.endDate && !this.expiryDate) this.expiryDate = this.endDate;
-  if (this.expiryDate && !this.endDate) this.endDate = this.expiryDate;
+  if (doc.endDate && !doc.expiryDate) doc.expiryDate = doc.endDate;
+  if (doc.expiryDate && !doc.endDate) doc.endDate = doc.expiryDate;
+}
+
+// Keep compatibility mirrors populated before validation checks required fields.
+SubscriptionSchema.pre('validate', function() {
+  syncSubscriptionCompatFields(this);
+});
+
+// Pre-save syncing for plan/planType and endDate/expiryDate and general compatibilities
+SubscriptionSchema.pre('save', async function() {
+  syncSubscriptionCompatFields(this);
 });
 
 module.exports = mongoose.model('Subscription', SubscriptionSchema);
-

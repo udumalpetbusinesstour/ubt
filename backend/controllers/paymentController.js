@@ -55,6 +55,7 @@ const createOrder = async (req, res, next) => {
 
     // Save a draft subscription tracking record
     await Subscription.create({
+      userId: req.user._id,
       businessId,
       ownerId: req.user._id,
       plan: resolvedPlanType,
@@ -82,6 +83,7 @@ const createOrder = async (req, res, next) => {
     const offlineDays = req.body.planType?.toLowerCase() === 'yearly' ? 365 : 28;
 
     await Subscription.create({
+      userId: req.user._id,
       businessId: req.body.businessId,
       ownerId: req.user._id,
       plan: req.body.planType || 'Monthly',
@@ -144,6 +146,7 @@ const verifyPayment = async (req, res, next) => {
 
     // Log the transaction payment details
     const payment = await Payment.create({
+      userId: subscription.userId || subscription.ownerId,
       businessId: subscription.businessId,
       subscriptionId: subscription._id,
       razorpayOrderId,
