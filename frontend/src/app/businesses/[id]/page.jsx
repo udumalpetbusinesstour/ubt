@@ -87,6 +87,7 @@ export default function BusinessDetail() {
   }, []);
 
   const [activeTab, setActiveTab] = useState('overview'); // overview | services | photos | reviews | offers | about | map
+  const [activePhotoIndex, setActivePhotoIndex] = useState(null);
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -126,6 +127,21 @@ export default function BusinessDetail() {
       setMenuUrlsState(business.menuUrls);
     }
   }, [business, showMenuModal]);
+
+  useEffect(() => {
+    if (activePhotoIndex === null) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setActivePhotoIndex(null);
+      } else if (e.key === 'ArrowRight') {
+        setActivePhotoIndex(prev => (prev < displayGallery.length - 1 ? prev + 1 : prev));
+      } else if (e.key === 'ArrowLeft') {
+        setActivePhotoIndex(prev => (prev > 0 ? prev - 1 : prev));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activePhotoIndex, displayGallery]);
 
   useEffect(() => {
     if (!showVerifyModal) return;
@@ -1964,7 +1980,7 @@ Please confirm availability and delivery time.`;
                     <div className="grid grid-cols-1 gap-3 mt-2 animate-fadeIn">
                       <div 
                         className="h-80 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
-                        onClick={() => setActiveTab('photos')}
+                        onClick={() => { setActivePhotoIndex(0); setActiveTab('photos'); }}
                         style={{ 
                           backgroundImage: `url('${displayGallery[0]}')`,
                           filter: isExpired ? 'blur(4px)' : 'none'
@@ -1979,7 +1995,7 @@ Please confirm availability and delivery time.`;
                         <div 
                           key={idx}
                           className="rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
-                          onClick={() => setActiveTab('photos')}
+                          onClick={() => { setActivePhotoIndex(idx); setActiveTab('photos'); }}
                           style={{ 
                             backgroundImage: `url('${url}')`,
                             filter: isExpired ? 'blur(4px)' : 'none'
@@ -1993,7 +2009,7 @@ Please confirm availability and delivery time.`;
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2 h-80 animate-fadeIn">
                       <div 
                         className="md:col-span-3 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
-                        onClick={() => setActiveTab('photos')}
+                        onClick={() => { setActivePhotoIndex(0); setActiveTab('photos'); }}
                         style={{ 
                           backgroundImage: `url('${displayGallery[0]}')`,
                           filter: isExpired ? 'blur(4px)' : 'none'
@@ -2006,7 +2022,7 @@ Please confirm availability and delivery time.`;
                           <div 
                             key={idx}
                             className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
-                            onClick={() => setActiveTab('photos')}
+                            onClick={() => { setActivePhotoIndex(idx + 1); setActiveTab('photos'); }}
                             style={{ 
                               backgroundImage: `url('${url}')`,
                               filter: isExpired ? 'blur(4px)' : 'none'
@@ -2032,7 +2048,7 @@ Please confirm availability and delivery time.`;
                       <div className="md:col-span-2 grid grid-rows-2 gap-3 h-full">
                         <div 
                           className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
-                          onClick={() => setActiveTab('photos')}
+                          onClick={() => { setActivePhotoIndex(1); setActiveTab('photos'); }}
                           style={{ 
                             backgroundImage: `url('${displayGallery[1]}')`,
                             filter: isExpired ? 'blur(4px)' : 'none'
@@ -2045,7 +2061,7 @@ Please confirm availability and delivery time.`;
                             <div 
                               key={idx}
                               className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
-                              onClick={() => setActiveTab('photos')}
+                              onClick={() => { setActivePhotoIndex(idx + 2); setActiveTab('photos'); }}
                               style={{ 
                                 backgroundImage: `url('${url}')`,
                                 filter: isExpired ? 'blur(4px)' : 'none'
@@ -2077,7 +2093,7 @@ Please confirm availability and delivery time.`;
                             <div 
                               key={idx}
                               className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
-                              onClick={() => setActiveTab('photos')}
+                              onClick={() => { setActivePhotoIndex(idx + 1); setActiveTab('photos'); }}
                               style={{ 
                                 backgroundImage: `url('${url}')`,
                                 filter: isExpired ? 'blur(4px)' : 'none'
@@ -2361,7 +2377,8 @@ Please confirm availability and delivery time.`;
                   {displayGallery.map((url, idx) => (
                     <div 
                       key={idx} 
-                      className="h-44 rounded-2xl bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow" 
+                      onClick={() => setActivePhotoIndex(idx)}
+                      className="h-44 rounded-2xl bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow cursor-pointer" 
                       style={{ 
                         backgroundImage: `url('${url}')`,
                         filter: isExpired ? 'blur(4px)' : 'none' 
@@ -2371,7 +2388,7 @@ Please confirm availability and delivery time.`;
                       {isOwner && (
                         <button
                           type="button"
-                          onClick={() => handleDeleteGalleryPhoto(url)}
+                          onClick={(e) => { e.stopPropagation(); handleDeleteGalleryPhoto(url); }}
                           className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity shadow-md cursor-pointer border border-red-500/25 z-10"
                           title="Delete photo"
                         >
@@ -3172,6 +3189,60 @@ Please confirm availability and delivery time.`;
               >
                 {verifyLoading ? 'Verifying...' : 'Verify & Link'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Lightbox / Full-screen Image Viewer Modal */}
+      {activePhotoIndex !== null && (
+        <div 
+          className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-10 select-none animate-fadeIn"
+          onClick={() => setActivePhotoIndex(null)}
+        >
+          {/* Close Button */}
+          <button 
+            onClick={() => setActivePhotoIndex(null)}
+            className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 z-55"
+            title="Close (Esc)"
+          >
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
+          </button>
+
+          {/* Left Arrow Navigation */}
+          {activePhotoIndex > 0 && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); setActivePhotoIndex(idx => idx - 1); }}
+              className="absolute left-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 z-55"
+              title="Previous (Left Arrow)"
+            >
+              <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 rotate-180" />
+            </button>
+          )}
+
+          {/* Right Arrow Navigation */}
+          {activePhotoIndex < displayGallery.length - 1 && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); setActivePhotoIndex(idx => idx + 1); }}
+              className="absolute right-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 z-55"
+              title="Next (Right Arrow)"
+            >
+              <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
+            </button>
+          )}
+
+          {/* Image Container */}
+          <div 
+            className="relative max-w-full max-h-[85vh] flex flex-col items-center gap-4 animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img 
+              src={displayGallery[activePhotoIndex]} 
+              alt={`Gallery view ${activePhotoIndex + 1}`}
+              className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/10"
+            />
+            {/* Image counter indicator */}
+            <div className="px-4 py-1.5 bg-black/60 border border-white/15 rounded-full text-white text-xs font-extrabold font-mono tracking-wider shadow-sm">
+              {activePhotoIndex + 1} / {displayGallery.length}
             </div>
           </div>
         </div>
