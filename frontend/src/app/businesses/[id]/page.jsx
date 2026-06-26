@@ -133,9 +133,9 @@ export default function BusinessDetail() {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         setActivePhotoIndex(null);
-      } else if (e.key === 'ArrowRight') {
+      } else if (e.key === 'ArrowRight' && typeof activePhotoIndex === 'number') {
         setActivePhotoIndex(prev => (prev < displayGallery.length - 1 ? prev + 1 : prev));
-      } else if (e.key === 'ArrowLeft') {
+      } else if (e.key === 'ArrowLeft' && typeof activePhotoIndex === 'number') {
         setActivePhotoIndex(prev => (prev > 0 ? prev - 1 : prev));
       }
     };
@@ -1454,7 +1454,9 @@ Please confirm availability and delivery time.`;
       <section className="w-full relative bg-slate-900 text-white py-14 px-4 border-b border-slate-800/60 overflow-hidden">
         {/* Background Image opacity filter */}
         <div 
-          className="absolute inset-0 bg-cover" 
+          className="absolute inset-0 bg-cover cursor-pointer transition-opacity duration-300 hover:opacity-95" 
+          onClick={() => setActivePhotoIndex('cover')}
+          title="Click to view full cover photo"
           style={{ 
             backgroundImage: `url('${mainImage}')`,
             backgroundPosition: `center ${business.coverImageOffset ?? 50}%`,
@@ -1497,7 +1499,11 @@ Please confirm availability and delivery time.`;
             {/* Title Block with Logo and Verified Badge */}
             <div className="flex items-center gap-4 mt-2 flex-wrap text-left">
               {business.logoUrl ? (
-                <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-white shadow-md shrink-0 flex items-center justify-center">
+                <div 
+                  onClick={() => setActivePhotoIndex('logo')}
+                  title="Click to view logo"
+                  className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-white shadow-md shrink-0 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-300"
+                >
                   <img src={window.getImageUrl(business.logoUrl)} alt={`${business.name} Logo`} className="h-full w-full object-cover" />
                 </div>
               ) : (
@@ -3209,7 +3215,7 @@ Please confirm availability and delivery time.`;
           </button>
 
           {/* Left Arrow Navigation */}
-          {activePhotoIndex > 0 && (
+          {typeof activePhotoIndex === 'number' && activePhotoIndex > 0 && (
             <button 
               onClick={(e) => { e.stopPropagation(); setActivePhotoIndex(idx => idx - 1); }}
               className="absolute left-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 z-55"
@@ -3220,7 +3226,7 @@ Please confirm availability and delivery time.`;
           )}
 
           {/* Right Arrow Navigation */}
-          {activePhotoIndex < displayGallery.length - 1 && (
+          {typeof activePhotoIndex === 'number' && activePhotoIndex < displayGallery.length - 1 && (
             <button 
               onClick={(e) => { e.stopPropagation(); setActivePhotoIndex(idx => idx + 1); }}
               className="absolute right-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 z-55"
@@ -3236,14 +3242,38 @@ Please confirm availability and delivery time.`;
             onClick={(e) => e.stopPropagation()}
           >
             <img 
-              src={displayGallery[activePhotoIndex]} 
-              alt={`Gallery view ${activePhotoIndex + 1}`}
+              src={
+                activePhotoIndex === 'logo'
+                  ? window.getImageUrl(business.logoUrl)
+                  : activePhotoIndex === 'cover'
+                    ? mainImage
+                    : displayGallery[activePhotoIndex]
+              } 
+              alt={
+                activePhotoIndex === 'logo'
+                  ? 'Logo'
+                  : activePhotoIndex === 'cover'
+                    ? 'Cover image'
+                    : `Gallery view ${activePhotoIndex + 1}`
+              }
               className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/10"
             />
             {/* Image counter indicator */}
-            <div className="px-4 py-1.5 bg-black/60 border border-white/15 rounded-full text-white text-xs font-extrabold font-mono tracking-wider shadow-sm">
-              {activePhotoIndex + 1} / {displayGallery.length}
-            </div>
+            {typeof activePhotoIndex === 'number' && (
+              <div className="px-4 py-1.5 bg-black/60 border border-white/15 rounded-full text-white text-xs font-extrabold font-mono tracking-wider shadow-sm">
+                {activePhotoIndex + 1} / {displayGallery.length}
+              </div>
+            )}
+            {activePhotoIndex === 'logo' && (
+              <div className="px-4 py-1.5 bg-black/60 border border-white/15 rounded-full text-white text-xs font-extrabold tracking-wider shadow-sm">
+                Business Logo
+              </div>
+            )}
+            {activePhotoIndex === 'cover' && (
+              <div className="px-4 py-1.5 bg-black/60 border border-white/15 rounded-full text-white text-xs font-extrabold tracking-wider shadow-sm">
+                Cover Photo
+              </div>
+            )}
           </div>
         </div>
       )}
