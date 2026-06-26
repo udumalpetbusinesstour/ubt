@@ -1429,21 +1429,94 @@ function BusinessesList() {
         <section className="max-w-4xl w-full px-4 md:px-8 py-12 text-left">
           <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 flex flex-col gap-6 font-sans">
             <h3 className="font-extrabold text-[#001c41] text-base border-b border-slate-100 pb-3">
-              Official {docTitle} — Last Updated: May 30, 2026
+              Official {docTitle} — Last Updated: {isTermsView ? 'June 2026' : 'May 30, 2026'}
             </h3>
             
             {isTermsView && (
-              <div className="flex flex-col gap-4 text-xs font-semibold text-slate-600 leading-relaxed">
-                <p>Welcome to Udumalpet Business Tour (UBT). By accessing or using our directory platform, you agree to comply with and be bound by the following terms and conditions.</p>
+              <div className="flex flex-col gap-4 text-xs font-semibold text-slate-600 leading-relaxed max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin">
+                <p>Welcome to UBT (Udumalpet Business Tour). By accessing or using our directory platform, you agree to comply with and be bound by the following terms and conditions. If you do not agree with any part of these terms, you must discontinue the use of the platform.</p>
                 
-                <h4 className="font-extrabold text-slate-800 text-sm mt-2">1. Use of the Directory</h4>
-                <p>This directory is designed to connect local buyers with verified businesses in Udumalpet. You agree to use the platform only for lawful purposes. Any automated queries, scraping, or indexing of merchant details without prior written consent is strictly prohibited.</p>
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">1. Acceptance of Terms</h4>
+                <p>By accessing or using UBT (Udumalpet Business Tour), you agree to comply with these Terms & Conditions. If you do not agree with any part of these terms, you must discontinue the use of the platform.</p>
                 
-                <h4 className="font-extrabold text-slate-800 text-sm mt-2">2. Business Owner Responsibilities</h4>
-                <p>Merchant owners must ensure all registered information (business name, contact phone, whatsapp, cover image, and category) is accurate, up-to-date, and genuine. Uploading misleading names, copycat logos, or fraudulent ratings violates our platform guidelines and may lead to account suspension.</p>
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">2. Eligibility</h4>
+                <ul className="list-disc pl-4 flex flex-col gap-1">
+                  <li>Users must be at least 18 years of age.</li>
+                  <li>Business owners and partners must provide accurate and complete information during registration.</li>
+                  <li>UBT reserves the right to verify user and business information at any time.</li>
+                </ul>
                 
-                <h4 className="font-extrabold text-slate-800 text-sm mt-2">3. User Ratings & Review Conduct</h4>
-                <p>Reviewers must provide honest, factual experiences. We do not tolerate spam reviews, promotional links, or abusive language. The administration reserves the right to moderate, flag, or delete any content that violates community standards.</p>
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">3. Account Registration</h4>
+                <ul className="list-disc pl-4 flex flex-col gap-1">
+                  <li>Users are responsible for maintaining the confidentiality of their login credentials.</li>
+                  <li>One account per individual or business is permitted unless otherwise approved by UBT.</li>
+                  <li>Providing false or misleading information may result in account suspension or termination.</li>
+                </ul>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">4. Business Listings</h4>
+                <p>Business owners are solely responsible for the accuracy of their Business Name, Address, Contact Details, Business Hours, Images, Products and Services, and Offers and Promotions.</p>
+                <p>UBT reserves the right to edit formatting and categorization, reject or remove listings that violate platform policies, and request proof of business ownership before approving or transferring listings.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">5. Community Listings</h4>
+                <p>Registered users may submit public information such as Government Offices, Public Service Organizations, and Temples or Religious Places. UBT reserves the right to review, modify, approve or reject community-submitted listings before publication.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">6. Subscription Plans</h4>
+                <p>Current subscription plans are:</p>
+                <ul className="list-disc pl-4 flex flex-col gap-1">
+                  <li>Monthly Plan – ₹99</li>
+                  <li>Yearly Plan – ₹999</li>
+                </ul>
+                <p>Benefits may include: Dedicated Business Page, Digital Visiting Card, Business Dashboard, Blog Publishing, Event Listings, Offers Management, Priority Listing, and Customer Engagement Features. UBT reserves the right to modify subscription pricing. Existing subscriptions remain valid until their expiry date.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">7. Events</h4>
+                <p>Businesses may publish events through the platform. UBT may remove events containing illegal activities, adult content, hate speech, fraudulent information, or misleading advertisements. Completed events may be automatically archived.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">8. Business Blogs</h4>
+                <p>Businesses may publish blogs related to their services. Prohibited content includes plagiarism, copyright infringement, false information, political propaganda, hate speech, and illegal content.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">9. Reviews & Testimonials</h4>
+                <p>Google Reviews displayed on UBT are retrieved from publicly available Google Business Profiles. UBT does not modify or manipulate Google reviews. Testimonials submitted directly to UBT may be displayed after moderation.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">10. Digital Visiting Card</h4>
+                <p>Businesses may generate digital business cards using the information they provide. Businesses are responsible for ensuring all contact information remains accurate and up to date.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">11. Referral Program</h4>
+                <p>Registered users may participate in the referral program. Current policy states:</p>
+                <ul className="list-disc pl-4 flex flex-col gap-1">
+                  <li>Every successful verified referral earns <strong>99 referral points</strong>.</li>
+                  <li>Referral points are non-transferable and have no direct cash value.</li>
+                  <li>Referral points may only be redeemed according to UBT's current referral policy.</li>
+                  <li>Fraudulent, duplicate or self-referrals will be cancelled.</li>
+                </ul>
+                <p>UBT reserves the right to modify referral benefits at any time.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">12. Partner Program</h4>
+                <p>UBT offers a Partner Program for individuals who promote business registrations. Partners must provide their Full Name, Email Address, Mobile Number, Aadhaar Details, and any additional verification documents requested by UBT.</p>
+                <p>Partners receive 99 referral points for every successful verified business registration, and reach redemption eligibility upon reaching <strong>1000 referral points</strong>, subject to verification and approval. UBT reserves the right to reject requests involving suspicious or fraudulent activities.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">13. Founding Member Recognition</h4>
+                <p>The first 100 eligible businesses registered on UBT may receive a Founding Member badge. UBT reserves the right to determine eligibility and remove the badge if eligibility criteria are no longer satisfied.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">14. Payments</h4>
+                <p>Payments are processed securely through approved third-party gateways such as Razorpay. UBT does not store debit card, credit card, or banking credentials.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">15. Intellectual Property</h4>
+                <p>All intellectual property, including the UBT Logo, Brand Name, Website Design, Graphics, Icons, Software, and Content, remains the exclusive property of UBT unless otherwise stated.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">16. Accuracy of Information</h4>
+                <p>Business owners are solely responsible for maintaining accurate business information. UBT does not guarantee the completeness or accuracy of information submitted by users.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">17. Limitation of Liability</h4>
+                <p>UBT operates solely as a digital business discovery platform. UBT does not guarantee business quality, product quality, service quality, sales, customer leads, event attendance, or business growth. All commercial transactions occur directly between customers and businesses.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">18. Suspension & Termination</h4>
+                <p>UBT reserves the right to suspend or remove accounts involved in fake business registrations, fraud, spam, abuse, policy violations, or illegal activities without prior notice.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">19. Privacy</h4>
+                <p>User information is collected and processed according to the UBT Privacy Policy.</p>
+                
+                <h4 className="font-extrabold text-slate-800 text-sm mt-2">20. Governing Law</h4>
+                <p>These Terms & Conditions shall be governed by the laws of India. Any disputes shall fall under the jurisdiction of the competent courts in Tamil Nadu.</p>
               </div>
             )}
 
