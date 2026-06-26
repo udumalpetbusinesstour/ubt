@@ -102,6 +102,10 @@ export default function BusinessDetail() {
   const [error, setError] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
 
+  const displayGallery = business ? Array.from(new Set(business.galleryUrls || [])).filter(Boolean).map(url => window.getImageUrl(url)) : [];
+  const galleryCount = displayGallery.length;
+  const mainImage = business ? (window.getImageUrl(business.coverImageUrl) || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80") : "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80";
+
   const [mediaError, setMediaError] = useState('');
   const directionsUrl = business
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.address ? `${business.name}, ${business.address}` : `${business.name}, Udumalpet`)}`
@@ -1328,9 +1332,7 @@ Please confirm availability and delivery time.`;
     (!business.ownerId && !business.owner)
   );
   const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin');
-  const displayGallery = Array.from(new Set(business.galleryUrls || [])).filter(Boolean).map(url => window.getImageUrl(url));
-  const galleryCount = displayGallery.length;
-  const mainImage = window.getImageUrl(business.coverImageUrl) || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80";
+
   const remainingCount = Math.max(0, galleryCount - 5);
 
   const allReviews = [
