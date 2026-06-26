@@ -2152,7 +2152,6 @@ const handlePartnerAction = async (partnerId, action) => {
         { id: 'Signups', label: 'Signups', icon: <User className="h-4.5 w-4.5" /> },
         { id: 'Merchants', label: 'Users', icon: <User className="h-4.5 w-4.5" /> },
         { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-4.5 w-4.5" /> },
-        { id: 'Access Control', label: 'Roles & Permissions', icon: <Key className="h-4.5 w-4.5" /> },
         { id: 'Admin Management', label: 'Admins', icon: <Shield className="h-4.5 w-4.5" /> }
       ]
     },
