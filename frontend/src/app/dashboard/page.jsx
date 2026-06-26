@@ -6248,12 +6248,18 @@ function DashboardContent() {
                           </div>
                           
                           <div className="flex flex-col gap-3 text-slate-500 font-medium text-xs sm:text-[13px] leading-relaxed text-justify mt-1.5">
-                            <p>
-                              Founded in {business.yearEstablished || '2012'}, {business.name} has grown to become one of the premier departmental stores inside Udumalpet. We provide top-class local solutions to residential housings, retail shopping complexes, and large-scale industrial systems.
-                            </p>
-                            <p>
-                              Our teams hold verified registrations, professional certificates, and are highly vetted by UBT administration to offer maximum safety and quality operations.
-                            </p>
+                            {business.description ? (
+                              <p className="whitespace-pre-wrap">{business.description}</p>
+                            ) : (
+                              <>
+                                <p>
+                                  Founded in {business.yearEstablished || '2012'}, {business.name} has grown to become one of the premier departmental stores inside Udumalpet. We provide top-class local solutions to residential housings, retail shopping complexes, and large-scale industrial systems.
+                                </p>
+                                <p>
+                                  Our teams hold verified registrations, professional certificates, and are highly vetted by UBT administration to offer maximum safety and quality operations.
+                                </p>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>

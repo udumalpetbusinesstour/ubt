@@ -2594,12 +2594,18 @@ Please confirm availability and delivery time.`;
               <h3 className="text-xl font-extrabold text-slate-800 font-sans border-b border-slate-100 pb-3">About {business.name}</h3>
               
               <div className="flex flex-col gap-4 text-slate-500 font-medium text-sm leading-relaxed text-justify">
-                <p>
-                  Founded in {business.yearEstablished || '2012'}, {business.name} has grown to become one of the premier {business.type} choices inside Udumalpet. We provide top-class local solutions to residential housings, retail shopping complexes, and large-scale industrial systems.
-                </p>
-                <p>
-                  Our teams hold verified registrations, professional certificates, and are highly vetting by UBT administration to offer maximum safety and quality operations. Our working environment holds standard customer ratings and synced feedback.
-                </p>
+                {business.description ? (
+                  <p className="whitespace-pre-wrap">{business.description}</p>
+                ) : (
+                  <>
+                    <p>
+                      Founded in {business.yearEstablished || '2012'}, {business.name} has grown to become one of the premier {business.type} choices inside Udumalpet. We provide top-class local solutions to residential housings, retail shopping complexes, and large-scale industrial systems.
+                    </p>
+                    <p>
+                      Our teams hold verified registrations, professional certificates, and are highly vetting by UBT administration to offer maximum safety and quality operations. Our working environment holds standard customer ratings and synced feedback.
+                    </p>
+                  </>
+                )}
               </div>
 
               {business.brands && Array.isArray(business.brands) && business.brands.length > 0 && (
