@@ -28,6 +28,13 @@ export default function Register() {
   const [infoMessage, setInfoMessage] = useState('');
   const [googleAvailable, setGoogleAvailable] = useState(false);
 
+  // Email verification states
+  const [verificationStep, setVerificationStep] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [verificationOtpError, setVerificationOtpError] = useState('');
+  const [resendSuccess, setResendSuccess] = useState('');
+
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     if (!fullName || !email || !mobileNumber || !password || !confirmPassword) {
@@ -65,6 +72,17 @@ export default function Register() {
       });
       const data = await res.json();
       if (data.success) {
+        const requiresVerification = data.requiresVerification || (data.data && data.data.requiresVerification);
+        const verifyEmail = data.email || (data.data && data.data.email);
+
+        if (requiresVerification) {
+          setVerificationEmail(verifyEmail || email);
+          setVerificationStep(true);
+          setInfoMessage('Verification code sent to your email!');
+          setError('');
+          return;
+        }
+
         const token = data.token || (data.data && data.data.token);
         const user = data.user || (data.data && data.data.user);
         const draftBusiness = data.draftBusiness || (data.data && data.data.draftBusiness);
@@ -119,6 +137,90 @@ export default function Register() {
       window.removeEventListener('popstate', handlePopState);
     };
   }, [navigate]);
+
+  useEffect(() => {
+    const verify = searchParams.get('verify') === 'true';
+    const emailParam = searchParams.get('email');
+    if (verify && emailParam) {
+      setVerificationStep(true);
+      setVerificationEmail(emailParam);
+    }
+  }, [searchParams]);
+
+  const handleOtpVerify = async (e) => {
+    e.preventDefault();
+    if (!otp) {
+      setVerificationOtpError('Please enter the 6-digit code.');
+      return;
+    }
+    setLoading(true);
+    setVerificationOtpError('');
+    setInfoMessage('');
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/verify-email-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: verificationEmail, otp }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const token = data.token || (data.data && data.data.token);
+        const user = data.user || (data.data && data.data.user);
+        
+        if (!token || !user) {
+          setVerificationOtpError('Response validation error: token or user information missing.');
+          return;
+        }
+
+        localStorage.setItem('ubt_token', token);
+        localStorage.setItem('ubt_user', JSON.stringify(user));
+        setInfoMessage('Email verified successfully! Redirecting...');
+        setVerificationOtpError('');
+        
+        const redirect = searchParams.get('redirect');
+        setTimeout(() => {
+          if (redirect && redirect !== '/' && redirect !== '/login' && redirect !== '/register') {
+            navigate(redirect);
+          } else {
+            if (user && user.role === 'partner') {
+              navigate('/partner-register');
+            } else {
+              navigate('/add-business');
+            }
+          }
+        }, 1200);
+      } else {
+        setVerificationOtpError(data.message || 'Verification failed. Please try again.');
+      }
+    } catch (err) {
+      setVerificationOtpError('Connection failed. Server might be offline.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setLoading(true);
+    setVerificationOtpError('');
+    setResendSuccess('');
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/resend-verification-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: verificationEmail }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setResendSuccess('Verification OTP resent successfully!');
+      } else {
+        setVerificationOtpError(data.message || 'Failed to resend OTP.');
+      }
+    } catch (err) {
+      setVerificationOtpError('Connection failed. Server might be offline.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Dynamically load Google Identity Services script if not already present
@@ -601,226 +703,312 @@ export default function Register() {
 
         {/* Right Side Panel: Form Card Panel */}
         <div className="order-1 lg:order-2 lg:w-[55%] p-5 sm:p-8 md:p-12 flex flex-col justify-center bg-white font-sans">
-          <div className="w-full flex flex-col gap-6 max-w-sm mx-auto">
-            
-            {/* Header text */}
-            <div>
-              <h3 className="text-2xl font-black text-[#001c41] tracking-tight">
-                {fromParam === 'events' ? 'Register for Events' : (fromParam === 'blogs' ? 'Register for Blogs' : 'Create Your Account')}
-              </h3>
-              <p className="text-xs text-slate-500 font-semibold mt-1.5">
-                {fromParam === 'events' ? 'Fill in the details below to list and manage your events' : (fromParam === 'blogs' ? 'Fill in the details below to write and publish blogs' : 'Fill in the details below to get started')}
-              </p>
-            </div>
-
-
-
-            {/* Message banners */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-650 rounded-xl p-3 text-xs font-semibold flex items-start gap-2 animate-shake">
-                <AlertCircle className="h-4 w-4 shrink-0 text-red-500 mt-0.5" />
-                <span>{error}</span>
+          {verificationStep ? (
+            <div className="w-full flex flex-col gap-6 max-w-sm mx-auto">
+              {/* Header text */}
+              <div>
+                <h3 className="text-2xl font-black text-[#001c41] tracking-tight">
+                  Verify Your Email
+                </h3>
+                <p className="text-xs text-slate-500 font-semibold mt-1.5 leading-relaxed">
+                  We've sent a 6-digit verification code to <span className="text-[#027244] font-black">{verificationEmail}</span>. Please enter it below to complete registration.
+                </p>
               </div>
-            )}
-            {searchParams.get('ref') && !infoMessage && (
-              <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl p-3 text-xs font-semibold flex items-start gap-2">
-                <ShieldCheck className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
-                <span>You were referred! Complete registration and subscribe to earn credit discounts.</span>
-              </div>
-            )}
-            {infoMessage && (
-              <div className="bg-emerald-50 border border-emerald-250 text-emerald-800 rounded-xl p-3 text-xs font-semibold flex items-start gap-2">
-                <ShieldCheck className="h-4 w-4 shrink-0 text-[#027244] mt-0.5" />
-                <span>{infoMessage}</span>
-              </div>
-            )}
 
-            {/* Registration Form */}
-            <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-3.5">
-              
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-700">Full Name <span className="text-red-500">*</span></label>
-                <div className="relative flex items-center">
-                  <User className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
-                  <input
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
-                  />
+              {/* Message banners */}
+              {verificationOtpError && (
+                <div className="bg-red-50 border border-red-200 text-red-650 rounded-xl p-3 text-xs font-semibold flex items-start gap-2 animate-shake">
+                  <AlertCircle className="h-4.5 w-4.5 shrink-0 text-red-500 mt-0.5" />
+                  <span>{verificationOtpError}</span>
                 </div>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-700">Email Address <span className="text-red-500">*</span></label>
-                <div className="relative flex items-center">
-                  <Mail className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
-                  <input
-                    type="email"
-                    placeholder="Enter your email address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
-                  />
+              )}
+              {resendSuccess && (
+                <div className="bg-emerald-50 border border-emerald-250 text-emerald-800 rounded-xl p-3 text-xs font-semibold flex items-start gap-2">
+                  <ShieldCheck className="h-4.5 w-4.5 shrink-0 text-[#027244] mt-0.5" />
+                  <span>{resendSuccess}</span>
                 </div>
-              </div>
+              )}
+              {infoMessage && !resendSuccess && (
+                <div className="bg-emerald-50 border border-emerald-250 text-emerald-800 rounded-xl p-3 text-xs font-semibold flex items-start gap-2">
+                  <ShieldCheck className="h-4.5 w-4.5 shrink-0 text-[#027244] mt-0.5" />
+                  <span>{infoMessage}</span>
+                </div>
+              )}
 
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-700">Mobile Number <span className="text-red-500">*</span></label>
-                <div className="flex gap-2.5">
-                  {/* Styled Country Code Dropdown */}
-                  <div className="relative flex items-center shrink-0">
-                    <select 
-                      disabled
-                      className="appearance-none bg-slate-50/50 border border-slate-200 rounded-xl pl-3 pr-8 py-2.5 text-xs font-extrabold text-[#001c41] cursor-default select-none focus:outline-none"
-                    >
-                      <option>+91</option>
-                    </select>
-                    <span className="pointer-events-none absolute right-3 text-slate-400 flex items-center">
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </span>
-                  </div>
-                  
-                  {/* Phone input field with icon */}
-                  <div className="relative flex-grow flex items-center">
-                    <Phone className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
+              {/* OTP Form */}
+              <form onSubmit={handleOtpVerify} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-700">6-Digit Verification Code</label>
+                  <div className="relative flex items-center">
+                    <ShieldCheck className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
                     <input
                       type="text"
-                      placeholder="Enter mobile number"
-                      value={mobileNumber}
-                      onChange={(e) => setMobileNumber(e.target.value)}
+                      maxLength="6"
+                      placeholder="Enter 6-digit OTP"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                      className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all tracking-[0.25em] text-center font-mono"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-[#027244] hover:bg-[#005934] text-white font-black text-xs py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
+                >
+                  {loading && <Loader className="h-4 w-4 animate-spin" />}
+                  <span>Verify OTP</span>
+                </button>
+              </form>
+
+              <div className="flex flex-col items-center gap-2 mt-2">
+                <span className="text-[11px] text-slate-500 font-semibold">Didn't receive the code?</span>
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={loading}
+                  className="text-xs text-[#027244] font-black hover:underline cursor-pointer bg-transparent border-none focus:outline-none disabled:opacity-50"
+                >
+                  Resend Code
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVerificationStep(false);
+                    setError('');
+                    setInfoMessage('');
+                    setVerificationOtpError('');
+                    setResendSuccess('');
+                  }}
+                  className="text-xs text-slate-400 hover:text-slate-600 font-semibold cursor-pointer bg-transparent border-none focus:outline-none mt-2"
+                >
+                  Back to Registration
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full flex flex-col gap-6 max-w-sm mx-auto">
+              
+              {/* Header text */}
+              <div>
+                <h3 className="text-2xl font-black text-[#001c41] tracking-tight">
+                  {fromParam === 'events' ? 'Register for Events' : (fromParam === 'blogs' ? 'Register for Blogs' : 'Create Your Account')}
+                </h3>
+                <p className="text-xs text-slate-500 font-semibold mt-1.5">
+                  {fromParam === 'events' ? 'Fill in the details below to list and manage your events' : (fromParam === 'blogs' ? 'Fill in the details below to write and publish blogs' : 'Fill in the details below to get started')}
+                </p>
+              </div>
+
+
+
+              {/* Message banners */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-650 rounded-xl p-3 text-xs font-semibold flex items-start gap-2 animate-shake">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-red-500 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+              {searchParams.get('ref') && !infoMessage && (
+                <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl p-3 text-xs font-semibold flex items-start gap-2">
+                  <ShieldCheck className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
+                  <span>You were referred! Complete registration and subscribe to earn credit discounts.</span>
+                </div>
+              )}
+              {infoMessage && (
+                <div className="bg-emerald-50 border border-emerald-250 text-emerald-800 rounded-xl p-3 text-xs font-semibold flex items-start gap-2">
+                  <ShieldCheck className="h-4 w-4 shrink-0 text-[#027244] mt-0.5" />
+                  <span>{infoMessage}</span>
+                </div>
+              )}
+
+              {/* Registration Form */}
+              <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-3.5">
+                
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-700">Full Name <span className="text-red-500">*</span></label>
+                  <div className="relative flex items-center">
+                    <User className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
+                    <input
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
                       className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-700">Password <span className="text-red-500">*</span></label>
-                <div className="relative flex items-center">
-                  <Lock className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-700">Email Address <span className="text-red-500">*</span></label>
+                  <div className="relative flex items-center">
+                    <Mail className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
+                    <input
+                      type="email"
+                      placeholder="Enter your email address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-700">Mobile Number <span className="text-red-500">*</span></label>
+                  <div className="flex gap-2.5">
+                    {/* Styled Country Code Dropdown */}
+                    <div className="relative flex items-center shrink-0">
+                      <select 
+                        disabled
+                        className="appearance-none bg-slate-50/50 border border-slate-200 rounded-xl pl-3 pr-8 py-2.5 text-xs font-extrabold text-[#001c41] cursor-default select-none focus:outline-none"
+                      >
+                        <option>+91</option>
+                      </select>
+                      <span className="pointer-events-none absolute right-3 text-slate-400 flex items-center">
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </span>
+                    </div>
+                    
+                    {/* Phone input field with icon */}
+                    <div className="relative flex-grow flex items-center">
+                      <Phone className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
+                      <input
+                        type="text"
+                        placeholder="Enter mobile number"
+                        value={mobileNumber}
+                        onChange={(e) => setMobileNumber(e.target.value)}
+                        className="w-full py-2.5 pl-10 pr-4 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-700">Password <span className="text-red-500">*</span></label>
+                  <div className="relative flex items-center">
+                    <Lock className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Create a password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full py-2.5 pl-10 pr-10 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-700">Confirm Password <span className="text-red-500">*</span></label>
+                  <div className="relative flex items-center">
+                    <Lock className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full py-2.5 pl-10 pr-10 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Agree terms */}
+                <div className="flex items-start mt-1">
                   <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Create a password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full py-2.5 pl-10 pr-10 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
+                    type="checkbox"
+                    id="agree"
+                    checked={agreeTerms}
+                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                    className="h-4 w-4 mt-0.5 border-slate-300 rounded text-[#027244] focus:ring-[#027244] cursor-pointer"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+                  <label htmlFor="agree" className="text-[11px] font-bold text-slate-505 ml-2 cursor-pointer leading-normal select-none">
+                    I agree to the <Link to="/businesses?focus=terms" className="text-[#027244] hover:underline font-extrabold">Terms of Service</Link> and <Link to="/businesses?focus=privacy" className="text-[#027244] hover:underline font-extrabold">Privacy Policy</Link>
+                  </label>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-[#027244] hover:bg-[#005934] text-white font-black text-xs py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
+                >
+                  {loading && <Loader className="h-4 w-4 animate-spin" />}
+                  <span>Sign Up</span>
+                </button>
+              </form>
+
+
+              {/* Social logins */}
+              <div className="flex flex-col gap-3 mt-1 border-t border-slate-100 pt-4">
+                <div className="relative flex py-1 items-center justify-center">
+                  <div className="flex-grow border-t border-slate-200"></div>
+                  <span className="flex-shrink mx-4 text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">or sign up with</span>
+                  <div className="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                {/* Stacked Google-only sign-up button */}
+                <div className="flex flex-col gap-2.5 font-sans items-center w-full justify-center">
+                  {googleAvailable ? (
+                    <div id="google-signin-btn" className="w-full flex justify-center min-h-[44px]"></div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={triggerGoogleSignIn}
+                      className="py-2.5 border border-slate-200 hover:bg-slate-50 text-[#001c41] font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer w-full"
+                    >
+                      {/* Inline Google SVG icon to ensure it always renders without network latency */}
+                      <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 shrink-0" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                      </svg>
+                      <span>Sign up with Google</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-700">Confirm Password <span className="text-red-500">*</span></label>
-                <div className="relative flex items-center">
-                  <Lock className="h-4.5 w-4.5 text-slate-400 absolute left-3" />
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="Confirm your password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full py-2.5 pl-10 pr-10 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none"
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+              {/* Respect privacy badge */}
+              <div className="flex items-center gap-1.5 text-[10.5px] text-slate-400 font-semibold leading-none mt-2 justify-center text-center">
+                <Lock className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                <span>We respect your privacy. Your data is safe with us.</span>
+              </div>
+
+              {/* Need Help? Panel for mobile views */}
+              <div className="lg:hidden mt-2 p-4 rounded-xl bg-[#F0FDF4]/50 border border-emerald-100/80 flex items-start gap-4 text-left shadow-sm">
+                <div className="bg-[#E6F2ED] p-2 rounded-lg text-[#027244] border border-emerald-100/50 shrink-0">
+                  <Headset className="h-5 w-5" />
+                </div>
+                <div className="flex flex-col gap-0.5 text-left">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Need Help?</span>
+                  <span className="text-xs text-[#001c41] font-extrabold mt-1 leading-normal">
+                    {fromParam === 'events' ? 'Our events support desk is here for you.' : (fromParam === 'blogs' ? 'Our editor assistance team is here to help.' : 'Our support team is here to help you.')}
+                  </span>
+                  {fromParam === 'blogs' ? (
+                    <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Email: udumalpetbusinesstour@gmail.com</a>
+                  ) : (
+                    <a href="tel:+918925728260" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 89257 28260</a>
+                  )}
                 </div>
               </div>
 
-              {/* Agree terms */}
-              <div className="flex items-start mt-1">
-                <input
-                  type="checkbox"
-                  id="agree"
-                  checked={agreeTerms}
-                  onChange={(e) => setAgreeTerms(e.target.checked)}
-                  className="h-4 w-4 mt-0.5 border-slate-300 rounded text-[#027244] focus:ring-[#027244] cursor-pointer"
-                />
-                <label htmlFor="agree" className="text-[11px] font-bold text-slate-505 ml-2 cursor-pointer leading-normal select-none">
-                  I agree to the <Link to="/businesses?focus=terms" className="text-[#027244] hover:underline font-extrabold">Terms of Service</Link> and <Link to="/businesses?focus=privacy" className="text-[#027244] hover:underline font-extrabold">Privacy Policy</Link>
-                </label>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-[#027244] hover:bg-[#005934] text-white font-black text-xs py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 mt-2"
-              >
-                {loading && <Loader className="h-4 w-4 animate-spin" />}
-                <span>Sign Up</span>
-              </button>
-            </form>
-
-
-            {/* Social logins */}
-            <div className="flex flex-col gap-3 mt-1 border-t border-slate-100 pt-4">
-              <div className="relative flex py-1 items-center justify-center">
-                <div className="flex-grow border-t border-slate-200"></div>
-                <span className="flex-shrink mx-4 text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">or sign up with</span>
-                <div className="flex-grow border-t border-slate-200"></div>
-              </div>
-
-              {/* Stacked Google-only sign-up button */}
-              <div className="flex flex-col gap-2.5 font-sans items-center w-full justify-center">
-                {googleAvailable ? (
-                  <div id="google-signin-btn" className="w-full flex justify-center min-h-[44px]"></div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={triggerGoogleSignIn}
-                    className="py-2.5 border border-slate-200 hover:bg-slate-50 text-[#001c41] font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer w-full"
-                  >
-                    {/* Inline Google SVG icon to ensure it always renders without network latency */}
-                    <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 shrink-0" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
-                    </svg>
-                    <span>Sign up with Google</span>
-                  </button>
-                )}
-              </div>
             </div>
-
-            {/* Respect privacy badge */}
-            <div className="flex items-center gap-1.5 text-[10.5px] text-slate-400 font-semibold leading-none mt-2 justify-center text-center">
-              <Lock className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-              <span>We respect your privacy. Your data is safe with us.</span>
-            </div>
-
-            {/* Need Help? Panel for mobile views */}
-            <div className="lg:hidden mt-2 p-4 rounded-xl bg-[#F0FDF4]/50 border border-emerald-100/80 flex items-start gap-4 text-left shadow-sm">
-              <div className="bg-[#E6F2ED] p-2 rounded-lg text-[#027244] border border-emerald-100/50 shrink-0">
-                <Headset className="h-5 w-5" />
-              </div>
-              <div className="flex flex-col gap-0.5 text-left">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Need Help?</span>
-                <span className="text-xs text-[#001c41] font-extrabold mt-1 leading-normal">
-                  {fromParam === 'events' ? 'Our events support desk is here for you.' : (fromParam === 'blogs' ? 'Our editor assistance team is here to help.' : 'Our support team is here to help you.')}
-                </span>
-                {fromParam === 'blogs' ? (
-                  <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Email: udumalpetbusinesstour@gmail.com</a>
-                ) : (
-                  <a href="tel:+918925728260" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 89257 28260</a>
-                )}
-              </div>
-            </div>
-
-          </div>
+          )}
         </div>
 
       </div>

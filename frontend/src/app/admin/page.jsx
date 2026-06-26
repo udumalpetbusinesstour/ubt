@@ -179,6 +179,13 @@ export default function AdminDashboard() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   
+  // Toast notification state
+  const [toast, setToast] = useState(null); // { message, type: 'success' | 'error' }
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
   // Tab navigation state
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [auditSubTab, setAuditSubTab] = useState('Businesses'); // Businesses | Blogs | Testimonials
@@ -1786,6 +1793,16 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-800 text-left">
       
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 rounded-2xl shadow-xl text-sm font-extrabold flex items-center gap-2.5 animate-fadeIn ${
+          toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
+        }`}>
+          {toast.type === 'success' ? <CheckCircle2 className="h-4.5 w-4.5 shrink-0" /> : <AlertCircle className="h-4.5 w-4.5 shrink-0" />}
+          <span>{toast.message}</span>
+        </div>
+      )}
+
       {/* 1. SIDEBAR CONTAINER */}
       <aside className={`bg-[#001c41] text-white flex flex-col justify-between transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'} shrink-0 relative overflow-hidden z-20 h-screen sticky top-0 hidden md:flex`}>
         <div className="flex flex-col gap-8 py-6 flex-1 overflow-y-auto">
@@ -2217,7 +2234,7 @@ export default function AdminDashboard() {
                                     </span>
                                     {/* Prominent external View Profile link */}
                                     <a
-                                      href={`/businesses/${b._id}`}
+                                      href={`/businesses/${b.slug || b._id}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-[#027244] hover:text-[#005934] hover:underline font-black text-[10.5px] mt-1.5 flex items-center gap-1 w-fit cursor-pointer leading-none"
@@ -2257,20 +2274,22 @@ export default function AdminDashboard() {
                                     >
                                       Vet details
                                     </button>
-                                    <button
-                                      onClick={() => handleAction(b._id, 'approve')}
-                                      disabled={b.status === 'Approved'}
-                                      className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer disabled:opacity-40 shadow-2xs"
-                                    >
-                                      Approve
-                                    </button>
-                                    <button
-                                      onClick={() => handleAction(b._id, 'reject')}
-                                      disabled={b.status === 'Rejected'}
-                                      className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-[10.5px] font-extrabold cursor-pointer disabled:opacity-40 shadow-2xs"
-                                    >
-                                      Reject
-                                    </button>
+                                    {b.status !== 'Approved' && (
+                                       <button
+                                         onClick={() => { handleAction(b._id, 'approve'); showToast('Listing approved!', 'success'); }}
+                                         className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
+                                       >
+                                         Approve
+                                       </button>
+                                     )}
+                                     {b.status !== 'Rejected' && (
+                                       <button
+                                         onClick={() => { handleAction(b._id, 'reject'); showToast('Listing rejected.', 'error'); }}
+                                         className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
+                                       >
+                                         Reject
+                                       </button>
+                                     )}
                                     <button
                                       onClick={() => handleDeleteBusiness(b._id)}
                                       className="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer transition-colors shadow-2xs"
@@ -2604,20 +2623,21 @@ export default function AdminDashboard() {
                               <td className="p-4.5 text-right">
                                 <div className="flex items-center justify-end gap-2">
                                   <a 
-                                    href={`/businesses/${b._id}`}
+                                    href={`/businesses/${b.slug || b._id}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[10.5px] font-extrabold text-center leading-none shadow-2xs"
                                   >
                                     View Profile
                                   </a>
-                                  <button 
-                                    onClick={() => handleAction(b._id, 'approve')}
-                                    disabled={b.status === 'Approved'}
-                                    className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer disabled:opacity-40"
-                                  >
-                                    Approve
-                                  </button>
+                                  {b.status !== 'Approved' && (
+                                    <button 
+                                      onClick={() => { handleAction(b._id, 'approve'); showToast('Listing approved!', 'success'); }}
+                                      className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer"
+                                    >
+                                      Approve
+                                    </button>
+                                  )}
                                   <button 
                                     onClick={() => handleAction(b._id, b.status === 'Hidden' ? 'unhide' : 'hide')}
                                     className={`px-2.5 py-1.5 rounded-lg text-[10.5px] font-extrabold cursor-pointer transition-colors shadow-2xs ${
@@ -2628,13 +2648,14 @@ export default function AdminDashboard() {
                                   >
                                     {b.status === 'Hidden' ? 'Unhide' : 'Hide'}
                                   </button>
-                                  <button 
-                                    onClick={() => handleAction(b._id, 'reject')}
-                                    disabled={b.status === 'Rejected'}
-                                    className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-[10.5px] font-extrabold cursor-pointer disabled:opacity-40"
-                                  >
-                                    Reject
-                                  </button>
+                                  {b.status !== 'Rejected' && (
+                                    <button 
+                                      onClick={() => { handleAction(b._id, 'reject'); showToast('Listing rejected.', 'error'); }}
+                                      className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-[10.5px] font-extrabold cursor-pointer"
+                                    >
+                                      Reject
+                                    </button>
+                                  )}
                                   <button 
                                     onClick={() => handleDeleteBusiness(b._id)}
                                     className="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer transition-colors shadow-2xs"
@@ -2777,18 +2798,22 @@ export default function AdminDashboard() {
                             </button>
                             
                             <div className="flex gap-2">
-                              <button 
-                                onClick={() => handleAction(b._id, 'reject')}
-                                className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
-                              >
-                                Reject
-                              </button>
-                              <button 
-                                onClick={() => handleAction(b._id, 'approve')}
-                                className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow shadow-emerald-800/10"
-                              >
-                                Approve listing
-                              </button>
+                              {b.status !== 'Approved' && (
+                                <button 
+                                  onClick={() => { handleAction(b._id, 'reject'); showToast('Listing rejected.', 'error'); }}
+                                  className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                                >
+                                  Reject
+                                </button>
+                              )}
+                              {b.status !== 'Rejected' && (
+                                <button 
+                                  onClick={() => { handleAction(b._id, 'approve'); showToast('Listing approved!', 'success'); }}
+                                  className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow shadow-emerald-800/10"
+                                >
+                                  Approve listing
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -3544,7 +3569,7 @@ export default function AdminDashboard() {
                                       <div className="flex flex-col text-left">
                                         <span className="font-extrabold text-slate-800 text-xs leading-none">{b.name}</span>
                                         <a 
-                                          href={`/businesses/${b._id}`}
+                                          href={`/businesses/${b.slug || b._id}`}
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="text-[#027244] hover:text-[#005934] hover:underline font-black text-[10px] mt-1.5 flex items-center gap-1 w-fit cursor-pointer leading-none"
@@ -3575,7 +3600,7 @@ export default function AdminDashboard() {
                                     <td className="p-4 text-right">
                                       <div className="flex gap-2 justify-end">
                                         <a 
-                                          href={`/businesses/${b._id}`}
+                                          href={`/businesses/${b.slug || b._id}`}
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[9.5px] font-extrabold text-center leading-none shadow-xs flex items-center justify-center"
@@ -5711,7 +5736,7 @@ export default function AdminDashboard() {
 
               {/* View Full Profile Direct Link */}
               <a
-                href={`/businesses/${selectedBiz._id}`}
+                href={`/businesses/${selectedBiz.slug || selectedBiz._id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl text-center shadow shadow-emerald-800/10 block shrink-0 cursor-pointer transition-colors"
@@ -5910,20 +5935,32 @@ export default function AdminDashboard() {
                 </label>
               )}
               <div className="flex flex-col sm:flex-row gap-3">
-                <button 
-                  onClick={() => { handleAction(selectedBiz._id, 'reject'); setShowBizModal(false); }}
-                  disabled={selectedBiz.status === 'Rejected'}
-                  className="w-full sm:flex-1 py-3 bg-red-550/10 border border-red-550/20 hover:bg-red-550/20 text-red-650 font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 text-center"
-                >
-                  Reject Listing
-                </button>
-                <button 
-                  onClick={() => { handleAction(selectedBiz._id, 'approve'); setShowBizModal(false); }}
-                  disabled={selectedBiz.status === 'Approved'}
-                  className="w-full sm:flex-1 py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 text-center shadow shadow-emerald-800/10"
-                >
-                  Approve & Publish
-                </button>
+                {selectedBiz.status !== 'Approved' && (
+                  <button 
+                    onClick={() => {
+                      handleAction(selectedBiz._id, 'reject');
+                      setSelectedBiz(prev => ({ ...prev, status: 'Rejected' }));
+                      setShowBizModal(false);
+                      showToast('Listing rejected and hidden from public.', 'error');
+                    }}
+                    className="w-full sm:flex-1 py-3 bg-red-550/10 border border-red-550/20 hover:bg-red-550/20 text-red-650 font-extrabold text-xs rounded-xl cursor-pointer text-center"
+                  >
+                    Reject Listing
+                  </button>
+                )}
+                {selectedBiz.status !== 'Rejected' && (
+                  <button 
+                    onClick={() => {
+                      handleAction(selectedBiz._id, 'approve');
+                      setSelectedBiz(prev => ({ ...prev, status: 'Approved' }));
+                      setShowBizModal(false);
+                      showToast('Listing approved and published successfully!', 'success');
+                    }}
+                    className="w-full sm:flex-1 py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer text-center shadow shadow-emerald-800/10"
+                  >
+                    Approve & Publish
+                  </button>
+                )}
               </div>
             </div>
 

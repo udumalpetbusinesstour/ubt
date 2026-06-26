@@ -989,7 +989,7 @@ export default function Home() {
               <div 
                 key={biz._id} 
                 className="card-premium group rounded-2xl overflow-hidden flex flex-col cursor-pointer relative w-[calc(50%-10px)] min-w-[145px] shrink-0 snap-start sm:w-auto sm:shrink"
-                onClick={() => navigate(`/businesses/${biz._id}`)}
+                onClick={() => navigate(`/${biz.slug || biz._id}`)}
               >
                 <div className="h-44 w-full overflow-hidden relative rounded-t-[15px]">
                   <div 
@@ -1069,7 +1069,7 @@ export default function Home() {
                       </div>
                     </div>
                     <Link 
-                      to={`/businesses/${biz._id}`}
+                      to={`/${biz.slug || biz._id}`}
                       className="text-[10px] font-bold text-[#027244] hover:underline flex items-center gap-0.5"
                     >
                       View Details
@@ -1080,7 +1080,7 @@ export default function Home() {
                 {/* Glassmorphism Lock Overlay for Inactive Subscriptions */}
                 {!isSubscribed && (
                   <div 
-                    onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz._id}`); }}
+                    onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
                     className="absolute inset-0 bg-slate-900/10 backdrop-blur-xs z-20 transition-all duration-300 hover:bg-slate-900/15 cursor-pointer"
                   />
                 )}
@@ -1138,7 +1138,7 @@ export default function Home() {
                 return (
                   <div 
                     key={biz._id}
-                    onClick={() => navigate(`/businesses/${biz._id}`)}
+                    onClick={() => navigate(`/${biz.slug || biz._id}`)}
                     className="w-[260px] sm:w-[285px] shrink-0 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 text-left snap-start relative overflow-hidden"
                   >
                     {/* Logo/Image */}
@@ -1191,7 +1191,7 @@ export default function Home() {
                     {/* Glassmorphism Lock Overlay for Inactive Subscriptions */}
                     {!isSubscribed && (
                       <div 
-                        onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz._id}`); }}
+                        onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
                         className="absolute inset-0 bg-slate-900/10 backdrop-blur-xs z-20 transition-all duration-300 hover:bg-slate-900/15 cursor-pointer"
                       />
                     )}

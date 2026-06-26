@@ -43,6 +43,13 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  emailVerificationOtp: {
+    type: String,
+    default: '',
+  },
+  emailVerificationOtpExpires: {
+    type: Date,
+  },
   status: {
     type: String,
     enum: ['Active', 'Suspended'],

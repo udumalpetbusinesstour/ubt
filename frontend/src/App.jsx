@@ -87,6 +87,7 @@ function AppContent() {
           <Route path="/profile/:id" element={<UserProfile />} />
           <Route path="/blood-donors" element={<BloodDonorsPage />} />
           <Route path="/partner-register" element={<PartnerRegister />} />
+          <Route path="/:id" element={<BusinessDetail />} />
         </Routes>
       </main>
       {!hideNavAndFooter && <Footer />}

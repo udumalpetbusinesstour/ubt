@@ -28,7 +28,9 @@ const sendError = (res, statusCode = 500, message = 'Internal Server Error', err
   return res.status(statusCode).json({
     success: false,
     message,
-    error: process.env.NODE_ENV === 'production' ? {} : error
+    error: process.env.NODE_ENV === 'production'
+      ? (error && error.requiresVerification ? { requiresVerification: true, email: error.email } : {})
+      : error
   });
 };
 

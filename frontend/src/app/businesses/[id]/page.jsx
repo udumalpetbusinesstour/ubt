@@ -1133,7 +1133,7 @@ export default function BusinessDetail() {
     setReviewSubmitLoading(true);
 
     try {
-      const res = await fetch(`http://localhost:5000/api/reviews/${params.id}`, {
+      const res = await fetch(`http://localhost:5000/api/reviews/${business._id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -42,6 +42,13 @@ export default function SuperAdminDashboard() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   
+  // Toast notification state
+  const [toast, setToast] = useState(null); // { message, type: 'success' | 'error' | 'info' }
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
   // Tab navigation state
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [recentRegTab, setRecentRegTab] = useState('Businesses');
@@ -2136,8 +2143,7 @@ const handlePartnerAction = async (partnerId, action) => {
     {
       group: 'CONFIGURATION',
       items: [
-        { id: 'Platform Settings', subtab: 'plans', label: 'Settings', icon: <Settings className="h-4.5 w-4.5" /> },
-        { id: 'System Logs', label: 'System Logs', icon: <Terminal className="h-4.5 w-4.5" /> }
+        { id: 'Platform Settings', subtab: 'plans', label: 'Settings', icon: <Settings className="h-4.5 w-4.5" /> }
       ]
     },
     {
@@ -2211,6 +2217,16 @@ const handlePartnerAction = async (partnerId, action) => {
       themeMode === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-800'
     }`}>
       
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 rounded-2xl shadow-xl text-sm font-extrabold flex items-center gap-2.5 animate-fadeIn transition-all ${
+          toast.type === 'success' ? 'bg-emerald-600 text-white' : toast.type === 'error' ? 'bg-rose-600 text-white' : 'bg-[#001c41] text-white'
+        }`}>
+          {toast.type === 'success' ? <CheckCircle2 className="h-4.5 w-4.5 shrink-0" /> : <AlertCircle className="h-4.5 w-4.5 shrink-0" />}
+          <span>{toast.message}</span>
+        </div>
+      )}
+
       {/* 1. COLLAPSIBLE LEFT SIDEBAR */}
       <aside className={`text-white flex flex-col justify-between transition-all duration-300 ${
         sidebarCollapsed ? 'w-20' : 'w-64'
@@ -7879,13 +7895,19 @@ const handlePartnerAction = async (partnerId, action) => {
               themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-200'
             }`}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <button 
-                  onClick={() => { handleAction(selectedBiz._id, 'reject'); setShowBizModal(false); }}
-                  disabled={selectedBiz.status === 'Rejected'}
-                  className="py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 font-extrabold text-[11px] rounded-xl cursor-pointer disabled:opacity-40 text-center transition-colors border border-rose-500/25"
-                >
-                  Reject listing
-                </button>
+                {selectedBiz.status !== 'Approved' && (
+                  <button 
+                    onClick={() => {
+                      handleAction(selectedBiz._id, 'reject');
+                      setSelectedBiz(prev => ({ ...prev, status: 'Rejected' }));
+                      setShowBizModal(false);
+                      showToast('Listing rejected and hidden from public.', 'error');
+                    }}
+                    className="py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 font-extrabold text-[11px] rounded-xl cursor-pointer text-center transition-colors border border-rose-500/25"
+                  >
+                    Reject listing
+                  </button>
+                )}
                 <button 
                   onClick={() => { handleAction(selectedBiz._id, 'suspend'); setShowBizModal(false); }}
                   disabled={selectedBiz.status === 'Suspended'}
@@ -7911,19 +7933,25 @@ const handlePartnerAction = async (partnerId, action) => {
                 </button>
               </div>
               <button 
-                onClick={() => window.open(`/businesses/${selectedBiz._id}`, '_blank')}
+                onClick={() => window.open(`/businesses/${selectedBiz.slug || selectedBiz._id}`, '_blank')}
                 className="w-full py-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 font-extrabold text-[11px] rounded-xl cursor-pointer text-center transition-colors border border-blue-500/25 flex items-center justify-center gap-1.5"
               >
                 <Eye className="h-4 w-4" />
                 <span>View Public Landing Page</span>
               </button>
-              <button 
-                onClick={() => { handleAction(selectedBiz._id, 'approve'); setShowBizModal(false); }}
-                disabled={selectedBiz.status === 'Approved'}
-                className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 text-center shadow shadow-emerald-800/10 transition-colors uppercase tracking-wider"
-              >
-                Approve & Publish listing
-              </button>
+              {selectedBiz.status !== 'Rejected' && (
+                <button 
+                  onClick={() => {
+                    handleAction(selectedBiz._id, 'approve');
+                    setSelectedBiz(prev => ({ ...prev, status: 'Approved' }));
+                    setShowBizModal(false);
+                    showToast('Listing approved and published successfully!', 'success');
+                  }}
+                  className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer text-center shadow shadow-emerald-800/10 transition-colors uppercase tracking-wider"
+                >
+                  Approve & Publish listing
+                </button>
+              )}
             </div>
 
           </div>

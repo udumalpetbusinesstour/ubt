@@ -67,6 +67,9 @@ const registerUser = async (req, res, next) => {
       }
     }
 
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
     // Create new user
     const user = await User.create({
       name: resolvedName,
@@ -80,6 +83,9 @@ const registerUser = async (req, res, next) => {
       website: website || '',
       instagram: instagram || '',
       facebook: facebook || '',
+      isVerified: false,
+      emailVerificationOtp: otp,
+      emailVerificationOtpExpires: otpExpires
     });
 
     // Create pending Referral record
@@ -99,27 +105,20 @@ const registerUser = async (req, res, next) => {
       });
     }
 
-    return sendSuccess(res, 201, 'User registered successfully', {
-      token: generateToken(user._id),
-      user: {
-        id: user._id,
-        name: user.name,
-        fullName: user.name,
-        email: user.email,
-        phone: user.phone,
-        mobileNumber: user.phone,
-        role: user.role,
-        website: user.website,
-        instagram: user.instagram,
-        facebook: user.facebook,
-        isPartnerRegistered: user.isPartnerRegistered || false,
-        isPartnerApproved: user.isPartnerApproved || false,
-        partnerStatus: user.partnerStatus || 'pending',
-        aadhaarNumber: user.aadhaarNumber || '',
-        address: user.address || '',
-        referralCode: user.referralCode || '',
-        referralPoints: user.referralPoints || 0
-      }
+    try {
+      await sendEmail({
+        to: email,
+        subject: 'Email Verification OTP - UBT',
+        text: `Hello ${resolvedName},\n\nWelcome to Udumalpet Business Tour!\n\nYour 6-digit verification code is: ${otp}\n\nIt is valid for 10 minutes.\n\nBest regards,\nUBT Team`,
+        html: `<p>Hello <strong>${resolvedName}</strong>,</p><p>Welcome to Udumalpet Business Tour!</p><p>Your 6-digit verification code is: <strong style="font-size: 18px; color: #027244;">${otp}</strong></p><p>It is valid for 10 minutes.</p><p>Best regards,<br/>UBT Team</p>`
+      });
+    } catch (emailErr) {
+      console.error('Failed to send verification email during registration:', emailErr);
+    }
+
+    return sendSuccess(res, 201, 'Verification OTP sent to your email. Please verify to complete registration.', {
+      requiresVerification: true,
+      email: user.email
     });
   } catch (err) {
     next(err);
@@ -148,6 +147,29 @@ const loginUser = async (req, res, next) => {
     if (user && (await user.matchPassword(password))) {
       if (user.status === 'Suspended') {
         return sendError(res, 403, 'Your administrative account has been suspended due to system violations.');
+      }
+
+      if (!user.isVerified) {
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.emailVerificationOtp = otp;
+        user.emailVerificationOtpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+        await user.save();
+
+        try {
+          await sendEmail({
+            to: user.email,
+            subject: 'Email Verification OTP - UBT',
+            text: `Your 6-digit verification code is: ${otp}. It will expire in 10 minutes.`,
+            html: `<p>Your 6-digit verification code is: <strong style="font-size: 18px; color: #027244;">${otp}</strong></p><p>It will expire in 10 minutes.</p>`
+          });
+        } catch (emailErr) {
+          console.error('Failed to send verification email during login:', emailErr);
+        }
+
+        return sendError(res, 403, 'Email verification required. A verification code has been sent to your email.', {
+          requiresVerification: true,
+          email: user.email
+        });
       }
 
       const business = await Business.findOne({ ownerId: user._id });
@@ -559,6 +581,107 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
+/**
+ * Verify Email Verification OTP
+ */
+const verifyEmailOtp = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return sendError(res, 400, 'Email and verification code are required.');
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return sendError(res, 404, 'User not found.');
+    }
+
+    if (user.isVerified) {
+      return sendError(res, 400, 'Email is already verified.');
+    }
+
+    if (user.emailVerificationOtp !== otp) {
+      return sendError(res, 400, 'Invalid verification code.');
+    }
+
+    if (user.emailVerificationOtpExpires && user.emailVerificationOtpExpires < new Date()) {
+      return sendError(res, 400, 'Verification code has expired. Please request a new one.');
+    }
+
+    // Update user to verified
+    user.isVerified = true;
+    user.emailVerificationOtp = '';
+    user.emailVerificationOtpExpires = undefined;
+    await user.save();
+
+    return sendSuccess(res, 200, 'Email verified successfully!', {
+      token: generateToken(user._id),
+      user: {
+        id: user._id,
+        name: user.name,
+        fullName: user.name,
+        email: user.email,
+        phone: user.phone,
+        mobileNumber: user.phone,
+        role: user.role,
+        website: user.website,
+        instagram: user.instagram,
+        facebook: user.facebook,
+        isPartnerRegistered: user.isPartnerRegistered || false,
+        isPartnerApproved: user.isPartnerApproved || false,
+        partnerStatus: user.partnerStatus || 'pending',
+        aadhaarNumber: user.aadhaarNumber || '',
+        address: user.address || '',
+        referralCode: user.referralCode || '',
+        referralPoints: user.referralPoints || 0
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Resend Email Verification OTP
+ */
+const resendVerificationOtp = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return sendError(res, 400, 'Email is required.');
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return sendError(res, 404, 'User not found.');
+    }
+
+    if (user.isVerified) {
+      return sendError(res, 400, 'Email is already verified.');
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.emailVerificationOtp = otp;
+    user.emailVerificationOtpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Email Verification OTP - UBT',
+        text: `Your 6-digit verification code is: ${otp}. It will expire in 10 minutes.`,
+        html: `<p>Your 6-digit verification code is: <strong style="font-size: 18px; color: #027244;">${otp}</strong></p><p>It will expire in 10 minutes.</p>`
+      });
+    } catch (emailErr) {
+      console.error('Failed to send verification email:', emailErr);
+    }
+
+    return sendSuccess(res, 200, 'Verification OTP sent to your email.');
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -567,6 +690,8 @@ module.exports = {
   deleteAccount,
   googleLogin,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  verifyEmailOtp,
+  resendVerificationOtp
 };
 

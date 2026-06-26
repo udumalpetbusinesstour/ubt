@@ -388,6 +388,17 @@ export default function Login() {
           }
         }
       } else {
+        const requiresVerification = data.requiresVerification || (data.error && data.error.requiresVerification) || (data.data && data.data.requiresVerification);
+        const verifyEmail = data.email || (data.error && data.error.email) || (data.data && data.data.email);
+        
+        if (requiresVerification && verifyEmail) {
+          setError('');
+          setInfoMessage('Email verification required. Redirecting to verification page...');
+          setTimeout(() => {
+            navigate(`/register?verify=true&email=${encodeURIComponent(verifyEmail)}`);
+          }, 1200);
+          return;
+        }
         setError(data.message || 'Invalid credentials.');
       }
     } catch (err) {

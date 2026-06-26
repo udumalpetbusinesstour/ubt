@@ -8,13 +8,23 @@ const {
   deleteAccount,
   googleLogin,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  verifyEmailOtp,
+  resendVerificationOtp
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
 // @route   POST /api/auth/register
 // @access  Public
 router.post('/register', registerUser);
+
+// @route   POST /api/auth/verify-email-otp
+// @access  Public
+router.post('/verify-email-otp', verifyEmailOtp);
+
+// @route   POST /api/auth/resend-verification-otp
+// @access  Public
+router.post('/resend-verification-otp', resendVerificationOtp);
 
 // @route   POST /api/auth/google-login
 // @access  Public

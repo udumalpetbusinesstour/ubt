@@ -330,7 +330,7 @@ BusinessSchema.pre('save', async function() {
     this.verificationStatus = statusMap[this.status] || 'pending';
   }
 
-  if (this.businessName && this.isModified('businessName')) {
+  if (this.businessName && (!this.slug || this.isModified('businessName'))) {
     this.slug = this.businessName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')

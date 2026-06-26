@@ -3792,7 +3792,7 @@ function DashboardContent() {
 
   const copyReviewLink = () => {
     if (!business || !business._id) return;
-    const url = `${window.location.origin}/businesses/${business._id}?tab=reviews`;
+    const url = `${window.location.origin}/${business.slug || business._id}?tab=reviews`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -3803,7 +3803,7 @@ function DashboardContent() {
       alert("Business details not loaded yet.");
       return;
     }
-    const url = `${window.location.origin}/businesses/${business._id}`;
+    const url = `${window.location.origin}/${business.slug || business._id}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -3825,7 +3825,7 @@ function DashboardContent() {
 
   const handleDashboardShare = async (biz) => {
     if (!biz || !biz._id) return;
-    const url = `${window.location.origin}/businesses/${biz._id}`;
+    const url = `${window.location.origin}/${biz.slug || biz._id}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -4122,7 +4122,7 @@ function DashboardContent() {
           <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 shrink-0">
             {business && (
               <Link 
-                to={`/businesses/${business._id}`}
+                to={`/${business.slug || business._id}`}
                 target="_blank"
                 className="px-2.5 sm:px-4 py-1.5 sm:py-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-extrabold text-emerald-600 hover:text-emerald-700 flex items-center gap-2 transition-all shadow-xs cursor-pointer"
               >
@@ -4251,7 +4251,7 @@ function DashboardContent() {
                       <p className="text-[11px] text-slate-600 font-semibold leading-relaxed">
                         Your listing is successfully submitted. It will become live globally in the directory as soon as the administrators verify your business details.
                       </p>
-                      {business.googlePlaceId ? (
+                      {(business.googlePlaceId || business.googleBusinessLink || business.googleLinked) ? (
                         <div className="flex items-center gap-1.5 mt-1.5">
                           <span className="bg-blue-100 text-blue-700 border border-blue-200 text-[8.5px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-0.5 shadow-2xs">
                             ⚡ Google Connected — Faster Approval Active
@@ -4282,7 +4282,7 @@ function DashboardContent() {
                       <p className="text-[11px] text-slate-600 font-semibold leading-relaxed">
                         An auditor is currently reviewing your registration documents, locality, and contact details. Vetting usually completes within 2-4 hours.
                       </p>
-                      {business.googlePlaceId && (
+                      {(business.googlePlaceId || business.googleBusinessLink || business.googleLinked) && (
                         <div className="flex items-center gap-1.5 mt-1.5">
                           <span className="bg-blue-100 text-blue-700 border border-blue-200 text-[8.5px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-0.5 shadow-2xs">
                             ⚡ Google Connected — Faster Approval Active
@@ -5296,7 +5296,7 @@ function DashboardContent() {
                           <input 
                             type="text" 
                             readOnly
-                            value={business ? `${window.location.origin}/businesses/${business._id}?tab=reviews` : ''}
+                            value={business ? `${window.location.origin}/${business.slug || business._id}?tab=reviews` : ''}
                             className="w-full bg-transparent text-[11px] font-semibold text-slate-600 px-2 focus:outline-none"
                           />
                           <button 
@@ -6486,14 +6486,14 @@ function DashboardContent() {
                       <div className="flex items-center gap-3 mt-1.5 justify-start">
                         <button 
                           type="button"
-                          onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin + '/businesses/' + business._id)}`, '_blank')}
+                          onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin + '/' + (business.slug || business._id))}`, '_blank')}
                           className="h-8 w-8 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
                         >
                           <Facebook className="h-4 w-4" />
                         </button>
                         <button 
                           type="button"
-                          onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent('Check out my business on UBT: ' + window.location.origin + '/businesses/' + business._id)}`, '_blank')}
+                          onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent('Check out my business on UBT: ' + window.location.origin + '/' + (business.slug || business._id))}`, '_blank')}
                           className="h-8 w-8 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 rounded-full flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
                         >
                           <MessageSquare className="h-4 w-4 text-slate-650" />

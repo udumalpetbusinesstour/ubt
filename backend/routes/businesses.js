@@ -1524,13 +1524,29 @@ router.post('/validate-address', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const skipInc = req.query.skipInc === 'true';
-    const business = skipInc
-      ? await Business.findById(req.id || req.params.id)
-      : await Business.findByIdAndUpdate(
-          req.id || req.params.id,
-          { $inc: { views: 1 } },
-          { new: true }
-        );
+    const idOrSlug = req.id || req.params.id;
+    const isObjectId = require('mongoose').Types.ObjectId.isValid(idOrSlug);
+    
+    let business;
+    if (isObjectId) {
+      business = skipInc
+        ? await Business.findById(idOrSlug)
+        : await Business.findByIdAndUpdate(idOrSlug, { $inc: { views: 1 } }, { new: true });
+    } else {
+      const searchSlug = idOrSlug.toLowerCase();
+      business = skipInc
+        ? await Business.findOne({ slug: searchSlug })
+        : await Business.findOneAndUpdate({ slug: searchSlug }, { $inc: { views: 1 } }, { new: true });
+        
+      if (!business) {
+        // Fallback: try searching by name or businessName
+        const nameRegex = new RegExp(`^${idOrSlug.replace(/[-_]/g, ' ')}$`, 'i');
+        business = skipInc
+          ? await Business.findOne({ $or: [{ name: nameRegex }, { businessName: nameRegex }] })
+          : await Business.findOneAndUpdate({ $or: [{ name: nameRegex }, { businessName: nameRegex }] }, { $inc: { views: 1 } }, { new: true });
+      }
+    }
+
     if (!business) {
       return res.status(404).json({ success: false, message: 'Business not found' });
     }
