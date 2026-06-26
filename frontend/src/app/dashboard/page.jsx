@@ -3885,7 +3885,10 @@ function DashboardContent() {
       ] : []),
       { label: 'Photos & Media', icon: <ImageIcon className="h-4 w-4" /> },
       { label: 'Reviews & Reputation', icon: <Star className="h-4 w-4" /> },
-      { label: 'Leads & Enquiries', icon: <Mail className="h-4 w-4" />, badge: (leadsList || []).filter(l => l.status !== 'Rectified').length },
+      { label: 'Leads & Enquiries', icon: <Mail className="h-4 w-4" />, badge: (leadsList || []).filter(l => {
+        const isClickLog = l.name.startsWith('Customer (');
+        return l.status !== 'Rectified' && !isClickLog;
+      }).length },
       { label: 'Subscription & Billing', icon: <CreditCard className="h-4 w-4" /> },
       { label: 'Offers & Promotions', icon: <Sparkles className="h-4 w-4" /> },
       { label: 'Referral & Rewards', icon: <Gift className="h-4 w-4" /> }
@@ -4200,7 +4203,7 @@ function DashboardContent() {
         </header>
 
         {/* Scrollable Workspace Panels */}
-        <main className="flex-grow overflow-y-auto px-3 md:px-6 py-4 md:py-6 max-w-[1680px] 2xl:max-w-[1820px] w-full mx-auto flex flex-col gap-4 md:gap-6">
+        <main className="flex-grow overflow-y-auto px-3 md:px-6 py-4 md:py-6 max-w-[1440px] w-full mx-auto flex flex-col gap-4 md:gap-6">
           
           {/* Mobile Branch Switcher */}
           {primaryBusiness && branches && branches.length > 0 && (
@@ -5100,10 +5103,13 @@ function DashboardContent() {
 
                     {/* Leads list stream */}
                     <div className="flex flex-col divide-y divide-slate-100">
-                      {leadsList.length === 0 ? (
+                      {leadsList.filter(l => !l.name.startsWith('Customer (')).length === 0 ? (
                         <p className="text-slate-400 font-semibold italic text-xs py-5.5 text-center">No customer leads received yet</p>
                       ) : (
-                        leadsList.slice(0, 5).map((lead, idx) => (
+                        leadsList
+                          .filter(l => !l.name.startsWith('Customer ('))
+                          .slice(0, 5)
+                          .map((lead, idx) => (
                           <div key={lead._id || idx} className="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 first:pt-0 last:pb-0 gap-3">
                             <div className="flex items-center gap-3.5">
                               <div className={`h-9 w-9 rounded-full ${lead.color || 'bg-slate-100 text-slate-600'} flex items-center justify-center font-extrabold text-xs shadow-inner shrink-0 select-none`}>

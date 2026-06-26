@@ -9,13 +9,13 @@ const { sendSuccess, sendError } = require('../utils/responseHelper');
 // @access  Public
 router.get('/', async (req, res, next) => {
   try {
-    const { seedDefaultCategories } = require('../models/Category');
-    await seedDefaultCategories();
-
-    const { syncAllApprovedCategories } = require('../utils/categoryHelper');
-    await syncAllApprovedCategories();
-
-    const categories = await Category.find().sort({ categoryName: 1 });
+    let categories = await Category.find().sort({ categoryName: 1 });
+    if (categories.length === 0) {
+      console.log('[CATEGORIES API] No categories found, triggering default seed routine...');
+      const { seedDefaultCategories } = require('../models/Category');
+      await seedDefaultCategories();
+      categories = await Category.find().sort({ categoryName: 1 });
+    }
     return sendSuccess(res, 200, 'Categories retrieved successfully', categories);
   } catch (err) {
     next(err);

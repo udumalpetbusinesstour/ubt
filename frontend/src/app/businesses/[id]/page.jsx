@@ -1424,7 +1424,7 @@ Please confirm availability and delivery time.`;
       )}
 
       {/* Expiry Warning Header Banner */}
-      {isExpired && (
+      {isExpired && (isOwner || isAdmin) && (
         <div className="w-full bg-red-600 text-white font-extrabold text-xs py-3.5 px-4 text-center sticky top-[76px] z-30 shadow flex items-center justify-center gap-2">
           <AlertCircle className="h-4.5 w-4.5" />
           <span>Subscription expired. Renew to restore profile visibility and unlock contact buttons.</span>
@@ -1458,7 +1458,7 @@ Please confirm availability and delivery time.`;
           </div>
         )}
 
-        <div className="relative max-w-[1680px] 2xl:max-w-[1820px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10">
+        <div className="relative max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10">
           <div className="flex flex-col gap-3 w-full">
             {/* Go Back button with Left Arrow */}
             <button 
@@ -1659,7 +1659,7 @@ Please confirm availability and delivery time.`;
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                <span>Contact Details Blurred — Subscription Activation Required</span>
+                <span>{(isOwner || isAdmin) ? "Contact Details Blurred — Subscription Activation Required" : "Contact Details Blurred"}</span>
               </div>
             )}
           </div>
@@ -1682,7 +1682,7 @@ Please confirm availability and delivery time.`;
       {/* Tabs navigation bar */}
       {!isGovernmentalOrPublic(business) && (
         <section className="w-full bg-white border-b border-slate-200/80 sticky top-[76px] z-20 shadow-xs">
-          <div className="max-w-[1680px] 2xl:max-w-[1820px] mx-auto px-4 md:px-8 flex overflow-x-auto gap-8">
+          <div className="max-w-[1440px] mx-auto px-4 md:px-8 flex overflow-x-auto gap-8">
             {[
               { id: 'overview', label: 'Overview' },
               ...(isFoodRelated(business?.category, business?.customCategoryName) ? [
@@ -1713,7 +1713,7 @@ Please confirm availability and delivery time.`;
       )}
 
       {/* Main Grid Content */}
-      <section className="max-w-[1680px] 2xl:max-w-[1820px] w-full px-4 md:px-8 py-10 relative">
+      <section className="max-w-[1440px] w-full px-4 md:px-8 py-10 relative">
         <div 
           className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full"
           style={{

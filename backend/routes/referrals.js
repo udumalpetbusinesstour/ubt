@@ -182,37 +182,83 @@ router.get('/top', async (req, res, next) => {
     ]);
 
     // Populate referrer user details
-    const populatedLeaderboard = await Promise.all(
-      leaderboard.map(async (item) => {
+    const populatedLeaderboard = [];
+    for (const item of leaderboard) {
+      if (item._id) {
         const user = await User.findById(item._id).select('fullName name businessName');
-        return {
-          name: user ? (user.businessName || user.fullName || user.name) : 'Anonymous Member',
-          referralsCount: item.count
-        };
+        if (user) {
+          populatedLeaderboard.push({
+            name: user.businessName || user.fullName || user.name || 'Anonymous Member',
+            referralsCount: item.count
+          });
+        }
+      }
+    }
+
+    // Fallbacks: If we don't have 3 items on the leaderboard, pull from users with referral points
+    if (populatedLeaderboard.length < 3) {
+      const existingNames = new Set(populatedLeaderboard.map(item => item.name));
+      const usersWithPoints = await User.find({ 
+        referralPoints: { $gt: 0 } 
       })
-    );
+      .sort({ referralPoints: -1 })
+      .limit(3);
 
-    // Fallbacks in case there aren't enough dynamic referrers in the database yet
-    const fallbacks = [
-      { name: 'Lakshmi Textiles', referralsCount: 32 },
-      { name: 'Sri Electricals', referralsCount: 27 },
-      { name: 'ABC Traders', referralsCount: 21 }
-    ];
+      for (const u of usersWithPoints) {
+        const name = u.businessName || u.fullName || u.name;
+        if (name && !existingNames.has(name)) {
+          populatedLeaderboard.push({
+            name,
+            referralsCount: Math.max(1, Math.floor((u.referralPoints || 0) / 100))
+          });
+          existingNames.add(name);
+          if (populatedLeaderboard.length >= 3) break;
+        }
+      }
+    }
 
-    // Merge dynamic leaderboard with fallbacks to ensure exactly 3 beautiful positions are always displayed
-    const finalLeaderboard = [...populatedLeaderboard];
-    for (let i = finalLeaderboard.length; i < 3; i++) {
-      // Find a fallback that isn't already in finalLeaderboard names
-      const existingNames = new Set(finalLeaderboard.map(item => item.name));
-      const nextFallback = fallbacks.find(fb => !existingNames.has(fb.name));
-      if (nextFallback) {
-        finalLeaderboard.push(nextFallback);
+    // Fallbacks: If we still don't have 3 items, pull from real business listings in the DB
+    if (populatedLeaderboard.length < 3) {
+      const existingNames = new Set(populatedLeaderboard.map(item => item.name));
+      let activeBusinesses = await Business.find({ status: 'Approved' }).limit(3);
+      if (activeBusinesses.length === 0) {
+        activeBusinesses = await Business.find().limit(3);
+      }
+      
+      const fallbackCounts = [15, 11, 7];
+      let countIdx = populatedLeaderboard.length;
+      for (const b of activeBusinesses) {
+        if (b.name && !existingNames.has(b.name)) {
+          populatedLeaderboard.push({
+            name: b.name,
+            referralsCount: fallbackCounts[countIdx % fallbackCounts.length]
+          });
+          existingNames.add(b.name);
+          countIdx++;
+          if (populatedLeaderboard.length >= 3) break;
+        }
+      }
+    }
+
+    // Absolute fallback in case the database is completely empty
+    if (populatedLeaderboard.length < 3) {
+      const existingNames = new Set(populatedLeaderboard.map(item => item.name));
+      const mockFallbacks = [
+        { name: 'Lakshmi Textiles', referralsCount: 8 },
+        { name: 'Sri Electricals', referralsCount: 5 },
+        { name: 'ABC Traders', referralsCount: 2 }
+      ];
+      for (const fb of mockFallbacks) {
+        if (!existingNames.has(fb.name)) {
+          populatedLeaderboard.push(fb);
+          if (populatedLeaderboard.length >= 3) break;
+        }
       }
     }
 
     res.json({
       success: true,
-      data: finalLeaderboard.slice(0, 3)
+      data: populatedLeaderboard.slice(0, 3)
     });
   } catch (error) {
     next(error);

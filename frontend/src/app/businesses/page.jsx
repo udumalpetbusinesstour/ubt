@@ -263,6 +263,18 @@ const staticData = [
 function BusinessesList() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('ubt_user');
+    if (storedUser) {
+      try {
+        setCurrentUser(JSON.parse(storedUser));
+      } catch (err) {
+        console.error('Failed to parse user from local storage', err);
+      }
+    }
+  }, []);
 
   // Search & Filter state variables
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
@@ -1397,7 +1409,7 @@ function BusinessesList() {
         <section 
           className="w-full relative min-h-[260px] bg-[#001c41] text-white py-10 px-4 md:px-8 border-b border-slate-800"
         >
-          <div className="relative max-w-[1680px] 2xl:max-w-[1820px] mx-auto flex flex-col items-center z-10 text-left">
+          <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 text-left">
             <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-2">
               <Link to="/" className="hover:text-emerald-450 transition-colors">Home</Link>
               <span className="text-slate-505">&gt;</span>
@@ -1505,7 +1517,7 @@ function BusinessesList() {
         <section 
           className="w-full relative min-h-[260px] bg-[#001c41] text-white py-10 px-4 md:px-8 border-b border-slate-800"
         >
-          <div className="relative max-w-[1680px] 2xl:max-w-[1820px] mx-auto flex flex-col items-center z-10 text-left">
+          <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 text-left">
             <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-2">
               <Link to="/" className="hover:text-emerald-450 transition-colors">Home</Link>
               <span className="text-slate-505">&gt;</span>
@@ -1720,7 +1732,7 @@ function BusinessesList() {
         <section 
           className="w-full relative min-h-0 md:min-h-[260px] bg-[#001c41] text-white py-4 md:py-10 px-4 md:px-8 border-b border-slate-800"
         >
-          <div className="relative max-w-[1680px] 2xl:max-w-[1820px] mx-auto flex flex-col items-center z-10 text-left w-full">
+          <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 text-left w-full">
             <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-1 md:mt-2 order-1">
               <Link to="/" className="hover:text-emerald-450 transition-colors">Home</Link>
               <span className="text-slate-505">&gt;</span>
@@ -1750,7 +1762,7 @@ function BusinessesList() {
         </section>
 
         {/* Main Two-Column Split Grid */}
-        <section className="max-w-[1680px] 2xl:max-w-[1820px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <section className="max-w-[1440px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
           
           {/* Left Column: Main categories grid, search results, or subcategory drilldown */}
           <div className="lg:col-span-3 flex flex-col gap-6">
@@ -2016,6 +2028,15 @@ function BusinessesList() {
                         {displayedExploreBusinesses.map((biz) => {
                           const isExpired = biz.subscriptionStatus === 'expired' && !isGovernmentalOrPublic(biz);
                           const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
+                          const isOwner = currentUser && biz && (
+                            (currentUser._id && biz.ownerId && currentUser._id === biz.ownerId) ||
+                            (currentUser.id && biz.ownerId && currentUser.id === biz.ownerId) ||
+                            (currentUser._id && biz.owner && currentUser._id === biz.owner) ||
+                            (currentUser.id && biz.owner && currentUser.id === biz.owner) ||
+                            (biz._id && typeof biz._id === 'string' && biz._id.startsWith('biz_')) ||
+                            (!biz.ownerId && !biz.owner)
+                          );
+                          const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin');
                           return (
                             <div
                               key={biz._id}
@@ -2057,7 +2078,7 @@ function BusinessesList() {
                                     )}
                                   </div>
                                 )}
-                                {isExpired && (
+                                {isExpired && (isOwner || isAdmin) && (
                                   <div className="absolute inset-0 bg-slate-950/40 flex items-center justify-center text-center p-2 text-white z-10">
                                     <span className="bg-red-650 text-[9px] font-extrabold uppercase px-2 py-1 rounded shadow">
                                       Subscription Expired
@@ -2579,7 +2600,7 @@ function BusinessesList() {
       <section 
         className="w-full relative min-h-0 md:min-h-[260px] bg-[#001c41] text-white py-4 md:py-10 px-4 md:px-8 border-b border-slate-800"
       >
-        <div className="relative max-w-[1680px] 2xl:max-w-[1820px] mx-auto flex flex-col items-center z-10 w-full">
+        <div className="relative max-w-[1440px] mx-auto flex flex-col items-center z-10 w-full">
           
           {/* Breadcrumbs */}
           <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-1 md:mt-2 order-1">
@@ -2683,7 +2704,7 @@ function BusinessesList() {
 
       {/* Continue Registration Banner (only shown when user has a draft business) */}
       {showDraftBanner && draftBusiness && (
-        <div className="w-full max-w-[1680px] 2xl:max-w-[1820px] px-4 md:px-8 pt-6 pb-0 mx-auto animate-fadeIn">
+        <div className="w-full max-w-[1440px] px-4 md:px-8 pt-6 pb-0 mx-auto animate-fadeIn">
           <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm shadow-amber-100/50">
             <div className="flex items-start sm:items-center gap-3">
               <div className="h-10 w-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center shrink-0 border border-amber-200">
@@ -2718,7 +2739,7 @@ function BusinessesList() {
       )}
 
       {/* Main Two-column Content Grid */}
-      <section className="max-w-[1680px] 2xl:max-w-[1820px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <section className="max-w-[1440px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* Mobile Filter Toggle Button */}
         <div className="lg:hidden flex items-center justify-between gap-4 w-full bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm mb-1.5 text-left col-span-1">
@@ -2825,7 +2846,15 @@ function BusinessesList() {
               {displayedBusinesses.map((biz) => {
                 const isExpired = biz.subscriptionStatus === 'expired' && !isGovernmentalOrPublic(biz);
                 const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
-                
+                const isOwner = currentUser && biz && (
+                  (currentUser._id && biz.ownerId && currentUser._id === biz.ownerId) ||
+                  (currentUser.id && biz.ownerId && currentUser.id === biz.ownerId) ||
+                  (currentUser._id && biz.owner && currentUser._id === biz.owner) ||
+                  (currentUser.id && biz.owner && currentUser.id === biz.owner) ||
+                  (biz._id && typeof biz._id === 'string' && biz._id.startsWith('biz_')) ||
+                  (!biz.ownerId && !biz.owner)
+                );
+                const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin');
                 return (
                   <div
                     key={biz._id}
@@ -2876,7 +2905,7 @@ function BusinessesList() {
                       )}
 
                       {/* Subscription expired lock overlay */}
-                      {isExpired && (
+                      {isExpired && (isOwner || isAdmin) && (
                         <div className="absolute inset-0 bg-slate-950/40 flex items-center justify-center text-center p-2 text-white z-10">
                           <span className="bg-red-650 text-[8px] sm:text-[9px] font-extrabold uppercase px-2 py-1 rounded shadow">
                             Subscription Expired
@@ -3057,7 +3086,7 @@ function BusinessesList() {
       </section>
 
       {/* Footer Trust Bar & Business Callout (Combined in one gorgeous container as per mockup crop) */}
-      <div className="max-w-[1680px] 2xl:max-w-[1820px] w-full border border-slate-200/80 bg-white rounded-3xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 mt-12 shadow-sm font-sans">
+      <div className="max-w-[1440px] w-full border border-slate-200/80 bg-white rounded-3xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 mt-12 shadow-sm font-sans">
         
         {/* Left Col (Col-span-9): Solid Navy Blue panel with 4 trust columns separated by lines */}
         <div className="lg:col-span-9 bg-[#001c41] text-white p-7 grid grid-cols-2 md:grid-cols-4 gap-6 items-center">

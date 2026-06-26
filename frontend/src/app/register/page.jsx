@@ -106,6 +106,21 @@ export default function Register() {
   };
 
   useEffect(() => {
+    // Push state to create a history entry we can intercept
+    window.history.pushState(null, null, window.location.pathname);
+    
+    const handlePopState = (event) => {
+      // When back is pressed, redirect to home page
+      navigate('/', { replace: true });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [navigate]);
+
+  useEffect(() => {
     // Dynamically load Google Identity Services script if not already present
     let script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
     if (!script) {

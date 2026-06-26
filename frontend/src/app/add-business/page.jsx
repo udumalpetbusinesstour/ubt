@@ -2081,7 +2081,7 @@ export default function AddBusiness() {
       {/* Scenic Banner Header */}
       <div className="w-full bg-[#001c41] py-16 px-4 md:px-8 relative overflow-hidden text-white font-sans text-center md:text-left select-none border-b border-slate-800 z-0">
         
-        <div className="max-w-[1680px] 2xl:max-w-[1820px] mx-auto relative z-10 flex flex-col gap-2">
+        <div className="max-w-[1440px] mx-auto relative z-10 flex flex-col gap-2">
           <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold uppercase tracking-wider justify-center md:justify-start">
             <Link to="/" className="hover:text-emerald-400 transition-colors">Home</Link>
             <ChevronRight className="h-3 w-3 text-slate-500" />
@@ -2098,7 +2098,7 @@ export default function AddBusiness() {
         </div>
       </div>
 
-      <div className="max-w-[1680px] 2xl:max-w-[1820px] mx-auto px-4 md:px-8 py-10 relative z-10">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-10 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
           {/* Left Column: Form & Stepper (lg:col-span-2) */}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   ShieldCheck, RefreshCw, Star, Check, X, AlertCircle, AlertTriangle, 
@@ -217,6 +217,8 @@ export default function SuperAdminDashboard() {
     { _id: 'TKT-1026', user: 'senthil@gmail.com', issueType: 'Blog Moderation', priority: 'Low', status: 'Closed', message: 'My blog post was rejected. Can you explain why?', replyText: 'Hello, your blog post contained external advertisement links which violate our guidelines. It has been moderated.', createdAt: new Date(new Date().getTime() - 48 * 60 * 60 * 1000) }
   ]);
 
+
+
   // Platform pricing & settings
   const [plans, setPlans] = useState([
     { id: 'monthly', name: 'Monthly Premium Plan', price: 99, duration: '28 Days' },
@@ -271,11 +273,105 @@ export default function SuperAdminDashboard() {
   const [referralsLoading, setReferralsLoading] = useState(false);
   const [referralsError, setReferralsError] = useState('');
   const [referralFilter, setReferralFilter] = useState('All'); // All | Pending | Completed | Rejected
-  const [referralSearch, setReferralSearch] = useState('');
 
-  // Redemption states
+  // Compile dynamic activity logs
+  const activityLogs = useMemo(() => {
+    const compiledLogs = [];
+    
+    // 1. Businesses
+    (businesses || []).forEach(b => {
+      if (b.createdAt) {
+        compiledLogs.push({
+          log: `New business "${b.name || b.businessName || 'Business'}" registered`,
+          time: new Date(b.createdAt),
+          color: 'text-[#027244] bg-[#027244]/10'
+        });
+      }
+    });
+
+    // 2. Events
+    (events || []).forEach(e => {
+      const date = e.createdAt || e.date;
+      if (date) {
+        compiledLogs.push({
+          log: `Event "${e.title || 'Event'}" ${e.status === 'Approved' ? 'approved' : 'submitted for approval'}`,
+          time: new Date(date),
+          color: 'text-purple-400 bg-purple-500/10'
+        });
+      }
+    });
+
+    // 3. Blogs
+    (blogs || []).forEach(bl => {
+      if (bl.createdAt) {
+        compiledLogs.push({
+          log: `Blog post "${bl.title || 'Blog'}" ${bl.status === 'Approved' ? 'published' : 'submitted'}`,
+          time: new Date(bl.createdAt),
+          color: 'text-pink-400 bg-pink-500/10'
+        });
+      }
+    });
+
+    // 4. Payments
+    const paymentSource = revenueAnalytics?.paymentsLog || [];
+    paymentSource.forEach(p => {
+      const date = p.paidAt || p.paymentDate || p.createdAt;
+      if (date) {
+        const name = p.businessId?.name || p.userId?.fullName || p.userId?.name || 'Merchant';
+        compiledLogs.push({
+          log: `Payment of ₹${p.amount} received from ${name}`,
+          time: new Date(date),
+          color: 'text-emerald-455 bg-emerald-500/10'
+        });
+      }
+    });
+
+    // 5. Reviews
+    (reviews || []).forEach(r => {
+      if (r.createdAt) {
+        const isFlagged = r.status === 'flagged' || r.status === 'Reported';
+        const bizName = r.businessId?.name || 'Business';
+        compiledLogs.push({
+          log: isFlagged ? `Review reported for "${bizName}"` : `New review added for "${bizName}"`,
+          time: new Date(r.createdAt),
+          color: isFlagged ? 'text-rose-455 bg-rose-500/10' : 'text-blue-400 bg-blue-500/10'
+        });
+      }
+    });
+
+    compiledLogs.sort((a, b) => b.time - a.time);
+
+    const getRelativeTimeStr = (dateVal) => {
+      const now = new Date();
+      const diffMs = now - dateVal;
+      if (diffMs < 0) return 'Just now';
+      const diffMins = Math.floor(diffMs / 60000);
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+      const diffHrs = Math.floor(diffMins / 60);
+      if (diffHrs < 24) return `${diffHrs} hour${diffHrs > 1 ? 's' : ''} ago`;
+      const diffDays = Math.floor(diffHrs / 24);
+      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    };
+
+    return compiledLogs.length > 0
+      ? compiledLogs.slice(0, 5).map(item => ({
+          log: item.log,
+          time: getRelativeTimeStr(item.time),
+          color: item.color
+        }))
+      : [
+          { log: 'New business "Sri Lakshmi Electricals" registered', time: '2 mins ago', color: 'text-[#027244] bg-[#027244]/10' },
+          { log: 'Event "Temple Festival 2025" submitted for approval', time: '15 mins ago', color: 'text-purple-400 bg-purple-500/10' },
+          { log: 'Blog post "Top 10 Places in Udumalpet" published', time: '1 hour ago', color: 'text-pink-400 bg-pink-500/10' },
+          { log: 'Payment of ₹49 received from Tech Solutions', time: '2 hours ago', color: 'text-emerald-400 bg-emerald-500/10' },
+          { log: 'Review reported for "XYZ Restaurant"', time: '3 hours ago', color: 'text-rose-455 bg-rose-500/10' }
+        ];
+  }, [businesses, events, blogs, revenueAnalytics, reviews]);
+  const [referralSearch, setReferralSearch] = useState('');
   const [redemptions, setRedemptions] = useState([]);
   const [redemptionsLoading, setRedemptionsLoading] = useState(false);
+  const [redemptionsError, setRedemptionsError] = useState('');
 
 // Partners Portal states
   const [partners, setPartners] = useState([]);
@@ -1791,6 +1887,7 @@ const handlePartnerAction = async (partnerId, action) => {
   const dateFilteredSubscriptions = subscriptions.filter(s => matchesDateFilter(s.createdAt));
   const dateFilteredMerchants = merchants.filter(m => matchesDateFilter(m.createdAt));
   const dateFilteredRegularUsers = regularUsers.filter(r => matchesDateFilter(r.createdAt));
+  const dateFilteredSignups = signups.filter(u => matchesDateFilter(u.createdAt));
   const dateFilteredSupportTickets = supportTickets.filter(t => matchesDateFilter(t.createdAt));
   const dateFilteredQueries = queries.filter(q => matchesDateFilter(q.createdAt));
 
@@ -1821,7 +1918,7 @@ const handlePartnerAction = async (partnerId, action) => {
     const bizPoints = [];
     const userPoints = [];
     const revPoints = [];
-    const allUsers = [...merchants, ...regularUsers];
+    const allUsers = signups.length > 0 ? signups : [...merchants, ...regularUsers];
 
     intervals.forEach(d => {
       const limitTime = d.getTime();
@@ -1836,10 +1933,15 @@ const handlePartnerAction = async (partnerId, action) => {
         return !isNaN(t) && t <= limitTime;
       }).length;
 
-      const revSum = subscriptions.filter(s => {
-        const t = new Date(s.createdAt || s.paidAt).getTime();
+      const paymentSource = (revenueAnalytics?.allPayments && revenueAnalytics.allPayments.length > 0)
+        ? revenueAnalytics.allPayments
+        : ((revenueAnalytics?.paymentsLog && revenueAnalytics.paymentsLog.length > 0)
+            ? revenueAnalytics.paymentsLog
+            : subscriptions);
+      const revSum = paymentSource.filter(p => {
+        const t = new Date(p.paidAt || p.paymentDate || p.createdAt).getTime();
         return !isNaN(t) && t <= limitTime;
-      }).reduce((sum, s) => sum + (s.amount || 0), 0);
+      }).reduce((sum, p) => sum + (p.amount || 0), 0);
 
       bizPoints.push(bizCount);
       userPoints.push(userCount);
@@ -2585,7 +2687,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     const activeApprovedPct = activeApprovedBeforeThisMonth > 0 ? ((activeApprovedThisMonth / activeApprovedBeforeThisMonth) * 100).toFixed(1) : '0';
 
                     // 3. Total Users
-                    const allUsers = [...(merchants || []), ...(regularUsers || [])];
+                    const allUsers = signups.length > 0 ? signups : [...(merchants || []), ...(regularUsers || [])];
                     const usersThisMonth = allUsers.filter(u => u.createdAt && new Date(u.createdAt) >= startOfThisMonth).length;
                     const totalUsersCount = allUsers.length;
                     const usersBeforeThisMonth = totalUsersCount - usersThisMonth;
@@ -2612,7 +2714,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     const cards = [
                       { title: 'Total Businesses', val: dateFilteredBusinesses.length || 0, desc: `+${businessesThisMonth} this month`, pct: `+${businessesPct}%`, icon: <Store className="h-5 w-5" />, color: 'from-purple-500/10 border-purple-500/20 text-purple-500', tabId: 'Businesses' },
                       { title: 'Active Businesses', val: activeFilteredCount || 0, desc: `${activePercentOfTotal}% of total`, pct: `+${activeApprovedPct}%`, icon: <CheckCircle2 className="h-5 w-5" />, color: 'from-emerald-500/10 border-emerald-500/20 text-emerald-500', tabId: 'Businesses' },
-                      { title: 'Total Users', val: (dateFilteredMerchants.length + dateFilteredRegularUsers.length) || 0, desc: `+${usersThisMonth} this month`, pct: `+${usersPct}%`, icon: <User className="h-5 w-5" />, color: 'from-amber-500/10 border-amber-500/20 text-amber-500', tabId: 'Merchants' },
+                      { title: 'Total Users', val: dateFilteredSignups.length || 0, desc: `+${usersThisMonth} this month`, pct: `+${usersPct}%`, icon: <User className="h-5 w-5" />, color: 'from-amber-500/10 border-amber-500/20 text-amber-500', tabId: 'Merchants' },
                       { title: 'Events Listed', val: dateFilteredEvents.length || 0, desc: `+${eventsThisMonth} this month`, pct: `+${eventsPct}%`, icon: <Calendar className="h-5 w-5" />, color: 'from-pink-500/10 border-pink-500/20 text-pink-500', tabId: 'Events Moderation' },
                       { title: 'Blog Posts', val: dateFilteredBlogs.length || 0, desc: `+${blogsThisMonth} this month`, pct: `+${blogsPct}%`, icon: <BookOpen className="h-5 w-5" />, color: 'from-blue-500/10 border-blue-500/20 text-blue-500', tabId: 'Blogs Moderation' },
                       { title: 'Total Revenue', val: '₹' + (dashboardStats?.totalRevenue !== undefined ? dashboardStats.totalRevenue : dateFilteredSubscriptions.reduce((sum, s) => sum + (s.amount || 0), 0)).toLocaleString('en-IN'), desc: `+₹${revenueThisMonthVal.toLocaleString('en-IN')} this month`, pct: `+${revenuePctVal}%`, icon: <Coins className="h-5 w-5" />, color: 'from-cyan-500/10 border-cyan-500/20 text-cyan-500', tabId: 'Subscriptions' }
@@ -2824,16 +2926,16 @@ const handlePartnerAction = async (partnerId, action) => {
                             tabId: 'Blogs Moderation' 
                           },
                           { 
-                            label: 'Offers', 
+                            label: 'Categories', 
                             count: pendingCategories.length, 
                             icon: <Award className="h-3.5 w-3.5" />, 
-                            desc: 'Offers & promotions', 
+                            desc: 'Custom category requests', 
                             color: 'text-amber-400 bg-amber-500/10', 
                             tabId: 'Category Management' 
                           },
                           { 
                             label: 'Reviews', 
-                            count: reviews.filter(r => r.status === 'Pending' || r.status === 'flagged' || r.status === 'Reported').length || reviews.length, 
+                            count: reviews.filter(r => r.status === 'Pending' || r.status === 'flagged' || r.status === 'Reported').length, 
                             icon: <MessageSquare className="h-3.5 w-3.5" />, 
                             desc: 'Review reports', 
                             color: 'text-emerald-400 bg-emerald-500/10', 
@@ -3123,22 +3225,34 @@ const handlePartnerAction = async (partnerId, action) => {
                             </tr>
                           </thead>
                           <tbody>
-                            {(dateFilteredSubscriptions.length > 0
-                              ? dateFilteredSubscriptions.map(s => ({
-                                  id: s._id.toString().slice(-8).toUpperCase(),
-                                  name: s.businessName || 'Premium Plan',
-                                  amt: '₹' + s.amount,
-                                  status: s.paymentStatus === 'Paid' ? 'Success' : s.paymentStatus,
-                                  time: new Date(s.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
-                                  raw: s
+                            {((revenueAnalytics?.paymentsLog && revenueAnalytics.paymentsLog.length > 0)
+                              ? revenueAnalytics.paymentsLog.map(p => ({
+                                  id: p._id.toString().slice(-8).toUpperCase(),
+                                  name: p.businessId?.name || (p.eventId ? (p.eventId.title || 'Event Posting Fee') : 'Platform Payment'),
+                                  amt: '₹' + p.amount,
+                                  status: p.paymentStatus === 'Paid' ? 'Success' : (p.status === 'Paid' ? 'Success' : 'Failed'),
+                                  time: p.paidAt 
+                                    ? new Date(p.paidAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                                    : (p.paymentDate ? new Date(p.paymentDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'N/A'),
+                                  raw: p
                                 }))
-                              : [
-                                  { id: 'TXN12548', name: 'Sri Lakshmi Electricals', amt: '₹49', status: 'Success', time: '2 mins ago' },
-                                  { id: 'TXN12547', name: 'Green Leaf Restaurant', amt: '₹49', status: 'Success', time: '15 mins ago' },
-                                  { id: 'TXN12546', name: 'Vetri Catering Service', amt: '₹99', status: 'Success', time: '32 mins ago' },
-                                  { id: 'TXN12545', name: 'Tech Solutions', amt: '₹49', status: 'Failed', time: '1 hour ago' },
-                                  { id: 'TXN12544', name: 'Anu Beauty Parlour', amt: '₹49', status: 'Success', time: '2 hours ago' }
-                                ]
+                              : (dateFilteredSubscriptions.length > 0
+                                  ? dateFilteredSubscriptions.map(s => ({
+                                      id: s._id.toString().slice(-8).toUpperCase(),
+                                      name: s.businessName || 'Premium Plan',
+                                      amt: '₹' + s.amount,
+                                      status: s.paymentStatus === 'Paid' ? 'Success' : s.paymentStatus,
+                                      time: new Date(s.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+                                      raw: s
+                                    }))
+                                  : [
+                                      { id: 'TXN12548', name: 'Sri Lakshmi Electricals', amt: '₹49', status: 'Success', time: '2 mins ago' },
+                                      { id: 'TXN12547', name: 'Green Leaf Restaurant', amt: '₹49', status: 'Success', time: '15 mins ago' },
+                                      { id: 'TXN12546', name: 'Vetri Catering Service', amt: '₹99', status: 'Success', time: '32 mins ago' },
+                                      { id: 'TXN12545', name: 'Tech Solutions', amt: '₹49', status: 'Failed', time: '1 hour ago' },
+                                      { id: 'TXN12544', name: 'Anu Beauty Parlour', amt: '₹49', status: 'Success', time: '2 hours ago' }
+                                    ]
+                                )
                             ).slice(0, 5).map((txn, idx) => (
                               <tr key={idx} 
                                 onClick={() => { setSelectedTx(txn.raw || txn); setShowTxModal(true); }}
@@ -3244,26 +3358,37 @@ const handlePartnerAction = async (partnerId, action) => {
                         </span>
                       </div>
                       
-                      <div className="flex-1 flex flex-col gap-3 py-3 overflow-y-auto pr-1">
-                        {[
-                          { rank: 1, name: 'Green Leaf Restaurant', views: '4,256', rate: '4.8', leads: '126', sector: 'Food & Restaurants', icon: '🟢' },
-                          { rank: 2, name: 'Sri Lakshmi Electricals', views: '3,782', rate: '4.6', leads: '98', sector: 'Electrical Services', icon: '⚡' },
-                          { rank: 3, name: 'Royal Car Care', views: '3,421', rate: '4.7', leads: '87', sector: 'Automotive', icon: '🔵' }
-                        ].map((top, idx) => (
+                        <div className="flex-1 flex flex-col gap-3 py-3 overflow-y-auto pr-1">{(dashboardStats?.topBusinesses && dashboardStats.topBusinesses.length > 0
+                          ? dashboardStats.topBusinesses.map(t => ({
+                              _id: t._id,
+                              rank: t.rank,
+                              name: t.name,
+                              views: t.views.toLocaleString('en-IN'),
+                              rate: t.rate.toFixed(1),
+                              leads: t.leads.toLocaleString('en-IN'),
+                              sector: t.sector,
+                              icon: t.icon
+                            }))
+                          : [
+                              { rank: 1, name: 'Green Leaf Restaurant', views: '4,256', rate: '4.8', leads: '126', sector: 'Food & Restaurants', icon: '🟢' },
+                              { rank: 2, name: 'Sri Lakshmi Electricals', views: '3,782', rate: '4.6', leads: '98', sector: 'Electrical Services', icon: '⚡' },
+                              { rank: 3, name: 'Royal Car Care', views: '3,421', rate: '4.7', leads: '87', sector: 'Automotive', icon: '🔵' }
+                            ]
+                        ).map((top, idx) => (
                           <div key={idx} 
                             onClick={() => {
-                              const biz = businesses.find(b => b.name.toLowerCase() === top.name.toLowerCase());
+                              const biz = businesses.find(b => b._id === top._id || b.name.toLowerCase() === top.name.toLowerCase());
                               setSelectedBiz(biz || {
                                 name: top.name,
                                 category: top.sector,
-                                rating: top.rate,
-                                googleRating: top.rate,
-                                views: top.views,
-                                leads: top.leads,
+                                rating: Number(top.rate),
+                                googleRating: Number(top.rate),
+                                views: parseInt(top.views.replace(/,/g, '')),
+                                leads: parseInt(top.leads.replace(/,/g, '')),
                                 status: 'Approved',
-                                ownerName: 'Muthuvel S.',
-                                email: 'muthuvel@gmail.com',
-                                phone: '+91 94435 99999',
+                                ownerName: 'Merchant',
+                                email: '',
+                                phone: '',
                                 locality: 'Udumalpet',
                                 createdAt: new Date()
                               });
@@ -3354,30 +3479,20 @@ const handlePartnerAction = async (partnerId, action) => {
                         ].map((act, idx) => (
                           <div key={idx} onClick={act.onClick} className="flex flex-col items-center gap-1.5 cursor-pointer group">
                             <span className={`h-9 w-9 rounded-full flex items-center justify-center transition-all border group-hover:text-[#027244] group-hover:border-[#027244] group-hover:bg-[#027244]/10 ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-550'}`}>
-
                               {act.icon}
                             </span>
                             <span className={`text-[7.5px] font-black uppercase tracking-wider text-center transition-colors ${themeMode === 'dark' ? 'text-slate-400 group-hover:text-white' : 'text-slate-550 group-hover:text-[#027244]'}`}>{act.label}</span>
-
                           </div>
                         ))}
                       </div>
 
                       {/* Log List */}
                       <div className="flex-1 flex flex-col gap-2 overflow-y-auto mt-2 text-left border-t border-slate-850 pt-3 pr-1">
-                        {[
-                          { log: 'New business "Sri Lakshmi Electricals" registered', time: '2 mins ago', color: 'text-[#027244] bg-[#027244]/10' },
-                          { log: 'Event "Temple Festival 2025" submitted for approval', time: '15 mins ago', color: 'text-purple-400 bg-purple-500/10' },
-                          { log: 'Blog post "Top 10 Places in Udumalpet" published', time: '1 hour ago', color: 'text-pink-400 bg-pink-500/10' },
-                          { log: 'Payment of ₹49 received from Tech Solutions', time: '2 hours ago', color: 'text-emerald-400 bg-emerald-500/10' },
-                          { log: 'Review reported for "XYZ Restaurant"', time: '3 hours ago', color: 'text-rose-455 bg-rose-500/10' }
-                        ].map((actLog, idx) => (
+                        {activityLogs.map((actLog, idx) => (
                           <div key={idx} className={`flex items-center gap-2 p-1.5 rounded-lg transition-colors ${themeMode === 'dark' ? 'bg-slate-950/10 hover:bg-slate-950/30' : 'bg-slate-50/50 hover:bg-slate-100/50 border border-slate-100/50'}`}>
-
                             <span className={`h-1.5 w-1.5 rounded-full ${actLog.color.split(' ')[0]} shrink-0`} />
                             <div className="flex flex-col flex-1 min-w-0">
                               <span className={`text-[9.5px] font-bold truncate ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>{actLog.log}</span>
-
                               <span className="text-[7.5px] text-slate-500 font-semibold">{actLog.time}</span>
                             </div>
                           </div>
@@ -3389,7 +3504,6 @@ const handlePartnerAction = async (partnerId, action) => {
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
-                    
                     {/* Live system monitoring console - Terminal Shell style */}
                     <div className="lg:col-span-2 bg-[#030712] text-emerald-400 border border-emerald-500/20 rounded-[28px] p-6 shadow-[0_0_35px_rgba(16,185,129,0.08)] flex flex-col gap-4 max-h-[360px] overflow-y-auto font-mono">
                       <div className="flex justify-between items-center border-b border-slate-800/80 pb-3">
@@ -9557,14 +9671,15 @@ const handlePartnerAction = async (partnerId, action) => {
                 <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
                   <span>Merchant/Business</span>
                   <span className={`text-sm font-extrabold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                    {selectedTx.name || selectedTx.businessName || 'Sri Lakshmi Electricals'}
+                    {selectedTx.businessId?.name || selectedTx.eventId?.title || selectedTx.userId?.fullName || selectedTx.userId?.name || selectedTx.name || selectedTx.businessName || 'Platform Merchant'}
                   </span>
                 </div>
                 <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
                   <span>Subscription Plan</span>
                   <span className={`text-sm font-extrabold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
                     {(() => {
-                      const pType = selectedTx.planType;
+                      if (selectedTx.eventId) return 'Event Listing Fee';
+                      const pType = selectedTx.planType || (selectedTx.subscriptionId ? 'Premium Subscription' : null);
                       if (!pType) return 'Premium Listing';
                       const clean = pType.trim();
                       if (/plan$/i.test(clean)) {

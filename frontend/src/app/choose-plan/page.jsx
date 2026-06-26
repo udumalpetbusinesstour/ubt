@@ -40,16 +40,13 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
     const storedToken = localStorage.getItem('ubt_token');
     const storedUser = localStorage.getItem('ubt_user');
 
-    if (!storedToken || !storedUser) {
-      navigate('/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
-      return;
-    }
-
-    setToken(storedToken);
-    try {
-      setUser(JSON.parse(storedUser));
-    } catch (e) {
-      console.error('Error parsing user storage:', e);
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error('Error parsing user storage:', e);
+      }
     }
 
     initializeBusinessAndReferrals(storedToken);

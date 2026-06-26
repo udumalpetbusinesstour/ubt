@@ -90,6 +90,13 @@ const initializeServer = async () => {
     // 5. Initialize Weekly Google Reviews Sync Cron
     startGoogleReviewsCron();
 
+    // 6. Seed and sync default categories on boot
+    console.log('[Boot] Seeding and syncing category systems...');
+    const { seedDefaultCategories } = require('./models/Category');
+    await seedDefaultCategories();
+    const { syncAllApprovedCategories } = require('./utils/categoryHelper');
+    await syncAllApprovedCategories();
+
     console.log('UBT Backend Subsystems initialized and synced successfully.');
   } catch (error) {
     console.error('API bootloader initialization sequence failed:', error.message);

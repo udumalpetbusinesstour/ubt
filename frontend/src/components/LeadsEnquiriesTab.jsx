@@ -24,7 +24,10 @@ export default function LeadsEnquiriesTab({
           <span className="text-[11px] text-slate-450 font-semibold mt-1">Aggregate direct customer inquiries, receive phone callback requests, and initiate instant WhatsApp replies</span>
         </div>
         <div className="bg-emerald-55/15 text-[#027244] border border-emerald-100 px-3.5 py-1.5 rounded-2xl text-[11px] font-black uppercase inline-flex items-center gap-1.5 shrink-0 select-none shadow-xs font-sans">
-          <Mail className="h-3.5 w-3.5" /> {(leadsList || []).filter(l => l.status !== 'Rectified').length} Active Enquiries
+          <Mail className="h-3.5 w-3.5" /> {(leadsList || []).filter(l => {
+            const isClickLog = l.name.startsWith('Customer (');
+            return l.status !== 'Rectified' && !isClickLog;
+          }).length} Active Enquiries
         </div>
       </div>
 
@@ -54,12 +57,14 @@ export default function LeadsEnquiriesTab({
           <div className="flex-grow overflow-y-auto divide-y divide-slate-100">
             {leadsList
               .filter(l => {
+                const isClickLog = l.name.startsWith('Customer (');
+                if (isClickLog) return false;
                 if (leadFilter === 'Urgent' && l.name !== 'Suresh Kumar' && l.name !== 'Kavin Prakash') return false;
                 if (leadFilter === 'Responded' && !l.responded) return false;
                 return true;
               })
               .map((lead) => {
-                const originalIdx = leadsList.findIndex(l => l.name === lead.name);
+                const originalIdx = leadsList.findIndex(l => l._id ? l._id === lead._id : l.name === lead.name);
                 const isSelected = selectedLeadIdx === originalIdx;
                 
                 return (
@@ -153,8 +158,14 @@ export default function LeadsEnquiriesTab({
                       <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Customer Message</span>
                       <div className="bg-[#F8FAFC] border border-slate-200/60 p-4.5 rounded-2xl mt-1.5 relative overflow-hidden shadow-3xs">
                         <div className="absolute top-0 left-0 w-1 h-full bg-[#027244]" />
-                        <p className="text-slate-600 text-xs font-semibold leading-relaxed">
-                          "Hello! I saw your shop profile on Udumalpet Business Tour. I am looking to get service support for <strong>{activeLead.category}</strong>. Please reach out to me callback immediately or text back on WhatsApp. My details are verified."
+                        <p className="text-slate-600 text-xs font-semibold leading-relaxed font-sans">
+                          {activeLead.message ? (
+                            `"${activeLead.message}"`
+                          ) : (
+                            <>
+                              "Hello! I saw your shop profile on Udumalpet Business Tour. I am looking to get service support for <strong>{activeLead.category}</strong>. Please reach out to me callback immediately or text back on WhatsApp. My details are verified."
+                            </>
+                          )}
                         </p>
                       </div>
                     </div>

@@ -326,6 +326,21 @@ export default function Login() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    // Push state to create a history entry we can intercept
+    window.history.pushState(null, null, window.location.pathname);
+    
+    const handlePopState = (event) => {
+      // When back is pressed, redirect to home page
+      navigate('/', { replace: true });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [navigate]);
+
   const handlePasswordLogin = async (e) => {
     e.preventDefault();
     if (!emailOrPhone || !password) {
