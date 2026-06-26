@@ -751,7 +751,7 @@ export default function Home() {
       <section className="w-full relative min-h-[500px] sm:min-h-[620px] bg-[#F8FAFC] flex items-center justify-center pt-4 pb-14 sm:pt-6 sm:pb-28 px-4 md:px-8 overflow-hidden z-0">
         
         {/* Background Image wrapper to prevent scaling blur on ultra-wide screens */}
-        <div className="absolute inset-0 max-w-[1440px] mx-auto w-full h-full z-0 overflow-hidden">
+        <div className="absolute inset-0 max-w-[1680px] 2xl:max-w-[1820px] mx-auto w-full h-full z-0 overflow-hidden">
           <img 
             src="/thirumoorthy_dam.png" 
             alt="Thirumoorthy Hills Background"
@@ -762,7 +762,7 @@ export default function Home() {
         </div>
 
         {/* Hero main body */}
-        <div className="relative max-w-[1440px] w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center z-20">
+        <div className="relative max-w-[1680px] 2xl:max-w-[1820px] w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center z-20">
           
           {/* Left panel: text & search */}
           <div className="lg:col-span-8 flex flex-col items-start text-left">
