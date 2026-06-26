@@ -4243,26 +4243,26 @@ function DashboardContent() {
           {business && !isExpired && (
             <>
               {business.status === 'Pending Verification' && (
-                <div className="bg-amber-50 border border-amber-200 text-amber-805 rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn text-left">
+                <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn text-left">
                   <div className="flex items-start gap-3.5">
                     <AlertTriangle className="h-5.5 w-5.5 text-amber-500 shrink-0 mt-0.5" />
                     <div className="flex flex-col gap-0.5">
                       <span className="font-extrabold text-xs text-slate-800">Verification Pending</span>
-                      <p className="text-[11px] text-slate-600 font-semibold leading-relaxed">
+                      <p className="text-xs text-slate-700 font-semibold leading-relaxed">
                         Your listing is successfully submitted. It will become live globally in the directory as soon as the administrators verify your business details.
                       </p>
                       {(business.googlePlaceId || business.googleBusinessLink || business.googleLinked) ? (
                         <div className="flex items-center gap-1.5 mt-1.5">
-                          <span className="bg-blue-100 text-blue-700 border border-blue-200 text-[8.5px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-0.5 shadow-2xs">
+                          <span className="bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-0.5 shadow-2xs">
                             ⚡ Google Connected — Faster Approval Active
                           </span>
-                          <span className="text-[9.5px] font-extrabold text-slate-450">High-trust priority queue active!</span>
+                          <span className="text-[11px] font-extrabold text-slate-600">High-trust priority queue active!</span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-1.5 mt-1.5">
                           <button
                             onClick={() => setShowVerifyModal(true)}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1.5 px-3 rounded-lg transition-all shadow-sm cursor-pointer border-none"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] py-1.5 px-3 rounded-lg transition-all shadow-sm cursor-pointer border-none"
                           >
                             Link Google Business URL to speed up verification
                           </button>
@@ -5261,14 +5261,14 @@ function DashboardContent() {
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-2">
                           <h3 className="font-extrabold text-sm text-[#001c41]">Google Reviews</h3>
-                          <span className="bg-emerald-50 text-[#027244] border border-emerald-100 px-2 py-0.5 rounded-full text-[8.5px] font-extrabold inline-flex items-center gap-1 shrink-0 select-none">
+                          <span className="bg-emerald-50 text-[#027244] border border-emerald-100 px-2 py-0.5 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1 shrink-0 select-none">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Connected
                           </span>
                         </div>
-                        <p className="text-slate-500 text-[10.5px] font-semibold leading-relaxed">
+                        <p className="text-slate-650 text-xs font-semibold leading-relaxed">
                           Your Google Business Profile is connected. We are showing your latest Google reviews.
                         </p>
-                        <span className="text-[9.5px] text-slate-400 font-bold block mt-1.5">
+                        <span className="text-xs text-slate-500 font-bold block mt-1.5">
                           Last synced: 29 May 2025, 10:30 AM
                         </span>
                       </div>
@@ -6155,7 +6155,7 @@ function DashboardContent() {
                                       </div>
                                       <div className="flex flex-col">
                                         <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName || 'Anonymous'}</span>
-                                        <span className={`text-[8.5px] font-bold uppercase tracking-widest mt-1 block ${rev.isGoogle ? 'text-amber-650' : 'text-slate-450'}`}>
+                                        <span className={`text-xs font-bold uppercase tracking-widest mt-1 block ${rev.isGoogle ? 'text-amber-650' : 'text-slate-500'}`}>
                                           {rev.isGoogle ? 'Synced Google Review' : 'Verified Customer'}
                                         </span>
                                       </div>
@@ -6166,7 +6166,7 @@ function DashboardContent() {
                                       ))}
                                     </div>
                                   </div>
-                                  <p className="text-[11.5px] text-slate-550 font-medium leading-relaxed mt-0.5 text-justify">{rev.text}</p>
+                                  <p className="text-xs text-slate-700 font-medium leading-relaxed mt-0.5 text-justify">{rev.text}</p>
                                 </div>
                               ))}
                             </div>
@@ -8807,7 +8807,7 @@ function DashboardContent() {
               setShowRenewModal(false);
             }
           }}
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-none z-50 flex items-center justify-center p-4 overflow-y-auto"
         >
           <div 
             className="max-w-4xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-6 animate-scaleUp text-left max-h-[90vh] overflow-y-auto scrollbar-none relative my-auto"
@@ -9032,7 +9032,7 @@ function DashboardContent() {
 
       {/* MODAL 1.5: Google My Business Verification Modal */}
       {showVerifyModal && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-none z-50 flex items-center justify-center p-4 animate-fadeIn">
           <div className="max-w-md w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-6 animate-scaleUp text-left relative">
             
             {/* Close button */}
@@ -9102,7 +9102,7 @@ function DashboardContent() {
 
       {/* MODAL 2: Edit Profile Details Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-none z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div 
             className="max-w-2xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] flex flex-col animate-scaleUp text-left h-[85vh] max-h-[85vh] overflow-hidden font-sans my-auto"
           >
@@ -9751,7 +9751,7 @@ function DashboardContent() {
 
       {/* MODAL: Add / Edit Branch Modal */}
       {showBranchModal && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-none z-50 flex items-center justify-center p-4">
           <div className="max-w-2xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-5 animate-scaleUp text-left max-h-[85vh] overflow-y-auto scrollbar-none font-sans">
             <div className="flex justify-between items-start border-b border-slate-100 pb-3">
               <div>
@@ -9926,7 +9926,7 @@ function DashboardContent() {
 
       {/* MODAL 3: Photos Gallery & Upload Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-none z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div 
             className="max-w-lg w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 flex flex-col gap-5 animate-scaleUp text-left my-auto"
           >
@@ -10022,7 +10022,7 @@ function DashboardContent() {
 
       {/* MODAL 4: Dashboard Write Blog Post Modal */}
       {showWriteBlogModal && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-none z-50 flex items-center justify-center p-4">
           <div className="max-w-xl w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 flex flex-col gap-5 animate-scaleUp text-left max-h-[90vh] overflow-y-auto">
             
             <div className="flex justify-between items-start border-b border-slate-100 pb-3">
@@ -10284,7 +10284,7 @@ function DashboardContent() {
 
       {/* MODAL 3: List New Event Modal */}
       {showCreateEventModal && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-none z-50 flex items-center justify-center p-4">
           <div className="max-w-lg w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 flex flex-col gap-4 animate-scaleUp text-left max-h-[90vh] overflow-y-auto">
             
             <div className="flex justify-between items-start border-b border-slate-100 pb-3">
@@ -10452,7 +10452,7 @@ function DashboardContent() {
 
       {/* MODAL 5: Pay & Complete Event Listing Modal */}
       {showCompleteEventModal && completeEvent && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-none z-50 flex items-center justify-center p-4">
           <div className="max-w-2xl w-full bg-white border border-slate-200 shadow-2xl rounded-3xl p-7 flex flex-col gap-5 animate-scaleUp text-left max-h-[90vh] overflow-y-auto">
             
             <div className="flex justify-between items-start border-b border-slate-100 pb-3.5">
@@ -10749,7 +10749,7 @@ function DashboardContent() {
 
       {/* MODAL 6: Add / Edit Menu Item Modal */}
       {showMenuItemModal && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-none z-50 flex items-center justify-center p-4 animate-fadeIn">
           <div className="max-w-md w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-6 animate-scaleUp text-left relative">
             
             <button 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { 
   ShieldCheck, RefreshCw, Star, Check, X, AlertCircle, AlertTriangle, 
   ArrowRight, Eye, Grid, Shield, CreditCard, LayoutDashboard, Store, BookOpen, Calendar, 
@@ -50,7 +50,14 @@ export default function SuperAdminDashboard() {
   };
 
   // Tab navigation state
-  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'Dashboard';
+  const setActiveTab = (tab) => {
+    setSearchParams(params => {
+      params.set('tab', tab);
+      return params;
+    }, { replace: false });
+  };
   const [recentRegTab, setRecentRegTab] = useState('Businesses');
   const [auditSubTab, setAuditSubTab] = useState('Businesses'); // Businesses | Blogs | Testimonials
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -1304,6 +1311,10 @@ const handlePartnerAction = async (partnerId, action) => {
     if (type === 'suspend') nextStatus = 'Suspended';
     if (type === 'hide') nextStatus = 'Hidden';
     if (type === 'unhide') nextStatus = 'Approved';
+    
+    // Update local state immediately to avoid stale rendering/flickering
+    setBusinesses(prev => prev.map(b => b._id === bizId ? { ...b, status: nextStatus } : b));
+    
     try {
       const res = await fetch(`http://localhost:5000/api/superadmin/businesses/${bizId}/status`, {
         method: 'PUT',
@@ -1548,6 +1559,12 @@ const handlePartnerAction = async (partnerId, action) => {
   };
 
   const handleBlogAction = async (blogId, status, suggestions = '') => {
+    // Update local state immediately to avoid stale rendering/flickering
+    setBlogs(prev => prev.map(b => b._id === blogId ? { ...b, status, revisionSuggestions: suggestions } : b));
+    if (selectedBlogModal && selectedBlogModal._id === blogId) {
+      setSelectedBlogModal(prev => ({ ...prev, status, revisionSuggestions: suggestions }));
+    }
+
     try {
       const res = await fetch(`http://localhost:5000/api/superadmin/blogs/${blogId}`, {
         method: 'PUT',
@@ -1589,6 +1606,12 @@ const handlePartnerAction = async (partnerId, action) => {
   };
 
   const handleEventAction = async (eventId, status) => {
+    // Update local state immediately to avoid stale rendering/flickering
+    setEvents(prev => prev.map(e => e._id === eventId ? { ...e, status } : e));
+    if (editingEvent && editingEvent._id === eventId) {
+      setEditingEvent(prev => ({ ...prev, status }));
+    }
+
     try {
       const res = await fetch(`http://localhost:5000/api/superadmin/events/${eventId}`, {
         method: 'PUT',
@@ -2730,7 +2753,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     const cards = [
                       { title: 'Total Businesses', val: dateFilteredBusinesses.length || 0, desc: `+${businessesThisMonth} this month`, pct: `+${businessesPct}%`, icon: <Store className="h-5 w-5" />, color: 'from-purple-500/10 border-purple-500/20 text-purple-500', tabId: 'Businesses' },
                       { title: 'Active Businesses', val: activeFilteredCount || 0, desc: `${activePercentOfTotal}% of total`, pct: `+${activeApprovedPct}%`, icon: <CheckCircle2 className="h-5 w-5" />, color: 'from-emerald-500/10 border-emerald-500/20 text-emerald-500', tabId: 'Businesses' },
-                      { title: 'Total Users', val: dateFilteredSignups.length || 0, desc: `+${usersThisMonth} this month`, pct: `+${usersPct}%`, icon: <User className="h-5 w-5" />, color: 'from-amber-500/10 border-amber-500/20 text-amber-500', tabId: 'Merchants' },
+                      { title: 'Total Users', val: dateFilteredSignups.length || 0, desc: `+${usersThisMonth} this month`, pct: `+${usersPct}%`, icon: <User className="h-5 w-5" />, color: 'from-amber-500/10 border-amber-500/20 text-amber-500', tabId: 'Signups' },
                       { title: 'Events Listed', val: dateFilteredEvents.length || 0, desc: `+${eventsThisMonth} this month`, pct: `+${eventsPct}%`, icon: <Calendar className="h-5 w-5" />, color: 'from-pink-500/10 border-pink-500/20 text-pink-500', tabId: 'Events Moderation' },
                       { title: 'Blog Posts', val: dateFilteredBlogs.length || 0, desc: `+${blogsThisMonth} this month`, pct: `+${blogsPct}%`, icon: <BookOpen className="h-5 w-5" />, color: 'from-blue-500/10 border-blue-500/20 text-blue-500', tabId: 'Blogs Moderation' },
                       { title: 'Total Revenue', val: '₹' + (dashboardStats?.totalRevenue !== undefined ? dashboardStats.totalRevenue : dateFilteredSubscriptions.reduce((sum, s) => sum + (s.amount || 0), 0)).toLocaleString('en-IN'), desc: `+₹${revenueThisMonthVal.toLocaleString('en-IN')} this month`, pct: `+${revenuePctVal}%`, icon: <Coins className="h-5 w-5" />, color: 'from-cyan-500/10 border-cyan-500/20 text-cyan-500', tabId: 'Subscriptions' }
@@ -3805,21 +3828,21 @@ const handlePartnerAction = async (partnerId, action) => {
                               </button>
                               
                               {/* Direct Approve/Reject for non-approved states */}
-                              {b.status !== 'Approved' && (
-                                <button
-                                  onClick={() => handleAction(b._id, 'approve')}
-                                  className="col-span-2 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer text-center transition-colors shadow-xs"
-                                >
-                                  Approve Listing
-                                </button>
-                              )}
-                              {b.status === 'Approved' && (
-                                <button
-                                  onClick={() => handleAction(b._id, 'reject')}
-                                  className="col-span-2 py-2 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-500 font-extrabold text-[10.5px] rounded-xl cursor-pointer text-center transition-colors"
-                                >
-                                  Reject Listing
-                                </button>
+                              {b.status !== 'Approved' && b.status !== 'Rejected' && (
+                                <>
+                                  <button
+                                    onClick={() => handleAction(b._id, 'reject')}
+                                    className="py-2 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-500 font-extrabold text-[10.5px] rounded-xl cursor-pointer text-center transition-colors"
+                                  >
+                                    Reject Listing
+                                  </button>
+                                  <button
+                                    onClick={() => handleAction(b._id, 'approve')}
+                                    className="py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer text-center transition-colors shadow-xs"
+                                  >
+                                    Approve Listing
+                                  </button>
+                                </>
                               )}
                             </div>
                           </div>
@@ -5175,20 +5198,22 @@ const handlePartnerAction = async (partnerId, action) => {
                             >
                               {e.status === 'Hidden' ? 'Unhide' : 'Hide'}
                             </button>
-                            <button 
-                              onClick={() => handleEventAction(e._id, 'Rejected')}
-                              disabled={e.status === 'Rejected'}
-                              className="px-3.5 py-1.5 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-500 font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 transition-colors"
-                            >
-                              Reject
-                            </button>
-                            <button 
-                              onClick={() => handleEventAction(e._id, 'Approved')}
-                              disabled={e.status === 'Approved'}
-                              className="px-4.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 transition-colors shadow shadow-emerald-800/10"
-                            >
-                              Approve & Publish
-                            </button>
+                            {e.status !== 'Approved' && e.status !== 'Rejected' && (
+                              <>
+                                <button 
+                                  onClick={() => handleEventAction(e._id, 'Rejected')}
+                                  className="px-3.5 py-1.5 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-500 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors"
+                                >
+                                  Reject
+                                </button>
+                                <button 
+                                  onClick={() => handleEventAction(e._id, 'Approved')}
+                                  className="px-4.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors shadow shadow-emerald-800/10"
+                                >
+                                  Approve & Publish
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -7895,7 +7920,7 @@ const handlePartnerAction = async (partnerId, action) => {
               themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-200'
             }`}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {selectedBiz.status !== 'Approved' && (
+                {selectedBiz.status !== 'Approved' && selectedBiz.status !== 'Rejected' && (
                   <button 
                     onClick={() => {
                       handleAction(selectedBiz._id, 'reject');
@@ -7939,7 +7964,7 @@ const handlePartnerAction = async (partnerId, action) => {
                 <Eye className="h-4 w-4" />
                 <span>View Public Landing Page</span>
               </button>
-              {selectedBiz.status !== 'Rejected' && (
+              {selectedBiz.status !== 'Approved' && selectedBiz.status !== 'Rejected' && (
                 <button 
                   onClick={() => {
                     handleAction(selectedBiz._id, 'approve');
@@ -9244,20 +9269,30 @@ const handlePartnerAction = async (partnerId, action) => {
                     Delete Event
                   </button>
 
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      handleEventAction(editingEvent._id, editingEvent.status === 'Approved' ? 'Rejected' : 'Approved');
-                      setEditingEvent(prev => ({ ...prev, status: prev.status === 'Approved' ? 'Rejected' : 'Approved' }));
-                    }}
-                    className={`px-4 py-2 border text-xs font-extrabold rounded-xl cursor-pointer ${
-                      editingEvent.status === 'Approved' 
-                        ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' 
-                        : 'bg-[#027244]/15 border-[#027244]/25 text-[#027244]'
-                    }`}
-                  >
-                    {editingEvent.status === 'Approved' ? 'Reject' : 'Approve & Publish'}
-                  </button>
+                  {editingEvent.status !== 'Approved' && editingEvent.status !== 'Rejected' && (
+                    <>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          handleEventAction(editingEvent._id, 'Rejected');
+                          setEditingEvent(prev => ({ ...prev, status: 'Rejected' }));
+                        }}
+                        className="px-4 py-2 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-500 text-xs font-extrabold rounded-xl cursor-pointer"
+                      >
+                        Reject Event
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          handleEventAction(editingEvent._id, 'Approved');
+                          setEditingEvent(prev => ({ ...prev, status: 'Approved' }));
+                        }}
+                        className="px-4 py-2 bg-[#027244]/15 border-[#027244]/25 text-[#027244] text-xs font-extrabold rounded-xl cursor-pointer"
+                      >
+                        Approve & Publish
+                      </button>
+                    </>
+                  )}
 
                   <button 
                     type="submit"
@@ -9466,28 +9501,30 @@ const handlePartnerAction = async (partnerId, action) => {
                 >
                   {selectedBlogModal.status === 'Hidden' ? 'Unhide' : 'Hide'}
                 </button>
-                <button 
-                  onClick={() => {
-                    handleBlogAction(selectedBlogModal._id, 'Rejected');
-                    setSelectedBlogModal(null);
-                  }}
-                  disabled={selectedBlogModal.status === 'Rejected'}
-                  className={`px-4.5 py-2.5 border font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 transition-colors ${
-                    themeMode === 'dark' ? 'border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-850' : 'border-slate-200 bg-slate-100 text-slate-755 hover:bg-slate-200'
-                  }`}
-                >
-                  Reject & Hide
-                </button>
-                <button 
-                  onClick={() => {
-                    handleBlogAction(selectedBlogModal._id, 'Approved');
-                    setSelectedBlogModal(null);
-                  }}
-                  disabled={selectedBlogModal.status === 'Approved'}
-                  className="px-5 py-2.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 transition-all shadow shadow-emerald-800/10"
-                >
-                  Approve & Publish
-                </button>
+                {selectedBlogModal.status !== 'Approved' && selectedBlogModal.status !== 'Rejected' && (
+                  <>
+                    <button 
+                      onClick={() => {
+                        handleBlogAction(selectedBlogModal._id, 'Rejected');
+                        setSelectedBlogModal(null);
+                      }}
+                      className={`px-4.5 py-2.5 border font-extrabold text-xs rounded-xl cursor-pointer transition-colors ${
+                        themeMode === 'dark' ? 'border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-850' : 'border-slate-200 bg-slate-100 text-slate-755 hover:bg-slate-200'
+                      }`}
+                    >
+                      Reject & Hide
+                    </button>
+                    <button 
+                      onClick={() => {
+                        handleBlogAction(selectedBlogModal._id, 'Approved');
+                        setSelectedBlogModal(null);
+                      }}
+                      className="px-5 py-2.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer transition-all shadow shadow-emerald-800/10"
+                    >
+                      Approve & Publish
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 

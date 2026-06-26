@@ -1661,7 +1661,7 @@ export default function AddBusiness() {
 
 
 
-                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-xs text-slate-500 leading-relaxed font-semibold">
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-xs text-slate-700 leading-relaxed font-semibold">
                   <span className="font-extrabold text-slate-700 block mb-0.5">ℹ️ Google Business Profile Verification</span>
                   Paste your Google Maps / Business Profile link above. You can also search your business name above to autofill all details and import Google Reviews automatically.
                 </div>

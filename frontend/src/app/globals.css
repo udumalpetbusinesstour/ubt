@@ -17,6 +17,26 @@
   --text-4xl: 2.6rem;   /* default 2.25rem */
   --text-5xl: 3.4rem;   /* default 3rem */
   --text-6xl: 4.2rem;   /* default 3.75rem */
+
+  /* Custom Tailwind Theme Colors used in the application */
+  --color-slate-450: #707f94;
+  --color-slate-455: #6d7c92;
+  --color-slate-205: #e1e7f0;
+  --color-slate-805: #1a2436;
+  --color-amber-805: #8c4f0d;
+  --color-amber-450: #d97706;
+  --color-blue-805: #103b7a;
+  --color-blue-450: #3b82f6;
+  --color-blue-150: #bfdbfe;
+  --color-emerald-450: #10b981;
+  --color-rose-455: #e11d48;
+  --color-rose-500: #f43f5e;
+  --color-red-550: #ef4444;
+  --color-red-650: #dc2626;
+  --color-red-655: #dc2626;
+  --color-slate-905: #0f172a;
+  --color-slate-955: #020617;
+  --color-emerald-55: #10b981;
 }
 
 :root {

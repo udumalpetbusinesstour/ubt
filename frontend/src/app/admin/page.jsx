@@ -1362,6 +1362,12 @@ export default function AdminDashboard() {
     if (type === 'hide') nextStatus = 'Hidden';
     if (type === 'unhide') nextStatus = 'Approved';
     
+    // Update local state immediately to avoid stale rendering/flickering
+    setBusinesses(prev => prev.map(b => b._id === bizId ? { ...b, status: nextStatus, isFoundingMember: type === 'approve' ? isFoundingMemberCheck : b.isFoundingMember } : b));
+    if (selectedBiz && selectedBiz._id === bizId) {
+      setSelectedBiz(prev => ({ ...prev, status: nextStatus, isFoundingMember: type === 'approve' ? isFoundingMemberCheck : prev.isFoundingMember }));
+    }
+    
     try {
       const res = await fetch(`http://localhost:5000/api/admin/businesses/${bizId}/status`, {
         method: 'PUT',
@@ -1593,6 +1599,12 @@ export default function AdminDashboard() {
   };
 
   const handleBlogAction = async (blogId, status, suggestions = '') => {
+    // Update local state immediately to avoid stale rendering/flickering
+    setBlogs(prev => prev.map(b => b._id === blogId ? { ...b, status, revisionSuggestions: suggestions } : b));
+    if (selectedBlogModal && selectedBlogModal._id === blogId) {
+      setSelectedBlogModal(prev => ({ ...prev, status, revisionSuggestions: suggestions }));
+    }
+
     try {
       const res = await fetch(`http://localhost:5000/api/admin/blogs/moderate`, {
         method: 'PUT',
@@ -1639,6 +1651,9 @@ export default function AdminDashboard() {
   };
 
   const handleEventAction = async (eventId, status) => {
+    // Update local state immediately to avoid stale rendering/flickering
+    setEvents(prev => prev.map(e => e._id === eventId ? { ...e, status } : e));
+
     try {
       const res = await fetch(`http://localhost:5000/api/admin/events/moderate`, {
         method: 'PUT',
@@ -2274,21 +2289,21 @@ export default function AdminDashboard() {
                                     >
                                       Vet details
                                     </button>
-                                    {b.status !== 'Approved' && (
-                                       <button
-                                         onClick={() => { handleAction(b._id, 'approve'); showToast('Listing approved!', 'success'); }}
-                                         className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
-                                       >
-                                         Approve
-                                       </button>
-                                     )}
-                                     {b.status !== 'Rejected' && (
-                                       <button
-                                         onClick={() => { handleAction(b._id, 'reject'); showToast('Listing rejected.', 'error'); }}
-                                         className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
-                                       >
-                                         Reject
-                                       </button>
+                                    {b.status !== 'Approved' && b.status !== 'Rejected' && (
+                                      <>
+                                        <button
+                                          onClick={() => { handleAction(b._id, 'reject'); showToast('Listing rejected.', 'error'); }}
+                                          className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
+                                        >
+                                          Reject
+                                        </button>
+                                        <button
+                                          onClick={() => { handleAction(b._id, 'approve'); showToast('Listing approved!', 'success'); }}
+                                          className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
+                                        >
+                                          Approve
+                                        </button>
+                                      </>
                                      )}
                                     <button
                                       onClick={() => handleDeleteBusiness(b._id)}
@@ -2350,20 +2365,22 @@ export default function AdminDashboard() {
                               >
                                 {b.status === 'Hidden' ? 'Unhide' : 'Hide'}
                               </button>
-                              <button 
-                                onClick={() => handleBlogAction(b._id, 'Rejected')}
-                                disabled={b.status === 'Rejected'}
-                                className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-2xs"
-                              >
-                                Reject
-                              </button>
-                              <button 
-                                onClick={() => handleBlogAction(b._id, 'Approved')}
-                                disabled={b.status === 'Approved'}
-                                className="px-4.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-sm shadow-emerald-800/10"
-                              >
-                                Approve & Publish
-                              </button>
+                              {b.status !== 'Approved' && b.status !== 'Rejected' && (
+                                <>
+                                  <button 
+                                    onClick={() => handleBlogAction(b._id, 'Rejected')}
+                                    className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow-2xs"
+                                  >
+                                    Reject
+                                  </button>
+                                  <button 
+                                    onClick={() => handleBlogAction(b._id, 'Approved')}
+                                    className="px-4.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow-sm shadow-emerald-800/10"
+                                  >
+                                    Approve & Publish
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -2420,20 +2437,22 @@ export default function AdminDashboard() {
                                   >
                                     Delete
                                   </button>
-                                  <button 
-                                    onClick={() => handleEventAction(e._id, 'Rejected')}
-                                    disabled={e.status === 'Rejected'}
-                                    className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-2xs"
-                                  >
-                                    Reject
-                                  </button>
-                                  <button 
-                                    onClick={() => handleEventAction(e._id, 'Approved')}
-                                    disabled={e.status === 'Approved'}
-                                    className="px-4 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-sm"
-                                  >
-                                    Approve & Publish
-                                  </button>
+                                  {e.status !== 'Approved' && e.status !== 'Rejected' && (
+                                    <>
+                                      <button 
+                                        onClick={() => handleEventAction(e._id, 'Rejected')}
+                                        className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow-2xs"
+                                      >
+                                        Reject
+                                      </button>
+                                      <button 
+                                        onClick={() => handleEventAction(e._id, 'Approved')}
+                                        className="px-4 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow-sm"
+                                      >
+                                        Approve & Publish
+                                      </button>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -2630,13 +2649,21 @@ export default function AdminDashboard() {
                                   >
                                     View Profile
                                   </a>
-                                  {b.status !== 'Approved' && (
-                                    <button 
-                                      onClick={() => { handleAction(b._id, 'approve'); showToast('Listing approved!', 'success'); }}
-                                      className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer"
-                                    >
-                                      Approve
-                                    </button>
+                                  {b.status !== 'Approved' && b.status !== 'Rejected' && (
+                                    <>
+                                      <button 
+                                        onClick={() => { handleAction(b._id, 'reject'); showToast('Listing rejected.', 'error'); }}
+                                        className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-[10.5px] font-extrabold cursor-pointer"
+                                      >
+                                        Reject
+                                      </button>
+                                      <button 
+                                        onClick={() => { handleAction(b._id, 'approve'); showToast('Listing approved!', 'success'); }}
+                                        className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer"
+                                      >
+                                        Approve
+                                      </button>
+                                    </>
                                   )}
                                   <button 
                                     onClick={() => handleAction(b._id, b.status === 'Hidden' ? 'unhide' : 'hide')}
@@ -2648,14 +2675,6 @@ export default function AdminDashboard() {
                                   >
                                     {b.status === 'Hidden' ? 'Unhide' : 'Hide'}
                                   </button>
-                                  {b.status !== 'Rejected' && (
-                                    <button 
-                                      onClick={() => { handleAction(b._id, 'reject'); showToast('Listing rejected.', 'error'); }}
-                                      className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-[10.5px] font-extrabold cursor-pointer"
-                                    >
-                                      Reject
-                                    </button>
-                                  )}
                                   <button 
                                     onClick={() => handleDeleteBusiness(b._id)}
                                     className="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer transition-colors shadow-2xs"
@@ -2798,21 +2817,21 @@ export default function AdminDashboard() {
                             </button>
                             
                             <div className="flex gap-2">
-                              {b.status !== 'Approved' && (
-                                <button 
-                                  onClick={() => { handleAction(b._id, 'reject'); showToast('Listing rejected.', 'error'); }}
-                                  className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
-                                >
-                                  Reject
-                                </button>
-                              )}
-                              {b.status !== 'Rejected' && (
-                                <button 
-                                  onClick={() => { handleAction(b._id, 'approve'); showToast('Listing approved!', 'success'); }}
-                                  className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow shadow-emerald-800/10"
-                                >
-                                  Approve listing
-                                </button>
+                              {b.status !== 'Approved' && b.status !== 'Rejected' && (
+                                <>
+                                  <button 
+                                    onClick={() => { handleAction(b._id, 'reject'); showToast('Listing rejected.', 'error'); }}
+                                    className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                                  >
+                                    Reject
+                                  </button>
+                                  <button 
+                                    onClick={() => { handleAction(b._id, 'approve'); showToast('Listing approved!', 'success'); }}
+                                    className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow shadow-emerald-800/10"
+                                  >
+                                    Approve listing
+                                  </button>
+                                </>
                               )}
                             </div>
                           </div>
@@ -2873,18 +2892,22 @@ export default function AdminDashboard() {
                               >
                                 {b.status === 'Hidden' ? 'Unhide' : 'Hide'}
                               </button>
-                              <button 
-                                onClick={() => handleBlogAction(b._id, 'Rejected')}
-                                className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
-                              >
-                                Reject
-                              </button>
-                              <button 
-                                onClick={() => handleBlogAction(b._id, 'Approved')}
-                                className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow shadow-emerald-800/10"
-                              >
-                                Approve
-                              </button>
+                              {b.status !== 'Approved' && b.status !== 'Rejected' && (
+                                <>
+                                  <button 
+                                    onClick={() => handleBlogAction(b._id, 'Rejected')}
+                                    className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                                  >
+                                    Reject
+                                  </button>
+                                  <button 
+                                    onClick={() => handleBlogAction(b._id, 'Approved')}
+                                    className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow shadow-emerald-800/10"
+                                  >
+                                    Approve
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -2934,18 +2957,22 @@ export default function AdminDashboard() {
                                 >
                                   Delete
                                 </button>
-                                <button 
-                                  onClick={() => handleEventAction(e._id, 'Rejected')}
-                                  className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
-                                >
-                                  Reject
-                                </button>
-                                <button 
-                                  onClick={() => handleEventAction(e._id, 'Approved')}
-                                  className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow shadow-emerald-800/10"
-                                >
-                                  Approve
-                                </button>
+                                {e.status !== 'Approved' && e.status !== 'Rejected' && (
+                                  <>
+                                    <button 
+                                      onClick={() => handleEventAction(e._id, 'Rejected')}
+                                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
+                                    >
+                                      Reject
+                                    </button>
+                                    <button 
+                                      onClick={() => handleEventAction(e._id, 'Approved')}
+                                      className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow shadow-emerald-800/10"
+                                    >
+                                      Approve
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             </div>
                           );
@@ -3304,20 +3331,22 @@ export default function AdminDashboard() {
                               >
                                 {e.status === 'Hidden' ? 'Unhide' : 'Hide'}
                               </button>
-                              <button 
-                                onClick={() => handleEventAction(e._id, 'Rejected')}
-                                disabled={e.status === 'Rejected'}
-                                className="px-3 py-1.5 bg-red-550/10 hover:bg-red-550/20 border border-red-550/20 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 transition-colors"
-                              >
-                                Reject
-                              </button>
-                              <button 
-                                onClick={() => handleEventAction(e._id, 'Approved')}
-                                disabled={e.status === 'Approved'}
-                                className="px-4 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 shadow-sm"
-                              >
-                                Approve
-                              </button>
+                              {e.status !== 'Approved' && e.status !== 'Rejected' && (
+                                <>
+                                  <button 
+                                    onClick={() => handleEventAction(e._id, 'Rejected')}
+                                    className="px-3 py-1.5 bg-red-550/10 hover:bg-red-550/20 border border-red-550/20 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors"
+                                  >
+                                    Reject
+                                  </button>
+                                  <button 
+                                    onClick={() => handleEventAction(e._id, 'Approved')}
+                                    className="px-4 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow-sm"
+                                  >
+                                    Approve
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </div>
                         );
@@ -5923,7 +5952,7 @@ export default function AdminDashboard() {
 
             {/* Modal Action Footer */}
             <div className="p-4 sm:p-6 border-t border-slate-200 bg-slate-50 flex flex-col gap-4 shrink-0">
-              {selectedBiz.status !== 'Approved' && (
+              {selectedBiz.status !== 'Approved' && selectedBiz.status !== 'Rejected' && (
                 <label className="flex items-center gap-2 px-1 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -5935,7 +5964,7 @@ export default function AdminDashboard() {
                 </label>
               )}
               <div className="flex flex-col sm:flex-row gap-3">
-                {selectedBiz.status !== 'Approved' && (
+                {selectedBiz.status !== 'Approved' && selectedBiz.status !== 'Rejected' && (
                   <button 
                     onClick={() => {
                       handleAction(selectedBiz._id, 'reject');
@@ -5948,7 +5977,7 @@ export default function AdminDashboard() {
                     Reject Listing
                   </button>
                 )}
-                {selectedBiz.status !== 'Rejected' && (
+                {selectedBiz.status !== 'Approved' && selectedBiz.status !== 'Rejected' && (
                   <button 
                     onClick={() => {
                       handleAction(selectedBiz._id, 'approve');
@@ -6456,26 +6485,28 @@ export default function AdminDashboard() {
                 >
                   {selectedBlogModal.status === 'Hidden' ? 'Unhide' : 'Hide'}
                 </button>
-                <button 
-                  onClick={() => {
-                    handleBlogAction(selectedBlogModal._id, 'Rejected');
-                    setSelectedBlogModal(null);
-                  }}
-                  disabled={selectedBlogModal.status === 'Rejected'}
-                  className="px-4.5 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 transition-colors"
-                >
-                  Reject & Hide
-                </button>
-                <button 
-                  onClick={() => {
-                    handleBlogAction(selectedBlogModal._id, 'Approved');
-                    setSelectedBlogModal(null);
-                  }}
-                  disabled={selectedBlogModal.status === 'Approved'}
-                  className="px-5 py-2.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-40 transition-all shadow shadow-emerald-800/10"
-                >
-                  Approve & Publish
-                </button>
+                {selectedBlogModal.status !== 'Approved' && selectedBlogModal.status !== 'Rejected' && (
+                  <>
+                    <button 
+                      onClick={() => {
+                        handleBlogAction(selectedBlogModal._id, 'Rejected');
+                        setSelectedBlogModal(null);
+                      }}
+                      className="px-4.5 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-extrabold text-xs rounded-xl cursor-pointer transition-colors"
+                    >
+                      Reject & Hide
+                    </button>
+                    <button 
+                      onClick={() => {
+                        handleBlogAction(selectedBlogModal._id, 'Approved');
+                        setSelectedBlogModal(null);
+                      }}
+                      className="px-5 py-2.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer transition-all shadow shadow-emerald-800/10"
+                    >
+                      Approve & Publish
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
