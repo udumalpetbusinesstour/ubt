@@ -1666,6 +1666,8 @@ export default function AddBusiness() {
                   Paste your Google Maps / Business Profile link above. You can also search your business name above to autofill all details and import Google Reviews automatically.
                 </div>
 
+
+
                 {error && (
                   <div className="text-red-650 text-xs font-semibold bg-red-50 border border-red-200 p-3 rounded-xl flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
@@ -1733,6 +1735,7 @@ export default function AddBusiness() {
                             timings: d.timings || d.openingHours || formData.timings,
                           };
                           setFormData(updated);
+                          setGmbImportedReviews(d.googleReviews || []);
                           setIsPincodeVerified(true);
                           setGmbAutofillSuccess(true);
                           setToastMessage("Business information imported from link successfully.");
@@ -1958,9 +1961,14 @@ export default function AddBusiness() {
                 </div>
 
                 {branchAutofillSuccess && (
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 font-semibold flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                    <span>Details autofilled successfully! You can still edit any field in the next steps.</span>
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 font-semibold flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                      <span>Details autofilled successfully! You can still edit any field in the next steps.</span>
+                    </div>
+                    {branchImportedReviews?.length > 0 && (
+                      <p className="text-[10px] text-emerald-700 italic">Preview: Imported {branchImportedReviews.length} reviews.</p>
+                    )}
                   </div>
                 )}
 
@@ -1978,10 +1986,12 @@ export default function AddBusiness() {
 
 
 
-                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-xs text-slate-500 leading-relaxed font-semibold">
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-xs text-slate-550 leading-relaxed font-semibold">
                   <span className="font-extrabold text-slate-700 block mb-0.5">ℹ️ Google Business Profile Verification</span>
                   Search your branch name above to autofill details and import reviews, or paste your Google Maps link directly. Our admins will verify your branch details.
                 </div>
+
+
 
                 {error && (
                   <div className="text-red-650 text-xs font-semibold bg-red-50 border border-red-200 p-3 rounded-xl flex items-center gap-2">
@@ -2050,6 +2060,7 @@ export default function AddBusiness() {
                             timings: d.timings || d.openingHours || branchForm.timings,
                           };
                           setBranchForm(updated);
+                          setBranchImportedReviews(d.googleReviews || []);
                           setIsBranchEligibilityVerified(true);
                           setBranchAutofillSuccess(true);
                           setToastMessage("Branch information imported from link successfully.");
@@ -3393,6 +3404,8 @@ export default function AddBusiness() {
                         </div>
                       </div>
                     </div>
+
+
                   </div>
                 </div>
               )}

@@ -4574,7 +4574,7 @@ function DashboardContent() {
                   <div className="flex flex-col overflow-hidden min-w-0">
                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Total Referrals</span>
                     <span className="text-lg font-black text-[#001c41] leading-tight mt-0.5">
-                      {referralsLoading ? '...' : (referralStats?.referrals?.length || 0)}
+                      {referralsLoading ? '...' : (referralStats?.referrals?.filter(r => r.referredBusinessId)?.length || 0)}
                     </span>
                     <span className="text-[10px] text-slate-455 font-bold mt-0.5">Invited Traders</span>
                   </div>
@@ -4700,7 +4700,7 @@ function DashboardContent() {
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                     <h3 className="font-extrabold text-slate-800 text-sm">Referral History</h3>
                     <span className="text-xs bg-slate-50 border border-slate-200 text-slate-500 rounded px-2 py-0.5 font-bold">
-                      {referralStats?.referrals?.length || 0} Total
+                      {referralStats?.referrals?.filter(r => r.referredBusinessId)?.length || 0} Total
                     </span>
                   </div>
 
@@ -4708,56 +4708,70 @@ function DashboardContent() {
                     <div className="py-8 flex justify-center text-slate-400">
                       <RefreshCw className="h-5 w-5 animate-spin text-emerald-600" />
                     </div>
-                  ) : !referralStats?.referrals || referralStats.referrals.length === 0 ? (
-                    <div className="py-12 bg-slate-50/50 border border-slate-200 border-dashed rounded-xl text-center text-xs sm:text-sm font-semibold text-slate-400">
-                      No referrals made yet. Share your link to start earning!
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-1">
-                      {referralStats.referrals.map((ref) => (
-                        <div key={ref._id} className="border border-slate-100 rounded-xl p-3 bg-slate-50/20 hover:bg-slate-50/50 transition-all flex justify-between items-center gap-3">
-                          <div className="flex flex-col min-w-0 text-left">
-                            <span className="font-extrabold text-slate-755 text-xs truncate leading-snug">
-                              {ref.referredUserId?.fullName || ref.referredUserId?.name || 'New Trader User'}
-                            </span>
-                            <span className="text-[11px] text-slate-455 font-bold mt-0.5">
-                              {ref.referredBusinessId?.name || 'Business details pending'}
-                            </span>
-                            <span className="text-[10px] text-slate-400 mt-0.5 block font-semibold">
-                              Invited on {new Date(ref.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                          
-                          <div className="flex flex-col items-end shrink-0 leading-normal">
-                            {ref.status === 'completed' ? (
-                              <>
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase">
-                                  Earned
-                                </span>
-                                <span className="text-xs font-extrabold text-emerald-600 mt-0.5">+{ref.points} pts</span>
-                              </>
-                            ) : ref.status === 'rejected' ? (
-                              <>
-                                <span className="bg-rose-50 text-rose-700 border border-rose-200/50 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase">
-                                  Flagged
-                                </span>
-                                <span className="text-[10px] text-rose-455 font-bold mt-0.5 text-right max-w-[120px] truncate" title={ref.rejectionReason}>
-                                  {ref.rejectionReason || 'Duplicate / Void'}
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <span className="bg-amber-50 text-amber-700 border border-amber-200/50 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase">
-                                  Pending
-                                </span>
-                                <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Waiting register</span>
-                              </>
-                            )}
-                          </div>
+                  ) : (() => {
+                    const registeredRefs = referralStats?.referrals?.filter(r => r.referredBusinessId) || [];
+                    if (registeredRefs.length === 0) {
+                      return (
+                        <div className="py-12 bg-slate-50/50 border border-slate-200 border-dashed rounded-xl text-center text-xs sm:text-sm font-semibold text-slate-400">
+                          No referrals made yet. Share your link to start earning!
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      );
+                    }
+                    return (
+                      <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-1">
+                        {registeredRefs.map((ref) => (
+                          <div key={ref._id} className="border border-slate-100 rounded-xl p-3 bg-slate-50/20 hover:bg-slate-50/50 transition-all flex justify-between items-center gap-3">
+                            <div className="flex flex-col min-w-0 text-left">
+                              <span className="font-extrabold text-slate-755 text-xs truncate leading-snug">
+                                {ref.referredUserId?.fullName || ref.referredUserId?.name || 'New Trader User'}
+                              </span>
+                              <span className="text-[11px] text-slate-455 font-bold mt-0.5">
+                                {ref.referredBusinessId?.name || 'Business details pending'}
+                              </span>
+                              <span className="text-[10px] text-slate-400 mt-0.5 block font-semibold">
+                                Invited on {new Date(ref.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                            
+                            <div className="flex flex-col items-end shrink-0 leading-normal">
+                              {ref.status === 'completed' ? (
+                                <>
+                                  <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase">
+                                    Earned
+                                  </span>
+                                  <span className="text-xs font-extrabold text-emerald-600 mt-0.5">+{ref.points} pts</span>
+                                </>
+                              ) : ref.status === 'rejected' ? (
+                                <>
+                                  <span className="bg-rose-50 text-rose-700 border border-rose-200/50 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase">
+                                    Flagged
+                                  </span>
+                                  <span className="text-[10px] text-rose-455 font-bold mt-0.5 text-right max-w-[120px] truncate" title={ref.rejectionReason}>
+                                    {ref.rejectionReason || 'Duplicate / Void'}
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="bg-amber-50 text-amber-700 border border-amber-200/50 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase">
+                                    Pending
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                                    {(() => {
+                                      const bizStatus = ref.referredBusinessId?.status || 'Pending Vetting';
+                                      const subStatus = ref.referredBusinessId?.subscriptionStatus || 'none';
+                                      if (subStatus !== 'active') return 'Subscription Pending';
+                                      if (bizStatus !== 'Approved') return 'Approval Pending';
+                                      return 'Payment Pending';
+                                    })()}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Reward Status / Redemption Requests History */}
@@ -8376,7 +8390,9 @@ function DashboardContent() {
                   <div className="flex flex-col gap-2 mt-1">
                     <div className="flex justify-between items-center py-2 border-b border-slate-100">
                       <span className="text-xs font-semibold text-slate-500">Total Referrals</span>
-                      <span className="text-xs font-extrabold text-slate-800">{referralStats?.referrals?.length || 0}</span>
+                      <span className="text-xs font-extrabold text-slate-800">
+                        {referralStats?.referrals?.filter(r => r.referredBusinessId)?.length || 0}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-slate-100">
                       <span className="text-xs font-semibold text-slate-500">Successful Claims</span>
@@ -8387,7 +8403,7 @@ function DashboardContent() {
                     <div className="flex justify-between items-center py-2">
                       <span className="text-xs font-semibold text-slate-500">Pending Approvals</span>
                       <span className="text-xs font-extrabold text-amber-600">
-                        {referralStats?.referrals?.filter(r => r.status === 'pending').length || 0}
+                        {referralStats?.referrals?.filter(r => r.status === 'pending' && r.referredBusinessId).length || 0}
                       </span>
                     </div>
                   </div>
@@ -8480,60 +8496,65 @@ function DashboardContent() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 font-medium">
-                        {referralStats?.referrals?.map(r => {
-                          const isCompleted = r.status === 'completed';
-                          const isRejected = r.status === 'rejected';
-                          const bizName = r.referredBusinessId?.name || 'Incomplete Draft';
-                          const bizStatus = r.referredBusinessId?.status || 'Pending Vetting';
-                          const subStatus = r.referredBusinessId?.subscriptionStatus || 'none';
-                          
-                          return (
-                            <tr key={r._id} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="p-4 flex flex-col text-left">
-                                <span className="font-extrabold text-slate-800 text-xs sm:text-[13px]">{r.referredUserId?.fullName || r.referredUserId?.name || 'Referred Merchant'}</span>
-                                <span className="text-[10px] text-slate-400 font-semibold mt-0.5">{r.referredUserId?.email || r.referredUserId?.phone}</span>
-                              </td>
-                              <td className="p-4 font-bold text-slate-700">{bizName}</td>
-                              <td className="p-4 text-slate-500 font-bold">
-                                {new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                              </td>
-                              <td className="p-4">
-                                <div className="flex flex-col gap-1 text-[10.5px]">
-                                  <div className="flex items-center gap-1">
-                                    <span>{r.referredBusinessId ? "✅ Business Registered" : "❌ Business Pending"}</span>
+                        {(() => {
+                          const registeredRefs = referralStats?.referrals?.filter(r => r.referredBusinessId) || [];
+                          if (registeredRefs.length === 0) {
+                            return (
+                              <tr>
+                                <td colSpan="5" className="p-8 text-center text-slate-400 text-xs font-bold leading-normal">
+                                  You haven't referred any registered businesses yet. Share your invite link above to start earning!
+                                </td>
+                              </tr>
+                            );
+                          }
+                          return registeredRefs.map(r => {
+                            const isCompleted = r.status === 'completed';
+                            const isRejected = r.status === 'rejected';
+                            const bizName = r.referredBusinessId?.name || 'Incomplete Draft';
+                            const bizStatus = r.referredBusinessId?.status || 'Pending Vetting';
+                            const subStatus = r.referredBusinessId?.subscriptionStatus || 'none';
+                            
+                            return (
+                              <tr key={r._id} className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-4 flex flex-col text-left">
+                                  <span className="font-extrabold text-slate-800 text-xs sm:text-[13px]">{r.referredUserId?.fullName || r.referredUserId?.name || 'Referred Merchant'}</span>
+                                  <span className="text-[10px] text-slate-400 font-semibold mt-0.5">{r.referredUserId?.email || r.referredUserId?.phone}</span>
+                                </td>
+                                <td className="p-4 font-bold text-slate-700">{bizName}</td>
+                                <td className="p-4 text-slate-500 font-bold">
+                                  {new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </td>
+                                <td className="p-4">
+                                  <div className="flex flex-col gap-1 text-[10.5px]">
+                                    <div className="flex items-center gap-1">
+                                      <span>{r.referredBusinessId ? "✅ Business Registered" : "❌ Business Pending"}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <span>{subStatus === 'active' ? "✅ Paid Subscription" : "❌ Subscription Pending"}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <span>{bizStatus === 'Approved' ? "✅ Approved by Admin" : "❌ Approval Pending"}</span>
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-1">
-                                    <span>{subStatus === 'active' ? "✅ Paid Subscription" : "❌ Subscription Pending"}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span>{bizStatus === 'Approved' ? "✅ Approved by Admin" : "❌ Approval Pending"}</span>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="p-4">
-                                <span className={`px-2.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
-                                  isCompleted
-                                    ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
-                                    : isRejected
-                                      ? 'bg-red-50 border-red-200 text-red-650'
-                                      : 'bg-amber-50 border-amber-250 text-amber-600'
-                                }`}>
-                                  {isCompleted ? `+${r.points} Points` : isRejected ? '0 (Rejected)' : '0 (Pending)'}
-                                </span>
-                                {isRejected && r.rejectionReason && (
-                                  <span className="text-[9px] text-red-500 font-semibold block mt-1.5 leading-normal max-w-xs">{r.rejectionReason}</span>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                        {(!referralStats?.referrals || referralStats.referrals.length === 0) && (
-                          <tr>
-                            <td colSpan="5" className="p-8 text-center text-slate-400 text-xs font-bold leading-normal">
-                              You haven't referred any businesses yet. Share your invite link above to start earning!
-                            </td>
-                          </tr>
-                        )}
+                                </td>
+                                <td className="p-4">
+                                  <span className={`px-2.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
+                                    isCompleted
+                                      ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
+                                      : isRejected
+                                        ? 'bg-red-50 border-red-200 text-red-650'
+                                        : 'bg-amber-50 border-amber-250 text-amber-600'
+                                  }`}>
+                                    {isCompleted ? `+${r.points} Points` : isRejected ? '0 (Rejected)' : '0 (Pending)'}
+                                  </span>
+                                  {isRejected && r.rejectionReason && (
+                                    <span className="text-[9px] text-red-500 font-semibold block mt-1.5 leading-normal max-w-xs">{r.rejectionReason}</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          });
+                        })()}
                       </tbody>
                     </table>
                   </div>

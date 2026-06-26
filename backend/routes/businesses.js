@@ -1395,6 +1395,34 @@ router.post('/google-autofill-link', async (req, res) => {
       Sunday: 'Closed',
     };
 
+    // Reviews from Places API (New) — may be empty if billing tier doesn't include reviews
+    let googleReviews = (result.reviews || []).map(r => ({
+      authorName: r.authorAttribution?.displayName || 'A Google User',
+      rating: r.rating || 0,
+      text: r.text?.text || '',
+      createdAt: r.publishTime ? new Date(r.publishTime) : new Date(),
+    }));
+
+    // Fallback: use legacy Places Details API to get reviews when new API returns none
+    if (googleReviews.length === 0 && apiKey && placeId) {
+      try {
+        const legacyUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&key=${apiKey}`;
+        const legacyResp = await fetch(legacyUrl);
+        const legacyData = await legacyResp.json();
+        if (legacyData.status === 'OK' && legacyData.result?.reviews) {
+          googleReviews = legacyData.result.reviews.slice(0, 5).map(r => ({
+            authorName: r.author_name || 'A Google User',
+            rating: r.rating || 0,
+            text: r.text || '',
+            createdAt: new Date(r.time * 1000),
+          }));
+          console.log(`[Autofill Link] Fetched ${googleReviews.length} reviews via legacy Places API for ${placeId}`);
+        }
+      } catch (legacyErr) {
+        console.warn('[Autofill Link] Legacy Places reviews fetch failed:', legacyErr.message);
+      }
+    }
+
     const detail = {
       name: result.displayName?.text || extractedName || '',
       address: result.formattedAddress || '',
@@ -1405,7 +1433,7 @@ router.post('/google-autofill-link', async (req, res) => {
       googlePlaceId: placeId,
       googleRating: result.rating || 0,
       googleReviewsCount: result.userRatingCount || 0,
-      googleReviews: [],
+      googleReviews,
       timings,
       pincode,
       locality
