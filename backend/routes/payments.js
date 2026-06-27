@@ -59,10 +59,11 @@ router.post('/create-order', protect, async (req, res) => {
           }
         }
         
-        // 2. Mark status as expired in database
+        // 2. Mark status as expired and turn off autoRenew (autopay) in database
         activeSub.status = 'expired';
+        activeSub.autoRenew = false;
         await activeSub.save();
-        console.log(`[SUBSCRIPTION CANCEL] Marked subscription ${activeSub._id} as expired in MongoDB.`);
+        console.log(`[SUBSCRIPTION CANCEL] Marked subscription ${activeSub._id} as expired and autoRenew set to false in MongoDB.`);
       }
     } catch (subCancelErr) {
       console.error('[SUBSCRIPTION CANCEL] Error searching/cancelling active subscriptions:', subCancelErr.message);
