@@ -1935,7 +1935,9 @@ router.post('/', protect, async (req, res) => {
       categoryStatus,
       offers,
       menuUrls,
-      isFoodBusiness
+      isFoodBusiness,
+      languagesKnown,
+      serviceArea
     } = req.body;
 
     // 0. Final validation of required fields
@@ -2075,6 +2077,8 @@ router.post('/', protect, async (req, res) => {
       requestedParentCategory: requestedParentCategory || undefined,
       categoryStatus: categoryStatus || undefined,
       offers: offers || [],
+      languagesKnown: languagesKnown || '',
+      serviceArea: serviceArea || '',
     };
 
     // If user is referred, run anti-fraud checks before creating/updating

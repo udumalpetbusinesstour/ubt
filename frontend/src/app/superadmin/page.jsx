@@ -4291,30 +4291,35 @@ const handlePartnerAction = async (partnerId, action) => {
 
                                 return (
                                   <div key={parent} className="border border-slate-200/60 dark:border-slate-800/80 rounded-2xl overflow-hidden bg-slate-50/10 dark:bg-slate-950/5">
-                                    {/* Header accordion button */}
-                                    <div className="w-full flex justify-between items-center p-4 bg-slate-50/50 dark:bg-slate-955/20 border-b border-slate-200/50 dark:border-slate-800/50 text-left">
-                                      <button
+                                    {/* Header accordion container */}
+                                    <div className="w-full flex justify-between items-center p-4 bg-slate-50/50 dark:bg-slate-900/20 border-b border-slate-200/50 dark:border-slate-800/50 text-left">
+                                      <div
                                         onClick={() => setExpandedMainCategories(prev => ({ ...prev, [parent]: !isExpanded }))}
-                                        className="flex flex-col flex-1 cursor-pointer text-left"
+                                        className="flex flex-col flex-1 cursor-pointer text-left select-none min-w-0"
                                       >
-                                        <span className="font-extrabold text-sm text-emerald-650 dark:text-emerald-500">{parent}</span>
-                                        <span className="text-[10px] text-slate-450 mt-1 font-bold">
+                                        <span className="font-extrabold text-sm text-[#027244] dark:text-emerald-500 truncate">{parent}</span>
+                                        <span className="text-[10px] text-slate-500 mt-1 font-bold">
                                           {subs.length} subcategories {subcategorySearch && '(filtered)'}
                                         </span>
-                                      </button>
-                                      <div className="flex items-center gap-1.5 shrink-0">
+                                      </div>
+                                      <div className="flex items-center gap-2 shrink-0 ml-4">
                                         <button
                                           type="button"
                                           onClick={(e) => { e.stopPropagation(); renameMainCategory(parent); }}
-                                          className="h-7 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800 flex items-center justify-center cursor-pointer text-blue-600 dark:text-blue-400 font-extrabold text-[9.5px] gap-1"
+                                          className="h-7 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-blue-600 dark:text-blue-400 font-extrabold text-[10px] gap-1 bg-white dark:bg-slate-950/20 shadow-xs"
                                           title="Rename Main Category"
                                         >
                                           <Edit3 className="h-3 w-3" /> Edit
                                         </button>
-                                        <ChevronDown
+                                        <button
+                                          type="button"
                                           onClick={() => setExpandedMainCategories(prev => ({ ...prev, [parent]: !isExpanded }))}
-                                          className={`h-4.5 w-4.5 text-slate-400 transition-transform cursor-pointer ${isExpanded ? 'rotate-180' : ''}`}
-                                        />
+                                          className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-955 shadow-xs"
+                                        >
+                                          <ChevronDown
+                                            className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                          />
+                                        </button>
                                       </div>
                                     </div>
 
