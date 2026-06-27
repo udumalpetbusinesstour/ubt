@@ -83,6 +83,28 @@ router.post('/', protect, admin, async (req, res, next) => {
   }
 });
 
+// @desc    Bulk rename a parent/main category name across all subcategories
+// @route   PUT /api/categories/rename-parent
+// @access  Private/Admin
+router.put('/rename-parent', protect, admin, async (req, res, next) => {
+  try {
+    const { oldParentName, newParentName } = req.body;
+    if (!oldParentName || !newParentName) {
+      return sendError(res, 400, 'oldParentName and newParentName are required');
+    }
+    if (oldParentName.trim() === newParentName.trim()) {
+      return sendError(res, 400, 'Old and new names are the same');
+    }
+    const result = await Category.updateMany(
+      { parentCategory: oldParentName.trim() },
+      { $set: { parentCategory: newParentName.trim() } }
+    );
+    return sendSuccess(res, 200, `Parent category renamed. ${result.modifiedCount} subcategories updated.`, { modifiedCount: result.modifiedCount });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // @desc    Update category
 // @route   PUT /api/categories/:id
 // @access  Private/Admin

@@ -30,7 +30,7 @@ router.post('/', async (req, res, next) => {
       const { sendEmail } = require('../utils/emailHelper');
       const merchantName = req.user.fullName || req.user.name || 'Merchant';
       await sendEmail({
-        to: 'udumalpetbusinesstour@gmail.com', // Central SuperAdmin email
+        to: process.env.SMTP_USER || 'info@udumalpet.business', // Central SuperAdmin email
         subject: `New Support Ticket raised: [${priority || 'Medium'}] ${subject}`,
         text: `Hello Admin,\n\nA new support ticket has been opened by merchant "${merchantName}" (${req.user.email}).\n\nSubject: ${subject}\nPriority: ${priority || 'Medium'}\n\nDescription:\n"${description}"\n\nPlease log in to the admin panel to reply to this ticket.\n\nBest regards,\nUBT Platform Automation`
       });

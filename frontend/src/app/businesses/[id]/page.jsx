@@ -1168,6 +1168,7 @@ export default function BusinessDetail() {
         setNewReviewAuthor('');
         setNewReviewText('');
         setReviewSuccess(true);
+        fetchBusinessDetails();
         setTimeout(() => setReviewSuccess(false), 3000);
       }
     } catch (err) {
@@ -1242,7 +1243,7 @@ export default function BusinessDetail() {
 
   const handleShare = async () => {
     trackClick('share');
-    const shareUrl = window.location.href;
+    const shareUrl = window.location.origin + '/' + (business?.slug || business?._id || '');
     const shareTitle = business?.name || 'Udumalpet Business Tour';
     if (navigator.share) {
       try {
@@ -1425,6 +1426,8 @@ Please confirm availability and delivery time.`;
       };
     });
   };
+
+  const totalReviewsCount = (business?.googleReviewsCount || 0) + (reviews?.length || 0);
 
   const ratingDistribution = getRatingDistribution(
     business.googleRating,
@@ -1714,7 +1717,7 @@ Please confirm availability and delivery time.`;
               ] : []),
               { id: 'services', label: 'Services' },
               { id: 'photos', label: `Photos (${galleryCount})` },
-              { id: 'reviews', label: `Reviews (${allReviews.length})` },
+              { id: 'reviews', label: `Reviews (${totalReviewsCount})` },
               { id: 'offers', label: `Offers (${business.offers ? business.offers.filter(o => o.active !== false).length : 0})` },
               { id: 'about', label: 'About' },
               ...((branches.length > 0 || isOwner) ? [{ id: 'branches', label: branches.length > 0 ? `Branches (${branches.length + 1})` : 'Branches' }] : []),
@@ -1872,14 +1875,14 @@ Please confirm availability and delivery time.`;
                     </>
                   )}
 
-                  {!isGovernmentalOrPublic(business) && (
+                  {(!isGovernmentalOrPublic(business) || (business.timings && Object.keys(business.timings).length > 0 && Object.values(business.timings).some(v => v && v.trim() !== ''))) && (
                     <div className="flex items-start gap-4">
                       <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
                         <Clock className="h-5 w-5" />
                       </div>
                       <div className="flex flex-col w-full max-w-[240px]">
                         <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">
-                          Working Hours
+                          {isGovernmentalOrPublic(business) ? 'Office Hours' : 'Working Hours'}
                         </span>
                         <div className="flex flex-col mt-2 font-extrabold text-slate-800 text-sm leading-snug">
                           {business.parentBusinessId && business.workingHours ? (
@@ -2509,7 +2512,14 @@ Please confirm availability and delivery time.`;
 
               {/* Reviews List */}
               <div className="flex flex-col gap-4.5 mt-4">
-                <span className="font-black text-sm text-slate-800 border-b border-slate-100 pb-2">Customer Feedback Stream ({allReviews.length})</span>
+                <div className="flex justify-between items-center border-b border-slate-100 pb-2 flex-wrap gap-2 w-full text-slate-800">
+                  <span className="font-black text-sm">Customer Feedback Stream ({allReviews.length})</span>
+                  {business.googleReviewsCount > 0 && (
+                    <span className="text-[10px] text-slate-400 font-bold bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-lg">
+                      Showing {business.googleReviews?.length || 0} synced Google reviews out of {business.googleReviewsCount}
+                    </span>
+                  )}
+                </div>
                 {allReviews.map((rev, idx) => (
                   <div key={idx} className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-xs flex flex-col gap-3">
                     <div className="flex justify-between items-center">

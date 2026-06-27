@@ -75,10 +75,8 @@ const moderateBusiness = async (req, res, next) => {
     await business.save({ validateBeforeSave: false });
 
     if (action === 'approve' || action === 'reactivate') {
-      const { checkAndCompleteReferralByBusiness } = require('../utils/referralHelper');
-      await checkAndCompleteReferralByBusiness(business._id);
-      const { ensureCategoriesExist } = require('../utils/categoryHelper');
-      await ensureCategoriesExist(business);
+       const { checkAndCompleteReferralByBusiness } = require('../utils/referralHelper');
+       await checkAndCompleteReferralByBusiness(business._id);
     }
 
     // Log the administrative action audit trail

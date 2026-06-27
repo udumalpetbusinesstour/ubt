@@ -286,6 +286,7 @@ const updateProfile = async (req, res, next) => {
       if (req.body.isPartnerRegistered === true) {
         user.isPartnerApproved = false;
         user.partnerStatus = 'pending';
+        user.role = 'partner';
       }
     }
 

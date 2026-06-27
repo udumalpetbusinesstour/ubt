@@ -151,9 +151,6 @@ router.post('/businesses/directory-add', async (req, res, next) => {
       galleryImages: galleryUrls || []
     });
 
-    const { ensureCategoriesExist } = require('../utils/categoryHelper');
-    await ensureCategoriesExist(business);
-
     res.status(201).json({ success: true, data: business });
   } catch (error) {
     next(error);
@@ -608,7 +605,8 @@ router.post('/categories/merge', mergeCategories);
 // @access  Private/Admin
 router.get('/partners', async (req, res, next) => {
   try {
-    const partners = await User.find({ role: 'partner' }).sort({ createdAt: -1 });
+    const partners = await User.find({ $or: [{ role: 'partner' }, { isPartnerRegistered: true }] }).sort({ createdAt: -1 });
+    
     res.json({
       success: true,
       count: partners.length,
@@ -625,7 +623,7 @@ router.get('/partners', async (req, res, next) => {
 router.post('/partners/approve', async (req, res, next) => {
   try {
     const { partnerId, action } = req.body; // action: 'approve' or 'reject'
-    const partner = await User.findOne({ _id: partnerId, role: 'partner' });
+    const partner = await User.findOne({ _id: partnerId, $or: [{ role: 'partner' }, { isPartnerRegistered: true }] });
     if (!partner) {
       return res.status(404).json({ success: false, message: 'Partner not found' });
     }
@@ -633,6 +631,7 @@ router.post('/partners/approve', async (req, res, next) => {
       partner.isPartnerApproved = true;
       partner.partnerStatus = 'approved';
       partner.partnerApprovedAt = new Date();
+      partner.role = 'partner';
     } else if (action === 'reject') {
       const { rejectionReason } = req.body;
       partner.isPartnerApproved = false;
@@ -640,6 +639,7 @@ router.post('/partners/approve', async (req, res, next) => {
       partner.partnerRejectedAt = new Date();
       partner.isPartnerRegistered = false; // Reset so they must register again
       partner.partnerRejectionReason = rejectionReason || '';
+      partner.role = 'owner';
     } else {
       return res.status(400).json({ success: false, message: 'Invalid action. Must be "approve" or "reject".' });
     }

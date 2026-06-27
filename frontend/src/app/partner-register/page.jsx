@@ -105,6 +105,7 @@ export default function PartnerRegister() {
         // Update user session details in localStorage
         const updatedUser = {
           ...sessionUser,
+          role: data.data.role || 'partner',
           fullName: data.data.fullName,
           email: data.data.email,
           phone: data.data.phone,

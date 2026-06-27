@@ -38,94 +38,6 @@ const isGovernmentalOrPublic = (biz) => {
   return false;
 };
 
-const parentCategoryMapping = {
-  'Shopping': [
-    'Grocery Stores', 'Supermarkets', 'Vegetable & Fruit Shops', 'Textile & Garments', 
-    'Footwear Shops', 'Jewelry Shops', 'Gift Shops', 'Stationery & Book Stores', 
-    'Furniture Shops', 'Hardware Stores', 'Paint Stores', 'Pet Shops', 'Cosmetic Stores'
-  ],
-  'Electronics': [
-    'Mobile Stores', 'Computer & Laptop Stores', 'Electronics & Appliances'
-  ],
-  'Food & Restaurants': [
-    'Restaurants', 'Hotels & Lodges', 'Bakeries', 'Cafes & Tea Shops', 
-    'Sweet Shops', 'Fast Food Centers', 'Catering Services', 'Juice & Ice Cream Parlors'
-  ],
-  'Health & Medical': [
-    'Hospitals', 'Clinics', 'Dental Clinics', 'Pharmacies', 
-    'Diagnostic Labs', 'Physiotherapy Centers', 'Veterinary Clinics'
-  ],
-  'Beauty & Wellness': [
-    'Beauty Parlours', 'Salons & Barbers', 'Spa & Wellness Centers'
-  ],
-  'Education': [
-    'Schools', 'Colleges', 'Tuition Centers', 'Coaching Institutes', 
-    'Computer Training Centers', 'Driving Schools'
-  ],
-  'Automotive': [
-    'Car Showrooms', 'Bike Showrooms', 'Automobile Service Centers', 
-    'Car Wash Services', 'Tyre Shops', 'Spare Parts Dealers', 'Petrol Bunks'
-  ],
-  'Home Services': [
-    'Electricians', 'Plumbers', 'Carpenters', 'AC Service & Repair', 
-    'Home Cleaning Services', 'Interior Designers', 'Pest Control Services'
-  ],
-  'Real Estate': [
-    'Real Estate Agencies'
-  ],
-  'Construction': [
-    'Builders & Contractors', 'Construction Material Suppliers', 'Cement & Steel Dealers', 
-    'Architects', 'Borewell Services'
-  ],
-  'Agriculture': [
-    'Farm Equipment Dealers', 'Coconut Traders', 'Fertilizer & Pesticide Shops', 
-    'Dairy Farms', 'Poultry Farms', 'Agricultural Consultants', 'Irrigation Equipment Suppliers'
-  ],
-  'Professional Services': [
-    'Chartered Accountants', 'Auditors', 'Advocates / Lawyers', 'Tax Consultants'
-  ],
-  'Finance & Insurance': [
-    'Insurance Agents', 'Financial Advisors'
-  ],
-  'Events & Entertainment': [
-    'Event Organizers', 'Wedding Planners', 'Photography & Videography', 
-    'Decoration Services', 'Sound & Lighting Services', 'Printing & Flex Services'
-  ],
-  'Travel & Hospitality': [
-    'Travel Agencies', 'Tours & Travels', 'Vehicle Rentals', 'Taxi Services', 'Bus Operators'
-  ],
-  'Sports & Fitness': [
-    'Gyms', 'Yoga Centers', 'Sports Academies', 'Sports Equipment Stores'
-  ],
-  'Governmental organisations': [
-    'Taluk Office', 'Municipality', 'Police Stations', 'Hospitals', 'Banks', 'Schools'
-  ],
-  'Public Sector': [
-    'Temples', 'Govt Schools', 'Govt Offices', 'Govt Hospitals', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs'
-  ]
-};
-
-const availableCategories = [
-  'Automotive',
-  'Beauty & Wellness',
-  'Education',
-  'Electronics',
-  'Food & Restaurants',
-  'Health & Medical',
-  'Home Services',
-  'Real Estate',
-  'Shopping',
-  'Manufacturing',
-  'Professional Services',
-  'Travel & Hospitality',
-  'Construction',
-  'Agriculture',
-  'Finance & Insurance',
-  'Events & Entertainment',
-  'Sports & Fitness',
-  'Governmental organisations',
-  'Public Sector'
-];
 
 const parentIconStringMap = {
   'Automotive': 'Car',
@@ -407,27 +319,17 @@ function BusinessesList() {
     setAnonAutofillLoading(true);
     setAnonAutofillSuccess(false);
     try {
-      let placeId = anonGmbLink;
-      if (anonGmbLink.includes('google.com/maps') || anonGmbLink.includes('goo.gl/maps') || anonGmbLink.includes('maps.app.goo.gl')) {
-        const resolveRes = await fetch('http://localhost:5000/api/businesses/google-autofill-link', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: anonGmbLink })
-        });
-        const resolveData = await resolveRes.json();
-        if (resolveData.success && resolveData.placeId) {
-          placeId = resolveData.placeId;
-        } else {
-          alert('Could not extract place details from Maps URL. Trying standard search.');
-        }
-      }
+      const isUrl = anonGmbLink.includes('http://') || anonGmbLink.includes('https://') || anonGmbLink.includes('google.com') || anonGmbLink.includes('goo.gl') || anonGmbLink.includes('share.google');
+      const endpoint = isUrl ? 'google-autofill-link' : 'google-autofill';
+      const body = isUrl ? { link: anonGmbLink } : { placeId: anonGmbLink };
       
-      const res = await fetch('http://localhost:5000/api/businesses/google-autofill', {
+      const res = await fetch(`http://localhost:5000/api/businesses/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ placeId })
+        body: JSON.stringify(body)
       });
       const data = await res.json();
+      
       if (data.success && data.data) {
         const d = data.data;
         setAnonForm(prev => ({
@@ -772,38 +674,33 @@ function BusinessesList() {
     { name: 'Public Sector', icon: <Landmark className="h-4.5 w-4.5 text-slate-500" />, bg: 'bg-slate-50' }
   ];
 
+  // Build dynamicCategoryDetails and dynamicAvailableCategories fully from dbCategories
   const dynamicCategoryDetails = [...categoryDetails];
-  const dynamicAvailableCategories = [...availableCategories];
+  const dynamicAvailableCategories = Array.from(
+    new Set(dbCategories.map(cat => cat.parentCategory).filter(p => p && p.trim() !== '' && p !== 'Others'))
+  ).sort();
 
-  dbCategories.forEach(cat => {
-    if (!cat.parentCategory && !categoryDetails.some(c => c.name.toLowerCase() === cat.categoryName.toLowerCase())) {
+  // Merge any DB main-category-only items into dynamicCategoryDetails
+  dynamicAvailableCategories.forEach(parentName => {
+    if (!dynamicCategoryDetails.some(c => c.name.toLowerCase() === parentName.toLowerCase())) {
       dynamicCategoryDetails.push({
-        name: cat.categoryName,
-        icon: renderCategoryIcon(cat.icon || 'Store', "h-4.5 w-4.5 text-emerald-500"),
+        name: parentName,
+        icon: renderCategoryIcon('Store', "h-4.5 w-4.5 text-emerald-500"),
         bg: 'bg-emerald-50'
       });
-      dynamicAvailableCategories.push(cat.categoryName);
     }
   });
 
   const getParentCategory = (subName) => {
     if (!subName) return 'Others';
-    // 1. Check database categories first
+    // 1. Exact DB match
     const dbCat = dbCategories.find(c => c.categoryName.toLowerCase() === subName.toLowerCase());
-    if (dbCat && dbCat.parentCategory) {
+    if (dbCat && dbCat.parentCategory && dbCat.parentCategory !== 'Others') {
       return dbCat.parentCategory;
     }
-    // 2. Check static mapping
-    for (const [parent, subs] of Object.entries(parentCategoryMapping)) {
-      if (subs.some(sub => sub.toLowerCase() === subName.toLowerCase())) {
-        return parent;
-      }
-    }
-    // Try fuzzy match
-    for (const [parent, subs] of Object.entries(parentCategoryMapping)) {
-      if (parent.toLowerCase().includes(subName.toLowerCase()) || subName.toLowerCase().includes(parent.toLowerCase())) {
-        return parent;
-      }
+    // 2. If it is itself a main category
+    if (dynamicAvailableCategories.some(p => p.toLowerCase() === subName.toLowerCase())) {
+      return subName;
     }
     // 3. If it exists in db and has no parentCategory, it is a main category itself
     if (dbCat && !dbCat.parentCategory) {
@@ -906,7 +803,7 @@ function BusinessesList() {
 
   useEffect(() => {
     const counts = {};
-    availableCategories.forEach(c => {
+    dynamicAvailableCategories.forEach(c => {
       counts[c] = 0;
     });
     dbCategories.forEach(cat => {
@@ -1054,9 +951,12 @@ function BusinessesList() {
         const catList = cat.split(',');
         results = results.filter(b => {
           return catList.some(singleCat => {
-            const subcategories = parentCategoryMapping[singleCat];
-            if (subcategories) {
-              return b.category === singleCat || subcategories.some(sub => sub.toLowerCase() === (b.category || '').toLowerCase());
+            // Check if singleCat is a parent category in DB
+            const isParent = dynamicAvailableCategories.some(p => p.toLowerCase() === singleCat.toLowerCase());
+            if (isParent) {
+              // Match business category if it belongs to this parent
+              const parent = getParentCategory(b.category || '');
+              return parent.toLowerCase() === singleCat.toLowerCase() || b.category === singleCat;
             } else {
               return b.category === singleCat;
             }
@@ -1127,17 +1027,7 @@ function BusinessesList() {
       }
     });
     
-    // 2. Check static subcategories from parentCategoryMapping
-    Object.entries(parentCategoryMapping).forEach(([parent, subs]) => {
-      subs.forEach(sub => {
-        if (sub.toLowerCase().includes(query) && !seenNames.has(sub.toLowerCase()) && sub !== 'Others') {
-          seenNames.add(sub.toLowerCase());
-          suggestions.push({ name: sub, type: 'subcategory', parent });
-        }
-      });
-    });
-    
-    // 3. Check database categories (dbCategories)
+    // 2. Check DB subcategories
     if (Array.isArray(dbCategories)) {
       dbCategories.forEach(cat => {
         if (cat.categoryName && cat.categoryName.toLowerCase().includes(query) && !seenNames.has(cat.categoryName.toLowerCase())) {
@@ -1146,7 +1036,7 @@ function BusinessesList() {
         }
       });
     }
-    
+
     return suggestions.slice(0, 8); // Limit to 8 hints
   };
 
@@ -1708,7 +1598,7 @@ function BusinessesList() {
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[10px] font-extrabold text-slate-500 uppercase leading-none">Email Us</span>
-                  <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-xs text-slate-800 font-extrabold hover:underline mt-1 leading-normal">udumalpetbusinesstour@gmail.com</a>
+                  <a href="mailto:info@udumalpet.business" className="text-xs text-slate-800 font-extrabold hover:underline mt-1 leading-normal">info@udumalpet.business</a>
                 </div>
               </div>
             </div>

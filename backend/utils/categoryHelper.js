@@ -98,11 +98,7 @@ const syncAllApprovedCategories = async () => {
       console.log(`[SUBSCRIPTION SYNC] Activated subscription status for ${subsResult.modifiedCount} approved businesses that were previously inactive.`);
     }
 
-    const approvedBusinesses = await Business.find({ status: 'Approved' });
-    for (const biz of approvedBusinesses) {
-      await ensureCategoriesExist(biz);
-    }
-    console.log(`[CATEGORY SYNC] Done checking/syncing categories for ${approvedBusinesses.length} approved listings.`);
+    console.log(`[CATEGORY SYNC] Startup categories sync bypassed.`);
   } catch (err) {
     console.error('Error syncing all approved categories:', err);
   }

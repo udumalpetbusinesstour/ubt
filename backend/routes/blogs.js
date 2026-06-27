@@ -481,7 +481,7 @@ router.post('/:id/revision-comment', protect, async (req, res) => {
         const { sendEmail } = require('../utils/emailHelper');
         const authorName = blog.author.fullName || blog.author.name || 'Writer';
         await sendEmail({
-          to: 'udumalpetbusinesstour@gmail.com', // SuperAdmin central desk
+          to: process.env.SMTP_USER || 'info@udumalpet.business', // SuperAdmin central desk
           subject: `New Revision Response: "${blog.title}" by ${authorName}`,
           text: `Hello Admin,\n\nThe blog author "${authorName}" has responded to the revision thread for their article "${blog.title}".\n\nComment Message:\n"${message}"\n\nPlease log in to the admin console to moderate the blog.\n\nBest regards,\nUBT Platform Automation`
         });

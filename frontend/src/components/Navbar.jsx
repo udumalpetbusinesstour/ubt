@@ -427,7 +427,7 @@ export default function Navbar() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-[#027244] shrink-0" />
-                  <a href="mailto:udumalpetbusinesstour@gmail.com" className="hover:text-[#027244] transition-colors break-all">udumalpetbusinesstour@gmail.com</a>
+                  <a href="mailto:info@udumalpet.business" className="hover:text-[#027244] transition-colors break-all">info@udumalpet.business</a>
                 </div>
               </div>
             </div>

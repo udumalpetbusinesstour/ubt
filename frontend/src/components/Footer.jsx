@@ -95,7 +95,7 @@ export default function Footer() {
             </li>
             <li className="flex items-center gap-2.5">
               <Mail className="h-4.5 w-4.5 text-emerald-500 shrink-0" />
-              <a href="mailto:udumalpetbusinesstour@gmail.com" className="hover:text-emerald-500 transition-colors">udumalpetbusinesstour@gmail.com</a>
+              <a href="mailto:info@udumalpet.business" className="hover:text-emerald-500 transition-colors break-all">info@udumalpet.business</a>
             </li>
           </ul>
         </div>

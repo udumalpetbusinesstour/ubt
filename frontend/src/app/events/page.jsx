@@ -2328,7 +2328,7 @@ export default function EventsPage() {
             </div>
 
             <a 
-              href="mailto:udumalpetbusinesstour@gmail.com"
+              href="mailto:info@udumalpet.business"
               className="w-full py-3 border border-[#6366F1] text-[#6366F1] hover:bg-indigo-50 font-extrabold text-xs rounded-xl shadow-xs transition-all text-center uppercase tracking-wider cursor-pointer"
             >
               Contact Support

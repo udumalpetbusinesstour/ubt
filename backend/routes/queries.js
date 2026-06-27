@@ -46,7 +46,7 @@ router.post('/merchant-query', protect, async (req, res) => {
     try {
       const { sendEmail } = require('../utils/emailHelper');
       await sendEmail({
-        to: 'udumalpetbusinesstour@gmail.com', // Central SuperAdmin email
+        to: process.env.SMTP_USER || 'info@udumalpet.business', // Central SuperAdmin email
         subject: `New Merchant Inquiry from ${req.user.fullName || 'Merchant'}`,
         text: `Hello Admin,\n\nA new merchant support message has been submitted from the dashboard.\n\nFrom: ${req.user.fullName || 'Merchant'} (${req.user.email})\n\nMessage:\n"${message}"\n\nPlease log in to the admin panel to reply.\n\nBest regards,\nUBT Platform Automation`
       });
@@ -77,7 +77,7 @@ router.post('/', async (req, res) => {
     try {
       const { sendEmail } = require('../utils/emailHelper');
       await sendEmail({
-        to: 'udumalpetbusinesstour@gmail.com', // Central SuperAdmin email
+        to: process.env.SMTP_USER || 'info@udumalpet.business', // Central SuperAdmin email
         subject: `New Inquiry received: "${subject}" from ${name}`,
         text: `Hello Admin,\n\nA new user inquiry has been submitted on Udumalpet Business Tour.\n\nFrom: ${name} (${email})\nSubject: ${subject}\n\nMessage:\n"${message}"\n\nPlease log in to the admin panel to reply.\n\nBest regards,\nUBT Platform Automation`
       });

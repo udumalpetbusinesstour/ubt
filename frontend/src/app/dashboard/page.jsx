@@ -11,94 +11,6 @@ import {
   FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin, LogOut, Facebook, Instagram, Phone, Users, Move, Utensils
 } from 'lucide-react';
 
-const parentCategoryMapping = {
-  'Shopping': [
-    'Grocery Stores', 'Supermarkets', 'Vegetable & Fruit Shops', 'Textile & Garments', 
-    'Footwear Shops', 'Jewelry Shops', 'Gift Shops', 'Stationery & Book Stores', 
-    'Furniture Shops', 'Hardware Stores', 'Paint Stores', 'Pet Shops', 'Cosmetic Stores'
-  ],
-  'Electronics': [
-    'Mobile Stores', 'Computer & Laptop Stores', 'Electronics & Appliances'
-  ],
-  'Food & Restaurants': [
-    'Restaurants', 'Hotels & Lodges', 'Bakeries', 'Cafes & Tea Shops', 
-    'Sweet Shops', 'Fast Food Centers', 'Catering Services', 'Juice & Ice Cream Parlors'
-  ],
-  'Health & Medical': [
-    'Hospitals', 'Clinics', 'Dental Clinics', 'Pharmacies', 
-    'Diagnostic Labs', 'Physiotherapy Centers', 'Veterinary Clinics'
-  ],
-  'Beauty & Wellness': [
-    'Beauty Parlours', 'Salons & Barbers', 'Spa & Wellness Centers'
-  ],
-  'Education': [
-    'Schools', 'Colleges', 'Tuition Centers', 'Coaching Institutes', 
-    'Computer Training Centers', 'Driving Schools'
-  ],
-  'Automotive': [
-    'Car Showrooms', 'Bike Showrooms', 'Automobile Service Centers', 
-    'Car Wash Services', 'Tyre Shops', 'Spare Parts Dealers', 'Petrol Bunks'
-  ],
-  'Home Services': [
-    'Electricians', 'Plumbers', 'Carpenters', 'AC Service & Repair', 
-    'Home Cleaning Services', 'Interior Designers', 'Pest Control Services'
-  ],
-  'Real Estate': [
-    'Real Estate Agencies'
-  ],
-  'Construction': [
-    'Builders & Contractors', 'Construction Material Suppliers', 'Cement & Steel Dealers', 
-    'Architects', 'Borewell Services'
-  ],
-  'Agriculture': [
-    'Farm Equipment Dealers', 'Coconut Traders', 'Fertilizer & Pesticide Shops', 
-    'Dairy Farms', 'Poultry Farms', 'Agricultural Consultants', 'Irrigation Equipment Suppliers'
-  ],
-  'Professional Services': [
-    'Chartered Accountants', 'Auditors', 'Advocates / Lawyers', 'Tax Consultants'
-  ],
-  'Finance & Insurance': [
-    'Insurance Agents', 'Financial Advisors'
-  ],
-  'Events & Entertainment': [
-    'Event Organizers', 'Wedding Planners', 'Photography & Videography', 
-    'Decoration Services', 'Sound & Lighting Services', 'Printing & Flex Services'
-  ],
-  'Travel & Hospitality': [
-    'Travel Agencies', 'Tours & Travels', 'Vehicle Rentals', 'Taxi Services', 'Bus Operators'
-  ],
-  'Sports & Fitness': [
-    'Gyms', 'Yoga Centers', 'Sports Academies', 'Sports Equipment Stores'
-  ],
-  'Governmental organisations': [
-    'Taluk Office', 'Municipality', 'Police Stations', 'Hospitals', 'Banks', 'Schools'
-  ],
-  'Public Sector': [
-    'Temples', 'Govt Schools', 'Govt Offices', 'Govt Hospitals', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs'
-  ]
-};
-
-const availableCategories = [
-  'Automotive',
-  'Beauty & Wellness',
-  'Education',
-  'Electronics',
-  'Food & Restaurants',
-  'Health & Medical',
-  'Home Services',
-  'Real Estate',
-  'Shopping',
-  'Manufacturing',
-  'Professional Services',
-  'Travel & Hospitality',
-  'Construction',
-  'Agriculture',
-  'Finance & Insurance',
-  'Events & Entertainment',
-  'Sports & Fitness',
-  'Governmental organisations',
-  'Public Sector'
-];
 
 const getEventDefaultImage = (category) => {
   return '/default_event_cover.jpg';
@@ -617,34 +529,22 @@ function DashboardContent() {
   }, []);
 
   const getDashboardDynamicMainCategories = () => {
-    const mainCats = new Set(availableCategories);
-    if (Array.isArray(dbCategories)) {
-      dbCategories.forEach(cat => {
-        if (!cat.parentCategory || cat.parentCategory.trim() === '' || cat.parentCategory === 'Others') {
-          if (cat.categoryName && cat.categoryName !== 'Others') {
-            mainCats.add(cat.categoryName.trim());
-          }
-        } else {
-          mainCats.add(cat.parentCategory.trim());
-        }
-      });
-    }
+    if (!Array.isArray(dbCategories) || dbCategories.length === 0) return [];
+    const mainCats = new Set();
+    dbCategories.forEach(cat => {
+      if (cat.parentCategory && cat.parentCategory.trim() !== '' && cat.parentCategory !== 'Others') {
+        mainCats.add(cat.parentCategory.trim());
+      }
+    });
     return Array.from(mainCats).sort();
   };
 
   const getDashboardDynamicSubcategories = (parentCategory) => {
-    if (!parentCategory) return [];
-    const subs = new Set(parentCategoryMapping[parentCategory] || []);
-    if (Array.isArray(dbCategories)) {
-      dbCategories.forEach(cat => {
-        if (cat.parentCategory && cat.parentCategory.toLowerCase() === parentCategory.toLowerCase()) {
-          if (cat.categoryName && cat.categoryName !== 'Others') {
-            subs.add(cat.categoryName);
-          }
-        }
-      });
-    }
-    return Array.from(subs).sort();
+    if (!parentCategory || !Array.isArray(dbCategories)) return [];
+    return dbCategories
+      .filter(cat => cat.parentCategory && cat.parentCategory.toLowerCase() === parentCategory.toLowerCase() && cat.categoryName && cat.categoryName !== 'Others')
+      .map(cat => cat.categoryName)
+      .sort();
   };
 
   // Image upload states & handler
@@ -4969,10 +4869,10 @@ function DashboardContent() {
                 </div>
               )}
               {/* 3. KPI CARDS ROW (8 Horizontal premium aligned widgets) */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 sm:gap-4">
+              <div className="flex overflow-x-auto gap-4 pb-3.5 w-full scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent snap-x snap-mandatory">
                 
                 {/* Total Leads */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                     <Plus className="h-5 w-5" />
                   </div>
@@ -4983,7 +4883,7 @@ function DashboardContent() {
                 </div>
 
                 {/* Call Clicks */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                     <PhoneCall className="h-4.5 w-4.5" />
                   </div>
@@ -4994,7 +4894,7 @@ function DashboardContent() {
                 </div>
 
                 {/* WhatsApp Clicks */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-emerald-55/15 text-emerald-600 flex items-center justify-center shrink-0">
                     <MessageSquare className="h-4.5 w-4.5" />
                   </div>
@@ -5005,7 +4905,7 @@ function DashboardContent() {
                 </div>
 
                 {/* Website Clicks */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-teal-50 text-teal-650 flex items-center justify-center shrink-0">
                     <Globe className="h-4.5 w-4.5" />
                   </div>
@@ -5016,7 +4916,7 @@ function DashboardContent() {
                 </div>
 
                 {/* Social Clicks */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center shrink-0">
                     <Users className="h-4.5 w-4.5" />
                   </div>
@@ -5029,7 +4929,7 @@ function DashboardContent() {
                 </div>
 
                 {/* Average Rating */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
                     <Star className="h-4.5 w-4.5 fill-current" />
                   </div>
@@ -5045,7 +4945,7 @@ function DashboardContent() {
                 </div>
 
                 {/* Listing Status */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
                   <div className={`h-10.5 w-10.5 rounded-xl flex items-center justify-center shrink-0 ${
                     isGmbVerified ? 'bg-emerald-50 text-emerald-600' :
                     business.status === 'Approved' ? 'bg-blue-50 text-blue-600' :
@@ -5083,7 +4983,7 @@ function DashboardContent() {
                 </div>
 
                 {/* Plan Renewal */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
                     <CreditCard className="h-4.5 w-4.5" />
                   </div>
@@ -8228,8 +8128,8 @@ function DashboardContent() {
                   <Info className="h-5 w-5 text-slate-400 shrink-0" />
                   <p className="text-[10.5px] text-slate-500 font-semibold leading-normal">
                     You can also reach us via standard email client protocols at{' '}
-                    <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-[#027244] hover:underline font-extrabold">
-                      udumalpetbusinesstour@gmail.com
+                    <a href="mailto:info@udumalpet.business" className="text-[#027244] hover:underline font-extrabold">
+                      info@udumalpet.business
                     </a>{' '}
                     for emergency account access.
                   </p>

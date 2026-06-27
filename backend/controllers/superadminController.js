@@ -451,8 +451,6 @@ const updateBusinessStatus = async (req, res, next) => {
     if (status === 'Approved') {
       const { checkAndCompleteReferralByBusiness } = require('../utils/referralHelper');
       await checkAndCompleteReferralByBusiness(business._id);
-      const { ensureCategoriesExist } = require('../utils/categoryHelper');
-      await ensureCategoriesExist(business);
     }
 
     // Log admin action

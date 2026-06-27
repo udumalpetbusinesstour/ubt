@@ -4,11 +4,11 @@ import {
   ShieldCheck, RefreshCw, Star, Check, X, AlertCircle, AlertTriangle, 
   ArrowRight, Eye, Grid, Shield, CreditCard, LayoutDashboard, Store, BookOpen, Calendar, 
   MessageSquare, CreditCard as CardIcon, Bell, BarChart3, Settings, LogOut, Search, User, 
-  MapPin, ChevronRight, Landmark, Trash2, Mail, Globe, Award, ShieldAlert, CheckCircle2,
+  MapPin, ChevronRight, ChevronDown, Landmark, Trash2, Mail, Globe, Award, ShieldAlert, CheckCircle2,
   Clock, Plus, Filter, Activity, Cpu, Database, Terminal, Users, BarChart, FileText, Ban,
   Play, Square, Layers, Sparkles, HelpCircle, Key, Lock, Phone, UserCheck, ShieldOff, CheckSquare,
   Utensils, Dumbbell, Plane, GraduationCap, Camera, Leaf, Building, Coins, ShoppingBag, Wrench, Gift, Heart,
-  Copy, XCircle
+  Copy, XCircle, Edit3
 } from 'lucide-react';
 import BloodDonorsTab from '../../components/BloodDonorsTab';
 
@@ -205,6 +205,10 @@ export default function SuperAdminDashboard() {
   const [reviews, setReviews] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [presetCategories, setPresetCategories] = useState([]);
+  const [mainCategorySearch, setMainCategorySearch] = useState('');
+  const [subcategorySearch, setSubcategorySearch] = useState('');
+  const [expandedMainCategories, setExpandedMainCategories] = useState({});
+  const [categoryViewMode, setCategoryViewMode] = useState('grouped'); // grouped | list
   const [pendingCategories, setPendingCategories] = useState([]);
   const [resolutionActionMap, setResolutionActionMap] = useState({});
   const [resolutionTargetCatMap, setResolutionTargetCatMap] = useState({});
@@ -1744,6 +1748,33 @@ const handlePartnerAction = async (partnerId, action) => {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const renameMainCategory = async (oldParentName) => {
+    const newParentName = prompt(`Rename main category "${oldParentName}" to:`, oldParentName);
+    if (!newParentName || newParentName.trim() === '' || newParentName.trim() === oldParentName) return;
+    const confirmed = confirm(`Rename main category "${oldParentName}" → "${newParentName.trim()}"?\nThis will update all subcategories under it.`);
+    if (!confirmed) return;
+    try {
+      const res = await fetch('http://localhost:5000/api/categories/rename-parent', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
+        },
+        body: JSON.stringify({ oldParentName: oldParentName.trim(), newParentName: newParentName.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`Main category renamed! ${data.data?.modifiedCount || 0} subcategories updated.`);
+        loadPlatformRealData();
+      } else {
+        alert('Error: ' + (data.message || 'Rename failed'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error renaming category');
     }
   };
 
@@ -4182,64 +4213,244 @@ const handlePartnerAction = async (partnerId, action) => {
                       <div className={`border shadow-xs rounded-[28px] p-6 ${
                         themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                       }`}>
-                        <div className="flex justify-between items-center mb-4 border-b pb-3 border-slate-200/10">
-                          <h4 className="font-extrabold text-xs uppercase tracking-wider flex items-center gap-2">
-                            <Grid className="h-4.5 w-4.5 text-emerald-500" /> Preset Categories ({presetCategories.length})
-                          </h4>
-                          <span className="text-[10px] text-slate-500 font-bold">Sort: Alphabetical</span>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto pr-1">
-                          {presetCategories.map(cat => {
-                            const count = businesses.filter(b => b.category === cat.categoryName).length;
-                            return (
-                              <div 
-                                key={cat._id} 
-                                className={`border rounded-2xl p-4 flex justify-between items-center transition-all min-w-0 gap-3 ${
-                                  themeMode === 'dark' ? 'bg-slate-950/20 border-slate-800 hover:border-slate-700' : 'bg-slate-50/50 border-slate-200 hover:bg-slate-50'
+                        <div className="flex flex-col gap-4 mb-4 border-b pb-4 border-slate-200/10">
+                          <div className="flex justify-between items-center flex-wrap gap-2">
+                            <h4 className="font-extrabold text-xs uppercase tracking-wider flex items-center gap-2">
+                              <Grid className="h-4.5 w-4.5 text-emerald-500" /> Preset Categories ({presetCategories.length})
+                            </h4>
+                            {/* Toggle view mode */}
+                            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl">
+                              <button
+                                onClick={() => setCategoryViewMode('grouped')}
+                                className={`px-2.5 py-1 text-[10px] font-black rounded-lg transition-colors cursor-pointer ${
+                                  categoryViewMode === 'grouped' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-700'
                                 }`}
                               >
-                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                  <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-black shrink-0 ${
-                                    themeMode === 'dark' ? 'bg-slate-900 text-emerald-455 border border-slate-800' : 'bg-emerald-50 text-[#027244] border-emerald-100'
-                                  }`}>
-                                    <Store className="h-4.5 w-4.5" />
-                                  </div>
-                                  <div className="flex flex-col text-left min-w-0 flex-1">
-                                    <span className={`font-extrabold text-xs truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{cat.categoryName}</span>
-                                    <span className="text-[9.5px] text-slate-450 dark:text-slate-400 font-bold mt-1 leading-none truncate">Main: {cat.parentCategory || 'Others'}</span>
-                                    <span className="text-[9px] text-slate-400 mt-1.5 font-semibold truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
-                                    <span className="text-[9.5px] text-emerald-650 font-black mt-2 leading-none">{count} active businesses</span>
-                                  </div>
-                                </div>
+                                Grouped by Main
+                              </button>
+                              <button
+                                onClick={() => setCategoryViewMode('list')}
+                                className={`px-2.5 py-1 text-[10px] font-black rounded-lg transition-colors cursor-pointer ${
+                                  categoryViewMode === 'list' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                              >
+                                All List View
+                              </button>
+                            </div>
+                          </div>
 
-                                <div className="flex gap-1.5 shrink-0">
-                                  <button
-                                    onClick={() => {
-                                      const newName = prompt("Rename category:", cat.categoryName);
-                                      if (!newName || newName === cat.categoryName) return;
-                                      updatePresetCategory(cat._id, { categoryName: newName });
-                                    }}
-                                    className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[10px]"
-                                    title="Edit Category Name"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      if (confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
-                                        deletePresetCategory(cat._id);
-                                      }
-                                    }}
-                                    className="h-7 w-7 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 flex items-center justify-center cursor-pointer border border-rose-500/10"
-                                    title="Delete Category"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
+                          {/* Dual Search bars */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            {/* Search Main Category */}
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="Search Main Category..."
+                                value={mainCategorySearch}
+                                onChange={(e) => setMainCategorySearch(e.target.value)}
+                                className="w-full pl-8.5 pr-4 py-2 text-xs border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-955 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                              />
+                              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                            </div>
+
+                            {/* Search Subcategory */}
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="Search Subcategory..."
+                                value={subcategorySearch}
+                                onChange={(e) => setSubcategorySearch(e.target.value)}
+                                className="w-full pl-8.5 pr-4 py-2 text-xs border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-955 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                              />
+                              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="max-h-[600px] overflow-y-auto pr-1 flex flex-col gap-4">
+                          {categoryViewMode === 'grouped' ? (
+                            (() => {
+                              // 1. Get unique parent categories
+                              const uniqueParents = Array.from(new Set(presetCategories.map(c => c.parentCategory || 'Others')))
+                                .sort();
+
+                              // 2. Filter parents by parent search query
+                              const filteredParents = uniqueParents.filter(p => p.toLowerCase().includes(mainCategorySearch.toLowerCase()));
+
+                              // 3. Filter and render subcategories grouped under parents
+                              return filteredParents.map(parent => {
+                                const subs = presetCategories.filter(cat => 
+                                  (cat.parentCategory || 'Others') === parent && 
+                                  cat.categoryName.toLowerCase().includes(subcategorySearch.toLowerCase())
+                                );
+
+                                // If search query is entered, but no matching subcategories in this parent, don't show the parent card
+                                if (subcategorySearch && subs.length === 0) return null;
+
+                                const isExpanded = expandedMainCategories[parent] !== false; // expanded by default
+
+                                return (
+                                  <div key={parent} className="border border-slate-200/60 dark:border-slate-800/80 rounded-2xl overflow-hidden bg-slate-50/10 dark:bg-slate-950/5">
+                                    {/* Header accordion button */}
+                                    <div className="w-full flex justify-between items-center p-4 bg-slate-50/50 dark:bg-slate-955/20 border-b border-slate-200/50 dark:border-slate-800/50 text-left">
+                                      <button
+                                        onClick={() => setExpandedMainCategories(prev => ({ ...prev, [parent]: !isExpanded }))}
+                                        className="flex flex-col flex-1 cursor-pointer text-left"
+                                      >
+                                        <span className="font-extrabold text-sm text-emerald-650 dark:text-emerald-500">{parent}</span>
+                                        <span className="text-[10px] text-slate-450 mt-1 font-bold">
+                                          {subs.length} subcategories {subcategorySearch && '(filtered)'}
+                                        </span>
+                                      </button>
+                                      <div className="flex items-center gap-1.5 shrink-0">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => { e.stopPropagation(); renameMainCategory(parent); }}
+                                          className="h-7 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800 flex items-center justify-center cursor-pointer text-blue-600 dark:text-blue-400 font-extrabold text-[9.5px] gap-1"
+                                          title="Rename Main Category"
+                                        >
+                                          <Edit3 className="h-3 w-3" /> Edit
+                                        </button>
+                                        <ChevronDown
+                                          onClick={() => setExpandedMainCategories(prev => ({ ...prev, [parent]: !isExpanded }))}
+                                          className={`h-4.5 w-4.5 text-slate-400 transition-transform cursor-pointer ${isExpanded ? 'rotate-180' : ''}`}
+                                        />
+                                      </div>
+                                    </div>
+
+                                    {/* Accordion panel listing subcategories */}
+                                    {isExpanded && (
+                                      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-white dark:bg-slate-900/10">
+                                        {subs.length > 0 ? (
+                                          subs.map(cat => {
+                                            const count = businesses.filter(b => b.category === cat.categoryName).length;
+                                            return (
+                                              <div 
+                                                key={cat._id} 
+                                                className={`border rounded-2xl p-3.5 flex justify-between items-center transition-all min-w-0 gap-3 bg-white dark:bg-slate-900 ${
+                                                  themeMode === 'dark' ? 'border-slate-800 hover:border-slate-700' : 'border-slate-105 hover:border-slate-200 hover:bg-slate-50/40'
+                                                }`}
+                                              >
+                                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center font-black shrink-0 ${
+                                                    themeMode === 'dark' ? 'bg-slate-900 text-emerald-455 border border-slate-800' : 'bg-emerald-50/80 text-[#027244] border-emerald-100'
+                                                  }`}>
+                                                    <Store className="h-4 w-4" />
+                                                  </div>
+                                                  <div className="flex flex-col text-left min-w-0 flex-1">
+                                                    <span className={`font-extrabold text-xs truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{cat.categoryName}</span>
+                                                    <span className="text-[9px] text-slate-400 mt-1 font-semibold truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
+                                                    <span className="text-[9.5px] text-emerald-650 font-black mt-1.5 leading-none">{count} active businesses</span>
+                                                  </div>
+                                                </div>
+
+                                                <div className="flex gap-1.5 shrink-0">
+                                                  <button
+                                                    onClick={() => {
+                                                      const newName = prompt("Rename category:", cat.categoryName);
+                                                      if (!newName || newName === cat.categoryName) return;
+                                                      updatePresetCategory(cat._id, { categoryName: newName });
+                                                    }}
+                                                    className="h-7 px-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[9.5px]"
+                                                    title="Rename"
+                                                  >
+                                                    Edit
+                                                  </button>
+                                                  <button
+                                                    onClick={() => {
+                                                      if (confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
+                                                        deletePresetCategory(cat._id);
+                                                      }
+                                                    }}
+                                                    className="h-7 w-7 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 flex items-center justify-center cursor-pointer border border-rose-500/10"
+                                                    title="Delete"
+                                                  >
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            );
+                                          })
+                                        ) : (
+                                          <span className="text-[11px] text-slate-400 italic col-span-2 text-center py-2">No matching subcategories in this group.</span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              });
+                            })()
+                          ) : (
+                            // Flat search list view of all subcategories
+                            (() => {
+                              const filteredList = presetCategories.filter(cat => {
+                                const matchesMain = (cat.parentCategory || 'Others').toLowerCase().includes(mainCategorySearch.toLowerCase());
+                                const matchesSub = cat.categoryName.toLowerCase().includes(subcategorySearch.toLowerCase());
+                                return matchesMain && matchesSub;
+                              });
+
+                              return (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  {filteredList.length > 0 ? (
+                                    filteredList.map(cat => {
+                                      const count = businesses.filter(b => b.category === cat.categoryName).length;
+                                      return (
+                                        <div 
+                                          key={cat._id} 
+                                          className={`border rounded-2xl p-4 flex justify-between items-center transition-all min-w-0 gap-3 ${
+                                            themeMode === 'dark' ? 'bg-slate-950/20 border-slate-800 hover:border-slate-700' : 'bg-slate-50/50 border-slate-200 hover:bg-slate-50'
+                                          }`}
+                                        >
+                                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                                            <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-black shrink-0 ${
+                                              themeMode === 'dark' ? 'bg-slate-900 text-emerald-455 border border-slate-800' : 'bg-emerald-50 text-[#027244] border-emerald-100'
+                                            }`}>
+                                              <Store className="h-4.5 w-4.5" />
+                                            </div>
+                                            <div className="flex flex-col text-left min-w-0 flex-1">
+                                              <span className={`font-extrabold text-xs truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{cat.categoryName}</span>
+                                              <span className="text-[9.5px] text-slate-450 dark:text-slate-400 font-bold mt-1 leading-none truncate">Main: {cat.parentCategory || 'Others'}</span>
+                                              <span className="text-[9px] text-slate-400 mt-1.5 font-semibold truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
+                                              <span className="text-[9.5px] text-emerald-650 font-black mt-2 leading-none">{count} active businesses</span>
+                                            </div>
+                                          </div>
+
+                                          <div className="flex gap-1.5 shrink-0">
+                                            <button
+                                              onClick={() => {
+                                                const newName = prompt("Rename category:", cat.categoryName);
+                                                if (!newName || newName === cat.categoryName) return;
+                                                updatePresetCategory(cat._id, { categoryName: newName });
+                                              }}
+                                              className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[10px]"
+                                              title="Edit Category Name"
+                                            >
+                                              Edit
+                                            </button>
+                                            <button
+                                              onClick={() => {
+                                                if (confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
+                                                  deletePresetCategory(cat._id);
+                                                }
+                                              }}
+                                              className="h-7 w-7 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 flex items-center justify-center cursor-pointer border border-rose-500/10"
+                                              title="Delete Category"
+                                            >
+                                              <Trash2 className="h-3.5 w-3.5" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      );
+                                    })
+                                  ) : (
+                                    <div className="col-span-2 text-center text-slate-455 italic py-6 text-xs bg-slate-50 dark:bg-slate-950/10 rounded-2xl border border-slate-200/50 dark:border-slate-800/50">
+                                      No preset categories found.
+                                    </div>
+                                  )}
                                 </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })()
+                          )}
                         </div>
                       </div>
                     </div>

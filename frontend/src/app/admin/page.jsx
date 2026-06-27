@@ -4,7 +4,7 @@ import {
   ShieldCheck, ToggleLeft, RefreshCw, Star, HelpCircle, Check, X, AlertCircle, AlertTriangle, 
   ArrowRight, Eye, Grid, Shield, CreditCard, LayoutDashboard, Store, BookOpen, Calendar, 
   MessageSquare, CreditCard as CardIcon, Bell, BarChart3, Settings, LogOut, Search, User, Users,
-  MapPin, ChevronRight, Landmark, Trash2, Mail, Globe, Award, ShieldAlert, CheckCircle2,
+  MapPin, ChevronRight, ChevronDown, Landmark, Trash2, Mail, Globe, Award, ShieldAlert, CheckCircle2,
   Clock, Plus, Filter, ShieldCheck as ShieldOk, Activity, Cpu, Database, Terminal, Gift, Smile,
   Upload, Heart, Copy, XCircle
 } from 'lucide-react';
@@ -25,131 +25,30 @@ const isBizDraft = (b) => {
   );
 };
 
-const availableCategories = [
-  'Automotive',
-  'Beauty & Wellness',
-  'Education',
-  'Electronics',
-  'Food & Restaurants',
-  'Health & Medical',
-  'Home Services',
-  'Real Estate',
-  'Shopping',
-  'Manufacturing',
-  'Professional Services',
-  'Travel & Hospitality',
-  'Construction',
-  'Agriculture',
-  'Finance & Insurance',
-  'Events & Entertainment',
-  'Sports & Fitness',
-  'Governmental organisations',
-  'Public Sector'
-];
-
-const parentCategoryMapping = {
-  'Shopping': [
-    'Grocery Stores', 'Supermarkets', 'Vegetable & Fruit Shops', 'Textile & Garments', 
-    'Footwear Shops', 'Jewelry Shops', 'Gift Shops', 'Stationery & Book Stores', 
-    'Furniture Shops', 'Hardware Stores', 'Paint Stores', 'Pet Shops', 'Cosmetic Stores'
-  ],
-  'Electronics': [
-    'Mobile Stores', 'Computer & Laptop Stores', 'Electronics & Appliances'
-  ],
-  'Food & Restaurants': [
-    'Restaurants', 'Hotels & Lodges', 'Bakeries', 'Cafes & Tea Shops', 
-    'Sweet Shops', 'Fast Food Centers', 'Catering Services', 'Juice & Ice Cream Parlors'
-  ],
-  'Health & Medical': [
-    'Hospitals', 'Clinics', 'Dental Clinics', 'Pharmacies', 
-    'Diagnostic Labs', 'Physiotherapy Centers', 'Veterinary Clinics'
-  ],
-  'Beauty & Wellness': [
-    'Beauty Parlours', 'Salons & Barbers', 'Spa & Wellness Centers'
-  ],
-  'Education': [
-    'Schools', 'Colleges', 'Tuition Centers', 'Coaching Institutes', 
-    'Computer Training Centers', 'Driving Schools'
-  ],
-  'Automotive': [
-    'Car Showrooms', 'Bike Showrooms', 'Automobile Service Centers', 
-    'Car Wash Services', 'Tyre Shops', 'Spare Parts Dealers', 'Petrol Bunks'
-  ],
-  'Home Services': [
-    'Electricians', 'Plumbers', 'Carpenters', 'AC Service & Repair', 
-    'Home Cleaning Services', 'Interior Designers', 'Pest Control Services'
-  ],
-  'Real Estate': [
-    'Real Estate Agencies'
-  ],
-  'Construction': [
-    'Builders & Contractors', 'Construction Material Suppliers', 'Cement & Steel Dealers', 
-    'Architects', 'Borewell Services'
-  ],
-  'Agriculture': [
-    'Farm Equipment Dealers', 'Coconut Traders', 'Fertilizer & Pesticide Shops', 
-    'Dairy Farms', 'Poultry Farms', 'Agricultural Consultants', 'Irrigation Equipment Suppliers'
-  ],
-  'Professional Services': [
-    'Chartered Accountants', 'Auditors', 'Advocates / Lawyers', 'Tax Consultants'
-  ],
-  'Finance & Insurance': [
-    'Insurance Agents', 'Financial Advisors'
-  ],
-  'Events & Entertainment': [
-    'Event Organizers', 'Wedding Planners', 'Photography & Videography', 
-    'Decoration Services', 'Sound & Lighting Services', 'Printing & Flex Services'
-  ],
-  'Travel & Hospitality': [
-    'Travel Agencies', 'Tours & Travels', 'Vehicle Rentals', 'Taxi Services', 'Bus Operators'
-  ],
-  'Sports & Fitness': [
-    'Gyms', 'Yoga Centers', 'Sports Academies', 'Sports Equipment Stores'
-  ],
-  'Governmental organisations': [
-    'Taluk Office', 'Municipality', 'Police Stations', 'Hospitals', 'Banks', 'Schools'
-  ],
-  'Public Sector': [
-    'Temples', 'Govt Schools', 'Govt Offices', 'Govt Hospitals', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs', 'Others'
-  ]
-};
 
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
 
-  // Dynamic Categories calculation helpers
+  // Dynamic Categories calculation helpers — fully driven by DB (presetCategories from API)
   const getAdminDynamicMainCategories = () => {
-    const mainCats = new Set(availableCategories);
-    if (Array.isArray(presetCategories)) {
-      presetCategories.forEach(cat => {
-        if (!cat.parentCategory || cat.parentCategory.trim() === '' || cat.parentCategory === 'Others') {
-          if (cat.categoryName && cat.categoryName !== 'Others') {
-            mainCats.add(cat.categoryName.trim());
-          }
-        } else {
-          mainCats.add(cat.parentCategory.trim());
-        }
-      });
-    }
+    if (!Array.isArray(presetCategories) || presetCategories.length === 0) return [];
+    const mainCats = new Set();
+    presetCategories.forEach(cat => {
+      if (cat.parentCategory && cat.parentCategory.trim() !== '' && cat.parentCategory !== 'Others') {
+        mainCats.add(cat.parentCategory.trim());
+      }
+    });
     return Array.from(mainCats).sort();
   };
 
   const getAdminDynamicSubcategories = (parentCategory) => {
-    if (!parentCategory) return [];
-    const subs = new Set(parentCategoryMapping[parentCategory] || []);
-    if (Array.isArray(presetCategories)) {
-      presetCategories.forEach(cat => {
-        if (cat.parentCategory && cat.parentCategory.toLowerCase() === parentCategory.toLowerCase()) {
-          if (cat.categoryName && cat.categoryName !== 'Others') {
-            subs.add(cat.categoryName);
-          }
-        }
-      });
-    }
-    return Array.from(subs).sort();
+    if (!parentCategory || !Array.isArray(presetCategories)) return [];
+    return presetCategories
+      .filter(cat => cat.parentCategory && cat.parentCategory.toLowerCase() === parentCategory.toLowerCase() && cat.categoryName && cat.categoryName !== 'Others')
+      .map(cat => cat.categoryName)
+      .sort();
   };
-
 
   const formatEventDateRange = (startDate, endDate) => {
     if (!startDate) return 'N/A';
@@ -213,6 +112,10 @@ export default function AdminDashboard() {
   const [reportsData, setReportsData] = useState({});
   const [pendingCategories, setPendingCategories] = useState([]);
   const [presetCategories, setPresetCategories] = useState([]);
+  const [mainCategorySearch, setMainCategorySearch] = useState('');
+  const [subcategorySearch, setSubcategorySearch] = useState('');
+  const [expandedMainCategories, setExpandedMainCategories] = useState({});
+  const [categoryViewMode, setCategoryViewMode] = useState('grouped'); // grouped | list
   const [resolutionActionMap, setResolutionActionMap] = useState({});
   const [resolutionTargetCatMap, setResolutionTargetCatMap] = useState({});
   const [resolutionCustomSubcatMap, setResolutionCustomSubcatMap] = useState({});
@@ -5276,60 +5179,223 @@ export default function AdminDashboard() {
 
                       {/* Section 2: Preset Seeded Categories Grid */}
                       <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
-                        <div className="flex justify-between items-center mb-4 border-b pb-3 border-slate-100">
-                          <h4 className="font-extrabold text-xs uppercase tracking-wider flex items-center gap-2 text-slate-800">
-                            <Grid className="h-4.5 w-4.5 text-emerald-500" /> Preset Categories ({presetCategories.length})
-                          </h4>
-                          <span className="text-[10px] text-slate-500 font-bold">Sort: Alphabetical</span>
+                        <div className="flex flex-col gap-4 mb-4 border-b pb-4 border-slate-100">
+                          <div className="flex justify-between items-center flex-wrap gap-2">
+                            <h4 className="font-extrabold text-xs uppercase tracking-wider flex items-center gap-2 text-slate-800">
+                              <Grid className="h-4.5 w-4.5 text-emerald-500" /> Preset Categories ({presetCategories.length})
+                            </h4>
+                            {/* Toggle view mode */}
+                            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                              <button
+                                onClick={() => setCategoryViewMode('grouped')}
+                                className={`px-2.5 py-1 text-[10px] font-black rounded-lg transition-colors cursor-pointer ${
+                                  categoryViewMode === 'grouped' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-555 hover:text-slate-700'
+                                }`}
+                              >
+                                Grouped by Main
+                              </button>
+                              <button
+                                onClick={() => setCategoryViewMode('list')}
+                                className={`px-2.5 py-1 text-[10px] font-black rounded-lg transition-colors cursor-pointer ${
+                                  categoryViewMode === 'list' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-555 hover:text-slate-700'
+                                }`}
+                              >
+                                All List View
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Dual Search bars */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            {/* Search Main Category */}
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="Search Main Category..."
+                                value={mainCategorySearch}
+                                onChange={(e) => setMainCategorySearch(e.target.value)}
+                                className="w-full pl-8.5 pr-4 py-2 text-xs border border-slate-200 rounded-xl bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                              />
+                              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                            </div>
+
+                            {/* Search Subcategory */}
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="Search Subcategory..."
+                                value={subcategorySearch}
+                                onChange={(e) => setSubcategorySearch(e.target.value)}
+                                className="w-full pl-8.5 pr-4 py-2 text-xs border border-slate-200 rounded-xl bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                              />
+                              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto pr-1">
-                          {presetCategories.map(cat => {
-                            const count = businesses.filter(b => b.category === cat.categoryName || b.type === cat.categoryName).length;
-                            return (
-                              <div 
-                                key={cat._id} 
-                                className="border border-slate-200 rounded-2xl p-4 flex justify-between items-center transition-all bg-slate-50/50 hover:bg-slate-50 min-w-0 gap-3"
-                              >
-                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                  <div className="h-9 w-9 rounded-xl flex items-center justify-center font-black shrink-0 bg-emerald-50 text-[#027244] border border-emerald-100">
-                                    <Store className="h-4.5 w-4.5" />
-                                  </div>
-                                  <div className="flex flex-col text-left min-w-0 flex-1">
-                                    <span className="font-extrabold text-xs truncate text-slate-800">{cat.categoryName}</span>
-                                    <span className="text-[9.5px] text-slate-450 font-bold mt-1 leading-none truncate">Main: {cat.parentCategory || 'Others'}</span>
-                                    <span className="text-[9px] text-slate-400 mt-1.5 font-semibold truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
-                                    <span className="text-[9.5px] text-emerald-650 font-black mt-2 leading-none">{count} active businesses</span>
-                                  </div>
-                                </div>
+                        <div className="max-h-[600px] overflow-y-auto pr-1 flex flex-col gap-4">
+                          {categoryViewMode === 'grouped' ? (
+                            (() => {
+                              // 1. Get unique parent categories
+                              const uniqueParents = Array.from(new Set(presetCategories.map(c => c.parentCategory || 'Others')))
+                                .sort();
 
-                                <div className="flex gap-1.5 shrink-0">
-                                  <button
-                                    onClick={() => {
-                                      const newName = prompt("Rename category:", cat.categoryName);
-                                      if (!newName || newName === cat.categoryName) return;
-                                      updatePresetCategory(cat._id, { categoryName: newName });
-                                    }}
-                                    className="h-7 w-7 rounded-lg border border-slate-200 hover:bg-slate-100 flex items-center justify-center cursor-pointer text-slate-550 font-extrabold text-[10px]"
-                                    title="Edit Category Name"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      if (confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
-                                        deletePresetCategory(cat._id);
-                                      }
-                                    }}
-                                    className="h-7 w-7 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 flex items-center justify-center cursor-pointer border border-rose-500/10"
-                                    title="Delete Category"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
+                              // 2. Filter parents by parent search query
+                              const filteredParents = uniqueParents.filter(p => p.toLowerCase().includes(mainCategorySearch.toLowerCase()));
+
+                              // 3. Filter and render subcategories grouped under parents
+                              return filteredParents.map(parent => {
+                                const subs = presetCategories.filter(cat => 
+                                  (cat.parentCategory || 'Others') === parent && 
+                                  cat.categoryName.toLowerCase().includes(subcategorySearch.toLowerCase())
+                                );
+
+                                // If search query is entered, but no matching subcategories in this parent, don't show the parent card
+                                if (subcategorySearch && subs.length === 0) return null;
+
+                                const isExpanded = expandedMainCategories[parent] !== false; // expanded by default
+
+                                return (
+                                  <div key={parent} className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/10">
+                                    {/* Header accordion button */}
+                                    <button
+                                      onClick={() => setExpandedMainCategories(prev => ({ ...prev, [parent]: !isExpanded }))}
+                                      className="w-full flex justify-between items-center p-4 bg-slate-50/50 border-b border-slate-200 text-left cursor-pointer"
+                                    >
+                                      <div className="flex flex-col">
+                                        <span className="font-extrabold text-sm text-emerald-650">{parent}</span>
+                                        <span className="text-[10px] text-slate-450 mt-1 font-bold">
+                                          {subs.length} subcategories {subcategorySearch && '(filtered)'}
+                                        </span>
+                                      </div>
+                                      <ChevronDown className={`h-4.5 w-4.5 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {/* Accordion panel listing subcategories */}
+                                    {isExpanded && (
+                                      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-white">
+                                        {subs.length > 0 ? (
+                                          subs.map(cat => {
+                                            const count = businesses.filter(b => b.category === cat.categoryName || b.type === cat.categoryName).length;
+                                            return (
+                                              <div 
+                                                key={cat._id} 
+                                                className="border border-slate-105 rounded-2xl p-3.5 flex justify-between items-center transition-all bg-white min-w-0 gap-3 hover:border-slate-200 hover:bg-slate-50/40"
+                                              >
+                                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                                  <div className="h-8 w-8 rounded-lg flex items-center justify-center font-black shrink-0 bg-emerald-50/80 text-[#027244] border-emerald-100">
+                                                    <Store className="h-4 w-4" />
+                                                  </div>
+                                                  <div className="flex flex-col text-left min-w-0 flex-1">
+                                                    <span className="font-extrabold text-xs truncate text-slate-800">{cat.categoryName}</span>
+                                                    <span className="text-[9px] text-slate-400 mt-1 font-semibold truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
+                                                    <span className="text-[9.5px] text-emerald-655 font-black mt-1.5 leading-none">{count} active businesses</span>
+                                                  </div>
+                                                </div>
+
+                                                <div className="flex gap-1.5 shrink-0">
+                                                  <button
+                                                    onClick={() => {
+                                                      const newName = prompt("Rename category:", cat.categoryName);
+                                                      if (!newName || newName === cat.categoryName) return;
+                                                      updatePresetCategory(cat._id, { categoryName: newName });
+                                                    }}
+                                                    className="h-7 px-2 rounded-lg border border-slate-200 hover:bg-slate-105 flex items-center justify-center cursor-pointer text-slate-550 font-extrabold text-[9.5px]"
+                                                    title="Rename"
+                                                  >
+                                                    Edit
+                                                  </button>
+                                                  <button
+                                                    onClick={() => {
+                                                      if (confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
+                                                        deletePresetCategory(cat._id);
+                                                      }
+                                                    }}
+                                                    className="h-7 w-7 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 flex items-center justify-center cursor-pointer border border-rose-500/10"
+                                                    title="Delete"
+                                                  >
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            );
+                                          })
+                                        ) : (
+                                          <span className="text-[11px] text-slate-400 italic col-span-2 text-center py-2">No matching subcategories in this group.</span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              });
+                            })()
+                          ) : (
+                            // Flat search list view of all subcategories
+                            (() => {
+                              const filteredList = presetCategories.filter(cat => {
+                                const matchesMain = (cat.parentCategory || 'Others').toLowerCase().includes(mainCategorySearch.toLowerCase());
+                                const matchesSub = cat.categoryName.toLowerCase().includes(subcategorySearch.toLowerCase());
+                                return matchesMain && matchesSub;
+                              });
+
+                              return (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  {filteredList.length > 0 ? (
+                                    filteredList.map(cat => {
+                                      const count = businesses.filter(b => b.category === cat.categoryName || b.type === cat.categoryName).length;
+                                      return (
+                                        <div 
+                                          key={cat._id} 
+                                          className="border border-slate-200 rounded-2xl p-4 flex justify-between items-center transition-all bg-slate-50/50 hover:bg-slate-50 min-w-0 gap-3"
+                                        >
+                                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                                            <div className="h-9 w-9 rounded-xl flex items-center justify-center font-black shrink-0 bg-emerald-50 text-[#027244] border border-emerald-100">
+                                              <Store className="h-4.5 w-4.5" />
+                                            </div>
+                                            <div className="flex flex-col text-left min-w-0 flex-1">
+                                              <span className="font-extrabold text-xs truncate text-slate-800">{cat.categoryName}</span>
+                                              <span className="text-[9.5px] text-slate-450 font-bold mt-1 leading-none truncate">Main: {cat.parentCategory || 'Others'}</span>
+                                              <span className="text-[9px] text-slate-400 mt-1.5 font-semibold truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
+                                              <span className="text-[9.5px] text-emerald-655 font-black mt-2 leading-none">{count} active businesses</span>
+                                            </div>
+                                          </div>
+
+                                          <div className="flex gap-1.5 shrink-0">
+                                            <button
+                                              onClick={() => {
+                                                const newName = prompt("Rename category:", cat.categoryName);
+                                                if (!newName || newName === cat.categoryName) return;
+                                                updatePresetCategory(cat._id, { categoryName: newName });
+                                              }}
+                                              className="h-7 w-7 rounded-lg border border-slate-200 hover:bg-slate-100 flex items-center justify-center cursor-pointer text-slate-550 font-extrabold text-[10px]"
+                                              title="Edit Category Name"
+                                            >
+                                              Edit
+                                            </button>
+                                            <button
+                                              onClick={() => {
+                                                if (confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
+                                                  deletePresetCategory(cat._id);
+                                                }
+                                              }}
+                                              className="h-7 w-7 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 flex items-center justify-center cursor-pointer border border-rose-500/10"
+                                              title="Delete Category"
+                                            >
+                                              <Trash2 className="h-3.5 w-3.5" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      );
+                                    })
+                                  ) : (
+                                    <div className="col-span-2 text-center text-slate-455 italic py-6 text-xs bg-slate-50 rounded-2xl border border-slate-205">
+                                      No preset categories found.
+                                    </div>
+                                  )}
                                 </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })()
+                          )}
                         </div>
                       </div>
                     </div>

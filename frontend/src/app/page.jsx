@@ -1143,11 +1143,11 @@ export default function Home() {
                   >
                     {/* Logo/Image */}
                     {biz.logoUrl ? (
-                      <div className="h-14 w-14 rounded-xl border border-slate-100 overflow-hidden bg-white shrink-0">
+                      <div className="h-14 w-14 rounded-xl border border-slate-100 overflow-hidden bg-white shrink-0 flex items-center justify-center p-0.5">
                         <img 
                           src={window.getImageUrl(biz.logoUrl)} 
                           alt={biz.name} 
-                          className="h-full w-full object-cover" 
+                          className="h-full w-full object-contain" 
                           style={{
                             filter: !isSubscribed ? 'blur(3px) grayscale(30%)' : 'none'
                           }}

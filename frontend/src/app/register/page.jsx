@@ -561,7 +561,7 @@ export default function Register() {
             <div className="flex flex-col gap-0.5 text-left">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Need Help?</span>
               <span className="text-xs text-[#001c41] font-extrabold mt-1 leading-normal">Our editor assistance team is here to help.</span>
-              <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Email: udumalpetbusinesstour@gmail.com</a>
+              <a href="mailto:info@udumalpet.business" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Email: info@udumalpet.business</a>
             </div>
           </div>
         </div>
@@ -1000,7 +1000,7 @@ export default function Register() {
                     {fromParam === 'events' ? 'Our events support desk is here for you.' : (fromParam === 'blogs' ? 'Our editor assistance team is here to help.' : 'Our support team is here to help you.')}
                   </span>
                   {fromParam === 'blogs' ? (
-                    <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Email: udumalpetbusinesstour@gmail.com</a>
+                    <a href="mailto:info@udumalpet.business" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Email: info@udumalpet.business</a>
                   ) : (
                     <a href="tel:+918925728260" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 89257 28260</a>
                   )}

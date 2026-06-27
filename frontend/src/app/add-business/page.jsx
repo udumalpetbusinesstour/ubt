@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { ShieldCheck, ArrowLeft, ArrowRight, Upload, Sparkles, CheckCircle2, ChevronRight, Eye, RefreshCw, AlertCircle, AlertTriangle, Lock, Briefcase, Lightbulb, Headset, Phone, Mail, Clock, Search, BookOpen } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, ArrowRight, Upload, Sparkles, CheckCircle2, ChevronRight, Eye, RefreshCw, AlertCircle, AlertTriangle, Lock, Briefcase, Lightbulb, Headset, Phone, Mail, Clock, Search, BookOpen, ChevronDown } from 'lucide-react';
 import MockGoogleMaps from '@/components/MockGoogleMaps';
 import ChoosePlan from '../choose-plan/page';
 
@@ -20,94 +20,6 @@ const branchSteps = [
   { id: 4, name: 'Photos & Media' },
 ];
 
-const parentCategoryMapping = {
-  'Shopping': [
-    'Grocery Stores', 'Supermarkets', 'Vegetable & Fruit Shops', 'Textile & Garments', 
-    'Footwear Shops', 'Jewelry Shops', 'Gift Shops', 'Stationery & Book Stores', 
-    'Furniture Shops', 'Hardware Stores', 'Paint Stores', 'Pet Shops', 'Cosmetic Stores'
-  ],
-  'Electronics': [
-    'Mobile Stores', 'Computer & Laptop Stores', 'Electronics & Appliances'
-  ],
-  'Food & Restaurants': [
-    'Restaurants', 'Hotels & Lodges', 'Bakeries', 'Cafes & Tea Shops', 
-    'Sweet Shops', 'Fast Food Centers', 'Catering Services', 'Juice & Ice Cream Parlors'
-  ],
-  'Health & Medical': [
-    'Hospitals', 'Clinics', 'Dental Clinics', 'Pharmacies', 
-    'Diagnostic Labs', 'Physiotherapy Centers', 'Veterinary Clinics'
-  ],
-  'Beauty & Wellness': [
-    'Beauty Parlours', 'Salons & Barbers', 'Spa & Wellness Centers'
-  ],
-  'Education': [
-    'Schools', 'Colleges', 'Tuition Centers', 'Coaching Institutes', 
-    'Computer Training Centers', 'Driving Schools'
-  ],
-  'Automotive': [
-    'Car Showrooms', 'Bike Showrooms', 'Automobile Service Centers', 
-    'Car Wash Services', 'Tyre Shops', 'Spare Parts Dealers', 'Petrol Bunks'
-  ],
-  'Home Services': [
-    'Electricians', 'Plumbers', 'Carpenters', 'AC Service & Repair', 
-    'Home Cleaning Services', 'Interior Designers', 'Pest Control Services'
-  ],
-  'Real Estate': [
-    'Real Estate Agencies'
-  ],
-  'Construction': [
-    'Builders & Contractors', 'Construction Material Suppliers', 'Cement & Steel Dealers', 
-    'Architects', 'Borewell Services'
-  ],
-  'Agriculture': [
-    'Farm Equipment Dealers', 'Coconut Traders', 'Fertilizer & Pesticide Shops', 
-    'Dairy Farms', 'Poultry Farms', 'Agricultural Consultants', 'Irrigation Equipment Suppliers'
-  ],
-  'Professional Services': [
-    'Chartered Accountants', 'Auditors', 'Advocates / Lawyers', 'Tax Consultants'
-  ],
-  'Finance & Insurance': [
-    'Insurance Agents', 'Financial Advisors'
-  ],
-  'Events & Entertainment': [
-    'Event Organizers', 'Wedding Planners', 'Photography & Videography', 
-    'Decoration Services', 'Sound & Lighting Services', 'Printing & Flex Services'
-  ],
-  'Travel & Hospitality': [
-    'Travel Agencies', 'Tours & Travels', 'Vehicle Rentals', 'Taxi Services', 'Bus Operators'
-  ],
-  'Sports & Fitness': [
-    'Gyms', 'Yoga Centers', 'Sports Academies', 'Sports Equipment Stores'
-  ],
-  'Governmental organisations': [
-    'Taluk Office', 'Municipality', 'Police Stations', 'Hospitals', 'Banks', 'Schools'
-  ],
-  'Public Sector': [
-    'Temples', 'Govt Schools', 'Govt Offices', 'Govt Hospitals', 'Marriage Halls', 'Community Halls', 'Trusts & NGOs', 'Others'
-  ]
-};
-
-const availableCategories = [
-  'Automotive',
-  'Beauty & Wellness',
-  'Education',
-  'Electronics',
-  'Food & Restaurants',
-  'Health & Medical',
-  'Home Services',
-  'Real Estate',
-  'Shopping',
-  'Manufacturing',
-  'Professional Services',
-  'Travel & Hospitality',
-  'Construction',
-  'Agriculture',
-  'Finance & Insurance',
-  'Events & Entertainment',
-  'Sports & Fitness',
-  'Governmental organisations',
-  'Public Sector'
-];
 
 const availableLocalities = [
   'Gandhi Nagar', 
@@ -119,6 +31,24 @@ const availableLocalities = [
   'Palani Road',
   'Dhali Road',
   'Kaniyur Road'
+];
+
+const pincodesList = [
+  { value: "642126", label: "642126 - Udumalpet Main Town (Head Post Office, Bazaar, East, South, Eripalayam)" },
+  { value: "642207", label: "642207 - Pungamuthur (Erisinampatti, Devanurpudur, Vilamarathupatti, Udukkampalayam)" },
+  { value: "642154", label: "642154 - Bodipatti & Gandhi Nagar (Andiyagoundanur, Kuralkuttai, Thumbalapatti, Elayamuthur)" },
+  { value: "642112", label: "642112 - Dhali (Thirumoorthi Nagar, Jallipatti, Manupatti, Kurichikottai)" },
+  { value: "642205", label: "642205 - Pethappampatti (Kongalnagaram, Poosaripatti, Pudupalayam, Dhottampatti, Vadugapalayam)" },
+  { value: "642122", label: "642122 - Poolankinar (Anthiyur, Ganapathipalayam, Kodingium, Senjellappagoundenpudur)" },
+  { value: "642204", label: "642204 - Komaralingam & Kolumam (Rudrapalayam, Samarayapatti, Pappankulam, Uralpatti)" },
+  { value: "642201", label: "642201 - Gudimangalam (Amandakadavoo, Kondampatti, Kottamangalam, Periapatti)" },
+  { value: "642203", label: "642203 - Kaniyur (Kadathur, Myvadi, Karatholuvu, Thungavi, Metrathi)" },
+  { value: "642102", label: "642102 - Amaravathi Nagar (Kallapuram, Amaravathi Dam area)" },
+  { value: "642128", label: "642128 - Venkatesa Mills (S V Puram)" },
+  { value: "642113", label: "642113 - Madathukulam (Solamadevi, Sarkarkannadipudur)" },
+  { value: "642206", label: "642206 - Poolavadi (Aathukinathupatti, Munduvelampatti)" },
+  { value: "642132", label: "642132 - Valavadi (Dheepalapatti, Sundakkampalayam)" },
+  { value: "642111", label: "642111 - Agrahara Kannadiputhur (Krishnapuram)" }
 ];
 
 const isFoodRelated = (category, customCategoryName) => {
@@ -151,36 +81,24 @@ export default function AddBusiness() {
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Dynamic Categories calculation helpers
+  // Dynamic Categories calculation helpers — fully driven by DB data
   const getDynamicMainCategories = () => {
-    const mainCats = new Set(availableCategories);
-    if (Array.isArray(dbCategories)) {
-      dbCategories.forEach(cat => {
-        if (!cat.parentCategory || cat.parentCategory.trim() === '' || cat.parentCategory === 'Others') {
-          if (cat.categoryName && cat.categoryName !== 'Others') {
-            mainCats.add(cat.categoryName.trim());
-          }
-        } else {
-          mainCats.add(cat.parentCategory.trim());
-        }
-      });
-    }
+    if (!Array.isArray(dbCategories) || dbCategories.length === 0) return [];
+    const mainCats = new Set();
+    dbCategories.forEach(cat => {
+      if (cat.parentCategory && cat.parentCategory.trim() !== '' && cat.parentCategory !== 'Others') {
+        mainCats.add(cat.parentCategory.trim());
+      }
+    });
     return Array.from(mainCats).sort();
   };
 
   const getDynamicSubcategories = (parentCategory) => {
-    if (!parentCategory) return [];
-    const subs = new Set(parentCategoryMapping[parentCategory] || []);
-    if (Array.isArray(dbCategories)) {
-      dbCategories.forEach(cat => {
-        if (cat.parentCategory && cat.parentCategory.toLowerCase() === parentCategory.toLowerCase()) {
-          if (cat.categoryName && cat.categoryName !== 'Others') {
-            subs.add(cat.categoryName);
-          }
-        }
-      });
-    }
-    return Array.from(subs).sort();
+    if (!parentCategory || !Array.isArray(dbCategories)) return [];
+    return dbCategories
+      .filter(cat => cat.parentCategory && cat.parentCategory.toLowerCase() === parentCategory.toLowerCase() && cat.categoryName && cat.categoryName !== 'Others')
+      .map(cat => cat.categoryName)
+      .sort();
   };
 
 
@@ -193,7 +111,7 @@ export default function AddBusiness() {
   const [branchGalleryFiles, setBranchGalleryFiles] = useState([]);
   const [branchForm, setBranchForm] = useState({
     name: '',
-    category: 'Grocery Stores',
+    category: '',
     customCategoryName: '',
     type: 'Individual / Sole Proprietor',
     description: '',
@@ -236,9 +154,9 @@ export default function AddBusiness() {
   // Form Fields
   const [formData, setFormData] = useState({
     name: '',
-    category: 'Grocery Stores',
+    category: '',
     customCategoryName: '',
-    requestedParentCategory: 'Shopping',
+    requestedParentCategory: '',
     categoryStatus: 'Normal',
     type: 'Individual / Sole Proprietor',
     description: '',
@@ -379,6 +297,11 @@ export default function AddBusiness() {
   const [categoryWarning, setCategoryWarning] = useState('');
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
+  const [pincodeSearchQuery, setPincodeSearchQuery] = useState('');
+  const [showPincodeDropdown, setShowPincodeDropdown] = useState(false);
+  const [branchPincodeSearchQuery, setBranchPincodeSearchQuery] = useState('');
+  const [showBranchPincodeDropdown, setShowBranchPincodeDropdown] = useState(false);
 
   const fetchBranches = async (businessId, authToken) => {
     try {
@@ -799,7 +722,9 @@ export default function AddBusiness() {
             lat: d.latitude || d.coordinates?.lat || 10.585,
             lng: d.longitude || d.coordinates?.lng || 77.251
           },
-          timings: d.timings || d.openingHours || formData.timings,
+          timings: d.timings === null ? {
+            Monday: '', Tuesday: '', Wednesday: '', Thursday: '', Friday: '', Saturday: '', Sunday: ''
+          } : (d.timings || d.openingHours || formData.timings),
         };
 
         if (d.name) {
@@ -943,7 +868,9 @@ export default function AddBusiness() {
             lat: d.latitude || d.coordinates?.lat || 10.585,
             lng: d.longitude || d.coordinates?.lng || 77.251
           },
-          timings: d.timings || d.openingHours || branchForm.timings,
+          timings: d.timings === null ? {
+            Monday: '', Tuesday: '', Wednesday: '', Thursday: '', Friday: '', Saturday: '', Sunday: ''
+          } : (d.timings || d.openingHours || branchForm.timings),
         };
 
         if (d.name) {
@@ -1234,6 +1161,27 @@ export default function AddBusiness() {
         setError('Please select a branch pincode.');
         return false;
       }
+    } else if (branchStep === 2) {
+      if (!branchForm.services || !branchForm.services.trim()) {
+        setError('Branch Services / Products Offered is mandatory.');
+        return false;
+      }
+      if (!branchForm.brands || !branchForm.brands.trim()) {
+        setError('Branch Brands We Deal With is mandatory.');
+        return false;
+      }
+      if (!branchForm.serviceArea || !branchForm.serviceArea.trim()) {
+        setError('Branch Service Area Limits is mandatory.');
+        return false;
+      }
+      if (!branchForm.languagesKnown || !branchForm.languagesKnown.trim()) {
+        setError('Branch Languages Known is mandatory.');
+        return false;
+      }
+      if (!branchForm.highlights || !branchForm.highlights.trim()) {
+        setError('Branch Verified Highlights / Features (Green Tick Badges) is mandatory.');
+        return false;
+      }
     } else if (branchStep === 3) {
       if (!branchForm.phone || !branchForm.address || !branchForm.locality) {
         setError('Phone number, address, and locality are mandatory.');
@@ -1270,6 +1218,27 @@ export default function AddBusiness() {
       }
       if (formData.category === 'Others' && (!formData.customCategoryName || !formData.customCategoryName.trim())) {
         setError('Please specify your custom subcategory name.');
+        return false;
+      }
+    } else if (currentStep === 3) {
+      if (!formData.services || !formData.services.trim()) {
+        setError('Services / Products Offered is mandatory.');
+        return false;
+      }
+      if (!formData.brands || !formData.brands.trim()) {
+        setError('Brands We Deal With is mandatory.');
+        return false;
+      }
+      if (!formData.serviceArea || !formData.serviceArea.trim()) {
+        setError('Service Area Limits is mandatory.');
+        return false;
+      }
+      if (!formData.languagesKnown || !formData.languagesKnown.trim()) {
+        setError('Languages Known is mandatory.');
+        return false;
+      }
+      if (!formData.highlights || !formData.highlights.trim()) {
+        setError('Verified Highlights / Features (Green Tick Badges) is mandatory.');
         return false;
       }
     } else if (currentStep === 4) {
@@ -1492,29 +1461,63 @@ export default function AddBusiness() {
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5 text-left">
                   <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Select Business Pincode <span className="text-red-500">*</span></label>
-                  <select
-                    name="pincode"
-                    value={formData.pincode}
-                    onChange={handleInputChange}
-                    className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
-                  >
-                    <option value="">-- Choose Pincode --</option>
-                    <option value="642126">642126 - Udumalpet Main Town (Head Post Office, Bazaar, East, South, Eripalayam)</option>
-                    <option value="642207">642207 - Pungamuthur (Erisinampatti, Devanurpudur, Vilamarathupatti, Udukkampalayam)</option>
-                    <option value="642154">642154 - Bodipatti & Gandhi Nagar (Andiyagoundanur, Kuralkuttai, Thumbalapatti, Elayamuthur)</option>
-                    <option value="642112">642112 - Dhali (Thirumoorthi Nagar, Jallipatti, Manupatti, Kurichikottai)</option>
-                    <option value="642205">642205 - Pethappampatti (Kongalnagaram, Poosaripatti, Pudupalayam, Dhottampatti, Vadugapalayam)</option>
-                    <option value="642122">642122 - Poolankinar (Anthiyur, Ganapathipalayam, Kodingium, Senjellappagoundenpudur)</option>
-                    <option value="642204">642204 - Komaralingam & Kolumam (Rudrapalayam, Samarayapatti, Pappankulam, Uralpatti)</option>
-                    <option value="642201">642201 - Gudimangalam (Amandakadavoo, Kondampatti, Kottamangalam, Periapatti)</option>
-                    <option value="642203">642203 - Kaniyur (Kadathur, Myvadi, Karatholuvu, Thungavi, Metrathi)</option>
-                    <option value="642102">642102 - Amaravathi Nagar (Kallapuram, Amaravathi Dam area)</option>
-                    <option value="642128">642128 - Venkatesa Mills (S V Puram)</option>
-                    <option value="642113">642113 - Madathukulam (Solamadevi, Sarkarkannadipudur)</option>
-                    <option value="642206">642206 - Poolavadi (Aathukinathupatti, Munduvelampatti)</option>
-                    <option value="642132">642132 - Valavadi (Dheepalapatti, Sundakkampalayam)</option>
-                    <option value="642111">642111 - Agrahara Kannadiputhur (Krishnapuram)</option>
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowPincodeDropdown(!showPincodeDropdown)}
+                      className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold text-left focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer flex justify-between items-center"
+                    >
+                      <span className="truncate">
+                        {pincodesList.find(p => p.value === formData.pincode)?.label || '-- Choose Pincode --'}
+                      </span>
+                      <ChevronDown className="h-4.5 w-4.5 text-slate-400 shrink-0" />
+                    </button>
+                    {showPincodeDropdown && (
+                      <div className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-80 flex flex-col">
+                        <div className="p-2 border-b border-slate-100 bg-slate-50">
+                          <input
+                            type="text"
+                            placeholder="Type to search pincode/area..."
+                            value={pincodeSearchQuery}
+                            onChange={(e) => setPincodeSearchQuery(e.target.value)}
+                            className="w-full py-2 px-3 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-emerald-500"
+                            autoFocus
+                          />
+                        </div>
+                        <div className="overflow-y-auto max-h-60 py-1">
+                          {pincodesList.filter(p => p.label.toLowerCase().includes(pincodeSearchQuery.toLowerCase())).length > 0 ? (
+                            pincodesList
+                              .filter(p => p.label.toLowerCase().includes(pincodeSearchQuery.toLowerCase()))
+                              .map(p => (
+                                <button
+                                  key={p.value}
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = {
+                                      ...formData,
+                                      pincode: p.value
+                                    };
+                                    setFormData(updated);
+                                    saveDraft(updated);
+                                    setShowPincodeDropdown(false);
+                                    setPincodeSearchQuery('');
+                                  }}
+                                  className={`w-full text-left py-2.5 px-4 text-xs font-semibold hover:bg-slate-50 transition-colors ${
+                                    formData.pincode === p.value ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
+                                  }`}
+                                >
+                                  {p.label}
+                                </button>
+                              ))
+                          ) : (
+                            <div className="text-center py-4 text-xs text-slate-450 font-semibold">
+                              No matching pincodes found
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="bg-amber-50/50 border border-amber-200/60 rounded-2xl p-4.5 text-xs text-amber-800 leading-relaxed font-semibold text-left">
@@ -1726,13 +1729,15 @@ export default function AddBusiness() {
                             isAddressVerified: true,
                             googlePlaceId: d.googlePlaceId || '',
                             googleRating: d.googleRating || 0,
-                            googleReviewsCount: d.googleReviewsCount || 0,
+                    googleReviewsCount: d.googleReviewsCount || 0,
                             googleReviews: d.googleReviews || [],
                             coordinates: {
                               lat: d.latitude || d.coordinates?.lat || 10.585,
                               lng: d.longitude || d.coordinates?.lng || 77.251
                             },
-                            timings: d.timings || d.openingHours || formData.timings,
+                            timings: d.timings === null ? {
+                              Monday: '', Tuesday: '', Wednesday: '', Thursday: '', Friday: '', Saturday: '', Sunday: ''
+                            } : (d.timings || d.openingHours || formData.timings),
                           };
                           setFormData(updated);
                           setGmbImportedReviews(d.googleReviews || []);
@@ -1818,29 +1823,58 @@ export default function AddBusiness() {
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5 text-left">
                   <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Select Branch Pincode <span className="text-red-500">*</span></label>
-                  <select
-                    name="pincode"
-                    value={branchForm.pincode}
-                    onChange={handleBranchInputChange}
-                    className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
-                  >
-                    <option value="">-- Choose Pincode --</option>
-                    <option value="642126">642126 - Udumalpet Main Town</option>
-                    <option value="642207">642207 - Pungamuthur</option>
-                    <option value="642154">642154 - Bodipatti & Gandhi Nagar</option>
-                    <option value="642112">642112 - Dhali</option>
-                    <option value="642205">642205 - Pethappampatti</option>
-                    <option value="642122">642122 - Poolankinar</option>
-                    <option value="642204">642204 - Komaralingam & Kolumam</option>
-                    <option value="642201">642201 - Gudimangalam</option>
-                    <option value="642203">642203 - Kaniyur</option>
-                    <option value="642102">642102 - Amaravathi Nagar</option>
-                    <option value="642128">642128 - Venkatesa Mills</option>
-                    <option value="642113">642113 - Madathukulam</option>
-                    <option value="642206">642206 - Poolavadi</option>
-                    <option value="642132">642132 - Valavadi</option>
-                    <option value="642111">642111 - Agrahara Kannadiputhur</option>
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowBranchPincodeDropdown(!showBranchPincodeDropdown)}
+                      className="w-full py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold text-left focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer flex justify-between items-center"
+                    >
+                      <span className="truncate">
+                        {pincodesList.find(p => p.value === branchForm.pincode)?.label || '-- Choose Pincode --'}
+                      </span>
+                      <ChevronDown className="h-4.5 w-4.5 text-slate-400 shrink-0" />
+                    </button>
+                    {showBranchPincodeDropdown && (
+                      <div className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-80 flex flex-col">
+                        <div className="p-2 border-b border-slate-100 bg-slate-50">
+                          <input
+                            type="text"
+                            placeholder="Type to search pincode/area..."
+                            value={branchPincodeSearchQuery}
+                            onChange={(e) => setBranchPincodeSearchQuery(e.target.value)}
+                            className="w-full py-2 px-3 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-emerald-500"
+                            autoFocus
+                          />
+                        </div>
+                        <div className="overflow-y-auto max-h-60 py-1">
+                          {pincodesList.filter(p => p.label.toLowerCase().includes(branchPincodeSearchQuery.toLowerCase())).length > 0 ? (
+                            pincodesList
+                              .filter(p => p.label.toLowerCase().includes(branchPincodeSearchQuery.toLowerCase()))
+                              .map(p => (
+                                <button
+                                  key={p.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setBranchForm(prev => ({ ...prev, pincode: p.value }));
+                                    setShowBranchPincodeDropdown(false);
+                                    setBranchPincodeSearchQuery('');
+                                  }}
+                                  className={`w-full text-left py-2.5 px-4 text-xs font-semibold hover:bg-slate-50 transition-colors ${
+                                    branchForm.pincode === p.value ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
+                                  }`}
+                                >
+                                  {p.label}
+                                </button>
+                              ))
+                          ) : (
+                            <div className="text-center py-4 text-xs text-slate-450 font-semibold">
+                              No matching pincodes found
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="bg-amber-50/50 border border-amber-200/60 rounded-2xl p-4.5 text-xs text-amber-800 leading-relaxed font-semibold text-left">
@@ -2057,7 +2091,9 @@ export default function AddBusiness() {
                               lat: d.latitude || d.coordinates?.lat || 10.585,
                               lng: d.longitude || d.coordinates?.lng || 77.251
                             },
-                            timings: d.timings || d.openingHours || branchForm.timings,
+                            timings: d.timings === null ? {
+                              Monday: '', Tuesday: '', Wednesday: '', Thursday: '', Friday: '', Saturday: '', Sunday: ''
+                            } : (d.timings || d.openingHours || branchForm.timings),
                           };
                           setBranchForm(updated);
                           setBranchImportedReviews(d.googleReviews || []);
@@ -2241,14 +2277,21 @@ export default function AddBusiness() {
                               setFormData(updated);
                               saveDraft(updated);
                             } else {
-                              const subs = getDynamicSubcategories(parentVal);
-                              const subVal = subs[0] || '';
+                              const isGov = parentVal.toLowerCase() === 'governmental organisations' || parentVal.toLowerCase() === 'public sector';
+                              let currentTimings = formData.timings;
+                              const isDefault = currentTimings && currentTimings.Monday === '9:00 AM - 8:00 PM' && currentTimings.Sunday === 'Closed';
+                              if (isGov && isDefault) {
+                                currentTimings = {
+                                  Monday: '', Tuesday: '', Wednesday: '', Thursday: '', Friday: '', Saturday: '', Sunday: ''
+                                };
+                              }
                               const updated = {
                                 ...formData,
                                 requestedParentCategory: parentVal,
-                                category: subVal,
+                                category: '',
                                 customCategoryName: '',
-                                categoryStatus: 'Normal'
+                                categoryStatus: 'Normal',
+                                timings: currentTimings
                               };
                               setFormData(updated);
                               saveDraft(updated);
@@ -2260,6 +2303,7 @@ export default function AddBusiness() {
                           {getDynamicMainCategories().map(cat => (
                             <option key={cat} value={cat}>{cat}</option>
                           ))}
+                          <option value="Others">Others</option>
                         </select>
                       )}
                     </div>
@@ -2464,7 +2508,7 @@ export default function AddBusiness() {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Services / Products Offered *</label>
+                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Services / Products Offered <span className="text-red-500">*</span></label>
                     <span className="text-[10px] text-slate-400 font-bold -mt-1 block">Select the services or products you offer (Comma Separated)</span>
                     <input
                       type="text"
@@ -2477,7 +2521,7 @@ export default function AddBusiness() {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Brands We Deal With (Optional)</label>
+                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Brands We Deal With <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       name="brands"
@@ -2490,7 +2534,7 @@ export default function AddBusiness() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5 text-left">
-                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Service Area Limits</label>
+                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Service Area Limits <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         name="serviceArea"
@@ -2502,7 +2546,7 @@ export default function AddBusiness() {
                     </div>
 
                     <div className="flex flex-col gap-1.5 text-left">
-                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Languages Known</label>
+                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Languages Known <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         name="languagesKnown"
@@ -2515,7 +2559,7 @@ export default function AddBusiness() {
                   </div>
 
                   <div className="flex flex-col gap-1.5 text-left">
-                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Green Tick Badges)</label>
+                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Green Tick Badges) <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       name="highlights"
@@ -2583,7 +2627,7 @@ export default function AddBusiness() {
                     </div>
                     
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">WhatsApp Number</label>
+                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">WhatsApp Number <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         name="whatsapp"
@@ -3016,7 +3060,7 @@ export default function AddBusiness() {
                       </div>
 
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Brands Dealt With (Optional)</label>
+                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Brands Dealt With <span className="text-red-500">*</span></label>
                         <input
                           type="text"
                           name="brands"
@@ -3029,7 +3073,7 @@ export default function AddBusiness() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Service Area Limits</label>
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Service Area Limits <span className="text-red-500">*</span></label>
                           <input
                             type="text"
                             name="serviceArea"
@@ -3041,7 +3085,7 @@ export default function AddBusiness() {
                         </div>
 
                         <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Languages Known</label>
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Languages Known <span className="text-red-500">*</span></label>
                           <input
                             type="text"
                             name="languagesKnown"
@@ -3054,7 +3098,7 @@ export default function AddBusiness() {
                       </div>
 
                       <div className="flex flex-col gap-1.5 text-left">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Green Tick Badges)</label>
+                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Green Tick Badges) <span className="text-red-500">*</span></label>
                         <input
                           type="text"
                           name="highlights"
@@ -3119,7 +3163,7 @@ export default function AddBusiness() {
                           />
                         </div>
                         <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">WhatsApp Number</label>
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">WhatsApp Number <span className="text-red-500">*</span></label>
                           <input
                             type="text"
                             name="whatsapp"
@@ -3543,8 +3587,8 @@ export default function AddBusiness() {
                 
                 <div className="flex items-center gap-3">
                   <Mail className="h-[18px] w-[18px] text-[#ea580c] shrink-0" />
-                  <a href="mailto:udumalpetbusinesstour@gmail.com" className="text-slate-700 font-bold text-xs hover:text-[#027244] transition-colors">
-                    udumalpetbusinesstour@gmail.com
+                  <a href="mailto:info@udumalpet.business" className="text-slate-700 font-bold text-xs hover:text-[#027244] transition-colors">
+                    info@udumalpet.business
                   </a>
                 </div>
               </div>

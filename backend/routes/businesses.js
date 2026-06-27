@@ -6,6 +6,59 @@ const Category = require('../models/Category');
 const Lead = require('../models/Lead');
 const { protect } = require('../middleware/auth');
 
+// Helper to scrape email address from website or fallback to host domain guess
+const scrapeEmail = async (url) => {
+  if (!url) return '';
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) return '';
+    const text = await res.text();
+    const matches = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
+    if (matches && matches.length > 0) {
+      const excludeSuffixes = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', 'bootstrap', 'jquery', 'wix', 'wordpress'];
+      const found = matches.find(email => {
+        const e = email.toLowerCase();
+        return !excludeSuffixes.some(suffix => e.includes(suffix));
+      });
+      if (found) return found;
+    }
+  } catch (err) {
+    console.warn(`[Autofill Email Scraper] Error scraping ${url}:`, err.message);
+  }
+  return '';
+};
+
+// Helper to identify public sector / governmental organizations
+const isPublicSector = (types, name = '', category = '', parentCategory = '') => {
+  const govTypes = [
+    'local_government_office', 'government_office', 'police', 'hospital', 
+    'bank', 'school', 'courthouse', 'city_hall', 'embassy', 'fire_station', 
+    'post_office', 'library', 'primary_school', 'secondary_school', 'university'
+  ];
+  if (types && Array.isArray(types) && types.some(t => govTypes.includes(t))) {
+    return true;
+  }
+  
+  const lowerName = (name || '').toLowerCase();
+  const govKeywords = ['taluk', 'municipality', 'police station', 'collectorate', 'government hospital', 'govt hospital', 'post office', 'sub registrar'];
+  if (govKeywords.some(kw => lowerName.includes(kw))) {
+    return true;
+  }
+
+  const lowerParent = (parentCategory || '').toLowerCase();
+  const lowerCat = (category || '').toLowerCase();
+  const govParents = ['governmental organisations', 'government organisations', 'governmental organisation', 'government organisation', 'public sector'];
+  if (govParents.includes(lowerParent)) return true;
+  
+  const govCats = ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'];
+  if (govCats.includes(lowerCat)) return true;
+
+  return false;
+};
+
 // Helper to dynamically check and auto-expire a business subscription in the database
 const checkAndExpireBusiness = async (business) => {
   if (!business) return business;
@@ -63,6 +116,15 @@ async function syncBranches(parentBusiness, branchesData, userRole) {
       parentBusinessId: parentBusiness._id,
       businessId: parentBusiness._id,
       status: b.status || status,
+      services: b.services || [],
+      brands: b.brands || [],
+      highlights: b.highlights || [],
+      languagesKnown: b.languagesKnown || '',
+      serviceArea: b.serviceArea || '',
+      yearEstablished: b.yearEstablished,
+      employeeCount: b.employeeCount,
+      gstNumber: b.gstNumber,
+      timings: b.timings,
     };
 
     if (bId && existingIds.includes(bId.toString())) {
@@ -355,6 +417,7 @@ const mockDetails = {
     address: "Udumalaipettai Taluk Office, Udumalpet Main Town, Tamil Nadu - 642126",
     phone: "+91 4252 220261",
     website: "https://tiruppur.nic.in",
+    email: "talukoffice.udt@tn.gov.in",
     latitude: 10.585,
     longitude: 77.251,
     pincode: "642126",
@@ -381,6 +444,7 @@ const mockDetails = {
     address: "0, Katcheri St, opposite Udumalaipettai, Udumalpet Main Town, Tamil Nadu - 642126",
     phone: "+91 95970 30291",
     website: "https://sippiopticals.business.site",
+    email: "sippiopticals@gmail.com",
     latitude: 10.5878,
     longitude: 77.2465,
     pincode: "642126",
@@ -407,6 +471,7 @@ const mockDetails = {
     address: "Sippi Opticals, 0, Katcheri St, opposite Udumalaipettai, Udumalpet Main Town, Tamil Nadu - 642126",
     phone: "+91 97872 41221",
     website: "https://controln.in",
+    email: "contact@controln.in",
     latitude: 10.585,
     longitude: 77.251,
     pincode: "642126",
@@ -432,6 +497,7 @@ const mockDetails = {
     address: "Trigger Showroom, near Aishwarya Nagar, Gandhi Nagar, Udumalaipettai, Tamil Nadu - 642154",
     phone: "+91 95970 30291",
     website: "https://www.dhosaikadai.com",
+    email: "info@dhosaikadai.com",
     latitude: 10.585,
     longitude: 77.251,
     pincode: "642154",
@@ -457,6 +523,7 @@ const mockDetails = {
     address: "Head Post Office Road, Udumalpet Main Town, Tamil Nadu - 642126",
     phone: "+91 98765 43210",
     website: "https://rkelectricals.com",
+    email: "sales@rkelectricals.com",
     latitude: 10.5895,
     longitude: 77.2420,
     pincode: "642126",
@@ -483,6 +550,7 @@ const mockDetails = {
     address: "Coimbatore Road, Udumalpet, Tamil Nadu - 642128",
     phone: "+91 94432 10987",
     website: "https://hotelannapoornaudt.com",
+    email: "support@hotelannapoornaudt.com",
     latitude: 10.5921,
     longitude: 77.2398,
     pincode: "642128",
@@ -509,6 +577,7 @@ const mockDetails = {
     address: "Bazaar Street, Udumalpet Main Town, Tamil Nadu - 642126",
     phone: "+91 81223 94455",
     website: "https://royaltextilesudt.business.site",
+    email: "info@royaltextilesudt.com",
     latitude: 10.5880,
     longitude: 77.2450,
     pincode: "642126",
@@ -719,8 +788,8 @@ router.get('/', async (req, res) => {
 // @access  Private
 router.get('/draft', protect, async (req, res) => {
   try {
-    // Restrict access: Allow business owners, admins, and visitors/writers to view draft
-    if (req.user.role !== 'owner' && req.user.role !== 'merchant' && req.user.role !== 'admin' && req.user.role !== 'visitor') {
+    // Restrict access: Allow business owners, admins, visitors/writers, and partners to view draft
+    if (req.user.role !== 'owner' && req.user.role !== 'merchant' && req.user.role !== 'admin' && req.user.role !== 'visitor' && req.user.role !== 'partner') {
       return res.status(403).json({ success: false, message: 'Access denied: Authorized role required' });
     }
 
@@ -953,7 +1022,7 @@ router.post('/google-autofill', async (req, res) => {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,location,regularOpeningHours,rating,userRatingCount,reviews,addressComponents'
+        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,location,regularOpeningHours,rating,userRatingCount,reviews,addressComponents,types'
       }
     });
 
@@ -999,6 +1068,7 @@ router.post('/google-autofill', async (req, res) => {
 
     const cleanTimingStr = (str) => str.replace(/[\u2013\u2014\u2012\u2010]/g, '-').replace(/[\u202F\u00A0]/g, ' ').trim();
 
+    let hasGmbHours = false;
     const timings = {
       Monday: '9:00 AM - 8:00 PM',
       Tuesday: '9:00 AM - 8:00 PM',
@@ -1010,6 +1080,7 @@ router.post('/google-autofill', async (req, res) => {
     };
 
     if (result.regularOpeningHours && result.regularOpeningHours.weekdayDescriptions) {
+      hasGmbHours = true;
       for (const text of result.regularOpeningHours.weekdayDescriptions) {
         const parts = text.split(': ');
         if (parts.length >= 2) {
@@ -1022,6 +1093,9 @@ router.post('/google-autofill', async (req, res) => {
       }
     }
 
+    const isPublic = isPublicSector(result.types, result.displayName?.text);
+    const finalTimings = (isPublic && !hasGmbHours) ? null : timings;
+
     // Reviews from Places API (New) — may be empty if billing tier doesn't include reviews
     let googleReviews = (result.reviews || []).map(r => ({
       authorName: r.authorAttribution?.displayName || 'A Google User',
@@ -1030,23 +1104,49 @@ router.post('/google-autofill', async (req, res) => {
       createdAt: r.publishTime ? new Date(r.publishTime) : new Date(),
     }));
 
-    // Fallback: use legacy Places Details API to get reviews when new API returns none
-    if (googleReviews.length === 0) {
+    let rating = result.rating || 0;
+    let reviewsCount = result.userRatingCount || 0;
+
+    // Fallback: use legacy Places Details API to get reviews, rating, and count when missing
+    if (googleReviews.length === 0 || !rating || !reviewsCount) {
       try {
         const legacyUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&key=${apiKey}`;
         const legacyResp = await fetch(legacyUrl);
         const legacyData = await legacyResp.json();
-        if (legacyData.status === 'OK' && legacyData.result?.reviews) {
-          googleReviews = legacyData.result.reviews.slice(0, 5).map(r => ({
-            authorName: r.author_name || 'A Google User',
-            rating: r.rating || 0,
-            text: r.text || '',
-            createdAt: new Date(r.time * 1000),
-          }));
-          console.log(`[Autofill] Fetched ${googleReviews.length} reviews via legacy Places API for ${placeId}`);
+        if (legacyData.status === 'OK' && legacyData.result) {
+          if (legacyData.result.reviews && googleReviews.length === 0) {
+            googleReviews = legacyData.result.reviews.slice(0, 5).map(r => ({
+              authorName: r.author_name || 'A Google User',
+              rating: r.rating || 0,
+              text: r.text || '',
+              createdAt: new Date(r.time * 1000),
+            }));
+            console.log(`[Autofill] Fetched ${googleReviews.length} reviews via legacy Places API for ${placeId}`);
+          }
+          if (legacyData.result.rating && !rating) {
+            rating = legacyData.result.rating;
+          }
+          if (legacyData.result.user_ratings_total && !reviewsCount) {
+            reviewsCount = legacyData.result.user_ratings_total;
+          }
         }
       } catch (legacyErr) {
         console.warn('[Autofill] Legacy Places reviews fetch failed:', legacyErr.message);
+      }
+    }
+
+    // Scrape or guess email address
+    let email = '';
+    if (result.websiteUri) {
+      email = await scrapeEmail(result.websiteUri);
+      if (!email) {
+        try {
+          const urlObj = new URL(result.websiteUri);
+          const host = urlObj.hostname.replace('www.', '');
+          email = `info@${host}`;
+        } catch (e) {
+          // ignore
+        }
       }
     }
 
@@ -1055,14 +1155,15 @@ router.post('/google-autofill', async (req, res) => {
       address: result.formattedAddress || '',
       phone: result.nationalPhoneNumber || '',
       website: result.websiteUri || '',
+      email,
       latitude: lat,
       longitude: lng,
       googlePlaceId: placeId,
-      googleRating: result.rating || 0,
-      googleReviewsCount: result.userRatingCount || 0,
+      googleRating: rating,
+      googleReviewsCount: reviewsCount,
       googleReviews,
-      openingHours: timings,
-      timings,
+      openingHours: finalTimings,
+      timings: finalTimings,
       pincode,
       locality
     };
@@ -1078,9 +1179,9 @@ router.post('/google-autofill', async (req, res) => {
 // @route   POST /api/businesses/google-autofill-link
 // @access  Public
 router.post('/google-autofill-link', async (req, res) => {
-  const { link } = req.body;
+  const link = req.body.link || req.body.url;
   if (!link) {
-    return res.status(400).json({ success: false, message: 'link is required' });
+    return res.status(400).json({ success: false, message: 'link or url is required' });
   }
 
   try {
@@ -1314,7 +1415,7 @@ router.post('/google-autofill-link', async (req, res) => {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,location,regularOpeningHours,rating,userRatingCount,reviews,addressComponents'
+        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,location,regularOpeningHours,rating,userRatingCount,reviews,addressComponents,types'
       }
     });
 
@@ -1385,6 +1486,9 @@ router.post('/google-autofill-link', async (req, res) => {
       }
     }
 
+    const cleanTimingStr = (str) => str.replace(/[\u2013\u2014\u2012\u2010]/g, '-').replace(/[\u202F\u00A0]/g, ' ').trim();
+
+    let hasGmbHours = false;
     const timings = {
       Monday: '9:00 AM - 8:00 PM',
       Tuesday: '9:00 AM - 8:00 PM',
@@ -1395,6 +1499,23 @@ router.post('/google-autofill-link', async (req, res) => {
       Sunday: 'Closed',
     };
 
+    if (result.regularOpeningHours && result.regularOpeningHours.weekdayDescriptions) {
+      hasGmbHours = true;
+      for (const text of result.regularOpeningHours.weekdayDescriptions) {
+        const parts = text.split(': ');
+        if (parts.length >= 2) {
+          const day = parts[0];
+          const hours = cleanTimingStr(parts.slice(1).join(': '));
+          if (timings.hasOwnProperty(day)) {
+            timings[day] = hours;
+          }
+        }
+      }
+    }
+
+    const isPublic = isPublicSector(result.types, result.displayName?.text);
+    const finalTimings = (isPublic && !hasGmbHours) ? null : timings;
+
     // Reviews from Places API (New) — may be empty if billing tier doesn't include reviews
     let googleReviews = (result.reviews || []).map(r => ({
       authorName: r.authorAttribution?.displayName || 'A Google User',
@@ -1403,23 +1524,49 @@ router.post('/google-autofill-link', async (req, res) => {
       createdAt: r.publishTime ? new Date(r.publishTime) : new Date(),
     }));
 
-    // Fallback: use legacy Places Details API to get reviews when new API returns none
+    let rating = result.rating || 0;
+    let reviewsCount = result.userRatingCount || 0;
+
+    // Fallback: use legacy Places Details API to get reviews, rating, and count when missing
     if (googleReviews.length === 0 && apiKey && placeId) {
       try {
         const legacyUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&key=${apiKey}`;
         const legacyResp = await fetch(legacyUrl);
         const legacyData = await legacyResp.json();
-        if (legacyData.status === 'OK' && legacyData.result?.reviews) {
-          googleReviews = legacyData.result.reviews.slice(0, 5).map(r => ({
-            authorName: r.author_name || 'A Google User',
-            rating: r.rating || 0,
-            text: r.text || '',
-            createdAt: new Date(r.time * 1000),
-          }));
-          console.log(`[Autofill Link] Fetched ${googleReviews.length} reviews via legacy Places API for ${placeId}`);
+        if (legacyData.status === 'OK' && legacyData.result) {
+          if (legacyData.result.reviews && googleReviews.length === 0) {
+            googleReviews = legacyData.result.reviews.slice(0, 5).map(r => ({
+              authorName: r.author_name || 'A Google User',
+              rating: r.rating || 0,
+              text: r.text || '',
+              createdAt: new Date(r.time * 1000),
+            }));
+            console.log(`[Autofill Link] Fetched ${googleReviews.length} reviews via legacy Places API for ${placeId}`);
+          }
+          if (legacyData.result.rating && !rating) {
+            rating = legacyData.result.rating;
+          }
+          if (legacyData.result.user_ratings_total && !reviewsCount) {
+            reviewsCount = legacyData.result.user_ratings_total;
+          }
         }
       } catch (legacyErr) {
         console.warn('[Autofill Link] Legacy Places reviews fetch failed:', legacyErr.message);
+      }
+    }
+
+    // Scrape or guess email address
+    let email = '';
+    if (result.websiteUri) {
+      email = await scrapeEmail(result.websiteUri);
+      if (!email) {
+        try {
+          const urlObj = new URL(result.websiteUri);
+          const host = urlObj.hostname.replace('www.', '');
+          email = `info@${host}`;
+        } catch (e) {
+          // ignore
+        }
       }
     }
 
@@ -1428,13 +1575,15 @@ router.post('/google-autofill-link', async (req, res) => {
       address: result.formattedAddress || '',
       phone: result.nationalPhoneNumber || '',
       website: result.websiteUri || '',
+      email,
       latitude: lat,
       longitude: lng,
       googlePlaceId: placeId,
-      googleRating: result.rating || 0,
-      googleReviewsCount: result.userRatingCount || 0,
+      googleRating: rating,
+      googleReviewsCount: reviewsCount,
       googleReviews,
-      timings,
+      timings: finalTimings,
+      openingHours: finalTimings,
       pincode,
       locality
     };
@@ -1790,7 +1939,12 @@ router.post('/', protect, async (req, res) => {
     } = req.body;
 
     // 0. Final validation of required fields
-    if (!name || !category || !type || !description || !phone || !whatsapp || !pincode) {
+    if (!name || !category || !type || !description || !phone || !whatsapp || !pincode ||
+        !services || (Array.isArray(services) && services.length === 0) ||
+        !brands || (Array.isArray(brands) && brands.length === 0) ||
+        !highlights || (Array.isArray(highlights) && highlights.length === 0) ||
+        !languagesKnown || !languagesKnown.trim() ||
+        !serviceArea || !serviceArea.trim()) {
       return res.status(400).json({
         success: false,
         message: 'Validation failed: Please fill in all required business profile details.',
@@ -1821,8 +1975,8 @@ router.post('/', protect, async (req, res) => {
       }
     }
 
-    // Restrict access: Allow business owners, admins, and visitors/writers to register a business
-    if (req.user.role !== 'owner' && req.user.role !== 'merchant' && req.user.role !== 'admin' && req.user.role !== 'visitor') {
+    // Restrict access: Allow business owners, admins, visitors/writers, and partners to register a business
+    if (req.user.role !== 'owner' && req.user.role !== 'merchant' && req.user.role !== 'admin' && req.user.role !== 'visitor' && req.user.role !== 'partner') {
       return res.status(403).json({
         success: false,
         message: 'Registration denied: Authorized role required to register listings.',
@@ -2047,8 +2201,8 @@ router.put('/:id', protect, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Business not found' });
     }
 
-    // Verify owner or admin
-    if (business.ownerId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    // Verify owner, admin, or superadmin
+    if (business.ownerId.toString() !== req.user._id.toString() && req.user.role !== 'admin' && req.user.role !== 'superadmin') {
       return res.status(403).json({ success: false, message: 'Not authorized to update this listing' });
     }
 
