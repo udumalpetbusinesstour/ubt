@@ -1468,8 +1468,8 @@ Please confirm availability and delivery time.`;
             opacity: 0.85
           }} 
         />
-        {/* Sleek dark shadow gradient bottom-up */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/45 to-slate-950/15" />
+        {/* Sleek dark shadow gradient bottom-up - Increased darkness */}
+        <div className="absolute inset-0 bg-slate-950/80 bg-gradient-to-t from-slate-950 via-slate-950/85 to-slate-950/65" />
         
         {mediaError && (
           <div className="absolute top-4 left-4 right-4 bg-red-600 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl text-center z-30 shadow flex items-center justify-center gap-2 animate-fadeIn">
@@ -1486,19 +1486,19 @@ Please confirm availability and delivery time.`;
             {/* Go Back button with Left Arrow */}
             <button 
               onClick={() => navigate(-1)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-emerald-400 transition-colors w-fit cursor-pointer py-1 mb-1.5 hover:-translate-x-0.5 transition-transform"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-white/90 hover:text-white transition-colors w-fit cursor-pointer py-1 mb-1.5 hover:-translate-x-0.5 transition-transform"
             >
               <ArrowLeft className="h-4 w-4" /> Go Back
             </button>
             {/* Breadcrumbs */}
-            <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-slate-400 uppercase tracking-wider">
-              <Link to="/" className="hover:text-emerald-400 transition-colors">Home</Link>
-              <span className="text-slate-600">&gt;</span>
-              <Link to="/businesses" className="hover:text-emerald-400 transition-colors">Businesses</Link>
-              <span className="text-slate-600">&gt;</span>
-              <span className="text-emerald-450 hover:text-emerald-400 transition-colors cursor-pointer">{business.type}</span>
-              <span className="text-slate-600">&gt;</span>
-              <span className="text-slate-200">{business.name}</span>
+            <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-white/70 uppercase tracking-wider">
+              <Link to="/" className="hover:text-white transition-colors">Home</Link>
+              <span className="text-white/40">&gt;</span>
+              <Link to="/businesses" className="hover:text-white transition-colors">Businesses</Link>
+              <span className="text-white/40">&gt;</span>
+              <span className="text-white/85 hover:text-emerald-300 transition-colors cursor-pointer">{business.type}</span>
+              <span className="text-white/40">&gt;</span>
+              <span className="text-white">{business.name}</span>
             </div>
             
             {/* Title Block with Logo and Verified Badge */}
@@ -1552,14 +1552,14 @@ Please confirm availability and delivery time.`;
 
             {/* Website and Social Media links below Business Name */}
             {(business.website || business.facebook || business.instagram) && (
-              <div className="mt-2.5 flex flex-wrap items-center gap-4 text-xs font-black text-slate-400">
+              <div className="mt-2.5 flex flex-wrap items-center gap-4 text-xs font-black text-white/90">
                 {business.website && !isGovernmentalOrPublic(business) && (
                   <a 
                     href={business.website.startsWith('http') ? business.website : `https://${business.website}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     onClick={() => trackClick('website')}
-                    className="text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1.5"
+                    className="text-white hover:text-emerald-300 transition-colors flex items-center gap-1.5"
                   >
                     <Globe className="h-4 w-4" />
                     <span>Website</span>
@@ -1571,7 +1571,7 @@ Please confirm availability and delivery time.`;
                     target="_blank" 
                     rel="noopener noreferrer"
                     onClick={() => trackClick('facebook')}
-                    className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1.5"
+                    className="text-white hover:text-blue-300 transition-colors flex items-center gap-1.5"
                     title="Facebook Profile"
                   >
                     <Facebook className="h-4 w-4" />
@@ -1584,7 +1584,7 @@ Please confirm availability and delivery time.`;
                     target="_blank" 
                     rel="noopener noreferrer"
                     onClick={() => trackClick('instagram')}
-                    className="text-pink-400 hover:text-pink-300 transition-colors flex items-center gap-1.5"
+                    className="text-white hover:text-pink-350 transition-colors flex items-center gap-1.5"
                     title="Instagram Profile"
                   >
                     <Instagram className="h-4 w-4" />
@@ -1595,34 +1595,34 @@ Please confirm availability and delivery time.`;
             )}
 
             {/* Premium Rating and Specs Pills */}
-            <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-300 mt-2">
-              <div className="flex items-center gap-1 bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg">
+            <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-white/90 mt-2">
+              <div className="flex items-center gap-1 bg-white/10 border border-white/20 px-2.5 py-1 rounded-lg">
                 <div className="flex text-amber-400 shrink-0 gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(business.googleRating ?? 0) ? 'fill-current' : 'text-slate-700'}`} />
                   ))}
                 </div>
                 <span className="font-black text-white ml-1">{(business.googleRating ?? 0).toFixed(1)}</span>
-                <span className="text-[10px] text-slate-400">({business.googleReviewsCount || 0} Reviews)</span>
+                <span className="text-[10px] text-white/75">({business.googleReviewsCount || 0} Reviews)</span>
               </div>
-              <span className="text-slate-600">•</span>
-              <div className="flex items-center gap-1 bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg text-slate-400">
+              <span className="text-white/40">•</span>
+              <div className="flex items-center gap-1 bg-white/10 border border-white/20 px-2.5 py-1 rounded-lg text-white/95">
                 <Eye className="h-3.5 w-3.5 text-emerald-400" />
                 <span className="font-black text-white ml-1">{business.views || 0}</span>
-                <span className="text-[10px] text-slate-400">Views</span>
+                <span className="text-[10px] text-white/75">Views</span>
               </div>
-              <span className="text-slate-600">•</span>
-              <span className="text-emerald-450 font-bold bg-emerald-500/5 border border-emerald-500/15 px-2.5 py-1 rounded-lg">{business.type}</span>
-              <span className="text-slate-600">•</span>
+              <span className="text-white/40">•</span>
+              <span className="text-white font-bold bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-1 rounded-lg">{business.type}</span>
+              <span className="text-white/40">•</span>
               <a 
                 href={directionsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Open Directions in Google Maps"
                 onClick={() => trackClick('directions')}
-                className="flex items-center gap-1.5 text-slate-400 hover:text-emerald-450 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 text-white/80 hover:text-emerald-300 transition-colors cursor-pointer"
               >
-                <MapPin className="h-4 w-4 text-emerald-500" />
+                <MapPin className="h-4 w-4 text-emerald-450" />
                 <span>{business.locality}, Udumalpet, Tamil Nadu - {business.pincode}</span>
               </a>
             </div>

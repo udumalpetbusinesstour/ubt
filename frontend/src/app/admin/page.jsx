@@ -6,7 +6,7 @@ import {
   MessageSquare, CreditCard as CardIcon, Bell, BarChart3, Settings, LogOut, Search, User, Users,
   MapPin, ChevronRight, ChevronDown, Landmark, Trash2, Mail, Globe, Award, ShieldAlert, CheckCircle2,
   Clock, Plus, Filter, ShieldCheck as ShieldOk, Activity, Cpu, Database, Terminal, Gift, Smile,
-  Upload, Heart, Copy, XCircle
+  Upload, Heart, Copy, XCircle, Edit3
 } from 'lucide-react';
 import BloodDonorsTab from '../../components/BloodDonorsTab';
 
@@ -1236,6 +1236,33 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+  
+  const renameMainCategory = async (oldParentName) => {
+    const newParentName = prompt(`Rename main category "${oldParentName}" to:`, oldParentName);
+    if (!newParentName || newParentName.trim() === '' || newParentName.trim() === oldParentName) return;
+    const confirmed = confirm(`Rename main category "${oldParentName}" → "${newParentName.trim()}"?\nThis will update all subcategories under it.`);
+    if (!confirmed) return;
+    try {
+      const res = await fetch('http://localhost:5000/api/categories/rename-parent', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
+        },
+        body: JSON.stringify({ oldParentName: oldParentName.trim(), newParentName: newParentName.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`Main category renamed! ${data.data?.modifiedCount || 0} subcategories updated.`);
+        loadPlatformRealData();
+      } else {
+        alert('Error: ' + (data.message || 'Rename failed'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error renaming category');
     }
   };
 
@@ -5256,20 +5283,38 @@ export default function AdminDashboard() {
                                 const isExpanded = expandedMainCategories[parent] !== false; // expanded by default
 
                                 return (
-                                  <div key={parent} className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/10">
-                                    {/* Header accordion button */}
-                                    <button
-                                      onClick={() => setExpandedMainCategories(prev => ({ ...prev, [parent]: !isExpanded }))}
-                                      className="w-full flex justify-between items-center p-4 bg-slate-50/50 border-b border-slate-200 text-left cursor-pointer"
-                                    >
-                                      <div className="flex flex-col">
-                                        <span className="font-extrabold text-sm text-emerald-650">{parent}</span>
-                                        <span className="text-[10px] text-slate-450 mt-1 font-bold">
+                                  <div key={parent} className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/10 shrink-0">
+                                    {/* Header accordion container */}
+                                    <div className="w-full flex justify-between items-center p-4 bg-slate-50/50 border-b border-slate-200 text-left">
+                                      <div
+                                        onClick={() => setExpandedMainCategories(prev => ({ ...prev, [parent]: !isExpanded }))}
+                                        className="flex flex-col flex-1 cursor-pointer text-left select-none min-w-0"
+                                      >
+                                        <span className="font-extrabold text-sm text-[#027244] truncate">{parent}</span>
+                                        <span className="text-[10px] text-slate-500 mt-1 font-bold">
                                           {subs.length} subcategories {subcategorySearch && '(filtered)'}
                                         </span>
                                       </div>
-                                      <ChevronDown className={`h-4.5 w-4.5 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                                    </button>
+                                      <div className="flex items-center gap-2 shrink-0 ml-4">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => { e.stopPropagation(); renameMainCategory(parent); }}
+                                          className="h-7 px-2.5 rounded-lg border border-slate-200 hover:bg-slate-100 flex items-center justify-center cursor-pointer text-blue-600 font-extrabold text-[10px] gap-1 bg-white shadow-xs"
+                                          title="Rename Main Category"
+                                        >
+                                          <Edit3 className="h-3 w-3" /> Edit
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setExpandedMainCategories(prev => ({ ...prev, [parent]: !isExpanded }))}
+                                          className="h-7 w-7 rounded-lg border border-slate-200 hover:bg-slate-100 flex items-center justify-center cursor-pointer text-slate-400 bg-white shadow-xs"
+                                        >
+                                          <ChevronDown
+                                            className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                          />
+                                        </button>
+                                      </div>
+                                    </div>
 
                                     {/* Accordion panel listing subcategories */}
                                     {isExpanded && (
@@ -5280,7 +5325,7 @@ export default function AdminDashboard() {
                                             return (
                                               <div 
                                                 key={cat._id} 
-                                                className="border border-slate-105 rounded-2xl p-3.5 flex justify-between items-center transition-all bg-white min-w-0 gap-3 hover:border-slate-200 hover:bg-slate-50/40"
+                                                className="border border-slate-200 rounded-2xl p-3.5 flex justify-between items-center transition-all bg-white min-w-0 gap-3 hover:border-slate-300 hover:bg-slate-50/40"
                                               >
                                                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                                   <div className="h-8 w-8 rounded-lg flex items-center justify-center font-black shrink-0 bg-emerald-50/80 text-[#027244] border-emerald-100">
@@ -5289,7 +5334,7 @@ export default function AdminDashboard() {
                                                   <div className="flex flex-col text-left min-w-0 flex-1">
                                                     <span className="font-extrabold text-xs truncate text-slate-800">{cat.categoryName}</span>
                                                     <span className="text-[9px] text-slate-400 mt-1 font-semibold truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
-                                                    <span className="text-[9.5px] text-emerald-655 font-black mt-1.5 leading-none">{count} active businesses</span>
+                                                    <span className="text-[9.5px] text-emerald-600 font-black mt-1.5 leading-none">{count} active businesses</span>
                                                   </div>
                                                 </div>
 
@@ -5300,7 +5345,7 @@ export default function AdminDashboard() {
                                                       if (!newName || newName === cat.categoryName) return;
                                                       updatePresetCategory(cat._id, { categoryName: newName });
                                                     }}
-                                                    className="h-7 px-2 rounded-lg border border-slate-200 hover:bg-slate-105 flex items-center justify-center cursor-pointer text-slate-550 font-extrabold text-[9.5px]"
+                                                    className="h-7 px-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 flex items-center justify-center cursor-pointer text-slate-600 font-extrabold text-[9.5px]"
                                                     title="Rename"
                                                   >
                                                     Edit
