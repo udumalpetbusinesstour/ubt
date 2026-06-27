@@ -4290,7 +4290,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                 const isExpanded = expandedMainCategories[parent] !== false; // expanded by default
 
                                 return (
-                                  <div key={parent} className="border border-slate-200/60 dark:border-slate-800/80 rounded-2xl overflow-hidden bg-slate-50/10 dark:bg-slate-950/5">
+                                  <div key={parent} className="border border-slate-200/60 dark:border-slate-800/80 rounded-2xl overflow-hidden bg-slate-50/10 dark:bg-slate-950/5 shrink-0">
                                     {/* Header accordion container */}
                                     <div className="w-full flex justify-between items-center p-4 bg-slate-50/50 dark:bg-slate-900/20 border-b border-slate-200/50 dark:border-slate-800/50 text-left">
                                       <div
