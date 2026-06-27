@@ -41,6 +41,33 @@ router.post('/create-order', protect, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Business not found' });
     }
 
+    // Cancel existing active subscriptions for this business if they exist
+    try {
+      const activeSubs = await Subscription.find({ businessId: business._id, status: 'active' });
+      for (const activeSub of activeSubs) {
+        console.log(`[SUBSCRIPTION CANCEL] Found active subscription ${activeSub._id} for business ${businessId}. Cancelling...`);
+        
+        // 1. Cancel in Razorpay gateway if live client exists and it's a real subscription
+        if (razorpay && activeSub.razorpaySubscriptionId && !activeSub.razorpaySubscriptionId.startsWith('sub_mock_')) {
+          try {
+            await razorpay.subscriptions.cancel(activeSub.razorpaySubscriptionId, {
+              cancel_at_cycle_end: false
+            });
+            console.log(`[SUBSCRIPTION CANCEL] Cancelled subscription ${activeSub.razorpaySubscriptionId} on Razorpay.`);
+          } catch (rzpErr) {
+            console.error(`[SUBSCRIPTION CANCEL] Razorpay cancellation failed for ${activeSub.razorpaySubscriptionId}:`, rzpErr.message);
+          }
+        }
+        
+        // 2. Mark status as expired in database
+        activeSub.status = 'expired';
+        await activeSub.save();
+        console.log(`[SUBSCRIPTION CANCEL] Marked subscription ${activeSub._id} as expired in MongoDB.`);
+      }
+    } catch (subCancelErr) {
+      console.error('[SUBSCRIPTION CANCEL] Error searching/cancelling active subscriptions:', subCancelErr.message);
+    }
+
     const dbPlan = await Plan.findOne({
       $or: [
         { type: planType },
