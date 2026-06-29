@@ -660,7 +660,10 @@ router.post('/partners/:id/manual-verification', async (req, res, next) => {
     if (!partner) {
       return res.status(404).json({ success: false, message: 'Partner not found' });
     }
-    partner.isManualVerificationDone = !!isDone;
+    if (partner.isManualVerificationDone && !isDone) {
+      return res.status(400).json({ success: false, message: 'Manual verification cannot be reverted once completed.' });
+    }
+    partner.isManualVerificationDone = true;
     await partner.save();
     res.json({ success: true, message: `Manual verification status updated successfully.`, data: partner });
   } catch (error) {

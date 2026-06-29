@@ -6350,14 +6350,15 @@ export default function AdminDashboard() {
                 </div>
                 <button
                   onClick={() => {
-                    const nextVal = !selectedPartner.isManualVerificationDone;
-                    handleToggleManualVerification(selectedPartner.id || selectedPartner._id, nextVal);
-                    setSelectedPartner(prev => ({ ...prev, isManualVerificationDone: nextVal }));
+                    if (selectedPartner.isManualVerificationDone) return;
+                    handleToggleManualVerification(selectedPartner.id || selectedPartner._id, true);
+                    setSelectedPartner(prev => ({ ...prev, isManualVerificationDone: true }));
                   }}
-                  className={`px-3.5 py-2 font-black text-[11px] rounded-xl cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5 ${
+                  disabled={selectedPartner.isManualVerificationDone}
+                  className={`px-3.5 py-2 font-black text-[11px] rounded-xl transition-colors shadow-2xs flex items-center gap-1.5 ${
                     selectedPartner.isManualVerificationDone
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                      : 'bg-slate-150 hover:bg-slate-200 text-slate-700 border border-slate-250'
+                      ? 'bg-emerald-600 text-white cursor-default opacity-95'
+                      : 'bg-slate-150 hover:bg-slate-200 text-slate-700 border border-slate-250 cursor-pointer'
                   }`}
                 >
                   {selectedPartner.isManualVerificationDone ? (

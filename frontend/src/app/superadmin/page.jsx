@@ -7034,15 +7034,19 @@ const handlePartnerAction = async (partnerId, action) => {
                                            )}
 
                                            <button
-                                              onClick={() => handleToggleManualVerification(partner._id, !partner.isManualVerificationDone)}
-                                              className={`px-2 py-1 font-black text-[9px] rounded-lg cursor-pointer transition-colors flex items-center gap-0.5 ${
-                                                partner.isManualVerificationDone
-                                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                                                  : themeMode === 'dark'
-                                                    ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-750'
-                                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
-                                              }`}
-                                            >
+                                               onClick={() => {
+                                                 if (partner.isManualVerificationDone) return;
+                                                 handleToggleManualVerification(partner._id, true);
+                                               }}
+                                               disabled={partner.isManualVerificationDone}
+                                               className={`px-2 py-1 font-black text-[9px] rounded-lg transition-colors flex items-center gap-0.5 ${
+                                                 partner.isManualVerificationDone
+                                                   ? 'bg-emerald-600 text-white cursor-default opacity-95'
+                                                   : themeMode === 'dark'
+                                                     ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-750 cursor-pointer'
+                                                     : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer'
+                                               }`}
+                                             >
                                               {partner.isManualVerificationDone ? (
                                                 <>
                                                   <Check className="h-2.5 w-2.5" />
@@ -8487,14 +8491,15 @@ const handlePartnerAction = async (partnerId, action) => {
                 </div>
                 <button
                   onClick={() => {
-                    const nextVal = !selectedPartner.isManualVerificationDone;
-                    handleToggleManualVerification(selectedPartner._id, nextVal);
-                    setSelectedPartner(prev => ({ ...prev, isManualVerificationDone: nextVal }));
+                    if (selectedPartner.isManualVerificationDone) return;
+                    handleToggleManualVerification(selectedPartner._id, true);
+                    setSelectedPartner(prev => ({ ...prev, isManualVerificationDone: true }));
                   }}
-                  className={`px-3.5 py-2 font-black text-[11px] rounded-xl cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5 ${
+                  disabled={selectedPartner.isManualVerificationDone}
+                  className={`px-3.5 py-2 font-black text-[11px] rounded-xl transition-colors shadow-2xs flex items-center gap-1.5 ${
                     selectedPartner.isManualVerificationDone
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                      : 'bg-slate-150 hover:bg-slate-200 text-slate-700 border border-slate-250'
+                      ? 'bg-emerald-600 text-white cursor-default opacity-95'
+                      : 'bg-slate-150 hover:bg-slate-200 text-slate-700 border border-slate-250 cursor-pointer'
                   }`}
                 >
                   {selectedPartner.isManualVerificationDone ? (
