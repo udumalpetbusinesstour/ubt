@@ -802,6 +802,13 @@ export default function Home() {
     featuredScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
   };
 
+  const handleScrollSponsored = (direction) => {
+    if (!sponsoredAdsScrollRef.current) return;
+    const clientWidth = sponsoredAdsScrollRef.current.clientWidth;
+    const scrollAmount = direction === 'left' ? -(clientWidth + 20) : (clientWidth + 20);
+    sponsoredAdsScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  };
+
   const handleScrollTopViewed = (direction) => {
     if (!topViewedScrollRef.current) return;
     const scrollAmount = direction === 'left' ? -350 : 350;
@@ -1224,24 +1231,42 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div 
-            ref={sponsoredAdsScrollRef}
-            className="flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
-          >
-            {sponsoredAds.map((ad, idx) => (
-              <div 
-                key={idx}
-                onClick={() => navigate(`/${ad.businessSlug || ad.businessId}`)}
-                className="w-full md:w-[calc(50%-10px)] shrink-0 snap-start rounded-[20px] md:rounded-[28px] overflow-hidden aspect-[1920/900] bg-slate-900 shadow-md border border-slate-200 cursor-pointer hover:shadow-lg transition-shadow relative"
-              >
-                {/* Poster Background */}
-                <img
-                  src={window.getImageUrl(ad.offer.banner)}
-                  alt={ad.offer.title}
-                  className="absolute inset-0 w-full h-full object-cover select-none"
-                />
-              </div>
-            ))}
+          <div className="relative w-full">
+            {/* Carousel buttons */}
+            <button 
+              onClick={() => handleScrollSponsored('left')}
+              className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+              aria-label="Scroll Sponsored Ads Left"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button 
+              onClick={() => handleScrollSponsored('right')}
+              className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+              aria-label="Scroll Sponsored Ads Right"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+
+            <div 
+              ref={sponsoredAdsScrollRef}
+              className="flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
+            >
+              {sponsoredAds.map((ad, idx) => (
+                <div 
+                  key={idx}
+                  onClick={() => navigate(`/${ad.businessSlug || ad.businessId}`)}
+                  className="w-full md:w-[calc(50%-10px)] shrink-0 snap-start rounded-[20px] md:rounded-[28px] overflow-hidden aspect-[1920/900] bg-slate-900 shadow-md border border-slate-200 cursor-pointer hover:shadow-lg transition-shadow relative"
+                >
+                  {/* Poster Background */}
+                  <img
+                    src={window.getImageUrl(ad.offer.banner)}
+                    alt={ad.offer.title}
+                    className="absolute inset-0 w-full h-full object-cover select-none"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </section>
@@ -1258,26 +1283,27 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Carousel buttons */}
-        <button 
-          onClick={() => handleScrollFeatured('left')}
-          className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
-          aria-label="Scroll Featured Left"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button 
-          onClick={() => handleScrollFeatured('right')}
-          className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
-          aria-label="Scroll Featured Right"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
+        <div className="relative w-full">
+          {/* Carousel buttons */}
+          <button 
+            onClick={() => handleScrollFeatured('left')}
+            className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+            aria-label="Scroll Featured Left"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button 
+            onClick={() => handleScrollFeatured('right')}
+            className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+            aria-label="Scroll Featured Right"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
 
-        <div 
-          ref={featuredScrollRef}
-          className="flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
-        >
+          <div 
+            ref={featuredScrollRef}
+            className="flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
+          >
           {featuredBusinesses.map((biz) => {
             const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
             return (
@@ -1383,7 +1409,8 @@ export default function Home() {
             );
           })}
         </div>
-      </section>
+      </div>
+    </section>
 
       {/* 5. Statistics Sections Band (Exact theme color match) */}
       <section className="w-full bg-[#001c41] text-white py-5 sm:py-8 px-4 border-y border-[#001430]">
