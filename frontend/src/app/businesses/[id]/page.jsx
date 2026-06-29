@@ -239,6 +239,50 @@ export default function BusinessDetail() {
     }
   };
 
+  const [likeLoading, setLikeLoading] = useState(false);
+
+  const handleLikeBusiness = async () => {
+    if (!business) return;
+    setLikeLoading(true);
+    try {
+      const guestId = localStorage.getItem('ubt_guest_id');
+      const token = localStorage.getItem('ubt_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`http://localhost:5000/api/businesses/${business._id}/like`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ guestId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBusiness(prev => ({
+          ...prev,
+          likes: data.data
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to toggle business like:', err);
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
+  const currentGuestId = localStorage.getItem('ubt_guest_id');
+  const currentUserId = currentUser ? (currentUser._id || currentUser.id) : null;
+  const isLiked = business && business.likes && business.likes.some(likeStr => {
+    if (!likeStr) return false;
+    const parts = likeStr.split('|');
+    if (parts.length === 1) {
+      return likeStr === currentUserId || likeStr === currentGuestId;
+    }
+    const [dbUserId, dbGuestId] = parts;
+    if (currentUserId && dbUserId === currentUserId) return true;
+    if (currentGuestId && dbGuestId === currentGuestId) return true;
+    return false;
+  });
+
   const handleVerifyGoogleBusiness = async () => {
     setVerifyLoading(true);
     setVerifyError('');
@@ -1524,12 +1568,12 @@ Please confirm availability and delivery time.`;
                       <Sparkles className="h-3.5 w-3.5 text-white fill-current animate-pulse" /> Founding Member
                     </span>
                   )}
-                  {(business.isAddressVerified || (business.googlePlaceId && business.googlePlaceId !== '') || (business.googleBusinessLink && business.googleBusinessLink !== '') || business.googleLinked) ? (
-                    <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-400/25 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm shrink-0">
-                      <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  {((business.googlePlaceId && business.googlePlaceId !== '') || (business.googleBusinessLink && business.googleBusinessLink !== '') || business.googleLinked) ? (
+                    <span className="bg-blue-500/10 text-blue-400 border border-blue-400/25 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm shrink-0">
+                      <svg className="h-3.5 w-3.5 text-[#1a73e8] shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z" fill="currentColor" />
                         <path d="m9 12 2 2 4-4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg> Verified Business
+                      </svg> Google Verified
                     </span>
                   ) : (
                     isOwner && (
@@ -1699,8 +1743,17 @@ Please confirm availability and delivery time.`;
             >
               <Share2 className="h-4 w-4" /> Share
             </button>
-            <button className="h-10 px-4 bg-white/5 border border-white/10 hover:border-white/20 rounded-xl flex items-center justify-center gap-2 text-slate-300 hover:text-white transition-all cursor-pointer font-bold text-xs">
-              <Heart className="h-4 w-4 text-rose-500" /> Save
+            <button 
+              onClick={handleLikeBusiness}
+              disabled={likeLoading}
+              className={`h-10 px-4 border rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer font-bold text-xs ${
+                isLiked 
+                  ? 'bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100/60' 
+                  : 'bg-white/5 border-white/10 hover:border-white/20 text-slate-300 hover:text-white'
+              }`}
+            >
+              <Heart className={`h-4 w-4 transition-transform ${isLiked ? 'fill-current text-rose-500' : 'text-slate-400'}`} />
+              <span>{isLiked ? 'Liked' : 'Like'} ({business && business.likes ? business.likes.length : 0})</span>
             </button>
           </div>
         </div>
@@ -2930,9 +2983,9 @@ Please confirm availability and delivery time.`;
                   {isGovernmentalOrPublic(business) ? 'Contact Office' : 'Contact Business'}
                 </span>
                 <div className="flex items-center gap-2">
-                  {(business.isAddressVerified || (business.googlePlaceId && business.googlePlaceId !== '') || (business.googleBusinessLink && business.googleBusinessLink !== '') || business.googleLinked) ? (
-                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-150 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-0.5">
-                      ✓ Verified
+                  {((business.googlePlaceId && business.googlePlaceId !== '') || (business.googleBusinessLink && business.googleBusinessLink !== '') || business.googleLinked) ? (
+                    <span className="bg-blue-50 text-blue-700 border border-blue-150 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-0.5">
+                      ✓ Google Verified
                     </span>
                   ) : (
                     isOwner && (

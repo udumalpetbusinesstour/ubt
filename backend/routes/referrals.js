@@ -39,6 +39,7 @@ router.get('/my-stats', protect, async (req, res, next) => {
         referralCode: user.referralCode,
         referralPoints: availablePoints,
         referralCredits: availablePoints, // 1 point = ₹1 credit
+        isManualVerificationDone: !!user.isManualVerificationDone,
         referralLink: (() => {
           if (!isSubscribed) return '';
           let frontendOrigin = 'https://udumalpet.business';
@@ -280,6 +281,10 @@ router.post('/redeem', protect, async (req, res, next) => {
     const pendingRedemptions = await Redemption.find({ userId: user._id, status: 'Pending Approval' });
     const pendingPoints = pendingRedemptions.reduce((sum, r) => sum + r.points, 0);
     const availablePoints = (user.referralPoints || 0) - pendingPoints;
+
+    if (!user.isManualVerificationDone) {
+      return res.status(400).json({ success: false, message: 'Manual verification required before requesting a refund. Please contact support.' });
+    }
 
     if (availablePoints < 1000) {
       return res.status(400).json({ success: false, message: 'Minimum 1000 available points (excluding pending requests) required to redeem' });

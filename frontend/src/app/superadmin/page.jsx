@@ -700,6 +700,31 @@ const handlePartnerAction = async (partnerId, action) => {
     }
   };
 
+  const handleToggleManualVerification = async (partnerId, isDone) => {
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/admin/partners/${partnerId}/manual-verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ isDone })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(isDone ? 'Manual verification marked as completed!' : 'Manual verification status revoked!');
+        fetchPartners(); // Refresh partners list
+      } else {
+        alert(data.message || 'Failed to update manual verification status.');
+      }
+    } catch (err) {
+      console.error(err);
+      setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isManualVerificationDone: isDone } : p));
+      alert(isDone ? 'Manual verification simulated as completed (offline)!' : 'Manual verification simulated as revoked (offline)!');
+    }
+  };
+
   const fetchPartners = async () => {
     setPartnersLoading(true);
     try {
@@ -6971,6 +6996,26 @@ const handlePartnerAction = async (partnerId, action) => {
                                            )}
 
                                            <button
+                                              onClick={() => handleToggleManualVerification(partner._id, !partner.isManualVerificationDone)}
+                                              className={`px-2 py-1 font-black text-[9px] rounded-lg cursor-pointer transition-colors flex items-center gap-0.5 ${
+                                                partner.isManualVerificationDone
+                                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                                  : themeMode === 'dark'
+                                                    ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-750'
+                                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                                              }`}
+                                            >
+                                              {partner.isManualVerificationDone ? (
+                                                <>
+                                                  <Check className="h-2.5 w-2.5" />
+                                                  <span>Manual Verification Done</span>
+                                                </>
+                                              ) : (
+                                                <span>Verify Manually</span>
+                                              )}
+                                            </button>
+
+                                           <button
                                              onClick={() => handleDeletePartner(partner._id)}
                                              className={`px-2 py-1 font-black text-[9px] rounded-lg cursor-pointer transition-colors ${
                                                themeMode === 'dark'
@@ -8211,8 +8256,13 @@ const handlePartnerAction = async (partnerId, action) => {
             }`}>
               <div className="flex flex-col text-left min-w-0 flex-1 pr-3">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Partner Workspace</span>
-                <h3 className={`font-extrabold text-base leading-tight mt-1 truncate ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>
-                  {selectedPartner.fullName || selectedPartner.name}
+                <h3 className={`font-extrabold text-base leading-tight mt-1 truncate flex items-center gap-1.5 ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>
+                  <span>{selectedPartner.fullName || selectedPartner.name}</span>
+                  {selectedPartner.isManualVerificationDone && (
+                    <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-emerald-500 text-white shrink-0 shadow-2xs" title="Manually Verified Partner">
+                      <Check className="h-2.5 w-2.5 stroke-[3]" />
+                    </span>
+                  )}
                 </h3>
               </div>
               <button 
@@ -8237,16 +8287,28 @@ const handlePartnerAction = async (partnerId, action) => {
                 </div>
                 <div className="flex-1 flex flex-col gap-1 min-w-0 text-center sm:text-left">
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                    <span className={`font-extrabold text-sm leading-tight ${themeMode === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
-                      {selectedPartner.fullName || selectedPartner.name}
+                    <span className={`font-extrabold text-sm leading-tight flex items-center gap-1.5 ${themeMode === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
+                      <span>{selectedPartner.fullName || selectedPartner.name}</span>
+                      {selectedPartner.isManualVerificationDone && (
+                        <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-emerald-500 text-white shrink-0 shadow-2xs" title="Manually Verified Partner">
+                          <Check className="h-2.5 w-2.5 stroke-[3]" />
+                        </span>
+                      )}
                     </span>
                     {!selectedPartner.isPartnerRegistered ? (
                       <span className="bg-slate-100 text-slate-600 border border-slate-200/60 px-2 py-0.5 rounded text-[8px] font-black uppercase">
                         Draft User
                       </span>
                     ) : selectedPartner.isPartnerApproved ? (
-                      <span className="bg-emerald-50 text-emerald-700 border border-emerald-250 px-2 py-0.5 rounded text-[8px] font-black uppercase">
-                        Approved Partner
+                      <span className="bg-emerald-50 text-emerald-700 border border-emerald-250 px-2 py-0.5 rounded text-[8px] font-black uppercase flex items-center gap-1">
+                        {selectedPartner.isManualVerificationDone ? (
+                          <>
+                            <Check className="h-2.5 w-2.5 text-emerald-600 stroke-[3]" />
+                            <span>Manually Verified</span>
+                          </>
+                        ) : (
+                          <span>Approved Partner</span>
+                        )}
                       </span>
                     ) : selectedPartner.partnerStatus === 'rejected' ? (
                       <span className="bg-red-50 text-red-705 border border-red-200 px-2 py-0.5 rounded text-[8px] font-black uppercase">
@@ -8287,6 +8349,43 @@ const handlePartnerAction = async (partnerId, action) => {
                     </span>
                   </div>
                 </div>
+              </div>
+
+              {/* Manual Verification Status Card */}
+              <div className={`p-4 border rounded-2xl flex justify-between items-center ${
+                selectedPartner.isManualVerificationDone
+                  ? themeMode === 'dark' ? 'bg-emerald-950/20 border-emerald-900/30' : 'bg-emerald-50 border-emerald-250'
+                  : themeMode === 'dark' ? 'bg-slate-900/30 border-slate-850' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Manual Verification Status</span>
+                  <p className={`text-xs mt-1 font-semibold ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-650'}`}>
+                    {selectedPartner.isManualVerificationDone
+                      ? 'Completed: Refund redemption requests are enabled.'
+                      : 'Pending: Partner must complete manual verification before requested refunds.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    const nextVal = !selectedPartner.isManualVerificationDone;
+                    handleToggleManualVerification(selectedPartner._id, nextVal);
+                    setSelectedPartner(prev => ({ ...prev, isManualVerificationDone: nextVal }));
+                  }}
+                  className={`px-3.5 py-2 font-black text-[11px] rounded-xl cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5 ${
+                    selectedPartner.isManualVerificationDone
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      : 'bg-slate-150 hover:bg-slate-200 text-slate-700 border border-slate-250'
+                  }`}
+                >
+                  {selectedPartner.isManualVerificationDone ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 stroke-[3]" />
+                      <span>Manual Verification Done</span>
+                    </>
+                  ) : (
+                    <span>Verify Manually</span>
+                  )}
+                </button>
               </div>
 
               {/* Registration and Verification Log */}

@@ -279,12 +279,8 @@ export default function EventDetail() {
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [commentText, setCommentText] = useState('');
-  const [guestName, setGuestName] = useState('');
-  const [commentLoading, setCommentLoading] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
-  const [commentStatusMsg, setCommentStatusMsg] = useState('');
 
   // Auth Context
   const [user, setUser] = useState(null);
@@ -408,79 +404,7 @@ export default function EventDetail() {
     }
   };
 
-  const handleCommentSubmit = async (e) => {
-    e.preventDefault();
-    if (!commentText.trim()) return;
 
-    setCommentLoading(true);
-    try {
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const payload = { 
-        text: commentText,
-        userName: token ? undefined : (guestName.trim() || 'Anonymous Visitor')
-      };
-
-      const res = await fetch(`http://localhost:5000/api/events/${id}/comment`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (data.success) {
-        setEvent(prev => ({
-          ...prev,
-          comments: data.data
-        }));
-        setCommentText('');
-        setGuestName('');
-        setCommentStatusMsg(data.message || 'Comment posted successfully!');
-        setTimeout(() => setCommentStatusMsg(''), 6000);
-      }
-    } catch (err) {
-      const mockComment = {
-        _id: 'mock_c_' + Math.random().toString(36).substr(2, 9),
-        user: user ? (user._id || user.id) : undefined,
-        userName: user ? user.fullName : (guestName.trim() || 'Anonymous Visitor'),
-        text: commentText,
-        createdAt: new Date()
-      };
-      setEvent(prev => ({
-        ...prev,
-        comments: [...prev.comments, mockComment]
-      }));
-      setCommentText('');
-      setGuestName('');
-    } finally {
-      setCommentLoading(false);
-    }
-  };
-
-  const handleCommentDelete = async (commentId) => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/events/${id}/comment/${commentId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (data.success) {
-        setEvent(prev => ({
-          ...prev,
-          comments: data.data
-        }));
-      }
-    } catch (err) {
-      setEvent(prev => ({
-        ...prev,
-        comments: prev.comments.filter(c => c._id !== commentId)
-      }));
-    }
-  };
 
   if (loading) {
     return (
@@ -512,20 +436,20 @@ export default function EventDetail() {
   }
 
   const currentGuestId = localStorage.getItem('ubt_guest_id');
-  const isLiked = event && (
-    (user && (event.likes.includes(user._id) || event.likes.includes(user.id))) ||
-    (!user && currentGuestId && event.likes.includes(currentGuestId))
-  );
+  const currentUserId = user ? (user._id || user.id) : null;
+  const isLiked = event && event.likes && event.likes.some(likeStr => {
+    if (!likeStr) return false;
+    const parts = likeStr.split('|');
+    if (parts.length === 1) {
+      return likeStr === currentUserId || likeStr === currentGuestId;
+    }
+    const [dbUserId, dbGuestId] = parts;
+    if (currentUserId && dbUserId === currentUserId) return true;
+    if (currentGuestId && dbGuestId === currentGuestId) return true;
+    return false;
+  });
 
-  const canDeleteComment = (comment) => {
-    if (!user) return false;
-    const currentUserId = user._id || user.id;
-    if (!currentUserId) return false;
-    const isCommentCreator = comment.user && comment.user.toString() === currentUserId.toString();
-    const isEventOwner = event.ownerId && event.ownerId.toString() === currentUserId.toString();
-    const isAdmin = ['admin', 'superadmin'].includes(user.role);
-    return isCommentCreator || isEventOwner || isAdmin;
-  };
+
 
   const formatEventDateRange = (startDate, endDate) => {
     if (!startDate) return 'N/A';
@@ -587,7 +511,8 @@ export default function EventDetail() {
           <img 
             src={(!event.coverImageUrl || event.coverImageUrl.includes('unsplash.com')) ? '/default_event_cover.jpg' : window.getImageUrl(event.coverImageUrl)} 
             alt={event.title} 
-            className={`w-full h-full ${(!event.coverImageUrl || event.coverImageUrl.includes('unsplash.com')) ? 'object-contain bg-white p-4' : 'object-cover'}`}
+            className="w-full h-full object-cover"
+            onError={(e) => { e.target.onerror = null; e.target.src = '/default_event_cover.jpg'; }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent pointer-events-none" />
         </div>
@@ -681,7 +606,7 @@ export default function EventDetail() {
           {/* Description */}
           <div className="flex flex-col gap-2.5 text-left mt-2">
             <h3 className="font-extrabold text-sm text-[#001c41] uppercase tracking-wider">About the Event</h3>
-            <p className="text-slate-600 text-sm md:text-base font-medium leading-relaxed whitespace-pre-line font-sans">
+            <p className="text-slate-600 text-xs md:text-sm font-medium leading-relaxed whitespace-pre-line font-sans">
               {event.description}
             </p>
           </div>
@@ -733,98 +658,7 @@ export default function EventDetail() {
 
         </article>
 
-        {/* Discussion / Comments Feed */}
-        <div className="bg-white border border-slate-200/80 shadow-md rounded-[28px] p-6 md:p-8 flex flex-col gap-6 mx-2 md:mx-6">
-          
-          <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-            <MessageSquare className="h-5 w-5 text-emerald-600" />
-            <h3 className="font-extrabold text-sm text-[#001c41]">Discussion & Comments ({event.comments ? event.comments.length : 0})</h3>
-          </div>
 
-          {/* Comments List */}
-          <div className="flex flex-col divide-y divide-slate-100">
-            {!event.comments || event.comments.length === 0 ? (
-              <div className="py-8 text-center text-slate-450 text-xs font-semibold leading-relaxed">
-                No comments yet. Share your thoughts and start the conversation!
-              </div>
-            ) : (
-              event.comments.map((comment) => (
-                <div key={comment._id} className="flex gap-4 py-4.5 first:pt-0 last:pb-0 group">
-                  {/* Circle avatar */}
-                  <div className="h-8.5 w-8.5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-extrabold text-[#001c41] text-xs shadow-inner uppercase shrink-0 select-none">
-                    {(comment.userName || 'U').charAt(0)}
-                  </div>
-
-                  <div className="flex-grow flex flex-col text-left">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-extrabold text-slate-800 leading-none">{comment.userName}</span>
-                      <span className="text-[10px] text-slate-400 font-semibold">
-                        {new Date(comment.createdAt).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}
-                      </span>
-                    </div>
-                    <p className="text-slate-600 text-xs leading-relaxed font-semibold mt-2.5">
-                      {comment.text}
-                    </p>
-                  </div>
-
-                  {/* Trash Delete comment action button */}
-                  {canDeleteComment(comment) && (
-                    <button 
-                      onClick={() => handleCommentDelete(comment._id)}
-                      title="Delete comment"
-                      className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 text-slate-400 hover:text-red-655 cursor-pointer h-7 w-7 rounded-lg hover:bg-red-50 flex items-center justify-center shrink-0 self-start"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
-
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Comment Form */}
-          <form onSubmit={handleCommentSubmit} className="flex flex-col gap-3 border-t border-slate-100 pt-5 mt-2">
-            {commentStatusMsg && (
-              <div className="p-3 bg-emerald-50 text-[#027244] border border-emerald-250/20 text-xs font-semibold rounded-xl text-center flex items-center justify-center gap-2 animate-fadeIn">
-                <CheckCircle className="h-4 w-4 shrink-0" />
-                <span>{commentStatusMsg}</span>
-              </div>
-            )}
-            {!token && (
-              <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  value={guestName}
-                  onChange={(e) => setGuestName(e.target.value)}
-                  placeholder="Your Name (Optional)"
-                  disabled={commentLoading}
-                  className="w-full sm:w-1/3 border border-slate-200/70 p-2 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
-                />
-                <div className="text-slate-450 text-[10px] font-extrabold self-center">Commenting as Guest</div>
-              </div>
-            )}
-            <div className="flex gap-3">
-              <input 
-                type="text" 
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder="Add a public comment..."
-                disabled={commentLoading}
-                required
-                className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
-              />
-              <button 
-                type="submit"
-                disabled={commentLoading || !commentText.trim()}
-                className="bg-[#027244] hover:bg-[#005934] disabled:opacity-40 text-white rounded-xl h-11 w-11 flex items-center justify-center shrink-0 cursor-pointer shadow-md transition-colors"
-              >
-                {commentLoading ? <RefreshCw className="h-4.5 w-4.5 animate-spin" /> : <Send className="h-4 w-4" />}
-              </button>
-            </div>
-          </form>
-
-        </div>
 
       </div>
 

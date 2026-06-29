@@ -296,10 +296,7 @@ export default function EventsPage() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterCategory, setFilterCategory] = useState('All Categories');
   const [filterDate, setFilterDate] = useState('');
-  const [activeTab, setActiveTab] = useState(() => {
-    return searchParams.get('tab') || 'upcoming';
-  }); // upcoming | past
-  const [sortBy, setSortBy] = useState('Date (Soonest)');
+  const [sortBy, setSortBy] = useState('Date (Latest)');
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -307,25 +304,12 @@ export default function EventsPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [registeredEvent, setRegisteredEvent] = useState(null);
 
-  // Comments and Likes state variables
-  const [guestName, setGuestName] = useState('');
-  const [commentText, setCommentText] = useState('');
-  const [commentLoading, setCommentLoading] = useState(false);
-  const [showCommentsModal, setShowCommentsModal] = useState(false);
-  const [activeCommentsEvent, setActiveCommentsEvent] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [copiedEventId, setCopiedEventId] = useState(null);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchKeyword, filterCategory, filterDate, activeTab]);
-
-  useEffect(() => {
-    const tabParam = searchParams.get('tab');
-    if (tabParam && (tabParam === 'upcoming' || tabParam === 'past')) {
-      setActiveTab(tabParam);
-    }
-  }, [searchParams]);
+  }, [searchKeyword, filterCategory, filterDate]);
 
   useEffect(() => {
     // Check local storage for auth
@@ -508,8 +492,20 @@ export default function EventsPage() {
 
   const isLikedByUser = (evt) => {
     if (!evt.likes) return false;
-    const identifier = currentUser ? currentUser._id : localStorage.getItem('ubt_guest_id');
-    return evt.likes.includes(identifier);
+    const currentUserId = currentUser ? (currentUser._id || currentUser.id) : null;
+    const currentGuestId = localStorage.getItem('ubt_guest_id');
+    
+    return evt.likes.some(likeStr => {
+      if (!likeStr) return false;
+      const parts = likeStr.split('|');
+      if (parts.length === 1) {
+        return likeStr === currentUserId || likeStr === currentGuestId;
+      }
+      const [dbUserId, dbGuestId] = parts;
+      if (currentUserId && dbUserId === currentUserId) return true;
+      if (currentGuestId && dbGuestId === currentGuestId) return true;
+      return false;
+    });
   };
 
   const openEventCommentsModal = (evt) => {
@@ -1003,11 +999,7 @@ export default function EventsPage() {
       dateMatch = selected === current;
     }
 
-    const today = new Date();
-    const isUpcoming = new Date(e.date) >= today || (e.endDate && new Date(e.endDate) >= today);
-    const tabMatch = activeTab === 'upcoming' ? isUpcoming : !isUpcoming;
-
-    return keywordMatch && catMatch && dateMatch && tabMatch;
+    return keywordMatch && catMatch && dateMatch;
   });
 
   // Sorting list based on selection
@@ -1846,36 +1838,10 @@ export default function EventsPage() {
         {/* Left Column Listings (Col-span-3) */}
         <div className="lg:col-span-3 flex flex-col gap-6">
           
-          {/* Sub Navigation tabs */}
-          <div className="flex border-b border-slate-200/80 gap-6 text-xs font-black select-none">
-            <button
-              onClick={() => {
-                setActiveTab('upcoming');
-                const newParams = new URLSearchParams(window.location.search);
-                newParams.set('tab', 'upcoming');
-                navigate(`/events?${newParams.toString()}`, { replace: true });
-              }}
-              className={`pb-3.5 uppercase tracking-wider cursor-pointer border-b-2 ${activeTab === 'upcoming' ? 'border-[#027244] text-[#027244]' : 'border-transparent text-slate-400'}`}
-            >
-              Upcoming Events
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('past');
-                const newParams = new URLSearchParams(window.location.search);
-                newParams.set('tab', 'past');
-                navigate(`/events?${newParams.toString()}`, { replace: true });
-              }}
-              className={`pb-3.5 uppercase tracking-wider cursor-pointer border-b-2 ${activeTab === 'past' ? 'border-[#027244] text-[#027244]' : 'border-transparent text-slate-400'}`}
-            >
-              Past Events
-            </button>
-          </div>
-
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-2 pb-2.5 sm:pb-1.5 border-b border-slate-100 gap-3">
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-[#001c41] text-sm">
-                {activeTab === 'upcoming' ? 'Upcoming Events' : 'Past Events'}
+                Events List
               </span>
               <span className="bg-emerald-50 text-[#027244] text-[10px] font-black px-2.5 py-0.5 rounded-full border border-emerald-100 shadow-xs">
                 {filteredEvents.length} Event{filteredEvents.length !== 1 ? 's' : ''}
@@ -1936,9 +1902,11 @@ export default function EventsPage() {
                     >
                       {/* Cover Image Container */}
                       <div className="shrink-0 overflow-hidden relative h-40 w-full md:w-52 rounded-2xl bg-slate-50 border border-slate-100">
-                        <div 
-                          className={`h-full w-full bg-center ${(!evt.coverImageUrl || evt.coverImageUrl.includes('unsplash.com')) ? 'bg-contain bg-no-repeat bg-white p-1' : 'bg-cover'}`}
-                          style={{ backgroundImage: `url('${(!evt.coverImageUrl || evt.coverImageUrl.includes('unsplash.com')) ? getEventDefaultImage(evt.category) : window.getImageUrl(evt.coverImageUrl)}')` }}
+                        <img 
+                          src={(!evt.coverImageUrl || evt.coverImageUrl.includes('unsplash.com')) ? getEventDefaultImage(evt.category) : window.getImageUrl(evt.coverImageUrl)} 
+                          alt={evt.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.target.onerror = null; e.target.src = getEventDefaultImage(evt.category); }}
                         />
                       </div>
 
@@ -2005,22 +1973,14 @@ export default function EventsPage() {
                         <div className="flex items-center gap-4 border-t border-slate-100 pt-3.5 mt-1 text-[10.5px] text-slate-400">
                           <button 
                             onClick={(e) => { e.stopPropagation(); handleToggleLike(evt._id); }}
-                            className="flex items-center gap-1 bg-transparent border-none cursor-pointer text-rose-500 transition-colors"
+                            className={`flex items-center gap-1 bg-transparent border-none cursor-pointer transition-colors ${
+                              isLikedByUser(evt) ? 'text-rose-500' : 'text-slate-400 hover:text-rose-500'
+                            }`}
                             title="Like Event"
                           >
-                            <Heart className={`h-3.5 w-3.5 ${isLikedByUser(evt) ? 'fill-current text-rose-500' : 'fill-rose-50'}`} />
+                            <Heart className={`h-3.5 w-3.5 ${isLikedByUser(evt) ? 'fill-current text-rose-500' : ''}`} />
                             <span>{evt.likes ? evt.likes.length : 0}</span>
                           </button>
-                          
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); openEventCommentsModal(evt); }}
-                            className="flex items-center gap-1 bg-transparent border-none cursor-pointer text-blue-500 transition-colors"
-                            title="Comments"
-                          >
-                            <MessageSquare className="h-3.5 w-3.5 fill-blue-50" />
-                            <span>{evt.comments ? evt.comments.length : 0}</span>
-                          </button>
-                          
                           <span className="flex items-center gap-1 font-black text-slate-500 select-none animate-fadeIn" title="Views">
                             <Eye className="h-3.5 w-3.5 text-slate-450" />
                             <span>{evt.views || 0}</span>

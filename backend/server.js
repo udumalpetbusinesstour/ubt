@@ -97,6 +97,13 @@ const initializeServer = async () => {
     const { syncAllApprovedCategories } = require('./utils/categoryHelper');
     await syncAllApprovedCategories();
 
+    // 7. Seed default events on boot
+    console.log('[Boot] Seeding default events if collection is empty...');
+    const { seedDefaultEvents } = require('./routes/events');
+    if (seedDefaultEvents) {
+      await seedDefaultEvents();
+    }
+
     console.log('UBT Backend Subsystems initialized and synced successfully.');
   } catch (error) {
     console.error('API bootloader initialization sequence failed:', error.message);

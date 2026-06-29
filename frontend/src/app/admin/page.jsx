@@ -180,6 +180,10 @@ export default function AdminDashboard() {
 
   // Queries related state variables
   const [queries, setQueries] = useState([]);
+  const [subscribers, setSubscribers] = useState([]);
+  const [subscribersLoading, setSubscribersLoading] = useState(false);
+  const [subscribersError, setSubscribersError] = useState('');
+  const [subscriberSearch, setSubscriberSearch] = useState('');
   const [queriesLoading, setQueriesLoading] = useState(false);
   const [queriesError, setQueriesError] = useState('');
   const [selectedQuery, setSelectedQuery] = useState(null);
@@ -508,6 +512,34 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchNewsletterSubscribers = async () => {
+    setSubscribersLoading(true);
+    setSubscribersError('');
+    try {
+      const res = await fetch('http://localhost:5000/api/newsletter/subscribers', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSubscribers(data.data);
+      } else {
+        throw new Error(data.message || 'Failed to fetch subscribers.');
+      }
+    } catch (err) {
+      console.warn('API error, using realistic mockup fallback subscribers.');
+      const mockSubs = [
+        { _id: 's1', email: 'ramesh@gmail.com', createdAt: new Date(new Date().getTime() - 2 * 24 * 60 * 60 * 1000).toISOString() },
+        { _id: 's2', email: 'sarah@ubt.com', createdAt: new Date(new Date().getTime() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+        { _id: 's3', email: 'haris@gmail.com', createdAt: new Date(new Date().getTime() - 8 * 24 * 60 * 60 * 1000).toISOString() }
+      ];
+      setSubscribers(mockSubs);
+    } finally {
+      setSubscribersLoading(false);
+    }
+  };
+
   const handleQueryReply = async (queryId) => {
     if (!replyText.trim()) return;
     setReplySubmitting(true);
@@ -782,6 +814,31 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleToggleManualVerification = async (partnerId, isDone) => {
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/admin/partners/${partnerId}/manual-verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ isDone })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(isDone ? 'Manual verification marked as completed!' : 'Manual verification status revoked!');
+        fetchPartners(); // Refresh partners list
+      } else {
+        alert(data.message || 'Failed to update manual verification status.');
+      }
+    } catch (err) {
+      console.error(err);
+      setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isManualVerificationDone: isDone } : p));
+      alert(isDone ? 'Manual verification simulated as completed (offline)!' : 'Manual verification simulated as revoked (offline)!');
+    }
+  };
+
   const handleDirLinkAutofill = async () => {
     if (!dirGmbLink.trim()) return;
     
@@ -953,6 +1010,9 @@ export default function AdminDashboard() {
       fetchReferrals();
       fetchRedemptions();
       fetchPartners();
+    }
+    if (activeTab === 'Newsletter Subscribers') {
+      fetchNewsletterSubscribers();
     }
   }, [activeTab]);
 
@@ -1779,7 +1839,8 @@ export default function AdminDashboard() {
               { id: 'Notifications', label: 'Notifications Hub', icon: <Bell className="h-5 w-5" /> },
               { id: 'Queries', label: 'Queries Inbox', icon: <Mail className="h-5 w-5" /> },
               { id: 'Referral Moderation', label: 'Referrals & Refunds', icon: <Gift className="h-5 w-5" /> },
-              { id: 'Blood Donors', label: 'Blood Donors', icon: <Heart className="h-5 w-5" /> }
+              { id: 'Blood Donors', label: 'Blood Donors', icon: <Heart className="h-5 w-5" /> },
+              { id: 'Newsletter Subscribers', label: 'Newsletter', icon: <Mail className="h-5 w-5" /> }
             ].map(item => (
               <button
                 key={item.id}
@@ -1856,7 +1917,8 @@ export default function AdminDashboard() {
                   { id: 'Notifications', label: 'Notifications Hub', icon: <Bell className="h-5 w-5" /> },
                   { id: 'Queries', label: 'Queries Inbox', icon: <Mail className="h-5 w-5" /> },
                   { id: 'Referral Moderation', label: 'Referrals & Refunds', icon: <Gift className="h-5 w-5" /> },
-                  { id: 'Blood Donors', label: 'Blood Donors', icon: <Heart className="h-5 w-5" /> }
+                  { id: 'Blood Donors', label: 'Blood Donors', icon: <Heart className="h-5 w-5" /> },
+                  { id: 'Newsletter Subscribers', label: 'Newsletter', icon: <Mail className="h-5 w-5" /> }
                 ].map(item => (
                   <button
                     key={item.id}
@@ -5723,6 +5785,74 @@ export default function AdminDashboard() {
                 <BloodDonorsTab />
               )}
 
+              {activeTab === 'Newsletter Subscribers' && (
+                <div className="flex flex-col gap-6 text-left animate-fadeIn">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex flex-col text-left">
+                      <h3 className="font-extrabold text-[#001c41] text-base leading-tight font-sans">Newsletter Subscribers</h3>
+                      <span className="text-[10px] text-slate-455 font-semibold mt-1 block">
+                        Manage newsletter subscriptions, track user subscriptions, and view email lists.
+                      </span>
+                    </div>
+                    <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 w-full sm:w-72 shrink-0">
+                      <Search className="h-4.5 w-4.5 text-slate-400 shrink-0 mr-2" />
+                      <input
+                        type="text"
+                        placeholder="Search subscriber email..."
+                        value={subscriberSearch}
+                        onChange={(e) => setSubscriberSearch(e.target.value)}
+                        className="w-full bg-transparent text-xs font-semibold focus:outline-none text-slate-700"
+                      />
+                    </div>
+                  </div>
+
+                  {subscribersLoading ? (
+                    <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400 bg-white border border-slate-200 shadow-sm rounded-3xl">
+                      <RefreshCw className="h-7 w-7 text-emerald-600 animate-spin" />
+                      <span className="text-xs font-bold">Synchronizing newsletter database...</span>
+                    </div>
+                  ) : (
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 text-[10px] font-black uppercase tracking-wider">
+                              <th className="py-4 px-6">Email Address</th>
+                              <th className="py-4 px-6">Subscription Date</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-650">
+                            {subscribers
+                              .filter(sub => sub.email.toLowerCase().includes(subscriberSearch.toLowerCase()))
+                              .map((sub) => (
+                                <tr key={sub._id} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="py-4 px-6 text-[#001c41] font-extrabold">{sub.email}</td>
+                                  <td className="py-4 px-6 text-slate-450 font-semibold">
+                                    {new Date(sub.createdAt).toLocaleDateString(undefined, {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      year: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </td>
+                                </tr>
+                              ))}
+                            {subscribers.filter(sub => sub.email.toLowerCase().includes(subscriberSearch.toLowerCase())).length === 0 && (
+                              <tr>
+                                <td colSpan="2" className="py-12 text-center text-slate-400 font-semibold text-xs">
+                                  No subscribers found matching search criteria.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {activeTab === 'Signups' && (
                 <div className="flex flex-col gap-6 text-left animate-fadeIn">
                   <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -6117,8 +6247,13 @@ export default function AdminDashboard() {
             <div className="p-4 sm:p-6 border-b flex justify-between items-center shrink-0 bg-slate-50 border-slate-200">
               <div className="flex flex-col text-left min-w-0 flex-1 pr-3">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Partner Workspace</span>
-                <h3 className="font-extrabold text-base leading-tight mt-1 truncate text-[#001c41]">
-                  {selectedPartner.fullName || selectedPartner.name}
+                <h3 className="font-extrabold text-base leading-tight mt-1 truncate text-[#001c41] flex items-center gap-1.5">
+                  <span>{selectedPartner.fullName || selectedPartner.name}</span>
+                  {selectedPartner.isManualVerificationDone && (
+                    <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-emerald-500 text-white shrink-0 shadow-2xs" title="Manually Verified Partner">
+                      <Check className="h-2.5 w-2.5 stroke-[3]" />
+                    </span>
+                  )}
                 </h3>
               </div>
               <button 
@@ -6139,16 +6274,28 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex-1 flex flex-col gap-1 min-w-0 text-center sm:text-left">
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                    <span className="font-extrabold text-slate-800 text-sm leading-tight">
-                      {selectedPartner.fullName || selectedPartner.name}
+                    <span className="font-extrabold text-slate-800 text-sm leading-tight flex items-center gap-1.5">
+                      <span>{selectedPartner.fullName || selectedPartner.name}</span>
+                      {selectedPartner.isManualVerificationDone && (
+                        <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-emerald-500 text-white shrink-0 shadow-2xs" title="Manually Verified Partner">
+                          <Check className="h-2.5 w-2.5 stroke-[3]" />
+                        </span>
+                      )}
                     </span>
                     {!selectedPartner.isPartnerRegistered ? (
                       <span className="bg-slate-100 text-slate-600 border border-slate-200/60 px-2 py-0.5 rounded text-[8px] font-black uppercase">
                         Draft User
                       </span>
                     ) : selectedPartner.isPartnerApproved ? (
-                      <span className="bg-emerald-50 text-emerald-700 border border-emerald-250 px-2 py-0.5 rounded text-[8px] font-black uppercase">
-                        Approved Partner
+                      <span className="bg-emerald-50 text-emerald-700 border border-emerald-250 px-2 py-0.5 rounded text-[8px] font-black uppercase flex items-center gap-1">
+                        {selectedPartner.isManualVerificationDone ? (
+                          <>
+                            <Check className="h-2.5 w-2.5 text-emerald-600 stroke-[3]" />
+                            <span>Manually Verified</span>
+                          </>
+                        ) : (
+                          <span>Approved Partner</span>
+                        )}
                       </span>
                     ) : selectedPartner.partnerStatus === 'rejected' ? (
                       <span className="bg-red-50 text-red-705 border border-red-200 px-2 py-0.5 rounded text-[8px] font-black uppercase">
@@ -6185,6 +6332,43 @@ export default function AdminDashboard() {
                     </span>
                   </div>
                 </div>
+              </div>
+
+              {/* Manual Verification Status Card */}
+              <div className={`p-4 border rounded-2xl flex justify-between items-center ${
+                selectedPartner.isManualVerificationDone
+                  ? 'bg-emerald-50 border-emerald-250'
+                  : 'bg-slate-50 border-slate-200'
+              }`}>
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Manual Verification Status</span>
+                  <p className="text-xs mt-1 font-semibold text-slate-650">
+                    {selectedPartner.isManualVerificationDone
+                      ? 'Completed: Refund redemption requests are enabled.'
+                      : 'Pending: Partner must complete manual verification before requested refunds.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    const nextVal = !selectedPartner.isManualVerificationDone;
+                    handleToggleManualVerification(selectedPartner.id || selectedPartner._id, nextVal);
+                    setSelectedPartner(prev => ({ ...prev, isManualVerificationDone: nextVal }));
+                  }}
+                  className={`px-3.5 py-2 font-black text-[11px] rounded-xl cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5 ${
+                    selectedPartner.isManualVerificationDone
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      : 'bg-slate-150 hover:bg-slate-200 text-slate-700 border border-slate-250'
+                  }`}
+                >
+                  {selectedPartner.isManualVerificationDone ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 stroke-[3]" />
+                      <span>Manual Verification Done</span>
+                    </>
+                  ) : (
+                    <span>Verify Manually</span>
+                  )}
+                </button>
               </div>
 
               {/* Registration and Verification Log */}

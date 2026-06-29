@@ -2609,7 +2609,14 @@ function DashboardContent() {
   };
 
   const handleRedeemPoints = async () => {
-    if (!referralStats || (referralStats.referralPoints || 0) < 1000) {
+    if (!referralStats) return;
+
+    if (!referralStats.isManualVerificationDone) {
+      alert('Manual verification required! Before requesting a refund, you must contact us and complete manual verification.');
+      return;
+    }
+
+    if ((referralStats.referralPoints || 0) < 1000) {
       alert('You need at least 1,000 points to request a redemption.');
       return;
     }
@@ -4443,7 +4450,15 @@ function DashboardContent() {
               <div className="bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                 <div className="flex flex-col">
                   <h2 className="font-extrabold text-[#001c41] text-xl tracking-tight">Partner Dashboard</h2>
-                  <p className="text-xs text-slate-455 font-semibold mt-1">Welcome back, {user?.fullName || user?.name || 'Partner'}. Monitor your referrals, earnings, and redeem rewards.</p>
+                  <p className="text-xs text-slate-455 font-semibold mt-1 flex items-center gap-1.5 flex-wrap">
+                    <span>Welcome back, <strong className="text-slate-800">{user?.fullName || user?.name || 'Partner'}</strong></span>
+                    {referralStats?.isManualVerificationDone && (
+                      <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-emerald-500 text-white shrink-0 shadow-2xs" title="Manually Verified Partner">
+                        <Check className="h-2.5 w-2.5 stroke-[3]" />
+                      </span>
+                    )}
+                    <span>. Monitor your referrals, earnings, and redeem rewards.</span>
+                  </p>
                 </div>
                 <div className="flex items-center gap-2 bg-[#E6F2ED] text-[#027244] border border-emerald-100 rounded-xl px-3 py-1.5 text-xs font-bold shrink-0">
                   <Sparkles className="h-4 w-4 fill-current animate-pulse" /> Active Platform Partner
@@ -4556,7 +4571,12 @@ function DashboardContent() {
 
                 <div className="bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-5 flex flex-col gap-3 justify-between text-left">
                   <div>
-                    <h3 className="font-extrabold text-slate-800 text-sm border-b border-slate-100 pb-2">Points Summary & Payouts</h3>
+                    <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                      <h3 className="font-extrabold text-slate-800 text-sm">Points Summary & Payouts</h3>
+                      <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${referralStats?.isManualVerificationDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
+                        Verification: {referralStats?.isManualVerificationDone ? 'Done' : 'Required'}
+                      </span>
+                    </div>
                     <p className="text-xs text-slate-500 font-semibold leading-relaxed mt-2">
                       Earned points can be redeemed for cashback payouts when you reach a minimum balance of <span className="font-bold text-[#001c41]">1,000 points</span>. 1 Point = ₹1 credit.
                     </p>
@@ -4576,15 +4596,45 @@ function DashboardContent() {
                     </div>
                   </div>
 
+                  {!referralStats?.isManualVerificationDone && (
+                    <div className="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-4 flex flex-col gap-2.5 text-left shadow-2xs my-1">
+                      <div className="flex items-center gap-2 text-amber-900 font-extrabold text-xs">
+                        <ShieldCheck className="h-4.5 w-4.5 text-amber-600 shrink-0" />
+                        <span>Manual Verification Instructions</span>
+                      </div>
+                      <p className="text-[11px] text-slate-700 font-semibold leading-relaxed">
+                        Before requesting a cashback refund, partners must complete manual verification with a valid <b>ID Proof</b> (Aadhaar Card or Government Photo ID).
+                      </p>
+                      <div className="bg-white/90 border border-amber-200/60 rounded-xl p-2.5 flex flex-col gap-1.5 text-[10.5px]">
+                        <div className="flex items-start gap-1.5 text-slate-700 font-medium">
+                          <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                          <span><b>Office Address:</b> Control N - CN Technologies Private Limited, Sippi Opticals, 0, Katcheri St, Udumalpet Main Town, Tamil Nadu - 642126</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-700 font-medium mt-0.5 pt-1 border-t border-amber-100">
+                          <span className="flex items-center gap-1">
+                            <Phone className="h-3 w-3 text-emerald-600 shrink-0" />
+                            <b>Phone / WhatsApp:</b> +91 89257 28260
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Mail className="h-3 w-3 text-emerald-600 shrink-0" />
+                            <b>Email:</b> info@udumalpet.business
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <button
                     onClick={handleRedeemPoints}
-                    disabled={redemptionSubmitting || !referralStats || (referralStats?.referralPoints || 0) < 1000}
+                    disabled={redemptionSubmitting || !referralStats || !referralStats?.isManualVerificationDone || (referralStats?.referralPoints || 0) < 1000}
                     className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer mt-2"
                   >
                     {redemptionSubmitting ? (
                       <>
                         <RefreshCw className="h-4 w-4 animate-spin" /> Submitting Request...
                       </>
+                    ) : !referralStats || !referralStats?.isManualVerificationDone ? (
+                      'Manual Verification Required to Redeem'
                     ) : (
                       'Request Cashback Refund (₹1,000)'
                     )}

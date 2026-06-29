@@ -327,19 +327,18 @@ export default function Login() {
   }, [searchParams]);
 
   useEffect(() => {
-    // Push state to create a history entry we can intercept
-    window.history.pushState(null, null, window.location.pathname);
-    
+    const redirectParam = searchParams.get('redirect');
     const handlePopState = (event) => {
-      // When back is pressed, redirect to home page
-      navigate('/', { replace: true });
+      if (redirectParam && redirectParam !== '/login' && redirectParam !== '/register') {
+        navigate(redirectParam, { replace: true });
+      }
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   const handlePasswordLogin = async (e) => {
     e.preventDefault();
@@ -572,18 +571,28 @@ export default function Login() {
     }
   };
 
+  const redirectParam = searchParams.get('redirect');
+  const handleBackNavigation = () => {
+    if (redirectParam && redirectParam !== '/login' && redirectParam !== '/register') {
+      navigate(redirectParam);
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
     <div className="w-full flex flex-col items-center bg-[#F8FAFC] pt-6 pb-12 px-4 md:px-8 font-sans">
       
-      {/* Back to Home Link */}
+      {/* Dynamic Back Link */}
       <div className="max-w-5xl w-full flex justify-start mb-6">
-        <Link 
-          to="/" 
-          className="flex items-center gap-2 text-xs font-extrabold text-[#001c41] hover:text-[#027244] transition-all bg-white py-2.5 px-4 rounded-xl border border-slate-200 shadow-sm hover:shadow group"
+        <button 
+          type="button"
+          onClick={handleBackNavigation}
+          className="flex items-center gap-2 text-xs font-extrabold text-[#001c41] hover:text-[#027244] transition-all bg-white py-2.5 px-4 rounded-xl border border-slate-200 shadow-sm hover:shadow group cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4 text-slate-400 group-hover:text-[#027244] transition-colors" />
-          <span>Back to Home</span>
-        </Link>
+          <span>{redirectParam && redirectParam !== '/' ? `Back to ${redirectParam.replace('/', '').split('?')[0].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'Previous Page'}` : 'Go Back'}</span>
+        </button>
       </div>
 
       {/* Combined Left Panel and Right Form Card */}

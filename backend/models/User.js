@@ -123,6 +123,10 @@ const UserSchema = new mongoose.Schema({
   partnerRejectionReason: {
     type: String,
     default: '',
+  },
+  isManualVerificationDone: {
+    type: Boolean,
+    default: false,
   }
 }, {
   timestamps: true

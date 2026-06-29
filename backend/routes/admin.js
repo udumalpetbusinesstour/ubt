@@ -650,4 +650,22 @@ router.post('/partners/approve', async (req, res, next) => {
   }
 });
 
+// @desc    Toggle or set manual verification status for a partner
+// @route   POST /api/admin/partners/:id/manual-verification
+// @access  Private/Admin
+router.post('/partners/:id/manual-verification', async (req, res, next) => {
+  try {
+    const { isDone } = req.body;
+    const partner = await User.findById(req.params.id);
+    if (!partner) {
+      return res.status(404).json({ success: false, message: 'Partner not found' });
+    }
+    partner.isManualVerificationDone = !!isDone;
+    await partner.save();
+    res.json({ success: true, message: `Manual verification status updated successfully.`, data: partner });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

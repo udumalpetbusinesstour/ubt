@@ -1558,31 +1558,23 @@ export default function Home() {
           ].map((faq, idx) => (
             <div 
               key={idx} 
-              onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-              className="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] shrink-0 snap-start bg-white border border-slate-200/80 rounded-3xl p-6 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-start select-none cursor-pointer"
+              className="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] shrink-0 snap-start bg-white border border-slate-200/80 rounded-3xl p-6 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-start select-none gap-3"
             >
-              <div className="flex justify-between items-start gap-2 w-full">
-                <div className="flex gap-2">
-                  <span className="h-5.5 w-5.5 rounded-full bg-emerald-50 text-[#027244] font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5 border border-emerald-100">
-                    Q
-                  </span>
-                  <h3 className="font-extrabold text-[14px] text-slate-800 leading-snug">
-                    {faq.q}
-                  </h3>
-                </div>
-                <ChevronRight className={`h-4 w-4 text-slate-400 shrink-0 transition-transform duration-305 mt-1 ${activeFaq === idx ? 'rotate-90 text-[#027244]' : ''}`} />
+              <div className="flex items-start gap-2 w-full">
+                <span className="h-5.5 w-5.5 rounded-full bg-emerald-50 text-[#027244] font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5 border border-emerald-100">
+                  Q
+                </span>
+                <h3 className="font-extrabold text-[14px] text-slate-800 leading-snug">
+                  {faq.q}
+                </h3>
               </div>
-              <div 
-                className={`overflow-hidden transition-all duration-300 ${activeFaq === idx ? 'max-h-[220px] opacity-100 mt-3 border-t border-slate-100 pt-3' : 'max-h-0 opacity-0'}`}
-              >
-                <div className="flex gap-2">
-                  <span className="h-5.5 w-5.5 rounded-full bg-slate-50 text-slate-400 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5 border border-slate-100">
-                    A
-                  </span>
-                  <p className="text-[13px] text-slate-500 leading-relaxed font-medium">
-                    {faq.a}
-                  </p>
-                </div>
+              <div className="flex items-start gap-2 border-t border-slate-100 pt-3">
+                <span className="h-5.5 w-5.5 rounded-full bg-slate-50 text-slate-400 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5 border border-slate-100">
+                  A
+                </span>
+                <p className="text-[13px] text-slate-500 leading-relaxed font-medium">
+                  {faq.a}
+                </p>
               </div>
             </div>
           ))}

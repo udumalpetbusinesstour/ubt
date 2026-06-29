@@ -293,6 +293,11 @@ const BusinessSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  likes: [
+    {
+      type: String
+    }
+  ],
   offers: [
     {
       id: { type: String },

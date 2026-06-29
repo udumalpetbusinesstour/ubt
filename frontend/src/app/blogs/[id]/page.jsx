@@ -310,10 +310,18 @@ export default function BlogDetail() {
   }
 
   const currentGuestId = localStorage.getItem('ubt_guest_id');
-  const isLiked = blog && (
-    (user && (blog.likes.includes(user._id) || blog.likes.includes(user.id))) ||
-    (!user && currentGuestId && blog.likes.includes(currentGuestId))
-  );
+  const currentUserId = user ? (user._id || user.id) : null;
+  const isLiked = blog && blog.likes && blog.likes.some(likeStr => {
+    if (!likeStr) return false;
+    const parts = likeStr.split('|');
+    if (parts.length === 1) {
+      return likeStr === currentUserId || likeStr === currentGuestId;
+    }
+    const [dbUserId, dbGuestId] = parts;
+    if (currentUserId && dbUserId === currentUserId) return true;
+    if (currentGuestId && dbGuestId === currentGuestId) return true;
+    return false;
+  });
   const words = (blog.content || '').split(' ').length;
   const readTime = Math.max(Math.ceil(words / 150), 1);
 
@@ -363,7 +371,8 @@ export default function BlogDetail() {
           <img 
             src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : window.getImageUrl(blog.coverImage)} 
             alt={blog.title} 
-            className={`w-full h-full ${(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-4' : 'object-cover'}`}
+            className="w-full h-full object-cover"
+            onError={(e) => { e.target.onerror = null; e.target.src = '/default_blog_cover.jpg'; }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent pointer-events-none" />
         </div>
@@ -416,7 +425,7 @@ export default function BlogDetail() {
           </h1>
 
           {/* Content */}
-          <div className="text-slate-600 text-sm md:text-base font-medium leading-relaxed whitespace-pre-line flex flex-col gap-4 font-sans">
+          <div className="text-slate-600 text-xs md:text-sm font-medium leading-relaxed whitespace-pre-line flex flex-col gap-4 font-sans">
             {blog.content}
           </div>
 

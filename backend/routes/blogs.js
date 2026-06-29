@@ -224,23 +224,73 @@ router.post('/:id/like', async (req, res) => {
       }
     }
 
-    // Determine unique identifier for liking (user ID or guest ID / IP / Fingerprint)
-    const identifier = userIdStr || req.body.guestId || req.ip || req.headers['x-forwarded-for'] || 'guest_unknown';
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || 'unknown_ip';
+    const guestId = req.body.guestId || '';
 
     // Toggle identifier in likes array
-    const index = blog.likes.indexOf(identifier);
-    if (index === -1) {
-      blog.likes.push(identifier);
+    if (!blog.likes) blog.likes = [];
+    
+    let foundIndex = -1;
+    let ipMatchIndex = -1;
+    for (let i = 0; i < blog.likes.length; i++) {
+      const likeStr = blog.likes[i];
+      if (!likeStr) continue;
+      const parts = likeStr.split('|');
+      
+      if (parts.length === 1) {
+        const oldId = parts[0];
+        if ((userIdStr && oldId === userIdStr) || (guestId && oldId === guestId)) {
+          foundIndex = i;
+          break;
+        }
+        if (ip && oldId === ip) {
+          ipMatchIndex = i;
+        }
+      } else {
+        const [dbUserId, dbGuestId, dbIp] = parts;
+        if (userIdStr && dbUserId === userIdStr) {
+          foundIndex = i;
+          break;
+        }
+        if (guestId && dbGuestId === guestId) {
+          foundIndex = i;
+          break;
+        }
+        if (ip && dbIp === ip) {
+          ipMatchIndex = i;
+        }
+      }
+    }
+
+    if (foundIndex !== -1) {
+      blog.likes.splice(foundIndex, 1);
+    } else if (ipMatchIndex !== -1) {
+      // Already liked by this IP, do not add another but do not unlike the other user's like
     } else {
-      blog.likes.splice(index, 1);
+      blog.likes.push(`${userIdStr || ''}|${guestId || ''}|${ip}`);
     }
 
     await blog.save();
     
-    // Check if the current identifier is present to determine if liked
-    const isLiked = blog.likes.includes(identifier);
+    // Check if the current user/device/IP has liked it now
+    let isLikedNow = false;
+    for (const likeStr of blog.likes) {
+      if (!likeStr) continue;
+      const parts = likeStr.split('|');
+      if (parts.length === 1) {
+        if (likeStr === userIdStr || likeStr === guestId || likeStr === ip) {
+          isLikedNow = true;
+          break;
+        }
+      } else {
+        const [dbUserId, dbGuestId, dbIp] = parts;
+        if (userIdStr && dbUserId === userIdStr) { isLikedNow = true; break; }
+        if (guestId && dbGuestId === guestId) { isLikedNow = true; break; }
+        if (ip && dbIp === ip) { isLikedNow = true; break; }
+      }
+    }
 
-    res.json({ success: true, likesCount: blog.likes.length, isLiked, data: blog.likes });
+    res.json({ success: true, likesCount: blog.likes.length, isLiked: isLikedNow, data: blog.likes });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

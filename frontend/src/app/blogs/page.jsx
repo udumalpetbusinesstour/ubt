@@ -444,13 +444,18 @@ export default function BlogsPage() {
   // Sorting blogs
   const sortedBlogs = [...filteredBlogs].sort((a, b) => {
     if (sortBy === 'Popular') {
-      return (b.likes?.length || 0) - (a.likes?.length || 0);
+      const likesB = Array.isArray(b.likes) ? b.likes.length : 0;
+      const likesA = Array.isArray(a.likes) ? a.likes.length : 0;
+      return likesB - likesA;
     }
     if (sortBy === 'Discussed') {
-      return (b.comments?.length || 0) - (a.comments?.length || 0);
+      const commentsB = Array.isArray(b.comments) ? b.comments.length : 0;
+      const commentsA = Array.isArray(a.comments) ? a.comments.length : 0;
+      return commentsB - commentsA;
     }
-    // Default: 'Recent'
-    return new Date(b.createdAt) - new Date(a.createdAt);
+    const timeB = new Date(b.createdAt).getTime() || 0;
+    const timeA = new Date(a.createdAt).getTime() || 0;
+    return timeB - timeA;
   });
 
   const blogsPerPage = 6;
@@ -567,7 +572,12 @@ export default function BlogsPage() {
                 return (
                   <article key={blog._id} className="bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col cursor-pointer" onClick={() => navigate(`/blogs/${blog._id}`)}>
                     <div className="h-48 overflow-hidden bg-slate-100">
-                      <img src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : window.getImageUrl(blog.coverImage)} className={`w-full h-full ${(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-2' : 'object-cover'} hover:scale-105 transition-transform duration-500`} alt={blog.title} />
+                      <img 
+                        src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : window.getImageUrl(blog.coverImage)} 
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" 
+                        onError={(e) => { e.target.onerror = null; e.target.src = '/default_blog_cover.jpg'; }}
+                        alt={blog.title} 
+                      />
                     </div>
                     <div className="p-5 flex-1 flex flex-col justify-between gap-4">
                       <div className="flex flex-col gap-2">
@@ -605,75 +615,57 @@ export default function BlogsPage() {
                   <span className="text-xs text-slate-450 font-bold">{sortedBlogs.length} articles found</span>
                 </div>
                 
-                {/* Categories Tab navigation */}
-                <div className="flex items-center gap-1.5 flex-wrap mt-2 overflow-x-auto pb-1 select-none">
-                  {['All', ...STANDARD_CATEGORIES.slice(0, 4)].map(catName => (
+                {/* Categories 3-Column Layout */}
+                <div className="grid grid-cols-3 gap-2 mt-2 select-none w-full">
+                  {['All', ...activeCategoriesList].map(catName => (
                     <button
                       key={catName}
                       onClick={() => { setActiveCategory(catName); setCurrentPage(1); }}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer ${
+                      className={`px-3 py-2.5 rounded-xl text-[10px] font-black text-center transition-all cursor-pointer border ${
                         activeCategory === catName 
-                          ? 'bg-[#027244] text-white shadow-xs' 
-                          : 'bg-white border border-slate-200 text-slate-500 hover:text-slate-800'
+                          ? 'bg-[#027244] text-white border-[#027244] shadow-xs' 
+                          : 'bg-white border-slate-200 text-slate-650 hover:bg-slate-50'
                       }`}
                     >
                       {catName}
                     </button>
                   ))}
-                  
-                  {/* More Dropdown */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer bg-white border border-slate-200 text-slate-500 hover:text-slate-800 flex items-center gap-1 ${
-                        !['All', ...STANDARD_CATEGORIES.slice(0, 4)].includes(activeCategory) ? 'border-[#027244] text-[#027244]' : ''
-                      }`}
-                    >
-                      <span>{['All', ...STANDARD_CATEGORIES.slice(0, 4)].includes(activeCategory) ? 'More' : activeCategory}</span>
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </button>
-                    
-                    {isMoreMenuOpen && (
-                      <>
-                        <div className="fixed inset-0 z-20" onClick={() => setIsMoreMenuOpen(false)} />
-                        <div className="absolute right-0 mt-1.5 bg-white border border-slate-200 shadow-xl rounded-xl py-2 w-48 z-30 animate-fadeIn">
-                          {activeCategoriesList.slice(5).map(catName => (
-                            <button
-                              key={catName}
-                              onClick={() => {
-                                setActiveCategory(catName);
-                                setCurrentPage(1);
-                                setIsMoreMenuOpen(false);
-                              }}
-                              className={`w-full text-left px-4 py-2 text-xs font-bold hover:bg-slate-50 flex items-center justify-between ${
-                                activeCategory === catName ? 'text-[#027244] bg-emerald-50/50' : 'text-slate-650'
-                              }`}
-                            >
-                              <span>{catName}</span>
-                              {activeCategory === catName && <Check className="h-3.5 w-3.5 text-[#027244]" />}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Sorting Widget */}
-            <div className="flex items-center gap-2 self-end text-xs font-bold text-slate-500 bg-white border border-slate-200 rounded-xl px-3 py-1.5 w-fit shadow-3xs select-none">
-              <ArrowUpDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-              <span>Sort by:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent font-extrabold text-[#001c41] focus:outline-none cursor-pointer"
+            {/* Tristate Sorting Button Group */}
+            <div className="flex items-center gap-1 self-end bg-white border border-slate-200 rounded-xl p-1 shadow-3xs select-none">
+              <button
+                onClick={() => setSortBy('Recent')}
+                className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer text-[10.5px] font-black leading-none ${
+                  sortBy === 'Recent'
+                    ? 'bg-[#027244] text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                }`}
               >
-                <option value="Recent">Most Recent</option>
-                <option value="Popular">Most Popular</option>
-                <option value="Discussed">Most Discussed</option>
-              </select>
+                Recent
+              </button>
+              <button
+                onClick={() => setSortBy('Popular')}
+                className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer text-[10.5px] font-black leading-none ${
+                  sortBy === 'Popular'
+                    ? 'bg-[#027244] text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                }`}
+              >
+                Popular
+              </button>
+              <button
+                onClick={() => setSortBy('Discussed')}
+                className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer text-[10.5px] font-black leading-none ${
+                  sortBy === 'Discussed'
+                    ? 'bg-[#027244] text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                }`}
+              >
+                Discussed
+              </button>
             </div>
 
             {/* List block */}
@@ -714,7 +706,8 @@ export default function BlogsPage() {
                         <img 
                           src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : window.getImageUrl(blog.coverImage)} 
                           alt={blog.title} 
-                          className={`w-full h-full ${(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-1' : 'object-cover'} group-hover:scale-103 transition-transform duration-500`}
+                          className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
+                          onError={(e) => { e.target.onerror = null; e.target.src = '/default_blog_cover.jpg'; }}
                         />
                       </div>
 
@@ -865,69 +858,7 @@ export default function BlogsPage() {
           {/* Right Column: Sidebar Widgets */}
           <div className="flex flex-col gap-6 text-left">
             
-            {/* Widget 1: Categories Counts */}
-            <div className="bg-white border border-slate-200/80 shadow-sm rounded-3xl p-5">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-                <h3 className="font-extrabold text-slate-800 text-sm">Categories</h3>
-                <button onClick={() => setActiveCategory('All')} className="text-xs font-extrabold text-[#027244] hover:underline cursor-pointer">
-                  View All
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                {activeCategoriesList.map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => { setActiveCategory(cat); setCurrentPage(1); }}
-                    className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-bold transition-all text-left ${
-                      activeCategory === cat 
-                        ? 'bg-emerald-50/50 text-[#027244] font-extrabold border border-emerald-100/50' 
-                        : 'hover:bg-slate-50 text-slate-600'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      {getCategoryIcon(cat)}
-                      <span>{cat}</span>
-                    </div>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                      activeCategory === cat ? 'bg-[#027244] text-white' : 'bg-slate-100 text-slate-500'
-                    }`}>
-                      {categoryCounts[cat] || 0}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Widget 2: Popular Posts */}
-            <div className="bg-white border border-slate-200/80 shadow-sm rounded-3xl p-5">
-              <div className="border-b border-slate-100 pb-3 mb-4">
-                <h3 className="font-extrabold text-slate-800 text-sm">Popular Posts</h3>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                {popularBlogs.map(blog => (
-                  <div key={blog._id} className="flex gap-3 cursor-pointer group" onClick={() => navigate(`/blogs/${blog._id}`)}>
-                    <div className="h-12 w-12 rounded-lg overflow-hidden shrink-0 bg-slate-50 border border-slate-100">
-                      <img src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : blog.coverImage} className={`w-full h-full ${(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-1' : 'object-cover'} group-hover:scale-105 transition-transform duration-500`} alt="" />
-                    </div>
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <h4 className="text-xs font-extrabold text-slate-700 leading-snug line-clamp-2 group-hover:text-[#027244] transition-colors">
-                        {blog.title}
-                      </h4>
-                      <span className="text-[9px] font-bold text-slate-400">
-                        {new Date(blog.createdAt).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                {popularBlogs.length === 0 && (
-                  <span className="text-xs text-slate-400 font-semibold py-4 text-center">No popular posts yet.</span>
-                )}
-              </div>
-            </div>
-
-            {/* Widget 3: Newsletter Subscription */}
+            {/* Widget: Newsletter Subscription */}
             <div className="bg-[#001c41] text-white border border-slate-900 shadow-sm rounded-3xl p-5 relative overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-white/5 via-transparent to-transparent opacity-60 pointer-events-none" />
               

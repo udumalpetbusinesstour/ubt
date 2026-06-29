@@ -2432,4 +2432,103 @@ router.post('/:id/click', async (req, res) => {
   }
 });
 
+// @desc    Toggle Like on a business profile
+// @route   POST /api/businesses/:id/like
+// @access  Public (Optional Auth)
+router.post('/:id/like', async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Business not found (Invalid ID format)' });
+    }
+    const business = await Business.findById(req.params.id);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    // Extract authorization header to check if user is logged in
+    let userIdStr = null;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      try {
+        const token = req.headers.authorization.split(' ')[1];
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ubt_jwt_secret_token_123456');
+        userIdStr = decoded.id;
+      } catch (err) {
+        // Continue as guest
+      }
+    }
+
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || 'unknown_ip';
+    const guestId = req.body.guestId || '';
+
+    // Toggle identifier in likes array
+    if (!business.likes) business.likes = [];
+    
+    let foundIndex = -1;
+    let ipMatchIndex = -1;
+    for (let i = 0; i < business.likes.length; i++) {
+      const likeStr = business.likes[i];
+      if (!likeStr) continue;
+      const parts = likeStr.split('|');
+      
+      if (parts.length === 1) {
+        const oldId = parts[0];
+        if ((userIdStr && oldId === userIdStr) || (guestId && oldId === guestId)) {
+          foundIndex = i;
+          break;
+        }
+        if (ip && oldId === ip) {
+          ipMatchIndex = i;
+        }
+      } else {
+        const [dbUserId, dbGuestId, dbIp] = parts;
+        if (userIdStr && dbUserId === userIdStr) {
+          foundIndex = i;
+          break;
+        }
+        if (guestId && dbGuestId === guestId) {
+          foundIndex = i;
+          break;
+        }
+        if (ip && dbIp === ip) {
+          ipMatchIndex = i;
+        }
+      }
+    }
+
+    if (foundIndex !== -1) {
+      business.likes.splice(foundIndex, 1);
+    } else if (ipMatchIndex !== -1) {
+      // Already liked by this IP, do not add another but do not unlike the other user's like
+    } else {
+      business.likes.push(`${userIdStr || ''}|${guestId || ''}|${ip}`);
+    }
+
+    await business.save();
+    
+    // Check if the current user/device/IP has liked it now
+    let isLikedNow = false;
+    for (const likeStr of business.likes) {
+      if (!likeStr) continue;
+      const parts = likeStr.split('|');
+      if (parts.length === 1) {
+        if (likeStr === userIdStr || likeStr === guestId || likeStr === ip) {
+          isLikedNow = true;
+          break;
+        }
+      } else {
+        const [dbUserId, dbGuestId, dbIp] = parts;
+        if (userIdStr && dbUserId === userIdStr) { isLikedNow = true; break; }
+        if (guestId && dbGuestId === guestId) { isLikedNow = true; break; }
+        if (ip && dbIp === ip) { isLikedNow = true; break; }
+      }
+    }
+
+    res.json({ success: true, likesCount: business.likes.length, isLiked: isLikedNow, data: business.likes });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;

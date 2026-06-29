@@ -1017,23 +1017,20 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                 a: 'No, your profile will not be deleted. It will simply downgrade to a basic listing, which blurs gallery images, hides the WhatsApp lead button, and lowers your directory placement.'
               }
             ].map((faq, idx) => (
-              <div key={idx} className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-2xs transition-all duration-300">
-                <button
-                  type="button"
-                  onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-                  className="w-full px-5 py-4 flex justify-between items-center text-xs font-black text-slate-750 hover:text-[#027244] cursor-pointer text-left focus:outline-none"
-                >
-                  <span>{faq.q}</span>
-                  <span className={`text-[10px] transition-transform duration-300 ${activeFaq === idx ? 'rotate-180 text-[#027244]' : 'text-slate-400'}`}>
-                    ▼
+              <div key={idx} className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs flex flex-col gap-2.5 text-left">
+                <div className="flex items-start gap-2">
+                  <span className="h-5 w-5 rounded-full bg-emerald-50 text-[#027244] font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5 border border-emerald-100">
+                    Q
                   </span>
-                </button>
-                <div 
-                  className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                    activeFaq === idx ? 'max-h-40 border-t border-slate-100' : 'max-h-0'
-                  }`}
-                >
-                  <p className="px-5 py-3.5 text-[11px] text-slate-500 leading-relaxed font-semibold">
+                  <h4 className="text-xs font-black text-slate-800 leading-snug">
+                    {faq.q}
+                  </h4>
+                </div>
+                <div className="flex items-start gap-2 border-t border-slate-100 pt-2.5">
+                  <span className="h-5 w-5 rounded-full bg-slate-50 text-slate-400 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5 border border-slate-100">
+                    A
+                  </span>
+                  <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">
                     {faq.a}
                   </p>
                 </div>

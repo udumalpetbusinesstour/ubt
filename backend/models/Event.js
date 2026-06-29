@@ -125,7 +125,7 @@ const EventSchema = new mongoose.Schema({
 });
 
 // Auto-sync backward compatibility fields
-EventSchema.pre('save', async function() {
+EventSchema.pre('validate', async function() {
   if (this.ownerId && !this.authorId) this.authorId = this.ownerId;
   if (this.authorId && !this.ownerId) this.ownerId = this.authorId;
   

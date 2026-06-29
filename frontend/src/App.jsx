@@ -33,6 +33,12 @@ function AppContent() {
     window.addEventListener('open-referral-modal', handleOpenModal);
     return () => window.removeEventListener('open-referral-modal', handleOpenModal);
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !localStorage.getItem('ubt_guest_id')) {
+      localStorage.setItem('ubt_guest_id', 'guest_' + Math.random().toString(36).substr(2, 9));
+    }
+  }, []);
   
   useEffect(() => {
     if (location.hash) {

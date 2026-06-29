@@ -80,8 +80,7 @@ const seedDefaultEvents = async () => {
   }
 };
 
-// Execute seed
-seedDefaultEvents();
+// Execute seed will be called from server.js after connection
 
 // @desc    Get all events
 // @route   GET /api/events
@@ -89,7 +88,7 @@ seedDefaultEvents();
 router.get('/', async (req, res) => {
   try {
     const { category, search, dateType } = req.query;
-    let query = { status: 'Approved', isCompleted: true };
+    let query = { status: 'Approved' };
 
     // Category Filter
     if (category && category !== 'All Categories') {
@@ -182,6 +181,10 @@ router.get('/admin/all', protect, admin, async (req, res) => {
 // @access  Public
 router.get('/:id', async (req, res) => {
   try {
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Event not found (Invalid ID format)' });
+    }
     const skipInc = req.query.skipInc === 'true';
     const event = skipInc
       ? await Event.findById(req.params.id).populate('businessId')
@@ -335,6 +338,10 @@ router.delete('/:id', protect, async (req, res) => {
 // @access  Public (Optional Auth)
 router.post('/:id/like', async (req, res) => {
   try {
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Event not found (Invalid ID format)' });
+    }
     const event = await Event.findById(req.params.id);
     if (!event) {
       return res.status(404).json({ success: false, message: 'Event not found' });
@@ -353,24 +360,73 @@ router.post('/:id/like', async (req, res) => {
       }
     }
 
-    // Determine unique identifier for liking (user ID or guest ID / IP / Fingerprint)
-    const identifier = userIdStr || req.body.guestId || req.ip || req.headers['x-forwarded-for'] || 'guest_unknown';
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || 'unknown_ip';
+    const guestId = req.body.guestId || '';
 
     // Toggle identifier in likes array
     if (!event.likes) event.likes = [];
-    const index = event.likes.indexOf(identifier);
-    if (index === -1) {
-      event.likes.push(identifier);
+    
+    let foundIndex = -1;
+    let ipMatchIndex = -1;
+    for (let i = 0; i < event.likes.length; i++) {
+      const likeStr = event.likes[i];
+      if (!likeStr) continue;
+      const parts = likeStr.split('|');
+      
+      if (parts.length === 1) {
+        const oldId = parts[0];
+        if ((userIdStr && oldId === userIdStr) || (guestId && oldId === guestId)) {
+          foundIndex = i;
+          break;
+        }
+        if (ip && oldId === ip) {
+          ipMatchIndex = i;
+        }
+      } else {
+        const [dbUserId, dbGuestId, dbIp] = parts;
+        if (userIdStr && dbUserId === userIdStr) {
+          foundIndex = i;
+          break;
+        }
+        if (guestId && dbGuestId === guestId) {
+          foundIndex = i;
+          break;
+        }
+        if (ip && dbIp === ip) {
+          ipMatchIndex = i;
+        }
+      }
+    }
+
+    if (foundIndex !== -1) {
+      event.likes.splice(foundIndex, 1);
+    } else if (ipMatchIndex !== -1) {
+      // Already liked by this IP, do not add another but do not unlike the other user's like
     } else {
-      event.likes.splice(index, 1);
+      event.likes.push(`${userIdStr || ''}|${guestId || ''}|${ip}`);
     }
 
     await event.save();
     
-    // Check if the current identifier is present to determine if liked
-    const isLiked = event.likes.includes(identifier);
+    // Check if the current user/device/IP has liked it now
+    let isLikedNow = false;
+    for (const likeStr of event.likes) {
+      if (!likeStr) continue;
+      const parts = likeStr.split('|');
+      if (parts.length === 1) {
+        if (likeStr === userIdStr || likeStr === guestId || likeStr === ip) {
+          isLikedNow = true;
+          break;
+        }
+      } else {
+        const [dbUserId, dbGuestId, dbIp] = parts;
+        if (userIdStr && dbUserId === userIdStr) { isLikedNow = true; break; }
+        if (guestId && dbGuestId === guestId) { isLikedNow = true; break; }
+        if (ip && dbIp === ip) { isLikedNow = true; break; }
+      }
+    }
 
-    res.json({ success: true, likesCount: event.likes.length, isLiked, data: event.likes });
+    res.json({ success: true, likesCount: event.likes.length, isLiked: isLikedNow, data: event.likes });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -463,3 +519,4 @@ router.delete('/:id/comment/:commentId', protect, async (req, res) => {
 });
 
 module.exports = router;
+module.exports.seedDefaultEvents = seedDefaultEvents;

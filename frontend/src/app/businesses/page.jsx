@@ -207,7 +207,7 @@ function BusinessesList() {
   const [showAllLocalities, setShowAllLocalities] = useState(false);
 
   const [businesses, setBusinesses] = useState([]);
-  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [visibleCategoryLimit, setVisibleCategoryLimit] = useState(6);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [viewMode, setViewMode] = useState(typeof window !== 'undefined' && window.innerWidth < 768 ? 'grid' : 'list'); // list | grid
@@ -280,10 +280,27 @@ function BusinessesList() {
           }
         }
       } catch (err) {
-        // Silently ignore errors — this is a non-critical enhancement
+        // Silently ignore errors
       }
     })();
   }, []);
+
+  // Category dynamic scrolling observer
+  useEffect(() => {
+    const sentinel = document.getElementById('categories-scroll-sentinel');
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        setVisibleCategoryLimit((prev) => prev + 6);
+      }
+    }, {
+      rootMargin: '150px'
+    });
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [visibleCategoryLimit, selectedCategoryInExplore]);
 
   const getDraftResumeStep = (biz) => {
     if (!biz) return 1;
@@ -676,9 +693,16 @@ function BusinessesList() {
 
   // Build dynamicCategoryDetails and dynamicAvailableCategories fully from dbCategories
   const dynamicCategoryDetails = [...categoryDetails];
+  const parentCategoryViews = {};
+  dbCategories.forEach(cat => {
+    if (cat.parentCategory) {
+      parentCategoryViews[cat.parentCategory] = (parentCategoryViews[cat.parentCategory] || 0) + (cat.views || 0);
+    }
+  });
+
   const dynamicAvailableCategories = Array.from(
     new Set(dbCategories.map(cat => cat.parentCategory).filter(p => p && p.trim() !== '' && p !== 'Others'))
-  ).sort();
+  ).sort((a, b) => (parentCategoryViews[b] || 0) - (parentCategoryViews[a] || 0));
 
   // Merge any DB main-category-only items into dynamicCategoryDetails
   dynamicAvailableCategories.forEach(parentName => {
@@ -786,6 +810,32 @@ function BusinessesList() {
   }, []);
 
   useEffect(() => {
+    if (dbCategories.length > 0) {
+      const catParam = searchParams.get('category');
+      const focusParam = searchParams.get('focus');
+      if (!catParam && !focusParam) {
+        // Calculate parent category views
+        const parentCategoryViews = {};
+        dbCategories.forEach(cat => {
+          if (cat.parentCategory) {
+            parentCategoryViews[cat.parentCategory] = (parentCategoryViews[cat.parentCategory] || 0) + (cat.views || 0);
+          }
+        });
+        
+        // Sort and select top 3
+        const sortedParents = Array.from(
+          new Set(dbCategories.map(cat => cat.parentCategory).filter(p => p && p.trim() !== '' && p !== 'Others'))
+        ).sort((a, b) => (parentCategoryViews[b] || 0) - (parentCategoryViews[a] || 0));
+        
+        const top3 = sortedParents.slice(0, 3);
+        if (top3.length > 0) {
+          navigate(`/businesses?category=${encodeURIComponent(top3.join(','))}`, { replace: true });
+        }
+      }
+    }
+  }, [dbCategories, searchParams, navigate]);
+
+  useEffect(() => {
     const fetchAllCounts = async () => {
       try {
         const res = await fetch('http://localhost:5000/api/businesses');
@@ -828,7 +878,11 @@ function BusinessesList() {
     const cat = searchParams.get('category');
     if (cat) {
       if (cat === 'All Categories') {
-        setCheckedCategories({});
+        const allChecked = {};
+        dynamicAvailableCategories.forEach(c => {
+          allChecked[c] = true;
+        });
+        setCheckedCategories(allChecked);
         setSelectedCategory('All Categories');
       } else {
         const cats = cat.split(',');
@@ -1099,21 +1153,31 @@ function BusinessesList() {
   const handleCategoryCheckbox = (cat, checked) => {
     if (cat === 'All Categories') {
       if (checked) {
-        setCheckedCategories({});
+        const allChecked = {};
+        dynamicAvailableCategories.forEach(c => {
+          allChecked[c] = true;
+        });
+        setCheckedCategories(allChecked);
         setSelectedCategory('All Categories');
         triggerQueryUpdate('All Categories', undefined);
+      } else {
+        setCheckedCategories({});
+        setSelectedCategory('');
+        triggerQueryUpdate('', undefined);
       }
     } else {
       const updated = { ...checkedCategories, [cat]: checked };
       setCheckedCategories(updated);
       const activeCats = Object.keys(updated).filter(key => updated[key] && key !== 'All Categories');
-      if (activeCats.length > 0) {
+      
+      const allSelected = dynamicAvailableCategories.every(c => updated[c]);
+      if (allSelected || activeCats.length === 0) {
+        setSelectedCategory('All Categories');
+        triggerQueryUpdate('All Categories', undefined);
+      } else {
         const catStr = activeCats.join(',');
         setSelectedCategory(activeCats[0]);
         triggerQueryUpdate(catStr, undefined);
-      } else {
-        setSelectedCategory('All Categories');
-        triggerQueryUpdate('All Categories', undefined);
       }
     }
   };
@@ -1795,7 +1859,7 @@ function BusinessesList() {
 
                     {(() => {
                       const sortedCats = [...dynamicCategoryDetails].sort((a, b) => (categoryCounts[b.name] || 0) - (categoryCounts[a.name] || 0));
-                      const visibleCats = showAllCategories ? sortedCats : sortedCats.slice(0, 6);
+                      const visibleCats = sortedCats.slice(0, visibleCategoryLimit);
                       return (
                         <>
                           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4.5 text-left animate-fadeIn">
@@ -1834,15 +1898,10 @@ function BusinessesList() {
                             })}
                           </div>
 
-                          {!showAllCategories && sortedCats.length > 6 && (
-                            <div className="flex justify-center mt-6">
-                              <button 
-                                onClick={() => setShowAllCategories(true)}
-                                className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-250 hover:border-[#027244] text-[#001c41] hover:text-[#027244] font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer group"
-                              >
-                                <span>Load More Categories</span>
-                                <ChevronDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5 text-[#027244]" />
-                              </button>
+                          {visibleCategoryLimit < sortedCats.length && (
+                            <div id="categories-scroll-sentinel" className="h-10 w-full flex items-center justify-center py-4 mt-4">
+                              <RefreshCw className="h-5 w-5 text-emerald-600 animate-spin mr-2" />
+                              <span className="text-[11px] font-bold text-slate-400">Loading more categories...</span>
                             </div>
                           )}
                         </>
@@ -2030,13 +2089,13 @@ function BusinessesList() {
                                         <span className="text-[9px] font-black uppercase tracking-wider">Founding Member</span>
                                       </div>
                                     )}
-                                    {(biz.isAddressVerified || (biz.googlePlaceId && biz.googlePlaceId !== '') || (biz.googleBusinessLink && biz.googleBusinessLink !== '') || biz.googleLinked) && (
-                                      <div className="bg-white border border-emerald-100 px-2 py-0.5 rounded-lg shadow-xs flex items-center gap-1">
-                                         <svg className="h-3.5 w-3.5 text-[#027244] shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    {((biz.googlePlaceId && biz.googlePlaceId !== '') || (biz.googleBusinessLink && biz.googleBusinessLink !== '') || biz.googleLinked) && (
+                                      <div className="bg-white border border-blue-100 px-2 py-0.5 rounded-lg shadow-xs flex items-center gap-1">
+                                         <svg className="h-3.5 w-3.5 text-[#1a73e8] shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                            <path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z" fill="currentColor" />
                                            <path d="m9 12 2 2 4-4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                          </svg>
-                                        <span className="text-[9px] font-black text-[#027244] uppercase tracking-wider font-sans">UDT Verified</span>
+                                        <span className="text-[9px] font-black text-[#1a73e8] uppercase tracking-wider font-sans">Google Verified</span>
                                       </div>
                                     )}
                                   </div>
@@ -2855,13 +2914,13 @@ function BusinessesList() {
                               <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider">Founding Member</span>
                             </div>
                           )}
-                          {(biz.isAddressVerified || (biz.googlePlaceId && biz.googlePlaceId !== '') || (biz.googleBusinessLink && biz.googleBusinessLink !== '') || biz.googleLinked) && (
-                            <div className="bg-white border border-emerald-100 px-1.5 py-0.5 rounded-lg shadow-xs flex items-center gap-0.5">
-                               <svg className="h-3 w-3 text-[#027244] shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                           {((biz.googlePlaceId && biz.googlePlaceId !== '') || (biz.googleBusinessLink && biz.googleBusinessLink !== '') || biz.googleLinked) && (
+                            <div className="bg-white border border-blue-100 px-1.5 py-0.5 rounded-lg shadow-xs flex items-center gap-0.5">
+                               <svg className="h-3 w-3 text-[#1a73e8] shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                  <path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z" fill="currentColor" />
                                  <path d="m9 12 2 2 4-4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                </svg>
-                              <span className="text-[8px] sm:text-[9px] font-black text-[#027244] uppercase tracking-wider font-sans">UDT Verified</span>
+                              <span className="text-[8px] sm:text-[9px] font-black text-[#1a73e8] uppercase tracking-wider font-sans">Google Verified</span>
                             </div>
                           )}
                         </div>
