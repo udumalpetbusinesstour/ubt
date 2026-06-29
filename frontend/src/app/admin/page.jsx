@@ -6,7 +6,7 @@ import {
   MessageSquare, CreditCard as CardIcon, Bell, BarChart3, Settings, LogOut, Search, User, Users,
   MapPin, ChevronRight, ChevronDown, Landmark, Trash2, Mail, Globe, Award, ShieldAlert, CheckCircle2,
   Clock, Plus, Filter, ShieldCheck as ShieldOk, Activity, Cpu, Database, Terminal, Gift, Smile,
-  Upload, Heart, Copy, XCircle, Edit3
+  Upload, Heart, Copy, XCircle, Edit3, Sparkles
 } from 'lucide-react';
 import BloodDonorsTab from '../../components/BloodDonorsTab';
 
@@ -111,6 +111,8 @@ export default function AdminDashboard() {
   const notificationsRef = useRef(null);
   const [reportsData, setReportsData] = useState({});
   const [pendingCategories, setPendingCategories] = useState([]);
+  const [pendingSponsoredAds, setPendingSponsoredAds] = useState([]);
+  const [approvedSponsoredAds, setApprovedSponsoredAds] = useState([]);
   const [presetCategories, setPresetCategories] = useState([]);
   const [mainCategorySearch, setMainCategorySearch] = useState('');
   const [subcategorySearch, setSubcategorySearch] = useState('');
@@ -1247,6 +1249,34 @@ export default function AdminDashboard() {
         setPendingCategories(pendingCatData.data);
       }
 
+      // Fetch pending sponsored ads
+      try {
+        const adsRes = await fetch('http://localhost:5000/api/admin/sponsored-ads/pending', { headers });
+        const adsData = await adsRes.json();
+        if (adsData.success) {
+          setPendingSponsoredAds(adsData.data);
+        } else {
+          setPendingSponsoredAds([]);
+        }
+      } catch (adsErr) {
+        console.error('Error loading pending sponsored ads:', adsErr);
+        setPendingSponsoredAds([]);
+      }
+
+      // Fetch approved sponsored ads
+      try {
+        const approvedRes = await fetch('http://localhost:5000/api/businesses/homepage/sponsored-ads', { headers });
+        const approvedData = await approvedRes.json();
+        if (approvedData.success) {
+          setApprovedSponsoredAds(approvedData.data);
+        } else {
+          setApprovedSponsoredAds([]);
+        }
+      } catch (apprErr) {
+        console.error('Error loading approved sponsored ads:', apprErr);
+        setApprovedSponsoredAds([]);
+      }
+
     } catch (err) {
       console.error('Error hydrating admin platform datasets:', err);
     } finally {
@@ -1276,6 +1306,53 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error(err);
       alert("Error resolving category request.");
+    }
+  };
+
+  const handleSponsorAdAction = async (businessId, offerId, action) => {
+    try {
+      const storedToken = localStorage.getItem('ubt_token');
+      const headers = { 
+        'Authorization': `Bearer ${storedToken}` 
+      };
+      const res = await fetch(`http://localhost:5000/api/admin/sponsored-ads/${businessId}/${offerId}/${action}`, {
+        method: 'PUT',
+        headers
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message || `Sponsored ad ${action}ed successfully!`, 'success');
+        loadPlatformRealData();
+      } else {
+        showToast(data.message || `Failed to ${action} sponsored ad.`, 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(`Error performing action: ${action}`, 'error');
+    }
+  };
+
+  const handleDeleteSponsorAd = async (businessId, offerId) => {
+    const confirmed = confirm("Are you sure you want to permanently delete this flyer promotion from the database?");
+    if (!confirmed) return;
+    try {
+      const storedToken = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/admin/sponsored-ads/${businessId}/${offerId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${storedToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message || 'Sponsored ad deleted successfully!', 'success');
+        loadPlatformRealData();
+      } else {
+        showToast(data.message || 'Failed to delete sponsored ad.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Error deleting sponsored ad.', 'error');
     }
   };
 
@@ -1699,7 +1776,7 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('ubt_token');
     localStorage.removeItem('ubt_user');
-    navigate('/login');
+    navigate('/');
   };
 
   const handleDeleteSignup = async (userId) => {
@@ -1835,6 +1912,7 @@ export default function AdminDashboard() {
               { id: 'Events', label: 'Events Moderation', icon: <Calendar className="h-5 w-5" /> },
               { id: 'Reviews', label: 'Reviews Feed', icon: <MessageSquare className="h-5 w-5" /> },
               { id: 'Testimonials', label: 'Testimonials Moderation', icon: <Smile className="h-5 w-5" /> },
+              { id: 'Sponsored Ads', label: 'Ads Moderation', icon: <Sparkles className="h-5 w-5" /> },
               { id: 'Subscriptions', label: 'Subscriptions', icon: <CardIcon className="h-5 w-5" /> },
               { id: 'Notifications', label: 'Notifications Hub', icon: <Bell className="h-5 w-5" /> },
               { id: 'Queries', label: 'Queries Inbox', icon: <Mail className="h-5 w-5" /> },
@@ -1913,6 +1991,7 @@ export default function AdminDashboard() {
                   { id: 'Events', label: 'Events Moderation', icon: <Calendar className="h-5 w-5" /> },
                   { id: 'Reviews', label: 'Reviews Feed', icon: <MessageSquare className="h-5 w-5" /> },
                   { id: 'Testimonials', label: 'Testimonials Moderation', icon: <Smile className="h-5 w-5" /> },
+                  { id: 'Sponsored Ads', label: 'Ads Moderation', icon: <Sparkles className="h-5 w-5" /> },
                   { id: 'Subscriptions', label: 'Subscriptions', icon: <CardIcon className="h-5 w-5" /> },
                   { id: 'Notifications', label: 'Notifications Hub', icon: <Bell className="h-5 w-5" /> },
                   { id: 'Queries', label: 'Queries Inbox', icon: <Mail className="h-5 w-5" /> },
@@ -5039,6 +5118,142 @@ export default function AdminDashboard() {
                       </div>
                     </>
                   )}
+                </div>
+              )}
+
+              {/* TAB: SPONSORED ADS MODERATION */}
+              {activeTab === 'Sponsored Ads' && (
+                <div className="flex flex-col gap-6 text-left animate-fadeIn">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
+                    <h3 className="font-extrabold text-[#001c41] text-base leading-tight font-sans">Sponsored Homepage Ads Moderation</h3>
+                    <span className="text-[10px] text-slate-450 font-semibold mt-0.5 font-sans">Vet sponsored deal flyers (1920x900px) submitted by business owners for homepage listing</span>
+                  </div>
+
+                  <div className="flex flex-col gap-8">
+                    {/* A. Pending sponsored ads list */}
+                    <div className="flex flex-col gap-4">
+                      <h4 className="font-extrabold text-slate-800 text-sm border-b border-slate-100 pb-2">Pending Ad Approvals ({pendingSponsoredAds.length})</h4>
+                      {pendingSponsoredAds.length === 0 ? (
+                        <div className="p-10 text-center text-slate-450 text-xs font-bold bg-white border border-slate-205 rounded-[28px] flex flex-col items-center justify-center gap-2">
+                          <CheckCircle2 className="h-7 w-7 text-emerald-600" />
+                          <span>No sponsored ads pending approval.</span>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-6">
+                          {pendingSponsoredAds.map((ad, idx) => (
+                            <div key={idx} className="bg-white border border-slate-200 rounded-[28px] p-6 shadow-xs flex flex-col lg:flex-row gap-6 items-stretch text-left font-sans">
+                              {/* Poster preview */}
+                              <div className="w-full lg:w-96 h-44 rounded-2xl overflow-hidden border border-slate-200 shrink-0 bg-slate-50 relative select-none">
+                                <img 
+                                  src={window.getImageUrl(ad.offer.banner)} 
+                                  className="w-full h-full object-cover" 
+                                  alt="Promo Poster" 
+                                />
+                              </div>
+
+                              {/* Details */}
+                              <div className="flex-1 flex flex-col justify-between gap-4">
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="bg-rose-600 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-xs">₹99 Paid Promotion</span>
+                                    <span className="text-[11px] font-extrabold text-slate-450">Business: <strong className="text-slate-700">{ad.businessName}</strong></span>
+                                  </div>
+                                  <h4 className="font-extrabold text-[#001c41] text-sm md:text-base leading-snug mt-1">{ad.offer.title}</h4>
+                                  <p className="text-slate-550 text-xs font-medium leading-relaxed">{ad.offer.description}</p>
+                                  <div className="flex gap-4 mt-2">
+                                    <span className="text-[10px] bg-slate-100 px-2.5 py-1 rounded-lg text-slate-650 font-extrabold">Code/Rate: {ad.offer.rate}</span>
+                                    <span className="text-[10px] bg-slate-100 px-2.5 py-1 rounded-lg text-slate-655 font-extrabold">Offer Expiry: {ad.offer.expiry}</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 border-t border-slate-100 pt-4 mt-1">
+                                  <a
+                                    href={`/businesses/${ad.businessSlug || ad.businessId}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-650 font-extrabold text-[11px] rounded-xl cursor-pointer transition-colors shadow-2xs border border-slate-200 text-center flex items-center gap-1"
+                                  >
+                                    <Eye className="h-3.5 w-3.5" /> View Profile
+                                  </a>
+                                  <button
+                                    onClick={() => handleSponsorAdAction(ad.businessId, ad.offer.id, 'reject')}
+                                    className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[11px] rounded-xl cursor-pointer transition-colors shadow-2xs border-none"
+                                  >
+                                    Reject Ad
+                                  </button>
+                                  <button
+                                    onClick={() => handleSponsorAdAction(ad.businessId, ad.offer.id, 'approve')}
+                                    className="px-5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl cursor-pointer shadow-xs border-none"
+                                  >
+                                    Approve & Go Live (10 Days)
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* B. Approved & live sponsored ads list */}
+                    <div className="flex flex-col gap-4 mt-4 border-t border-slate-105 pt-6">
+                      <h4 className="font-extrabold text-slate-800 text-sm border-b border-slate-100 pb-2">Approved & Live Ads ({approvedSponsoredAds.length})</h4>
+                      {approvedSponsoredAds.length === 0 ? (
+                        <div className="p-10 text-center text-slate-450 text-xs font-bold bg-white border border-slate-205 rounded-[28px] flex flex-col items-center justify-center gap-2">
+                          <Sparkles className="h-7 w-7 text-amber-500 fill-amber-500/20 animate-pulse" />
+                          <span>No live sponsored ads are currently display on homepage.</span>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-6">
+                          {approvedSponsoredAds.map((ad, idx) => (
+                            <div key={idx} className="bg-white border border-slate-200 rounded-[28px] p-6 shadow-xs flex flex-col lg:flex-row gap-6 items-stretch text-left font-sans">
+                              {/* Poster preview */}
+                              <div className="w-full lg:w-96 h-44 rounded-2xl overflow-hidden border border-slate-200 shrink-0 bg-slate-50 relative select-none">
+                                <img 
+                                  src={window.getImageUrl(ad.offer.banner)} 
+                                  className="w-full h-full object-cover" 
+                                  alt="Promo Poster" 
+                                />
+                              </div>
+
+                              {/* Details */}
+                              <div className="flex-1 flex flex-col justify-between gap-4">
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="bg-[#027244] text-white text-[8.5px] font-black uppercase px-2 py-0.5 rounded shadow-xs">Live Homepage Ad</span>
+                                    <span className="text-[11px] font-extrabold text-slate-450">Business: <strong className="text-slate-700">{ad.businessName}</strong></span>
+                                  </div>
+                                  <h4 className="font-extrabold text-[#001c41] text-sm md:text-base leading-snug mt-1">{ad.offer.title}</h4>
+                                  <p className="text-slate-550 text-xs font-medium leading-relaxed">{ad.offer.description}</p>
+                                  <div className="flex gap-4 mt-2">
+                                    <span className="text-[10px] bg-slate-100 px-2.5 py-1 rounded-lg text-slate-650 font-extrabold">Code/Rate: {ad.offer.rate}</span>
+                                    <span className="text-[10px] bg-slate-100 px-2.5 py-1 rounded-lg text-slate-655 font-extrabold">Expiry Date: {ad.offer.expiry}</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 border-t border-slate-100 pt-4 mt-1">
+                                  <a
+                                    href={`/businesses/${ad.businessSlug || ad.businessId}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-650 font-extrabold text-[11px] rounded-xl cursor-pointer transition-colors shadow-2xs border border-slate-200 text-center flex items-center gap-1"
+                                  >
+                                    <Eye className="h-3.5 w-3.5" /> View Profile
+                                  </a>
+                                  <button
+                                    onClick={() => handleDeleteSponsorAd(ad.businessId, ad.offer.id)}
+                                    className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[11px] rounded-xl cursor-pointer transition-colors shadow-2xs border-none"
+                                  >
+                                    Delete Ad (From DB)
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 

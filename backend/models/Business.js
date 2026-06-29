@@ -298,17 +298,27 @@ const BusinessSchema = new mongoose.Schema({
       type: String
     }
   ],
-  offers: [
-    {
-      id: { type: String },
-      title: { type: String },
-      description: { type: String },
-      rate: { type: String },
-      expiry: { type: String },
-      active: { type: Boolean, default: true },
-      banner: { type: String }
-    }
-  ]
+   offers: [
+     {
+       id: { type: String },
+       title: { type: String },
+       description: { type: String },
+       rate: { type: String },
+       expiry: { type: String },
+       active: { type: Boolean, default: true },
+       banner: { type: String }
+     }
+   ],
+   promotions: [
+     {
+       id: { type: String },
+       image: { type: String },
+       active: { type: Boolean, default: true },
+       isSponsored: { type: Boolean, default: false },
+       sponsoredStatus: { type: String, enum: ['none', 'pending', 'approved', 'rejected'], default: 'none' },
+       sponsoredExpiry: { type: Date }
+     }
+   ]
 }, {
   timestamps: true
 });

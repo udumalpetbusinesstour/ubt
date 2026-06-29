@@ -1771,7 +1771,7 @@ Please confirm availability and delivery time.`;
               { id: 'services', label: 'Services' },
               { id: 'photos', label: `Photos (${galleryCount})` },
               { id: 'reviews', label: `Reviews (${totalReviewsCount})` },
-              { id: 'offers', label: `Offers (${business.offers ? business.offers.filter(o => o.active !== false).length : 0})` },
+              { id: 'offers', label: `Offers (${((business?.offers ? business.offers.filter(o => o.active !== false && o.active !== 'false').length : 0) + (business?.promotions ? business.promotions.filter(p => p.active !== false && p.active !== 'false').length : 0))})` },
               { id: 'about', label: 'About' },
               ...((branches.length > 0 || isOwner) ? [{ id: 'branches', label: branches.length > 0 ? `Branches (${branches.length + 1})` : 'Branches' }] : []),
               { id: 'map', label: 'Map & Location' }
@@ -2599,16 +2599,15 @@ Please confirm availability and delivery time.`;
               </div>
             </div>
           )}
-
           {/* TAB 5: OFFERS */}
           {activeTab === 'offers' && (
             <div className="flex flex-col gap-6 animate-fadeIn text-left font-sans">
               <h3 className="text-xl font-extrabold text-slate-800 font-sans border-b border-slate-100 pb-3">Active Promotional Offers</h3>
               <p className="text-xs text-slate-400 font-semibold mt-1">Claim special vouchers and deals offered by {business.name}.</p>
               
-              <div className="flex flex-col gap-5 mt-4">
-                {business.offers && business.offers.filter(o => o.active !== false).length > 0 ? (
-                  business.offers.filter(o => o.active !== false).map((campaign, oIdx) => {
+              {business.offers && business.offers.filter(o => o.active !== false && o.active !== 'false').length > 0 && (
+                <div className="flex flex-col gap-5 mt-4">
+                  {business.offers.filter(o => o.active !== false && o.active !== 'false').map((campaign, oIdx) => {
                     const gradients = [
                       'from-emerald-500 to-teal-600',
                       'from-blue-500 to-indigo-600',
@@ -2633,21 +2632,50 @@ Please confirm availability and delivery time.`;
                         </div>
                       </div>
                     );
-                  })
-                ) : (
-                  <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-400 flex flex-col items-center gap-4 shadow-sm max-w-md mx-auto my-6 animate-fadeIn">
-                    <div className="h-15 w-15 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center border border-slate-100">
-                      <Sparkles className="h-7 w-7 text-emerald-600" />
-                    </div>
-                    <div className="flex flex-col gap-1.5 text-center items-center">
-                      <h4 className="font-extrabold text-slate-800 text-base leading-tight">No active offers</h4>
-                      <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                        There are currently no active promotional campaigns or discount deals posted by this business. Check back later!
-                      </p>
-                    </div>
+                  })}
+                </div>
+              )}
+
+              {business.promotions && business.promotions.filter(p => p.active !== false && p.active !== 'false').length > 0 && (
+                <div className="flex flex-col gap-4 mt-8 border-t border-slate-100 pt-6">
+                  <h4 className="text-base font-extrabold text-[#001c41] font-sans">Business Promotions & Flyers</h4>
+                  <p className="text-xs text-slate-455 font-semibold -mt-2">Visual campaigns and promo flyers posted by this business.</p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
+                    {business.promotions.filter(p => p.active !== false && p.active !== 'false').map((promo, pIdx) => (
+                      <div key={promo.id || pIdx} className="bg-white border border-slate-200 rounded-[24px] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col group relative">
+                        <div className="h-56 w-full overflow-hidden bg-slate-50 relative select-none">
+                          <img 
+                            src={window.getImageUrl(promo.image)} 
+                            className="w-full h-full object-cover group-hover:scale-103 transition-all" 
+                            alt="Promotion Banner" 
+                          />
+                          {promo.isSponsored && (
+                            <span className="absolute top-3 left-3 bg-[#027244] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-sm">
+                              Sponsored
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+
+              {(!business.offers || business.offers.filter(o => o.active !== false && o.active !== 'false').length === 0) &&
+               (!business.promotions || business.promotions.filter(p => p.active !== false && p.active !== 'false').length === 0) && (
+                <div className="bg-white border border-slate-205 rounded-3xl p-12 text-center text-slate-400 flex flex-col items-center gap-4 shadow-sm max-w-md mx-auto my-6 animate-fadeIn">
+                  <div className="h-15 w-15 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center border border-slate-100">
+                    <Sparkles className="h-7 w-7 text-emerald-600" />
+                  </div>
+                  <div className="flex flex-col gap-1.5 text-center items-center">
+                    <h4 className="font-extrabold text-slate-800 text-base leading-tight">No active offers or flyers</h4>
+                    <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                      There are currently no active promotional campaigns, flyers, or discount deals posted by this business. Check back later!
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -141,6 +141,8 @@ export default function SuperAdminDashboard() {
   const base = gross - gst;
 
   // Custom states for forms
+  const [pendingSponsoredAds, setPendingSponsoredAds] = useState([]);
+  const [approvedSponsoredAds, setApprovedSponsoredAds] = useState([]);
   const [newNotice, setNewNotice] = useState({ title: '', message: '', type: 'announcement' });
   const [noticeSuccess, setNoticeSuccess] = useState(false);
   const [newAdmin, setNewAdmin] = useState({ fullName: '', email: '', permissions: 'Full' });
@@ -991,6 +993,34 @@ const handlePartnerAction = async (partnerId, action) => {
         setPendingCategories(pendingCatData.data);
       }
 
+      // Fetch pending sponsored ads
+      try {
+        const adsRes = await fetch('http://localhost:5000/api/admin/sponsored-ads/pending', { headers });
+        const adsData = await adsRes.json();
+        if (adsData.success) {
+          setPendingSponsoredAds(adsData.data);
+        } else {
+          setPendingSponsoredAds([]);
+        }
+      } catch (adsErr) {
+        console.error('Error loading pending sponsored ads in superadmin:', adsErr);
+        setPendingSponsoredAds([]);
+      }
+
+      // Fetch approved sponsored ads
+      try {
+        const approvedRes = await fetch('http://localhost:5000/api/businesses/homepage/sponsored-ads', { headers });
+        const approvedData = await approvedRes.json();
+        if (approvedData.success) {
+          setApprovedSponsoredAds(approvedData.data);
+        } else {
+          setApprovedSponsoredAds([]);
+        }
+      } catch (apprErr) {
+        console.error('Error loading approved sponsored ads in superadmin:', apprErr);
+        setApprovedSponsoredAds([]);
+      }
+
       // Fetch initial revenue analytics
       try {
         const res = await fetch('http://localhost:5000/api/superadmin/analytics', { headers });
@@ -1514,6 +1544,53 @@ const handlePartnerAction = async (partnerId, action) => {
     }
   };
 
+  const handleSponsorAdAction = async (businessId, offerId, action) => {
+    try {
+      const storedToken = localStorage.getItem('ubt_token');
+      const headers = { 
+        'Authorization': `Bearer ${storedToken}` 
+      };
+      const res = await fetch(`http://localhost:5000/api/admin/sponsored-ads/${businessId}/${offerId}/${action}`, {
+        method: 'PUT',
+        headers
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message || `Sponsored ad ${action}ed successfully!`, 'success');
+        loadPlatformRealData();
+      } else {
+        showToast(data.message || `Failed to ${action} sponsored ad.`, 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(`Error performing action: ${action}`, 'error');
+    }
+  };
+
+  const handleDeleteSponsorAd = async (businessId, offerId) => {
+    const confirmed = confirm("Are you sure you want to permanently delete this flyer promotion from the database?");
+    if (!confirmed) return;
+    try {
+      const storedToken = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/admin/sponsored-ads/${businessId}/${offerId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${storedToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message || 'Sponsored ad deleted successfully!', 'success');
+        loadPlatformRealData();
+      } else {
+        showToast(data.message || 'Failed to delete sponsored ad.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Error deleting sponsored ad.', 'error');
+    }
+  };
+
   const handleEventDelete = async (eventId) => {
     if (!window.confirm("Are you sure you want to permanently delete this event? This action cannot be undone.")) {
       return;
@@ -1767,7 +1844,7 @@ const handlePartnerAction = async (partnerId, action) => {
   const handleLogout = () => {
     localStorage.removeItem('ubt_token');
     localStorage.removeItem('ubt_user');
-    navigate('/login');
+    navigate('/');
   };
 
   const resolveCategoryRequest = async (businessId, action, categoryId = null, newCategoryName = null, icon = null, parentCategory = null) => {
@@ -2234,6 +2311,7 @@ const handlePartnerAction = async (partnerId, action) => {
         { id: 'Blogs Moderation', label: 'Blog Posts', icon: <BookOpen className="h-4.5 w-4.5" /> },
         { id: 'Notifications', label: 'Offers & Promotions', icon: <Award className="h-4.5 w-4.5" /> },
         { id: 'Reviews Moderation', label: 'Reviews', icon: <MessageSquare className="h-4.5 w-4.5" /> },
+        { id: 'Sponsored Ads', label: 'Ads Moderation', icon: <Sparkles className="h-4.5 w-4.5" /> },
         { id: 'Referrals', label: 'Referrals', icon: <Gift className="h-4.5 w-4.5" /> },
         { id: 'Support Tickets', label: 'Leads / Enquiries', icon: <FileText className="h-4.5 w-4.5" /> },
         { id: 'Blood Donors', label: 'Blood Donors', icon: <Heart className="h-4.5 w-4.5" /> },
@@ -5496,6 +5574,160 @@ const handlePartnerAction = async (partnerId, action) => {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: SPONSORED ADS MODERATION */}
+              {activeTab === 'Sponsored Ads' && (
+                <div className="flex flex-col gap-6 text-left animate-fadeIn">
+                  <div className={`border shadow-xs rounded-[28px] p-6 ${
+                    themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                  }`}>
+                    <h3 className="font-extrabold text-base leading-tight font-sans">Sponsored Homepage Ads Moderation</h3>
+                    <span className="text-[10px] text-slate-400 font-semibold mt-1 block font-sans">Vet sponsored deal flyers (1920x900px) submitted by business owners for homepage listing</span>
+                  </div>
+
+                  <div className="flex flex-col gap-8">
+                    {/* A. Pending sponsored ads list */}
+                    <div className="flex flex-col gap-4">
+                      <h4 className={`font-extrabold text-sm border-b pb-2 ${themeMode === 'dark' ? 'text-slate-200 border-slate-800' : 'text-slate-800 border-slate-100'}`}>Pending Ad Approvals ({pendingSponsoredAds.length})</h4>
+                      {pendingSponsoredAds.length === 0 ? (
+                        <div className={`p-10 text-center text-xs font-bold border rounded-[28px] flex flex-col items-center justify-center gap-2 ${
+                          themeMode === 'dark' ? 'bg-slate-900/30 border-slate-800 text-slate-500' : 'bg-white border-slate-205 text-slate-450'
+                        }`}>
+                          <CheckCircle2 className="h-7 w-7 text-emerald-600" />
+                          <span>No sponsored ads pending approval.</span>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-6 animate-fadeIn">
+                          {pendingSponsoredAds.map((ad, idx) => (
+                            <div key={idx} className={`border rounded-[28px] p-6 shadow-xs flex flex-col lg:flex-row gap-6 items-stretch text-left font-sans ${
+                              themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                            }`}>
+                              {/* Poster preview */}
+                              <div className="w-full lg:w-96 h-44 rounded-2xl overflow-hidden border border-slate-205 shrink-0 bg-slate-50 relative select-none">
+                                <img 
+                                  src={window.getImageUrl(ad.offer.banner)} 
+                                  className="w-full h-full object-cover" 
+                                  alt="Promo Poster" 
+                                />
+                              </div>
+
+                              {/* Details */}
+                              <div className="flex-1 flex flex-col justify-between gap-4">
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="bg-rose-600 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-xs">₹99 Paid Promotion</span>
+                                    <span className="text-[11px] font-extrabold text-slate-455">Business: <strong className={themeMode === 'dark' ? 'text-slate-200' : 'text-slate-700'}>{ad.businessName}</strong></span>
+                                  </div>
+                                  <h4 className={`font-extrabold text-sm md:text-base leading-snug mt-1 ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{ad.offer.title}</h4>
+                                  <p className={`text-xs font-semibold leading-relaxed ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-550'}`}>{ad.offer.description}</p>
+                                  <div className="flex gap-4 mt-2">
+                                    <span className={`text-[10px] px-2.5 py-1 rounded-lg font-extrabold ${themeMode === 'dark' ? 'bg-slate-800 text-slate-350' : 'bg-slate-100 text-slate-655'}`}>Code/Rate: {ad.offer.rate}</span>
+                                    <span className={`text-[10px] px-2.5 py-1 rounded-lg font-extrabold ${themeMode === 'dark' ? 'bg-slate-800 text-slate-350' : 'bg-slate-100 text-slate-655'}`}>Offer Expiry: {ad.offer.expiry}</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 border-t border-slate-800/10 pt-4 mt-1">
+                                  <a
+                                    href={`/businesses/${ad.businessSlug || ad.businessId}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`px-4 py-2 font-extrabold text-[11px] rounded-xl cursor-pointer transition-colors shadow-2xs border text-center flex items-center gap-1 ${
+                                      themeMode === 'dark' 
+                                        ? 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/80 text-slate-300' 
+                                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-655'
+                                    }`}
+                                  >
+                                    <Eye className="h-3.5 w-3.5" /> View Profile
+                                  </a>
+                                  <button
+                                    onClick={() => handleSponsorAdAction(ad.businessId, ad.offer.id, 'reject')}
+                                    className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-550 font-extrabold text-[11px] rounded-xl cursor-pointer transition-colors shadow-2xs border-none"
+                                  >
+                                    Reject Ad
+                                  </button>
+                                  <button
+                                    onClick={() => handleSponsorAdAction(ad.businessId, ad.offer.id, 'approve')}
+                                    className="px-5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl cursor-pointer shadow-xs border-none"
+                                  >
+                                    Approve & Go Live (10 Days)
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* B. Approved & live sponsored ads list */}
+                    <div className={`flex flex-col gap-4 mt-4 border-t pt-6 ${themeMode === 'dark' ? 'border-slate-800' : 'border-slate-105'}`}>
+                      <h4 className={`font-extrabold text-sm border-b pb-2 ${themeMode === 'dark' ? 'text-slate-200 border-slate-800' : 'text-slate-800 border-slate-100'}`}>Approved & Live Ads ({approvedSponsoredAds.length})</h4>
+                      {approvedSponsoredAds.length === 0 ? (
+                        <div className={`p-10 text-center text-xs font-bold border rounded-[28px] flex flex-col items-center justify-center gap-2 ${
+                          themeMode === 'dark' ? 'bg-slate-900/30 border-slate-800 text-slate-500' : 'bg-white border-slate-205 text-slate-450'
+                        }`}>
+                          <Sparkles className="h-7 w-7 text-amber-500 fill-amber-500/20 animate-pulse" />
+                          <span>No live sponsored ads are currently display on homepage.</span>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-6 animate-fadeIn">
+                          {approvedSponsoredAds.map((ad, idx) => (
+                            <div key={idx} className={`border rounded-[28px] p-6 shadow-xs flex flex-col lg:flex-row gap-6 items-stretch text-left font-sans ${
+                              themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                            }`}>
+                              {/* Poster preview */}
+                              <div className="w-full lg:w-96 h-44 rounded-2xl overflow-hidden border border-slate-205 shrink-0 bg-slate-50 relative select-none">
+                                <img 
+                                  src={window.getImageUrl(ad.offer.banner)} 
+                                  className="w-full h-full object-cover" 
+                                  alt="Promo Poster" 
+                                />
+                              </div>
+
+                              {/* Details */}
+                              <div className="flex-1 flex flex-col justify-between gap-4">
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="bg-[#027244] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-xs">Live Homepage Ad</span>
+                                    <span className="text-[11px] font-extrabold text-slate-455">Business: <strong className={themeMode === 'dark' ? 'text-slate-200' : 'text-slate-700'}>{ad.businessName}</strong></span>
+                                  </div>
+                                  <h4 className={`font-extrabold text-sm md:text-base leading-snug mt-1 ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{ad.offer.title}</h4>
+                                  <p className={`text-xs font-semibold leading-relaxed ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-555'}`}>{ad.offer.description}</p>
+                                  <div className="flex gap-4 mt-2">
+                                    <span className={`text-[10px] px-2.5 py-1 rounded-lg font-extrabold ${themeMode === 'dark' ? 'bg-slate-800 text-slate-350' : 'bg-slate-100 text-slate-655'}`}>Code/Rate: {ad.offer.rate}</span>
+                                    <span className={`text-[10px] px-2.5 py-1 rounded-lg font-extrabold ${themeMode === 'dark' ? 'bg-slate-800 text-slate-350' : 'bg-slate-100 text-slate-655'}`}>Expiry Date: {ad.offer.expiry}</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 border-t border-slate-800/10 pt-4 mt-1">
+                                  <a
+                                    href={`/businesses/${ad.businessSlug || ad.businessId}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`px-4 py-2 font-extrabold text-[11px] rounded-xl cursor-pointer transition-colors shadow-2xs border text-center flex items-center gap-1 ${
+                                      themeMode === 'dark' 
+                                        ? 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/80 text-slate-300' 
+                                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-655'
+                                    }`}
+                                  >
+                                    <Eye className="h-3.5 w-3.5" /> View Profile
+                                  </a>
+                                  <button
+                                    onClick={() => handleDeleteSponsorAd(ad.businessId, ad.offer.id)}
+                                    className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-555 font-extrabold text-[11px] rounded-xl cursor-pointer transition-colors shadow-2xs border-none"
+                                  >
+                                    Delete Ad (From DB)
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

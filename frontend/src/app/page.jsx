@@ -192,6 +192,8 @@ export default function Home() {
   const [categoryTerm, setCategoryTerm] = useState('All Categories');
   const [featuredBusinesses, setFeaturedBusinesses] = useState(mockFeatured);
   const [topViewedBusinesses, setTopViewedBusinesses] = useState([]);
+  const [sponsoredAds, setSponsoredAds] = useState([]);
+  const [activeAdIndex, setActiveAdIndex] = useState(0);
   const [activeFaq, setActiveFaq] = useState(null);
   const [dbCategories, setDbCategories] = useState([]);
   const [isGoogleReviewModalOpen, setIsGoogleReviewModalOpen] = useState(false);
@@ -256,6 +258,7 @@ export default function Home() {
   const topViewedScrollRef = useRef(null);
   const howItWorksScrollRef = useRef(null);
   const stepsRegisterScrollRef = useRef(null);
+  const sponsoredAdsScrollRef = useRef(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -270,6 +273,21 @@ export default function Home() {
     }, 3500);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (sponsoredAds.length <= 1) return;
+    const timer = setInterval(() => {
+      if (sponsoredAdsScrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = sponsoredAdsScrollRef.current;
+        if (scrollLeft + clientWidth >= scrollWidth - 20) {
+          sponsoredAdsScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          sponsoredAdsScrollRef.current.scrollBy({ left: clientWidth + 20, behavior: 'smooth' });
+        }
+      }
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [sponsoredAds]);
 
   // Testimonials state
   const fallbackTestimonials = [
@@ -426,9 +444,10 @@ export default function Home() {
     const fetchFeaturedAndCounts = async () => {
       // 1. Fetch top 10 featured businesses based on Bayesian Average formula
       try {
-        const res = await fetch('http://localhost:5000/api/businesses?sort=reviews&limit=10');
+        const res = await fetch('http://localhost:5000/api/businesses?sort=reviews&limit=15');
         const data = await res.json();
-        const listToProcess = (data.success && data.data.length > 0) ? data.data : mockFeatured;
+        const rawList = (data.success && data.data.length > 0) ? data.data : mockFeatured;
+        const listToProcess = rawList.filter(b => !isGovernmentalOrPublic(b) && b.subscriptionStatus === 'active');
 
         let totalRatingSum = 0;
         let totalRatingCount = 0;
@@ -465,7 +484,7 @@ export default function Home() {
           const volumeBonus = 0.1 * Math.log10(v + 1);
           return bayesianTerm + volumeBonus;
         };
-        const sortedMock = [...mockFeatured].sort((a, b) => getBayesianScore(b) - getBayesianScore(a));
+        const sortedMock = [...mockFeatured].filter(b => !isGovernmentalOrPublic(b) && b.subscriptionStatus === 'active').sort((a, b) => getBayesianScore(b) - getBayesianScore(a));
         setFeaturedBusinesses(sortedMock.slice(0, 10));
       }
 
@@ -474,15 +493,15 @@ export default function Home() {
         const res = await fetch('http://localhost:5000/api/businesses?sort=referrals&limit=10');
         const data = await res.json();
         if (data.success && data.data.length > 0) {
-          const sortedByRef = [...data.data].sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
+          const sortedByRef = [...data.data].filter(b => b.subscriptionStatus === 'active' || isGovernmentalOrPublic(b)).sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
           setTopViewedBusinesses(sortedByRef.slice(0, 10));
         } else {
-          const sortedMock = [...mockFeatured].sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
+          const sortedMock = [...mockFeatured].filter(b => b.subscriptionStatus === 'active' || isGovernmentalOrPublic(b)).sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
           setTopViewedBusinesses(sortedMock.slice(0, 10));
         }
       } catch (err) {
         console.warn('Backend server offline, running fallback top contributors sync.');
-        const sortedMock = [...mockFeatured].sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
+        const sortedMock = [...mockFeatured].filter(b => b.subscriptionStatus === 'active' || isGovernmentalOrPublic(b)).sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
         setTopViewedBusinesses(sortedMock.slice(0, 10));
       }
 
@@ -563,6 +582,20 @@ export default function Home() {
           'Public Sector': 4.1
         };
         updateDynamicCategories(mockCounts, mockAvgRatings);
+      }
+
+      // Fetch live approved sponsored ads
+      try {
+        const adsRes = await fetch('http://localhost:5000/api/businesses/homepage/sponsored-ads');
+        const adsData = await adsRes.json();
+        if (adsData.success && Array.isArray(adsData.data)) {
+          setSponsoredAds(adsData.data);
+        } else {
+          setSponsoredAds([]);
+        }
+      } catch (adsErr) {
+        console.error('Error fetching homepage sponsored ads:', adsErr);
+        setSponsoredAds([]);
       }
     };
 
@@ -1150,6 +1183,69 @@ export default function Home() {
         </div>
       </section>
 
+      {/* 3.5 Sponsored Ads Auto-scrolling Banner Section */}
+      <section className="max-w-[1440px] w-full px-4 md:px-8 py-6 flex flex-col gap-4">
+        <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight flex items-center gap-2">
+              <Sparkles className="h-5.5 w-5.5 text-amber-500 fill-amber-500/20 animate-pulse shrink-0" />
+              Sponsored Ads
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">Exclusive flyer promotions from our premium verified sponsors</p>
+          </div>
+          <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded shadow-2xs shrink-0 mb-1">Promotions</span>
+        </div>
+
+        {sponsoredAds.length === 0 ? (
+          <div className="bg-gradient-to-br from-slate-50 to-emerald-50/15 border border-dashed border-slate-300 rounded-[24px] p-8 flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-6 shadow-sm">
+            <div className="flex items-center gap-4 flex-col md:flex-row">
+              <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-[#027244] flex items-center justify-center border border-emerald-100 shadow-3xs shrink-0">
+                <Rocket className="h-6 w-6" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <h3 className="font-extrabold text-[#001c41] text-base font-sans tracking-tight">Promote your offers or business here</h3>
+                <p className="text-slate-500 text-xs font-semibold leading-relaxed max-w-xl">
+                  Get premium visibility by featuring your business or discount flyer right here on our homepage banner. Join our network of premium local sponsors today!
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={() => {
+                const isLoggedIn = !!localStorage.getItem('ubt_token');
+                if (isLoggedIn) {
+                  navigate('/dashboard?tab=Offers%20%26%20Promotions&subtab=promotions');
+                } else {
+                  navigate('/login?redirect=/dashboard?tab=Offers%20%26%20Promotions%26subtab%3Dpromotions');
+                }
+              }}
+              className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3.5 px-6 rounded-xl transition-all shadow-md shrink-0 flex items-center gap-2 border border-emerald-700/10 cursor-pointer"
+            >
+              Promote Now <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <div 
+            ref={sponsoredAdsScrollRef}
+            className="flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
+          >
+            {sponsoredAds.map((ad, idx) => (
+              <div 
+                key={idx}
+                onClick={() => navigate(`/${ad.businessSlug || ad.businessId}`)}
+                className="w-full md:w-[calc(50%-10px)] shrink-0 snap-start rounded-[20px] md:rounded-[28px] overflow-hidden aspect-[1920/900] bg-slate-900 shadow-md border border-slate-200 cursor-pointer hover:shadow-lg transition-shadow relative"
+              >
+                {/* Poster Background */}
+                <img
+                  src={window.getImageUrl(ad.offer.banner)}
+                  alt={ad.offer.title}
+                  className="absolute inset-0 w-full h-full object-cover select-none"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* 4. Featured Businesses Section (With side chevrons!) */}
       <section className="max-w-[1440px] w-full px-4 md:px-8 py-6 md:py-12 flex flex-col gap-4 md:gap-8 relative">
         <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
@@ -1359,7 +1455,7 @@ export default function Home() {
                           filter: !isSubscribed ? 'blur(3px) grayscale(30%)' : 'none'
                         }}
                       >
-                        {biz.name ? biz.name.charAt(0) : 'B'}
+                        {biz.name ? biz.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'B'}
                       </div>
                     )}
                     
@@ -1517,15 +1613,26 @@ export default function Home() {
             <div className="text-left flex flex-col gap-1.5">
               <div className="flex flex-wrap items-center gap-3">
                 <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">What People Say</h2>
-                <button 
-                  type="button"
-                  onClick={() => setIsGoogleReviewModalOpen(true)} 
+                <a 
+                  href="https://www.google.com/maps/place//data=!4m3!3m2!1s0x50c1e1cd425b733:0x8b8510b51c2abead!12e1?source=g.page.m.ia._&laa=nmx-review-solicitation-ia2"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const width = 800;
+                    const height = 800;
+                    const left = (window.innerWidth - width) / 2;
+                    const top = (window.innerHeight - height) / 2;
+                    window.open(
+                      "https://www.google.com/maps/place//data=!4m3!3m2!1s0x50c1e1cd425b733:0x8b8510b51c2abead!12e1?source=g.page.m.ia._&laa=nmx-review-solicitation-ia2",
+                      "GoogleReviewPopup",
+                      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
+                    );
+                  }}
                   className="inline-flex items-center gap-1 bg-[#4285F4]/10 hover:bg-[#4285F4]/15 text-[#4285F4] px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer border border-[#4285F4]/20 hover:scale-102"
                 >
                   <Star className="h-3 w-3 fill-current text-[#F4B400] border-none" />
                   <span>See or write a review on Google</span>
                   <ArrowRight className="h-3 w-3" />
-                </button>
+                </a>
               </div>
               <p className="text-sm text-slate-500 font-medium">Real experiences shared by our core community member creators</p>
             </div>

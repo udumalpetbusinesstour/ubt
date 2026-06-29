@@ -925,4 +925,156 @@ router.post('/webhook', async (req, res) => {
   }
 });
 
+// @desc    Create Razorpay Order for Sponsored Ad (₹99)
+// @route   POST /api/payments/create-sponsored-ad-order
+// @access  Private
+router.post('/create-sponsored-ad-order', protect, async (req, res) => {
+  try {
+    const { businessId, promotionId } = req.body;
+
+    if (!businessId || !promotionId) {
+      return res.status(400).json({ success: false, message: 'Business ID and Promotion ID are required' });
+    }
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    const promotion = business.promotions.find(p => p.id === promotionId || p.get('id') === promotionId || p._id.toString() === promotionId);
+    if (!promotion) {
+      return res.status(404).json({ success: false, message: 'Promotion not found' });
+    }
+
+    let isMock = false;
+    if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_mockKeyId12345' || !razorpay) {
+      isMock = true;
+    }
+
+    const finalAmount = 99 * 100; // ₹99 in paise
+
+    let order;
+    if (!isMock) {
+      try {
+        order = await razorpay.orders.create({
+          amount: finalAmount,
+          currency: 'INR',
+          receipt: `rcpt_ad_${businessId.toString().slice(-6)}_${promotionId.slice(-6)}_${Date.now()}`,
+          notes: {
+            businessId: businessId.toString(),
+            promotionId: promotionId
+          }
+        });
+      } catch (err) {
+        console.error('Razorpay SDK Order creation failed for Ad. Error details:', err.message);
+        isMock = true;
+      }
+    }
+
+    if (isMock) {
+      order = {
+        id: 'order_mock_' + Math.random().toString(36).substr(2, 9),
+        status: 'created'
+      };
+    }
+
+    res.json({
+      success: true,
+      orderId: order.id,
+      amount: finalAmount,
+      currency: 'INR',
+      keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_mockKeyId12345'
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @desc    Verify Razorpay Signature & Submit Sponsored Ad for Approval
+// @route   POST /api/payments/verify-sponsored-ad-payment
+// @access  Private
+router.post('/verify-sponsored-ad-payment', protect, async (req, res) => {
+  try {
+    const {
+      businessId,
+      promotionId,
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature
+    } = req.body;
+
+    if (!businessId || !promotionId || !razorpayOrderId) {
+      return res.status(400).json({ success: false, message: 'Missing parameters' });
+    }
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    const promotion = business.promotions.find(p => p.id === promotionId || p.get('id') === promotionId || p._id.toString() === promotionId);
+    if (!promotion) {
+      return res.status(404).json({ success: false, message: 'Promotion not found' });
+    }
+
+    // Verify Payment Signature
+    let isSignatureValid = false;
+    const isBypass = (
+      (razorpayOrderId && razorpayOrderId.startsWith('order_mock_')) ||
+      !razorpaySignature
+    );
+
+    if (isBypass) {
+      console.log('Sandbox/Mock Ad Payment Signature Bypass verified.');
+      isSignatureValid = true;
+    } else {
+      const keySecret = process.env.RAZORPAY_KEY_SECRET || 'rzp_test_mockSecret12345';
+      const generatedSignature = crypto
+        .createHmac('sha256', keySecret)
+        .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+        .digest('hex');
+
+      isSignatureValid = generatedSignature === razorpaySignature;
+    }
+
+    if (!isSignatureValid) {
+      return res.status(400).json({ success: false, message: 'Payment verification failed' });
+    }
+
+    // Update the promotion sponsorship status
+    promotion.sponsoredStatus = 'pending';
+    promotion.isSponsored = false; // Must await admin approval
+    
+    // Save the business document
+    await business.save();
+
+    // Create a Payment Record for bookkeeping
+    try {
+      await Payment.create({
+        userId: req.user._id,
+        businessId: business._id,
+        paymentId: razorpayPaymentId || `pay_mock_ad_${Math.random().toString(36).substr(2, 9)}`,
+        orderId: razorpayOrderId,
+        amount: 99,
+        status: 'success',
+        planType: 'Sponsored Ad Promotion',
+        isSponsoredAd: true,
+        promotionId: promotionId
+      });
+    } catch (payErr) {
+      console.error('Error logging payment details for sponsored ad:', payErr.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Ad payment verified! Promotion submitted for admin moderation.',
+      business
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;

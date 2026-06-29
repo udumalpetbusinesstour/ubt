@@ -671,4 +671,163 @@ router.post('/partners/:id/manual-verification', async (req, res, next) => {
   }
 });
 
+// @desc    Get all pending sponsored ads
+// @route   GET /api/admin/sponsored-ads/pending
+// @access  Private/Admin
+router.get('/sponsored-ads/pending', async (req, res, next) => {
+  try {
+    const businesses = await Business.find({
+      'promotions.sponsoredStatus': 'pending'
+    });
+
+    const pendingAds = [];
+    businesses.forEach(b => {
+      if (b.promotions && b.promotions.length) {
+        b.promotions.forEach(p => {
+          if (p.sponsoredStatus === 'pending') {
+            pendingAds.push({
+              businessId: b._id,
+              businessName: b.name,
+              businessSlug: b.slug,
+              offer: {
+                id: p.id,
+                title: 'Sponsored Promotion Flyer',
+                description: 'Flyer image promotion directly live on merchant profile.',
+                banner: p.image,
+                rate: '₹99 Promo',
+                expiry: p.sponsoredExpiry ? new Date(p.sponsoredExpiry).toLocaleDateString() : '10 Days'
+              }
+            });
+          }
+        });
+      }
+    });
+
+    res.json({ success: true, count: pendingAds.length, data: pendingAds });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Get all sponsored ads (active, pending, rejected, etc)
+// @route   GET /api/admin/sponsored-ads/all
+// @access  Private/Admin
+router.get('/sponsored-ads/all', async (req, res, next) => {
+  try {
+    const businesses = await Business.find({
+      'promotions.sponsoredStatus': { $ne: 'none' }
+    });
+
+    const allAds = [];
+    businesses.forEach(b => {
+      if (b.promotions && b.promotions.length) {
+        b.promotions.forEach(p => {
+          if (p.sponsoredStatus !== 'none') {
+            allAds.push({
+              businessId: b._id,
+              businessName: b.name,
+              businessSlug: b.slug,
+              offer: {
+                id: p.id,
+                title: 'Sponsored Promotion Flyer',
+                description: 'Flyer image promotion directly live on merchant profile.',
+                banner: p.image,
+                rate: '₹99 Promo',
+                expiry: p.sponsoredExpiry ? new Date(p.sponsoredExpiry).toLocaleDateString() : '10 Days',
+                sponsoredStatus: p.sponsoredStatus
+              }
+            });
+          }
+        });
+      }
+    });
+
+    res.json({ success: true, count: allAds.length, data: allAds });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Approve sponsored ad
+// @route   PUT /api/admin/sponsored-ads/:businessId/:promotionId/approve
+// @access  Private/Admin
+router.put('/sponsored-ads/:businessId/:promotionId/approve', async (req, res, next) => {
+  try {
+    const { businessId, promotionId } = req.params;
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    const promotion = business.promotions.find(p => p.id === promotionId || p.get('id') === promotionId || p._id.toString() === promotionId);
+    if (!promotion) {
+      return res.status(404).json({ success: false, message: 'Promotion not found' });
+    }
+
+    promotion.sponsoredStatus = 'approved';
+    promotion.isSponsored = true;
+    promotion.sponsoredExpiry = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000); // 10 days duration
+
+    await business.save();
+    res.json({ success: true, message: 'Sponsored promotion approved successfully!', data: promotion });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Reject sponsored ad
+// @route   PUT /api/admin/sponsored-ads/:businessId/:promotionId/reject
+// @access  Private/Admin
+router.put('/sponsored-ads/:businessId/:promotionId/reject', async (req, res, next) => {
+  try {
+    const { businessId, promotionId } = req.params;
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    const promotion = business.promotions.find(p => p.id === promotionId || p.get('id') === promotionId || p._id.toString() === promotionId);
+    if (!promotion) {
+      return res.status(404).json({ success: false, message: 'Promotion not found' });
+    }
+
+    promotion.sponsoredStatus = 'rejected';
+    promotion.isSponsored = false;
+
+    await business.save();
+    res.json({ success: true, message: 'Sponsored promotion rejected successfully!', data: promotion });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Delete sponsored ad (remove promotion from business)
+// @route   DELETE /api/admin/sponsored-ads/:businessId/:promotionId
+// @access  Private/Admin
+router.delete('/sponsored-ads/:businessId/:promotionId', async (req, res, next) => {
+  try {
+    const { businessId, promotionId } = req.params;
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    const originalLength = business.promotions.length;
+    business.promotions = business.promotions.filter(p => 
+      p.id !== promotionId && 
+      p.get('id') !== promotionId && 
+      p._id.toString() !== promotionId
+    );
+
+    if (business.promotions.length === originalLength) {
+      return res.status(404).json({ success: false, message: 'Promotion not found' });
+    }
+
+    await business.save();
+    res.json({ success: true, message: 'Sponsored promotion deleted from database successfully!' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

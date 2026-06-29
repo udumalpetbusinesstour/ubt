@@ -58,6 +58,16 @@ const PaymentSchema = new mongoose.Schema({
   paidAt: {
     type: Date,
     default: Date.now,
+  },
+  isSponsoredAd: {
+    type: Boolean,
+    default: false,
+  },
+  offerId: {
+    type: String,
+  },
+  promotionId: {
+    type: String,
   }
 }, {
   timestamps: true

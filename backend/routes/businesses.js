@@ -628,6 +628,45 @@ const mockDetails = {
   }
 };
 
+// @desc    Get all active sponsored ads for homepage
+// @route   GET /api/businesses/sponsored-ads
+// @access  Public
+router.get(['/sponsored-ads', '/homepage/sponsored-ads'], async (req, res) => {
+  try {
+    const businesses = await Business.find({
+      'promotions.isSponsored': true,
+      'promotions.active': { $ne: false }
+    });
+
+    const ads = [];
+    businesses.forEach(b => {
+      if (b.promotions && b.promotions.length) {
+        b.promotions.forEach(p => {
+          if (p.isSponsored && p.active !== false && p.sponsoredExpiry && new Date(p.sponsoredExpiry) > new Date()) {
+            ads.push({
+              businessId: b._id,
+              businessName: b.name,
+              businessSlug: b.slug,
+              offer: {
+                id: p.id,
+                title: 'Sponsored Promotion Flyer',
+                description: `Flyer promotion from ${b.name}`,
+                banner: p.image,
+                rate: '₹99 Promo',
+                expiry: p.sponsoredExpiry ? new Date(p.sponsoredExpiry).toLocaleDateString() : '10 Days'
+              }
+            });
+          }
+        });
+      }
+    });
+
+    res.json({ success: true, count: ads.length, data: ads });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // @desc    Get all businesses with filters, search, and premium sorting
 // @route   GET /api/businesses
 // @access  Public

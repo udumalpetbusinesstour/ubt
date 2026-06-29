@@ -445,7 +445,7 @@ function DashboardContent() {
   const handleLogout = () => {
     localStorage.removeItem('ubt_token');
     localStorage.removeItem('ubt_user');
-    navigate('/login');
+    navigate('/');
   };
 
   // Quick Photo upload states
@@ -841,15 +841,32 @@ function DashboardContent() {
     reputationLevel = 'Needs Attention';
   }
 
-  const [offersList, setOffersList] = useState([
-    { id: '1', title: 'Festival Special Ghee Roast', description: 'Buy 2 Get 1 Free on all special ghee roast items. Valid on dining.', rate: 'Buy 2 Get 1', expiry: '2026-06-30', active: true, banner: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80' },
-    { id: '2', title: 'Monsoon Discount Campaign', description: 'Flat 10% Off on all electrical installation services. Safe & verified engineers.', rate: '10% OFF', expiry: '2026-07-15', active: true, banner: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80' },
-  ]);
+  const [offersList, setOffersList] = useState([]);
+  const [promotionsList, setPromotionsList] = useState([]);
+
+  useEffect(() => {
+    if (business) {
+      setOffersList(business.offers || []);
+      setPromotionsList(business.promotions || []);
+    }
+  }, [business]);
+
+  const [offersSubTab, setOffersSubTab] = useState('offers');
+  useEffect(() => {
+    const subtabParam = searchParams.get('subtab');
+    if (subtabParam) {
+      setOffersSubTab(subtabParam);
+    }
+  }, [searchParams]);
   const [showAddOffer, setShowAddOffer] = useState(false);
+  const [showAddPromotion, setShowAddPromotion] = useState(false);
   const [newOfferFields, setNewOfferFields] = useState({ title: '', description: '', rate: '', expiry: '', banner: '' });
+  const [newPromotionFields, setNewPromotionFields] = useState({ image: '' });
   const [previewTab, setPreviewTab] = useState('overview');
   const [offerImageUploading, setOfferImageUploading] = useState(false);
   const [offerImageError, setOfferImageError] = useState('');
+  const [promoImageUploading, setPromoImageUploading] = useState(false);
+  const [promoImageError, setPromoImageError] = useState('');
 
   const handleOfferBannerUpload = async (e) => {
     const file = e.target.files[0];
@@ -889,6 +906,44 @@ function DashboardContent() {
     }
   };
 
+  const handlePromotionUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setPromoImageError('Image file size must be less than 5MB.');
+      return;
+    }
+
+    setPromoImageUploading(true);
+    setPromoImageError('');
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token || localStorage.getItem('ubt_token')}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setNewPromotionFields({ image: data.url || data.fileUrl });
+      } else {
+        setPromoImageError(data.message || 'Failed to upload image.');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      setPromoImageError('Network error uploading image.');
+    } finally {
+      setPromoImageUploading(false);
+    }
+  };
+
   const saveInlineFields = async (fields) => {
     const activeToken = token || localStorage.getItem('ubt_token');
     if (!business || !business._id || !activeToken) return;
@@ -904,6 +959,8 @@ function DashboardContent() {
       const data = await res.json();
       if (data.success) {
         setBusiness(data.data);
+        if (data.data.offers) setOffersList(data.data.offers);
+        if (data.data.promotions) setPromotionsList(data.data.promotions);
       }
     } catch (err) {
       console.warn('Failed to save fields inline, updating locally', err);
@@ -917,6 +974,160 @@ function DashboardContent() {
   const updateOffers = async (newOffers) => {
     setOffersList(newOffers);
     await saveInlineFields({ offers: newOffers });
+  };
+
+  const updatePromotions = async (newPromotions) => {
+    setPromotionsList(newPromotions);
+    await saveInlineFields({ promotions: newPromotions });
+  };
+
+  const [adPaymentLoadingMap, setAdPaymentLoadingMap] = useState({});
+
+  const handleSponsorAdPayment = async (promo) => {
+    const activeToken = token || localStorage.getItem('ubt_token');
+    if (!activeToken || !business) return;
+
+    const skipPayment = window.confirm("Skip payment gateway and auto-submit ad promotion for testing?");
+    if (skipPayment) {
+      setAdPaymentLoadingMap(prev => ({ ...prev, [promo.id]: true }));
+      try {
+        const verifyRes = await fetch('http://localhost:5000/api/payments/verify-sponsored-ad-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${activeToken}`,
+          },
+          body: JSON.stringify({
+            businessId: business._id,
+            promotionId: promo.id,
+            razorpayOrderId: `order_mock_skip_${Date.now()}`,
+            razorpayPaymentId: `pay_mock_skip_${Date.now()}`,
+            razorpaySignature: ''
+          }),
+        });
+        const verifyData = await verifyRes.json();
+        if (verifyData.success) {
+          setBusiness(verifyData.business);
+          if (verifyData.business && verifyData.business.promotions) {
+            setPromotionsList(verifyData.business.promotions);
+          }
+          alert('Ad Promotion submitted successfully (Payment Bypassed)!');
+          if (typeof fetchMyPayments === 'function') fetchMyPayments();
+        } else {
+          alert(verifyData.message || 'Payment bypass verification failed.');
+        }
+      } catch (err) {
+        console.error('Error bypassing payment:', err);
+        alert('Error bypassing payment status.');
+      } finally {
+        setAdPaymentLoadingMap(prev => ({ ...prev, [promo.id]: false }));
+      }
+      return;
+    }
+
+    setAdPaymentLoadingMap(prev => ({ ...prev, [promo.id]: true }));
+    try {
+      // 1. Create order on backend
+      const orderRes = await fetch('http://localhost:5000/api/payments/create-sponsored-ad-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`,
+        },
+        body: JSON.stringify({
+          businessId: business._id,
+          promotionId: promo.id
+        }),
+      });
+      const orderData = await orderRes.json();
+      
+      if (!orderData.success) {
+        alert(orderData.message || 'Failed to initialize Razorpay checkout.');
+        setAdPaymentLoadingMap(prev => ({ ...prev, [promo.id]: false }));
+        return;
+      }
+
+      // Check if Razorpay Script is loaded
+      const isRazorpayScriptLoaded = () => {
+        return new Promise((resolve) => {
+          if (window.Razorpay) {
+            resolve(true);
+            return;
+          }
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.body.appendChild(script);
+        });
+      };
+
+      await isRazorpayScriptLoaded();
+
+      const options = {
+        key: orderData.keyId,
+        name: 'Udumalpet Business Tour',
+        description: `Sponsored Homepage Ad promotion for Flyer`,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        order_id: orderData.orderId,
+        handler: async function (response) {
+          try {
+            // 2. Verify payment on backend
+            const verifyRes = await fetch('http://localhost:5000/api/payments/verify-sponsored-ad-payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${activeToken}`,
+              },
+              body: JSON.stringify({
+                businessId: business._id,
+                promotionId: promo.id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              setBusiness(verifyData.business);
+              if (verifyData.business && verifyData.business.promotions) {
+                setPromotionsList(verifyData.business.promotions);
+              }
+              alert('Ad Payment Successful! Your promotion flyer has been submitted for Admin approval.');
+              fetchMyPayments();
+            } else {
+              alert(verifyData.message || 'Payment verification failed.');
+            }
+          } catch (err) {
+            console.error('Error verifying payment:', err);
+            alert('Error verifying payment status.');
+          } finally {
+            setAdPaymentLoadingMap(prev => ({ ...prev, [promo.id]: false }));
+          }
+        },
+        prefill: {
+          name: user?.fullName || user?.name || '',
+          email: user?.email || '',
+          contact: user?.phone || user?.mobileNumber || '',
+        },
+        theme: {
+          color: '#027244',
+        },
+        modal: {
+          ondismiss: function() {
+            setAdPaymentLoadingMap(prev => ({ ...prev, [promo.id]: false }));
+          }
+        }
+      };
+
+      const rzp1 = new window.Razorpay(options);
+      rzp1.open();
+    } catch (err) {
+      console.error('Checkout error:', err);
+      alert('Network error launching payment gateway.');
+      setAdPaymentLoadingMap(prev => ({ ...prev, [promo.id]: false }));
+    }
   };
 
   const fetchNotifications = async (authToken) => {
@@ -1164,6 +1375,11 @@ function DashboardContent() {
           } else {
             setOffersList([]);
           }
+          if (userBiz.promotions) {
+            setPromotionsList(userBiz.promotions);
+          } else {
+            setPromotionsList([]);
+          }
           fetchBranches(authToken, userBiz._id);
           fetchLeads(authToken, userBiz._id);
           fetchReviews(authToken, userBiz._id);
@@ -1261,6 +1477,7 @@ function DashboardContent() {
       setBusiness(mockBiz);
       setPrimaryBusiness(mockBiz);
       setOffersList(mockBiz.offers);
+      setPromotionsList([]);
       fetchBranches(authToken, mockBiz._id);
       fetchLeads(authToken, mockBiz._id);
       fetchReviews(authToken, mockBiz._id);
@@ -6944,223 +7161,471 @@ function DashboardContent() {
           )}
 
           {/* ========================================================================= */}
-          {/* TAB: OFFERS & PROMOTIONS DASHBOARD */}
-          {/* ========================================================================= */}
-          {activeTab === 'Offers & Promotions' && (
+              {activeTab === 'Offers & Promotions' && (
             <div className="flex flex-col gap-6 text-left animate-fadeIn">
               
-              {/* Header card with UBT premium soft gradient */}
-              <div className="bg-gradient-to-r from-white via-white to-emerald-50/15 border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="flex flex-col">
-                  <h3 className="font-extrabold text-[#001c41] text-base md:text-lg tracking-tight font-sans">Discount Campaigns & Offers</h3>
-                  <span className="text-[11px] text-slate-450 font-semibold mt-1">Publish live custom discounts, festival campaign flyers, and BOGO deals to drive town engagement</span>
-                </div>
-                <button 
-                  onClick={() => setShowAddOffer(true)}
-                  className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-6 rounded-xl transition-all shadow-md hover:shadow-emerald-700/10 shrink-0 flex items-center gap-2 cursor-pointer border border-emerald-700/10 btn-active-press"
+              {/* Sub-tab Toggle Navigation */}
+              <div className="flex gap-2 border-b border-slate-100 pb-1">
+                <button
+                  onClick={() => setOffersSubTab('offers')}
+                  className={`pb-3 px-4 font-extrabold text-sm relative transition-all cursor-pointer ${offersSubTab === 'offers' ? 'text-[#027244] border-b-2 border-b-[#027244]' : 'text-slate-400 hover:text-slate-600'}`}
                 >
-                  <Plus className="h-4.5 w-4.5" /> Launch New Offer
+                  Discount Offers & Deals
+                </button>
+                <button
+                  onClick={() => setOffersSubTab('promotions')}
+                  className={`pb-3 px-4 font-extrabold text-sm relative transition-all cursor-pointer ${offersSubTab === 'promotions' ? 'text-[#027244] border-b-2 border-b-[#027244]' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  Flyer Promotions (Homepage Ads)
                 </button>
               </div>
 
-              {/* Add offer modal/inline form if active */}
-              {showAddOffer && (
-                <div className="bg-white border border-emerald-100 rounded-3xl p-6 shadow-md border-t-4 border-t-emerald-600 flex flex-col gap-4 animate-slideDown max-w-xl text-left">
-                  <h4 className="font-extrabold text-slate-800 text-sm tracking-tight font-sans">Launch New Deal Flyer</h4>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10.5px] font-extrabold text-slate-500">Offer Title</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Festival Special discount"
-                        value={newOfferFields.title}
-                        onChange={(e) => setNewOfferFields({ ...newOfferFields, title: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs bg-slate-50/50 focus:outline-emerald-600 font-semibold"
-                      />
+              {offersSubTab === 'offers' ? (
+                <>
+                  {/* Offers Header Card */}
+                  <div className="bg-gradient-to-r from-white via-white to-emerald-50/15 border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex flex-col">
+                      <h3 className="font-extrabold text-[#001c41] text-base md:text-lg tracking-tight font-sans">Discount Campaigns & Offers</h3>
+                      <span className="text-[11px] text-slate-450 font-semibold mt-1">Publish live custom discounts, deals, and BOGO vouchers to display on your profile tab</span>
                     </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10.5px] font-extrabold text-slate-500">Rate / Deal Code</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 15% OFF / Buy 1 Get 1"
-                        value={newOfferFields.rate}
-                        onChange={(e) => setNewOfferFields({ ...newOfferFields, rate: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs bg-slate-50/50 focus:outline-emerald-600 font-semibold"
-                      />
-                    </div>
+                    <button 
+                      onClick={() => setShowAddOffer(true)}
+                      className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-6 rounded-xl transition-all shadow-md hover:shadow-emerald-700/10 shrink-0 flex items-center gap-2 cursor-pointer border border-emerald-700/10 btn-active-press"
+                    >
+                      <Plus className="h-4.5 w-4.5" /> Launch New Offer
+                    </button>
                   </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10.5px] font-extrabold text-slate-500">Description</label>
-                    <textarea
-                      placeholder="Describe what customers get and how to redeem it..."
-                      value={newOfferFields.description}
-                      onChange={(e) => setNewOfferFields({ ...newOfferFields, description: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-3 text-xs bg-slate-50/50 focus:outline-emerald-650 font-semibold resize-none"
-                      rows={2.5}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10.5px] font-extrabold text-slate-500">Campaign Expiry Date</label>
-                      <input
-                        type="date"
-                        value={newOfferFields.expiry}
-                        onChange={(e) => setNewOfferFields({ ...newOfferFields, expiry: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50/50 focus:outline-emerald-600 font-semibold cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10.5px] font-extrabold text-slate-500">Deal Banner Image</label>
-                      {newOfferFields.banner ? (
-                        <div className="relative border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 p-2 flex items-center justify-between gap-3 group">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <img 
-                              src={window.getImageUrl(newOfferFields.banner)} 
-                              alt="Banner preview" 
-                              className="h-14 w-20 object-cover rounded-lg border border-slate-200/60 shadow-2xs"
-                            />
-                            <div className="flex flex-col min-w-0 flex-1 text-left">
-                              <span className="text-[11px] font-bold text-slate-700">Banner Selected</span>
-                              <span className="text-[9px] text-slate-400 font-semibold truncate">{newOfferFields.banner}</span>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setNewOfferFields(prev => ({ ...prev, banner: '' }))}
-                            className="p-2 hover:bg-red-50 text-slate-450 hover:text-red-650 rounded-xl transition-colors cursor-pointer border-none flex items-center justify-center shrink-0"
-                            title="Remove Image"
-                          >
-                            <Trash2 className="h-4.5 w-4.5" />
-                          </button>
+                  {/* Add Offer Modal */}
+                  {showAddOffer && (
+                    <div className="bg-white border border-emerald-100 rounded-3xl p-6 shadow-md border-t-4 border-t-emerald-600 flex flex-col gap-4 animate-slideDown max-w-xl text-left">
+                      <h4 className="font-extrabold text-slate-800 text-sm tracking-tight font-sans">Launch New Deal</h4>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[10.5px] font-extrabold text-slate-500">Offer Title</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Festival Special discount"
+                            value={newOfferFields.title}
+                            onChange={(e) => setNewOfferFields({ ...newOfferFields, title: e.target.value })}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs bg-slate-50/50 focus:outline-emerald-600 font-semibold"
+                          />
                         </div>
-                      ) : (
-                        <div className={`border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-colors bg-slate-50/20 relative ${offerImageUploading ? 'border-emerald-300 bg-emerald-50/5' : 'border-slate-200 hover:bg-slate-50/40'}`}>
-                          {offerImageUploading ? (
-                            <div className="flex flex-col items-center gap-2">
-                              <RefreshCw className="h-6 w-6 text-[#027244] animate-spin" />
-                              <span className="text-[10px] font-bold text-slate-500">Uploading banner...</span>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[10.5px] font-extrabold text-slate-500">Rate / Deal Code</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 15% OFF / Buy 1 Get 1"
+                            value={newOfferFields.rate}
+                            onChange={(e) => setNewOfferFields({ ...newOfferFields, rate: e.target.value })}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs bg-slate-50/50 focus:outline-emerald-600 font-semibold"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10.5px] font-extrabold text-slate-500">Description</label>
+                        <textarea
+                          placeholder="Describe what customers get and how to redeem it..."
+                          value={newOfferFields.description}
+                          onChange={(e) => setNewOfferFields({ ...newOfferFields, description: e.target.value })}
+                          className="w-full border border-slate-200 rounded-xl p-3 text-xs bg-slate-50/50 focus:outline-emerald-650 font-semibold resize-none"
+                          rows={2.5}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[10.5px] font-extrabold text-slate-500">Campaign Expiry Date</label>
+                          <input
+                            type="date"
+                            value={newOfferFields.expiry}
+                            onChange={(e) => setNewOfferFields({ ...newOfferFields, expiry: e.target.value })}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50/50 focus:outline-emerald-600 font-semibold cursor-pointer"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[10.5px] font-extrabold text-slate-500">Deal Banner Image (Optional)</label>
+                          {newOfferFields.banner ? (
+                            <div className="relative border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 p-2 flex items-center justify-between gap-3 group">
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <img 
+                                  src={window.getImageUrl(newOfferFields.banner)} 
+                                  alt="Banner preview" 
+                                  className="h-14 w-20 object-cover rounded-lg border border-slate-200/60 shadow-2xs"
+                                />
+                                <div className="flex flex-col min-w-0 flex-1 text-left">
+                                  <span className="text-[11px] font-bold text-slate-700">Banner Selected</span>
+                                  <span className="text-[9px] text-slate-400 font-semibold truncate">{newOfferFields.banner}</span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setNewOfferFields(prev => ({ ...prev, banner: '' }))}
+                                className="p-2 hover:bg-red-50 text-slate-455 hover:text-red-650 rounded-xl transition-colors cursor-pointer border-none flex items-center justify-center shrink-0"
+                                title="Remove Image"
+                              >
+                                <Trash2 className="h-4.5 w-4.5" />
+                              </button>
                             </div>
                           ) : (
-                            <>
-                              <div className="h-8 w-8 bg-slate-50 text-slate-500 border border-slate-100 rounded-xl flex items-center justify-center shadow-3xs">
-                                <Upload className="h-4 w-4" />
-                              </div>
-                              <div className="text-center flex flex-col items-center">
-                                <span className="text-[11px] font-extrabold text-slate-700">Click to upload banner</span>
-                                <span className="text-[9px] text-slate-455 font-bold mt-0.5">PNG, JPG up to 5MB</span>
-                              </div>
-                              <input 
-                                type="file" 
-                                accept="image/*"
-                                id="dashboard-offer-banner-upload"
-                                onChange={handleOfferBannerUpload}
-                                className="hidden"
-                              />
-                              <label 
-                                htmlFor="dashboard-offer-banner-upload"
-                                className="absolute inset-0 w-full h-full cursor-pointer"
-                              />
-                            </>
+                            <div className={`border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center gap-2 transition-colors bg-slate-50/20 relative ${offerImageUploading ? 'border-emerald-300 bg-emerald-50/5' : 'border-slate-200 hover:bg-slate-50/40'}`}>
+                              {offerImageUploading ? (
+                                <div className="flex flex-col items-center gap-2">
+                                  <RefreshCw className="h-6 w-6 text-[#027244] animate-spin" />
+                                  <span className="text-[10px] font-bold text-slate-500">Uploading banner...</span>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="h-8 w-8 bg-slate-50 text-slate-500 border border-slate-100 rounded-xl flex items-center justify-center shadow-3xs">
+                                    <Upload className="h-4 w-4" />
+                                  </div>
+                                  <div className="text-center flex flex-col items-center">
+                                    <span className="text-[11px] font-extrabold text-slate-700">Click to upload banner</span>
+                                    <span className="text-[9px] text-slate-455 font-bold mt-0.5">PNG, JPG up to 5MB</span>
+                                  </div>
+                                  <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    id="dashboard-offer-banner-upload"
+                                    onChange={handleOfferBannerUpload}
+                                    className="hidden"
+                                  />
+                                  <label 
+                                    htmlFor="dashboard-offer-banner-upload"
+                                    className="absolute inset-0 w-full h-full cursor-pointer"
+                                  />
+                                </>
+                              )}
+                            </div>
+                          )}
+                          {offerImageError && (
+                            <span className="text-[9.5px] text-red-500 font-semibold mt-1 flex items-center gap-1">
+                              <AlertCircle className="h-3.5 w-3.5" />
+                              {offerImageError}
+                            </span>
                           )}
                         </div>
-                      )}
-                      {offerImageError && (
-                        <span className="text-[9.5px] text-red-500 font-semibold mt-1 flex items-center gap-1">
-                          <AlertCircle className="h-3.5 w-3.5" />
-                          {offerImageError}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                      </div>
 
-                  <div className="flex gap-2 justify-start mt-2">
-                    <button
-                      onClick={() => {
-                        if (newOfferFields.title && newOfferFields.description) {
-                          const launched = {
-                            id: Date.now().toString(),
-                            title: newOfferFields.title,
-                            description: newOfferFields.description,
-                            rate: newOfferFields.rate || 'Special Deal',
-                            expiry: newOfferFields.expiry || '2026-06-30',
-                            active: true,
-                            banner: newOfferFields.banner || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'
-                          };
-                          updateOffers([launched, ...offersList]);
-                          setNewOfferFields({ title: '', description: '', rate: '', expiry: '', banner: '' });
-                          setShowAddOffer(false);
-                        }
-                      }}
-                      className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-emerald-700/10 cursor-pointer btn-active-press border border-emerald-700/10"
-                    >
-                      Publish Deal Campaign
-                    </button>
-                    <button
-                      onClick={() => setShowAddOffer(false)}
-                      className="py-2.5 px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-xs rounded-xl cursor-pointer btn-active-press"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Deals campaign grid using card-premium styling */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {offersList.map((campaign) => (
-                  <div key={campaign.id} className="card-premium rounded-3xl overflow-hidden flex flex-col relative bg-white">
-                    <div 
-                      className="h-36 bg-cover bg-center shrink-0 relative smooth-img-container"
-                      style={{ backgroundImage: `url('${window.getImageUrl(campaign.banner)}')` }}
-                    >
-                      <div className="absolute inset-0 bg-slate-950/20" />
-                      <div className="absolute top-4 left-4 bg-rose-600 text-white px-3 py-1 rounded-xl text-xs font-black uppercase shadow-md select-none tracking-wide">
-                        {campaign.rate}
+                      <div className="flex gap-2 justify-start mt-2">
+                        <button
+                          onClick={() => {
+                            if (newOfferFields.title && newOfferFields.description) {
+                              const launched = {
+                                id: Date.now().toString(),
+                                title: newOfferFields.title,
+                                description: newOfferFields.description,
+                                rate: newOfferFields.rate || 'Special Deal',
+                                expiry: newOfferFields.expiry || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                                active: true,
+                                banner: newOfferFields.banner || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'
+                              };
+                              updateOffers([launched, ...offersList]);
+                              setNewOfferFields({ title: '', description: '', rate: '', expiry: '', banner: '' });
+                              setShowAddOffer(false);
+                            }
+                          }}
+                          className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-emerald-700/10 cursor-pointer btn-active-press border border-emerald-700/10"
+                        >
+                          Publish Deal
+                        </button>
+                        <button
+                          onClick={() => setShowAddOffer(false)}
+                          className="py-2.5 px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-xs rounded-xl cursor-pointer btn-active-press"
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </div>
+                  )}
 
-                    <div className="p-6 flex flex-col gap-2 text-left justify-between flex-1">
-                      <div className="flex flex-col gap-1.5">
-                        <h4 className="font-extrabold text-[#001c41] text-sm md:text-base leading-snug">{campaign.title}</h4>
-                        <p className="text-slate-500 text-xs font-semibold leading-relaxed">
-                          {campaign.description}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-3">
-                        <span className="text-[10px] text-slate-450 font-bold">Campaign Expiry: {campaign.expiry}</span>
-                        
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              const updated = offersList.map(c => c.id === campaign.id ? { ...c, active: !c.active } : c);
-                              updateOffers(updated);
-                            }}
-                            className={`py-1.5 px-3 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer btn-active-press ${campaign.active ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-emerald-50 hover:bg-emerald-100 text-[#027244]'}`}
+                  {/* Offers Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {offersList.length > 0 ? (
+                      offersList.map((campaign) => (
+                        <div key={campaign.id} className="card-premium rounded-3xl overflow-hidden flex flex-col relative bg-white border border-slate-150">
+                          <div 
+                            className="h-36 bg-cover bg-center shrink-0 relative smooth-img-container"
+                            style={{ backgroundImage: `url('${window.getImageUrl(campaign.banner)}')` }}
                           >
-                            {campaign.active ? 'Pause' : 'Activate'}
-                          </button>
-                          <button
-                            onClick={() => {
-                              const updated = offersList.filter(c => c.id !== campaign.id);
-                              updateOffers(updated);
-                            }}
-                            className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[10px] font-black uppercase cursor-pointer btn-active-press"
-                          >
-                            Delete
-                          </button>
+                            <div className="absolute inset-0 bg-slate-950/20" />
+                            <div className="absolute top-4 left-4 bg-[#027244] text-white px-3 py-1 rounded-xl text-xs font-black uppercase shadow-md select-none tracking-wide">
+                              {campaign.rate}
+                            </div>
+                            <div className="absolute top-4 right-4 z-10">
+                              <span className="bg-slate-600/95 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-xs">
+                                Free Profile Offer
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="p-6 flex flex-col gap-2 text-left justify-between flex-1">
+                            <div className="flex flex-col gap-1.5">
+                              <h4 className="font-extrabold text-[#001c41] text-sm md:text-base leading-snug">{campaign.title}</h4>
+                              <p className="text-slate-500 text-xs font-semibold leading-relaxed">
+                                {campaign.description}
+                              </p>
+                            </div>
+                            
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-slate-100 pt-4 mt-3">
+                              <span className="text-[10px] text-slate-450 font-bold">Expires: {campaign.expiry}</span>
+                              
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  onClick={() => {
+                                    const isCurrentlyActive = campaign.active !== false;
+                                    const updated = offersList.map(c => 
+                                      ((c.id && c.id === campaign.id) || (c._id && c._id === campaign._id))
+                                        ? { ...c, active: !isCurrentlyActive } 
+                                        : c
+                                    );
+                                    updateOffers(updated);
+                                  }}
+                                  className={`py-1.5 px-3 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer btn-active-press ${(campaign.active !== false) ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-emerald-50 hover:bg-emerald-100 text-[#027244]'}`}
+                                >
+                                  {(campaign.active !== false) ? 'Pause' : 'Activate'}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const updated = offersList.filter(c => 
+                                      !((c.id && c.id === campaign.id) || (c._id && c._id === campaign._id))
+                                    );
+                                    updateOffers(updated);
+                                  }}
+                                  className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[10px] font-black uppercase cursor-pointer btn-active-press"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="col-span-full py-12 text-center text-slate-400 text-xs font-semibold bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+                        No custom offers launched yet. Click "Launch New Offer" to list your first discount deal.
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Promotions Header Card */}
+                  <div className="bg-gradient-to-r from-white via-white to-emerald-50/15 border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex flex-col">
+                      <h3 className="font-extrabold text-[#001c41] text-base md:text-lg tracking-tight font-sans">Flyer Promotions & Homepage Ads</h3>
+                      <span className="text-[11px] text-slate-450 font-semibold mt-1">Upload visual campaign posters. Display them directly on your profile for free, or pay ₹99 to request admin approved homepage listing.</span>
+                    </div>
+                    <button 
+                      onClick={() => setShowAddPromotion(true)}
+                      className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-6 rounded-xl transition-all shadow-md hover:shadow-emerald-700/10 shrink-0 flex items-center gap-2 cursor-pointer border border-emerald-700/10 btn-active-press"
+                    >
+                      <Plus className="h-4.5 w-4.5" /> Upload Flyer
+                    </button>
+                  </div>
+
+                  {/* Add Promotion Modal */}
+                  {showAddPromotion && (
+                    <div className="bg-white border border-emerald-100 rounded-3xl p-6 shadow-md border-t-4 border-t-emerald-600 flex flex-col gap-4 animate-slideDown max-w-xl text-left">
+                      <h4 className="font-extrabold text-slate-800 text-sm tracking-tight font-sans font-black">Upload Visual Promotion Flyer</h4>
+                      
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10.5px] font-extrabold text-slate-500">Poster / Flyer Image</label>
+                        {newPromotionFields.image ? (
+                          <div className="relative border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 p-2 flex items-center justify-between gap-3 group">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <img 
+                                src={window.getImageUrl(newPromotionFields.image)} 
+                                alt="Flyer preview" 
+                                className="h-24 w-40 object-cover rounded-lg border border-slate-200/60 shadow-2xs"
+                              />
+                              <div className="flex flex-col min-w-0 flex-1 text-left">
+                                <span className="text-[11px] font-bold text-slate-700">Flyer Uploaded</span>
+                                <span className="text-[9px] text-slate-400 font-semibold truncate">{newPromotionFields.image}</span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setNewPromotionFields({ image: '' })}
+                              className="p-2 hover:bg-red-50 text-slate-455 hover:text-red-650 rounded-xl transition-colors cursor-pointer border-none flex items-center justify-center shrink-0"
+                              title="Remove Flyer"
+                            >
+                              <Trash2 className="h-4.5 w-4.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center gap-2 transition-colors bg-slate-50/20 relative ${promoImageUploading ? 'border-emerald-300 bg-emerald-50/5' : 'border-slate-200 hover:bg-slate-50/40'}`}>
+                            {promoImageUploading ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <RefreshCw className="h-6 w-6 text-[#027244] animate-spin" />
+                                <span className="text-[10px] font-bold text-slate-500">Uploading poster flyer...</span>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="h-10 w-10 bg-slate-50 text-slate-500 border border-slate-100 rounded-xl flex items-center justify-center shadow-3xs">
+                                  <Upload className="h-5 w-5" />
+                                </div>
+                                <div className="text-center flex flex-col items-center">
+                                  <span className="text-[11px] font-extrabold text-slate-700">Select promotion flyer poster</span>
+                                  <span className="text-[9px] text-slate-455 font-bold mt-0.5">PNG, JPG flyer up to 5MB (16:9 ratio recommended)</span>
+                                </div>
+                                <input 
+                                  type="file" 
+                                  accept="image/*"
+                                  id="dashboard-promotion-flyer-upload"
+                                  onChange={handlePromotionUpload}
+                                  className="hidden"
+                                />
+                                <label 
+                                  htmlFor="dashboard-promotion-flyer-upload"
+                                  className="absolute inset-0 w-full h-full cursor-pointer"
+                                />
+                              </>
+                            )}
+                          </div>
+                        )}
+                        {promoImageError && (
+                          <span className="text-[9.5px] text-red-500 font-semibold mt-1 flex items-center gap-1">
+                            <AlertCircle className="h-3.5 w-3.5" />
+                            {promoImageError}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 justify-start mt-2">
+                        <button
+                          disabled={!newPromotionFields.image || promoImageUploading}
+                          onClick={() => {
+                            if (newPromotionFields.image) {
+                              const launched = {
+                                id: Date.now().toString(),
+                                image: newPromotionFields.image,
+                                active: true,
+                                isSponsored: false,
+                                sponsoredStatus: 'none'
+                              };
+                              updatePromotions([launched, ...promotionsList]);
+                              setNewPromotionFields({ image: '' });
+                              setShowAddPromotion(false);
+                            }
+                          }}
+                          className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-emerald-700/10 cursor-pointer btn-active-press border border-emerald-700/10"
+                        >
+                          Save Promotion Flyer
+                        </button>
+                        <button
+                          onClick={() => setShowAddPromotion(false)}
+                          className="py-2.5 px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-xs rounded-xl cursor-pointer btn-active-press"
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  )}
 
+                  {/* Promotions Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {promotionsList.length > 0 ? (
+                      promotionsList.map((promo) => (
+                        <div key={promo.id} className="card-premium rounded-3xl overflow-hidden flex flex-col relative bg-white border border-slate-150">
+                          <div className="h-44 bg-slate-50 overflow-hidden relative group select-none">
+                            <img 
+                              src={window.getImageUrl(promo.image)} 
+                              alt="Promotion Banner" 
+                              className="w-full h-full object-cover"
+                            />
+                            
+                            {/* Sponsorship Status Badge */}
+                            <div className="absolute top-4 right-4 z-10">
+                              {promo.isSponsored ? (
+                                <span className="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 border border-emerald-500">
+                                  <Sparkles className="h-3 w-3 fill-current text-white animate-pulse" /> Live Sponsored Ad
+                                </span>
+                              ) : promo.sponsoredStatus === 'pending' ? (
+                                <span className="bg-amber-500 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 border border-amber-450 animate-pulse">
+                                  <Clock className="h-3 w-3" /> Ad Review Pending
+                                </span>
+                              ) : promo.sponsoredStatus === 'rejected' ? (
+                                <span className="bg-rose-600 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 border border-rose-500">
+                                  <X className="h-3 w-3" /> Ad Rejected
+                                </span>
+                              ) : (
+                                <span className="bg-slate-600/90 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-xs">
+                                  Free Profile Listing
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="p-6 flex flex-col gap-4 text-left justify-between flex-1">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Promotion Type</span>
+                              <span className="text-xs font-bold text-slate-700">Visual campaign banner loaded on your business page.</span>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-slate-100 pt-4 mt-1">
+                              <span className="text-[10px] text-slate-400 font-bold">
+                                {promo.sponsoredExpiry ? `Ad Expiry: ${new Date(promo.sponsoredExpiry).toLocaleDateString()}` : 'No expiry set'}
+                              </span>
+
+                              <div className="flex flex-wrap gap-2">
+                                {!promo.isSponsored && promo.sponsoredStatus !== 'pending' && (
+                                  <button
+                                    onClick={() => handleSponsorAdPayment(promo)}
+                                    disabled={adPaymentLoadingMap[promo.id]}
+                                    className="py-1.5 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-black uppercase cursor-pointer btn-active-press flex items-center gap-1.5 border border-amber-600/10 shadow-xs"
+                                  >
+                                    {adPaymentLoadingMap[promo.id] ? (
+                                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                      <Sparkles className="h-3.5 w-3.5 fill-current text-white" />
+                                    )}
+                                    Promote to Homepage (₹99)
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => {
+                                    const isCurrentlyActive = promo.active !== false;
+                                    const updated = promotionsList.map(p => 
+                                      ((p.id && p.id === promo.id) || (p._id && p._id === promo._id))
+                                        ? { ...p, active: !isCurrentlyActive } 
+                                        : p
+                                    );
+                                    updatePromotions(updated);
+                                  }}
+                                  className={`py-1.5 px-3 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer btn-active-press ${(promo.active !== false) ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-emerald-50 hover:bg-emerald-100 text-[#027244]'}`}
+                                >
+                                  {(promo.active !== false) ? 'Pause' : 'Activate'}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const updated = promotionsList.filter(p => 
+                                      !((p.id && p.id === promo.id) || (p._id && p._id === promo._id))
+                                    );
+                                    updatePromotions(updated);
+                                  }}
+                                  className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[10px] font-black uppercase cursor-pointer btn-active-press"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="col-span-full py-12 text-center text-slate-400 text-xs font-semibold bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+                        No flyer promotions uploaded yet. Click "Upload Flyer" to list your first visual promotion flyer poster.
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )}
+
 
           {/* ========================================================================= */}
           {/* TAB: MENU DASHBOARD */}
