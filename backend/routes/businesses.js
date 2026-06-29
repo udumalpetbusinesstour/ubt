@@ -760,14 +760,26 @@ router.get('/', async (req, res) => {
     } else if (sort === 'referrals') {
       businesses.sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
     } else if (sort === 'reviews') {
-      const getRevCount = (b) => Number(b.googleReviewsCount ?? b.rawGoogleReviewsCount ?? b.reviewsCount ?? (b.googleReviews ? b.googleReviews.length : 0) ?? 0);
-      const getRat = (b) => Number(b.googleRating ?? b.rawGoogleRating ?? b.rating ?? 0);
-      businesses.sort((a, b) => {
-        const cA = getRevCount(a);
-        const cB = getRevCount(b);
-        if (cB !== cA) return cB - cA;
-        return getRat(b) - getRat(a);
+      let totalRatingSum = 0;
+      let totalRatingCount = 0;
+      businesses.forEach(b => {
+        const r = Number(b.googleRating ?? b.rawGoogleRating ?? b.rating ?? 0);
+        if (r > 0) {
+          totalRatingSum += r;
+          totalRatingCount++;
+        }
       });
+      const globalAvgC = totalRatingCount > 0 ? (totalRatingSum / totalRatingCount) : 4.0;
+      const confidenceWeightM = 10;
+
+      const getBayesianScore = (b) => {
+        const R = Number(b.googleRating ?? b.rawGoogleRating ?? b.rating ?? 0);
+        const v = Number(b.googleReviewsCount ?? b.rawGoogleReviewsCount ?? b.reviewsCount ?? (b.googleReviews ? b.googleReviews.length : 0) ?? 0);
+        if (v === 0 && R === 0) return 0;
+        return (v / (v + confidenceWeightM)) * R + (confidenceWeightM / (v + confidenceWeightM)) * globalAvgC;
+      };
+
+      businesses.sort((a, b) => getBayesianScore(b) - getBayesianScore(a));
     } else {
       businesses.sort((a, b) => {
         // Premium active vs others

@@ -423,30 +423,44 @@ export default function Home() {
 
   useEffect(() => {
     const fetchFeaturedAndCounts = async () => {
-      // 1. Fetch top 10 businesses based on highest reviews
+      // 1. Fetch top 10 featured businesses based on Bayesian Average formula
       try {
         const res = await fetch('http://localhost:5000/api/businesses?sort=reviews&limit=10');
         const data = await res.json();
-        if (data.success && data.data.length > 0) {
-          const getRevCount = (b) => Number(b.googleReviewsCount ?? b.rawGoogleReviewsCount ?? b.reviewsCount ?? (b.googleReviews ? b.googleReviews.length : 0) ?? 0);
-          const getRat = (b) => Number(b.googleRating ?? b.rawGoogleRating ?? b.rating ?? 0);
+        const listToProcess = (data.success && data.data.length > 0) ? data.data : mockFeatured;
 
-          const sortedByReviews = [...data.data].sort((a, b) => {
-            const cA = getRevCount(a);
-            const cB = getRevCount(b);
-            if (cB !== cA) return cB - cA;
-            return getRat(b) - getRat(a);
-          });
-          setFeaturedBusinesses(sortedByReviews.slice(0, 10));
-        } else {
-          const getRevCount = (b) => Number(b.googleReviewsCount ?? b.rawGoogleReviewsCount ?? b.reviewsCount ?? 0);
-          const sortedMock = [...mockFeatured].sort((a, b) => getRevCount(b) - getRevCount(a));
-          setFeaturedBusinesses(sortedMock.slice(0, 10));
-        }
+        let totalRatingSum = 0;
+        let totalRatingCount = 0;
+        listToProcess.forEach(b => {
+          const r = Number(b.googleRating ?? b.rawGoogleRating ?? b.rating ?? 0);
+          if (r > 0) {
+            totalRatingSum += r;
+            totalRatingCount++;
+          }
+        });
+        const globalAvgC = totalRatingCount > 0 ? (totalRatingSum / totalRatingCount) : 4.0;
+        const confidenceWeightM = 10;
+
+        const getBayesianScore = (b) => {
+          const R = Number(b.googleRating ?? b.rawGoogleRating ?? b.rating ?? 0);
+          const v = Number(b.googleReviewsCount ?? b.rawGoogleReviewsCount ?? b.reviewsCount ?? (b.googleReviews ? b.googleReviews.length : 0) ?? 0);
+          if (v === 0 && R === 0) return 0;
+          return (v / (v + confidenceWeightM)) * R + (confidenceWeightM / (v + confidenceWeightM)) * globalAvgC;
+        };
+
+        const sortedByBayesian = [...listToProcess].sort((a, b) => getBayesianScore(b) - getBayesianScore(a));
+        setFeaturedBusinesses(sortedByBayesian.slice(0, 10));
       } catch (err) {
-        console.warn('Backend server offline, running fallback featured businesses sync.');
-        const getRevCount = (b) => Number(b.googleReviewsCount ?? b.rawGoogleReviewsCount ?? b.reviewsCount ?? 0);
-        const sortedMock = [...mockFeatured].sort((a, b) => getRevCount(b) - getRevCount(a));
+        console.warn('Backend server offline, running fallback Bayesian featured businesses sync.');
+        const confidenceWeightM = 10;
+        const globalAvgC = 4.7;
+        const getBayesianScore = (b) => {
+          const R = Number(b.googleRating ?? b.rating ?? 0);
+          const v = Number(b.googleReviewsCount ?? b.reviewsCount ?? 0);
+          if (v === 0 && R === 0) return 0;
+          return (v / (v + confidenceWeightM)) * R + (confidenceWeightM / (v + confidenceWeightM)) * globalAvgC;
+        };
+        const sortedMock = [...mockFeatured].sort((a, b) => getBayesianScore(b) - getBayesianScore(a));
         setFeaturedBusinesses(sortedMock.slice(0, 10));
       }
 
