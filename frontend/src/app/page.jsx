@@ -1440,96 +1440,98 @@ export default function Home() {
             <p className="text-sm text-slate-500 font-medium">Leading local partners ranked by successful business referrals</p>
           </div>
           
-          <div className="max-w-[1440px] mx-auto w-full px-4 md:px-8 relative">
-            {/* Scroll Left Button */}
-            <button 
-              onClick={() => handleScrollTopViewed('left')}
-              className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
-              aria-label="Scroll Top Contributors Left"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
+          <div className="max-w-[1440px] mx-auto w-full px-4 md:px-8">
+            <div className="relative w-full">
+              {/* Scroll Left Button */}
+              <button 
+                onClick={() => handleScrollTopViewed('left')}
+                className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+                aria-label="Scroll Top Contributors Left"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
 
-            {/* The scrolling wrapper */}
-            <div 
-              ref={topViewedScrollRef}
-              className="flex overflow-x-auto gap-6 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
-            >
-              {topViewedBusinesses.map((biz) => {
-                const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
-                return (
-                  <div 
-                    key={biz._id}
-                    onClick={() => navigate(`/${biz.slug || biz._id}`)}
-                    className="w-[260px] sm:w-[285px] shrink-0 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 text-left snap-start relative overflow-hidden"
-                  >
-                    {/* Logo/Image */}
-                    {biz.logoUrl ? (
-                      <div className="h-14 w-14 rounded-xl border border-slate-100 overflow-hidden bg-white shrink-0 flex items-center justify-center p-0.5">
-                        <img 
-                          src={window.getImageUrl(biz.logoUrl)} 
-                          alt={biz.name} 
-                          className="h-full w-full object-contain" 
+              {/* The scrolling wrapper */}
+              <div 
+                ref={topViewedScrollRef}
+                className="flex overflow-x-auto gap-6 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
+              >
+                {topViewedBusinesses.map((biz) => {
+                  const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
+                  return (
+                    <div 
+                      key={biz._id}
+                      onClick={() => navigate(`/${biz.slug || biz._id}`)}
+                      className="w-[260px] sm:w-[285px] shrink-0 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 text-left snap-start relative overflow-hidden"
+                    >
+                      {/* Logo/Image */}
+                      {biz.logoUrl ? (
+                        <div className="h-14 w-14 rounded-xl border border-slate-100 overflow-hidden bg-white shrink-0 flex items-center justify-center p-0.5">
+                          <img 
+                            src={window.getImageUrl(biz.logoUrl)} 
+                            alt={biz.name} 
+                            className="h-full w-full object-contain" 
+                            style={{
+                              filter: !isSubscribed ? 'blur(3px) grayscale(30%)' : 'none'
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div 
+                          className="h-14 w-14 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-650 text-white font-extrabold text-lg flex items-center justify-center shrink-0 uppercase select-none"
                           style={{
                             filter: !isSubscribed ? 'blur(3px) grayscale(30%)' : 'none'
                           }}
-                        />
-                      </div>
-                    ) : (
+                        >
+                          {biz.name ? biz.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'B'}
+                        </div>
+                      )}
+                      
+                      {/* Content details */}
                       <div 
-                        className="h-14 w-14 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-650 text-white font-extrabold text-lg flex items-center justify-center shrink-0 uppercase select-none"
+                        className={`flex flex-col justify-between overflow-hidden flex-grow ${!isSubscribed ? 'select-none pointer-events-none' : ''}`}
                         style={{
-                          filter: !isSubscribed ? 'blur(3px) grayscale(30%)' : 'none'
+                          filter: !isSubscribed ? 'blur(3px)' : 'none'
                         }}
                       >
-                        {biz.name ? biz.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'B'}
-                      </div>
-                    )}
-                    
-                    {/* Content details */}
-                    <div 
-                      className={`flex flex-col justify-between overflow-hidden flex-grow ${!isSubscribed ? 'select-none pointer-events-none' : ''}`}
-                      style={{
-                        filter: !isSubscribed ? 'blur(3px)' : 'none'
-                      }}
-                    >
-                      <div className="flex flex-col gap-0.5">
-                        <h4 className="font-extrabold text-sm text-[#001c41] truncate" title={biz.name}>{biz.name}</h4>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide truncate">{biz.category}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-3 mt-1.5">
-                        <div className="flex items-center gap-0.5 text-xs text-amber-500 font-extrabold">
-                          <Star className="h-3.5 w-3.5 fill-current" />
-                          <span>{(biz.googleRating || 0).toFixed(1)}</span>
+                        <div className="flex flex-col gap-0.5">
+                          <h4 className="font-extrabold text-sm text-[#001c41] truncate" title={biz.name}>{biz.name}</h4>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide truncate">{biz.category}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
-                          <Users className="h-3.5 w-3.5 text-emerald-600" />
-                          <span>{biz.referrals || biz.referralCount || 0} referrals</span>
+                        
+                        <div className="flex items-center gap-3 mt-1.5">
+                          <div className="flex items-center gap-0.5 text-xs text-amber-500 font-extrabold">
+                            <Star className="h-3.5 w-3.5 fill-current" />
+                            <span>{(biz.googleRating || 0).toFixed(1)}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
+                            <Users className="h-3.5 w-3.5 text-emerald-600" />
+                            <span>{biz.referrals || biz.referralCount || 0} referrals</span>
+                          </div>
                         </div>
                       </div>
+
+                      {/* Glassmorphism Lock Overlay for Inactive Subscriptions */}
+                      {!isSubscribed && (
+                        <div 
+                          onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
+                          className="absolute inset-0 bg-slate-900/10 backdrop-blur-xs z-20 transition-all duration-300 hover:bg-slate-900/15 cursor-pointer"
+                        />
+                      )}
                     </div>
+                  );
+                })}
+              </div>
 
-                    {/* Glassmorphism Lock Overlay for Inactive Subscriptions */}
-                    {!isSubscribed && (
-                      <div 
-                        onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
-                        className="absolute inset-0 bg-slate-900/10 backdrop-blur-xs z-20 transition-all duration-300 hover:bg-slate-900/15 cursor-pointer"
-                      />
-                    )}
-                  </div>
-                );
-              })}
+              {/* Scroll Right Button */}
+              <button 
+                onClick={() => handleScrollTopViewed('right')}
+                className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+                aria-label="Scroll Top Viewed Right"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
             </div>
-
-            {/* Scroll Right Button */}
-            <button 
-              onClick={() => handleScrollTopViewed('right')}
-              className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
-              aria-label="Scroll Top Viewed Right"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
           </div>
         </section>
       )}
@@ -1890,21 +1892,21 @@ export default function Home() {
           ].map((faq, idx) => (
             <div 
               key={idx} 
-              className="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] shrink-0 snap-start bg-white border border-slate-200/80 rounded-3xl p-6 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-start select-none gap-3"
+              className="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] shrink-0 snap-start bg-white border border-slate-200/80 rounded-3xl p-7 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-start select-none gap-4"
             >
-              <div className="flex items-start gap-2 w-full">
-                <span className="h-5.5 w-5.5 rounded-full bg-emerald-50 text-[#027244] font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5 border border-emerald-100">
+              <div className="flex items-start gap-3 w-full">
+                <span className="h-6 w-6 rounded-full bg-emerald-50 text-[#027244] font-black text-xs flex items-center justify-center shrink-0 mt-0.5 border border-emerald-100">
                   Q
                 </span>
-                <h3 className="font-extrabold text-[14px] text-slate-800 leading-snug">
+                <h3 className="font-extrabold text-[15px] sm:text-base text-slate-800 leading-snug">
                   {faq.q}
                 </h3>
               </div>
-              <div className="flex items-start gap-2 border-t border-slate-100 pt-3">
-                <span className="h-5.5 w-5.5 rounded-full bg-slate-50 text-slate-400 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5 border border-slate-100">
+              <div className="flex items-start gap-3 border-t border-slate-100 pt-4">
+                <span className="h-6 w-6 rounded-full bg-slate-50 text-slate-400 font-black text-xs flex items-center justify-center shrink-0 mt-0.5 border border-slate-100">
                   A
                 </span>
-                <p className="text-[13px] text-slate-500 leading-relaxed font-medium">
+                <p className="text-[13.5px] sm:text-sm text-slate-500 leading-relaxed font-semibold">
                   {faq.a}
                 </p>
               </div>
