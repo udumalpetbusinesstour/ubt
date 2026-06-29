@@ -1514,10 +1514,7 @@ export default function Home() {
                 <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">What People Say</h2>
                 <button 
                   type="button"
-                  onClick={() => {
-                    setIsGoogleReviewModalOpen(true);
-                    window.open('https://g.page/r/Ca2-Khy1EIWLEBM/review', '_blank');
-                  }} 
+                  onClick={() => setIsGoogleReviewModalOpen(true)} 
                   className="inline-flex items-center gap-1 bg-[#4285F4]/10 hover:bg-[#4285F4]/15 text-[#4285F4] px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer border border-[#4285F4]/20 hover:scale-102"
                 >
                   <Star className="h-3 w-3 fill-current text-[#F4B400] border-none" />
@@ -1933,11 +1930,9 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <a
                   href="https://g.page/r/Ca2-Khy1EIWLEBM/review"
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="hidden sm:inline-flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all"
                 >
-                  <span>Open in Google App</span>
+                  <span>Open Review Form</span>
                   <ArrowRight className="h-3.5 w-3.5" />
                 </a>
                 <button
@@ -1966,8 +1961,6 @@ export default function Home() {
               <span>Looking to write an honest review directly on Google Maps?</span>
               <a
                 href="https://g.page/r/Ca2-Khy1EIWLEBM/review"
-                target="_blank"
-                rel="noopener noreferrer"
                 className="bg-[#4285F4] hover:bg-[#3367D6] text-white px-4 py-2 rounded-xl font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0"
               >
                 <span>Write Review on Google</span>
