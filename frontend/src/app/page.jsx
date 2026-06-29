@@ -1951,7 +1951,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex flex-col border-l border-slate-200 pl-4">
-                  <span className="text-xs font-extrabold text-slate-700">Verified Google Reviews</span>
+                  <span className="text-xs font-extrabold text-slate-700">UBT Reviews</span>
                   <span className="text-[11px] text-slate-500 font-semibold">Based on 128+ community ratings</span>
                 </div>
               </div>
@@ -2014,7 +2014,7 @@ export default function Home() {
                     },
                     ...testimonials.map(t => ({
                       name: t.authorName,
-                      time: 'Verified Reviewer',
+                      time: 'UBT Review',
                       rating: t.rating || 5,
                       text: t.text
                     }))

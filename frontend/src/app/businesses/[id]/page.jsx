@@ -2240,7 +2240,7 @@ Please confirm availability and delivery time.`;
                               <div className="flex flex-col">
                                 <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName || 'Anonymous'}</span>
                                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">
-                                  {rev.isGoogle ? 'Google Review' : 'Verified Customer'}
+                                  {rev.isGoogle ? 'Google Review' : 'UBT Review'}
                                 </span>
                               </div>
                             </div>
@@ -2583,7 +2583,7 @@ Please confirm availability and delivery time.`;
                         <div className="flex flex-col">
                           <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName || 'Anonymous'}</span>
                           <span className={`text-[8.5px] font-bold uppercase tracking-widest mt-1 block ${rev.isGoogle ? 'text-amber-600' : 'text-slate-400'}`}>
-                            {rev.isGoogle ? 'Google Review' : 'Verified Customer'}
+                            {rev.isGoogle ? 'Google Review' : 'UBT Review'}
                           </span>
                         </div>
                       </div>

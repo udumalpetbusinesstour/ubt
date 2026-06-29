@@ -750,35 +750,36 @@ router.get('/', async (req, res) => {
     }));
     businesses = businessesWithCounts;
 
+    // Calculate Bayesian Average score helper
+    let totalRatingSum = 0;
+    let totalRatingCount = 0;
+    businesses.forEach(b => {
+      const r = Number(b.googleRating ?? b.rawGoogleRating ?? b.rating ?? 0);
+      if (r > 0) {
+        totalRatingSum += r;
+        totalRatingCount++;
+      }
+    });
+    const globalAvgC = totalRatingCount > 0 ? (totalRatingSum / totalRatingCount) : 4.0;
+    const confidenceWeightM = 10;
+
+    const getBayesianScore = (b) => {
+      const R = Number(b.googleRating ?? b.rawGoogleRating ?? b.rating ?? 0);
+      const v = Number(b.googleReviewsCount ?? b.rawGoogleReviewsCount ?? b.reviewsCount ?? (b.googleReviews ? b.googleReviews.length : 0) ?? 0);
+      if (v === 0 && R === 0) return 0;
+      return (v / (v + confidenceWeightM)) * R + (confidenceWeightM / (v + confidenceWeightM)) * globalAvgC;
+    };
+
     // Custom Sorting: 
     // If sort === 'views', sort by views count.
     // If sort === 'referrals', sort by referral count.
-    // If sort === 'reviews', sort by review count descending.
+    // If sort === 'reviews' or 'rating', sort by Bayesian Average score.
     // Otherwise, use the standard priority sorting:
     if (sort === 'views') {
       businesses.sort((a, b) => (b.views || 0) - (a.views || 0));
     } else if (sort === 'referrals') {
       businesses.sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
-    } else if (sort === 'reviews') {
-      let totalRatingSum = 0;
-      let totalRatingCount = 0;
-      businesses.forEach(b => {
-        const r = Number(b.googleRating ?? b.rawGoogleRating ?? b.rating ?? 0);
-        if (r > 0) {
-          totalRatingSum += r;
-          totalRatingCount++;
-        }
-      });
-      const globalAvgC = totalRatingCount > 0 ? (totalRatingSum / totalRatingCount) : 4.0;
-      const confidenceWeightM = 10;
-
-      const getBayesianScore = (b) => {
-        const R = Number(b.googleRating ?? b.rawGoogleRating ?? b.rating ?? 0);
-        const v = Number(b.googleReviewsCount ?? b.rawGoogleReviewsCount ?? b.reviewsCount ?? (b.googleReviews ? b.googleReviews.length : 0) ?? 0);
-        if (v === 0 && R === 0) return 0;
-        return (v / (v + confidenceWeightM)) * R + (confidenceWeightM / (v + confidenceWeightM)) * globalAvgC;
-      };
-
+    } else if (sort === 'reviews' || sort === 'rating') {
       businesses.sort((a, b) => getBayesianScore(b) - getBayesianScore(a));
     } else {
       businesses.sort((a, b) => {
@@ -794,8 +795,8 @@ router.get('/', async (req, res) => {
         if (aActive && !bActive) return -1;
         if (!aActive && bActive) return 1;
 
-        // Rating sort
-        return b.googleRating - a.googleRating;
+        // Bayesian rating sort
+        return getBayesianScore(b) - getBayesianScore(a);
       });
     }
 
