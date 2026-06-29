@@ -1899,6 +1899,8 @@ export default function Home() {
             )}
           </div>
         </div>
+      )}
+
       {/* Google Review iframe Modal */}
       {isGoogleReviewModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
