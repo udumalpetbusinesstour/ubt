@@ -1500,7 +1500,10 @@ export default function Home() {
                 <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">What People Say</h2>
                 <button 
                   type="button"
-                  onClick={() => setIsGoogleReviewModalOpen(true)} 
+                  onClick={() => {
+                    setIsGoogleReviewModalOpen(true);
+                    window.open('https://g.page/r/Ca2-Khy1EIWLEBM/review', '_blank');
+                  }} 
                   className="inline-flex items-center gap-1 bg-[#4285F4]/10 hover:bg-[#4285F4]/15 text-[#4285F4] px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer border border-[#4285F4]/20 hover:scale-102"
                 >
                   <Star className="h-3 w-3 fill-current text-[#F4B400] border-none" />
