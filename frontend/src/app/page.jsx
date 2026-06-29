@@ -194,6 +194,7 @@ export default function Home() {
   const [topViewedBusinesses, setTopViewedBusinesses] = useState([]);
   const [activeFaq, setActiveFaq] = useState(null);
   const [dbCategories, setDbCategories] = useState([]);
+  const [isGoogleReviewModalOpen, setIsGoogleReviewModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -1497,16 +1498,15 @@ export default function Home() {
             <div className="text-left flex flex-col gap-1.5">
               <div className="flex flex-wrap items-center gap-3">
                 <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">What People Say</h2>
-                <a 
-                  href="https://g.page/r/Ca2-Khy1EIWLEBM/review" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <button 
+                  type="button"
+                  onClick={() => setIsGoogleReviewModalOpen(true)} 
                   className="inline-flex items-center gap-1 bg-[#4285F4]/10 hover:bg-[#4285F4]/15 text-[#4285F4] px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer border border-[#4285F4]/20 hover:scale-102"
                 >
                   <Star className="h-3 w-3 fill-current text-[#F4B400] border-none" />
                   <span>See or write a review on Google</span>
                   <ArrowRight className="h-3 w-3" />
-                </a>
+                </button>
               </div>
               <p className="text-sm text-slate-500 font-medium">Real experiences shared by our core community member creators</p>
             </div>
@@ -1894,6 +1894,67 @@ export default function Home() {
                 </button>
               </form>
             )}
+          </div>
+        </div>
+      {/* Google Review iframe Modal */}
+      {isGoogleReviewModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-4xl w-full h-[85vh] max-h-[750px] shadow-2xl flex flex-col overflow-hidden border border-slate-200 animate-scaleUp">
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-[#4285F4] to-[#34A853] text-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center font-extrabold text-white">
+                  <Star className="h-5 w-5 text-amber-300 fill-current" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <h3 className="font-extrabold text-base md:text-lg leading-tight">Google Reviews & Ratings</h3>
+                  <span className="text-xs text-white/90 font-medium">Udumalpet Business Tour (UBT)</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href="https://g.page/r/Ca2-Khy1EIWLEBM/review"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden sm:inline-flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all"
+                >
+                  <span>Open in Google App</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setIsGoogleReviewModalOpen(false)}
+                  className="h-9 w-9 rounded-xl bg-black/20 hover:bg-black/30 text-white flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body with iframe */}
+            <div className="flex-1 w-full bg-slate-100 relative overflow-hidden">
+              <iframe
+                title="Google Review Embed"
+                src="https://maps.google.com/maps?q=Udumalpet+Business+Tour&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                className="w-full h-full border-0"
+                allowFullScreen=""
+                loading="lazy"
+              />
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0 text-xs text-slate-600 font-semibold">
+              <span>Looking to write an honest review directly on Google Maps?</span>
+              <a
+                href="https://g.page/r/Ca2-Khy1EIWLEBM/review"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#4285F4] hover:bg-[#3367D6] text-white px-4 py-2 rounded-xl font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0"
+              >
+                <span>Write Review on Google</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </a>
+            </div>
           </div>
         </div>
       )}
