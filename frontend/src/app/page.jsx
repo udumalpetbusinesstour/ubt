@@ -340,12 +340,13 @@ export default function Home() {
         setTopViewedBusinesses(mapped);
       }
 
-      // 2. Fetch all businesses to calculate category counts dynamically
+      // 2. Fetch all businesses to calculate category counts and average ratings dynamically
       try {
         const res = await fetch('http://localhost:5000/api/businesses');
         const data = await res.json();
         if (data.success) {
           const counts = {};
+          const ratingSums = {};
           const availableCategories = [
             'Automotive', 'Beauty & Wellness', 'Education', 'Electronics', 'Food & Restaurants',
             'Health & Medical', 'Home Services', 'Real Estate', 'Shopping', 'Manufacturing',
@@ -354,15 +355,24 @@ export default function Home() {
           ];
           availableCategories.forEach(c => {
             counts[c] = 0;
+            ratingSums[c] = 0;
           });
           data.data.forEach(biz => {
-            if (counts[biz.category] !== undefined) {
-              counts[biz.category]++;
+            const cat = biz.category;
+            const rat = Number(biz.googleRating || biz.rating || 0);
+            if (counts[cat] !== undefined) {
+              counts[cat]++;
+              ratingSums[cat] += rat;
             } else {
-              counts[biz.category] = 1;
+              counts[cat] = 1;
+              ratingSums[cat] = rat;
             }
           });
-          updateDynamicCategories(counts);
+          const avgRatings = {};
+          Object.keys(counts).forEach(c => {
+            avgRatings[c] = counts[c] > 0 ? (ratingSums[c] / counts[c]) : 0;
+          });
+          updateDynamicCategories(counts, avgRatings);
         }
       } catch (err) {
         console.warn('API error, using standard fallback category counts.');
@@ -386,11 +396,31 @@ export default function Home() {
           'Sports & Fitness': 41,
           'Public Sector': 38
         };
-        updateDynamicCategories(mockCounts);
+        const mockAvgRatings = {
+          'Automotive': 4.6,
+          'Beauty & Wellness': 4.8,
+          'Education': 4.7,
+          'Electronics': 4.5,
+          'Food & Restaurants': 4.9,
+          'Health & Medical': 4.6,
+          'Home Services': 4.7,
+          'Real Estate': 4.4,
+          'Shopping': 4.6,
+          'Manufacturing': 4.3,
+          'Professional Services': 4.7,
+          'Travel & Hospitality': 4.5,
+          'Construction': 4.4,
+          'Agriculture': 4.2,
+          'Finance & Insurance': 4.3,
+          'Events & Entertainment': 4.6,
+          'Sports & Fitness': 4.5,
+          'Public Sector': 4.1
+        };
+        updateDynamicCategories(mockCounts, mockAvgRatings);
       }
     };
 
-    const updateDynamicCategories = (counts) => {
+    const updateDynamicCategories = (counts, avgRatings = {}) => {
       const availableCategories = [
         'Automotive', 'Beauty & Wellness', 'Education', 'Electronics', 'Food & Restaurants',
         'Health & Medical', 'Home Services', 'Real Estate', 'Shopping', 'Manufacturing',
@@ -463,10 +493,16 @@ export default function Home() {
         .map(name => ({
           name,
           count: counts[name] || 0,
+          avgRating: avgRatings[name] || 0,
           icon: iconMap[name] || <LayoutGrid className="h-7 w-7 text-slate-500" />,
           path: `/businesses?category=${encodeURIComponent(name)}`
         }))
-        .sort((a, b) => b.count - a.count)
+        .sort((a, b) => {
+          if (b.count !== a.count) {
+            return b.count - a.count;
+          }
+          return b.avgRating - a.avgRating;
+        })
         .slice(0, 11);
 
       // 12th item is More pointing to Explore Categories
