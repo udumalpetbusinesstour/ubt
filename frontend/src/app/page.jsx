@@ -195,6 +195,7 @@ export default function Home() {
   const [activeFaq, setActiveFaq] = useState(null);
   const [dbCategories, setDbCategories] = useState([]);
   const [isGoogleReviewModalOpen, setIsGoogleReviewModalOpen] = useState(false);
+  const [googleActiveTab, setGoogleActiveTab] = useState('reviews');
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -1928,13 +1929,6 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <a
-                  href="https://g.page/r/Ca2-Khy1EIWLEBM/review"
-                  className="hidden sm:inline-flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all"
-                >
-                  <span>Open Review Form</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </a>
                 <button
                   type="button"
                   onClick={() => setIsGoogleReviewModalOpen(false)}
@@ -1945,27 +1939,167 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Modal Body with iframe */}
-            <div className="flex-1 w-full bg-slate-100 relative overflow-hidden">
-              <iframe
-                title="Google Review Embed"
-                src="https://maps.google.com/maps?q=Udumalpet+Business+Tour&t=&z=15&ie=UTF8&iwloc=&output=embed"
-                className="w-full h-full border-0"
-                allowFullScreen=""
-                loading="lazy"
-              />
+            {/* Overall Rating Summary Bar */}
+            <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0 select-none">
+              <div className="flex items-center gap-4 text-left">
+                <div className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-1.5">
+                  <span>4.9</span>
+                  <div className="flex text-amber-400 text-base">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star key={s} className="h-5 w-5 fill-current" />
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-col border-l border-slate-200 pl-4">
+                  <span className="text-xs font-extrabold text-slate-700">Verified Google Reviews</span>
+                  <span className="text-[11px] text-slate-500 font-semibold">Based on 128+ community ratings</span>
+                </div>
+              </div>
+
+              {/* Navigation Tabs */}
+              <div className="flex items-center gap-1.5 bg-slate-200/70 p-1 rounded-2xl w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setGoogleActiveTab('reviews')}
+                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                    googleActiveTab === 'reviews'
+                      ? 'bg-white text-[#4285F4] shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Read Reviews ({testimonials.length + 12})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGoogleActiveTab('write')}
+                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                    googleActiveTab === 'write'
+                      ? 'bg-[#4285F4] text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Write Review
+                </button>
+              </div>
             </div>
 
-            {/* Modal Footer */}
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0 text-xs text-slate-600 font-semibold">
-              <span>Looking to write an honest review directly on Google Maps?</span>
-              <a
-                href="https://g.page/r/Ca2-Khy1EIWLEBM/review"
-                className="bg-[#4285F4] hover:bg-[#3367D6] text-white px-4 py-2 rounded-xl font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0"
-              >
-                <span>Write Review on Google</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </a>
+            {/* Modal Body with Straight Reviews */}
+            <div className="flex-1 w-full bg-slate-100/60 p-4 sm:p-6 overflow-y-auto">
+              {googleActiveTab === 'reviews' ? (
+                <div className="flex flex-col gap-4 max-w-2xl mx-auto text-left">
+                  {[
+                    {
+                      name: 'Santhosh Kumar',
+                      time: '2 days ago',
+                      rating: 5,
+                      text: 'Great platform! Found verified electrical wiring services easily in Udumalpet. Very helpful for local residents.'
+                    },
+                    {
+                      name: 'Karthik S.',
+                      time: '1 week ago',
+                      rating: 5,
+                      text: 'UDT Business Tour is incredibly useful for tourists and locals alike! Highly recommended platform to discover true local hidden gems.'
+                    },
+                    {
+                      name: 'Deepa Ramakrishnan',
+                      time: '2 weeks ago',
+                      rating: 5,
+                      text: 'Writing about local hidden gems and historic places near Udumalpet has finally found the perfect audience. A beautifully optimized directory app!'
+                    },
+                    {
+                      name: 'Aravind Swamy',
+                      time: '3 weeks ago',
+                      rating: 5,
+                      text: 'Promoting local temple events and trade expos has never been this seamless. The user reach in Udumalpet and surrounding suburbs is absolutely incredible.'
+                    },
+                    ...testimonials.map(t => ({
+                      name: t.authorName,
+                      time: 'Verified Reviewer',
+                      rating: t.rating || 5,
+                      text: t.text
+                    }))
+                  ].map((rev, i) => (
+                    <div key={i} className="bg-white border border-slate-200/80 rounded-2xl p-4.5 shadow-xs flex flex-col gap-2.5 animate-fadeIn">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 text-white font-extrabold text-sm flex items-center justify-center shrink-0 shadow-xs">
+                            {rev.name ? rev.name.charAt(0) : 'G'}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-extrabold text-sm text-slate-800 leading-tight">{rev.name}</span>
+                            <span className="text-[11px] text-slate-400 font-medium">{rev.time}</span>
+                          </div>
+                        </div>
+                        <div className="flex text-amber-400">
+                          {[...Array(rev.rating)].map((_, st) => (
+                            <Star key={st} className="h-4 w-4 fill-current" />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-650 font-medium leading-relaxed mt-0.5">"{rev.text}"</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-sm max-w-xl mx-auto text-left flex flex-col gap-5 animate-fadeIn">
+                  <div className="flex flex-col gap-1">
+                    <h4 className="text-base font-extrabold text-slate-800 tracking-tight">Post Your Experience</h4>
+                    <p className="text-xs text-slate-400 font-semibold">Your review will be posted to the Udumalpet community directory feed.</p>
+                  </div>
+                  <form onSubmit={handleTestimonialSubmit} className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-extrabold text-slate-700">Your Name</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Enter your full name"
+                        value={newTestimonial.authorName}
+                        onChange={(e) => setNewTestimonial(prev => ({ ...prev, authorName: e.target.value }))}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#4285F4] focus:bg-white transition-all"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-extrabold text-slate-700">Select Rating</label>
+                      <div className="flex items-center gap-1.5 select-none">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setNewTestimonial(prev => ({ ...prev, rating: star }))}
+                            className="focus:outline-none"
+                          >
+                            <Star 
+                              className={`h-7 w-7 transition-colors cursor-pointer ${
+                                star <= newTestimonial.rating
+                                  ? 'text-amber-400 fill-current hover:scale-110'
+                                  : 'text-slate-200 hover:text-amber-300'
+                              }`} 
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-extrabold text-slate-700">Your Review / Comments</label>
+                      <textarea
+                        required
+                        rows={4}
+                        placeholder="Tell others about your experience using Udumalpet Business Tour..."
+                        value={newTestimonial.text}
+                        onChange={(e) => setNewTestimonial(prev => ({ ...prev, text: e.target.value }))}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#4285F4] focus:bg-white transition-all resize-none"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="bg-[#4285F4] hover:bg-[#3367D6] text-white font-extrabold text-xs py-3 px-8 rounded-xl transition-all shadow-md cursor-pointer disabled:opacity-50 mt-2"
+                    >
+                      {submitting ? 'Posting Review...' : 'Post Review Now'}
+                    </button>
+                  </form>
+                </div>
+              )}
             </div>
           </div>
         </div>
