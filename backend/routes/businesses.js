@@ -761,13 +761,15 @@ router.get('/', async (req, res) => {
       }
     });
     const globalAvgC = totalRatingCount > 0 ? (totalRatingSum / totalRatingCount) : 4.0;
-    const confidenceWeightM = 10;
+    const confidenceWeightM = 50;
 
     const getBayesianScore = (b) => {
       const R = Number(b.googleRating ?? b.rawGoogleRating ?? b.rating ?? 0);
       const v = Number(b.googleReviewsCount ?? b.rawGoogleReviewsCount ?? b.reviewsCount ?? (b.googleReviews ? b.googleReviews.length : 0) ?? 0);
       if (v === 0 && R === 0) return 0;
-      return (v / (v + confidenceWeightM)) * R + (confidenceWeightM / (v + confidenceWeightM)) * globalAvgC;
+      const bayesianTerm = (v / (v + confidenceWeightM)) * R + (confidenceWeightM / (v + confidenceWeightM)) * globalAvgC;
+      const volumeBonus = 0.1 * Math.log10(v + 1);
+      return bayesianTerm + volumeBonus;
     };
 
     // Custom Sorting: 
