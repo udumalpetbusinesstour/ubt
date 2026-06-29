@@ -417,18 +417,26 @@ export default function Home() {
         const res = await fetch('http://localhost:5000/api/businesses');
         const data = await res.json();
         if (data.success && data.data.length > 0) {
+          const getRevCount = (b) => Number(b.googleReviewsCount ?? b.rawGoogleReviewsCount ?? b.reviewsCount ?? (b.googleReviews ? b.googleReviews.length : 0) ?? 0);
+          const getRat = (b) => Number(b.googleRating ?? b.rawGoogleRating ?? b.rating ?? 0);
+
           const sortedByReviews = [...data.data].sort((a, b) => {
-            const reviewsCountA = Number(a.googleReviewsCount || a.rawGoogleReviewsCount || a.reviewsCount || (a.googleReviews ? a.googleReviews.length : 0));
-            const reviewsCountB = Number(b.googleReviewsCount || b.rawGoogleReviewsCount || b.reviewsCount || (b.googleReviews ? b.googleReviews.length : 0));
-            if (reviewsCountB !== reviewsCountA) return reviewsCountB - reviewsCountA;
-            const ratingA = Number(a.googleRating || a.rawGoogleRating || a.rating || 0);
-            const ratingB = Number(b.googleRating || b.rawGoogleRating || b.rating || 0);
-            return ratingB - ratingA;
+            const cA = getRevCount(a);
+            const cB = getRevCount(b);
+            if (cB !== cA) return cB - cA;
+            return getRat(b) - getRat(a);
           });
           setFeaturedBusinesses(sortedByReviews.slice(0, 10));
+        } else {
+          const getRevCount = (b) => Number(b.googleReviewsCount ?? b.rawGoogleReviewsCount ?? b.reviewsCount ?? 0);
+          const sortedMock = [...mockFeatured].sort((a, b) => getRevCount(b) - getRevCount(a));
+          setFeaturedBusinesses(sortedMock.slice(0, 10));
         }
       } catch (err) {
         console.warn('Backend server offline, running fallback featured businesses sync.');
+        const getRevCount = (b) => Number(b.googleReviewsCount ?? b.rawGoogleReviewsCount ?? b.reviewsCount ?? 0);
+        const sortedMock = [...mockFeatured].sort((a, b) => getRevCount(b) - getRevCount(a));
+        setFeaturedBusinesses(sortedMock.slice(0, 10));
       }
 
       // 1b. Fetch top viewed businesses
