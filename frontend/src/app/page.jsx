@@ -30,6 +30,7 @@ const mockFeatured = [
     locality: 'Udumalpet',
     googleRating: 4.9,
     googleReviewsCount: 340,
+    referrals: 28,
     isPremium: true,
     subscriptionStatus: 'active',
     isAddressVerified: true,
@@ -45,6 +46,7 @@ const mockFeatured = [
     locality: 'Gandhi Nagar, Udumalpet',
     googleRating: 4.8,
     googleReviewsCount: 290,
+    referrals: 24,
     isPremium: true,
     subscriptionStatus: 'active',
     isAddressVerified: true,
@@ -60,6 +62,7 @@ const mockFeatured = [
     locality: 'Pollachi Road, Udumalpet',
     googleRating: 4.8,
     googleReviewsCount: 245,
+    referrals: 19,
     isPremium: true,
     subscriptionStatus: 'active',
     isAddressVerified: true,
@@ -75,6 +78,7 @@ const mockFeatured = [
     locality: 'Central Bus Stand, Udumalpet',
     googleRating: 4.7,
     googleReviewsCount: 215,
+    referrals: 16,
     isPremium: true,
     subscriptionStatus: 'active',
     isAddressVerified: true,
@@ -90,6 +94,7 @@ const mockFeatured = [
     locality: 'Pollachi Road, Udumalpet',
     googleRating: 4.7,
     googleReviewsCount: 180,
+    referrals: 14,
     isPremium: true,
     subscriptionStatus: 'active',
     isAddressVerified: true,
@@ -105,6 +110,7 @@ const mockFeatured = [
     locality: 'Palani Road, Udumalpet',
     googleRating: 4.9,
     googleReviewsCount: 165,
+    referrals: 12,
     isPremium: true,
     subscriptionStatus: 'active',
     isAddressVerified: true,
@@ -120,6 +126,7 @@ const mockFeatured = [
     locality: 'Kuttai Thidal, Udumalpet',
     googleRating: 4.8,
     googleReviewsCount: 152,
+    referrals: 10,
     isPremium: true,
     subscriptionStatus: 'active',
     isAddressVerified: true,
@@ -135,6 +142,7 @@ const mockFeatured = [
     locality: 'Main Bazaar, Udumalpet',
     googleRating: 4.6,
     googleReviewsCount: 140,
+    referrals: 9,
     isPremium: true,
     subscriptionStatus: 'active',
     isAddressVerified: true,
@@ -150,6 +158,7 @@ const mockFeatured = [
     locality: 'Bus Stand Complex, Udumalpet',
     googleRating: 4.7,
     googleReviewsCount: 135,
+    referrals: 7,
     isPremium: true,
     subscriptionStatus: 'active',
     isAddressVerified: true,
@@ -165,6 +174,7 @@ const mockFeatured = [
     locality: 'Thirumoorthy Dam Road, Udumalpet',
     googleRating: 4.8,
     googleReviewsCount: 128,
+    referrals: 5,
     isPremium: true,
     subscriptionStatus: 'active',
     isAddressVerified: true,
@@ -414,7 +424,7 @@ export default function Home() {
     const fetchFeaturedAndCounts = async () => {
       // 1. Fetch top 10 businesses based on highest reviews
       try {
-        const res = await fetch('http://localhost:5000/api/businesses');
+        const res = await fetch('http://localhost:5000/api/businesses?sort=reviews&limit=10');
         const data = await res.json();
         if (data.success && data.data.length > 0) {
           const getRevCount = (b) => Number(b.googleReviewsCount ?? b.rawGoogleReviewsCount ?? b.reviewsCount ?? (b.googleReviews ? b.googleReviews.length : 0) ?? 0);
@@ -439,30 +449,21 @@ export default function Home() {
         setFeaturedBusinesses(sortedMock.slice(0, 10));
       }
 
-      // 1b. Fetch top viewed businesses
+      // 1b. Fetch top 10 contributor businesses (ranked by referrals)
       try {
-        const res = await fetch('http://localhost:5000/api/businesses?sort=views&limit=10');
+        const res = await fetch('http://localhost:5000/api/businesses?sort=referrals&limit=10');
         const data = await res.json();
         if (data.success && data.data.length > 0) {
-          const mapped = data.data.map(b => ({
-            ...b,
-            views: Number(localStorage.getItem(`ubt_views_${b._id}`) || b.views || 0)
-          }));
-          setTopViewedBusinesses(mapped);
+          const sortedByRef = [...data.data].sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
+          setTopViewedBusinesses(sortedByRef.slice(0, 10));
         } else {
-          const mapped = mockFeatured.map(b => ({
-            ...b,
-            views: Number(localStorage.getItem(`ubt_views_${b._id}`) || b.views || 0)
-          }));
-          setTopViewedBusinesses(mapped);
+          const sortedMock = [...mockFeatured].sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
+          setTopViewedBusinesses(sortedMock.slice(0, 10));
         }
       } catch (err) {
-        console.warn('Backend server offline, running fallback top viewed businesses sync.');
-        const mapped = mockFeatured.map(b => ({
-          ...b,
-          views: Number(localStorage.getItem(`ubt_views_${b._id}`) || b.views || 0)
-        }));
-        setTopViewedBusinesses(mapped);
+        console.warn('Backend server offline, running fallback top contributors sync.');
+        const sortedMock = [...mockFeatured].sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
+        setTopViewedBusinesses(sortedMock.slice(0, 10));
       }
 
       // 2. Fetch all businesses to calculate category counts and average ratings dynamically
@@ -1288,12 +1289,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Top Viewed Businesses Section (Horizontal scrollable row with manual scroll chevron controls) */}
+      {/* Top 10 Contributors Section (Horizontal scrollable row with manual scroll chevron controls) */}
       {topViewedBusinesses && topViewedBusinesses.length > 0 && (
         <section className="w-full py-6 md:py-12 flex flex-col gap-6 bg-white overflow-hidden border-b border-slate-100">
           <div className="max-w-[1440px] mx-auto w-full px-4 md:px-8 flex flex-col gap-1 text-left">
-            <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Top Viewed Businesses</h2>
-            <p className="text-sm text-slate-500 font-medium">Most popular local directories ranked by client profile views</p>
+            <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Top 10 Contributors</h2>
+            <p className="text-sm text-slate-500 font-medium">Leading local partners ranked by successful business referrals</p>
           </div>
           
           <div className="max-w-[1440px] mx-auto w-full px-4 md:px-8 relative">
@@ -1301,7 +1302,7 @@ export default function Home() {
             <button 
               onClick={() => handleScrollTopViewed('left')}
               className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
-              aria-label="Scroll Top Viewed Left"
+              aria-label="Scroll Top Contributors Left"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -1359,9 +1360,9 @@ export default function Home() {
                           <Star className="h-3.5 w-3.5 fill-current" />
                           <span>{(biz.googleRating || 0).toFixed(1)}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-slate-400 font-semibold">
-                          <Eye className="h-3.5 w-3.5 text-slate-400" />
-                          <span>{biz.views || 0} views</span>
+                        <div className="flex items-center gap-1 text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
+                          <Users className="h-3.5 w-3.5 text-emerald-600" />
+                          <span>{biz.referrals || biz.referralCount || 0} referrals</span>
                         </div>
                       </div>
                     </div>

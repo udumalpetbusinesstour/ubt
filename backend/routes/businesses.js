@@ -737,19 +737,37 @@ router.get('/', async (req, res) => {
       }
 
       bObj.branchCount = await Business.countDocuments({ parentBusinessId: b._id, status: 'Approved' });
+      
+      const Referral = require('../models/Referral');
+      const refCount = await Referral.countDocuments({
+        $or: [
+          { referrerId: b.ownerId },
+          { referrerBusinessId: b._id }
+        ]
+      });
+      bObj.referrals = refCount || bObj.referrals || 0;
       return bObj;
     }));
     businesses = businessesWithCounts;
 
     // Custom Sorting: 
     // If sort === 'views', sort by views count.
+    // If sort === 'referrals', sort by referral count.
+    // If sort === 'reviews', sort by review count descending.
     // Otherwise, use the standard priority sorting:
-    // 1. Premium + Active first
-    // 2. Verified + Active second
-    // 3. Subscription Expired lower rank
-    // 4. Alphabetical / Newest
     if (sort === 'views') {
       businesses.sort((a, b) => (b.views || 0) - (a.views || 0));
+    } else if (sort === 'referrals') {
+      businesses.sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
+    } else if (sort === 'reviews') {
+      const getRevCount = (b) => Number(b.googleReviewsCount ?? b.rawGoogleReviewsCount ?? b.reviewsCount ?? (b.googleReviews ? b.googleReviews.length : 0) ?? 0);
+      const getRat = (b) => Number(b.googleRating ?? b.rawGoogleRating ?? b.rating ?? 0);
+      businesses.sort((a, b) => {
+        const cA = getRevCount(a);
+        const cB = getRevCount(b);
+        if (cB !== cA) return cB - cA;
+        return getRat(b) - getRat(a);
+      });
     } else {
       businesses.sort((a, b) => {
         // Premium active vs others
