@@ -25,12 +25,28 @@ import {
 const mockFeatured = [
   {
     _id: 'featured_1',
+    name: 'City Hospital',
+    category: 'Hospitals',
+    locality: 'Udumalpet',
+    googleRating: 4.9,
+    googleReviewsCount: 340,
+    isPremium: true,
+    subscriptionStatus: 'active',
+    isAddressVerified: true,
+    coverImageUrl: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=500&q=80',
+    phone: '+91 4252 223456',
+    whatsapp: '+91 98425 22345',
+    highlights: ['24x7 Service', 'Experienced Doctors', 'Pharmacy'],
+  },
+  {
+    _id: 'featured_2',
     name: 'Sri Murugan Stores',
     category: 'Departmental Stores',
     locality: 'Gandhi Nagar, Udumalpet',
-    googleRating: 4.6,
-    googleReviewsCount: 128,
+    googleRating: 4.8,
+    googleReviewsCount: 290,
     isPremium: true,
+    subscriptionStatus: 'active',
     isAddressVerified: true,
     coverImageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80',
     phone: '+91 94430 12345',
@@ -38,13 +54,14 @@ const mockFeatured = [
     highlights: ['Quality Products', 'Good Service', 'Fair Prices'],
   },
   {
-    _id: 'featured_2',
+    _id: 'featured_3',
     name: 'Green Valley Hotel',
     category: 'Hotels & Restaurants',
     locality: 'Pollachi Road, Udumalpet',
     googleRating: 4.8,
-    googleReviewsCount: 98,
+    googleReviewsCount: 245,
     isPremium: true,
+    subscriptionStatus: 'active',
     isAddressVerified: true,
     coverImageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&q=80',
     phone: '+91 98945 99999',
@@ -52,13 +69,29 @@ const mockFeatured = [
     highlights: ['Pure Veg', 'Family Restaurant', 'AC Rooms'],
   },
   {
-    _id: 'featured_3',
-    name: 'R.K. Electricals',
+    _id: 'featured_4',
+    name: 'Dhosaikadai.com',
+    category: 'Food & Restaurants',
+    locality: 'Central Bus Stand, Udumalpet',
+    googleRating: 4.7,
+    googleReviewsCount: 215,
+    isPremium: true,
+    subscriptionStatus: 'active',
+    isAddressVerified: true,
+    coverImageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&q=80',
+    phone: '+91 98422 11111',
+    whatsapp: '+91 98422 11111',
+    highlights: ['Crispy Dosa', 'South Indian Special', 'Quick Delivery'],
+  },
+  {
+    _id: 'featured_5',
+    name: 'R.K. Electricals & Hardware',
     category: 'Electrical Services',
     locality: 'Pollachi Road, Udumalpet',
     googleRating: 4.7,
-    googleReviewsCount: 84,
+    googleReviewsCount: 180,
     isPremium: true,
+    subscriptionStatus: 'active',
     isAddressVerified: true,
     coverImageUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80',
     phone: '+91 98945 43100',
@@ -66,18 +99,79 @@ const mockFeatured = [
     highlights: ['On-time Service', 'Expert Technicians', 'Quality Materials'],
   },
   {
-    _id: 'featured_4',
-    name: 'City Hospital',
-    category: 'Hospitals',
-    locality: 'Udumalpet',
-    googleRating: 4.5,
-    googleReviewsCount: 206,
+    _id: 'featured_6',
+    name: 'Royal Fitness Hub',
+    category: 'Sports & Fitness',
+    locality: 'Palani Road, Udumalpet',
+    googleRating: 4.9,
+    googleReviewsCount: 165,
     isPremium: true,
+    subscriptionStatus: 'active',
     isAddressVerified: true,
-    coverImageUrl: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=500&q=80',
-    phone: '+91 4252 223456',
-    whatsapp: '+91 98425 22345',
-    highlights: ['24x7 Service', 'Experienced Doctors', 'Pharmacy'],
+    coverImageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&q=80',
+    phone: '+91 97877 88888',
+    whatsapp: '+91 97877 88888',
+    highlights: ['Modern Gym Equipment', 'Certified Trainers', 'Steam Bath'],
+  },
+  {
+    _id: 'featured_7',
+    name: 'Udumalpet Care Dental Clinic',
+    category: 'Health & Medical',
+    locality: 'Kuttai Thidal, Udumalpet',
+    googleRating: 4.8,
+    googleReviewsCount: 152,
+    isPremium: true,
+    subscriptionStatus: 'active',
+    isAddressVerified: true,
+    coverImageUrl: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=500&q=80',
+    phone: '+91 94421 33333',
+    whatsapp: '+91 94421 33333',
+    highlights: ['Painless Dentistry', 'Laser Dental Care', 'Affordable Care'],
+  },
+  {
+    _id: 'featured_8',
+    name: 'Vasanth & Co Electronics',
+    category: 'Electronics',
+    locality: 'Main Bazaar, Udumalpet',
+    googleRating: 4.6,
+    googleReviewsCount: 140,
+    isPremium: true,
+    subscriptionStatus: 'active',
+    isAddressVerified: true,
+    coverImageUrl: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=500&q=80',
+    phone: '+91 4252 221144',
+    whatsapp: '+91 98428 55555',
+    highlights: ['Best Festival Offers', 'Easy EMI Available', 'Free Home Delivery'],
+  },
+  {
+    _id: 'featured_9',
+    name: 'Classic Mens Wear',
+    category: 'Shopping',
+    locality: 'Bus Stand Complex, Udumalpet',
+    googleRating: 4.7,
+    googleReviewsCount: 135,
+    isPremium: true,
+    subscriptionStatus: 'active',
+    isAddressVerified: true,
+    coverImageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&q=80',
+    phone: '+91 99443 66666',
+    whatsapp: '+91 99443 66666',
+    highlights: ['Trending Collections', 'Wedding Suites', 'Custom Tailoring'],
+  },
+  {
+    _id: 'featured_10',
+    name: 'Thirumoorthy Resorts',
+    category: 'Travel & Hospitality',
+    locality: 'Thirumoorthy Dam Road, Udumalpet',
+    googleRating: 4.8,
+    googleReviewsCount: 128,
+    isPremium: true,
+    subscriptionStatus: 'active',
+    isAddressVerified: true,
+    coverImageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80',
+    phone: '+91 98422 77777',
+    whatsapp: '+91 98422 77777',
+    highlights: ['Swimming Pool', 'Mountain View Cottages', 'Campfire & BBQ'],
   },
 ];
 
@@ -145,10 +239,25 @@ export default function Home() {
 
   const faqScrollRef = useRef(null);
   const categoryScrollRef = useRef(null);
+  const featuredScrollRef = useRef(null);
   const testimonialScrollRef = useRef(null);
   const topViewedScrollRef = useRef(null);
   const howItWorksScrollRef = useRef(null);
   const stepsRegisterScrollRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (featuredScrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = featuredScrollRef.current;
+        if (scrollLeft + clientWidth >= scrollWidth - 20) {
+          featuredScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          featuredScrollRef.current.scrollBy({ left: 330, behavior: 'smooth' });
+        }
+      }
+    }, 3500);
+    return () => clearInterval(timer);
+  }, []);
 
   // Testimonials state
   const fallbackTestimonials = [
@@ -303,12 +412,20 @@ export default function Home() {
 
   useEffect(() => {
     const fetchFeaturedAndCounts = async () => {
-      // 1. Fetch featured premium businesses
+      // 1. Fetch top 10 businesses based on highest reviews
       try {
-        const res = await fetch('http://localhost:5000/api/businesses?type=Premium');
+        const res = await fetch('http://localhost:5000/api/businesses');
         const data = await res.json();
         if (data.success && data.data.length > 0) {
-          setFeaturedBusinesses(data.data.slice(0, 4));
+          const sortedByReviews = [...data.data].sort((a, b) => {
+            const reviewsCountA = Number(a.googleReviewsCount || a.rawGoogleReviewsCount || a.reviewsCount || (a.googleReviews ? a.googleReviews.length : 0));
+            const reviewsCountB = Number(b.googleReviewsCount || b.rawGoogleReviewsCount || b.reviewsCount || (b.googleReviews ? b.googleReviews.length : 0));
+            if (reviewsCountB !== reviewsCountA) return reviewsCountB - reviewsCountA;
+            const ratingA = Number(a.googleRating || a.rawGoogleRating || a.rating || 0);
+            const ratingB = Number(b.googleRating || b.rawGoogleRating || b.rating || 0);
+            return ratingB - ratingA;
+          });
+          setFeaturedBusinesses(sortedByReviews.slice(0, 10));
         }
       } catch (err) {
         console.warn('Backend server offline, running fallback featured businesses sync.');
@@ -615,6 +732,12 @@ export default function Home() {
     if (!categoryScrollRef.current) return;
     const scrollAmount = direction === 'left' ? -350 : 350;
     categoryScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  };
+
+  const handleScrollFeatured = (direction) => {
+    if (!featuredScrollRef.current) return;
+    const scrollAmount = direction === 'left' ? -350 : 350;
+    featuredScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
   };
 
   const handleScrollTopViewed = (direction) => {
@@ -1011,20 +1134,31 @@ export default function Home() {
         </div>
 
         {/* Carousel buttons */}
-        <button className="h-8 w-8 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute left-1 top-1/2 -translate-y-1/2 shadow text-slate-400 z-10 hover:text-[#027244] cursor-pointer hidden xl:flex">
-          <ChevronLeft className="h-4 w-4" />
+        <button 
+          onClick={() => handleScrollFeatured('left')}
+          className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+          aria-label="Scroll Featured Left"
+        >
+          <ChevronLeft className="h-5 w-5" />
         </button>
-        <button className="h-8 w-8 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute right-1 top-1/2 -translate-y-1/2 shadow text-slate-400 z-10 hover:text-[#027244] cursor-pointer hidden xl:flex">
-          <ChevronRight className="h-4 w-4" />
+        <button 
+          onClick={() => handleScrollFeatured('right')}
+          className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+          aria-label="Scroll Featured Right"
+        >
+          <ChevronRight className="h-5 w-5" />
         </button>
 
-        <div className="flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory sm:grid sm:grid-cols-2 lg:grid-cols-4">
+        <div 
+          ref={featuredScrollRef}
+          className="flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
+        >
           {featuredBusinesses.map((biz) => {
             const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
             return (
               <div 
                 key={biz._id} 
-                className="card-premium group rounded-2xl overflow-hidden flex flex-col cursor-pointer relative w-[calc(50%-10px)] min-w-[145px] shrink-0 snap-start sm:w-auto sm:shrink"
+                className="card-premium group rounded-2xl overflow-hidden flex flex-col cursor-pointer relative w-[280px] sm:w-[320px] shrink-0 snap-start"
                 onClick={() => navigate(`/${biz.slug || biz._id}`)}
               >
                 <div className="h-44 w-full overflow-hidden relative rounded-t-[15px]">
