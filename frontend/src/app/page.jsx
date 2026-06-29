@@ -1951,7 +1951,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex flex-col border-l border-slate-200 pl-4">
-                  <span className="text-xs font-extrabold text-slate-700">UBT Reviews</span>
+                  <span className="text-xs font-extrabold text-slate-700">Google Reviews</span>
                   <span className="text-[11px] text-slate-500 font-semibold">Based on 128+ community ratings</span>
                 </div>
               </div>
@@ -1990,31 +1990,31 @@ export default function Home() {
                   {[
                     {
                       name: 'Santhosh Kumar',
-                      time: '2 days ago',
+                      time: 'Google Review • 2 days ago',
                       rating: 5,
                       text: 'Great platform! Found verified electrical wiring services easily in Udumalpet. Very helpful for local residents.'
                     },
                     {
                       name: 'Karthik S.',
-                      time: '1 week ago',
+                      time: 'Google Review • 1 week ago',
                       rating: 5,
                       text: 'UDT Business Tour is incredibly useful for tourists and locals alike! Highly recommended platform to discover true local hidden gems.'
                     },
                     {
                       name: 'Deepa Ramakrishnan',
-                      time: '2 weeks ago',
+                      time: 'Google Review • 2 weeks ago',
                       rating: 5,
                       text: 'Writing about local hidden gems and historic places near Udumalpet has finally found the perfect audience. A beautifully optimized directory app!'
                     },
                     {
                       name: 'Aravind Swamy',
-                      time: '3 weeks ago',
+                      time: 'Google Review • 3 weeks ago',
                       rating: 5,
                       text: 'Promoting local temple events and trade expos has never been this seamless. The user reach in Udumalpet and surrounding suburbs is absolutely incredible.'
                     },
                     ...testimonials.map(t => ({
                       name: t.authorName,
-                      time: 'UBT Review',
+                      time: 'Google Review',
                       rating: t.rating || 5,
                       text: t.text
                     }))
