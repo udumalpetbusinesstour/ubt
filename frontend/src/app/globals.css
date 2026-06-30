@@ -331,3 +331,24 @@ button:active, .btn-active-press:active, a.btn:active {
   filter: brightness(0) saturate(100%) invert(27%) sepia(82%) saturate(996%) hue-rotate(113deg) brightness(93%) contrast(98%);
 }
 
+/* Custom Overrides to enlarge very small dashboard text globally */
+.text-\[8px\] {
+  font-size: 9.5px !important;
+}
+.text-\[8\.5px\] {
+  font-size: 10px !important;
+}
+.text-\[9px\] {
+  font-size: 11px !important;
+}
+.text-\[9\.5px\] {
+  font-size: 11.5px !important;
+}
+.text-\[10px\] {
+  font-size: 12px !important;
+}
+.text-\[10\.5px\] {
+  font-size: 12.5px !important;
+}
+
+
