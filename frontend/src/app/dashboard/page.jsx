@@ -851,7 +851,7 @@ function DashboardContent() {
     }
   }, [business]);
 
-  const [offersSubTab, setOffersSubTab] = useState('offers');
+  const [offersSubTab, setOffersSubTab] = useState('promotions');
   useEffect(() => {
     const subtabParam = searchParams.get('subtab');
     if (subtabParam) {
@@ -7167,16 +7167,16 @@ function DashboardContent() {
               {/* Sub-tab Toggle Navigation */}
               <div className="flex gap-2 border-b border-slate-100 pb-1">
                 <button
-                  onClick={() => setOffersSubTab('offers')}
-                  className={`pb-3 px-4 font-extrabold text-sm relative transition-all cursor-pointer ${offersSubTab === 'offers' ? 'text-[#027244] border-b-2 border-b-[#027244]' : 'text-slate-400 hover:text-slate-600'}`}
-                >
-                  Discount Offers & Deals
-                </button>
-                <button
                   onClick={() => setOffersSubTab('promotions')}
                   className={`pb-3 px-4 font-extrabold text-sm relative transition-all cursor-pointer ${offersSubTab === 'promotions' ? 'text-[#027244] border-b-2 border-b-[#027244]' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                   Flyer Promotions (Homepage Ads)
+                </button>
+                <button
+                  onClick={() => setOffersSubTab('offers')}
+                  className={`pb-3 px-4 font-extrabold text-sm relative transition-all cursor-pointer ${offersSubTab === 'offers' ? 'text-[#027244] border-b-2 border-b-[#027244]' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  Discount Offers & Deals
                 </button>
               </div>
 
