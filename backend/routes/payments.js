@@ -334,6 +334,7 @@ router.post('/verify-payment', protect, async (req, res) => {
       startDate,
       endDate,
       expiryDate: endDate,
+      autoRenew: !!razorpaySubscriptionId,
     });
 
     // Create Payment record

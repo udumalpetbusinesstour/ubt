@@ -5816,6 +5816,8 @@ const handlePartnerAction = async (partnerId, action) => {
                           <th className="p-4.5">Plan Purchased</th>
                           <th className="p-4.5">Sales Amount</th>
                           <th className="p-4.5">Billing Expiry</th>
+                          <th className="p-4.5">Autopay</th>
+                          <th className="p-4.5">Next Autopay</th>
                           <th className="p-4.5">Status</th>
                           <th className="p-4.5 text-right">Actions</th>
                         </tr>
@@ -5829,6 +5831,18 @@ const handlePartnerAction = async (partnerId, action) => {
                             <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{s.planType} Plan</td>
                             <td className={`p-4.5 font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>₹{s.amount}</td>
                             <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{new Date(s.expiryDate).toLocaleDateString()}</td>
+                            <td className="p-4.5">
+                              <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
+                                s.autoRenew 
+                                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-450' 
+                                  : 'bg-slate-500/10 border-slate-500/20 text-slate-450'
+                              }`}>
+                                {s.autoRenew ? 'Active (ON)' : 'Disabled (OFF)'}
+                              </span>
+                            </td>
+                            <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                              {s.autoRenew && s.nextAutopayDate ? new Date(s.nextAutopayDate).toLocaleDateString() : 'N/A'}
+                            </td>
                             <td className="p-4.5">
                               <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
                                 s.paymentStatus === 'Paid' 

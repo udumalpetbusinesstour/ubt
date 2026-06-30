@@ -1093,6 +1093,8 @@ const getSubscriptions = async (req, res, next) => {
       amount: s.amount || 0,
       expiryDate: s.expiryDate || s.endDate,
       paymentStatus: s.status === 'active' ? 'Paid' : (s.status === 'expired' ? 'Expired' : 'Pending'),
+      autoRenew: s.autoRenew === true,
+      nextAutopayDate: s.autoRenew && (s.expiryDate || s.endDate) ? (s.expiryDate || s.endDate) : null,
       createdAt: s.createdAt
     }));
 
