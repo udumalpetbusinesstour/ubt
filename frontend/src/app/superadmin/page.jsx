@@ -5802,47 +5802,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Overview of active premium subscription logs, renewal dates, and billing metrics.</span>
                   </div>
 
-                  {/* Direct Activation Card */}
-                  <div className={`border shadow-xs rounded-[28px] p-6 ${
-                    themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                  }`}>
-                    <h3 className="font-extrabold text-base leading-tight font-sans">Direct Subscription Activation</h3>
-                    <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Activate premium subscription for any listing directly using its database ID.</span>
-                    
-                    <form onSubmit={handleDirectExtendSubscription} className="flex flex-col sm:flex-row gap-4 mt-5 items-end">
-                      <div className="flex-1 flex flex-col gap-1.5 w-full text-left">
-                        <label className="text-[9.5px] font-black text-slate-455 uppercase tracking-widest leading-none">Business Database ID</label>
-                        <input
-                          type="text"
-                          required
-                          value={directExtendBizId}
-                          onChange={(e) => setDirectExtendBizId(e.target.value)}
-                          placeholder="e.g. 65c92d5218abf523c90a1d4b"
-                          className="w-full border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-semibold focus:outline-none bg-slate-50/20"
-                        />
-                      </div>
-                      <div className="w-full sm:w-48 flex flex-col gap-1.5 text-left">
-                        <label className="text-[9.5px] font-black text-slate-455 uppercase tracking-widest leading-none">Duration</label>
-                        <select
-                          value={directExtendDays}
-                          onChange={(e) => setDirectExtendDays(Number(e.target.value))}
-                          className="w-full border border-slate-200 px-3 py-2.5 rounded-xl text-xs bg-slate-50/50 focus:outline-none cursor-pointer font-bold"
-                        >
-                          <option value={7}>7 Days (1 Week)</option>
-                          <option value={30}>30 Days (1 Month)</option>
-                          <option value={90}>90 Days (3 Months)</option>
-                          <option value={365}>365 Days (1 Year)</option>
-                        </select>
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={directExtendSubmitting}
-                        className="px-6 py-2.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl transition-all shadow-md shrink-0 disabled:opacity-75 cursor-pointer w-full sm:w-auto text-center"
-                      >
-                        {directExtendSubmitting ? 'Activating...' : 'Activate Listing'}
-                      </button>
-                    </form>
-                  </div>
+
 
                   <div className={`overflow-x-auto border rounded-[28px] ${
                     themeMode === 'dark' ? 'bg-slate-900/20 border-slate-800' : 'bg-white border-slate-200'
@@ -5880,31 +5840,6 @@ const handlePartnerAction = async (partnerId, action) => {
                             </td>
                             <td className="p-4.5 text-right" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center justify-end gap-2">
-                                {s.paymentStatus !== 'Paid' ? (
-                                  <button
-                                    onClick={async () => {
-                                      try {
-                                        const res = await fetch(`http://localhost:5000/api/superadmin/subscriptions/${s._id}/status`, {
-                                          method: 'PUT',
-                                          headers: {
-                                            'Content-Type': 'application/json',
-                                            'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
-                                          },
-                                          body: JSON.stringify({ status: 'active' })
-                                        });
-                                        if (res.ok) {
-                                          alert("Subscription package plan activated successfully.");
-                                          loadPlatformRealData();
-                                        }
-                                      } catch (err) {
-                                        console.error(err);
-                                      }
-                                    }}
-                                    className="px-3 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors"
-                                  >
-                                    Activate
-                                  </button>
-                                ) : null}
                                 <button
                                   onClick={() => {
                                     const biz = businesses.find(b => b.name === s.businessName);
@@ -5922,28 +5857,6 @@ const handlePartnerAction = async (partnerId, action) => {
                                   }`}
                                 >
                                   Extend
-                                </button>
-                                <button
-                                  onClick={async () => {
-                                    if (await window.confirm(`Refund payment for ${s.businessName}?`)) {
-                                      try {
-                                        const res = await fetch(`http://localhost:5000/api/superadmin/subscriptions/${s._id}/refund`, {
-                                          method: 'POST',
-                                          headers: { 'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` }
-                                        });
-                                        if (res.ok) {
-                                          alert("Payment refunded successfully.");
-                                          loadPlatformRealData();
-                                        }
-                                      } catch (err) {
-                                        console.error(err);
-                                      }
-                                    }
-                                  }}
-                                  disabled={s.paymentStatus === 'Refunded'}
-                                  className="px-3 py-1.5 border border-purple-500/25 bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors disabled:opacity-40"
-                                >
-                                  Refund
                                 </button>
                               </div>
                             </td>
