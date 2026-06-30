@@ -2715,16 +2715,6 @@ const handlePartnerAction = async (partnerId, action) => {
               )}
             </div>
 
-            {/* Dark/Light toggle slider */}
-            <button 
-              onClick={() => setThemeMode(themeMode === 'dark' ? 'light' : 'dark')}
-              className={`h-10 w-10 border rounded-full flex items-center justify-center transition-colors cursor-pointer ${
-                themeMode === 'dark' ? 'border-slate-800 text-amber-400 bg-slate-900/60 hover:bg-slate-800' : 'border-slate-200 text-slate-500 hover:bg-slate-100 bg-slate-50'
-              }`}
-              title="Toggle Theme Mode"
-            >
-              {themeMode === 'dark' ? <Sparkles className="h-4.5 w-4.5" /> : <Layers className="h-4.5 w-4.5" />}
-            </button>
 
             {/* Notification Bell Panel */}
             <div className="relative">
