@@ -2881,20 +2881,20 @@ const handlePartnerAction = async (partnerId, action) => {
                     const now = new Date();
                     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-                    // 1. Total Businesses
-                    const businessesThisMonth = (businesses || []).filter(b => b.createdAt && new Date(b.createdAt) >= startOfThisMonth).length;
-                    const totalBusinessesCount = (businesses || []).length;
+                    // 1. Total Businesses (Parent Businesses only)
+                    const businessesThisMonth = (businesses || []).filter(b => !b.parentBusinessId && b.createdAt && new Date(b.createdAt) >= startOfThisMonth).length;
+                    const totalBusinessesCount = (businesses || []).filter(b => !b.parentBusinessId).length;
                     const businessesBeforeThisMonth = totalBusinessesCount - businessesThisMonth;
                     const businessesPct = businessesBeforeThisMonth > 0 
                       ? ((businessesThisMonth / businessesBeforeThisMonth) * 100).toFixed(1) 
                       : (businessesThisMonth > 0 ? '100.0' : '0.0');
 
-                    // 2. Active Businesses
-                    const activeFilteredCount = (dateFilteredBusinesses || []).filter(b => b.status === 'Approved').length;
-                    const totalFiltered = (dateFilteredBusinesses || []).length;
+                    // 2. Active Businesses (Approved Parent Businesses only)
+                    const activeFilteredCount = (dateFilteredBusinesses || []).filter(b => !b.parentBusinessId && b.status === 'Approved').length;
+                    const totalFiltered = (dateFilteredBusinesses || []).filter(b => !b.parentBusinessId).length;
                     const activePercentOfTotal = totalFiltered > 0 ? ((activeFilteredCount / totalFiltered) * 100).toFixed(1) : '0';
-                    const activeApprovedThisMonth = (businesses || []).filter(b => b.status === 'Approved' && b.createdAt && new Date(b.createdAt) >= startOfThisMonth).length;
-                    const totalActiveApproved = (businesses || []).filter(b => b.status === 'Approved').length;
+                    const activeApprovedThisMonth = (businesses || []).filter(b => !b.parentBusinessId && b.status === 'Approved' && b.createdAt && new Date(b.createdAt) >= startOfThisMonth).length;
+                    const totalActiveApproved = (businesses || []).filter(b => !b.parentBusinessId && b.status === 'Approved').length;
                     const activeApprovedBeforeThisMonth = totalActiveApproved - activeApprovedThisMonth;
                     const activeApprovedPct = activeApprovedBeforeThisMonth > 0 
                       ? ((activeApprovedThisMonth / activeApprovedBeforeThisMonth) * 100).toFixed(1) 
@@ -2909,17 +2909,17 @@ const handlePartnerAction = async (partnerId, action) => {
                       ? ((usersThisMonth / usersBeforeThisMonth) * 100).toFixed(1) 
                       : (usersThisMonth > 0 ? '100.0' : '0.0');
 
-                    // 4. Events Listed
-                    const eventsThisMonth = (events || []).filter(e => (e.createdAt || e.date) && new Date(e.createdAt || e.date) >= startOfThisMonth).length;
-                    const totalEventsCount = (events || []).length;
+                    // 4. Events Listed (Approved Events only)
+                    const eventsThisMonth = (events || []).filter(e => e.status?.toLowerCase() === 'approved' && (e.createdAt || e.date) && new Date(e.createdAt || e.date) >= startOfThisMonth).length;
+                    const totalEventsCount = (events || []).filter(e => e.status?.toLowerCase() === 'approved').length;
                     const eventsBeforeThisMonth = totalEventsCount - eventsThisMonth;
                     const eventsPct = eventsBeforeThisMonth > 0 
                       ? ((eventsThisMonth / eventsBeforeThisMonth) * 100).toFixed(1) 
                       : (eventsThisMonth > 0 ? '100.0' : '0.0');
 
-                    // 5. Blog Posts
-                    const blogsThisMonth = (blogs || []).filter(b => b.createdAt && new Date(b.createdAt) >= startOfThisMonth).length;
-                    const totalBlogsCount = (blogs || []).length;
+                    // 5. Blog Posts (Approved Blogs only)
+                    const blogsThisMonth = (blogs || []).filter(b => b.status?.toLowerCase() === 'approved' && b.createdAt && new Date(b.createdAt) >= startOfThisMonth).length;
+                    const totalBlogsCount = (blogs || []).filter(b => b.status?.toLowerCase() === 'approved').length;
                     const blogsBeforeThisMonth = totalBlogsCount - blogsThisMonth;
                     const blogsPct = blogsBeforeThisMonth > 0 
                       ? ((blogsThisMonth / blogsBeforeThisMonth) * 100).toFixed(1) 
@@ -2936,11 +2936,11 @@ const handlePartnerAction = async (partnerId, action) => {
                           : (revenueThisMonthVal > 0 ? '100.0' : '0.0'));
 
                     const cards = [
-                      { title: 'Total Businesses', val: dateFilteredBusinesses.length || 0, desc: `+${businessesThisMonth} this month`, pct: `+${businessesPct}%`, icon: <Store className="h-5 w-5" />, color: 'from-purple-500/10 border-purple-500/20 text-purple-500', tabId: 'Businesses' },
+                      { title: 'Total Businesses', val: dateFilteredBusinesses.filter(b => !b.parentBusinessId).length || 0, desc: `+${businessesThisMonth} this month`, pct: `+${businessesPct}%`, icon: <Store className="h-5 w-5" />, color: 'from-purple-500/10 border-purple-500/20 text-purple-500', tabId: 'Businesses' },
                       { title: 'Active Businesses', val: activeFilteredCount || 0, desc: `${activePercentOfTotal}% of total`, pct: `+${activeApprovedPct}%`, icon: <CheckCircle2 className="h-5 w-5" />, color: 'from-emerald-500/10 border-emerald-500/20 text-emerald-500', tabId: 'Businesses' },
                       { title: 'Total Users', val: dateFilteredSignups.length || 0, desc: `+${usersThisMonth} this month`, pct: `+${usersPct}%`, icon: <User className="h-5 w-5" />, color: 'from-amber-500/10 border-amber-500/20 text-amber-500', tabId: 'Signups' },
-                      { title: 'Events Listed', val: dateFilteredEvents.length || 0, desc: `+${eventsThisMonth} this month`, pct: `+${eventsPct}%`, icon: <Calendar className="h-5 w-5" />, color: 'from-pink-500/10 border-pink-500/20 text-pink-500', tabId: 'Events Moderation' },
-                      { title: 'Blog Posts', val: dateFilteredBlogs.length || 0, desc: `+${blogsThisMonth} this month`, pct: `+${blogsPct}%`, icon: <BookOpen className="h-5 w-5" />, color: 'from-blue-500/10 border-blue-500/20 text-blue-500', tabId: 'Blogs Moderation' },
+                      { title: 'Events Listed', val: dateFilteredEvents.filter(e => e.status?.toLowerCase() === 'approved').length || 0, desc: `+${eventsThisMonth} this month`, pct: `+${eventsPct}%`, icon: <Calendar className="h-5 w-5" />, color: 'from-pink-500/10 border-pink-500/20 text-pink-500', tabId: 'Events Moderation' },
+                      { title: 'Blog Posts', val: dateFilteredBlogs.filter(b => b.status?.toLowerCase() === 'approved').length || 0, desc: `+${blogsThisMonth} this month`, pct: `+${blogsPct}%`, icon: <BookOpen className="h-5 w-5" />, color: 'from-blue-500/10 border-blue-500/20 text-blue-500', tabId: 'Blogs Moderation' },
                       { title: 'Total Revenue', val: '₹' + (dashboardStats?.totalRevenue !== undefined ? dashboardStats.totalRevenue : dateFilteredSubscriptions.reduce((sum, s) => sum + (s.amount || 0), 0)).toLocaleString('en-IN'), desc: `+₹${revenueThisMonthVal.toLocaleString('en-IN')} this month`, pct: `+${revenuePctVal}%`, icon: <Coins className="h-5 w-5" />, color: 'from-cyan-500/10 border-cyan-500/20 text-cyan-500', tabId: 'Subscriptions' }
                     ];
 

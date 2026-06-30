@@ -2156,11 +2156,11 @@ export default function AdminDashboard() {
                   {/* Overview Cards matching the UBT UI layout */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* Card 1: Pending Approvals */}
-                    <div className="bg-amber-50/30 border border-amber-250/70 p-5 rounded-[22px] shadow-2xs flex justify-between items-center transition-all hover:-translate-y-0.5 hover:shadow">
+                    <div className="bg-amber-50/30 border border-amber-200/70 p-5 rounded-[22px] shadow-2xs flex justify-between items-center transition-all hover:-translate-y-0.5 hover:shadow">
                       <div className="flex flex-col gap-1 text-left">
                         <span className="text-[10px] text-amber-600 font-black uppercase tracking-wider">Pending Approvals</span>
                         <span className="text-3xl font-black text-amber-700 mt-2 leading-none">
-                          {businesses.filter(b => b.status === 'Pending Verification' || b.status === 'Under Review').length +
+                          {businesses.filter(b => !b.parentBusinessId && (b.status === 'Pending Verification' || b.status === 'Under Review')).length +
                            blogs.filter(b => b.status === 'Pending Approval').length +
                            events.filter(e => e.status === 'Pending Review').length +
                            appTestimonials.filter(t => t.status === 'Pending').length}
@@ -2176,7 +2176,7 @@ export default function AdminDashboard() {
                       <div className="flex flex-col gap-1 text-left">
                         <span className="text-[10px] text-emerald-700 font-black uppercase tracking-wider">Active Premium</span>
                         <span className="text-3xl font-black text-emerald-800 mt-2 leading-none">
-                          {businesses.filter(b => b.subscriptionStatus === 'active' && b.status === 'Approved').length}
+                          {businesses.filter(b => !b.parentBusinessId && b.subscriptionStatus === 'active' && b.status === 'Approved').length}
                         </span>
                       </div>
                       <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 border border-emerald-100/50">
@@ -2189,7 +2189,7 @@ export default function AdminDashboard() {
                       <div className="flex flex-col gap-1 text-left">
                         <span className="text-[10px] text-red-650 font-black uppercase tracking-wider">Expired Billing</span>
                         <span className="text-3xl font-black text-red-700 mt-2 leading-none">
-                          {businesses.filter(b => b.subscriptionStatus === 'expired').length}
+                          {businesses.filter(b => !b.parentBusinessId && b.subscriptionStatus === 'expired').length}
                         </span>
                       </div>
                       <div className="h-10 w-10 bg-red-50 rounded-xl flex items-center justify-center text-red-500 border border-red-100/50">
@@ -2202,7 +2202,7 @@ export default function AdminDashboard() {
                       <div className="flex flex-col gap-1 text-left">
                         <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Total Listings</span>
                         <span className="text-3xl font-black text-[#001c41] mt-2 leading-none">
-                          {businesses.length}
+                          {businesses.filter(b => !b.parentBusinessId).length}
                         </span>
                       </div>
                       <div className="h-10 w-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 border border-slate-200/50">
