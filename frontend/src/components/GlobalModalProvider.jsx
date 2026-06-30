@@ -11,29 +11,32 @@ export default function GlobalModalProvider({ children }) {
   });
 
   useEffect(() => {
-    window.alert = (message, title = 'Notification') => {
-      return new Promise((resolve) => {
-        setModal({
-          isOpen: true,
-          title,
-          message,
-          type: 'alert',
-          resolve
-        });
-      });
-    };
-
-    window.confirm = (message, title = 'Confirm Action') => {
-      return new Promise((resolve) => {
-        setModal({
-          isOpen: true,
-          title,
-          message,
-          type: 'confirm',
-          resolve
-        });
-      });
-    };
+    if (typeof window !== 'undefined' && window.__registerModalCallbacks) {
+      window.__registerModalCallbacks(
+        (message, title = 'Notification') => {
+          return new Promise((resolve) => {
+            setModal({
+              isOpen: true,
+              title,
+              message,
+              type: 'alert',
+              resolve
+            });
+          });
+        },
+        (message, title = 'Confirm Action') => {
+          return new Promise((resolve) => {
+            setModal({
+              isOpen: true,
+              title,
+              message,
+              type: 'confirm',
+              resolve
+            });
+          });
+        }
+      );
+    }
   }, []);
 
   const handleConfirm = () => {

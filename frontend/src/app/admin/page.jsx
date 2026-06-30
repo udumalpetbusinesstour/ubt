@@ -1429,6 +1429,11 @@ export default function AdminDashboard() {
     if (type === 'hide') nextStatus = 'Hidden';
     if (type === 'unhide') nextStatus = 'Approved';
     
+    const actionVerb = type === 'unhide' ? 'unhide' : type;
+    if (!await window.confirm(`Are you sure you want to ${actionVerb} this business listing?`)) {
+      return false;
+    }
+    
     // Update local state immediately to avoid stale rendering/flickering
     setBusinesses(prev => prev.map(b => b._id === bizId ? { ...b, status: nextStatus, isFoundingMember: type === 'approve' ? isFoundingMemberCheck : b.isFoundingMember } : b));
     if (selectedBiz && selectedBiz._id === bizId) {
@@ -1451,16 +1456,14 @@ export default function AdminDashboard() {
       if (data.success) {
         alert(`Business successfully marked as ${nextStatus}!`);
         loadPlatformRealData();
+        return true;
       } else {
         alert(data.message || 'Failed to update business status.');
       }
     } catch (err) {
-      // Fallback mock update locally
-      setBusinesses(prev => prev.map(b => b._id === bizId ? { ...b, status: nextStatus, isFoundingMember: type === 'approve' ? isFoundingMemberCheck : b.isFoundingMember } : b));
-      if (selectedBiz && selectedBiz._id === bizId) {
-        setSelectedBiz(prev => ({ ...prev, status: nextStatus, isFoundingMember: type === 'approve' ? isFoundingMemberCheck : prev.isFoundingMember }));
-      }
+      console.error(err);
     }
+    return false;
   };
 
   const handlePartnerAction = async (partnerId, action) => {
@@ -2363,13 +2366,13 @@ export default function AdminDashboard() {
                                     {b.status !== 'Approved' && b.status !== 'Rejected' && (
                                       <>
                                         <button
-                                          onClick={() => { handleAction(b._id, 'reject'); showToast('Listing rejected.', 'error'); }}
+                                          onClick={async () => { if (await handleAction(b._id, 'reject')) showToast('Listing rejected.', 'error'); }}
                                           className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
                                         >
                                           Reject
                                         </button>
                                         <button
-                                          onClick={() => { handleAction(b._id, 'approve'); showToast('Listing approved!', 'success'); }}
+                                          onClick={async () => { if (await handleAction(b._id, 'approve')) showToast('Listing approved!', 'success'); }}
                                           className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
                                         >
                                           Approve
@@ -2723,13 +2726,13 @@ export default function AdminDashboard() {
                                   {b.status !== 'Approved' && b.status !== 'Rejected' && (
                                     <>
                                       <button 
-                                        onClick={() => { handleAction(b._id, 'reject'); showToast('Listing rejected.', 'error'); }}
+                                        onClick={async () => { if (await handleAction(b._id, 'reject')) showToast('Listing rejected.', 'error'); }}
                                         className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-[10.5px] font-extrabold cursor-pointer"
                                       >
                                         Reject
                                       </button>
                                       <button 
-                                        onClick={() => { handleAction(b._id, 'approve'); showToast('Listing approved!', 'success'); }}
+                                        onClick={async () => { if (await handleAction(b._id, 'approve')) showToast('Listing approved!', 'success'); }}
                                         className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer"
                                       >
                                         Approve
@@ -2891,13 +2894,13 @@ export default function AdminDashboard() {
                               {b.status !== 'Approved' && b.status !== 'Rejected' && (
                                 <>
                                   <button 
-                                    onClick={() => { handleAction(b._id, 'reject'); showToast('Listing rejected.', 'error'); }}
+                                    onClick={async () => { if (await handleAction(b._id, 'reject')) showToast('Listing rejected.', 'error'); }}
                                     className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer"
                                   >
                                     Reject
                                   </button>
                                   <button 
-                                    onClick={() => { handleAction(b._id, 'approve'); showToast('Listing approved!', 'success'); }}
+                                    onClick={async () => { if (await handleAction(b._id, 'approve')) showToast('Listing approved!', 'success'); }}
                                     className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer shadow shadow-emerald-800/10"
                                   >
                                     Approve listing
@@ -6422,11 +6425,12 @@ export default function AdminDashboard() {
               <div className="flex flex-col sm:flex-row gap-3">
                 {selectedBiz.status !== 'Approved' && selectedBiz.status !== 'Rejected' && (
                   <button 
-                    onClick={() => {
-                      handleAction(selectedBiz._id, 'reject');
-                      setSelectedBiz(prev => ({ ...prev, status: 'Rejected' }));
-                      setShowBizModal(false);
-                      showToast('Listing rejected and hidden from public.', 'error');
+                    onClick={async () => {
+                      if (await handleAction(selectedBiz._id, 'reject')) {
+                        setSelectedBiz(prev => ({ ...prev, status: 'Rejected' }));
+                        setShowBizModal(false);
+                        showToast('Listing rejected and hidden from public.', 'error');
+                      }
                     }}
                     className="w-full sm:flex-1 py-3 bg-red-550/10 border border-red-550/20 hover:bg-red-550/20 text-red-650 font-extrabold text-xs rounded-xl cursor-pointer text-center"
                   >
@@ -6435,11 +6439,12 @@ export default function AdminDashboard() {
                 )}
                 {selectedBiz.status !== 'Approved' && selectedBiz.status !== 'Rejected' && (
                   <button 
-                    onClick={() => {
-                      handleAction(selectedBiz._id, 'approve');
-                      setSelectedBiz(prev => ({ ...prev, status: 'Approved' }));
-                      setShowBizModal(false);
-                      showToast('Listing approved and published successfully!', 'success');
+                    onClick={async () => {
+                      if (await handleAction(selectedBiz._id, 'approve')) {
+                        setSelectedBiz(prev => ({ ...prev, status: 'Approved' }));
+                        setShowBizModal(false);
+                        showToast('Listing approved and published successfully!', 'success');
+                      }
                     }}
                     className="w-full sm:flex-1 py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer text-center shadow shadow-emerald-800/10"
                   >

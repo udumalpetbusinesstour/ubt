@@ -1408,6 +1408,11 @@ const handlePartnerAction = async (partnerId, action) => {
     if (type === 'hide') nextStatus = 'Hidden';
     if (type === 'unhide') nextStatus = 'Approved';
     
+    const actionVerb = type === 'unhide' ? 'unhide' : type;
+    if (!await window.confirm(`Are you sure you want to ${actionVerb} this business listing?`)) {
+      return false;
+    }
+    
     // Update local state immediately to avoid stale rendering/flickering
     setBusinesses(prev => prev.map(b => b._id === bizId ? { ...b, status: nextStatus } : b));
     
@@ -1423,10 +1428,12 @@ const handlePartnerAction = async (partnerId, action) => {
       if (res.ok) {
         alert(`Listing marked as ${nextStatus} successfully!`);
         loadPlatformRealData();
+        return true;
       }
     } catch (err) {
       console.error(err);
     }
+    return false;
   };
 
   const handleFeaturedToggle = async (bizId) => {

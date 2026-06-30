@@ -3,6 +3,33 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './app/globals.css';
 
+// Early override of window.alert and window.confirm to hook into our global React Modal System
+let globalShowAlert = null;
+let globalShowConfirm = null;
+
+if (typeof window !== 'undefined') {
+  window.alert = (message, title = 'Notification') => {
+    if (globalShowAlert) {
+      return globalShowAlert(message, title);
+    }
+    console.warn("Early alert fallback:", message);
+    return Promise.resolve();
+  };
+
+  window.confirm = (message, title = 'Confirm Action') => {
+    if (globalShowConfirm) {
+      return globalShowConfirm(message, title);
+    }
+    console.warn("Early confirm fallback:", message);
+    return Promise.resolve(true);
+  };
+  
+  window.__registerModalCallbacks = (showAlert, showConfirm) => {
+    globalShowAlert = showAlert;
+    globalShowConfirm = showConfirm;
+  };
+}
+
 // Centralized API URL Routing Interceptor for Production (Nginx / same-origin deployment)
 // In development (VITE_DEV_SERVER), the Vite proxy forwards /api → localhost:5000.
 // In production, the built frontend is served by Nginx on the same origin as the backend,
