@@ -192,8 +192,13 @@ export default function BloodDonorsPage() {
   // Handle Blood Request Submit
   const handleRequestSubmit = async (e) => {
     e.preventDefault();
-    if (!reqHospitalName.trim() || !reqPatientName.trim() || !reqPatientAddress.trim() || !reqMobileNum.trim() || !reqCause.trim()) {
-      setRequestError('Please fill in all the required fields.');
+    if (!reqHospitalName.trim() || !reqPatientName.trim() || !reqPatientAddress.trim() || !reqMobileNum.trim() || !reqAltMobileNum.trim() || !reqCause.trim()) {
+      setRequestError('Please fill in all fields. All fields are compulsory.');
+      return;
+    }
+    
+    if (reqMobileNum.trim() === reqAltMobileNum.trim()) {
+      setRequestError("Attender's mobile number and alternative mobile number must be different.");
       return;
     }
     
@@ -501,7 +506,7 @@ export default function BloodDonorsPage() {
 
                 {/* Mobile Number */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Mobile Number</label>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Attender's Mobile Number</label>
                   <input 
                     type="text" 
                     value={reqMobileNum}
@@ -515,13 +520,14 @@ export default function BloodDonorsPage() {
 
                 {/* Alt Mobile Number */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Alt Mobile (Optional)</label>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Alternative Mobile Number</label>
                   <input 
                     type="text" 
                     value={reqAltMobileNum}
                     onChange={(e) => setReqAltMobileNum(e.target.value)}
                     placeholder="e.g. +91 98430 54321"
                     disabled={requestSubmitting}
+                    required
                     className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20"
                   />
                 </div>

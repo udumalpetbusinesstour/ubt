@@ -12,8 +12,12 @@ router.post('/', async (req, res) => {
   try {
     const { hospitalName, patientName, bloodGroup, patientAddress, mobileNum, altMobileNum, cause } = req.body;
 
-    if (!hospitalName || !patientName || !bloodGroup || !patientAddress || !mobileNum || !cause) {
+    if (!hospitalName || !patientName || !bloodGroup || !patientAddress || !mobileNum || !altMobileNum || !cause) {
       return res.status(400).json({ success: false, message: 'Please provide all required fields.' });
+    }
+
+    if (mobileNum.trim() === altMobileNum.trim()) {
+      return res.status(400).json({ success: false, message: "Attender's mobile number and alternative mobile number must be different." });
     }
 
     const request = await BloodRequest.create({

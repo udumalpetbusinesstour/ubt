@@ -605,8 +605,8 @@ export default function BloodDonorsTab() {
                       <span className="text-slate-700 truncate mt-0.5">{request.patientAddress}</span>
                     </div>
                     <div className="flex flex-col text-left text-xs font-semibold text-slate-500">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Contact / Alt Mobile</span>
-                      <span className="text-slate-700 mt-0.5">{request.mobileNum} {request.altMobileNum ? `/ ${request.altMobileNum}` : ''}</span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Attender / Alternative Mobile</span>
+                      <span className="text-slate-700 mt-0.5">{request.mobileNum} / {request.altMobileNum}</span>
                     </div>
                     <div className="flex flex-col text-left text-xs font-semibold text-slate-500">
                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Cause</span>
@@ -828,7 +828,7 @@ export default function BloodDonorsTab() {
 
               <div className="flex flex-col gap-3.5 mt-2">
                 {assignedDonors.map((donor, idx) => {
-                  const text = `Hello ${donor.name}, emergency blood request from Udumalpet Business Tour. Patient ${currentApprovedRequest.patientName} needs ${currentApprovedRequest.bloodGroup} blood at ${currentApprovedRequest.hospitalName} for ${currentApprovedRequest.cause}. Please contact ${currentApprovedRequest.mobileNum} immediately if you can donate. Thank you!`;
+                  const text = `Hello ${donor.name}, emergency blood request from Udumalpet Business Tour. Patient ${currentApprovedRequest.patientName} needs ${currentApprovedRequest.bloodGroup} blood at ${currentApprovedRequest.hospitalName} for ${currentApprovedRequest.cause}. Please contact Attender's Mobile Number: ${currentApprovedRequest.mobileNum} or Alternative Mobile Number: ${currentApprovedRequest.altMobileNum} immediately if you can donate. Thank you!`;
                   const whatsappUrl = `https://wa.me/${donor.contactNum.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
 
                   return (

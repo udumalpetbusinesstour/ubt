@@ -29,6 +29,7 @@ const BloodRequestSchema = new mongoose.Schema({
   },
   altMobileNum: {
     type: String,
+    required: [true, 'Alternative mobile number is required'],
     trim: true
   },
   cause: {
