@@ -23,6 +23,7 @@ import ReferralModal from './components/ReferralModal';
 import UpdatePopup from './components/UpdatePopup';
 import BloodDonorsPage from './app/blood-donors/page';
 import PartnerRegister from './app/partner-register/page';
+import GlobalModalProvider from './components/GlobalModalProvider';
 
 function AppContent() {
   const location = useLocation();
@@ -106,7 +107,9 @@ function AppContent() {
 export default function App() {
   return (
     <Router>
-      <AppContent />
+      <GlobalModalProvider>
+        <AppContent />
+      </GlobalModalProvider>
     </Router>
   );
 }

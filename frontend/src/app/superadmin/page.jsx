@@ -1444,7 +1444,7 @@ const handlePartnerAction = async (partnerId, action) => {
   };
 
   const handleDeleteBusiness = async (bizId) => {
-    if (window.confirm("Are you sure you want to permanently delete this listing? All reviews, blogs, and events matching will be cascade deleted!")) {
+    if (await window.confirm("Are you sure you want to permanently delete this listing? All reviews, blogs, and events matching will be cascade deleted!")) {
       try {
         const res = await fetch(`http://localhost:5000/api/superadmin/businesses/${bizId}`, {
           method: 'DELETE',
@@ -1461,7 +1461,7 @@ const handlePartnerAction = async (partnerId, action) => {
   };
 
   const handleDeleteSignup = async (userId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this user signup? This will permanently delete the user registration and cascade-delete all their businesses, blogs, events, reviews, and subscriptions.')) {
+    if (!await window.confirm('Are you sure you want to permanently delete this user signup? This will permanently delete the user registration and cascade-delete all their businesses, blogs, events, reviews, and subscriptions.')) {
       return;
     }
     try {
@@ -1484,7 +1484,7 @@ const handlePartnerAction = async (partnerId, action) => {
   };
 
   const handleDeletePartner = async (partnerId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this partner and their entire registration? This will also cascade delete all their referrals, redemptions, and notifications.')) {
+    if (!await window.confirm('Are you sure you want to permanently delete this partner and their entire registration? This will also cascade delete all their referrals, redemptions, and notifications.')) {
       return;
     }
     try {
@@ -1510,7 +1510,7 @@ const handlePartnerAction = async (partnerId, action) => {
 
   const handleDeleteSelectedSignups = async () => {
     if (selectedSignups.length === 0) return;
-    if (!window.confirm(`Are you sure you want to permanently delete the ${selectedSignups.length} selected user registrations? This will cascade-delete ALL their businesses, blogs, events, reviews, and subscriptions. This action is irreversible!`)) {
+    if (!await window.confirm(`Are you sure you want to permanently delete the ${selectedSignups.length} selected user registrations? This will cascade-delete ALL their businesses, blogs, events, reviews, and subscriptions. This action is irreversible!`)) {
       return;
     }
     try {
@@ -1568,7 +1568,7 @@ const handlePartnerAction = async (partnerId, action) => {
   };
 
   const handleDeleteSponsorAd = async (businessId, offerId) => {
-    const confirmed = confirm("Are you sure you want to permanently delete this flyer promotion from the database?");
+    const confirmed = await confirm("Are you sure you want to permanently delete this flyer promotion from the database?");
     if (!confirmed) return;
     try {
       const storedToken = localStorage.getItem('ubt_token');
@@ -1592,7 +1592,7 @@ const handlePartnerAction = async (partnerId, action) => {
   };
 
   const handleEventDelete = async (eventId) => {
-    if (!window.confirm("Are you sure you want to permanently delete this event? This action cannot be undone.")) {
+    if (!await window.confirm("Are you sure you want to permanently delete this event? This action cannot be undone.")) {
       return;
     }
     try {
@@ -1726,7 +1726,7 @@ const handlePartnerAction = async (partnerId, action) => {
   };
 
   const handleBlogDelete = async (blogId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this blog post? This action cannot be undone.')) {
+    if (!await window.confirm('Are you sure you want to permanently delete this blog post? This action cannot be undone.')) {
       return;
     }
     try {
@@ -1893,7 +1893,7 @@ const handlePartnerAction = async (partnerId, action) => {
   const renameMainCategory = async (oldParentName) => {
     const newParentName = prompt(`Rename main category "${oldParentName}" to:`, oldParentName);
     if (!newParentName || newParentName.trim() === '' || newParentName.trim() === oldParentName) return;
-    const confirmed = confirm(`Rename main category "${oldParentName}" → "${newParentName.trim()}"?\nThis will update all subcategories under it.`);
+    const confirmed = await confirm(`Rename main category "${oldParentName}" → "${newParentName.trim()}"?\nThis will update all subcategories under it.`);
     if (!confirmed) return;
     try {
       const res = await fetch('http://localhost:5000/api/categories/rename-parent', {
@@ -4085,8 +4085,8 @@ const handlePartnerAction = async (partnerId, action) => {
                                   {biz.requestedParentCategory && (
                                     <button
                                       type="button"
-                                      onClick={() => {
-                                        const confirmed = confirm(`Approve new subcategory "${biz.customCategoryName}" nested under requested parent category "${biz.requestedParentCategory}"?`);
+                                      onClick={async () => {
+                                        const confirmed = await confirm(`Approve new subcategory "${biz.customCategoryName}" nested under requested parent category "${biz.requestedParentCategory}"?`);
                                         if (confirmed) {
                                           resolveCategoryRequest(biz._id, 'create', null, biz.customCategoryName, null, biz.requestedParentCategory);
                                         }
@@ -4145,7 +4145,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                           ))}
                                         </select>
                                         <button
-                                          onClick={() => {
+                                          onClick={async () => {
                                             const catId = resolutionTargetCatMap[biz._id];
                                             if (!catId) {
                                               alert("Please select a target category.");
@@ -4153,7 +4153,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                             }
                                             const matched = presetCategories.find(c => c._id === catId);
                                             if (matched) {
-                                              const confirmed = confirm(`Map custom request to existing category "${matched.categoryName}"?`);
+                                              const confirmed = await confirm(`Map custom request to existing category "${matched.categoryName}"?`);
                                               if (confirmed) {
                                                 resolveCategoryRequest(biz._id, 'assign', matched._id);
                                               }
@@ -4195,13 +4195,13 @@ const handlePartnerAction = async (partnerId, action) => {
                                           />
                                         </div>
                                         <button
-                                          onClick={() => {
+                                          onClick={async () => {
                                             const subcatName = resolutionCustomSubcatMap[biz._id]?.trim();
                                             if (!subcatName) {
                                               alert("Please specify a subcategory name.");
                                               return;
                                             }
-                                            const confirmed = confirm(`Create new Main Category "${biz.customCategoryName}" with Subcategory "${subcatName}"?`);
+                                            const confirmed = await confirm(`Create new Main Category "${biz.customCategoryName}" with Subcategory "${subcatName}"?`);
                                             if (confirmed) {
                                               resolveCategoryRequest(biz._id, 'create', null, subcatName, null, biz.customCategoryName);
                                             }
@@ -4253,13 +4253,13 @@ const handlePartnerAction = async (partnerId, action) => {
                                           />
                                         </div>
                                         <button
-                                          onClick={() => {
+                                          onClick={async () => {
                                             const parentVal = resolutionParentCatMap[biz._id];
                                             if (!parentVal) {
                                               alert("Please select a parent category.");
                                               return;
                                             }
-                                            const confirmed = confirm(`Add "${biz.customCategoryName}" as a new Subcategory under existing Main category "${parentVal}"?`);
+                                            const confirmed = await confirm(`Add "${biz.customCategoryName}" as a new Subcategory under existing Main category "${parentVal}"?`);
                                             if (confirmed) {
                                               resolveCategoryRequest(biz._id, 'create', null, biz.customCategoryName, null, parentVal);
                                             }
@@ -4420,7 +4420,7 @@ const handlePartnerAction = async (partnerId, action) => {
 
                                                 <div className="flex gap-1.5 shrink-0">
                                                   <button
-                                                    onClick={() => {
+                                                    onClick={async () => {
                                                       const newName = prompt("Rename category:", cat.categoryName);
                                                       if (!newName || newName === cat.categoryName) return;
                                                       updatePresetCategory(cat._id, { categoryName: newName });
@@ -4431,8 +4431,8 @@ const handlePartnerAction = async (partnerId, action) => {
                                                     Edit
                                                   </button>
                                                   <button
-                                                    onClick={() => {
-                                                      if (confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
+                                                    onClick={async () => {
+                                                      if (await confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
                                                         deletePresetCategory(cat._id);
                                                       }
                                                     }}
@@ -4491,7 +4491,7 @@ const handlePartnerAction = async (partnerId, action) => {
 
                                           <div className="flex gap-1.5 shrink-0">
                                             <button
-                                              onClick={() => {
+                                              onClick={async () => {
                                                 const newName = prompt("Rename category:", cat.categoryName);
                                                 if (!newName || newName === cat.categoryName) return;
                                                 updatePresetCategory(cat._id, { categoryName: newName });
@@ -4502,8 +4502,8 @@ const handlePartnerAction = async (partnerId, action) => {
                                               Edit
                                             </button>
                                             <button
-                                              onClick={() => {
-                                                if (confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
+                                              onClick={async () => {
+                                                if (await confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
                                                   deletePresetCategory(cat._id);
                                                 }
                                               }}
@@ -4749,7 +4749,7 @@ const handlePartnerAction = async (partnerId, action) => {
                               return;
                             }
 
-                            if (confirm("Are you sure you want to merge these categories? This will remap all businesses linked to source category and permanently delete it!")) {
+                            if (await confirm("Are you sure you want to merge these categories? This will remap all businesses linked to source category and permanently delete it!")) {
                               try {
                                 const mergeRes = await fetch('http://localhost:5000/api/superadmin/categories/merge', {
                                   method: 'POST',
@@ -5240,7 +5240,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                       {a.status === 'Active' ? 'Suspend' : 'Activate'}
                                     </button>
                                     <button 
-                                      onClick={() => { setEditingAdmin(a); setShowEditAdminModal(true); }}
+                                      onClick={async () => { setEditingAdmin(a); setShowEditAdminModal(true); }}
                                       className={`px-3 py-1.5 border rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors ${
                                         themeMode === 'dark' 
                                           ? 'border-slate-800 hover:bg-slate-800/40 text-slate-300' 
@@ -5250,8 +5250,8 @@ const handlePartnerAction = async (partnerId, action) => {
                                       Edit
                                     </button>
                                     <button 
-                                      onClick={() => {
-                                        if (window.confirm(`Are you sure you want to permanently remove admin ${a.fullName}?`)) {
+                                      onClick={async () => {
+                                        if (await window.confirm(`Are you sure you want to permanently remove admin ${a.fullName}?`)) {
                                           setAdmins(prev => prev.filter(adm => adm._id !== a._id));
                                           setSystemLogs(prev => [
                                             { time: new Date().toLocaleTimeString(), event: `SuperAdmin deleted administrative staff role: ${a.email}`, type: 'warning' },
@@ -5738,7 +5738,7 @@ const handlePartnerAction = async (partnerId, action) => {
                               {isHidden ? 'Un-Hide' : 'Hide'}
                             </button>
                             <button 
-                              onClick={() => {
+                              onClick={async () => {
                                 setReviews(prev => prev.map(item => item._id === r._id ? { ...item, status: isSpam ? 'approved' : 'spam' } : item));
                               }}
                               className={`px-3 py-1.5 border rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors ${
@@ -5750,8 +5750,8 @@ const handlePartnerAction = async (partnerId, action) => {
                               {isSpam ? 'Remove Spam Tag' : 'Mark Spam'}
                             </button>
                             <button 
-                              onClick={() => {
-                                if (window.confirm(`Are you sure you want to suspend user ${r.authorName}? This will auto-spam all their reviews.`)) {
+                              onClick={async () => {
+                                if (await window.confirm(`Are you sure you want to suspend user ${r.authorName}? This will auto-spam all their reviews.`)) {
                                   setSuspendedUsers(prev => [...prev, r.authorName]);
                                   setReviews(prev => prev.map(item => item.authorName === r.authorName ? { ...item, status: 'spam' } : item));
                                   setSystemLogs(prev => [
@@ -5766,8 +5766,8 @@ const handlePartnerAction = async (partnerId, action) => {
                               Suspend User
                             </button>
                             <button 
-                              onClick={() => {
-                                if (window.confirm("Are you sure you want to permanently delete this review?")) {
+                              onClick={async () => {
+                                if (await window.confirm("Are you sure you want to permanently delete this review?")) {
                                   handleReviewAction(r._id, 'delete');
                                 }
                               }}
@@ -5941,7 +5941,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                 </button>
                                 <button
                                   onClick={async () => {
-                                    if (window.confirm(`Refund payment for ${s.businessName}?`)) {
+                                    if (await window.confirm(`Refund payment for ${s.businessName}?`)) {
                                       try {
                                         const res = await fetch(`http://localhost:5000/api/superadmin/subscriptions/${s._id}/refund`, {
                                           method: 'POST',
@@ -6458,7 +6458,7 @@ const handlePartnerAction = async (partnerId, action) => {
                               <button
                                 type="button"
                                 onClick={async () => {
-                                  if (!window.confirm(`Are you sure you want to remove/deactivate the plan "${p.name}"?`)) return;
+                                  if (!await window.confirm(`Are you sure you want to remove/deactivate the plan "${p.name}"?`)) return;
                                   try {
                                     const res = await fetch(`http://localhost:5000/api/plans/${p.id}`, {
                                       method: 'DELETE',
@@ -7850,8 +7850,8 @@ const handlePartnerAction = async (partnerId, action) => {
                                     <div className="flex justify-end gap-2">
                                       {r.status !== 'completed' && (
                                         <button
-                                          onClick={() => {
-                                            if (confirm('Manually approve this referral and credit 100 points to the referrer?')) {
+                                          onClick={async () => {
+                                            if (await confirm('Manually approve this referral and credit 100 points to the referrer?')) {
                                               handleReferralModerate(r._id, 'approve');
                                             }
                                           }}
@@ -9018,7 +9018,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   {selectedUser.status === 'Active' ? 'Block Account Profile' : 'Unblock Account Profile'}
                 </button>
                 <button 
-                  onClick={() => {
+                  onClick={async () => {
                     setMerchantForNotice(selectedUser);
                     setMerchantNoticeText('');
                     setShowMerchantNoticeModal(true);
@@ -9031,7 +9031,7 @@ const handlePartnerAction = async (partnerId, action) => {
               </div>
               <button 
                 onClick={async () => {
-                  if (confirm(`CRITICAL WARNING: Are you sure you want to permanently delete user account profile "${selectedUser.fullName || selectedUser.name}"? This will cascadingly delete ALL their registered businesses, blogs, reviews, and events! THIS IS IRREVERSIBLE!`)) {
+                  if (await confirm(`CRITICAL WARNING: Are you sure you want to permanently delete user account profile "${selectedUser.fullName || selectedUser.name}"? This will cascadingly delete ALL their registered businesses, blogs, reviews, and events! THIS IS IRREVERSIBLE!`)) {
                     try {
                       const res = await fetch(`http://localhost:5000/api/superadmin/users/${selectedUser._id}`, {
                         method: 'DELETE',
@@ -9855,8 +9855,8 @@ const handlePartnerAction = async (partnerId, action) => {
                 <div className="flex gap-2 justify-end border-t dark:border-slate-800 pt-3">
                   <button 
                     type="button"
-                    onClick={() => {
-                      if (window.confirm("Permanently delete this event flyer?")) {
+                    onClick={async () => {
+                      if (await window.confirm("Permanently delete this event flyer?")) {
                         setEvents(prev => prev.filter(item => item._id !== editingEvent._id));
                         setShowEditEventModal(false);
                         setEditingEvent(null);
@@ -10065,8 +10065,8 @@ const handlePartnerAction = async (partnerId, action) => {
               themeMode === 'dark' ? 'border-slate-800 bg-slate-900/50' : 'border-slate-200 bg-slate-50'
             }`}>
               <button 
-                onClick={() => {
-                  if (confirm("Are you sure you want to permanently delete this blog post? This action cannot be undone.")) {
+                onClick={async () => {
+                  if (await confirm("Are you sure you want to permanently delete this blog post? This action cannot be undone.")) {
                     handleBlogDelete(selectedBlogModal._id);
                     setSelectedBlogModal(null);
                   }
@@ -10238,8 +10238,8 @@ const handlePartnerAction = async (partnerId, action) => {
               themeMode === 'dark' ? 'border-slate-800 bg-slate-900/50' : 'border-slate-100 bg-slate-50'
             }`}>
               <button 
-                onClick={() => {
-                  if (window.confirm("Permanently delete this review?")) {
+                onClick={async () => {
+                  if (await window.confirm("Permanently delete this review?")) {
                     handleReviewAction(selectedReview._id, 'delete');
                     setSelectedReview(null);
                     setShowReviewModal(false);

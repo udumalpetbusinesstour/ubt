@@ -987,7 +987,7 @@ function DashboardContent() {
     const activeToken = token || localStorage.getItem('ubt_token');
     if (!activeToken || !business) return;
 
-    const skipPayment = window.confirm("Skip payment gateway and auto-submit ad promotion for testing?");
+    const skipPayment = await window.confirm("Skip payment gateway and auto-submit ad promotion for testing?");
     if (skipPayment) {
       setAdPaymentLoadingMap(prev => ({ ...prev, [promo.id]: true }));
       try {
@@ -1975,7 +1975,7 @@ function DashboardContent() {
   };
 
   const handleBranchDelete = async (branchId) => {
-    if (!window.confirm('Are you sure you want to delete this branch?')) return;
+    if (!await window.confirm('Are you sure you want to delete this branch?')) return;
 
     try {
       if (business._id === 'UBT-10024') {
@@ -2189,7 +2189,7 @@ function DashboardContent() {
   };
 
   const handleMenuDelete = async (itemId) => {
-    if (!window.confirm('Are you sure you want to delete this menu item?')) return;
+    if (!await window.confirm('Are you sure you want to delete this menu item?')) return;
 
     const activeToken = token || localStorage.getItem('ubt_token');
 
@@ -2838,7 +2838,7 @@ function DashboardContent() {
       return;
     }
 
-    if (!window.confirm('Are you sure you want to redeem 1,000 points for a ₹1,000 cashback refund? 1,000 points will be deducted immediately.')) {
+    if (!await window.confirm('Are you sure you want to redeem 1,000 points for a ₹1,000 cashback refund? 1,000 points will be deducted immediately.')) {
       return;
     }
 
@@ -3023,7 +3023,7 @@ function DashboardContent() {
   };
 
   const handleBlogDelete = async (blogId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this blog post? This action cannot be undone.')) {
+    if (!await window.confirm('Are you sure you want to permanently delete this blog post? This action cannot be undone.')) {
       return;
     }
 
@@ -3046,7 +3046,7 @@ function DashboardContent() {
   };
 
   const handleEventDelete = async (eventId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this event listing? This action cannot be undone.')) {
+    if (!await window.confirm('Are you sure you want to permanently delete this event listing? This action cannot be undone.')) {
       return;
     }
 
@@ -3467,10 +3467,10 @@ function DashboardContent() {
       return;
     }
 
-    if (!window.confirm('WARNING: Are you absolutely sure you want to permanently deregister and delete your UBT account? This will permanently delete your profile, business listings, events, and blogs. This action is irreversible.')) {
+    if (!await window.confirm('WARNING: Are you absolutely sure you want to permanently deregister and delete your UBT account? This will permanently delete your profile, business listings, events, and blogs. This action is irreversible.')) {
       return;
     }
-    if (!window.confirm('CONFIRM ACCOUNT DELETION: Click OK to proceed with permanent registration removal.')) {
+    if (!await window.confirm('CONFIRM ACCOUNT DELETION: Click OK to proceed with permanent registration removal.')) {
       return;
     }
 

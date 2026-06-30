@@ -448,7 +448,7 @@ export default function AdminDashboard() {
   };
 
   const handleTestimonialDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to permanently delete this testimonial Thoughts?')) return;
+    if (!await window.confirm('Are you sure you want to permanently delete this testimonial Thoughts?')) return;
     try {
       const res = await fetch(`http://localhost:5000/api/testimonials/${id}`, {
         method: 'DELETE',
@@ -1333,7 +1333,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteSponsorAd = async (businessId, offerId) => {
-    const confirmed = confirm("Are you sure you want to permanently delete this flyer promotion from the database?");
+    const confirmed = await confirm("Are you sure you want to permanently delete this flyer promotion from the database?");
     if (!confirmed) return;
     try {
       const storedToken = localStorage.getItem('ubt_token');
@@ -1379,7 +1379,7 @@ export default function AdminDashboard() {
   const renameMainCategory = async (oldParentName) => {
     const newParentName = prompt(`Rename main category "${oldParentName}" to:`, oldParentName);
     if (!newParentName || newParentName.trim() === '' || newParentName.trim() === oldParentName) return;
-    const confirmed = confirm(`Rename main category "${oldParentName}" → "${newParentName.trim()}"?\nThis will update all subcategories under it.`);
+    const confirmed = await confirm(`Rename main category "${oldParentName}" → "${newParentName.trim()}"?\nThis will update all subcategories under it.`);
     if (!confirmed) return;
     try {
       const res = await fetch('http://localhost:5000/api/categories/rename-parent', {
@@ -1501,7 +1501,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeletePartner = async (partnerId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this partner and their entire registration? This will also cascade delete all their referrals, redemptions, and notifications.')) {
+    if (!await window.confirm('Are you sure you want to permanently delete this partner and their entire registration? This will also cascade delete all their referrals, redemptions, and notifications.')) {
       return;
     }
     try {
@@ -1526,7 +1526,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteBusiness = async (bizId) => {
-    if (window.confirm("Are you sure you want to permanently delete this listing? All reviews, blogs, and events matching will be cascade deleted!")) {
+    if (await window.confirm("Are you sure you want to permanently delete this listing? All reviews, blogs, and events matching will be cascade deleted!")) {
       try {
         const res = await fetch(`http://localhost:5000/api/admin/businesses/${bizId}`, {
           method: 'DELETE',
@@ -1695,7 +1695,7 @@ export default function AdminDashboard() {
   };
 
   const handleBlogDelete = async (blogId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this blog post? This action cannot be undone.')) {
+    if (!await window.confirm('Are you sure you want to permanently delete this blog post? This action cannot be undone.')) {
       return;
     }
     try {
@@ -1744,7 +1744,7 @@ export default function AdminDashboard() {
   };
 
   const handleEventDelete = async (eventId) => {
-    if (!window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+    if (!await window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
       return;
     }
     try {
@@ -1780,7 +1780,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteSignup = async (userId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this user signup? This will permanently delete the user registration and cascade-delete all their businesses, blogs, events, reviews, and subscriptions.')) {
+    if (!await window.confirm('Are you sure you want to permanently delete this user signup? This will permanently delete the user registration and cascade-delete all their businesses, blogs, events, reviews, and subscriptions.')) {
       return;
     }
     try {
@@ -1805,7 +1805,7 @@ export default function AdminDashboard() {
 
   const handleDeleteSelectedSignups = async () => {
     if (selectedSignups.length === 0) return;
-    if (!window.confirm(`Are you sure you want to permanently delete the ${selectedSignups.length} selected user registrations? This will cascade-delete ALL their businesses, blogs, events, reviews, and subscriptions. This action is irreversible!`)) {
+    if (!await window.confirm(`Are you sure you want to permanently delete the ${selectedSignups.length} selected user registrations? This will cascade-delete ALL their businesses, blogs, events, reviews, and subscriptions. This action is irreversible!`)) {
       return;
     }
     try {
@@ -3153,8 +3153,8 @@ export default function AdminDashboard() {
                               <div className="flex flex-wrap gap-2 items-center">
                                 {biz.requestedParentCategory && (
                                   <button
-                                    onClick={() => {
-                                      const confirmed = confirm(`Approve new subcategory "${biz.customCategoryName}" nested under requested parent category "${biz.requestedParentCategory}"?`);
+                                    onClick={async () => {
+                                      const confirmed = await confirm(`Approve new subcategory "${biz.customCategoryName}" nested under requested parent category "${biz.requestedParentCategory}"?`);
                                       if (confirmed) {
                                         resolveCategoryRequest(biz._id, 'create', null, biz.customCategoryName, null, biz.requestedParentCategory);
                                       }
@@ -3165,12 +3165,12 @@ export default function AdminDashboard() {
                                   </button>
                                 )}
                                 <select
-                                  onChange={(e) => {
+                                  onChange={async (e) => {
                                     const catId = e.target.value;
                                     if (!catId) return;
                                     const matched = presetCategories.find(c => c._id === catId);
                                     if (matched) {
-                                      const confirmed = confirm(`Assign existing category "${matched.categoryName}" for "${biz.customCategoryName}"?`);
+                                      const confirmed = await confirm(`Assign existing category "${matched.categoryName}" for "${biz.customCategoryName}"?`);
                                       if (confirmed) {
                                         resolveCategoryRequest(biz._id, 'assign', matched._id);
                                       }
@@ -3203,10 +3203,10 @@ export default function AdminDashboard() {
                                 </select>
 
                                 <button
-                                  onClick={() => {
+                                  onClick={async () => {
                                     const parentVal = document.getElementById(`parent-select-1-${biz._id}`).value;
                                     const parentText = parentVal === 'None' ? 'a Separate Main Category' : `a subcategory under "${parentVal}"`;
-                                    const isCreate = confirm(`Create genuinely new category "${biz.customCategoryName}" as ${parentText}? It will auto-resolve the business mapping.`);
+                                    const isCreate = await confirm(`Create genuinely new category "${biz.customCategoryName}" as ${parentText}? It will auto-resolve the business mapping.`);
                                     if (isCreate) {
                                       resolveCategoryRequest(biz._id, 'create', null, biz.customCategoryName, null, parentVal);
                                     }
@@ -4863,8 +4863,8 @@ export default function AdminDashboard() {
                                         <div className="flex justify-end gap-2">
                                           {r.status !== 'completed' && (
                                             <button
-                                              onClick={() => {
-                                                if (confirm('Manually approve this referral and credit 100 points to the referrer?')) {
+                                              onClick={async () => {
+                                                if (await confirm('Manually approve this referral and credit 100 points to the referrer?')) {
                                                   handleReferralModerate(r._id, 'approve');
                                                 }
                                               }}
@@ -5305,8 +5305,8 @@ export default function AdminDashboard() {
                                   {biz.requestedParentCategory && (
                                     <button
                                       type="button"
-                                      onClick={() => {
-                                        const confirmed = confirm(`Approve new subcategory "${biz.customCategoryName}" nested under requested parent category "${biz.requestedParentCategory}"?`);
+                                      onClick={async () => {
+                                        const confirmed = await confirm(`Approve new subcategory "${biz.customCategoryName}" nested under requested parent category "${biz.requestedParentCategory}"?`);
                                         if (confirmed) {
                                           resolveCategoryRequest(biz._id, 'create', null, biz.customCategoryName, null, biz.requestedParentCategory);
                                         }
@@ -5361,7 +5361,7 @@ export default function AdminDashboard() {
                                           ))}
                                         </select>
                                         <button
-                                          onClick={() => {
+                                          onClick={async () => {
                                             const catId = resolutionTargetCatMap[biz._id];
                                             if (!catId) {
                                               alert("Please select a target category.");
@@ -5369,7 +5369,7 @@ export default function AdminDashboard() {
                                             }
                                             const matched = presetCategories.find(c => c._id === catId);
                                             if (matched) {
-                                              const confirmed = confirm(`Map custom request to existing category "${matched.categoryName}"?`);
+                                              const confirmed = await confirm(`Map custom request to existing category "${matched.categoryName}"?`);
                                               if (confirmed) {
                                                 resolveCategoryRequest(biz._id, 'assign', matched._id);
                                               }
@@ -5401,7 +5401,7 @@ export default function AdminDashboard() {
                                             required
                                             placeholder="e.g. General, Services, custom sub..."
                                             value={resolutionCustomSubcatMap[biz._id] || ''}
-                                            onChange={(e) => {
+                                            onChange={async (e) => {
                                               const val = e.target.value;
                                               setResolutionCustomSubcatMap(prev => ({ ...prev, [biz._id]: val }));
                                             }}
@@ -5409,13 +5409,13 @@ export default function AdminDashboard() {
                                           />
                                         </div>
                                         <button
-                                          onClick={() => {
+                                          onClick={async () => {
                                             const subcatName = resolutionCustomSubcatMap[biz._id]?.trim();
                                             if (!subcatName) {
                                               alert("Please specify a subcategory name.");
                                               return;
                                             }
-                                            const confirmed = confirm(`Create new Main Category "${biz.customCategoryName}" with Subcategory "${subcatName}"?`);
+                                            const confirmed = await confirm(`Create new Main Category "${biz.customCategoryName}" with Subcategory "${subcatName}"?`);
                                             if (confirmed) {
                                               resolveCategoryRequest(biz._id, 'create', null, subcatName, null, biz.customCategoryName);
                                             }
@@ -5456,13 +5456,13 @@ export default function AdminDashboard() {
                                           />
                                         </div>
                                         <button
-                                          onClick={() => {
+                                          onClick={async () => {
                                             const parentVal = resolutionParentCatMap[biz._id];
                                             if (!parentVal) {
                                               alert("Please select a parent category.");
                                               return;
                                             }
-                                            const confirmed = confirm(`Add "${biz.customCategoryName}" as a new Subcategory under existing Main category "${parentVal}"?`);
+                                            const confirmed = await confirm(`Add "${biz.customCategoryName}" as a new Subcategory under existing Main category "${parentVal}"?`);
                                             if (confirmed) {
                                               resolveCategoryRequest(biz._id, 'create', null, biz.customCategoryName, null, parentVal);
                                             }
@@ -5617,7 +5617,7 @@ export default function AdminDashboard() {
 
                                                 <div className="flex gap-1.5 shrink-0">
                                                   <button
-                                                    onClick={() => {
+                                                    onClick={async () => {
                                                       const newName = prompt("Rename category:", cat.categoryName);
                                                       if (!newName || newName === cat.categoryName) return;
                                                       updatePresetCategory(cat._id, { categoryName: newName });
@@ -5628,8 +5628,8 @@ export default function AdminDashboard() {
                                                     Edit
                                                   </button>
                                                   <button
-                                                    onClick={() => {
-                                                      if (confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
+                                                    onClick={async () => {
+                                                      if (await confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
                                                         deletePresetCategory(cat._id);
                                                       }
                                                     }}
@@ -5684,7 +5684,7 @@ export default function AdminDashboard() {
 
                                           <div className="flex gap-1.5 shrink-0">
                                             <button
-                                              onClick={() => {
+                                              onClick={async () => {
                                                 const newName = prompt("Rename category:", cat.categoryName);
                                                 if (!newName || newName === cat.categoryName) return;
                                                 updatePresetCategory(cat._id, { categoryName: newName });
@@ -5695,8 +5695,8 @@ export default function AdminDashboard() {
                                               Edit
                                             </button>
                                             <button
-                                              onClick={() => {
-                                                if (confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
+                                              onClick={async () => {
+                                                if (await confirm(`Are you sure you want to permanently delete category "${cat.categoryName}"? Businesses linked will stay fallback to "Others".`)) {
                                                   deletePresetCategory(cat._id);
                                                 }
                                               }}
@@ -5930,7 +5930,7 @@ export default function AdminDashboard() {
                               return;
                             }
 
-                            if (confirm("Are you sure you want to merge these categories? This will remap all businesses linked to source category and permanently delete it!")) {
+                            if (await confirm("Are you sure you want to merge these categories? This will remap all businesses linked to source category and permanently delete it!")) {
                               try {
                                 const mergeRes = await fetch('http://localhost:5000/api/admin/categories/merge', {
                                   method: 'POST',
@@ -6965,8 +6965,8 @@ export default function AdminDashboard() {
             {/* Modal Footer */}
             <div className="p-6 border-t border-slate-200 bg-slate-50 flex gap-3 shrink-0 justify-between items-center">
               <button 
-                onClick={() => {
-                  if (confirm("Are you sure you want to permanently delete this blog post? This action cannot be undone.")) {
+                onClick={async () => {
+                  if (await confirm("Are you sure you want to permanently delete this blog post? This action cannot be undone.")) {
                     handleBlogDelete(selectedBlogModal._id);
                     setSelectedBlogModal(null);
                   }

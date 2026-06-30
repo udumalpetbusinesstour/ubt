@@ -456,7 +456,7 @@ export default function BusinessDetail() {
   };
 
   const handleDeleteGalleryPhoto = async (urlToDelete) => {
-    if (!window.confirm('Are you sure you want to remove this image from the gallery?')) return;
+    if (!await window.confirm('Are you sure you want to remove this image from the gallery?')) return;
     
     setMediaError('');
     const token = localStorage.getItem('ubt_token');

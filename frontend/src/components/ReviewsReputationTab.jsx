@@ -426,7 +426,7 @@ export default function ReviewsReputationTab({
                         <button 
                           onClick={async () => {
                             const activeToken = token || localStorage.getItem('ubt_token');
-                            if (confirm('Are you sure you want to flag this review as spam?')) {
+                            if (await confirm('Are you sure you want to flag this review as spam?')) {
                               try {
                                 const res = await fetch(`http://localhost:5000/api/reviews/${rev.id}/moderate`, {
                                   method: 'PUT',

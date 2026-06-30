@@ -566,7 +566,7 @@ export default function EventsPage() {
   };
 
   const handleCommentDelete = async (eventId, commentId) => {
-    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+    if (!await window.confirm('Are you sure you want to delete this comment?')) return;
     
     try {
       const token = localStorage.getItem('ubt_token');
