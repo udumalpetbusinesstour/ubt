@@ -1657,14 +1657,26 @@ export default function Home() {
             <div>
               <div className="flex flex-wrap items-center gap-3">
                 <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight">What People Say</h2>
-                <button 
-                  onClick={() => setIsGoogleReviewModalOpen(true)}
+                <a 
+                  href="https://www.google.com/maps/place//data=!4m3!3m2!1s0x50c1e1cd425b733:0x8b8510b51c2abead!12e1?source=g.page.m.ia._&laa=nmx-review-solicitation-ia2"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const width = 600;
+                    const height = 700;
+                    const left = (window.screen.width - width) / 2;
+                    const top = (window.screen.height - height) / 2;
+                    window.open(
+                      "https://www.google.com/maps/place//data=!4m3!3m2!1s0x50c1e1cd425b733:0x8b8510b51c2abead!12e1?source=g.page.m.ia._&laa=nmx-review-solicitation-ia2",
+                      "GoogleReviewPopup",
+                      `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`
+                    );
+                  }}
                   className="inline-flex items-center gap-1 bg-[#4285F4]/10 hover:bg-[#4285F4]/15 text-[#4285F4] px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer border border-[#4285F4]/20 hover:scale-102"
                 >
                   <Star className="h-3 w-3 fill-current text-[#F4B400] border-none" />
                   <span>See or write a review on Google</span>
                   <ArrowRight className="h-3 w-3" />
-                </button>
+                </a>
               </div>
               <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">Real experiences shared by our core community member creators</p>
             </div>
@@ -2088,7 +2100,7 @@ export default function Home() {
             <div className="flex-1 w-full bg-slate-100 relative overflow-hidden">
               <iframe
                 title="Google Review Embed"
-                src="https://www.google.com/maps/place//data=!4m3!3m2!1s0x50c1e1cd425b733:0x8b8510b51c2abead!12e1?source=g.page.m.ia._&laa=nmx-review-solicitation-ia2"
+                src="https://maps.google.com/maps?q=Udumalpet+Business+Tour&t=&z=15&ie=UTF8&iwloc=&output=embed"
                 className="w-full h-full border-0"
                 allowFullScreen=""
                 loading="lazy"

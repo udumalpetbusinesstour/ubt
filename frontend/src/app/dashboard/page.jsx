@@ -7528,93 +7528,106 @@ function DashboardContent() {
                   {/* Promotions Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {promotionsList.length > 0 ? (
-                      promotionsList.map((promo) => (
-                        <div key={promo.id} className="card-premium rounded-3xl overflow-hidden flex flex-col relative bg-white border border-slate-150">
-                          <div className="h-44 bg-slate-50 overflow-hidden relative group select-none">
-                            <img 
-                              src={window.getImageUrl(promo.image)} 
-                              alt="Promotion Banner" 
-                              className="w-full h-full object-cover"
-                            />
-                            
-                            {/* Sponsorship Status Badge */}
-                            <div className="absolute top-4 right-4 z-10">
-                              {promo.isSponsored ? (
-                                <span className="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 border border-emerald-500">
-                                  <Sparkles className="h-3 w-3 fill-current text-white animate-pulse" /> Live Sponsored Ad
-                                </span>
-                              ) : promo.sponsoredStatus === 'pending' ? (
-                                <span className="bg-amber-500 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 border border-amber-450 animate-pulse">
-                                  <Clock className="h-3 w-3" /> Ad Review Pending
-                                </span>
-                              ) : promo.sponsoredStatus === 'rejected' ? (
-                                <span className="bg-rose-600 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 border border-rose-500">
-                                  <X className="h-3 w-3" /> Ad Rejected
-                                </span>
-                              ) : (
-                                <span className="bg-slate-600/90 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-xs">
-                                  Free Profile Listing
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                      promotionsList.map((promo) => {
+                        const isAdExpired = promo.isSponsored && promo.sponsoredExpiry && new Date(promo.sponsoredExpiry) <= new Date();
+                        const canPromote = (!promo.isSponsored || isAdExpired) && promo.sponsoredStatus !== 'pending';
 
-                          <div className="p-6 flex flex-col gap-4 text-left justify-between flex-1">
-                            <div className="flex flex-col gap-1">
-                              <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Promotion Type</span>
-                              <span className="text-xs font-bold text-slate-700">Visual campaign banner loaded on your business page.</span>
-                            </div>
-
-                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-slate-100 pt-4 mt-1">
-                              <span className="text-[10px] text-slate-400 font-bold">
-                                {promo.sponsoredExpiry ? `Ad Expiry: ${new Date(promo.sponsoredExpiry).toLocaleDateString()}` : 'No expiry set'}
-                              </span>
-
-                              <div className="flex flex-wrap gap-2">
-                                {!promo.isSponsored && promo.sponsoredStatus !== 'pending' && (
-                                  <button
-                                    onClick={() => handleSponsorAdPayment(promo)}
-                                    disabled={adPaymentLoadingMap[promo.id]}
-                                    className="py-1.5 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-black uppercase cursor-pointer btn-active-press flex items-center gap-1.5 border border-amber-600/10 shadow-xs"
-                                  >
-                                    {adPaymentLoadingMap[promo.id] ? (
-                                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                                    ) : (
-                                      <Sparkles className="h-3.5 w-3.5 fill-current text-white" />
-                                    )}
-                                    Promote to Homepage (₹99)
-                                  </button>
+                        return (
+                          <div key={promo.id} className="card-premium rounded-3xl overflow-hidden flex flex-col relative bg-white border border-slate-150">
+                            <div className="h-44 bg-slate-50 overflow-hidden relative group select-none">
+                              <img 
+                                src={window.getImageUrl(promo.image)} 
+                                alt="Promotion Banner" 
+                                className="w-full h-full object-cover"
+                              />
+                              
+                              {/* Sponsorship Status Badge */}
+                              <div className="absolute top-4 right-4 z-10">
+                                {isAdExpired ? (
+                                  <span className="bg-slate-500 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 border border-slate-450">
+                                    <Clock className="h-3 w-3" /> Ad Expired
+                                  </span>
+                                ) : promo.isSponsored ? (
+                                  <span className="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 border border-emerald-500">
+                                    <Sparkles className="h-3 w-3 fill-current text-white animate-pulse" /> Live Sponsored Ad
+                                  </span>
+                                ) : promo.sponsoredStatus === 'pending' ? (
+                                  <span className="bg-amber-500 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 border border-amber-450 animate-pulse">
+                                    <Clock className="h-3 w-3" /> Ad Review Pending
+                                  </span>
+                                ) : promo.sponsoredStatus === 'rejected' ? (
+                                  <span className="bg-rose-600 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 border border-rose-500">
+                                    <X className="h-3 w-3" /> Ad Rejected
+                                  </span>
+                                ) : (
+                                  <span className="bg-slate-600/90 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-xs">
+                                    Free Profile Listing
+                                  </span>
                                 )}
-                                <button
-                                  onClick={() => {
-                                    const isCurrentlyActive = promo.active !== false;
-                                    const updated = promotionsList.map(p => 
-                                      ((p.id && p.id === promo.id) || (p._id && p._id === promo._id))
-                                        ? { ...p, active: !isCurrentlyActive } 
-                                        : p
-                                    );
-                                    updatePromotions(updated);
-                                  }}
-                                  className={`py-1.5 px-3 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer btn-active-press ${(promo.active !== false) ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-emerald-50 hover:bg-emerald-100 text-[#027244]'}`}
-                                >
-                                  {(promo.active !== false) ? 'Pause' : 'Activate'}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    const updated = promotionsList.filter(p => 
-                                      !((p.id && p.id === promo.id) || (p._id && p._id === promo._id))
-                                    );
-                                    updatePromotions(updated);
-                                  }}
-                                  className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[10px] font-black uppercase cursor-pointer btn-active-press"
-                                >
-                                  Delete
-                                </button>
+                              </div>
+                            </div>
+
+                            <div className="p-6 flex flex-col gap-4 text-left justify-between flex-1">
+                              <div className="flex flex-col gap-1">
+                                <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Promotion Type</span>
+                                <span className="text-xs font-bold text-slate-700">Visual campaign banner loaded on your business page.</span>
+                              </div>
+
+                              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-slate-100 pt-4 mt-1">
+                                <span className="text-[10px] text-slate-400 font-bold">
+                                  {promo.sponsoredExpiry ? `Ad Expiry: ${new Date(promo.sponsoredExpiry).toLocaleDateString()}` : 'No expiry set'}
+                                </span>
+
+                                <div className="flex flex-wrap gap-2">
+                                  {canPromote && (
+                                    <button
+                                      onClick={() => handleSponsorAdPayment(promo)}
+                                      disabled={adPaymentLoadingMap[promo.id]}
+                                      className="py-1.5 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-black uppercase cursor-pointer btn-active-press flex items-center gap-1.5 border border-amber-600/10 shadow-xs"
+                                    >
+                                      {adPaymentLoadingMap[promo.id] ? (
+                                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                                      ) : (
+                                        <Sparkles className="h-3.5 w-3.5 fill-current text-white" />
+                                      )}
+                                      {isAdExpired ? 'Repromote Flyer (₹99)' : 'Promote to Homepage (₹99)'}
+                                    </button>
+                                  )}
+                                  
+                                  {!isAdExpired && (
+                                    <button
+                                      onClick={() => {
+                                        const isCurrentlyActive = promo.active !== false;
+                                        const updated = promotionsList.map(p => 
+                                          ((p.id && p.id === promo.id) || (p._id && p._id === promo._id))
+                                            ? { ...p, active: !isCurrentlyActive } 
+                                            : p
+                                        );
+                                        updatePromotions(updated);
+                                      }}
+                                      className={`py-1.5 px-3 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer btn-active-press ${(promo.active !== false) ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-emerald-50 hover:bg-emerald-100 text-[#027244]'}`}
+                                    >
+                                      {(promo.active !== false) ? 'Pause' : 'Activate'}
+                                    </button>
+                                  )}
+                                  
+                                  <button
+                                    onClick={() => {
+                                      const updated = promotionsList.filter(p => 
+                                        !((p.id && p.id === promo.id) || (p._id && p._id === promo._id))
+                                      );
+                                      updatePromotions(updated);
+                                    }}
+                                    className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[10px] font-black uppercase cursor-pointer btn-active-press"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))
+                        );
+                      })
                     ) : (
                       <div className="col-span-full py-12 text-center text-slate-400 text-xs font-semibold bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
                         No flyer promotions uploaded yet. Click "Upload Flyer" to list your first visual promotion flyer poster.
