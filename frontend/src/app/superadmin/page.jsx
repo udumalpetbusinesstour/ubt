@@ -3832,11 +3832,7 @@ const handlePartnerAction = async (partnerId, action) => {
                           >
                             <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
                               <div className="flex gap-1">
-                                {b.featured && (
-                                  <span className="bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-0.5 select-none">
-                                    <Sparkles className="h-2.5 w-2.5 fill-current" /> Featured
-                                  </span>
-                                )}
+
                                 <span className={`text-[8.5px] font-black uppercase px-2 py-0.5 rounded-lg shadow-sm select-none ${
                                   b.status === 'Approved' 
                                     ? 'bg-[#027244] text-white' 
@@ -3936,26 +3932,7 @@ const handlePartnerAction = async (partnerId, action) => {
                               >
                                 Extend Sub
                               </button>
-                              <button 
-                                onClick={() => handleFeaturedToggle(b._id)}
-                                className={`py-2 text-[10.5px] font-extrabold rounded-xl cursor-pointer text-center transition-colors ${
-                                  b.featured 
-                                    ? 'bg-slate-500/15 border border-slate-500/25 text-slate-400 hover:bg-slate-500/25'
-                                    : 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs'
-                                }`}
-                              >
-                                {b.featured ? 'Un-Feature' : 'Mark Featured'}
-                              </button>
-                              <button 
-                                onClick={() => handleAction(b._id, b.status === 'Suspended' ? 'approve' : 'suspend')}
-                                className={`py-2 text-[10.5px] font-extrabold rounded-xl cursor-pointer text-center transition-colors ${
-                                  b.status === 'Suspended'
-                                    ? 'bg-[#027244] hover:bg-[#005934] text-white shadow-xs'
-                                    : 'bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-500'
-                                }`}
-                              >
-                                {b.status === 'Suspended' ? 'Reactivate' : 'Suspend'}
-                              </button>
+
                               
                               <button 
                                 onClick={() => handleAction(b._id, b.status === 'Hidden' ? 'unhide' : 'hide')}
@@ -8057,7 +8034,7 @@ const handlePartnerAction = async (partnerId, action) => {
             <div className={`p-4 sm:p-6 border-t flex flex-col gap-2 shrink-0 ${
               themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-200'
             }`}>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {selectedBiz.status !== 'Approved' && selectedBiz.status !== 'Rejected' && (
                   <button 
                     onClick={() => {
@@ -8071,13 +8048,6 @@ const handlePartnerAction = async (partnerId, action) => {
                     Reject listing
                   </button>
                 )}
-                <button 
-                  onClick={async () => { handleAction(selectedBiz._id, 'suspend'); setShowBizModal(false); }}
-                  disabled={selectedBiz.status === 'Suspended'}
-                  className="py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-550 font-extrabold text-[11px] rounded-xl cursor-pointer disabled:opacity-40 text-center transition-colors border border-amber-500/25"
-                >
-                  Suspend business
-                </button>
                 <button 
                   onClick={async () => {
                     const remarks = await window.prompt("Enter modification request comments:");

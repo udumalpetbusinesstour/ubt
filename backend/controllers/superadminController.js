@@ -451,6 +451,32 @@ const updateBusinessStatus = async (req, res, next) => {
     } else if (status === 'Rejected') {
       verification = 'rejected';
       actionWord = 'reject';
+      
+      // Send rejection email to the business owner
+      const { sendEmail } = require('../utils/emailHelper');
+      const ownerEmail = business.ownerEmail || (business.ownerId && business.ownerId.email);
+      if (ownerEmail) {
+        try {
+          await sendEmail({
+            to: ownerEmail,
+            subject: `UBT Listing Rejection: ${business.name}`,
+            text: `Dear Merchant,
+
+Your business directory listing "${business.name}" has been rejected during moderation on Udumalpet Business Tour (UBT).
+
+Reason for Rejection:
+${remarks || 'No specific reason provided.'}
+
+Please log in to your account, correct the details according to the reason above, and resubmit your listing for verification.
+
+Regards,
+UBT Moderation Team`
+          });
+          console.log(`[REJECTION EMAIL] Sent notification to ${ownerEmail}`);
+        } catch (mailErr) {
+          console.error('Failed to send rejection email notification:', mailErr.message);
+        }
+      }
     } else if (status === 'Suspended') {
       verification = 'suspended';
       actionWord = 'suspend';
