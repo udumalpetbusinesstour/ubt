@@ -260,7 +260,9 @@ const getSuperAdminStats = async (req, res, next) => {
       .filter(p => p.paidAt && new Date(p.paidAt) >= startOfThisMonth)
       .reduce((sum, p) => sum + p.amount, 0);
     const revenueBeforeThisMonth = totalRevenue - revenueThisMonth;
-    const revenuePct = revenueBeforeThisMonth > 0 ? ((revenueThisMonth / revenueBeforeThisMonth) * 100).toFixed(1) : '0';
+    const revenuePct = revenueBeforeThisMonth > 0 
+      ? ((revenueThisMonth / revenueBeforeThisMonth) * 100).toFixed(1) 
+      : (revenueThisMonth > 0 ? '100.0' : '0.0');
     
     const activeEvents = await Event.countDocuments(eventQuery);
     const pendingBlogs = await Blog.countDocuments(blogQuery);

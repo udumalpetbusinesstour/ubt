@@ -2885,7 +2885,9 @@ const handlePartnerAction = async (partnerId, action) => {
                     const businessesThisMonth = (businesses || []).filter(b => b.createdAt && new Date(b.createdAt) >= startOfThisMonth).length;
                     const totalBusinessesCount = (businesses || []).length;
                     const businessesBeforeThisMonth = totalBusinessesCount - businessesThisMonth;
-                    const businessesPct = businessesBeforeThisMonth > 0 ? ((businessesThisMonth / businessesBeforeThisMonth) * 100).toFixed(1) : '0';
+                    const businessesPct = businessesBeforeThisMonth > 0 
+                      ? ((businessesThisMonth / businessesBeforeThisMonth) * 100).toFixed(1) 
+                      : (businessesThisMonth > 0 ? '100.0' : '0.0');
 
                     // 2. Active Businesses
                     const activeFilteredCount = (dateFilteredBusinesses || []).filter(b => b.status === 'Approved').length;
@@ -2894,32 +2896,44 @@ const handlePartnerAction = async (partnerId, action) => {
                     const activeApprovedThisMonth = (businesses || []).filter(b => b.status === 'Approved' && b.createdAt && new Date(b.createdAt) >= startOfThisMonth).length;
                     const totalActiveApproved = (businesses || []).filter(b => b.status === 'Approved').length;
                     const activeApprovedBeforeThisMonth = totalActiveApproved - activeApprovedThisMonth;
-                    const activeApprovedPct = activeApprovedBeforeThisMonth > 0 ? ((activeApprovedThisMonth / activeApprovedBeforeThisMonth) * 100).toFixed(1) : '0';
+                    const activeApprovedPct = activeApprovedBeforeThisMonth > 0 
+                      ? ((activeApprovedThisMonth / activeApprovedBeforeThisMonth) * 100).toFixed(1) 
+                      : (activeApprovedThisMonth > 0 ? '100.0' : '0.0');
 
                     // 3. Total Users
                     const allUsers = signups.length > 0 ? signups : [...(merchants || []), ...(regularUsers || [])];
                     const usersThisMonth = allUsers.filter(u => u.createdAt && new Date(u.createdAt) >= startOfThisMonth).length;
                     const totalUsersCount = allUsers.length;
                     const usersBeforeThisMonth = totalUsersCount - usersThisMonth;
-                    const usersPct = usersBeforeThisMonth > 0 ? ((usersThisMonth / usersBeforeThisMonth) * 100).toFixed(1) : '0';
+                    const usersPct = usersBeforeThisMonth > 0 
+                      ? ((usersThisMonth / usersBeforeThisMonth) * 100).toFixed(1) 
+                      : (usersThisMonth > 0 ? '100.0' : '0.0');
 
                     // 4. Events Listed
                     const eventsThisMonth = (events || []).filter(e => (e.createdAt || e.date) && new Date(e.createdAt || e.date) >= startOfThisMonth).length;
                     const totalEventsCount = (events || []).length;
                     const eventsBeforeThisMonth = totalEventsCount - eventsThisMonth;
-                    const eventsPct = eventsBeforeThisMonth > 0 ? ((eventsThisMonth / eventsBeforeThisMonth) * 100).toFixed(1) : '0';
+                    const eventsPct = eventsBeforeThisMonth > 0 
+                      ? ((eventsThisMonth / eventsBeforeThisMonth) * 100).toFixed(1) 
+                      : (eventsThisMonth > 0 ? '100.0' : '0.0');
 
                     // 5. Blog Posts
                     const blogsThisMonth = (blogs || []).filter(b => b.createdAt && new Date(b.createdAt) >= startOfThisMonth).length;
                     const totalBlogsCount = (blogs || []).length;
                     const blogsBeforeThisMonth = totalBlogsCount - blogsThisMonth;
-                    const blogsPct = blogsBeforeThisMonth > 0 ? ((blogsThisMonth / blogsBeforeThisMonth) * 100).toFixed(1) : '0';
+                    const blogsPct = blogsBeforeThisMonth > 0 
+                      ? ((blogsThisMonth / blogsBeforeThisMonth) * 100).toFixed(1) 
+                      : (blogsThisMonth > 0 ? '100.0' : '0.0');
 
                     // 6. Total Revenue
                     const revenueThisMonthVal = dashboardStats?.revenueThisMonth !== undefined ? dashboardStats.revenueThisMonth : (subscriptions || []).filter(s => s.createdAt && new Date(s.createdAt) >= startOfThisMonth).reduce((sum, s) => sum + (s.amount || 0), 0);
-                    const revenuePctVal = dashboardStats?.revenuePct !== undefined ? dashboardStats.revenuePct : '0';
                     const totalRevenueCount = (subscriptions || []).reduce((sum, s) => sum + (s.amount || 0), 0);
                     const revenueBeforeThisMonth = totalRevenueCount - revenueThisMonthVal;
+                    const revenuePctVal = dashboardStats?.revenuePct !== undefined 
+                      ? dashboardStats.revenuePct 
+                      : (revenueBeforeThisMonth > 0 
+                          ? ((revenueThisMonthVal / revenueBeforeThisMonth) * 100).toFixed(1) 
+                          : (revenueThisMonthVal > 0 ? '100.0' : '0.0'));
 
                     const cards = [
                       { title: 'Total Businesses', val: dateFilteredBusinesses.length || 0, desc: `+${businessesThisMonth} this month`, pct: `+${businessesPct}%`, icon: <Store className="h-5 w-5" />, color: 'from-purple-500/10 border-purple-500/20 text-purple-500', tabId: 'Businesses' },
