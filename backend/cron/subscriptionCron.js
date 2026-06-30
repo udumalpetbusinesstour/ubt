@@ -127,12 +127,12 @@ const runExpiryAudit = async () => {
   }
 };
 
-// Orchestrate Daily Cron trigger pattern (Runs at 00:00 everyday)
+// Orchestrate Cron trigger pattern (Runs every 6 hours: 00:00, 06:00, 12:00, 18:00)
 const startSubscriptionCron = () => {
   // Run immediately on boot to ensure database integrity
   runExpiryAudit();
 
-  cron.schedule('0 0 * * *', () => {
+  cron.schedule('0 */6 * * *', () => {
     runExpiryAudit();
   });
 };
