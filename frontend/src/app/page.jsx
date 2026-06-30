@@ -289,6 +289,21 @@ export default function Home() {
     return () => clearInterval(timer);
   }, [sponsoredAds]);
 
+  useEffect(() => {
+    if (!topViewedBusinesses || topViewedBusinesses.length <= 1) return;
+    const timer = setInterval(() => {
+      if (topViewedScrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = topViewedScrollRef.current;
+        if (scrollLeft + clientWidth >= scrollWidth - 20) {
+          topViewedScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          topViewedScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+        }
+      }
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [topViewedBusinesses]);
+
   // Testimonials state
   const fallbackTestimonials = [
     {
