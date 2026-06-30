@@ -3552,11 +3552,10 @@ const handlePartnerAction = async (partnerId, action) => {
 
                   </div>
 
-                  {/* Top Performers, Reports & Activity Grid - Row 3 */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                     
                     {/* Top Performing Businesses Card */}
-                    <div className={`lg:col-span-4 rounded-3xl border p-5 flex flex-col h-[24rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
+                    <div className={`lg:col-span-6 rounded-3xl border p-5 flex flex-col h-[24rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
 
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
                         <span className="text-xs font-black uppercase tracking-widest text-slate-400">Top Performing Businesses</span>
@@ -3568,111 +3567,74 @@ const handlePartnerAction = async (partnerId, action) => {
                         </span>
                       </div>
                       
-                        <div className="flex-1 flex flex-col gap-3 py-3 overflow-y-auto pr-1">{(dashboardStats?.topBusinesses && dashboardStats.topBusinesses.length > 0
-                          ? dashboardStats.topBusinesses.map(t => ({
-                              _id: t._id,
-                              rank: t.rank,
-                              name: t.name,
-                              views: t.views.toLocaleString('en-IN'),
-                              rate: t.rate.toFixed(1),
-                              leads: t.leads.toLocaleString('en-IN'),
-                              sector: t.sector,
-                              icon: t.icon
-                            }))
-                          : [
-                              { rank: 1, name: 'Green Leaf Restaurant', views: '4,256', rate: '4.8', leads: '126', sector: 'Food & Restaurants', icon: '🟢' },
-                              { rank: 2, name: 'Sri Lakshmi Electricals', views: '3,782', rate: '4.6', leads: '98', sector: 'Electrical Services', icon: '⚡' },
-                              { rank: 3, name: 'Royal Car Care', views: '3,421', rate: '4.7', leads: '87', sector: 'Automotive', icon: '🔵' }
-                            ]
-                        ).map((top, idx) => (
-                          <div key={idx} 
-                            onClick={() => {
-                              const biz = businesses.find(b => b._id === top._id || b.name.toLowerCase() === top.name.toLowerCase());
-                              setSelectedBiz(biz || {
-                                name: top.name,
-                                category: top.sector,
-                                rating: Number(top.rate),
-                                googleRating: Number(top.rate),
-                                views: parseInt(top.views.replace(/,/g, '')),
-                                leads: parseInt(top.leads.replace(/,/g, '')),
-                                status: 'Approved',
-                                ownerName: 'Merchant',
-                                email: '',
-                                phone: '',
-                                locality: 'Udumalpet',
-                                createdAt: new Date()
-                              });
-                              setShowBizModal(true);
-                            }}
-                            className={`flex items-center gap-3 p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
-                            <span className="text-sm font-black text-[#001c41] w-4 text-left">{top.rank}</span>
-                            <span className={`h-8 w-8 rounded-xl border flex items-center justify-center text-sm shrink-0 shadow-inner ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-                              {top.icon}
-                            </span>
-                            <div className="flex flex-col text-left flex-1 min-w-0">
-                              <span className={`text-xs font-black truncate leading-none ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{top.name}</span>
+                      <div className="flex-1 flex flex-col gap-3 py-3 overflow-y-auto pr-1">{(dashboardStats?.topBusinesses && dashboardStats.topBusinesses.length > 0
+                        ? dashboardStats.topBusinesses.map(t => ({
+                            _id: t._id,
+                            rank: t.rank,
+                            name: t.name,
+                            views: t.views.toLocaleString('en-IN'),
+                            rate: t.rate.toFixed(1),
+                            leads: t.leads.toLocaleString('en-IN'),
+                            sector: t.sector,
+                            icon: t.icon
+                          }))
+                        : [
+                            { rank: 1, name: 'Green Leaf Restaurant', views: '4,256', rate: '4.8', leads: '126', sector: 'Food & Restaurants', icon: '🟢' },
+                            { rank: 2, name: 'Sri Lakshmi Electricals', views: '3,782', rate: '4.6', leads: '98', sector: 'Electrical Services', icon: '⚡' },
+                            { rank: 3, name: 'Royal Car Care', views: '3,421', rate: '4.7', leads: '87', sector: 'Automotive', icon: '🔵' }
+                          ]
+                      ).map((top, idx) => (
+                        <div key={idx} 
+                          onClick={() => {
+                            const biz = businesses.find(b => b._id === top._id || b.name.toLowerCase() === top.name.toLowerCase());
+                            setSelectedBiz(biz || {
+                              name: top.name,
+                              category: top.sector,
+                              rating: Number(top.rate),
+                              googleRating: Number(top.rate),
+                              views: parseInt(top.views.replace(/,/g, '')),
+                              leads: parseInt(top.leads.replace(/,/g, '')),
+                              status: 'Approved',
+                              ownerName: 'Merchant',
+                              email: '',
+                              phone: '',
+                              locality: 'Udumalpet',
+                              createdAt: new Date()
+                            });
+                            setShowBizModal(true);
+                          }}
+                          className={`flex items-center gap-3 p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
+                          <span className="text-sm font-black text-[#001c41] w-4 text-left">{top.rank}</span>
+                          <span className={`h-8 w-8 rounded-xl border flex items-center justify-center text-sm shrink-0 shadow-inner ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+                            {top.icon}
+                          </span>
+                          <div className="flex flex-col text-left flex-1 min-w-0">
+                            <span className={`text-xs font-black truncate leading-none ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{top.name}</span>
 
-                              <span className="text-[8px] text-slate-500 font-bold mt-1">{top.sector}</span>
+                            <span className="text-[8px] text-slate-500 font-bold mt-1">{top.sector}</span>
+                          </div>
+                          <div className="flex items-center gap-3 text-right shrink-0">
+                            <div className="flex flex-col gap-0.5">
+                              <span className={`text-[10px] font-black ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{top.views}</span>
+
+                              <span className="text-[8px] text-slate-500 font-bold">Views</span>
                             </div>
-                            <div className="flex items-center gap-3 text-right shrink-0">
-                              <div className="flex flex-col gap-0.5">
-                                <span className={`text-[10px] font-black ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{top.views}</span>
-
-                                <span className="text-[8px] text-slate-500 font-bold">Views</span>
-                              </div>
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-black text-emerald-450">★ {top.rate}</span>
-                                <span className="text-[8px] text-slate-500 font-bold">Rating</span>
-                              </div>
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-black text-[#027244]">{top.leads}</span>
-                                <span className="text-[8px] text-slate-500 font-bold">Leads</span>
-                              </div>
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[10px] font-black text-emerald-450">★ {top.rate}</span>
+                              <span className="text-[8px] text-slate-500 font-bold">Rating</span>
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[10px] font-black text-[#027244]">{top.leads}</span>
+                              <span className="text-[8px] text-slate-500 font-bold">Leads</span>
                             </div>
                           </div>
-                        ))}
+                        </div>
+                      ))}
                       </div>
-                    </div>
-
-                    {/* Reports & Analytics Card */}
-                    <div className={`lg:col-span-4 rounded-3xl border p-5 flex flex-col justify-between h-[24rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
-
-                      <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
-
-                        <span className="text-xs font-black uppercase tracking-widest text-slate-400">Reports & Analytics</span>
-                      </div>
-                      
-                      <div className="flex-1 grid grid-cols-2 gap-3 py-4">
-                        {[
-                          { title: 'Business Report', desc: 'Overview of all businesses', icon: <Store className="h-5 w-5 text-[#027244]" /> },
-                          { title: 'User Report', desc: 'User registration analytics', icon: <BarChart className="h-5 w-5 text-emerald-400" /> },
-                          { title: 'Revenue Report', desc: 'Financial & transaction reports', icon: <Landmark className="h-5 w-5 text-purple-400" /> },
-                          { title: 'Lead Report', desc: 'Leads & enquiry analytics', icon: <FileText className="h-5 w-5 text-amber-400" /> }
-                        ].map((rep, idx) => (
-                          <div key={idx} onClick={() => alert(`Generating ${rep.title} dynamic summary data...`)} className={`rounded-2xl p-3 border hover:-translate-y-0.5 transition-all text-left flex flex-col justify-between cursor-pointer ${themeMode === 'dark' ? 'bg-slate-950/30 border-slate-850 hover:bg-slate-950/60' : 'bg-slate-50/50 border-slate-200/60 hover:bg-slate-100/50 shadow-xs'}`}>
-                            <span className={`h-8 w-8 rounded-lg border flex items-center justify-center ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-                              {rep.icon}
-                            </span>
-                            <div className="flex flex-col gap-0.5 mt-2">
-                              <span className={`text-[10px] font-black leading-tight ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{rep.title}</span>
-
-                              <span className="text-[8px] text-slate-500 font-semibold mt-0.5 leading-tight">{rep.desc}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      <button
-                        onClick={() => alert("Hydrating analytics suite summary...")}
-                        className={`w-full py-2.5 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-all border uppercase tracking-widest text-center ${themeMode === 'dark' ? 'bg-slate-800 hover:bg-slate-700 text-white border-slate-700' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'}`}
-                      >
-
-                        View All Reports
-                      </button>
                     </div>
 
                     {/* Quick Actions & Platform Activity Card */}
-                    <div className={`lg:col-span-4 rounded-3xl border p-5 flex flex-col justify-between h-[24rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
+                    <div className={`lg:col-span-6 rounded-3xl border p-5 flex flex-col justify-between h-[24rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
 
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
 
@@ -3713,79 +3675,31 @@ const handlePartnerAction = async (partnerId, action) => {
 
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
-                    {/* Live system monitoring console - Terminal Shell style */}
-                    <div className="lg:col-span-2 bg-[#030712] text-emerald-400 border border-emerald-500/20 rounded-[28px] p-6 shadow-[0_0_35px_rgba(16,185,129,0.08)] flex flex-col gap-4 max-h-[360px] overflow-y-auto font-mono">
-                      <div className="flex justify-between items-center border-b border-slate-800/80 pb-3">
-                        {/* Terminal dots controls */}
-                        <div className="flex items-center gap-6">
-                          <div className="flex gap-1.5 shrink-0">
-                            <span className="h-3 w-3 rounded-full bg-red-500/80 border border-red-650" />
-                            <span className="h-3 w-3 rounded-full bg-yellow-500/80 border border-yellow-650" />
-                            <span className="h-3 w-3 rounded-full bg-emerald-500/80 border border-emerald-650" />
-                          </div>
-                          <span className="text-[10px] uppercase font-bold tracking-widest text-slate-450 flex items-center gap-1.5 select-none">
-                            <Terminal className="h-3.5 w-3.5 text-emerald-450" />
-                            ubt_telemetry_monitor.sh
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500">
-                          <span>Status: <b className="text-emerald-450 font-black">Matrix Online</b></span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-2.5 text-[11px] select-all leading-relaxed text-left">
-                        <div className="text-slate-500 select-none">root@ubt-server:~# tail -f /var/log/ubt/telemetry.log</div>
-                        {systemLogs.map((log, idx) => (
-                          <div key={idx} className="flex items-start gap-4">
-                            <span className="text-slate-600 font-bold shrink-0">[{log.time}]</span>
-                            <span className={
-                              log.type === 'system' 
-                                ? 'text-emerald-400 font-bold' 
-                                : log.type === 'warning' 
-                                  ? 'text-amber-400 font-bold' 
-                                  : 'text-slate-400'
-                            }>
-                              {log.type === 'system' ? '⚙ SYSTEM: ' : (log.type === 'warning' ? '⚠ WARNING: ' : 'ℹ INFO: ')}
-                              {log.event}
-                            </span>
-                          </div>
-                        ))}
-                        <div className="flex gap-1 select-none items-center text-emerald-500 animate-pulse mt-1">
-                          <span>root@ubt-server:~#</span>
-                          <span className="h-3.5 w-2 bg-emerald-450" />
-                        </div>
-                      </div>
+                  <div className="w-full mt-2 bg-white border border-slate-200/80 rounded-[28px] p-6 shadow-sm flex flex-col gap-4 text-left text-[#001c41]">
+                    <h3 className="font-black text-sm uppercase tracking-wider border-b border-slate-100 pb-3">Super Admin Actions</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-sans">
+                      <button 
+                        onClick={() => setActiveTab('Platform Settings')}
+                        className="py-2.5 px-4 bg-emerald-50 border border-emerald-150 hover:bg-emerald-100 text-[#027244] font-extrabold text-xs rounded-xl flex items-center justify-between transition-colors cursor-pointer"
+                      >
+                        <span>Adjust Pricing Plans</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('Access Control')}
+                        className="py-2.5 px-4 bg-blue-50 border border-blue-150 hover:bg-blue-100 text-blue-700 font-extrabold text-xs rounded-xl flex items-center justify-between transition-colors cursor-pointer"
+                      >
+                        <span>Manage Admin Roles</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('Notifications')}
+                        className="py-2.5 px-4 bg-purple-50 border border-purple-150 hover:bg-purple-100 text-purple-700 font-extrabold text-xs rounded-xl flex items-center justify-between transition-colors cursor-pointer"
+                      >
+                        <span>Dispatch Global Broadcast</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
                     </div>
-
-                    {/* Platform quick settings */}
-                    <div className="lg:col-span-1 bg-white border border-slate-200/80 rounded-[28px] p-6 shadow-sm flex flex-col gap-4 text-left text-[#001c41]">
-                      <h3 className="font-black text-sm uppercase tracking-wider border-b border-slate-100 pb-3">Super Admin Actions</h3>
-                      <div className="flex flex-col gap-3 font-sans">
-                        <button 
-                          onClick={() => setActiveTab('Platform Settings')}
-                          className="py-2.5 px-4 bg-emerald-50 border border-emerald-150 hover:bg-emerald-100 text-[#027244] font-extrabold text-xs rounded-xl flex items-center justify-between transition-colors cursor-pointer"
-                        >
-                          <span>Adjust Pricing Plans</span>
-                          <ArrowRight className="h-4 w-4" />
-                        </button>
-                        <button 
-                          onClick={() => setActiveTab('Access Control')}
-                          className="py-2.5 px-4 bg-blue-50 border border-blue-150 hover:bg-blue-100 text-blue-700 font-extrabold text-xs rounded-xl flex items-center justify-between transition-colors cursor-pointer"
-                        >
-                          <span>Manage Admin Roles</span>
-                          <ArrowRight className="h-4 w-4" />
-                        </button>
-                        <button 
-                          onClick={() => setActiveTab('Notifications')}
-                          className="py-2.5 px-4 bg-purple-50 border border-purple-150 hover:bg-purple-100 text-purple-700 font-extrabold text-xs rounded-xl flex items-center justify-between transition-colors cursor-pointer"
-                        >
-                          <span>Dispatch Global Broadcast</span>
-                          <ArrowRight className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
                   </div>
                 </div>
               )}
