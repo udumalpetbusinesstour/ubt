@@ -5903,31 +5903,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                   >
                                     Activate
                                   </button>
-                                ) : (
-                                  <button
-                                    onClick={async () => {
-                                      try {
-                                        const res = await fetch(`http://localhost:5000/api/superadmin/subscriptions/${s._id}/status`, {
-                                          method: 'PUT',
-                                          headers: {
-                                            'Content-Type': 'application/json',
-                                            'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
-                                          },
-                                          body: JSON.stringify({ status: 'expired' })
-                                        });
-                                        if (res.ok) {
-                                          alert("Plan suspended successfully.");
-                                          loadPlatformRealData();
-                                        }
-                                      } catch (err) {
-                                        console.error(err);
-                                      }
-                                    }}
-                                    className="px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-500 rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors"
-                                  >
-                                    Suspend
-                                  </button>
-                                )}
+                                ) : null}
                                 <button
                                   onClick={() => {
                                     const biz = businesses.find(b => b.name === s.businessName);

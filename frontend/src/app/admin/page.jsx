@@ -1191,7 +1191,7 @@ export default function AdminDashboard() {
           _id: 'sub_1',
           businessName: 'R.K. Electricals',
           planType: 'Monthly',
-          amount: 499,
+          amount: 99,
           paymentStatus: 'Paid',
           expiryDate: new Date(new Date().getTime() + 15 * 24 * 60 * 60 * 1000)
         }
@@ -3459,8 +3459,12 @@ export default function AdminDashboard() {
                         </div>
 
                         <button 
-                          onClick={() => handleReviewAction(r._id, 'delete')}
-                          className="h-10 w-10 rounded-xl bg-red-50 hover:bg-red-100 text-red-650 flex items-center justify-center shrink-0 shadow-2xs transition-colors cursor-pointer"
+                          onClick={async () => {
+                            if (await window.confirm("Are you sure you want to permanently delete this review?")) {
+                              handleReviewAction(r._id, 'delete');
+                            }
+                          }}
+                          className="h-10 w-10 rounded-xl bg-red-50 hover:bg-red-100 text-red-650 flex items-center justify-center shrink-0 shadow-2xs transition-colors cursor-pointer border-none"
                           title="Purge Spam Review"
                         >
                           <Trash2 className="h-4.5 w-4.5" />
@@ -3683,7 +3687,7 @@ export default function AdminDashboard() {
                                     </td>
                                     <td className="p-4">{b.subscriptionStatus === 'active' ? 'Premium Package' : 'Basic Tier'}</td>
                                     <td className="p-4 font-extrabold text-slate-800">
-                                      {b.subscriptionStatus === 'active' ? '₹499 / Mon' : '₹0'}
+                                      {b.subscriptionStatus === 'active' ? '₹99 / Mon' : '₹0'}
                                     </td>
                                     <td className="p-4">
                                       <span className={`px-2.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide border ${
@@ -3719,14 +3723,6 @@ export default function AdminDashboard() {
                                             Activate 30 Days
                                           </button>
                                         )}
-                                        <button 
-                                          onClick={() => handleSuspendSubscription(b._id)}
-                                          className={`px-2.5 py-1.5 font-extrabold text-[9.5px] rounded-lg cursor-pointer shadow-xs border-none text-white ${
-                                            b.subscriptionStatus === 'suspended' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-rose-600 hover:bg-rose-700'
-                                          }`}
-                                        >
-                                          {b.subscriptionStatus === 'suspended' ? 'Reactivate' : 'Suspend'}
-                                        </button>
                                         {b.subscriptionStatus !== 'active' && (
                                           <button 
                                             onClick={() => handleSendReminder(b._id)}
