@@ -1059,11 +1059,103 @@ router.get('/google-autocomplete', async (req, res) => {
 // ==========================================
 // This endpoint fetches full detailed information for a specific Place ID, mapping
 // opening hours, formatted phone, address locality components, websites, coordinates, and reviews.
-//
-// Key Details:
-// - Imports Google Reviews (author name, rating score, reviews text content).
-// - Transforms Google Opening Hours (weekday_text) to the UBT timings schema.
-// - Supports a local mock fallback when a mock ID is supplied or environment key is missing.
+
+async function fetchLegacyDetails(placeId, cid, apiKey, extractedName, extractedLat, extractedLng) {
+  if (!apiKey) return null;
+  try {
+    let legacyUrl = `https://maps.googleapis.com/maps/api/place/details/json?fields=place_id,name,formatted_address,formatted_phone_number,website,geometry,opening_hours,rating,user_ratings_total,reviews,address_components&key=${apiKey}`;
+    if (placeId) {
+      legacyUrl += `&place_id=${placeId}`;
+    } else if (cid) {
+      legacyUrl += `&cid=${cid}`;
+    } else {
+      return null;
+    }
+
+    const legacyResp = await fetch(legacyUrl);
+    const legacyData = await legacyResp.json();
+    if (legacyData.status === 'OK' && legacyData.result) {
+      const legacyResult = legacyData.result;
+      
+      let timings = {
+        Monday: '9:00 AM - 8:00 PM',
+        Tuesday: '9:00 AM - 8:00 PM',
+        Wednesday: '9:00 AM - 8:00 PM',
+        Thursday: '9:00 AM - 8:00 PM',
+        Friday: '9:00 AM - 8:00 PM',
+        Saturday: '9:00 AM - 8:00 PM',
+        Sunday: 'Closed',
+      };
+      if (legacyResult.opening_hours && legacyResult.opening_hours.weekday_text) {
+        for (const text of legacyResult.opening_hours.weekday_text) {
+          const parts = text.split(': ');
+          if (parts.length >= 2) {
+            const day = parts[0];
+            const hours = parts.slice(1).join(': ').trim();
+            if (timings.hasOwnProperty(day)) {
+              timings[day] = hours;
+            }
+          }
+        }
+      }
+      
+      const legacyReviews = (legacyResult.reviews || []).map(r => ({
+        authorName: r.author_name || 'A Google User',
+        rating: r.rating || 0,
+        text: r.text || '',
+        createdAt: r.time ? new Date(r.time * 1000) : new Date(),
+      }));
+
+      let lat = legacyResult.geometry?.location?.lat || extractedLat || 10.585;
+      let lng = legacyResult.geometry?.location?.lng || extractedLng || 77.251;
+      
+      let pincode = '642126';
+      let locality = 'Udumalpet';
+      if (legacyResult.address_components) {
+        for (const comp of legacyResult.address_components) {
+          if (comp.types.includes('postal_code')) {
+            pincode = comp.long_name;
+          }
+          if (comp.types.includes('sublocality') || comp.types.includes('neighborhood')) {
+            locality = comp.long_name;
+          } else if (!locality && comp.types.includes('locality')) {
+            locality = comp.long_name;
+          }
+        }
+      }
+
+      const detail = {
+        name: legacyResult.name || extractedName || '',
+        address: legacyResult.formatted_address || '',
+        phone: legacyResult.formatted_phone_number || '',
+        website: legacyResult.website || '',
+        email: '',
+        latitude: lat,
+        longitude: lng,
+        googlePlaceId: placeId || legacyResult.place_id || '',
+        googleRating: legacyResult.rating || 0,
+        googleReviewsCount: legacyResult.user_ratings_total || 0,
+        googleReviews: legacyReviews,
+        timings,
+        openingHours: timings,
+        pincode,
+        locality
+      };
+      
+      if (detail.website) {
+        try {
+          detail.email = await scrapeEmail(detail.website) || `info@${new URL(detail.website).hostname.replace('www.', '')}`;
+        } catch (e) {}
+      }
+      
+      return detail;
+    }
+  } catch (err) {
+    console.warn('[fetchLegacyDetails] Legacy details call failed:', err.message);
+  }
+  return null;
+}
+
 // @desc    Google Places Auto-fill Details
 // @route   POST /api/businesses/google-autofill
 // @access  Public
@@ -1088,159 +1180,162 @@ router.post('/google-autofill', async (req, res) => {
   }
 
   try {
-    const url = `https://places.googleapis.com/v1/places/${placeId}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,location,regularOpeningHours,rating,userRatingCount,reviews,addressComponents,types'
-      }
-    });
+    const isMockKey = !apiKey || apiKey.includes('mockKeyId');
 
-    const result = await response.json();
-    
-    if (result.error) {
-      console.warn(`Google Place Details API (New) error: ${result.error.message}. Falling back to mock details.`);
-      
-      const isMockKey = !apiKey || apiKey.includes('mockKeyId');
-      if (!isMockKey) {
-        return res.status(400).json({ success: false, message: `Google Places API Error: ${result.error.message}` });
-      }
-
-      let detail = mockDetails[placeId];
-      if (!detail) {
-        const lowerId = String(placeId || '').toLowerCase();
-        if (lowerId.includes('taluk') || lowerId.includes('office') || lowerId.includes('gov') || lowerId.includes('police') || lowerId.includes('municipality')) {
-          detail = mockDetails['mock_place_udumalaipettai_taluk_office'];
-        } else {
-          detail = mockDetails['mock_place_rk_electricals'];
-        }
-      }
-      return res.json({ success: true, data: detail });
-    }
-
-    const lat = result.location?.latitude || 10.585;
-    const lng = result.location?.longitude || 77.251;
-
-    let pincode = '';
-    let locality = '';
-    if (result.addressComponents) {
-      for (const comp of result.addressComponents) {
-        if (comp.types.includes('postal_code')) {
-          pincode = comp.longText;
-        }
-        if (comp.types.includes('sublocality') || comp.types.includes('neighborhood')) {
-          locality = comp.longText;
-        } else if (!locality && comp.types.includes('locality')) {
-          locality = comp.longText;
-        }
-      }
-    }
-
-    const cleanTimingStr = (str) => str.replace(/[\u2013\u2014\u2012\u2010]/g, '-').replace(/[\u202F\u00A0]/g, ' ').trim();
-
-    let hasGmbHours = false;
-    const timings = {
-      Monday: '9:00 AM - 8:00 PM',
-      Tuesday: '9:00 AM - 8:00 PM',
-      Wednesday: '9:00 AM - 8:00 PM',
-      Thursday: '9:00 AM - 8:00 PM',
-      Friday: '9:00 AM - 8:00 PM',
-      Saturday: '9:00 AM - 8:00 PM',
-      Sunday: 'Closed',
-    };
-
-    if (result.regularOpeningHours && result.regularOpeningHours.weekdayDescriptions) {
-      hasGmbHours = true;
-      for (const text of result.regularOpeningHours.weekdayDescriptions) {
-        const parts = text.split(': ');
-        if (parts.length >= 2) {
-          const day = parts[0];
-          const hours = cleanTimingStr(parts.slice(1).join(': '));
-          if (timings.hasOwnProperty(day)) {
-            timings[day] = hours;
-          }
-        }
-      }
-    }
-
-    const isPublic = isPublicSector(result.types, result.displayName?.text);
-    const finalTimings = (isPublic && !hasGmbHours) ? null : timings;
-
-    // Reviews from Places API (New) — may be empty if billing tier doesn't include reviews
-    let googleReviews = (result.reviews || []).map(r => ({
-      authorName: r.authorAttribution?.displayName || 'A Google User',
-      rating: r.rating || 0,
-      text: r.text?.text || '',
-      createdAt: r.publishTime ? new Date(r.publishTime) : new Date(),
-    }));
-
-    let rating = result.rating || 0;
-    let reviewsCount = result.userRatingCount || 0;
-
-    // Fallback: use legacy Places Details API to get reviews, rating, and count when missing
-    if (googleReviews.length === 0 || !rating || !reviewsCount) {
+    // 1. Try Google Places Details API (New) first
+    if (!isMockKey) {
       try {
-        const legacyUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&key=${apiKey}`;
-        const legacyResp = await fetch(legacyUrl);
-        const legacyData = await legacyResp.json();
-        if (legacyData.status === 'OK' && legacyData.result) {
-          if (legacyData.result.reviews && googleReviews.length === 0) {
-            googleReviews = legacyData.result.reviews.slice(0, 5).map(r => ({
-              authorName: r.author_name || 'A Google User',
-              rating: r.rating || 0,
-              text: r.text || '',
-              createdAt: new Date(r.time * 1000),
-            }));
-            console.log(`[Autofill] Fetched ${googleReviews.length} reviews via legacy Places API for ${placeId}`);
+        const url = `https://places.googleapis.com/v1/places/${placeId}`;
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': apiKey,
+            'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,location,regularOpeningHours,rating,userRatingCount,reviews,addressComponents,types'
           }
-          if (legacyData.result.rating && !rating) {
-            rating = legacyData.result.rating;
+        });
+
+        const result = await response.json();
+        
+        if (!result.error) {
+          const lat = result.location?.latitude || 10.585;
+          const lng = result.location?.longitude || 77.251;
+
+          let pincode = '';
+          let locality = '';
+          if (result.addressComponents) {
+            for (const comp of result.addressComponents) {
+              if (comp.types.includes('postal_code')) {
+                pincode = comp.longText;
+              }
+              if (comp.types.includes('sublocality') || comp.types.includes('neighborhood')) {
+                locality = comp.longText;
+              } else if (!locality && comp.types.includes('locality')) {
+                locality = comp.longText;
+              }
+            }
           }
-          if (legacyData.result.user_ratings_total && !reviewsCount) {
-            reviewsCount = legacyData.result.user_ratings_total;
+
+          const cleanTimingStr = (str) => str.replace(/[\u2013\u2014\u2012\u2010]/g, '-').replace(/[\u202F\u00A0]/g, ' ').trim();
+
+          let hasGmbHours = false;
+          const timings = {
+            Monday: '9:00 AM - 8:00 PM',
+            Tuesday: '9:00 AM - 8:00 PM',
+            Wednesday: '9:00 AM - 8:00 PM',
+            Thursday: '9:00 AM - 8:00 PM',
+            Friday: '9:00 AM - 8:00 PM',
+            Saturday: '9:00 AM - 8:00 PM',
+            Sunday: 'Closed',
+          };
+
+          if (result.regularOpeningHours && result.regularOpeningHours.weekdayDescriptions) {
+            hasGmbHours = true;
+            for (const text of result.regularOpeningHours.weekdayDescriptions) {
+              const parts = text.split(': ');
+              if (parts.length >= 2) {
+                const day = parts[0];
+                const hours = cleanTimingStr(parts.slice(1).join(': '));
+                if (timings.hasOwnProperty(day)) {
+                  timings[day] = hours;
+                }
+              }
+            }
           }
+
+          const isPublic = isPublicSector(result.types, result.displayName?.text);
+          const finalTimings = (isPublic && !hasGmbHours) ? null : timings;
+
+          let googleReviews = (result.reviews || []).map(r => ({
+            authorName: r.authorAttribution?.displayName || 'A Google User',
+            rating: r.rating || 0,
+            text: r.text?.text || '',
+            createdAt: r.publishTime ? new Date(r.publishTime) : new Date(),
+          }));
+
+          let rating = result.rating || 0;
+          let reviewsCount = result.userRatingCount || 0;
+
+          if (googleReviews.length === 0 || !rating || !reviewsCount) {
+            try {
+              const legacyUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&key=${apiKey}`;
+              const legacyResp = await fetch(legacyUrl);
+              const legacyData = await legacyResp.json();
+              if (legacyData.status === 'OK' && legacyData.result) {
+                if (legacyData.result.reviews && googleReviews.length === 0) {
+                  googleReviews = legacyData.result.reviews.slice(0, 5).map(r => ({
+                    authorName: r.author_name || 'A Google User',
+                    rating: r.rating || 0,
+                    text: r.text || '',
+                    createdAt: new Date(r.time * 1000),
+                  }));
+                }
+                if (legacyData.result.rating && !rating) {
+                  rating = legacyData.result.rating;
+                }
+                if (legacyData.result.user_ratings_total && !reviewsCount) {
+                  reviewsCount = legacyData.result.user_ratings_total;
+                }
+              }
+            } catch (e) {}
+          }
+
+          let email = '';
+          if (result.websiteUri) {
+            email = await scrapeEmail(result.websiteUri);
+            if (!email) {
+              try {
+                const urlObj = new URL(result.websiteUri);
+                const host = urlObj.hostname.replace('www.', '');
+                email = `info@${host}`;
+              } catch (e) {}
+            }
+          }
+
+          const detail = {
+            name: result.displayName?.text || '',
+            address: result.formattedAddress || '',
+            phone: result.nationalPhoneNumber || '',
+            website: result.websiteUri || '',
+            email,
+            latitude: lat,
+            longitude: lng,
+            googlePlaceId: placeId,
+            googleRating: rating,
+            googleReviewsCount: reviewsCount,
+            googleReviews,
+            openingHours: finalTimings,
+            timings: finalTimings,
+            pincode,
+            locality
+          };
+
+          return res.json({ success: true, data: detail });
         }
-      } catch (legacyErr) {
-        console.warn('[Autofill] Legacy Places reviews fetch failed:', legacyErr.message);
+      } catch (err) {
+        console.warn('Google Places Details (New) failed, attempting legacy:', err.message);
       }
     }
 
-    // Scrape or guess email address
-    let email = '';
-    if (result.websiteUri) {
-      email = await scrapeEmail(result.websiteUri);
-      if (!email) {
-        try {
-          const urlObj = new URL(result.websiteUri);
-          const host = urlObj.hostname.replace('www.', '');
-          email = `info@${host}`;
-        } catch (e) {
-          // ignore
-        }
+    // 2. Try legacy Places Details API
+    if (!isMockKey) {
+      const legacyDetail = await fetchLegacyDetails(placeId, null, apiKey);
+      if (legacyDetail) {
+        return res.json({ success: true, data: legacyDetail });
       }
     }
 
-    const detail = {
-      name: result.displayName?.text || '',
-      address: result.formattedAddress || '',
-      phone: result.nationalPhoneNumber || '',
-      website: result.websiteUri || '',
-      email,
-      latitude: lat,
-      longitude: lng,
-      googlePlaceId: placeId,
-      googleRating: rating,
-      googleReviewsCount: reviewsCount,
-      googleReviews,
-      openingHours: finalTimings,
-      timings: finalTimings,
-      pincode,
-      locality
-    };
-
-    res.json({ success: true, data: detail });
+    // Default Mock fallback
+    let detail = mockDetails[placeId];
+    if (!detail) {
+      const lowerId = String(placeId || '').toLowerCase();
+      if (lowerId.includes('taluk') || lowerId.includes('office') || lowerId.includes('gov') || lowerId.includes('police') || lowerId.includes('municipality')) {
+        detail = mockDetails['mock_place_udumalaipettai_taluk_office'];
+      } else {
+        detail = mockDetails['mock_place_rk_electricals'];
+      }
+    }
+    return res.json({ success: true, data: detail });
   } catch (error) {
     console.error('Google Place Details error:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -1288,6 +1383,13 @@ router.post('/google-autofill-link', async (req, res) => {
       } catch (e) {}
     }
 
+    // Attempt CID extraction (common in Google My Business profile/review links)
+    let cid = '';
+    const cidMatch = targetLink.match(/cid=(\d+)/) || originalLink.match(/cid=(\d+)/);
+    if (cidMatch) {
+      cid = cidMatch[1];
+    }
+
     // 2. Try to extract Name from URL path (check targetLink and originalLink)
     let extractedName = '';
     const parseName = (urlStr) => {
@@ -1330,50 +1432,8 @@ router.post('/google-autofill-link', async (req, res) => {
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
     const isMockKey = !apiKey || apiKey.includes('mockKeyId');
 
-    // 4. Map specific test links or keywords to mock details (checking both target and original links)
-    // Only perform mock overrides if we do not have a valid, active API Key!
-    if (!placeId && isMockKey) {
-      const linkLower = targetLink.toLowerCase();
-      const origLower = originalLink.toLowerCase();
-      
-      if (targetLink.includes('e5QlEETkIAw0h1i3J') || originalLink.includes('e5QlEETkIAw0h1i3J') || 
-          linkLower.includes('control') || origLower.includes('control') || 
-          linkLower.includes('cn_technologies') || origLower.includes('cn_technologies')) {
-        placeId = 'mock_place_cn_technologies';
-      } else if (targetLink.includes('kPq9i5zHmPHYrxXAI') || originalLink.includes('kPq9i5zHmPHYrxXAI') || 
-                 linkLower.includes('dhosai') || origLower.includes('dhosai') || 
-                 linkLower.includes('dhosaikadai') || origLower.includes('dhosaikadai')) {
-        placeId = 'mock_place_dhosaikadai';
-      } else if (targetLink.includes('t73emg0mDpJSh0OMO') || originalLink.includes('t73emg0mDpJSh0OMO') || 
-                 linkLower.includes('sippi') || origLower.includes('sippi') || 
-                 linkLower.includes('sippy') || origLower.includes('sippy') || 
-                 linkLower.includes('opticals') || origLower.includes('opticals')) {
-        placeId = 'mock_place_sippi_opticals';
-      } else if (linkLower.includes('taluk') || origLower.includes('taluk') ||
-                 linkLower.includes('gov') || origLower.includes('gov') ||
-                 linkLower.includes('office') || origLower.includes('office') ||
-                 linkLower.includes('police') || origLower.includes('police') ||
-                 linkLower.includes('municipality') || origLower.includes('municipality')) {
-        placeId = 'mock_place_udumalaipettai_taluk_office';
-      } else if (extractedName) {
-        // Fallback: search mockDetails by name if name matches any key
-        const keys = Object.keys(mockDetails);
-        for (const k of keys) {
-          const d = mockDetails[k];
-          if (d.name) {
-            const n1 = d.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-            const n2 = extractedName.toLowerCase().replace(/[^a-z0-9]/g, '');
-            if (n1.includes(n2) || n2.includes(n1)) {
-              placeId = k;
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    // 5. Try Google Text Search to resolve name to Place ID if API Key is real and we still don't have placeId
-    if (!placeId && extractedName && apiKey && !isMockKey) {
+    // Resolve name to Place ID via Text Search if API Key is real and we still don't have placeId or cid
+    if (!placeId && !cid && extractedName && apiKey && !isMockKey) {
       try {
         const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
         const searchRes = await fetch(searchUrl, {
@@ -1394,273 +1454,177 @@ router.post('/google-autofill-link', async (req, res) => {
       } catch (err) {
         console.warn('Text search fallback failed:', err.message);
       }
-    }    // 6. Return Mock Details if mock place or missing/mock API Key
-    if (!placeId || isMockKey || mockDetails[placeId] || placeId.startsWith('mock_place_') || placeId.startsWith('mock_addr_')) {
-        let baseDetail = mockDetails[placeId];
-        if (!baseDetail) {
-          const lowerId = String(placeId || '').toLowerCase();
-          const lowerName = String(extractedName || '').toLowerCase();
-          if (lowerId.includes('taluk') || lowerId.includes('office') || lowerId.includes('gov') || lowerId.includes('police') || lowerId.includes('municipality') ||
-              lowerName.includes('taluk') || lowerName.includes('office') || lowerName.includes('gov') || lowerName.includes('police') || lowerName.includes('municipality')) {
-            baseDetail = mockDetails['mock_place_udumalaipettai_taluk_office'];
-          } else {
-            baseDetail = mockDetails['mock_place_rk_electricals'];
-          }
-        }
-        const detail = {
-          logoUrl: "",
-          coverImageUrl: "",
-          galleryUrls: [],
-          ...baseDetail
-        };
-      
-      // If we don't have placeId or it's a non-predefined placeId (fallback to RK Electricals),
-      // but we extracted a name, let's dynamically customize the mock details!
-      if ((!placeId || !mockDetails[placeId]) && extractedName) {
-        const name = extractedName;
-        const lat = extractedLat || 10.585;
-        const lng = extractedLng || 77.251;
-        const isGov = name.toLowerCase().includes('taluk') || name.toLowerCase().includes('office') || name.toLowerCase().includes('gov') || name.toLowerCase().includes('police') || name.toLowerCase().includes('municipality');
-        const dynamicDetail = {
-          name: name,
-          address: `${name}, Udumalpet Main Town, Tamil Nadu - 642126`,
-          phone: isGov ? "+91 4252 220261" : "+91 98765 43210",
-          website: isGov ? "https://tiruppur.nic.in" : `https://${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.business.site`,
-          latitude: lat,
-          longitude: lng,
-          googlePlaceId: placeId || `mock_place_${name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
-          googleRating: 4.5,
-          googleReviewsCount: 15,
-          googleReviews: [
-            { authorName: "Local Guide", rating: 5, text: "Great service and behavior. Highly recommended!", createdAt: new Date() }
-          ],
-          logoUrl: "",
-          coverImageUrl: "",
-          galleryUrls: [],
-          openingHours: isGov ? {
-            Monday: "10:00 AM - 5:45 PM",
-            Tuesday: "10:00 AM - 5:45 PM",
-            Wednesday: "10:00 AM - 5:45 PM",
-            Thursday: "10:00 AM - 5:45 PM",
-            Friday: "10:00 AM - 5:45 PM",
-            Saturday: "Closed",
-            Sunday: "Closed"
-          } : {
-            Monday: "9:00 AM - 8:00 PM",
-            Tuesday: "9:00 AM - 8:00 PM",
-            Wednesday: "9:00 AM - 8:00 PM",
-            Thursday: "9:00 AM - 8:00 PM",
-            Friday: "9:00 AM - 8:00 PM",
-            Saturday: "9:00 AM - 8:00 PM",
-            Sunday: "Closed"
-          },
-          timings: isGov ? {
-            Monday: "10:00 AM - 5:45 PM",
-            Tuesday: "10:00 AM - 5:45 PM",
-            Wednesday: "10:00 AM - 5:45 PM",
-            Thursday: "10:00 AM - 5:45 PM",
-            Friday: "10:00 AM - 5:45 PM",
-            Saturday: "Closed",
-            Sunday: "Closed"
-          } : {
-            Monday: "9:00 AM - 8:00 PM",
-            Tuesday: "9:00 AM - 8:00 PM",
-            Wednesday: "9:00 AM - 8:00 PM",
-            Thursday: "9:00 AM - 8:00 PM",
-            Friday: "9:00 AM - 8:00 PM",
-            Saturday: "9:00 AM - 8:00 PM",
-            Sunday: "Closed"
-          },
-          pincode: "642126",
-          locality: "Udumalpet Town"
-        };
-        return res.json({ success: true, data: dynamicDetail });
-      }
- 
-      return res.json({ success: true, data: detail });
     }
 
-    // Call real Places Details API
-    const url = `https://places.googleapis.com/v1/places/${placeId}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,location,regularOpeningHours,rating,userRatingCount,reviews,addressComponents,types'
-      }
-    });
-
-    const result = await response.json();
-    if (result.error) {
-      if ((!placeId || !mockDetails[placeId]) && extractedName) {
-        const name = extractedName;
-        const lat = extractedLat || 10.585;
-        const lng = extractedLng || 77.251;
-        const dynamicDetail = {
-          name: name,
-          address: `${name}, Udumalpet Main Town, Tamil Nadu - 642126`,
-          phone: "+91 98765 43210",
-          website: `https://${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.business.site`,
-          latitude: lat,
-          longitude: lng,
-          googlePlaceId: placeId || `mock_place_${name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
-          googleRating: 4.5,
-          googleReviewsCount: 15,
-          googleReviews: [
-            { authorName: "Local Guide", rating: 5, text: "Great service and behavior. Highly recommended!", createdAt: new Date() }
-          ],
-          logoUrl: "",
-          coverImageUrl: "",
-          galleryUrls: [],
-          openingHours: {
-            Monday: "9:00 AM - 8:00 PM",
-            Tuesday: "9:00 AM - 8:00 PM",
-            Wednesday: "9:00 AM - 8:00 PM",
-            Thursday: "9:00 AM - 8:00 PM",
-            Friday: "9:00 AM - 8:00 PM",
-            Saturday: "9:00 AM - 8:00 PM",
-            Sunday: "Closed"
-          },
-          timings: {
-            Monday: "9:00 AM - 8:00 PM",
-            Tuesday: "9:00 AM - 8:00 PM",
-            Wednesday: "9:00 AM - 8:00 PM",
-            Thursday: "9:00 AM - 8:00 PM",
-            Friday: "9:00 AM - 8:00 PM",
-            Saturday: "9:00 AM - 8:00 PM",
-            Sunday: "Closed"
-          },
-          pincode: "642126",
-          locality: "Udumalpet Town"
-        };
-        return res.json({ success: true, data: dynamicDetail });
-      }
-      const detail = mockDetails[placeId] || mockDetails['mock_place_rk_electricals'];
-      return res.json({ success: true, data: detail });
-    }
-
-    const lat = result.location?.latitude || extractedLat || 10.585;
-    const lng = result.location?.longitude || extractedLng || 77.251;
-
-    let pincode = '';
-    let locality = '';
-    if (result.addressComponents) {
-      for (const comp of result.addressComponents) {
-        if (comp.types.includes('postal_code')) {
-          pincode = comp.longText;
-        }
-        if (comp.types.includes('sublocality') || comp.types.includes('neighborhood')) {
-          locality = comp.longText;
-        } else if (!locality && comp.types.includes('locality')) {
-          locality = comp.longText;
-        }
-      }
-    }
-
-    const cleanTimingStr = (str) => str.replace(/[\u2013\u2014\u2012\u2010]/g, '-').replace(/[\u202F\u00A0]/g, ' ').trim();
-
-    let hasGmbHours = false;
-    const timings = {
-      Monday: '9:00 AM - 8:00 PM',
-      Tuesday: '9:00 AM - 8:00 PM',
-      Wednesday: '9:00 AM - 8:00 PM',
-      Thursday: '9:00 AM - 8:00 PM',
-      Friday: '9:00 AM - 8:00 PM',
-      Saturday: '9:00 AM - 8:00 PM',
-      Sunday: 'Closed',
-    };
-
-    if (result.regularOpeningHours && result.regularOpeningHours.weekdayDescriptions) {
-      hasGmbHours = true;
-      for (const text of result.regularOpeningHours.weekdayDescriptions) {
-        const parts = text.split(': ');
-        if (parts.length >= 2) {
-          const day = parts[0];
-          const hours = cleanTimingStr(parts.slice(1).join(': '));
-          if (timings.hasOwnProperty(day)) {
-            timings[day] = hours;
-          }
-        }
-      }
-    }
-
-    const isPublic = isPublicSector(result.types, result.displayName?.text);
-    const finalTimings = (isPublic && !hasGmbHours) ? null : timings;
-
-    // Reviews from Places API (New) — may be empty if billing tier doesn't include reviews
-    let googleReviews = (result.reviews || []).map(r => ({
-      authorName: r.authorAttribution?.displayName || 'A Google User',
-      rating: r.rating || 0,
-      text: r.text?.text || '',
-      createdAt: r.publishTime ? new Date(r.publishTime) : new Date(),
-    }));
-
-    let rating = result.rating || 0;
-    let reviewsCount = result.userRatingCount || 0;
-
-    // Fallback: use legacy Places Details API to get reviews, rating, and count when missing
-    if (googleReviews.length === 0 && apiKey && placeId) {
-      try {
-        const legacyUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&key=${apiKey}`;
-        const legacyResp = await fetch(legacyUrl);
-        const legacyData = await legacyResp.json();
-        if (legacyData.status === 'OK' && legacyData.result) {
-          if (legacyData.result.reviews && googleReviews.length === 0) {
-            googleReviews = legacyData.result.reviews.slice(0, 5).map(r => ({
-              authorName: r.author_name || 'A Google User',
-              rating: r.rating || 0,
-              text: r.text || '',
-              createdAt: new Date(r.time * 1000),
-            }));
-            console.log(`[Autofill Link] Fetched ${googleReviews.length} reviews via legacy Places API for ${placeId}`);
-          }
-          if (legacyData.result.rating && !rating) {
-            rating = legacyData.result.rating;
-          }
-          if (legacyData.result.user_ratings_total && !reviewsCount) {
-            reviewsCount = legacyData.result.user_ratings_total;
-          }
-        }
-      } catch (legacyErr) {
-        console.warn('[Autofill Link] Legacy Places reviews fetch failed:', legacyErr.message);
-      }
-    }
-
-    // Scrape or guess email address
-    let email = '';
-    if (result.websiteUri) {
-      email = await scrapeEmail(result.websiteUri);
-      if (!email) {
+    // Try real fetch if API key is real and we have placeId or cid
+    if (!isMockKey && (placeId || cid) && !String(placeId).startsWith('mock_place_') && !String(placeId).startsWith('mock_addr_') && !mockDetails[placeId]) {
+      // 1. Try New Places API first (only works if we have placeId)
+      if (placeId) {
         try {
-          const urlObj = new URL(result.websiteUri);
-          const host = urlObj.hostname.replace('www.', '');
-          email = `info@${host}`;
-        } catch (e) {
-          // ignore
+          const url = `https://places.googleapis.com/v1/places/${placeId}`;
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Goog-Api-Key': apiKey,
+              'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,location,regularOpeningHours,rating,userRatingCount,reviews,addressComponents,types'
+            }
+          });
+          const result = await response.json();
+          if (!result.error) {
+            const lat = result.location?.latitude || extractedLat || 10.585;
+            const lng = result.location?.longitude || extractedLng || 77.251;
+
+            let pincode = '';
+            let locality = '';
+            if (result.addressComponents) {
+              for (const comp of result.addressComponents) {
+                if (comp.types.includes('postal_code')) {
+                  pincode = comp.longText;
+                }
+                if (comp.types.includes('sublocality') || comp.types.includes('neighborhood')) {
+                  locality = comp.longText;
+                } else if (!locality && comp.types.includes('locality')) {
+                  locality = comp.longText;
+                }
+              }
+            }
+
+            const cleanTimingStr = (str) => str.replace(/[\u2013\u2014\u2012\u2010]/g, '-').replace(/[\u202F\u00A0]/g, ' ').trim();
+
+            let hasGmbHours = false;
+            const timings = {
+              Monday: '9:00 AM - 8:00 PM',
+              Tuesday: '9:00 AM - 8:00 PM',
+              Wednesday: '9:00 AM - 8:00 PM',
+              Thursday: '9:00 AM - 8:00 PM',
+              Friday: '9:00 AM - 8:00 PM',
+              Saturday: '9:00 AM - 8:00 PM',
+              Sunday: 'Closed',
+            };
+
+            if (result.regularOpeningHours && result.regularOpeningHours.weekdayDescriptions) {
+              hasGmbHours = true;
+              for (const text of result.regularOpeningHours.weekdayDescriptions) {
+                const parts = text.split(': ');
+                if (parts.length >= 2) {
+                  const day = parts[0];
+                  const hours = cleanTimingStr(parts.slice(1).join(': '));
+                  if (timings.hasOwnProperty(day)) {
+                    timings[day] = hours;
+                  }
+                }
+              }
+            }
+
+            const isPublic = isPublicSector(result.types, result.displayName?.text);
+            const finalTimings = (isPublic && !hasGmbHours) ? null : timings;
+
+            let googleReviews = (result.reviews || []).map(r => ({
+              authorName: r.authorAttribution?.displayName || 'A Google User',
+              rating: r.rating || 0,
+              text: r.text?.text || '',
+              createdAt: r.publishTime ? new Date(r.publishTime) : new Date(),
+            }));
+
+            let rating = result.rating || 0;
+            let reviewsCount = result.userRatingCount || 0;
+
+            if (googleReviews.length === 0 || !rating || !reviewsCount) {
+              try {
+                const legacyUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&key=${apiKey}`;
+                const legacyResp = await fetch(legacyUrl);
+                const legacyData = await legacyResp.json();
+                if (legacyData.status === 'OK' && legacyData.result) {
+                  if (legacyData.result.reviews && googleReviews.length === 0) {
+                    googleReviews = legacyData.result.reviews.slice(0, 5).map(r => ({
+                      authorName: r.author_name || 'A Google User',
+                      rating: r.rating || 0,
+                      text: r.text || '',
+                      createdAt: new Date(r.time * 1000),
+                    }));
+                  }
+                  if (legacyData.result.rating && !rating) {
+                    rating = legacyData.result.rating;
+                  }
+                  if (legacyData.result.user_ratings_total && !reviewsCount) {
+                    reviewsCount = legacyData.result.user_ratings_total;
+                  }
+                }
+              } catch (e) {}
+            }
+
+            let email = '';
+            if (result.websiteUri) {
+              email = await scrapeEmail(result.websiteUri);
+              if (!email) {
+                try {
+                  const urlObj = new URL(result.websiteUri);
+                  const host = urlObj.hostname.replace('www.', '');
+                  email = `info@${host}`;
+                } catch (e) {}
+              }
+            }
+
+            const detail = {
+              name: result.displayName?.text || extractedName || '',
+              address: result.formattedAddress || '',
+              phone: result.nationalPhoneNumber || '',
+              website: result.websiteUri || '',
+              email,
+              latitude: lat,
+              longitude: lng,
+              googlePlaceId: placeId,
+              googleRating: rating,
+              googleReviewsCount: reviewsCount,
+              googleReviews,
+              timings: finalTimings,
+              openingHours: finalTimings,
+              pincode,
+              locality
+            };
+
+            return res.json({ success: true, data: detail });
+          }
+        } catch (err) {
+          console.warn('New Places Details API link call failed, trying legacy:', err.message);
         }
+      }
+
+      // 2. Try legacy Places Details API (works with placeId or cid)
+      try {
+        const legacyDetail = await fetchLegacyDetails(placeId, cid, apiKey, extractedName, extractedLat, extractedLng);
+        if (legacyDetail) {
+          return res.json({ success: true, data: legacyDetail });
+        }
+      } catch (err) {
+        console.warn('Legacy Places Details API link call failed:', err.message);
       }
     }
 
-    const detail = {
-      name: result.displayName?.text || extractedName || '',
-      address: result.formattedAddress || '',
-      phone: result.nationalPhoneNumber || '',
-      website: result.websiteUri || '',
-      email,
-      latitude: lat,
-      longitude: lng,
-      googlePlaceId: placeId,
-      googleRating: rating,
-      googleReviewsCount: reviewsCount,
-      googleReviews,
-      timings: finalTimings,
-      openingHours: finalTimings,
-      pincode,
-      locality
-    };
+    // Default mock fallbacks
+    if (!placeId || isMockKey || mockDetails[placeId] || String(placeId).startsWith('mock_place_') || String(placeId).startsWith('mock_addr_')) {
+      let baseDetail = mockDetails[placeId];
+      if (!baseDetail) {
+        const lowerId = String(placeId || '').toLowerCase();
+        const lowerName = String(extractedName || '').toLowerCase();
+        if (lowerId.includes('taluk') || lowerId.includes('office') || lowerId.includes('gov') || lowerId.includes('police') || lowerId.includes('municipality') ||
+            lowerName.includes('taluk') || lowerName.includes('office') || lowerName.includes('gov') || lowerName.includes('police') || lowerName.includes('municipality')) {
+          baseDetail = mockDetails['mock_place_udumalaipettai_taluk_office'];
+        } else {
+          baseDetail = mockDetails['mock_place_rk_electricals'];
+        }
+      }
+      const detail = {
+        logoUrl: "",
+        coverImageUrl: "",
+        galleryUrls: [],
+        ...baseDetail
+      };
+      return res.json({ success: true, data: detail });
+    }
 
-    res.json({ success: true, data: detail });
+    res.status(404).json({ success: false, message: 'Google Place details not found' });
   } catch (error) {
     console.error('Autofill by link error:', error);
     res.status(500).json({ success: false, message: error.message });

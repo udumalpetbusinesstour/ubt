@@ -15,7 +15,7 @@ const cloudinaryStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'ubt_gallery',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'gif', 'svg', 'heic', 'heif', 'bmp', 'tiff'],
     transformation: [{ width: 1200, height: 800, crop: 'limit' }]
   }
 });
@@ -44,14 +44,18 @@ const selectStorageEngine = () => {
 
 // Filter file types
 const fileFilter = (req, file, cb) => {
-  const filetypes = /jpeg|jpg|png|webp/;
-  const mimetype = filetypes.test(file.mimetype);
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-
-  if (mimetype && extname) {
+  if (file.mimetype && file.mimetype.startsWith('image/')) {
     return cb(null, true);
   }
-  cb(new Error('Only image files (jpeg, jpg, png, webp) are permitted for gallery uploads!'));
+  
+  // Also check extension name as fallback
+  const filetypes = /jpeg|jpg|png|webp|gif|svg|heic|heif|bmp|tiff/;
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  if (extname) {
+    return cb(null, true);
+  }
+
+  cb(new Error('Only image files (jpeg, jpg, png, webp, svg, gif, heic, bmp) are permitted!'));
 };
 
 const upload = multer({
