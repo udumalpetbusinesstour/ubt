@@ -12,6 +12,25 @@ const runExpiryAudit = async () => {
     console.log('--- Background Expiry Cron Service Started ---');
     const now = new Date();
 
+    // 1. Activate queued subscriptions whose start date has arrived
+    const Subscription = require('../models/Subscription');
+    const queuedSubs = await Subscription.find({
+      status: 'queued',
+      startDate: { $lte: now }
+    });
+
+    for (const sub of queuedSubs) {
+      console.log(`[Cron Activation] Activating queued subscription ${sub._id} for business ${sub.businessId}`);
+      sub.status = 'active';
+      await sub.save();
+
+      // Mark other active plans for this business as expired
+      await Subscription.updateMany(
+        { businessId: sub.businessId, status: 'active', _id: { $ne: sub._id } },
+        { $set: { status: 'expired' } }
+      );
+    }
+
     // Find all businesses with active premium status
     const activePremiumBiz = await Business.find({
       subscriptionStatus: 'active',

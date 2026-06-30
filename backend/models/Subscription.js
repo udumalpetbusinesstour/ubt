@@ -41,7 +41,7 @@ const SubscriptionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['active', 'expired', 'pending', 'refunded'],
+    enum: ['active', 'expired', 'pending', 'refunded', 'queued'],
     default: 'pending',
   },
   razorpayOrderId: {

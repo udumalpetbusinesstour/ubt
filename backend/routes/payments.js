@@ -59,11 +59,10 @@ router.post('/create-order', protect, async (req, res) => {
           }
         }
         
-        // 2. Mark status as expired and turn off autoRenew (autopay) in database
-        activeSub.status = 'expired';
+        // 2. Turn off autoRenew (autopay) in database but KEEP the status active so user gets remaining days
         activeSub.autoRenew = false;
         await activeSub.save();
-        console.log(`[SUBSCRIPTION CANCEL] Marked subscription ${activeSub._id} as expired and autoRenew set to false in MongoDB.`);
+        console.log(`[SUBSCRIPTION CANCEL] Disabled autoRenew on active subscription ${activeSub._id} in MongoDB (kept active).`);
       }
     } catch (subCancelErr) {
       console.error('[SUBSCRIPTION CANCEL] Error searching/cancelling active subscriptions:', subCancelErr.message);
@@ -274,8 +273,19 @@ router.post('/verify-payment', protect, async (req, res) => {
     }
 
     // Calculate dates
-    const startDate = new Date();
-    let endDate = new Date();
+    let startDate = new Date();
+    let subStatus = 'active';
+
+    const currentActive = await Subscription.findOne({
+      businessId: business._id,
+      status: 'active',
+      endDate: { $gt: new Date() }
+    });
+
+    if (currentActive) {
+      startDate = new Date(currentActive.endDate);
+      subStatus = 'queued';
+    }
 
     const dbPlan = await Plan.findOne({
       $or: [
@@ -289,7 +299,7 @@ router.post('/verify-payment', protect, async (req, res) => {
     if (isPublicSector) {
       durationDays = 3650; // 10 years free subscription
     }
-    endDate.setDate(startDate.getDate() + durationDays);
+    const endDate = new Date(startDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
 
     let baseAmount = isAdminUser ? 0 : (dbPlan ? dbPlan.price : (planType === 'Monthly' ? 99 : 999));
     if (isPublicSector) {
@@ -317,7 +327,7 @@ router.post('/verify-payment', protect, async (req, res) => {
       amount: finalAmount,
       amountPaid: finalAmount,
       referralDiscount: discountAmountRupees,
-      status: 'active',
+      status: subStatus,
       razorpayOrderId: razorpayOrderId || undefined,
       razorpaySubscriptionId: razorpaySubscriptionId || undefined,
       razorpayPaymentId: razorpayPaymentId || 'pay_mock_' + Math.random().toString(36).substr(2, 9),
