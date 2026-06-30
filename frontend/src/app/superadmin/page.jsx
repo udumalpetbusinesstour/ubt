@@ -261,6 +261,7 @@ export default function SuperAdminDashboard() {
   const [dashboardStats, setDashboardStats] = useState(null);
   const [revenueAnalytics, setRevenueAnalytics] = useState(null);
   const [revenueLoading, setRevenueLoading] = useState(false);
+  const [eventUploading, setEventUploading] = useState(false);
   const [revenueGraphType, setRevenueGraphType] = useState('total'); // total | subscription | event | ad
 
   // System activities logs
@@ -2015,6 +2016,42 @@ const handlePartnerAction = async (partnerId, action) => {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleEventImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image file size must be less than 5MB.');
+      return;
+    }
+
+    setEventUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('ubt_token')}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setEditingEvent(prev => ({ ...prev, coverImageUrl: data.url, bannerImage: data.url }));
+      } else {
+        alert(data.message || 'Failed to upload event image.');
+      }
+    } catch (err) {
+      console.error('Event image upload error:', err);
+      alert('Network error uploading event image.');
+    } finally {
+      setEventUploading(false);
     }
   };
 
@@ -5128,11 +5165,7 @@ const handlePartnerAction = async (partnerId, action) => {
                           <div className="flex flex-col text-left font-sans">
                             <div className="flex items-center gap-2">
                               <span className={`font-extrabold text-xs sm:text-[13px] leading-snug ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{e.title}</span>
-                              {e.featured && (
-                                <span className="bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-lg flex items-center gap-0.5 select-none shrink-0">
-                                  <Sparkles className="h-2 w-2 fill-current" /> Featured
-                                </span>
-                              )}
+
                             </div>
                             <span className="text-[9.5px] text-slate-400 font-bold mt-1 block">
                               Organizer: {e.organizer} • Date: {formatEventDateRange(e.date, e.endDate)} • Venue: {e.venue || 'To Be Declared'}
@@ -5159,18 +5192,6 @@ const handlePartnerAction = async (partnerId, action) => {
                           }`}
                         >
                           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                            <button 
-                              onClick={() => {
-                                setEvents(prev => prev.map(item => item._id === e._id ? { ...item, featured: !item.featured } : item));
-                              }}
-                              className={`px-3 py-1.5 border rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors ${
-                                e.featured
-                                  ? 'bg-amber-500/10 border-amber-500/20 text-amber-550'
-                                  : themeMode === 'dark' ? 'border-slate-800 text-slate-400 hover:bg-slate-800/40' : 'border-slate-200 text-slate-600 hover:bg-slate-55 hover:bg-slate-50'
-                              }`}
-                            >
-                              {e.featured ? 'Un-Feature' : 'Feature Event'}
-                            </button>
                             <button 
                               onClick={() => { setEditingEvent(e); setShowEditEventModal(true); }}
                               className={`px-3 py-1.5 border rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors ${
@@ -5454,34 +5475,6 @@ const handlePartnerAction = async (partnerId, action) => {
                               }`}
                             >
                               {isHidden ? 'Un-Hide' : 'Hide'}
-                            </button>
-                            <button 
-                              onClick={async () => {
-                                setReviews(prev => prev.map(item => item._id === r._id ? { ...item, status: isSpam ? 'approved' : 'spam' } : item));
-                              }}
-                              className={`px-3 py-1.5 border rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors ${
-                                isSpam
-                                  ? 'bg-rose-500/10 border-rose-500/20 text-rose-500 font-bold'
-                                  : themeMode === 'dark' ? 'border-slate-800 text-slate-400 hover:bg-slate-800/40' : 'border-slate-200 text-slate-600 hover:bg-slate-550'
-                              }`}
-                            >
-                              {isSpam ? 'Remove Spam Tag' : 'Mark Spam'}
-                            </button>
-                            <button 
-                              onClick={async () => {
-                                if (await window.confirm(`Are you sure you want to suspend user ${r.authorName}? This will auto-spam all their reviews.`)) {
-                                  setSuspendedUsers(prev => [...prev, r.authorName]);
-                                  setReviews(prev => prev.map(item => item.authorName === r.authorName ? { ...item, status: 'spam' } : item));
-                                  setSystemLogs(prev => [
-                                    { time: new Date().toLocaleTimeString(), event: `SuperAdmin suspended user account: ${r.authorName}`, type: 'warning' },
-                                    ...prev
-                                  ]);
-                                  alert(`User ${r.authorName} has been suspended.`);
-                                }
-                              }}
-                              className="px-3 py-1.5 border border-purple-500/25 bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors"
-                            >
-                              Suspend User
                             </button>
                             <button 
                               onClick={async () => {
@@ -9429,15 +9422,34 @@ const handlePartnerAction = async (partnerId, action) => {
                     </select>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[9px] font-black text-slate-555 uppercase tracking-widest leading-none">Cover Image URL</label>
-                    <input 
-                      type="text" 
-                      value={editingEvent.coverImageUrl || ''}
-                      onChange={(e) => setEditingEvent({ ...editingEvent, coverImageUrl: e.target.value, bannerImage: e.target.value })}
-                      className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
-                        themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-[#027244]'
-                      }`}
-                    />
+                    <label className="text-[9px] font-black text-slate-555 uppercase tracking-widest leading-none">Cover Image</label>
+                    {editingEvent.coverImageUrl ? (
+                      <div className="relative w-full h-24 border rounded-xl overflow-hidden group">
+                        <img src={editingEvent.coverImageUrl} alt="Cover" className="h-full w-full object-cover" />
+                        <button 
+                          type="button"
+                          onClick={() => setEditingEvent({ ...editingEvent, coverImageUrl: '', bannerImage: '' })}
+                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity border-none cursor-pointer"
+                        >
+                          Remove & Replace
+                        </button>
+                      </div>
+                    ) : eventUploading ? (
+                      <div className="w-full h-24 border border-dashed rounded-xl flex items-center justify-center text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-900 dark:border-slate-800">
+                        Uploading Cover Image...
+                      </div>
+                    ) : (
+                      <div className="relative w-full h-24 border border-dashed border-slate-300 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
+                        <input 
+                          type="file"
+                          accept="image/*"
+                          onChange={handleEventImageUpload}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                        <Plus className="h-5 w-5 text-slate-400" />
+                        <span className="text-[9px] text-slate-400 mt-1 font-bold">Upload Cover Image (Max 5MB)</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
