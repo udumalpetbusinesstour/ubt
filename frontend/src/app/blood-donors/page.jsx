@@ -332,9 +332,9 @@ export default function BloodDonorsPage() {
 
               <form onSubmit={handleRegister} className="flex flex-col gap-4">
                 
-                {/* Full Name */}
+                 {/* Full Name */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Full Name</label>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Full Name <span className="text-rose-500">*</span></label>
                   <input 
                     type="text" 
                     value={regName}
@@ -348,7 +348,7 @@ export default function BloodDonorsPage() {
 
                 {/* Locality */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Locality / Location</label>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Locality / Location <span className="text-rose-500">*</span></label>
                   <input 
                     type="text" 
                     value={regLocation}
@@ -362,7 +362,7 @@ export default function BloodDonorsPage() {
 
                 {/* Blood Group Dropdown */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Blood Group</label>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Blood Group <span className="text-rose-500">*</span></label>
                   <select 
                     value={regBloodGroup}
                     onChange={(e) => setRegBloodGroup(e.target.value)}
@@ -378,7 +378,7 @@ export default function BloodDonorsPage() {
                 {/* Custom Blood Group */}
                 {regBloodGroup === 'Others' && (
                   <div className="flex flex-col gap-1.5 animate-fadeIn">
-                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Specify Blood Group</label>
+                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Specify Blood Group <span className="text-rose-500">*</span></label>
                     <input 
                       type="text" 
                       value={customBloodGroupName}
@@ -393,7 +393,7 @@ export default function BloodDonorsPage() {
 
                 {/* Contact Number */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Contact Number</label>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Contact Number <span className="text-rose-500">*</span></label>
                   <input 
                     type="text" 
                     value={regContact}
@@ -447,9 +447,9 @@ export default function BloodDonorsPage() {
 
               <form onSubmit={handleRequestSubmit} className="flex flex-col gap-4">
                 
-                {/* Patient Name */}
+                 {/* Patient Name */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Patient Name</label>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Patient Name <span className="text-rose-500">*</span></label>
                   <input 
                     type="text" 
                     value={reqPatientName}
@@ -463,7 +463,7 @@ export default function BloodDonorsPage() {
 
                 {/* Hospital Name */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Hospital Name</label>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Hospital Name <span className="text-rose-500">*</span></label>
                   <input 
                     type="text" 
                     value={reqHospitalName}
@@ -477,7 +477,7 @@ export default function BloodDonorsPage() {
 
                 {/* Blood Group Dropdown */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Blood Group Needed</label>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Blood Group Needed <span className="text-rose-500">*</span></label>
                   <select 
                     value={reqBloodGroup}
                     onChange={(e) => setReqBloodGroup(e.target.value)}
@@ -492,7 +492,7 @@ export default function BloodDonorsPage() {
 
                 {/* Patient Address */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Patient Address</label>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Patient Address <span className="text-rose-500">*</span></label>
                   <input 
                     type="text" 
                     value={reqPatientAddress}
@@ -506,7 +506,7 @@ export default function BloodDonorsPage() {
 
                 {/* Mobile Number */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Attender's Mobile Number</label>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Attender's Mobile Number <span className="text-rose-500">*</span></label>
                   <input 
                     type="text" 
                     value={reqMobileNum}
@@ -520,7 +520,7 @@ export default function BloodDonorsPage() {
 
                 {/* Alt Mobile Number */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Alternative Mobile Number</label>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Alternative Mobile Number <span className="text-rose-500">*</span></label>
                   <input 
                     type="text" 
                     value={reqAltMobileNum}
@@ -534,7 +534,7 @@ export default function BloodDonorsPage() {
 
                 {/* Cause */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Cause / Reason</label>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Cause / Reason <span className="text-rose-500">*</span></label>
                   <textarea 
                     value={reqCause}
                     onChange={(e) => setReqCause(e.target.value)}
