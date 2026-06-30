@@ -1661,14 +1661,14 @@ export default function Home() {
                   href="https://www.google.com/maps/place//data=!4m3!3m2!1s0x50c1e1cd425b733:0x8b8510b51c2abead!12e1?source=g.page.m.ia._&laa=nmx-review-solicitation-ia2"
                   onClick={(e) => {
                     e.preventDefault();
-                    const width = 800;
-                    const height = 800;
-                    const left = (window.innerWidth - width) / 2;
-                    const top = (window.innerHeight - height) / 2;
+                    const width = 600;
+                    const height = 700;
+                    const left = (window.screen.width - width) / 2;
+                    const top = (window.screen.height - height) / 2;
                     window.open(
                       "https://www.google.com/maps/place//data=!4m3!3m2!1s0x50c1e1cd425b733:0x8b8510b51c2abead!12e1?source=g.page.m.ia._&laa=nmx-review-solicitation-ia2",
                       "GoogleReviewPopup",
-                      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
+                      `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`
                     );
                   }}
                   className="inline-flex items-center gap-1 bg-[#4285F4]/10 hover:bg-[#4285F4]/15 text-[#4285F4] px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer border border-[#4285F4]/20 hover:scale-102"
