@@ -814,22 +814,23 @@ function BusinessesList() {
       const catParam = searchParams.get('category');
       const focusParam = searchParams.get('focus');
       if (!catParam && !focusParam) {
-        // Calculate parent category views
-        const parentCategoryViews = {};
-        dbCategories.forEach(cat => {
-          if (cat.parentCategory) {
-            parentCategoryViews[cat.parentCategory] = (parentCategoryViews[cat.parentCategory] || 0) + (cat.views || 0);
+        const excludeParents = ['public sector', 'governmental organisations', 'government organisations', 'governmental organisation', 'government organisation', 'others'];
+        
+        const sortedDbCats = [...dbCategories].sort((a, b) => (b.views || 0) - (a.views || 0));
+        const top10HotCats = sortedDbCats.slice(0, 10);
+        
+        const defaultTickedParents = [];
+        top10HotCats.forEach(cat => {
+          const parent = getParentCategory(cat.categoryName || '');
+          if (parent && parent.trim() !== '' && !excludeParents.includes(parent.toLowerCase())) {
+            if (!defaultTickedParents.includes(parent)) {
+              defaultTickedParents.push(parent);
+            }
           }
         });
-        
-        // Sort and select top 3
-        const sortedParents = Array.from(
-          new Set(dbCategories.map(cat => cat.parentCategory).filter(p => p && p.trim() !== '' && p !== 'Others'))
-        ).sort((a, b) => (parentCategoryViews[b] || 0) - (parentCategoryViews[a] || 0));
-        
-        const top3 = sortedParents.slice(0, 3);
-        if (top3.length > 0) {
-          navigate(`/businesses?category=${encodeURIComponent(top3.join(','))}`, { replace: true });
+
+        if (defaultTickedParents.length > 0) {
+          navigate(`/businesses?category=${encodeURIComponent(defaultTickedParents.join(','))}`, { replace: true });
         }
       }
     }
@@ -1106,10 +1107,15 @@ function BusinessesList() {
     // category filter
     let cat = '';
     if (newCat !== undefined) {
-      cat = newCat === 'All Categories' ? '' : newCat;
+      cat = newCat;
     } else {
       const activeCats = Object.keys(checkedCategories).filter(k => checkedCategories[k]);
-      cat = activeCats.join(',');
+      const allSelected = dynamicAvailableCategories.length > 0 && dynamicAvailableCategories.every(c => checkedCategories[c]);
+      if (allSelected) {
+        cat = 'All Categories';
+      } else {
+        cat = activeCats.join(',');
+      }
     }
     if (cat) url += `&category=${encodeURIComponent(cat)}`;
     

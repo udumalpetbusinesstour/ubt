@@ -1030,7 +1030,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                   <span className="h-5 w-5 rounded-full bg-slate-50 text-slate-400 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5 border border-slate-100">
                     A
                   </span>
-                  <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">
+                  <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
                     {faq.a}
                   </p>
                 </div>

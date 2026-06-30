@@ -1635,13 +1635,13 @@ export default function Home() {
 
 
       {/* 8. What People Say Section */}
-      <section className="w-full bg-slate-50/50 py-8 md:py-16 px-4 border-t border-slate-200/50 relative">
-        <div className="max-w-6xl mx-auto flex flex-col items-center gap-6 md:gap-10 relative">
+      <section className="w-full bg-slate-50/50 py-8 md:py-16 border-t border-slate-200/50 relative">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-8 flex flex-col gap-6 md:gap-10 relative w-full">
           
-          <div className="w-full flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div className="text-left flex flex-col gap-1.5">
+          <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
+            <div>
               <div className="flex flex-wrap items-center gap-3">
-                <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">What People Say</h2>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight">What People Say</h2>
                 <a 
                   href="https://www.google.com/maps/place//data=!4m3!3m2!1s0x50c1e1cd425b733:0x8b8510b51c2abead!12e1?source=g.page.m.ia._&laa=nmx-review-solicitation-ia2"
                   onClick={(e) => {
@@ -1663,66 +1663,68 @@ export default function Home() {
                   <ArrowRight className="h-3 w-3" />
                 </a>
               </div>
-              <p className="text-sm text-slate-500 font-medium">Real experiences shared by our core community member creators</p>
-            </div>
-            
-            {/* Scroll Navigation Arrows */}
-            <div className="flex gap-2 select-none">
-              <button
-                onClick={() => handleScrollTestimonials('left')}
-                aria-label="Scroll left"
-                className="h-8 w-8 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center shadow-xs text-slate-400 hover:text-[#027244] cursor-pointer transition-colors"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => handleScrollTestimonials('right')}
-                aria-label="Scroll right"
-                className="h-8 w-8 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center shadow-xs text-slate-400 hover:text-[#027244] cursor-pointer transition-colors"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">Real experiences shared by our core community member creators</p>
             </div>
           </div>
 
-          <div 
-            ref={testimonialScrollRef}
-            className="w-full flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden animate-fadeIn"
-          >
-            {testimonials.map((t, idx) => (
-              <div 
-                key={t._id || idx}
-                className="min-w-[240px] sm:min-w-[340px] max-w-[340px] bg-white border border-slate-200/80 rounded-3xl p-4 sm:p-6.5 flex flex-col justify-between gap-3 sm:gap-5 shrink-0 snap-start shadow-2xs hover:shadow-xs transition-all relative"
-              >
-                <div className="flex flex-col gap-2.5 sm:gap-4">
-                  {/* Review stars */}
-                  <div className="flex items-center text-amber-400">
-                    {[...Array(t.rating || 5)].map((_, i) => (
-                      <Star key={i} className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-current" />
-                    ))}
-                    {[...Array(5 - (t.rating || 5))].map((_, i) => (
-                      <Star key={i + 10} className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-200" />
-                    ))}
-                  </div>
-                  
-                  <p className="text-slate-600 font-semibold italic text-[11px] sm:text-xs leading-relaxed">
-                    "{t.text || ''}"
-                  </p>
-                </div>
+          <div className="relative w-full">
+            {/* Scroll Left Button */}
+            <button 
+              onClick={() => handleScrollTestimonials('left')}
+              className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+              aria-label="Scroll Testimonials Left"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
 
-                <div className="flex items-center gap-2 sm:gap-3 mt-1 border-t border-slate-100/70 pt-2.5 sm:pt-3.5">
-                  <div className="h-7.5 w-7.5 sm:h-9 sm:w-9 rounded-full border border-slate-200 bg-[#E6F2ED] text-[#027244] font-black text-[9px] sm:text-[10px] flex items-center justify-center select-none shadow-2xs uppercase">
-                    {(t.authorName || '').slice(0, 2)}
+            <div 
+              ref={testimonialScrollRef}
+              className="w-full flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden animate-fadeIn scroll-smooth"
+            >
+              {testimonials.map((t, idx) => (
+                <div 
+                  key={t._id || idx}
+                  className="w-[280px] sm:w-[350px] bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-7 flex flex-col justify-between gap-4 shrink-0 snap-start shadow-2xs hover:shadow-xs transition-all relative"
+                >
+                  <div className="flex flex-col gap-3 sm:gap-4">
+                    {/* Review stars */}
+                    <div className="flex items-center text-amber-400">
+                      {[...Array(t.rating || 5)].map((_, i) => (
+                        <Star key={i} className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-current" />
+                      ))}
+                      {[...Array(5 - (t.rating || 5))].map((_, i) => (
+                        <Star key={i + 10} className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-200" />
+                      ))}
+                    </div>
+                    
+                    <p className="text-slate-600 font-semibold italic text-xs sm:text-[13px] leading-relaxed">
+                      "{t.text || ''}"
+                    </p>
                   </div>
-                  <div className="text-left flex flex-col gap-0.5">
-                    <span className="font-extrabold text-[10px] sm:text-[11px] text-slate-800 leading-none">{t.authorName || ''}</span>
-                    <span className="text-[7.5px] sm:text-[8.5px] font-bold text-[#027244] uppercase tracking-wider bg-emerald-50 border border-emerald-100 rounded-sm px-1.5 py-0.5 leading-none inline-block mt-0.5">
-                      {t.role || 'Business Owner'}
-                    </span>
+
+                  <div className="flex items-center gap-2 sm:gap-3 mt-1 border-t border-slate-100/70 pt-3 sm:pt-4">
+                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border border-slate-200 bg-[#E6F2ED] text-[#027244] font-black text-[10px] sm:text-xs flex items-center justify-center select-none shadow-2xs uppercase">
+                      {(t.authorName || '').slice(0, 2)}
+                    </div>
+                    <div className="text-left flex flex-col gap-0.5">
+                      <span className="font-extrabold text-[11px] sm:text-xs text-slate-800 leading-none">{t.authorName || ''}</span>
+                      <span className="text-[8px] sm:text-[9px] font-bold text-[#027244] uppercase tracking-wider bg-emerald-50 border border-emerald-100 rounded-sm px-1.5 py-0.5 leading-none inline-block mt-0.5">
+                        {t.role || 'Business Owner'}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            {/* Scroll Right Button */}
+            <button 
+              onClick={() => handleScrollTestimonials('right')}
+              className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+              aria-label="Scroll Testimonials Right"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
           </div>
 
           {/* Ask business owners, event managers, blog writers to share their thoughts */}
@@ -1836,7 +1838,7 @@ export default function Home() {
       </section>
 
       {/* 8. FAQ Section */}
-      <section id="faq" className="max-w-6xl w-full px-4 md:px-8 py-8 md:py-16 flex flex-col gap-6 md:gap-12 border-t border-slate-200/50">
+      <section id="faq" className="max-w-[1440px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col gap-6 md:gap-12 border-t border-slate-200/50">
         
         {/* Header Block: Image left to FAQ heading */}
         <div className="w-full flex flex-col md:flex-row items-center gap-6 md:gap-10 text-center md:text-left">
@@ -1906,7 +1908,7 @@ export default function Home() {
                 <span className="h-6 w-6 rounded-full bg-slate-50 text-slate-400 font-black text-xs flex items-center justify-center shrink-0 mt-0.5 border border-slate-100">
                   A
                 </span>
-                <p className="text-[13.5px] sm:text-sm text-slate-500 leading-relaxed font-semibold">
+                <p className="text-[13.5px] sm:text-sm text-slate-500 leading-relaxed font-medium">
                   {faq.a}
                 </p>
               </div>
