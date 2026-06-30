@@ -2705,11 +2705,11 @@ const handlePartnerAction = async (partnerId, action) => {
                     <span>Track Platform Revenue</span>
                   </button>
                   <button 
-                    onClick={() => { setActiveTab('Platform Settings'); setQuickActionsOpen(false); }}
+                    onClick={() => { setActiveTab('Signups'); setQuickActionsOpen(false); }}
                     className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-left hover:bg-slate-50 transition-colors w-full cursor-pointer"
                   >
-                    <Settings className="h-4 w-4 text-purple-600" />
-                    <span>Platform Settings</span>
+                    <User className="h-4 w-4 text-purple-600" />
+                    <span>Audit User Signups</span>
                   </button>
                 </div>
               )}
