@@ -42,6 +42,54 @@ export default function BloodDonorsTab() {
   const [assignedDonors, setAssignedDonors] = useState([]);
   const [currentApprovedRequest, setCurrentApprovedRequest] = useState(null);
 
+  // Custom Promise-based Alert / Confirmation Modal State
+  const [dialogConfig, setDialogConfig] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'alert', // 'alert' | 'confirm'
+    onConfirm: null,
+    onCancel: null
+  });
+
+  const showCustomAlert = (message, title = 'Alert') => {
+    return new Promise((resolve) => {
+      setDialogConfig({
+        isOpen: true,
+        title,
+        message,
+        type: 'alert',
+        onConfirm: () => {
+          setDialogConfig(prev => ({ ...prev, isOpen: false }));
+          resolve(true);
+        },
+        onCancel: () => {
+          setDialogConfig(prev => ({ ...prev, isOpen: false }));
+          resolve(false);
+        }
+      });
+    });
+  };
+
+  const showCustomConfirm = (message, title = 'Confirm Action') => {
+    return new Promise((resolve) => {
+      setDialogConfig({
+        isOpen: true,
+        title,
+        message,
+        type: 'confirm',
+        onConfirm: () => {
+          setDialogConfig(prev => ({ ...prev, isOpen: false }));
+          resolve(true);
+        },
+        onCancel: () => {
+          setDialogConfig(prev => ({ ...prev, isOpen: false }));
+          resolve(false);
+        }
+      });
+    });
+  };
+
   // Fetch Donors
   const fetchDonors = async () => {
     setLoading(true);
@@ -264,7 +312,7 @@ export default function BloodDonorsTab() {
 
   // Handle Delete Donor
   const handleDelete = async (donorId) => {
-    if (!window.confirm('Are you sure you want to permanently remove this donor from the directory?')) return;
+    if (!await showCustomConfirm('Are you sure you want to permanently remove this donor from the directory?', 'Delete Donor')) return;
     
     const token = localStorage.getItem('ubt_token');
     try {
@@ -292,7 +340,7 @@ export default function BloodDonorsTab() {
 
   // Handle Approve Blood Request
   const handleApproveRequest = async (requestId) => {
-    if (!window.confirm('Are you sure you want to approve this blood request and assign donors?')) return;
+    if (!await showCustomConfirm('Are you sure you want to approve this blood request and assign donors?', 'Approve Request')) return;
     try {
       const token = localStorage.getItem('ubt_token');
       const res = await fetch(`http://localhost:5000/api/blood-requests/${requestId}/approve`, {
@@ -311,17 +359,17 @@ export default function BloodDonorsTab() {
         // Refresh donors list
         fetchDonors();
       } else {
-        alert(data.message || 'Approval failed.');
+        await showCustomAlert(data.message || 'Approval failed.', 'Error');
       }
     } catch (err) {
       console.error(err);
-      alert('Failed to connect to the server.');
+      await showCustomAlert('Failed to connect to the server.', 'Network Error');
     }
   };
 
   // Handle Reject Blood Request
   const handleRejectRequest = async (requestId) => {
-    if (!window.confirm('Are you sure you want to reject this request?')) return;
+    if (!await showCustomConfirm('Are you sure you want to reject this request?', 'Reject Request')) return;
     try {
       const token = localStorage.getItem('ubt_token');
       const res = await fetch(`http://localhost:5000/api/blood-requests/${requestId}/reject`, {
@@ -333,11 +381,11 @@ export default function BloodDonorsTab() {
         setRequests(prev => prev.map(r => r._id === requestId ? data.data : r));
         triggerFeedbackAlert('Request rejected successfully.');
       } else {
-        alert(data.message || 'Rejection failed.');
+        await showCustomAlert(data.message || 'Rejection failed.', 'Error');
       }
     } catch (err) {
       console.error(err);
-      alert('Failed to connect to the server.');
+      await showCustomAlert('Failed to connect to the server.', 'Network Error');
     }
   };
 
@@ -818,6 +866,66 @@ export default function BloodDonorsTab() {
                 className="py-2 px-5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer border-none"
               >
                 Close & Complete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Promise-based Alert / Confirm Dialog Modal */}
+      {dialogConfig.isOpen && (
+        <div 
+          onClick={() => {
+            if (dialogConfig.type === 'alert') {
+              dialogConfig.onConfirm();
+            }
+          }}
+          className="fixed inset-0 z-100 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fadeIn"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md bg-white border border-slate-200 shadow-2xl rounded-3xl overflow-hidden animate-zoomIn text-left font-sans flex flex-col justify-between"
+          >
+            {/* Header */}
+            <div className="p-5 border-b border-slate-100 bg-slate-50/80 flex justify-between items-center shrink-0">
+              <h3 className="font-extrabold text-sm text-[#001c41] uppercase tracking-wide flex items-center gap-2">
+                {dialogConfig.type === 'confirm' ? (
+                  <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
+                ) : (
+                  <CheckCircle className="h-5 w-5 text-blue-500 shrink-0" />
+                )}
+                {dialogConfig.title}
+              </h3>
+              <button 
+                onClick={() => dialogConfig.onCancel()}
+                className="h-8.5 w-8.5 rounded-xl hover:bg-slate-200/80 flex items-center justify-center text-slate-450 hover:text-slate-700 transition-colors cursor-pointer border-none bg-transparent"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Body Content */}
+            <div className="p-6 text-sm text-slate-600 font-semibold leading-relaxed">
+              {dialogConfig.message}
+            </div>
+
+            {/* Actions Footer */}
+            <div className="p-5 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 shrink-0 select-none">
+              {dialogConfig.type === 'confirm' && (
+                <button
+                  onClick={() => dialogConfig.onCancel()}
+                  className="py-2.5 px-5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-xs rounded-xl shadow-xs cursor-pointer border-none transition-colors"
+                >
+                  Cancel
+                </button>
+              )}
+              <button
+                onClick={() => dialogConfig.onConfirm()}
+                className={`py-2.5 px-5 text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer border-none transition-colors ${
+                  dialogConfig.type === 'confirm' ? 'bg-[#027244] hover:bg-emerald-700' : 'bg-[#001c41] hover:bg-slate-800'
+                }`}
+              >
+                {dialogConfig.type === 'confirm' ? 'Confirm' : 'OK'}
               </button>
             </div>
           </div>

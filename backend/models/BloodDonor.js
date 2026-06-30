@@ -25,6 +25,10 @@ const BloodDonorSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  lastAssignedAt: {
+    type: Date,
+    default: null,
+  },
 });
 
 module.exports = mongoose.model('BloodDonor', BloodDonorSchema);

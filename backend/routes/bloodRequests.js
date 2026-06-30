@@ -60,55 +60,38 @@ router.put('/:id/approve', protect, admin, async (req, res) => {
 
     const bloodGroup = request.bloodGroup.toUpperCase().trim();
 
-    // Find all donors with this blood group sorted by stable ID (ascending)
-    const donors = await BloodDonor.find({ bloodGroup }).sort({ _id: 1 });
+    // Find all donors with this blood group sorted by lastAssignedAt (ascending, nulls/undefined first) and createdAt (ascending)
+    const donors = await BloodDonor.find({ bloodGroup }).sort({ lastAssignedAt: 1, createdAt: 1 });
     const N = donors.length;
 
     if (N === 0) {
       return res.status(400).json({ success: false, message: `No registered donors found for blood group ${bloodGroup}.` });
     }
 
-    // Get circular queue state
-    let queueState = await BloodQueueState.findOne({ bloodGroup });
-    if (!queueState) {
-      queueState = new BloodQueueState({ bloodGroup, lastIndex: -1 });
-    }
-
     const selectedDonors = [];
-    let nextLastIndex = queueState.lastIndex;
+    const matchedDonorsToUpdate = [];
+    const countToSelect = Math.min(N, 5);
 
-    if (N <= 5) {
-      // If we have 5 or fewer donors, select all of them
-      for (let i = 0; i < N; i++) {
-        selectedDonors.push({
-          name: donors[i].name,
-          contactNum: donors[i].contactNum,
-          location: donors[i].location
-        });
-      }
-      nextLastIndex = N - 1;
-    } else {
-      // Circular queue selection of 5 donors
-      const startIndex = (queueState.lastIndex + 1) % N;
-      for (let i = 0; i < 5; i++) {
-        const idx = (startIndex + i) % N;
-        selectedDonors.push({
-          name: donors[idx].name,
-          contactNum: donors[idx].contactNum,
-          location: donors[idx].location
-        });
-      }
-      nextLastIndex = (startIndex + 4) % N;
+    for (let i = 0; i < countToSelect; i++) {
+      selectedDonors.push({
+        name: donors[i].name,
+        contactNum: donors[i].contactNum,
+        location: donors[i].location
+      });
+      matchedDonorsToUpdate.push(donors[i]);
     }
 
-    // Update queue state in database
-    queueState.lastIndex = nextLastIndex;
-    await queueState.save();
+    // Update their lastAssignedAt timestamp to current time to send them to the bottom of the queue
+    const assignmentDate = new Date();
+    for (const donor of matchedDonorsToUpdate) {
+      donor.lastAssignedAt = assignmentDate;
+      await donor.save();
+    }
 
     // Update request details
     request.status = 'Approved';
     request.approvedDonors = selectedDonors;
-    request.approvedAt = new Date();
+    request.approvedAt = assignmentDate;
     await request.save();
 
     res.json({
