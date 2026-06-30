@@ -2380,7 +2380,7 @@ const handlePartnerAction = async (partnerId, action) => {
     {
       group: 'CONFIGURATION',
       items: [
-        { id: 'Platform Settings', subtab: 'plans', label: 'Settings', icon: <Settings className="h-4.5 w-4.5" /> }
+        { id: 'Platform Settings', subtab: 'plans', label: 'Subscription Plan Settings', icon: <Settings className="h-4.5 w-4.5" /> }
       ]
     },
     {
@@ -6233,6 +6233,95 @@ const handlePartnerAction = async (partnerId, action) => {
                         </button>
                       </form>
                     </div>
+                  </div>
+
+                  {/* Security Settings: Password Change */}
+                  <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-5 ${
+                    themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                  }`}>
+                    <div>
+                      <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-3">Security Controls (Change Administrative Password)</h4>
+                      <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Regularly rotate credentials to protect admin access records.</span>
+                    </div>
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        const currentPass = e.target.currentPassword.value;
+                        const newPass = e.target.newPassword.value;
+                        const confirmPass = e.target.confirmPassword.value;
+                        
+                        if (!currentPass || !newPass || !confirmPass) {
+                          alert("All password fields are required.");
+                          return;
+                        }
+                        if (newPass !== confirmPass) {
+                          alert("New password and confirm password fields do not match.");
+                          return;
+                        }
+                        
+                        try {
+                          const res = await fetch('http://localhost:5000/api/auth/profile', {
+                            method: 'PUT',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
+                            },
+                            body: JSON.stringify({ currentPassword: currentPass, newPassword: newPass })
+                          });
+                          const data = await res.json();
+                          if (res.ok && data.success) {
+                            alert("Administrative password updated successfully!");
+                            e.target.reset();
+                          } else {
+                            alert(data.message || "Failed to update administrative password.");
+                          }
+                        } catch (err) {
+                          console.error(err);
+                          alert("Network error updating password.");
+                        }
+                      }}
+                      className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end"
+                    >
+                      <div className="flex flex-col gap-1 text-left">
+                        <label className="text-[9.5px] font-black text-slate-555 uppercase tracking-widest leading-none">Current Password</label>
+                        <input 
+                          name="currentPassword"
+                          type="password"
+                          required
+                          className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
+                            themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-750 focus:border-[#027244]'
+                          }`}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 text-left">
+                        <label className="text-[9.5px] font-black text-slate-555 uppercase tracking-widest leading-none">New Password</label>
+                        <input 
+                          name="newPassword"
+                          type="password"
+                          required
+                          className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
+                            themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-750 focus:border-[#027244]'
+                          }`}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 text-left">
+                        <label className="text-[9.5px] font-black text-slate-555 uppercase tracking-widest leading-none">Confirm New Password</label>
+                        <input 
+                          name="confirmPassword"
+                          type="password"
+                          required
+                          className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
+                            themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-750 focus:border-[#027244]'
+                          }`}
+                        />
+                      </div>
+                      <button 
+                        type="submit"
+                        className="sm:col-span-3 py-2.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl cursor-pointer transition-colors shadow-md text-center border-none"
+                      >
+                        Update Security Password
+                      </button>
+                    </form>
                   </div>
 
                 </div>
