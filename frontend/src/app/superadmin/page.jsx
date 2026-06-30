@@ -261,7 +261,7 @@ export default function SuperAdminDashboard() {
   const [dashboardStats, setDashboardStats] = useState(null);
   const [revenueAnalytics, setRevenueAnalytics] = useState(null);
   const [revenueLoading, setRevenueLoading] = useState(false);
-  const [revenueGraphType, setRevenueGraphType] = useState('total'); // total | subscription | event
+  const [revenueGraphType, setRevenueGraphType] = useState('total'); // total | subscription | event | ad
 
   // System activities logs
   const [systemLogs, setSystemLogs] = useState([
@@ -2381,6 +2381,7 @@ const handlePartnerAction = async (partnerId, action) => {
       let val = matched?.total || 0;
       if (revenueGraphType === 'subscription') val = matched?.subscriptionTotal || 0;
       if (revenueGraphType === 'event') val = matched?.eventTotal || 0;
+      if (revenueGraphType === 'ad') val = matched?.adTotal || 0;
       return {
         label: `${m.label} (${formatAmountShort(val)})`,
         val
@@ -5959,27 +5960,34 @@ const handlePartnerAction = async (partnerId, action) => {
                 <div className="flex flex-col gap-8 text-left animate-fadeIn font-sans">
                   
                   {/* Top Stats Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                     <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                     }`}>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Platform Revenue</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-sans">Total Platform Revenue</span>
                       <h3 className="text-2xl font-black mt-2">₹{revenueAnalytics?.totalRevenue?.toLocaleString('en-IN') || 0}</h3>
                       <span className="text-[10.5px] text-slate-550 font-semibold mt-1">Direct merchant sales</span>
                     </div>
                     <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                     }`}>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Subscription Earnings</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-sans">Subscription Earnings</span>
                       <h3 className="text-2xl font-black text-emerald-600 mt-2">₹{revenueAnalytics?.subscriptionRevenue?.toLocaleString('en-IN') || 0}</h3>
                       <span className="text-[10.5px] text-slate-550 font-semibold mt-1">Monthly/Yearly premium plans</span>
                     </div>
                     <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                     }`}>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Event Postings Revenue</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-sans">Event Postings Revenue</span>
                       <h3 className="text-2xl font-black text-blue-500 mt-2">₹{revenueAnalytics?.eventRevenue?.toLocaleString('en-IN') || 0}</h3>
                       <span className="text-[10.5px] text-slate-550 font-semibold mt-1">₹99 per event postings fee</span>
+                    </div>
+                    <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
+                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                    }`}>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-sans">Ads Postings Revenue</span>
+                      <h3 className="text-2xl font-black text-purple-600 mt-2">₹{revenueAnalytics?.adRevenue?.toLocaleString('en-IN') || 0}</h3>
+                      <span className="text-[10.5px] text-slate-550 font-semibold mt-1">₹99 per sponsored ad promotion</span>
                     </div>
                     <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
@@ -5997,7 +6005,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Monthly income growth, plan split distributions, and transaction records.</span>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 font-sans">
+                   <div className="w-full font-sans">
                     {/* SVG Premium Chart */}
                     <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-6 font-sans ${
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
@@ -6005,7 +6013,7 @@ const handlePartnerAction = async (partnerId, action) => {
                       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                         <span className="font-extrabold text-xs uppercase tracking-wider text-slate-400">Monthly Revenue Graph (₹)</span>
                         <div className="flex gap-2 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-fit border border-slate-200 dark:border-slate-800">
-                          {['total', 'subscription', 'event'].map(type => (
+                          {['total', 'subscription', 'event', 'ad'].map(type => (
                             <button
                               key={type}
                               onClick={() => setRevenueGraphType(type)}
@@ -6042,33 +6050,6 @@ const handlePartnerAction = async (partnerId, action) => {
                             <span key={i}>{d.label}</span>
                           ))}
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Subscription Sales Bar Chart */}
-                    <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-6 font-sans ${
-                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                    }`}>
-                      <div className="flex justify-between items-center">
-                        <span className="font-extrabold text-xs uppercase tracking-wider text-slate-400">Subscription Registrations (Plan ratio)</span>
-                        <span className="text-sm font-black text-blue-500">Active Premium: {dateFilteredSubscriptions.filter(s => s.paymentStatus === 'Paid').length}</span>
-                      </div>
-
-                      <div className="w-full h-64 shrink-0 relative flex items-end justify-around pb-6 pt-4">
-                        {planRatioData.map((bar, idx) => (
-                          <div key={idx} className="flex flex-col items-center gap-2 h-full justify-end w-12 sm:w-16">
-                            <div className="text-[10px] font-black text-slate-400 mb-1">{bar.val} units</div>
-                            <div 
-                              className="w-8 sm:w-10 rounded-t-lg transition-all duration-500 hover:opacity-80"
-                              style={{ 
-                                height: `${(bar.val / maxPlanRatioVal) * 80}%`,
-                                backgroundColor: bar.color,
-                                boxShadow: `0 4px 12px ${bar.color}25`
-                              }}
-                            />
-                            <span className="text-[9px] text-slate-400 font-extrabold text-center uppercase tracking-wide leading-tight mt-1">{bar.label}</span>
-                          </div>
-                        ))}
                       </div>
                     </div>
                   </div>

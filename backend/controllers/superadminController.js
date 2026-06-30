@@ -129,11 +129,15 @@ const getRevenueAnalytics = async (req, res, next) => {
     const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
 
     const subscriptionRevenue = payments
-      .filter(p => p.subscriptionId || !p.eventId)
+      .filter(p => !p.eventId && !p.isSponsoredAd && p.planType !== 'Sponsored Ad Promotion')
       .reduce((sum, p) => sum + p.amount, 0);
 
     const eventRevenue = payments
       .filter(p => p.eventId)
+      .reduce((sum, p) => sum + p.amount, 0);
+
+    const adRevenue = payments
+      .filter(p => p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion')
       .reduce((sum, p) => sum + p.amount, 0);
 
     // Group paid payments by month
@@ -150,12 +154,10 @@ const getRevenueAnalytics = async (req, res, next) => {
             $sum: {
               $cond: [
                 {
-                  $or: [
-                    { $ifNull: ['$subscriptionId', false] },
-                    { $and: [
-                      { $eq: [{ $ifNull: ['$eventId', null] }, null] },
-                      { $eq: [{ $ifNull: ['$subscriptionId', null] }, null] }
-                    ]}
+                  $and: [
+                    { $eq: [{ $ifNull: ['$eventId', null] }, null] },
+                    { $eq: [{ $ifNull: ['$isSponsoredAd', false] }, false] },
+                    { $ne: [{ $ifNull: ['$planType', ''], 'Sponsored Ad Promotion' }] }
                   ]
                 },
                 '$amount',
@@ -165,6 +167,18 @@ const getRevenueAnalytics = async (req, res, next) => {
           },
           eventTotal: {
             $sum: { $cond: [{ $ifNull: ['$eventId', false] }, '$amount', 0] }
+          },
+          adTotal: {
+            $sum: { $cond: [
+              {
+                $or: [
+                  { $ifNull: ['$isSponsoredAd', false] },
+                  { $eq: [{ $ifNull: ['$planType', ''] }, 'Sponsored Ad Promotion'] }
+                ]
+              },
+              '$amount',
+              0
+            ]}
           }
         }
       },
@@ -192,6 +206,7 @@ const getRevenueAnalytics = async (req, res, next) => {
       totalRevenue,
       subscriptionRevenue,
       eventRevenue,
+      adRevenue,
       activeSubscriptions,
       expiredSubscriptions,
       pendingSubscriptions,
