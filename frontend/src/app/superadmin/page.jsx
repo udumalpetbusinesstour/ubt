@@ -800,7 +800,7 @@ const handlePartnerAction = async (partnerId, action) => {
 
 
   const handleProcessRefund = async (redemptionId) => {
-    const remarks = window.prompt('Enter manual refund transaction reference / remarks:', 'Manual refund processed and merchant notified.');
+    const remarks = await window.prompt('Enter manual refund transaction reference / remarks:', 'Manual refund processed and merchant notified.');
     if (remarks === null) return; // cancelled
 
     try {
@@ -1898,7 +1898,7 @@ const handlePartnerAction = async (partnerId, action) => {
   };
 
   const renameMainCategory = async (oldParentName) => {
-    const newParentName = prompt(`Rename main category "${oldParentName}" to:`, oldParentName);
+    const newParentName = await prompt(`Rename main category "${oldParentName}" to:`, oldParentName);
     if (!newParentName || newParentName.trim() === '' || newParentName.trim() === oldParentName) return;
     const confirmed = await confirm(`Rename main category "${oldParentName}" → "${newParentName.trim()}"?\nThis will update all subcategories under it.`);
     if (!confirmed) return;
@@ -4428,7 +4428,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                                 <div className="flex gap-1.5 shrink-0">
                                                   <button
                                                     onClick={async () => {
-                                                      const newName = prompt("Rename category:", cat.categoryName);
+                                                      const newName = await prompt("Rename category:", cat.categoryName);
                                                       if (!newName || newName === cat.categoryName) return;
                                                       updatePresetCategory(cat._id, { categoryName: newName });
                                                     }}
@@ -4499,7 +4499,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                           <div className="flex gap-1.5 shrink-0">
                                             <button
                                               onClick={async () => {
-                                                const newName = prompt("Rename category:", cat.categoryName);
+                                                const newName = await prompt("Rename category:", cat.categoryName);
                                                 if (!newName || newName === cat.categoryName) return;
                                                 updatePresetCategory(cat._id, { categoryName: newName });
                                               }}
@@ -7543,8 +7543,8 @@ const handlePartnerAction = async (partnerId, action) => {
                                       {req.status === 'Pending Approval' ? (
                                         <div className="flex items-center justify-center gap-1.5">
                                           <button
-                                            onClick={() => {
-                                              const remarks = prompt('Enter payout transaction details / remarks for the partner:');
+                                            onClick={async () => {
+                                              const remarks = await prompt('Enter payout transaction details / remarks for the partner:');
                                               if (remarks !== null) {
                                                 handleRedemptionRefund(req._id, remarks);
                                               }
@@ -7554,8 +7554,8 @@ const handlePartnerAction = async (partnerId, action) => {
                                             Arrange Refund
                                           </button>
                                           <button
-                                            onClick={() => {
-                                              const remarks = prompt('Enter rejection reason remarks for the partner:');
+                                            onClick={async () => {
+                                              const remarks = await prompt('Enter rejection reason remarks for the partner:');
                                               if (remarks !== null && remarks.trim()) {
                                                 handleRedemptionReject(req._id, remarks);
                                               }
@@ -7869,8 +7869,8 @@ const handlePartnerAction = async (partnerId, action) => {
                                       )}
                                       {r.status !== 'rejected' && (
                                         <button
-                                          onClick={() => {
-                                            const reason = prompt('Please enter a rejection reason (optional):');
+                                          onClick={async () => {
+                                            const reason = await prompt('Please enter a rejection reason (optional):');
                                             if (reason !== null) {
                                               handleReferralModerate(r._id, 'reject', reason);
                                             }
@@ -8485,15 +8485,15 @@ const handlePartnerAction = async (partnerId, action) => {
                   </button>
                 )}
                 <button 
-                  onClick={() => { handleAction(selectedBiz._id, 'suspend'); setShowBizModal(false); }}
+                  onClick={async () => { handleAction(selectedBiz._id, 'suspend'); setShowBizModal(false); }}
                   disabled={selectedBiz.status === 'Suspended'}
                   className="py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-550 font-extrabold text-[11px] rounded-xl cursor-pointer disabled:opacity-40 text-center transition-colors border border-amber-500/25"
                 >
                   Suspend business
                 </button>
                 <button 
-                  onClick={() => {
-                    const remarks = window.prompt("Enter modification request comments:");
+                  onClick={async () => {
+                    const remarks = await window.prompt("Enter modification request comments:");
                     if (remarks) {
                       setSystemLogs(prev => [
                         { time: new Date().toLocaleTimeString(), event: `SuperAdmin requested modifications for ${selectedBiz.name}. Comments: ${remarks}`, type: 'warning' },

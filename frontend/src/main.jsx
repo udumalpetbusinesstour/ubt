@@ -3,9 +3,10 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './app/globals.css';
 
-// Early override of window.alert and window.confirm to hook into our global React Modal System
+// Early override of window.alert, window.confirm, and window.prompt to hook into our global React Modal System
 let globalShowAlert = null;
 let globalShowConfirm = null;
+let globalShowPrompt = null;
 
 if (typeof window !== 'undefined') {
   window.alert = (message, title = 'Notification') => {
@@ -23,10 +24,19 @@ if (typeof window !== 'undefined') {
     console.warn("Early confirm fallback:", message);
     return Promise.resolve(true);
   };
+
+  window.prompt = (message, defaultValue = '', title = 'Input Required') => {
+    if (globalShowPrompt) {
+      return globalShowPrompt(message, defaultValue, title);
+    }
+    console.warn("Early prompt fallback:", message);
+    return Promise.resolve(defaultValue);
+  };
   
-  window.__registerModalCallbacks = (showAlert, showConfirm) => {
+  window.__registerModalCallbacks = (showAlert, showConfirm, showPrompt) => {
     globalShowAlert = showAlert;
     globalShowConfirm = showConfirm;
+    globalShowPrompt = showPrompt;
   };
 }
 

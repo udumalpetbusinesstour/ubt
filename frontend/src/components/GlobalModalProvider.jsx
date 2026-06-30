@@ -7,6 +7,8 @@ export default function GlobalModalProvider({ children }) {
     title: '',
     message: '',
     type: 'alert',
+    defaultValue: '',
+    inputValue: '',
     resolve: null
   });
 
@@ -20,6 +22,8 @@ export default function GlobalModalProvider({ children }) {
               title,
               message,
               type: 'alert',
+              defaultValue: '',
+              inputValue: '',
               resolve
             });
           });
@@ -31,6 +35,21 @@ export default function GlobalModalProvider({ children }) {
               title,
               message,
               type: 'confirm',
+              defaultValue: '',
+              inputValue: '',
+              resolve
+            });
+          });
+        },
+        (message, defaultValue = '', title = 'Input Required') => {
+          return new Promise((resolve) => {
+            setModal({
+              isOpen: true,
+              title,
+              message,
+              type: 'prompt',
+              defaultValue,
+              inputValue: defaultValue,
               resolve
             });
           });
@@ -40,12 +59,24 @@ export default function GlobalModalProvider({ children }) {
   }, []);
 
   const handleConfirm = () => {
-    if (modal.resolve) modal.resolve(true);
+    if (modal.resolve) {
+      if (modal.type === 'prompt') {
+        modal.resolve(modal.inputValue);
+      } else {
+        modal.resolve(true);
+      }
+    }
     setModal(prev => ({ ...prev, isOpen: false }));
   };
 
   const handleCancel = () => {
-    if (modal.resolve) modal.resolve(false);
+    if (modal.resolve) {
+      if (modal.type === 'prompt') {
+        modal.resolve(null);
+      } else {
+        modal.resolve(false);
+      }
+    }
     setModal(prev => ({ ...prev, isOpen: false }));
   };
 
@@ -68,6 +99,8 @@ export default function GlobalModalProvider({ children }) {
               <h3 className="font-extrabold text-sm text-[#001c41] uppercase tracking-wide flex items-center gap-2">
                 {modal.type === 'confirm' ? (
                   <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
+                ) : modal.type === 'prompt' ? (
+                  <AlertCircle className="h-5 w-5 text-emerald-500 shrink-0" />
                 ) : (
                   <CheckCircle className="h-5 w-5 text-blue-500 shrink-0" />
                 )}
@@ -82,15 +115,32 @@ export default function GlobalModalProvider({ children }) {
             </div>
 
             {/* Content */}
-            <div className="p-6 text-sm text-slate-650 font-semibold leading-relaxed max-h-[60vh] overflow-y-auto">
-              {String(modal.message).split('\n').map((line, i) => (
-                <div key={i}>{line}</div>
-              ))}
+            <div className="p-6 text-sm text-slate-650 font-semibold leading-relaxed max-h-[60vh] overflow-y-auto flex flex-col gap-3">
+              <div>
+                {String(modal.message).split('\n').map((line, i) => (
+                  <div key={i}>{line}</div>
+                ))}
+              </div>
+              {modal.type === 'prompt' && (
+                <div className="mt-2 w-full">
+                  <input
+                    type="text"
+                    value={modal.inputValue}
+                    onChange={(e) => setModal(prev => ({ ...prev, inputValue: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-[#027244] bg-white transition-all text-sm"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleConfirm();
+                      if (e.key === 'Escape') handleCancel();
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Actions */}
             <div className="p-5 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 shrink-0 select-none">
-              {modal.type === 'confirm' && (
+              {(modal.type === 'confirm' || modal.type === 'prompt') && (
                 <button
                   onClick={handleCancel}
                   className="py-2.5 px-5 bg-slate-150 hover:bg-slate-200 text-slate-600 font-extrabold text-xs rounded-xl shadow-xs cursor-pointer border-none transition-colors"
@@ -101,10 +151,10 @@ export default function GlobalModalProvider({ children }) {
               <button
                 onClick={handleConfirm}
                 className={`py-2.5 px-5 text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer border-none transition-colors ${
-                  modal.type === 'confirm' ? 'bg-[#027244] hover:bg-emerald-700' : 'bg-[#001c41] hover:bg-slate-800'
+                  modal.type === 'confirm' || modal.type === 'prompt' ? 'bg-[#027244] hover:bg-emerald-700' : 'bg-[#001c41] hover:bg-slate-800'
                 }`}
               >
-                {modal.type === 'confirm' ? 'Confirm' : 'OK'}
+                {modal.type === 'confirm' || modal.type === 'prompt' ? 'Confirm' : 'OK'}
               </button>
             </div>
           </div>

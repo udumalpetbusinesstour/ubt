@@ -1377,7 +1377,7 @@ export default function AdminDashboard() {
   };
   
   const renameMainCategory = async (oldParentName) => {
-    const newParentName = prompt(`Rename main category "${oldParentName}" to:`, oldParentName);
+    const newParentName = await prompt(`Rename main category "${oldParentName}" to:`, oldParentName);
     if (!newParentName || newParentName.trim() === '' || newParentName.trim() === oldParentName) return;
     const confirmed = await confirm(`Rename main category "${oldParentName}" → "${newParentName.trim()}"?\nThis will update all subcategories under it.`);
     if (!confirmed) return;
@@ -1469,7 +1469,7 @@ export default function AdminDashboard() {
   const handlePartnerAction = async (partnerId, action) => {
     let rejectionReason = '';
     if (action === 'reject') {
-      rejectionReason = window.prompt("Please enter the reason/details for rejection:");
+      rejectionReason = await window.prompt("Please enter the reason/details for rejection:");
       if (rejectionReason === null) return; // Cancelled
     }
     try {
@@ -1616,7 +1616,7 @@ export default function AdminDashboard() {
     const businessObj = businesses.find(b => b._id === bizId);
     const businessName = businessObj ? businessObj.name : '';
     const defaultMsg = `Friendly reminder: Please renew your subscription for "${businessName}" to maintain premium visibility and access.`;
-    const customMessage = window.prompt("Enter customized reminder text (leave empty to send default message):", defaultMsg);
+    const customMessage = await window.prompt("Enter customized reminder text (leave empty to send default message):", defaultMsg);
     
     if (customMessage === null) return;
 
@@ -4623,8 +4623,8 @@ export default function AdminDashboard() {
                                       {req.status === 'Pending Approval' ? (
                                         <div className="flex items-center justify-center gap-1.5">
                                           <button
-                                            onClick={() => {
-                                              const remarks = prompt('Enter payout transaction details / remarks for the partner:');
+                                            onClick={async () => {
+                                              const remarks = await prompt('Enter payout transaction details / remarks for the partner:');
                                               if (remarks !== null) {
                                                 handleRedemptionRefund(req._id, remarks);
                                               }
@@ -4634,8 +4634,8 @@ export default function AdminDashboard() {
                                             Arrange Refund
                                           </button>
                                           <button
-                                            onClick={() => {
-                                              const remarks = prompt('Enter rejection reason remarks for the partner:');
+                                            onClick={async () => {
+                                              const remarks = await prompt('Enter rejection reason remarks for the partner:');
                                               if (remarks !== null && remarks.trim()) {
                                                 handleRedemptionReject(req._id, remarks);
                                               }
@@ -4878,8 +4878,8 @@ export default function AdminDashboard() {
                                           )}
                                           {r.status !== 'rejected' && (
                                             <button
-                                              onClick={() => {
-                                                const reason = prompt('Please enter a rejection reason (optional):');
+                                              onClick={async () => {
+                                                const reason = await prompt('Please enter a rejection reason (optional):');
                                                 if (reason !== null) {
                                                   handleReferralModerate(r._id, 'reject', reason);
                                                 }
@@ -5011,8 +5011,8 @@ export default function AdminDashboard() {
                                     <td className="px-6 py-4 text-right">
                                       {r.status === 'Pending Approval' ? (
                                         <button
-                                          onClick={() => {
-                                            const remarks = prompt('Enter refund remarks (e.g. Transaction ID, bank payment details):');
+                                          onClick={async () => {
+                                            const remarks = await prompt('Enter refund remarks (e.g. Transaction ID, bank payment details):');
                                             if (remarks !== null) {
                                               handleRedemptionRefund(r._id, remarks);
                                             }
@@ -5621,7 +5621,7 @@ export default function AdminDashboard() {
                                                 <div className="flex gap-1.5 shrink-0">
                                                   <button
                                                     onClick={async () => {
-                                                      const newName = prompt("Rename category:", cat.categoryName);
+                                                      const newName = await prompt("Rename category:", cat.categoryName);
                                                       if (!newName || newName === cat.categoryName) return;
                                                       updatePresetCategory(cat._id, { categoryName: newName });
                                                     }}
@@ -5688,7 +5688,7 @@ export default function AdminDashboard() {
                                           <div className="flex gap-1.5 shrink-0">
                                             <button
                                               onClick={async () => {
-                                                const newName = prompt("Rename category:", cat.categoryName);
+                                                const newName = await prompt("Rename category:", cat.categoryName);
                                                 if (!newName || newName === cat.categoryName) return;
                                                 updatePresetCategory(cat._id, { categoryName: newName });
                                               }}
