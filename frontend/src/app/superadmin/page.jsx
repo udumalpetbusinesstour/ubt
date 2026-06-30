@@ -6023,7 +6023,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                   : 'bg-transparent text-slate-400 hover:text-slate-650'
                               }`}
                             >
-                              {type}
+                              {type === 'ad' ? 'ads' : type}
                             </button>
                           ))}
                         </div>
