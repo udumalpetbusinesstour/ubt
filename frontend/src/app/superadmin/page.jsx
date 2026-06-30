@@ -2691,25 +2691,25 @@ const handlePartnerAction = async (partnerId, action) => {
               {quickActionsOpen && (
                 <div className="absolute right-0 mt-2.5 w-56 rounded-2xl bg-white border border-slate-200 shadow-xl p-2 flex flex-col gap-1 animate-fadeIn z-20 text-[#001c41]">
                   <button 
-                    onClick={() => { setActiveTab('Admin Management'); setQuickActionsOpen(false); }}
+                    onClick={() => { setActiveTab('Businesses'); setQuickActionsOpen(false); }}
                     className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-left hover:bg-slate-50 transition-colors w-full cursor-pointer"
                   >
-                    <Shield className="h-4 w-4 text-emerald-600" />
-                    <span>Create Sub-Admin</span>
+                    <Store className="h-4 w-4 text-emerald-600" />
+                    <span>Audit Listings Queue</span>
                   </button>
                   <button 
-                    onClick={() => { setActiveTab('Notifications'); setQuickActionsOpen(false); }}
+                    onClick={() => { setActiveTab('Revenue'); setQuickActionsOpen(false); }}
                     className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-left hover:bg-slate-50 transition-colors w-full cursor-pointer"
                   >
-                    <Bell className="h-4 w-4 text-blue-600" />
-                    <span>Broadcast notice</span>
+                    <CreditCard className="h-4 w-4 text-blue-600" />
+                    <span>Track Platform Revenue</span>
                   </button>
                   <button 
-                    onClick={() => { setActiveTab('System Logs'); setQuickActionsOpen(false); }}
+                    onClick={() => { setActiveTab('Platform Settings'); setQuickActionsOpen(false); }}
                     className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-left hover:bg-slate-50 transition-colors w-full cursor-pointer"
                   >
-                    <Terminal className="h-4 w-4 text-purple-600" />
-                    <span>Audit System Logs</span>
+                    <Settings className="h-4 w-4 text-purple-600" />
+                    <span>Platform Settings</span>
                   </button>
                 </div>
               )}
