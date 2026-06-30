@@ -4125,7 +4125,7 @@ function DashboardContent() {
                 }
                 setSidebarOpen(false);
               }}
-              className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-[11.5px] font-extrabold transition-all hover:bg-slate-800/40 hover:text-white cursor-pointer ${
+              className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-bold transition-all hover:bg-slate-800/40 hover:text-white cursor-pointer ${
                 activeTab === link.label && !link.onClick
                   ? 'bg-[#027244] text-white shadow-md shadow-emerald-900/20' 
                   : 'text-slate-400 hover:bg-slate-800/30'
