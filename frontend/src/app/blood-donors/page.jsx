@@ -217,6 +217,17 @@ export default function BloodDonorsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      if (!res.ok) {
+        const text = await res.text();
+        let errMsg = 'Failed to submit request.';
+        try {
+          const parsed = JSON.parse(text);
+          errMsg = parsed.message || errMsg;
+        } catch (e) {
+          errMsg = `Server error (${res.status}). Please ensure your backend server is restarted.`;
+        }
+        throw new Error(errMsg);
+      }
       const data = await res.json();
       if (data.success) {
         setRequestSuccess('Blood request submitted successfully! Admin will assign donors.');
