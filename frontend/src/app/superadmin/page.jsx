@@ -3794,8 +3794,7 @@ const handlePartnerAction = async (partnerId, action) => {
                         { id: 'Approved', label: 'Approved (UDT Verified)' },
                         { id: 'Pending', label: 'Audit Queue (Pending)' },
                         { id: 'Premium', label: 'Active Premium' },
-                        { id: 'Expired', label: 'Expired Plan' },
-                        { id: 'Suspended', label: 'Suspended' }
+                        { id: 'Expired', label: 'Expired Plan' }
                       ].map(pill => (
                         <button
                           key={pill.id}
@@ -3819,6 +3818,23 @@ const handlePartnerAction = async (partnerId, action) => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-sans">
                     {filteredBusinesses.map(b => {
                       const isExpired = b.subscriptionStatus === 'expired';
+                      const activeSub = subscriptions.find(s => s.businessId === b._id && s.paymentStatus === 'Paid');
+                      let expiryDisplayText = 'Pending';
+                      let expiryTextColor = 'text-amber-500';
+                      
+                      if (activeSub) {
+                        if (activeSub.autoRenew) {
+                          expiryDisplayText = 'Autopay On';
+                          expiryTextColor = 'text-[#027244]';
+                        } else {
+                          const expDate = b.subscriptionExpiry || activeSub.expiryDate;
+                          if (expDate) {
+                            const isExpiredSub = new Date(expDate) < new Date();
+                            expiryDisplayText = new Date(expDate).toLocaleDateString();
+                            expiryTextColor = isExpiredSub ? 'text-rose-600' : 'text-slate-800 dark:text-slate-200';
+                          }
+                        }
+                      }
                       return (
                         <div 
                           key={b._id}
@@ -3907,8 +3923,8 @@ const handlePartnerAction = async (partnerId, action) => {
                               </div>
                               <div className="flex justify-between">
                                 <span>Subscription Expiry</span>
-                                <span className={`font-black ${isExpired ? 'text-rose-600' : 'text-[#027244]'}`}>
-                                  {b.subscriptionExpiry ? new Date(b.subscriptionExpiry).toLocaleDateString() : 'N/A'}
+                                <span className={`font-black ${expiryTextColor}`}>
+                                  {expiryDisplayText}
                                 </span>
                               </div>
                             </div>
