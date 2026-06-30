@@ -1325,6 +1325,11 @@ router.post('/google-autofill', async (req, res) => {
       }
     }
 
+    // If it's a real API key and a real Place ID, return error instead of falling back to mock details
+    if (!isMockKey && !String(placeId).startsWith('mock_') && !mockDetails[placeId]) {
+      return res.status(400).json({ success: false, message: 'Failed to retrieve details from Google Places API for the provided Place ID.' });
+    }
+
     // Default Mock fallback
     let detail = mockDetails[placeId];
     if (!detail) {
@@ -1602,8 +1607,9 @@ router.post('/google-autofill-link', async (req, res) => {
       }
     }
 
-    // Default mock fallbacks
-    if (!placeId || isMockKey || mockDetails[placeId] || String(placeId).startsWith('mock_place_') || String(placeId).startsWith('mock_addr_')) {
+    // Default mock fallbacks - only triggers if it is explicitly a mock environment or a mock Place ID.
+    // If it's a real API key and we couldn't parse a valid Place ID / CID or failed to fetch, return error.
+    if (isMockKey || (placeId && (mockDetails[placeId] || String(placeId).startsWith('mock_place_') || String(placeId).startsWith('mock_addr_')))) {
       let baseDetail = mockDetails[placeId];
       if (!baseDetail) {
         const lowerId = String(placeId || '').toLowerCase();
