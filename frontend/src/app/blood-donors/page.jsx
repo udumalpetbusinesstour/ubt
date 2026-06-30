@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
-  Heart, MapPin, Phone, MessageSquare, AlertCircle, CheckCircle, RefreshCw, Sparkles, Filter, ShieldCheck, HeartHandshake, UserPlus
+  Heart, MapPin, Phone, MessageSquare, AlertCircle, CheckCircle, RefreshCw, Sparkles, Filter, ShieldCheck, HeartHandshake, UserPlus, FileText, ClipboardList
 } from 'lucide-react';
 
 const STANDARD_BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -29,10 +29,40 @@ export default function BloodDonorsPage() {
   const [regContact, setRegContact] = useState('');
   
   const [customGroups, setCustomGroups] = useState([]);
-  
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState('');
   const [submitError, setSubmitError] = useState('');
+
+  // Tab State for Left Column ('register' | 'request')
+  const [activeSidebarTab, setActiveSidebarTab] = useState('request');
+
+  // Request Blood Form State
+  const [reqHospitalName, setReqHospitalName] = useState('');
+  const [reqPatientName, setReqPatientName] = useState('');
+  const [reqBloodGroup, setReqBloodGroup] = useState('O+');
+  const [reqPatientAddress, setReqPatientAddress] = useState('');
+  const [reqMobileNum, setReqMobileNum] = useState('');
+  const [reqAltMobileNum, setReqAltMobileNum] = useState('');
+  const [reqCause, setReqCause] = useState('');
+  const [requestSubmitting, setRequestSubmitting] = useState(false);
+  const [requestSuccess, setRequestSuccess] = useState('');
+  const [requestError, setRequestError] = useState('');
+
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('ubt_user');
+    if (storedUser) {
+      try {
+        setCurrentUser(JSON.parse(storedUser));
+      } catch (err) {
+        console.error('Failed to parse user from local storage', err);
+      }
+    }
+  }, []);
+
+  const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin');
 
   // Fetch Donors
   const fetchDonors = async () => {
@@ -48,7 +78,6 @@ export default function BloodDonorsPage() {
       }
     } catch (err) {
       console.warn('Backend server offline or error. Using local mock donors fallback.', err);
-      // Initialize with local mock donors if DB request fails
       const stored = localStorage.getItem('ubt_local_donors');
       if (stored) {
         try {
@@ -93,7 +122,7 @@ export default function BloodDonorsPage() {
     }
   }, [donors, activeFilter]);
 
-  // Handle Form Submit
+  // Handle Register Donor Submit
   const handleRegister = async (e) => {
     e.preventDefault();
     if (!regName.trim() || !regLocation.trim() || !regContact.trim()) {
@@ -128,9 +157,7 @@ export default function BloodDonorsPage() {
       const data = await res.json();
       if (data.success && data.data) {
         setSubmitSuccess('You have registered successfully! Thank you for your generosity.');
-        // Prepend to current list
         setDonors(prev => [data.data, ...prev]);
-        // Reset inputs
         setRegName('');
         setRegLocation('');
         setRegContact('');
@@ -141,7 +168,6 @@ export default function BloodDonorsPage() {
       }
     } catch (err) {
       console.warn('Backend offline. Simulating local registration fallback.', err);
-      // Simulate registration locally in offline state
       const localNew = {
         _id: 'local_reg_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36),
         ...payload,
@@ -153,7 +179,6 @@ export default function BloodDonorsPage() {
       localStorage.setItem('ubt_local_donors', JSON.stringify(updatedList));
 
       setSubmitSuccess('Registered successfully (Offline Mode)! Your details are updated locally.');
-      // Reset inputs
       setRegName('');
       setRegLocation('');
       setRegContact('');
@@ -161,6 +186,54 @@ export default function BloodDonorsPage() {
       setCustomBloodGroupName('');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Handle Blood Request Submit
+  const handleRequestSubmit = async (e) => {
+    e.preventDefault();
+    if (!reqHospitalName.trim() || !reqPatientName.trim() || !reqPatientAddress.trim() || !reqMobileNum.trim() || !reqCause.trim()) {
+      setRequestError('Please fill in all the required fields.');
+      return;
+    }
+    
+    setRequestSubmitting(true);
+    setRequestError('');
+    setRequestSuccess('');
+    
+    const payload = {
+      hospitalName: reqHospitalName.trim(),
+      patientName: reqPatientName.trim(),
+      bloodGroup: reqBloodGroup,
+      patientAddress: reqPatientAddress.trim(),
+      mobileNum: reqMobileNum.trim(),
+      altMobileNum: reqAltMobileNum.trim(),
+      cause: reqCause.trim()
+    };
+    
+    try {
+      const res = await fetch('http://localhost:5000/api/blood-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRequestSuccess('Blood request submitted successfully! Admin will assign donors.');
+        setReqHospitalName('');
+        setReqPatientName('');
+        setReqBloodGroup('O+');
+        setReqPatientAddress('');
+        setReqMobileNum('');
+        setReqAltMobileNum('');
+        setReqCause('');
+      } else {
+        throw new Error(data.message || 'Failed to submit request.');
+      }
+    } catch (err) {
+      setRequestError(err.message || 'Server connection error. Please try again later.');
+    } finally {
+      setRequestSubmitting(false);
     }
   };
 
@@ -180,7 +253,7 @@ export default function BloodDonorsPage() {
               Blood Donors <span className="text-rose-400">Directory</span>
             </h1>
             <p className="text-xs md:text-sm text-slate-300 font-semibold leading-relaxed">
-              Find life-saving blood donors instantly in and around Udumalpet. Direct contact information. Register yourself as a volunteer donor to help save a life in emergencies.
+              Find life-saving blood donors instantly in and around Udumalpet. Volunteer donor contact details are securely vetted. Request blood or register as a donor.
             </p>
           </div>
         </div>
@@ -189,129 +262,298 @@ export default function BloodDonorsPage() {
       {/* 2. Main Grid Content */}
       <div className="max-w-6xl mx-auto px-4 md:px-8 mt-12 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* Left Column: Register Form (lg:col-span-4) */}
+        {/* Left Column: Form Controls (lg:col-span-4) */}
         <div className="lg:col-span-4 flex flex-col gap-6">
-          <div className="bg-white border border-slate-200/80 shadow-md rounded-[28px] p-6 flex flex-col gap-5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 h-24 w-24 bg-gradient-to-bl from-rose-100/30 to-transparent rounded-bl-full pointer-events-none" />
-            
-            <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-              <UserPlus className="h-5 w-5 text-rose-500" />
-              <h3 className="font-extrabold text-sm text-[#001c41] uppercase tracking-wide">Register as Donor</h3>
-            </div>
+          
+          {/* Tab Switcher */}
+          <div className="flex bg-white border border-slate-200 shadow-sm p-1 rounded-2xl select-none animate-fadeIn">
+            <button
+              onClick={() => setActiveSidebarTab('request')}
+              className={`flex-grow py-2.5 px-4 text-[11px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                activeSidebarTab === 'request'
+                  ? 'bg-rose-50 border border-rose-100 text-rose-600 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700 bg-transparent border border-transparent'
+              }`}
+            >
+              <HeartHandshake className="h-3.5 w-3.5" />
+              <span>Request Blood</span>
+            </button>
+            <button
+              onClick={() => setActiveSidebarTab('register')}
+              className={`flex-grow py-2.5 px-4 text-[11px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                activeSidebarTab === 'register'
+                  ? 'bg-rose-50 border border-rose-100 text-rose-600 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700 bg-transparent border border-transparent'
+              }`}
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              <span>Register</span>
+            </button>
+          </div>
 
-            {submitSuccess && (
-              <div className="p-3 bg-emerald-50 text-[#027244] border border-emerald-200/20 text-xs font-semibold rounded-xl text-center flex items-center gap-2 animate-fadeIn">
-                <CheckCircle className="h-4.5 w-4.5 shrink-0" />
-                <span>{submitSuccess}</span>
-              </div>
-            )}
-
-            {submitError && (
-              <div className="p-3 bg-red-50 text-red-700 border border-red-200/20 text-xs font-semibold rounded-xl text-center flex items-center gap-2 animate-fadeIn">
-                <AlertCircle className="h-4.5 w-4.5 shrink-0" />
-                <span>{submitError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleRegister} className="flex flex-col gap-4">
+          {activeSidebarTab === 'register' ? (
+            <div className="bg-white border border-slate-200/80 shadow-md rounded-[28px] p-6 flex flex-col gap-5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 h-24 w-24 bg-gradient-to-bl from-rose-100/30 to-transparent rounded-bl-full pointer-events-none" />
               
-              {/* Full Name */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Full Name</label>
-                <input 
-                  type="text" 
-                  value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  placeholder="e.g. Anand Kumar"
-                  disabled={submitting}
-                  required
-                  className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20"
-                />
+              <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                <UserPlus className="h-5 w-5 text-rose-500" />
+                <h3 className="font-extrabold text-sm text-[#001c41] uppercase tracking-wide">Register as Donor</h3>
               </div>
 
-              {/* Locality */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Locality / Location</label>
-                <input 
-                  type="text" 
-                  value={regLocation}
-                  onChange={(e) => setRegLocation(e.target.value)}
-                  placeholder="e.g. Gandhi Nagar, Udumalpet"
-                  disabled={submitting}
-                  required
-                  className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20"
-                />
-              </div>
+              {submitSuccess && (
+                <div className="p-3 bg-emerald-50 text-[#027244] border border-emerald-200/20 text-xs font-semibold rounded-xl text-center flex items-center gap-2 animate-fadeIn">
+                  <CheckCircle className="h-4.5 w-4.5 shrink-0" />
+                  <span>{submitSuccess}</span>
+                </div>
+              )}
 
-              {/* Blood Group Dropdown */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Blood Group</label>
-                <select 
-                  value={regBloodGroup}
-                  onChange={(e) => setRegBloodGroup(e.target.value)}
-                  disabled={submitting}
-                  className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20 cursor-pointer"
-                >
-                  {dropdownGroups.map(g => (
-                    <option key={g} value={g}>{g}</option>
-                  ))}
-                </select>
-              </div>
+              {submitError && (
+                <div className="p-3 bg-red-50 text-red-700 border border-red-200/20 text-xs font-semibold rounded-xl text-center flex items-center gap-2 animate-fadeIn">
+                  <AlertCircle className="h-4.5 w-4.5 shrink-0" />
+                  <span>{submitError}</span>
+                </div>
+              )}
 
-              {/* Custom Blood Group Text Input (if 'Other' selected) */}
-              {regBloodGroup === 'Others' && (
-                <div className="flex flex-col gap-1.5 animate-fadeIn">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Specify Blood Group</label>
+              <form onSubmit={handleRegister} className="flex flex-col gap-4">
+                
+                {/* Full Name */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Full Name</label>
                   <input 
                     type="text" 
-                    value={customBloodGroupName}
-                    onChange={(e) => setCustomBloodGroupName(e.target.value)}
-                    placeholder="e.g. Bombay, HH, Rh-null"
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    placeholder="e.g. Anand Kumar"
                     disabled={submitting}
                     required
                     className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20"
                   />
                 </div>
-              )}
 
-              {/* Contact Number */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Contact Number</label>
-                <input 
-                  type="text" 
-                  value={regContact}
-                  onChange={(e) => setRegContact(e.target.value)}
-                  placeholder="e.g. +91 94430 12345"
+                {/* Locality */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Locality / Location</label>
+                  <input 
+                    type="text" 
+                    value={regLocation}
+                    onChange={(e) => setRegLocation(e.target.value)}
+                    placeholder="e.g. Gandhi Nagar, Udumalpet"
+                    disabled={submitting}
+                    required
+                    className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20"
+                  />
+                </div>
+
+                {/* Blood Group Dropdown */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Blood Group</label>
+                  <select 
+                    value={regBloodGroup}
+                    onChange={(e) => setRegBloodGroup(e.target.value)}
+                    disabled={submitting}
+                    className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20 cursor-pointer"
+                  >
+                    {dropdownGroups.map(g => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Custom Blood Group */}
+                {regBloodGroup === 'Others' && (
+                  <div className="flex flex-col gap-1.5 animate-fadeIn">
+                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Specify Blood Group</label>
+                    <input 
+                      type="text" 
+                      value={customBloodGroupName}
+                      onChange={(e) => setCustomBloodGroupName(e.target.value)}
+                      placeholder="e.g. Bombay, HH"
+                      disabled={submitting}
+                      required
+                      className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20"
+                    />
+                  </div>
+                )}
+
+                {/* Contact Number */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Contact Number</label>
+                  <input 
+                    type="text" 
+                    value={regContact}
+                    onChange={(e) => setRegContact(e.target.value)}
+                    placeholder="e.g. +91 94430 12345"
+                    disabled={submitting}
+                    required
+                    className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button 
+                  type="submit"
                   disabled={submitting}
-                  required
-                  className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20"
-                />
+                  className="w-full py-3 px-6 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-colors flex items-center justify-center gap-1.5 mt-2"
+                >
+                  {submitting ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Heart className="h-4 w-4 shrink-0 fill-current" />
+                      <span>Register to Save Lives</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div className="bg-white border border-slate-200/80 shadow-md rounded-[28px] p-6 flex flex-col gap-5 relative overflow-hidden animate-fadeIn">
+              <div className="absolute top-0 right-0 h-24 w-24 bg-gradient-to-bl from-rose-100/30 to-transparent rounded-bl-full pointer-events-none" />
+              
+              <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                <HeartHandshake className="h-5 w-5 text-rose-500" />
+                <h3 className="font-extrabold text-sm text-[#001c41] uppercase tracking-wide">Request Blood</h3>
               </div>
 
-              {/* Submit Button */}
-              <button 
-                type="submit"
-                disabled={submitting}
-                className="w-full py-3 px-6 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-colors flex items-center justify-center gap-1.5 mt-2"
-              >
-                {submitting ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <Heart className="h-4 w-4 shrink-0 fill-current" />
-                    <span>Register to Save Lives</span>
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
+              {requestSuccess && (
+                <div className="p-3 bg-emerald-50 text-[#027244] border border-emerald-200/20 text-xs font-semibold rounded-xl text-center flex items-center gap-2 animate-fadeIn">
+                  <CheckCircle className="h-4.5 w-4.5 shrink-0" />
+                  <span>{requestSuccess}</span>
+                </div>
+              )}
 
-          {/* Core Info Guideline */}
-          <div className="bg-slate-50 border border-slate-200 p-5 rounded-2xl flex items-start gap-3">
+              {requestError && (
+                <div className="p-3 bg-red-50 text-red-700 border border-red-200/20 text-xs font-semibold rounded-xl text-center flex items-center gap-2 animate-fadeIn">
+                  <AlertCircle className="h-4.5 w-4.5 shrink-0" />
+                  <span>{requestError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleRequestSubmit} className="flex flex-col gap-4">
+                
+                {/* Patient Name */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Patient Name</label>
+                  <input 
+                    type="text" 
+                    value={reqPatientName}
+                    onChange={(e) => setReqPatientName(e.target.value)}
+                    placeholder="e.g. Kumarasamy"
+                    disabled={requestSubmitting}
+                    required
+                    className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20"
+                  />
+                </div>
+
+                {/* Hospital Name */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Hospital Name</label>
+                  <input 
+                    type="text" 
+                    value={reqHospitalName}
+                    onChange={(e) => setReqHospitalName(e.target.value)}
+                    placeholder="e.g. Government Hospital, Udumalpet"
+                    disabled={requestSubmitting}
+                    required
+                    className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20"
+                  />
+                </div>
+
+                {/* Blood Group Dropdown */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Blood Group Needed</label>
+                  <select 
+                    value={reqBloodGroup}
+                    onChange={(e) => setReqBloodGroup(e.target.value)}
+                    disabled={requestSubmitting}
+                    className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20 cursor-pointer"
+                  >
+                    {STANDARD_BLOOD_GROUPS.map(g => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Patient Address */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Patient Address</label>
+                  <input 
+                    type="text" 
+                    value={reqPatientAddress}
+                    onChange={(e) => setReqPatientAddress(e.target.value)}
+                    placeholder="e.g. Dharapuram Road, Udumalpet"
+                    disabled={requestSubmitting}
+                    required
+                    className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20"
+                  />
+                </div>
+
+                {/* Mobile Number */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Mobile Number</label>
+                  <input 
+                    type="text" 
+                    value={reqMobileNum}
+                    onChange={(e) => setReqMobileNum(e.target.value)}
+                    placeholder="e.g. +91 94430 12345"
+                    disabled={requestSubmitting}
+                    required
+                    className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20"
+                  />
+                </div>
+
+                {/* Alt Mobile Number */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Alt Mobile (Optional)</label>
+                  <input 
+                    type="text" 
+                    value={reqAltMobileNum}
+                    onChange={(e) => setReqAltMobileNum(e.target.value)}
+                    placeholder="e.g. +91 98430 54321"
+                    disabled={requestSubmitting}
+                    className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20"
+                  />
+                </div>
+
+                {/* Cause */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Cause / Reason</label>
+                  <textarea 
+                    value={reqCause}
+                    onChange={(e) => setReqCause(e.target.value)}
+                    placeholder="e.g. Emergency surgery scheduled tomorrow"
+                    disabled={requestSubmitting}
+                    required
+                    rows="3"
+                    className="w-full border border-slate-200/70 p-3 px-4 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-rose-500 bg-slate-50/20 resize-none animate-fadeIn"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button 
+                  type="submit"
+                  disabled={requestSubmitting}
+                  className="w-full py-3 px-6 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-colors flex items-center justify-center gap-1.5 mt-2"
+                >
+                  {requestSubmitting ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Heart className="h-4 w-4 shrink-0 fill-current" />
+                      <span>Submit Request</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Privacy Safety Guidelines */}
+          <div className="bg-slate-50 border border-slate-200 p-5 rounded-2xl flex items-start gap-3 text-left">
             <HeartHandshake className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
-            <div className="flex flex-col text-xs text-slate-500 font-semibold leading-relaxed">
-              <span className="text-slate-800 font-extrabold">Privacy & Safety:</span>
-              Your details will be publicly listed on this page so that patients in local hospitals (Udumalpet Government Hospital, private clinics) can contact you directly in emergencies. Only register if you are willing to help and receive calls.
+            <div className="flex flex-col text-[11px] text-slate-500 font-semibold leading-relaxed">
+              <span className="text-slate-800 font-extrabold">Directory Integrity & Privacy:</span>
+              To protect donor privacy, contact details are hidden for regular visitors. Only logged-in platform administrators can access verified contact numbers and coordinate lifelines.
             </div>
           </div>
         </div>
@@ -393,34 +635,44 @@ export default function BloodDonorsPage() {
                           )}
                         </h4>
                         
-                        <div className="flex items-center gap-1 text-[11px] text-slate-455 font-semibold leading-none">
-                          <MapPin className="h-3 w-3 text-slate-400 shrink-0" />
-                          <span className="truncate">{donor.location}</span>
-                        </div>
+                        {isAdmin ? (
+                          <div className="flex items-center gap-1 text-[11px] text-slate-450 font-semibold leading-none">
+                            <MapPin className="h-3 w-3 text-slate-400 shrink-0" />
+                            <span className="truncate">{donor.location}</span>
+                          </div>
+                        ) : (
+                          <span className="text-[9.5px] text-slate-400 font-bold uppercase tracking-wider">Verified Volunteer</span>
+                        )}
                       </div>
                     </div>
 
                     {/* Actions Panel */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      {/* Call Button */}
-                      <a
-                        href={`tel:${donor.contactNum}`}
-                        title={`Call ${donor.name}`}
-                        className="h-8.5 w-8.5 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center hover:border-rose-300 text-slate-500 hover:text-rose-600 transition-all cursor-pointer shadow-2xs"
-                      >
-                        <Phone className="h-4 w-4" />
-                      </a>
-                      {/* WhatsApp Button */}
-                      <a
-                        href={`https://wa.me/${donor.contactNum.replace(/[^0-9]/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={`WhatsApp ${donor.name}`}
-                        className="h-8.5 w-8.5 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center hover:border-emerald-300 text-slate-500 hover:text-emerald-600 transition-all cursor-pointer shadow-2xs"
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                      </a>
-                    </div>
+                    {isAdmin ? (
+                      <div className="flex items-center gap-2 shrink-0">
+                        {/* Call Button */}
+                        <a
+                          href={`tel:${donor.contactNum}`}
+                          title={`Call ${donor.name}`}
+                          className="h-8.5 w-8.5 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center hover:border-rose-300 text-slate-500 hover:text-rose-600 transition-all cursor-pointer shadow-2xs"
+                        >
+                          <Phone className="h-4 w-4" />
+                        </a>
+                        {/* WhatsApp Button */}
+                        <a
+                          href={`https://wa.me/${donor.contactNum.replace(/[^0-9]/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={`WhatsApp ${donor.name}`}
+                          className="h-8.5 w-8.5 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center hover:border-emerald-300 text-slate-500 hover:text-emerald-600 transition-all cursor-pointer shadow-2xs"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/40 py-1.5 px-3 rounded-xl select-none text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wide">
+                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 fill-emerald-50/50" /> Locked
+                      </div>
+                    )}
 
                   </div>
                 ))}
