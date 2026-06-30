@@ -3853,10 +3853,10 @@ const handlePartnerAction = async (partnerId, action) => {
                                   b.status === 'Approved' 
                                     ? 'bg-[#027244] text-white' 
                                     : b.status === 'Rejected' 
-                                      ? 'bg-rose-650 text-white' 
+                                      ? 'bg-rose-600 text-white' 
                                       : b.status === 'Hidden' 
-                                        ? 'bg-amber-600 text-white' 
-                                        : 'bg-amber-550 text-white'
+                                        ? 'bg-slate-600 text-white' 
+                                        : 'bg-amber-500 text-white'
                                 }`}>
                                   {b.status}
                                 </span>
