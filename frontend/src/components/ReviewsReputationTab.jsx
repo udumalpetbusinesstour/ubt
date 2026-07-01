@@ -4,11 +4,12 @@ import { Star, StarHalf, Search, MessageSquare, Trash2, RefreshCw } from 'lucide
 const renderStars = (rating, sizeClass = "h-3.5 w-3.5", emptyColor = "text-slate-200") => {
   const stars = [];
   const r = rating ?? 0;
+  const rounded = Math.round(r * 2) / 2;
   for (let i = 0; i < 5; i++) {
     const starVal = i + 1;
-    if (r >= starVal) {
+    if (rounded >= starVal) {
       stars.push(<Star key={i} className={`${sizeClass} fill-current`} />);
-    } else if (r >= starVal - 0.7) {
+    } else if (rounded === starVal - 0.5) {
       stars.push(
         <div key={i} className="relative inline-block shrink-0">
           <Star className={`${sizeClass} ${emptyColor}`} />

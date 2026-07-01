@@ -26,11 +26,12 @@ const getDaysRemaining = (expiryDate) => {
 const renderStars = (rating, sizeClass = "h-3.5 w-3.5", emptyColor = "text-slate-200") => {
   const stars = [];
   const r = rating ?? 0;
+  const rounded = Math.round(r * 2) / 2;
   for (let i = 0; i < 5; i++) {
     const starVal = i + 1;
-    if (r >= starVal) {
+    if (rounded >= starVal) {
       stars.push(<Star key={i} className={`${sizeClass} fill-current`} />);
-    } else if (r >= starVal - 0.7) {
+    } else if (rounded === starVal - 0.5) {
       stars.push(
         <div key={i} className="relative inline-block shrink-0">
           <Star className={`${sizeClass} ${emptyColor}`} />
@@ -6353,26 +6354,26 @@ function DashboardContent() {
                               <span className="font-extrabold text-xs text-slate-400 uppercase tracking-widest">Customer Feedback Stream ({uniqueReviews.length})</span>
                               
                               {uniqueReviews.map((rev, idx) => (
-                                <div key={idx} className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4 flex flex-col gap-2.5 text-left">
+                                <div key={idx} className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-xs flex flex-col gap-3">
                                   <div className="flex justify-between items-center">
-                                    <div className="flex items-center gap-2.5">
-                                      <div className="h-7 w-7 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-[10px] font-black text-emerald-700 uppercase">
+                                    <div className="flex items-center gap-3">
+                                      <div className="h-8.5 w-8.5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-xs font-black text-emerald-700 uppercase shadow-2xs">
                                         {(rev.authorName || 'R').charAt(0)}
                                       </div>
                                       <div className="flex flex-col">
                                         <span className="font-extrabold text-xs text-slate-800 leading-none">{rev.authorName || 'Anonymous'}</span>
-                                        <span className={`text-xs font-bold uppercase tracking-widest mt-1 block ${rev.isGoogle ? 'text-amber-650' : 'text-slate-500'}`}>
-                                          {rev.isGoogle ? 'Synced Google Review' : 'Verified Customer'}
+                                        <span className={`text-[8.5px] font-bold uppercase tracking-widest mt-1 block ${rev.isGoogle ? 'text-amber-600' : 'text-slate-400'}`}>
+                                          {rev.isGoogle ? 'Google Review' : 'UBT Review'}
                                         </span>
                                       </div>
                                     </div>
                                     <div className="flex items-center text-amber-400 gap-0.5">
                                       {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className={`h-3 w-3 ${i < rev.rating ? 'fill-current' : 'text-slate-200'}`} />
+                                        <Star key={i} className={`h-3.5 w-3.5 ${i < rev.rating ? 'fill-current' : 'text-slate-200'}`} />
                                       ))}
                                     </div>
                                   </div>
-                                  <p className="text-xs text-slate-700 font-medium leading-relaxed mt-0.5 text-justify">{rev.text}</p>
+                                  <p className="text-[12px] text-slate-550 font-medium leading-relaxed text-justify mt-1">{rev.text}</p>
                                 </div>
                               ))}
                             </div>
