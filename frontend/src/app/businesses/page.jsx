@@ -260,6 +260,9 @@ function BusinessesList() {
       console.log('[SlugRoute] comparing category:', cat.categoryName, 'norm:', normCatName, 'with:', normSlug);
       if (normCatName === normSlug) {
         console.log('[SlugRoute] MATCHED category:', cat.categoryName);
+        if (cat.parentCategory && cat.parentCategory !== 'None' && cat.parentCategory.trim() !== '') {
+          return { type: 'subcategory', value: cat.categoryName, parent: cat.parentCategory };
+        }
         return { type: 'category', value: cat.categoryName };
       }
       const matchedSub = (cat.subcategories || []).find(sub => {
@@ -808,9 +811,9 @@ function BusinessesList() {
   const handleHotCategoryClick = async (categoryName, parentCatName) => {
     const parent = parentCatName || getParentCategory(categoryName);
     if (parent.toLowerCase() === categoryName.toLowerCase()) {
-      navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}`);
+      navigate(getCategorySlug(parent));
     } else {
-      navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}&subcategory=${encodeURIComponent(categoryName)}`);
+      navigate(getCategorySlug(categoryName));
     }
     
     // Background view increment
