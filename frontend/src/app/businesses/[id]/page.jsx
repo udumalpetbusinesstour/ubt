@@ -62,22 +62,31 @@ const getQuickTimingsDisplay = (timings) => {
 const renderStars = (rating, sizeClass = "h-3.5 w-3.5", emptyColor = "text-slate-200") => {
   const stars = [];
   const r = rating ?? 0;
-  const rounded = Math.round(r * 2) / 2;
   for (let i = 0; i < 5; i++) {
     const starVal = i + 1;
-    if (rounded >= starVal) {
-      stars.push(<Star key={i} className={`${sizeClass} fill-current`} />);
-    } else if (rounded === starVal - 0.5) {
+    let fillPct = 0;
+    if (r >= starVal) {
+      fillPct = 100;
+    } else if (r > starVal - 1) {
+      fillPct = Math.round((r - (starVal - 1)) * 100);
+    }
+    
+    if (fillPct === 100) {
+      stars.push(<Star key={i} className={`${sizeClass} fill-amber-400 text-amber-400`} />);
+    } else if (fillPct === 0) {
+      stars.push(<Star key={i} className={`${sizeClass} ${emptyColor}`} />);
+    } else {
       stars.push(
         <div key={i} className="relative inline-block shrink-0">
           <Star className={`${sizeClass} ${emptyColor}`} />
-          <div className="absolute inset-0 overflow-hidden text-amber-400">
-            <StarHalf className={`${sizeClass} fill-current`} />
+          <div 
+            className="absolute inset-0 overflow-hidden text-amber-400"
+            style={{ width: `${fillPct}%` }}
+          >
+            <Star className={`${sizeClass} fill-amber-400 text-amber-400`} />
           </div>
         </div>
       );
-    } else {
-      stars.push(<Star key={i} className={`${sizeClass} ${emptyColor}`} />);
     }
   }
   return stars;
