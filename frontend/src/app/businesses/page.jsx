@@ -1838,11 +1838,34 @@ function BusinessesList() {
             <div className="flex items-center gap-1.5 text-xs text-slate-300 font-bold self-start mt-1 md:mt-2 order-1">
               <Link to="/" className="hover:text-emerald-450 transition-colors">Home</Link>
               <span className="text-slate-505">&gt;</span>
-              <span className="text-slate-100">Categories</span>
+              {selectedCategoryInExplore ? (
+                <>
+                  <Link to="/businesses?focus=categories" className="hover:text-emerald-450 transition-colors">Categories</Link>
+                  <span className="text-slate-505">&gt;</span>
+                  {selectedSubcategoryInExplore && selectedSubcategoryInExplore !== 'All' ? (
+                    <>
+                      <button 
+                        onClick={() => navigate(getCategorySlug(selectedCategoryInExplore))} 
+                        className="hover:text-emerald-450 transition-colors bg-transparent border-none p-0 cursor-pointer font-bold text-xs text-slate-300 hover:underline"
+                      >
+                        {selectedCategoryInExplore}
+                      </button>
+                      <span className="text-slate-505">&gt;</span>
+                      <span className="text-slate-100">{selectedSubcategoryInExplore}</span>
+                    </>
+                  ) : (
+                    <span className="text-slate-100">{selectedCategoryInExplore}</span>
+                  )}
+                </>
+              ) : (
+                <span className="text-slate-100">Categories</span>
+              )}
             </div>
 
             <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white mt-3 md:mt-4 self-start font-sans order-2">
-              Explore Categories
+              Explore {selectedSubcategoryInExplore && selectedSubcategoryInExplore !== 'All' 
+                ? selectedSubcategoryInExplore 
+                : (selectedCategoryInExplore || 'Categories')}
             </h1>
             <p className="hidden sm:block text-slate-400 text-xs font-semibold self-start mt-1.5 leading-relaxed order-3">
               Find local businesses and specialized services in Udumalpet
