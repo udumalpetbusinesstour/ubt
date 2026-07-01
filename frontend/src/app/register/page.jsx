@@ -683,7 +683,7 @@ export default function Register() {
           className="flex items-center gap-2 text-xs font-extrabold text-[#001c41] hover:text-[#027244] transition-all bg-white py-2.5 px-4 rounded-xl border border-slate-200 shadow-sm hover:shadow group cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4 text-slate-400 group-hover:text-[#027244] transition-colors" />
-          <span>{redirectParam && redirectParam !== '/' ? `Back to ${redirectParam.replace('/', '').split('?')[0].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'Previous Page'}` : 'Go Back'}</span>
+          <span>{redirect && redirect !== '/' ? `Back to ${redirect.replace('/', '').split('?')[0].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'Previous Page'}` : 'Go Back'}</span>
         </button>
       </div>
 
