@@ -2789,13 +2789,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     <User className="h-4 w-4 text-slate-500" />
                     <span>My Profile</span>
                   </button>
-                  <button 
-                    onClick={() => { setActiveTab('Platform Settings'); setProfileDropdownOpen(false); }}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-left hover:bg-slate-50 transition-colors w-full cursor-pointer"
-                  >
-                    <Settings className="h-4 w-4 text-slate-500" />
-                    <span>Settings</span>
-                  </button>
+
                   <div className="h-[1px] bg-slate-100 my-1" />
                   <button 
                     onClick={handleLogout}
