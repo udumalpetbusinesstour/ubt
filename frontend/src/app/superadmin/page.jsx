@@ -1008,12 +1008,13 @@ const handlePartnerAction = async (partnerId, action) => {
         setPendingSponsoredAds([]);
       }
 
-      // Fetch approved sponsored ads
+      // Fetch approved sponsored ads (both active and hidden)
       try {
-        const approvedRes = await fetch('http://localhost:5000/api/businesses/homepage/sponsored-ads', { headers });
+        const approvedRes = await fetch('http://localhost:5000/api/admin/sponsored-ads/all', { headers });
         const approvedData = await approvedRes.json();
         if (approvedData.success) {
-          setApprovedSponsoredAds(approvedData.data);
+          const approvedOnly = (approvedData.data || []).filter(ad => ad.offer.sponsoredStatus === 'approved');
+          setApprovedSponsoredAds(approvedOnly);
         } else {
           setApprovedSponsoredAds([]);
         }
@@ -1572,6 +1573,29 @@ const handlePartnerAction = async (partnerId, action) => {
     } catch (err) {
       console.error(err);
       showToast(`Error performing action: ${action}`, 'error');
+    }
+  };
+
+  const handleToggleSponsorAdActive = async (businessId, offerId, currentActive) => {
+    const action = currentActive ? 'hide' : 'activate';
+    try {
+      const storedToken = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/admin/sponsored-ads/${businessId}/${offerId}/${action}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${storedToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message || `Sponsored ad ${action}d successfully!`, 'success');
+        loadPlatformRealData();
+      } else {
+        showToast(data.message || `Failed to ${action} sponsored ad.`, 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(`Error trying to ${action} sponsored ad.`, 'error');
     }
   };
 
@@ -5335,7 +5359,11 @@ const handlePartnerAction = async (partnerId, action) => {
                               <div className="flex-1 flex flex-col justify-between gap-4">
                                 <div className="flex flex-col gap-1.5">
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="bg-[#027244] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-xs">Live Homepage Ad</span>
+                                    {ad.offer.active ? (
+                                      <span className="bg-[#027244] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-xs">Live Homepage Ad</span>
+                                    ) : (
+                                      <span className="bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-xs">Hidden Ad</span>
+                                    )}
                                     <span className="text-[11px] font-extrabold text-slate-455">Business: <strong className={themeMode === 'dark' ? 'text-slate-200' : 'text-slate-700'}>{ad.businessName}</strong></span>
                                   </div>
                                   <h4 className={`font-extrabold text-sm md:text-base leading-snug mt-1 ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{ad.offer.title}</h4>
@@ -5360,10 +5388,20 @@ const handlePartnerAction = async (partnerId, action) => {
                                     <Eye className="h-3.5 w-3.5" /> View Profile
                                   </a>
                                   <button
+                                    onClick={() => handleToggleSponsorAdActive(ad.businessId, ad.offer.id, ad.offer.active)}
+                                    className={`px-4 py-2 font-extrabold text-[11px] rounded-xl cursor-pointer transition-colors shadow-2xs border-none ${
+                                      ad.offer.active 
+                                        ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-600' 
+                                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600'
+                                    }`}
+                                  >
+                                    {ad.offer.active ? 'Hide Ad' : 'Activate Ad'}
+                                  </button>
+                                  <button
                                     onClick={() => handleDeleteSponsorAd(ad.businessId, ad.offer.id)}
                                     className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-555 font-extrabold text-[11px] rounded-xl cursor-pointer transition-colors shadow-2xs border-none"
                                   >
-                                    Delete Ad (From DB)
+                                    Delete Ad (For Me)
                                   </button>
                                 </div>
                               </div>
