@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { 
-  MapPin, Phone, Mail, Clock, ShieldCheck, HeartHandshake, Star, Share2, Heart, Award, 
+  MapPin, Phone, Mail, Clock, ShieldCheck, HeartHandshake, Star, StarHalf, Share2, Heart, Award, 
   ArrowLeft, Send, CheckCircle2, MessageSquare, AlertCircle, RefreshCw, Calendar, Globe, Sparkles,
   Briefcase, Users, ChevronRight, Check, X, Facebook, Twitter, Edit3, Plus, Upload, Trash2, Instagram, Move, ImageIcon,
   Utensils, Eye
@@ -57,6 +57,22 @@ const getQuickTimingsDisplay = (timings) => {
       <span className="text-[11px] text-slate-400 font-semibold mt-0.5">Full hours in sidebar</span>
     </div>
   );
+};
+
+const renderStars = (rating, sizeClass = "h-3.5 w-3.5", emptyColor = "text-slate-200") => {
+  const stars = [];
+  const r = rating ?? 0;
+  for (let i = 0; i < 5; i++) {
+    const starVal = i + 1;
+    if (r >= starVal) {
+      stars.push(<Star key={i} className={`${sizeClass} fill-current`} />);
+    } else if (r >= starVal - 0.7) {
+      stars.push(<StarHalf key={i} className={`${sizeClass} fill-current`} />);
+    } else {
+      stars.push(<Star key={i} className={`${sizeClass} ${emptyColor}`} />);
+    }
+  }
+  return stars;
 };
 
 const getTimingsSummaryString = (timings) => {
@@ -1642,9 +1658,7 @@ Please confirm availability and delivery time.`;
             <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-white/90 mt-2">
               <div className="flex items-center gap-1 bg-white/10 border border-white/20 px-2.5 py-1 rounded-lg">
                 <div className="flex text-amber-400 shrink-0 gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(business.googleRating ?? 0) ? 'fill-current' : 'text-slate-700'}`} />
-                  ))}
+                  {renderStars(business.googleRating, 'h-3.5 w-3.5', 'text-slate-700')}
                 </div>
                 <span className="font-black text-white ml-1">{(business.googleRating ?? 0).toFixed(1)}</span>
                 <span className="text-[10px] text-white/75">({business.googleReviewsCount || 0} Reviews)</span>
@@ -2221,9 +2235,7 @@ Please confirm availability and delivery time.`;
                     <div className="md:col-span-1 bg-slate-50 border border-slate-200/80 rounded-3xl p-6 flex flex-col items-center justify-center text-center gap-2 shadow-2xs h-full min-h-[220px]">
                       <span className="text-5xl font-black text-slate-800">{(business.googleRating ?? 0).toFixed(1)}</span>
                       <div className="flex text-amber-400 gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`h-4.5 w-4.5 ${i < Math.floor(business.googleRating ?? 0) ? 'fill-current' : 'text-slate-200'}`} />
-                        ))}
+                        {renderStars(business.googleRating, 'h-4.5 w-4.5', 'text-slate-200')}
                       </div>
                       <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Out of 5 Stars</span>
                     </div>
@@ -2482,11 +2494,9 @@ Please confirm availability and delivery time.`;
               {/* Review Distribution card */}
               <div className="bg-slate-50 border border-slate-200/80 rounded-[28px] p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xs">
                 <div className="text-center flex flex-col gap-1.5 shrink-0 bg-white border border-slate-200 p-6 rounded-2xl shadow-2xs min-w-[150px]">
-                  <span className="text-5xl font-black text-slate-800 leading-none">{business.googleRating.toFixed(1)}</span>
+                  <span className="text-5xl font-black text-slate-800 leading-none">{(business.googleRating ?? 0).toFixed(1)}</span>
                   <div className="flex text-amber-400 gap-0.5 justify-center mt-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`h-4.5 w-4.5 ${i < Math.floor(business.googleRating) ? 'fill-current' : 'text-slate-200'}`} />
-                    ))}
+                    {renderStars(business.googleRating, 'h-4.5 w-4.5', 'text-slate-200')}
                   </div>
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1.5">Out of 5 Stars</span>
                 </div>
