@@ -8,7 +8,7 @@ import {
   Clock, Plus, Filter, Activity, Cpu, Database, Terminal, Users, BarChart, FileText, Ban,
   Play, Square, Layers, Sparkles, HelpCircle, Key, Lock, Phone, UserCheck, ShieldOff, CheckSquare,
   Utensils, Dumbbell, Plane, GraduationCap, Camera, Leaf, Building, Coins, ShoppingBag, Wrench, Gift, Heart,
-  Copy, XCircle, Edit3
+  Copy, XCircle, Edit3, Upload
 } from 'lucide-react';
 import BloodDonorsTab from '../../components/BloodDonorsTab';
 
@@ -228,6 +228,13 @@ export default function SuperAdminDashboard() {
 
   // Datasets states (Inherited from Admin)
   const [businesses, setBusinesses] = useState([]);
+  const [showDirectAdModal, setShowDirectAdModal] = useState(false);
+  const [directAdBusinessId, setDirectAdBusinessId] = useState('');
+  const [directAdExpiryDays, setDirectAdExpiryDays] = useState(30);
+  const [directAdFile, setDirectAdFile] = useState(null);
+  const [directAdPreview, setDirectAdPreview] = useState('');
+  const [directAdLoading, setDirectAdLoading] = useState(false);
+  const [directAdError, setDirectAdError] = useState('');
   const [blogs, setBlogs] = useState([]);
   const [events, setEvents] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -1653,6 +1660,74 @@ const handlePartnerAction = async (partnerId, action) => {
         }
       }
     );
+  };
+
+  const handleDirectAdSubmit = async (e) => {
+    e.preventDefault();
+    if (!directAdBusinessId) {
+      setDirectAdError('Please select a business');
+      return;
+    }
+    if (!directAdFile) {
+      setDirectAdError('Please select a flyer image');
+      return;
+    }
+
+    setDirectAdLoading(true);
+    setDirectAdError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('image', directAdFile);
+
+      const token = localStorage.getItem('ubt_token');
+      const uploadRes = await fetch('http://localhost:5000/api/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const uploadData = await uploadRes.json();
+      if (!uploadData.success) {
+        throw new Error(uploadData.message || 'Image upload failed');
+      }
+
+      const imageUrl = uploadData.fileUrl;
+
+      const adRes = await fetch('http://localhost:5000/api/admin/sponsored-ads/direct-post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          businessId: directAdBusinessId,
+          imageUrl,
+          expiryDays: directAdExpiryDays
+        })
+      });
+
+      const adData = await adRes.json();
+      if (!adData.success) {
+        throw new Error(adData.message || 'Failed to post sponsored ad');
+      }
+
+      showToast('Sponsored ad posted directly successfully without payment!', 'success');
+      setShowDirectAdModal(false);
+      setDirectAdBusinessId('');
+      setDirectAdFile(null);
+      setDirectAdPreview('');
+      setDirectAdExpiryDays(30);
+
+      loadPlatformRealData();
+    } catch (err) {
+      console.error(err);
+      setDirectAdError(err.message || 'An error occurred during submission');
+    } finally {
+      setDirectAdLoading(false);
+    }
   };
 
   const handleEventDelete = async (eventId) => {
@@ -5281,11 +5356,19 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* TAB: SPONSORED ADS MODERATION */}
               {activeTab === 'Sponsored Ads' && (
                 <div className="flex flex-col gap-6 text-left animate-fadeIn">
-                  <div className={`border shadow-xs rounded-[28px] p-6 ${
+                  <div className={`border shadow-xs rounded-[28px] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
-                    <h3 className="font-extrabold text-base leading-tight font-sans">Sponsored Homepage Ads Moderation</h3>
-                    <span className="text-[10px] text-slate-400 font-semibold mt-1 block font-sans">Vet sponsored deal flyers (1920x900px) submitted by business owners for homepage listing</span>
+                    <div>
+                      <h3 className="font-extrabold text-base leading-tight font-sans">Sponsored Homepage Ads Moderation</h3>
+                      <span className="text-[10px] text-slate-400 font-semibold mt-1 block font-sans">Vet sponsored deal flyers (1920x900px) submitted by business owners for homepage listing</span>
+                    </div>
+                    <button 
+                      onClick={() => setShowDirectAdModal(true)}
+                      className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-2.5 px-4 rounded-xl transition-all shadow-md shrink-0 flex items-center gap-1.5 cursor-pointer border-none"
+                    >
+                      <Plus className="h-4 w-4" /> Post Ad Directly
+                    </button>
                   </div>
 
                   <div className="flex flex-col gap-8">
@@ -10312,6 +10395,157 @@ const handlePartnerAction = async (partnerId, action) => {
                 Done
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Post Sponsored Ad Directly Modal */}
+      {showDirectAdModal && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fadeIn text-[#001c41]">
+          <div className={`w-full max-w-lg border shadow-2xl rounded-[24px] p-6 flex flex-col gap-5 text-left font-sans ${
+            themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+          }`}>
+            <div className={`flex justify-between items-center border-b pb-3 ${
+              themeMode === 'dark' ? 'border-slate-800' : 'border-slate-100'
+            }`}>
+              <h3 className="font-extrabold text-sm uppercase tracking-wider">Post Sponsored Flyer Directly</h3>
+              <button 
+                onClick={() => {
+                  setShowDirectAdModal(false);
+                  setDirectAdBusinessId('');
+                  setDirectAdFile(null);
+                  setDirectAdPreview('');
+                  setDirectAdError('');
+                }} 
+                className="text-slate-400 hover:text-slate-600 transition-colors border-none bg-transparent cursor-pointer font-sans font-bold"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {directAdError && (
+              <div className="bg-rose-500/10 text-rose-600 border border-rose-500/20 px-4 py-2 rounded-xl text-xs font-bold">
+                {directAdError}
+              </div>
+            )}
+
+            <form onSubmit={handleDirectAdSubmit} className="flex flex-col gap-4">
+              {/* Select Business */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-400">Associated Business Directory Listing</label>
+                <select
+                  required
+                  value={directAdBusinessId}
+                  onChange={(e) => setDirectAdBusinessId(e.target.value)}
+                  className={`w-full text-xs font-semibold p-3.5 rounded-xl border focus:outline-none transition-all ${
+                    themeMode === 'dark'
+                      ? 'bg-slate-850 border-slate-800 text-slate-200 focus:border-emerald-600'
+                      : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-emerald-600'
+                  }`}
+                >
+                  <option value="">-- Choose Business Listing --</option>
+                  {[...businesses]
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((biz) => (
+                      <option key={biz._id} value={biz._id}>
+                        {biz.name} ({biz.category})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Expiry Days Selection */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-400">Ad Active Duration (Days)</label>
+                <select
+                  required
+                  value={directAdExpiryDays}
+                  onChange={(e) => setDirectAdExpiryDays(Number(e.target.value))}
+                  className={`w-full text-xs font-semibold p-3.5 rounded-xl border focus:outline-none transition-all ${
+                    themeMode === 'dark'
+                      ? 'bg-slate-850 border-slate-800 text-slate-200 focus:border-emerald-600'
+                      : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-emerald-600'
+                  }`}
+                >
+                  <option value={7}>7 Days</option>
+                  <option value={15}>15 Days</option>
+                  <option value={30}>30 Days (Default)</option>
+                  <option value={60}>60 Days</option>
+                  <option value={90}>90 Days</option>
+                  <option value={180}>180 Days (6 Months)</option>
+                  <option value={365}>365 Days (1 Year)</option>
+                </select>
+              </div>
+
+              {/* Upload Banner */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-400 font-sans">Flyer Image (1920x900px Aspect Ratio Recommended)</label>
+                <div 
+                  className={`border-2 border-dashed rounded-[20px] p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[140px] relative ${
+                    themeMode === 'dark'
+                      ? 'bg-slate-850/40 border-slate-800 hover:border-emerald-600 text-slate-300'
+                      : 'bg-slate-50 border-slate-205 hover:border-emerald-600 text-[#001c41]'
+                  }`}
+                  onClick={() => document.getElementById('direct-ad-file-input').click()}
+                >
+                  {directAdPreview ? (
+                    <div className="w-full h-28 rounded-lg overflow-hidden relative">
+                      <img src={directAdPreview} alt="Flyer Preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/45 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                        <span className="text-[10px] text-white font-extrabold uppercase tracking-wider">Change Image</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="h-7 w-7 text-slate-400 mb-1" />
+                      <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest mt-1">Select Banner Flyer Image</span>
+                      <span className="text-[9px] text-slate-400 mt-0.5 font-sans">JPEG, PNG, WebP up to 5MB</span>
+                    </>
+                  )}
+                  <input
+                    id="direct-ad-file-input"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setDirectAdFile(file);
+                        setDirectAdPreview(URL.createObjectURL(file));
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Form Buttons */}
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDirectAdModal(false);
+                    setDirectAdBusinessId('');
+                    setDirectAdFile(null);
+                    setDirectAdPreview('');
+                    setDirectAdError('');
+                  }}
+                  className={`px-4.5 py-2 border text-xs font-extrabold rounded-xl transition-colors cursor-pointer ${
+                    themeMode === 'dark'
+                      ? 'border-slate-700 bg-slate-800 hover:bg-slate-750 text-slate-300'
+                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={directAdLoading}
+                  className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-2 px-5 rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer border-none disabled:opacity-50"
+                >
+                  {directAdLoading ? 'Publishing...' : 'Publish Directly'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

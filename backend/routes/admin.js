@@ -895,4 +895,44 @@ router.put('/sponsored-ads/:businessId/:promotionId/activate', async (req, res, 
   }
 });
 
+// @desc    Directly post a sponsored ad without payment
+// @route   POST /api/admin/sponsored-ads/direct-post
+// @access  Private/Admin
+router.post('/sponsored-ads/direct-post', async (req, res, next) => {
+  try {
+    const { businessId, imageUrl, expiryDays } = req.body;
+    if (!businessId || !imageUrl) {
+      return res.status(400).json({ success: false, message: 'Please provide businessId and imageUrl' });
+    }
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    const newPromotion = {
+      id: 'promo_' + Math.random().toString(36).substring(2, 9),
+      image: imageUrl,
+      active: true,
+      isSponsored: true,
+      sponsoredStatus: 'approved',
+      sponsoredExpiry: new Date(Date.now() + (Number(expiryDays) || 30) * 24 * 60 * 60 * 1000)
+    };
+
+    if (!business.promotions) {
+      business.promotions = [];
+    }
+    business.promotions.push(newPromotion);
+    await business.save();
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'Sponsored ad posted directly successfully!', 
+      data: newPromotion 
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;
