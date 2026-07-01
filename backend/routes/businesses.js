@@ -2304,6 +2304,9 @@ router.put('/:id', protect, async (req, res) => {
     if (req.body.tags && Array.isArray(req.body.tags)) {
       req.body.tags = req.body.tags.filter(t => t !== 'draft');
     }
+    if (req.body.googlePlaceId) {
+      req.body.googleLinked = true;
+    }
 
     business = await Business.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -2333,6 +2336,9 @@ router.put('/:id', protect, async (req, res) => {
 router.post('/draft', protect, async (req, res) => {
   try {
     const fields = req.body;
+    if (fields.googlePlaceId) {
+      fields.googleLinked = true;
+    }
     
     let business = null;
     const isAdminUser = req.user && (req.user.role === 'admin' || req.user.role === 'superadmin');

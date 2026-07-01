@@ -3,6 +3,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { ShieldCheck, ArrowLeft, ArrowRight, Upload, Sparkles, CheckCircle2, ChevronRight, Eye, RefreshCw, AlertCircle, AlertTriangle, Lock, Briefcase, Lightbulb, Headset, Phone, Mail, Clock, Search, BookOpen, ChevronDown } from 'lucide-react';
 import MockGoogleMaps from '@/components/MockGoogleMaps';
 import ChoosePlan from '../choose-plan/page';
+import { compressImage } from '@/utils/imageCompression';
 
 const steps = [
   { id: 1, name: 'Choose Plan' },
@@ -454,7 +455,7 @@ export default function AddBusiness() {
     
     if (!storedToken || !storedUser) {
       // Force login before listing a business!
-      navigate('/login');
+      navigate('/login?redirect=/add-business', { replace: true });
     } else {
       try {
         setToken(storedToken);
@@ -495,7 +496,7 @@ export default function AddBusiness() {
         console.error('Failed to parse user details from localStorage:', err);
         localStorage.removeItem('ubt_user');
         localStorage.removeItem('ubt_token');
-        navigate('/login');
+        navigate('/login?redirect=/add-business', { replace: true });
       }
     }
   }, [searchParams]);
@@ -939,7 +940,7 @@ export default function AddBusiness() {
       locality: addrDetails.locality,
       coordinates: addrDetails.coordinates,
       isAddressVerified: addrDetails.isVerified,
-      googlePlaceId: addrDetails.googlePlaceId || '',
+      googlePlaceId: formData.googlePlaceId || addrDetails.googlePlaceId || '',
     };
     setFormData(updated);
     saveDraft(updated);
@@ -1010,14 +1011,15 @@ export default function AddBusiness() {
   const handleLogoUpload = async (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Logo file size must be less than 5MB.');
+      if (file.size > 20 * 1024 * 1024) {
+        setError('Logo file size must be less than 20MB.');
         return;
       }
       setLogoFile(file.name);
       setUploadingLogo(true);
       try {
-        const url = await uploadFileToServer(file);
+        const compressedFile = await compressImage(file, 500, 500);
+        const url = await uploadFileToServer(compressedFile);
         const updated = { ...formData, logoUrl: url };
         setFormData(updated);
         saveDraft(updated);
@@ -1032,14 +1034,15 @@ export default function AddBusiness() {
   const handleCoverUpload = async (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Cover image file size must be less than 5MB.');
+      if (file.size > 20 * 1024 * 1024) {
+        setError('Cover image file size must be less than 20MB.');
         return;
       }
       setCoverFile(file.name);
       setUploadingCover(true);
       try {
-        const url = await uploadFileToServer(file);
+        const compressedFile = await compressImage(file, 1200, 800);
+        const url = await uploadFileToServer(compressedFile);
         const updated = { ...formData, coverImageUrl: url };
         setFormData(updated);
         saveDraft(updated);
@@ -1054,15 +1057,16 @@ export default function AddBusiness() {
   const handleGalleryUpload = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const files = Array.from(e.target.files);
-      const oversized = files.find(f => f.size > 5 * 1024 * 1024);
+      const oversized = files.find(f => f.size > 20 * 1024 * 1024);
       if (oversized) {
-        setError(`Gallery photo "${oversized.name}" exceeds the 5MB size limit.`);
+        setError(`Gallery photo "${oversized.name}" exceeds the 20MB size limit.`);
         return;
       }
       setGalleryFiles(prev => [...prev, ...files.map(f => f.name)]);
       setUploadingGallery(true);
       try {
-        const urls = await Promise.all(files.map(f => uploadFileToServer(f)));
+        const compressedFiles = await Promise.all(files.map(f => compressImage(f, 1200, 800)));
+        const urls = await Promise.all(compressedFiles.map(f => uploadFileToServer(f)));
         const updated = { ...formData, galleryUrls: [...(formData.galleryUrls || []), ...urls] };
         setFormData(updated);
         saveDraft(updated);
@@ -1082,14 +1086,15 @@ export default function AddBusiness() {
   const handleBranchLogoUpload = async (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Branch logo file size must be less than 5MB.');
+      if (file.size > 20 * 1024 * 1024) {
+        setError('Branch logo file size must be less than 20MB.');
         return;
       }
       setBranchLogoFile(file.name);
       setUploadingBranchLogo(true);
       try {
-        const url = await uploadFileToServer(file);
+        const compressedFile = await compressImage(file, 500, 500);
+        const url = await uploadFileToServer(compressedFile);
         setBranchForm(prev => ({ ...prev, logoUrl: url }));
       } catch (err) {
         setError('Branch logo upload failed: ' + err.message);
@@ -1102,14 +1107,15 @@ export default function AddBusiness() {
   const handleBranchCoverUpload = async (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Branch cover image file size must be less than 5MB.');
+      if (file.size > 20 * 1024 * 1024) {
+        setError('Branch cover image file size must be less than 20MB.');
         return;
       }
       setBranchCoverFile(file.name);
       setUploadingBranchCover(true);
       try {
-        const url = await uploadFileToServer(file);
+        const compressedFile = await compressImage(file, 1200, 800);
+        const url = await uploadFileToServer(compressedFile);
         setBranchForm(prev => ({ ...prev, coverImageUrl: url }));
       } catch (err) {
         setError('Branch cover upload failed: ' + err.message);
@@ -1122,15 +1128,16 @@ export default function AddBusiness() {
   const handleBranchGalleryUpload = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const files = Array.from(e.target.files);
-      const oversized = files.find(f => f.size > 5 * 1024 * 1024);
+      const oversized = files.find(f => f.size > 20 * 1024 * 1024);
       if (oversized) {
-        setError(`Branch gallery photo "${oversized.name}" exceeds the 5MB size limit.`);
+        setError(`Branch gallery photo "${oversized.name}" exceeds the 20MB size limit.`);
         return;
       }
       setBranchGalleryFiles(prev => [...prev, ...files.map(f => f.name)]);
       setUploadingBranchGallery(true);
       try {
-        const urls = await Promise.all(files.map(f => uploadFileToServer(f)));
+        const compressedFiles = await Promise.all(files.map(f => compressImage(f, 1200, 800)));
+        const urls = await Promise.all(compressedFiles.map(f => uploadFileToServer(f)));
         setBranchForm(prev => ({ ...prev, galleryUrls: [...(prev.galleryUrls || []), ...urls] }));
       } catch (err) {
         setError('Branch gallery upload failed: ' + err.message);
@@ -1623,6 +1630,7 @@ export default function AddBusiness() {
                                   pincode: d.pincode || prev.pincode,
                                   coordinates: d.latitude ? { lat: d.latitude, lng: d.longitude } : prev.coordinates,
                                   googlePlaceId: d.googlePlaceId || prev.googlePlaceId,
+                                  googleLinked: d.googlePlaceId ? true : prev.googleLinked,
                                   googleRating: d.googleRating || prev.googleRating,
                                   googleReviewsCount: d.googleReviewsCount || prev.googleReviewsCount,
                                   googleReviews: d.googleReviews?.length ? d.googleReviews : prev.googleReviews,
@@ -1728,8 +1736,9 @@ export default function AddBusiness() {
                             pincode: placePincode || formData.pincode,
                             isAddressVerified: true,
                             googlePlaceId: d.googlePlaceId || '',
+                            googleLinked: d.googlePlaceId ? true : false,
                             googleRating: d.googleRating || 0,
-                    googleReviewsCount: d.googleReviewsCount || 0,
+                            googleReviewsCount: d.googleReviewsCount || 0,
                             googleReviews: d.googleReviews || [],
                             coordinates: {
                               lat: d.latitude || d.coordinates?.lat || 10.585,
@@ -2201,7 +2210,7 @@ export default function AddBusiness() {
                   <div className="flex flex-col gap-5">
                     <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
                       <h3 className="text-lg font-extrabold text-slate-805">2. Basic Information</h3>
-                      <p className="text-slate-400 text-xs font-semibold">Tell us the basic details about your business.</p>
+                      <p className="text-slate-600 text-xs font-semibold">Tell us the basic details about your business.</p>
                     </div>
                     
                     <div className="flex flex-col gap-1.5">
@@ -2460,7 +2469,7 @@ export default function AddBusiness() {
                 <div className="flex flex-col gap-6 animate-fadeIn">
                   <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
                     <h3 className="text-lg font-extrabold text-slate-800">3. Business Details</h3>
-                    <p className="text-slate-400 text-xs font-semibold">Provide more information about your business.</p>
+                    <p className="text-slate-600 text-xs font-semibold">Provide more information about your business.</p>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -2509,7 +2518,7 @@ export default function AddBusiness() {
 
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Services / Products Offered <span className="text-red-500">*</span></label>
-                    <span className="text-[10px] text-slate-400 font-bold -mt-1 block">Select the services or products you offer (Comma Separated)</span>
+                    <span className="text-xs text-slate-600 font-bold -mt-1 block">Select the services or products you offer (Comma Separated)</span>
                     <input
                       type="text"
                       name="services"
@@ -2568,14 +2577,14 @@ export default function AddBusiness() {
                       placeholder="e.g. On-time Service, Expert Technicians, Quality Materials, Affordable Pricing"
                       className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
                     />
-                    <span className="text-[10px] text-slate-400 font-bold -mt-1 block">Enter comma-separated highlights to display as green badges under your description.</span>
+                    <span className="text-xs text-slate-600 font-bold -mt-1 block">Enter comma-separated highlights to display as green badges under your description.</span>
                   </div>
 
                   <div className="flex flex-col gap-3 mt-4 border-t border-slate-100 pt-5 text-left">
                     <label className="text-xs font-bold text-slate-700 tracking-wide uppercase flex items-center gap-1.5">
                       <Clock className="h-4 w-4 text-[#027244]" /> Business Hours (Monday - Sunday)
                     </label>
-                    <span className="text-[10px] text-slate-400 font-bold -mt-2 block">Set opening and closing hours for each day. Use "Closed" if not operating on that day.</span>
+                    <span className="text-xs text-slate-600 font-bold -mt-2 block">Set opening and closing hours for each day. Use "Closed" if not operating on that day.</span>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50 p-4.5 rounded-2xl border border-slate-150">
                       {formData.timings && typeof formData.timings === 'object' && !Array.isArray(formData.timings) ? (
                         Object.keys(formData.timings).map((day) => (
@@ -3107,14 +3116,14 @@ export default function AddBusiness() {
                           placeholder="e.g. On-time Service, Expert Technicians, Quality Materials, Affordable Pricing"
                           className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
                         />
-                        <span className="text-[10px] text-slate-400 font-bold -mt-1 block">Enter comma-separated highlights to display as green badges under your description.</span>
+                        <span className="text-xs text-slate-600 font-bold -mt-1 block">Enter comma-separated highlights to display as green badges under your description.</span>
                       </div>
 
                       <div className="flex flex-col gap-3 mt-4 border-t border-slate-100 pt-5 text-left">
                         <label className="text-xs font-bold text-slate-700 tracking-wide uppercase flex items-center gap-1.5">
                           <Clock className="h-4 w-4 text-[#027244]" /> Branch Operating Hours (Monday - Sunday)
                         </label>
-                        <span className="text-[10px] text-slate-400 font-bold -mt-2 block">Set opening and closing hours for each day. Use "Closed" if not operating on that day.</span>
+                        <span className="text-xs text-slate-600 font-bold -mt-2 block">Set opening and closing hours for each day. Use "Closed" if not operating on that day.</span>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50 p-4.5 rounded-2xl border border-slate-150">
                           {branchForm.timings && typeof branchForm.timings === 'object' && !Array.isArray(branchForm.timings) ? (
                             Object.keys(branchForm.timings).map((day) => (

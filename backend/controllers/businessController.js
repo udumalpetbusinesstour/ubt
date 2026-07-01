@@ -92,7 +92,7 @@ const registerBusiness = async (req, res, next) => {
       longitude: longitude || 77.251,
       coordinates: resolvedCoordinates,
       googlePlaceId,
-      googleLinked,
+      googleLinked: googleLinked || !!googlePlaceId,
       tags: tags || [],
       highlights: highlights || [],
       galleryUrls: galleryImages || [],

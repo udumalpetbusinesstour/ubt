@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import MockGoogleMaps from '@/components/MockGoogleMaps';
 import LeadsEnquiriesTab from '@/components/LeadsEnquiriesTab';
 import ReviewsReputationTab from '@/components/ReviewsReputationTab';
+import { compressImage } from '@/utils/imageCompression';
 import { 
   ShieldCheck, Sparkles, AlertTriangle, AlertCircle, Edit3, Image as ImageIcon, 
   RefreshCw, Star, CreditCard, ChevronRight, ChevronLeft, ArrowLeft, Activity, PhoneCall, 
@@ -568,18 +569,19 @@ function DashboardContent() {
 
     if (targetField === 'logoUrl' || targetField === 'coverImageUrl') {
       const file = files[0];
-      if (file.size > 5 * 1024 * 1024) {
-        setUploadError('Image file size must be less than 5MB.');
+      if (file.size > 20 * 1024 * 1024) {
+        setUploadError('Image file size must be less than 20MB.');
         return;
       }
 
       if (targetField === 'logoUrl') setLogoUploading(true);
       else setCoverUploading(true);
 
-      const formData = new FormData();
-      formData.append('image', file);
-
       try {
+        const compressedFile = await compressImage(file, targetField === 'logoUrl' ? 500 : 1200, targetField === 'logoUrl' ? 500 : 800);
+        const formData = new FormData();
+        formData.append('image', compressedFile);
+
         const res = await fetch('http://localhost:5000/api/upload', {
           method: 'POST',
           headers: {
@@ -606,15 +608,16 @@ function DashboardContent() {
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        if (file.size > 5 * 1024 * 1024) {
-          setUploadError(`File ${file.name} is too large (max 5MB).`);
+        if (file.size > 20 * 1024 * 1024) {
+          setUploadError(`File ${file.name} is too large (max 20MB).`);
           continue;
         }
 
-        const formData = new FormData();
-        formData.append('image', file);
-
         try {
+          const compressedFile = await compressImage(file, 1200, 800);
+          const formData = new FormData();
+          formData.append('image', compressedFile);
+
           const res = await fetch('http://localhost:5000/api/upload', {
             method: 'POST',
             headers: {
@@ -647,15 +650,16 @@ function DashboardContent() {
   const handleDashboardLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError('Logo photo size is too large (max 5MB).');
+    if (file.size > 20 * 1024 * 1024) {
+      setUploadError('Logo photo size is too large (max 20MB).');
       return;
     }
-    const formData = new FormData();
-    formData.append('image', file);
     try {
       setUploadError('');
       setLogoUploading(true);
+      const compressedFile = await compressImage(file, 500, 500);
+      const formData = new FormData();
+      formData.append('image', compressedFile);
       const activeToken = token || localStorage.getItem('ubt_token');
       const res = await fetch('http://localhost:5000/api/upload', {
         method: 'POST',
@@ -682,15 +686,16 @@ function DashboardContent() {
   const handleDashboardCoverUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError('Cover photo size is too large (max 5MB).');
+    if (file.size > 20 * 1024 * 1024) {
+      setUploadError('Cover photo size is too large (max 20MB).');
       return;
     }
-    const formData = new FormData();
-    formData.append('image', file);
     try {
       setUploadError('');
       setCoverUploading(true);
+      const compressedFile = await compressImage(file, 1200, 800);
+      const formData = new FormData();
+      formData.append('image', compressedFile);
       const activeToken = token || localStorage.getItem('ubt_token');
       const res = await fetch('http://localhost:5000/api/upload', {
         method: 'POST',
@@ -872,18 +877,19 @@ function DashboardContent() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setOfferImageError('Image file size must be less than 5MB.');
+    if (file.size > 20 * 1024 * 1024) {
+      setOfferImageError('Image file size must be less than 20MB.');
       return;
     }
 
     setOfferImageUploading(true);
     setOfferImageError('');
 
-    const formData = new FormData();
-    formData.append('image', file);
-
     try {
+      const compressedFile = await compressImage(file, 1200, 800);
+      const formData = new FormData();
+      formData.append('image', compressedFile);
+
       const res = await fetch('http://localhost:5000/api/upload', {
         method: 'POST',
         headers: {
@@ -910,18 +916,19 @@ function DashboardContent() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setPromoImageError('Image file size must be less than 5MB.');
+    if (file.size > 20 * 1024 * 1024) {
+      setPromoImageError('Image file size must be less than 20MB.');
       return;
     }
 
     setPromoImageUploading(true);
     setPromoImageError('');
 
-    const formData = new FormData();
-    formData.append('image', file);
-
     try {
+      const compressedFile = await compressImage(file, 1200, 800);
+      const formData = new FormData();
+      formData.append('image', compressedFile);
+
       const res = await fetch('http://localhost:5000/api/upload', {
         method: 'POST',
         headers: {
@@ -1280,7 +1287,7 @@ function DashboardContent() {
     const storedUser = localStorage.getItem('ubt_user');
     
     if (!storedToken || !storedUser) {
-      navigate('/login');
+      navigate('/login?redirect=/dashboard', { replace: true });
       return;
     }
 
@@ -1314,7 +1321,7 @@ function DashboardContent() {
         parsedUser.role !== 'partner'
       ) {
         // Access Denied: Redirect non-registered users to login with an error code
-        navigate('/login?error=unauthorized');
+        navigate('/login?error=unauthorized', { replace: true });
         return;
       }
       setToken(storedToken);
@@ -1335,7 +1342,7 @@ function DashboardContent() {
       }
       fetchNotifications(storedToken);
     } catch (err) {
-      navigate('/login');
+      navigate('/login?redirect=/dashboard', { replace: true });
     }
 
     const tabParam = searchParams.get('tab');

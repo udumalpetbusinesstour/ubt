@@ -1072,14 +1072,14 @@ const handlePartnerAction = async (partnerId, action) => {
     const storedUser = localStorage.getItem('ubt_user');
 
     if (!storedToken || !storedUser) {
-      navigate('/login');
+      navigate('/login?redirect=/superadmin', { replace: true });
       return;
     }
 
     try {
       const uObj = JSON.parse(storedUser);
       if (uObj.role !== 'superadmin') {
-        navigate('/login?error=unauthorized');
+        navigate('/login?error=unauthorized', { replace: true });
         return;
       }
       setToken(storedToken);
@@ -1093,7 +1093,7 @@ const handlePartnerAction = async (partnerId, action) => {
     } catch (err) {
       localStorage.removeItem('ubt_user');
       localStorage.removeItem('ubt_token');
-      navigate('/login');
+      navigate('/login?redirect=/superadmin', { replace: true });
     }
   }, []);
 

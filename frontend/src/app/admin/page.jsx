@@ -976,14 +976,14 @@ export default function AdminDashboard() {
     const storedUser = localStorage.getItem('ubt_user');
 
     if (!storedToken || !storedUser) {
-      navigate('/login');
+      navigate('/login?redirect=/admin', { replace: true });
       return;
     }
 
     try {
       const uObj = JSON.parse(storedUser);
       if (uObj.role !== 'admin' && uObj.role !== 'superadmin') {
-        navigate('/login?error=unauthorized');
+        navigate('/login?error=unauthorized', { replace: true });
         return;
       }
       setToken(storedToken);
@@ -996,7 +996,7 @@ export default function AdminDashboard() {
     } catch (err) {
       localStorage.removeItem('ubt_user');
       localStorage.removeItem('ubt_token');
-      navigate('/login');
+      navigate('/login?redirect=/admin', { replace: true });
     }
   }, []);
 

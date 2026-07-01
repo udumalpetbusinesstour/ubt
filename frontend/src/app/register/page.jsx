@@ -123,19 +123,7 @@ export default function Register() {
     }
   };
 
-  useEffect(() => {
-    const redirectParam = searchParams.get('redirect');
-    const handlePopState = (event) => {
-      if (redirectParam && redirectParam !== '/login' && redirectParam !== '/register') {
-        navigate(redirectParam, { replace: true });
-      }
-    };
 
-    window.addEventListener('popstate', handlePopState);
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [navigate, searchParams]);
 
   useEffect(() => {
     const verify = searchParams.get('verify') === 'true';
@@ -680,13 +668,8 @@ export default function Register() {
     );
   };
 
-  const redirectParam = searchParams.get('redirect');
   const handleBackNavigation = () => {
-    if (redirectParam && redirectParam !== '/login' && redirectParam !== '/register') {
-      navigate(redirectParam);
-    } else {
-      navigate(-1);
-    }
+    navigate(-1);
   };
 
   return (

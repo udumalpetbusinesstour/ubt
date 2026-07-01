@@ -326,19 +326,7 @@ export default function Login() {
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    const redirectParam = searchParams.get('redirect');
-    const handlePopState = (event) => {
-      if (redirectParam && redirectParam !== '/login' && redirectParam !== '/register') {
-        navigate(redirectParam, { replace: true });
-      }
-    };
 
-    window.addEventListener('popstate', handlePopState);
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [navigate, searchParams]);
 
   const handlePasswordLogin = async (e) => {
     e.preventDefault();
@@ -573,11 +561,7 @@ export default function Login() {
 
   const redirectParam = searchParams.get('redirect');
   const handleBackNavigation = () => {
-    if (redirectParam && redirectParam !== '/login' && redirectParam !== '/register') {
-      navigate(redirectParam);
-    } else {
-      navigate(-1);
-    }
+    navigate(-1);
   };
 
   return (
