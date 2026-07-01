@@ -210,48 +210,9 @@ router.get('/top', async (req, res, next) => {
         if (name && !existingNames.has(name)) {
           populatedLeaderboard.push({
             name,
-            referralsCount: Math.max(1, Math.floor((u.referralPoints || 0) / 100))
+            referralsCount: Math.max(1, Math.floor((u.referralPoints || 0) / 99))
           });
           existingNames.add(name);
-          if (populatedLeaderboard.length >= 3) break;
-        }
-      }
-    }
-
-    // Fallbacks: If we still don't have 3 items, pull from real business listings in the DB
-    if (populatedLeaderboard.length < 3) {
-      const existingNames = new Set(populatedLeaderboard.map(item => item.name));
-      let activeBusinesses = await Business.find({ status: 'Approved' }).limit(3);
-      if (activeBusinesses.length === 0) {
-        activeBusinesses = await Business.find().limit(3);
-      }
-      
-      const fallbackCounts = [15, 11, 7];
-      let countIdx = populatedLeaderboard.length;
-      for (const b of activeBusinesses) {
-        if (b.name && !existingNames.has(b.name)) {
-          populatedLeaderboard.push({
-            name: b.name,
-            referralsCount: fallbackCounts[countIdx % fallbackCounts.length]
-          });
-          existingNames.add(b.name);
-          countIdx++;
-          if (populatedLeaderboard.length >= 3) break;
-        }
-      }
-    }
-
-    // Absolute fallback in case the database is completely empty
-    if (populatedLeaderboard.length < 3) {
-      const existingNames = new Set(populatedLeaderboard.map(item => item.name));
-      const mockFallbacks = [
-        { name: 'Lakshmi Textiles', referralsCount: 8 },
-        { name: 'Sri Electricals', referralsCount: 5 },
-        { name: 'ABC Traders', referralsCount: 2 }
-      ];
-      for (const fb of mockFallbacks) {
-        if (!existingNames.has(fb.name)) {
-          populatedLeaderboard.push(fb);
           if (populatedLeaderboard.length >= 3) break;
         }
       }
