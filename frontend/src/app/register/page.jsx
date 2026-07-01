@@ -11,6 +11,7 @@ export default function Register() {
   const [searchParams] = useSearchParams();
   const fromParam = searchParams.get('from') || 'business';
   const flowParam = searchParams.get('flow') || 'general';
+  const redirect = searchParams.get('redirect') || '';
   
   // Registration form states
   const [fullName, setFullName] = useState('');
