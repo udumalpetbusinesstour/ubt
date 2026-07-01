@@ -3414,13 +3414,14 @@ const handlePartnerAction = async (partnerId, action) => {
                               if (cat.includes('beauty') || cat.includes('parlour') || cat.includes('salon')) return '💇';
                               return '🏢';
                             };
-                            const bizList = dateFilteredBusinesses.length > 0 ? dateFilteredBusinesses : [
-                              { _id: 'mock_biz_1', name: 'Sri Lakshmi Electricals', category: 'Home Services', locality: 'Udumalpet', createdAt: new Date(), status: 'Pending Verification', ownerName: 'Muthuvel S.', gstNumber: '33ABCDE1234F1Z5', yearEstablished: '2015', email: 'srilakshmi@gmail.com', phone: '+91 94435 99999', website: 'srilakshmielectricals.com', pincode: '642126' },
-                              { _id: 'mock_biz_2', name: 'Green Leaf Restaurant', category: 'Food & Restaurants', locality: 'Udumalpet', createdAt: new Date(Date.now() - 15*60*1000), status: 'Approved', ownerName: 'Rajesh Kumar', gstNumber: '33ABCDE1234F1Z5', yearEstablished: '2018', email: 'greenleaf@gmail.com', phone: '+91 98425 22345', website: 'greenleafrestaurant.com', pincode: '642126' },
-                              { _id: 'mock_biz_3', name: 'Royal Car Care', category: 'Automotive', locality: 'Udumalpet', createdAt: new Date(Date.now() - 32*60*1000), status: 'Pending Verification', ownerName: 'Senthil Nathan', gstNumber: '33ABCDE1234F1Z5', yearEstablished: '2020', email: 'royalcarcare@gmail.com', phone: '+91 97895 43210', website: 'royalcarcare.com', pincode: '642126' },
-                              { _id: 'mock_biz_4', name: 'Anu Beauty Parlour', category: 'Beauty & Wellness', locality: 'Udumalpet', createdAt: new Date(Date.now() - 60*60*1000), status: 'Approved', ownerName: 'Anu Pandian', gstNumber: '33ABCDE1234F1Z5', yearEstablished: '2016', email: 'anubeauty@gmail.com', phone: '+91 98944 22222', website: 'anubeautyparlour.com', pincode: '642126' },
-                              { _id: 'mock_biz_5', name: 'Vetri Catering Service', category: 'Catering Services', locality: 'Udumalpet', createdAt: new Date(Date.now() - 120*60*1000), status: 'Pending Verification', ownerName: 'Vetrivel S.', gstNumber: '33ABCDE1234F1Z5', yearEstablished: '2012', email: 'vetricatering@gmail.com', phone: '+91 90000 00000', website: 'vetricaterers.com', pincode: '642126' }
-                            ];
+                            const bizList = dateFilteredBusinesses;
+                            if (bizList.length === 0) {
+                              return (
+                                <div className="flex flex-col items-center justify-center py-16 text-slate-400 text-xs font-bold font-sans">
+                                  No recent businesses registered.
+                                </div>
+                              );
+                            }
                             return bizList.slice(0, 5).map((reg, idx) => {
                               const timeStr = reg.createdAt ? new Date(reg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now';
                               return (
@@ -3456,12 +3457,14 @@ const handlePartnerAction = async (partnerId, action) => {
 
                          {recentRegTab === 'Users' && (
                            (() => {
-                             const combinedUsers = [...dateFilteredMerchants, ...dateFilteredRegularUsers].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-                             const list = combinedUsers.length > 0 ? combinedUsers : [
-                               { _id: 'usr_m1', fullName: 'Muthuvel S.', role: 'merchant', email: 'muthuvel@gmail.com', status: 'Active', createdAt: new Date() },
-                               { _id: 'usr_m2', fullName: 'Arun Kumar', role: 'user', email: 'arun@gmail.com', status: 'Active', createdAt: new Date(Date.now() - 15*60*1000) },
-                               { _id: 'usr_m3', fullName: 'Senthil Nathan', role: 'merchant', email: 'senthil@gmail.com', status: 'Suspended', createdAt: new Date(Date.now() - 32*60*1000) }
-                             ];
+                             const list = [...dateFilteredMerchants, ...dateFilteredRegularUsers].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+                             if (list.length === 0) {
+                               return (
+                                 <div className="flex flex-col items-center justify-center py-16 text-slate-400 text-xs font-bold font-sans">
+                                   No recent users registered.
+                                 </div>
+                               );
+                             }
                              return list.slice(0, 5).map((u, idx) => {
                                const timeStr = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Just now';
                                return (
@@ -3500,10 +3503,14 @@ const handlePartnerAction = async (partnerId, action) => {
 
                          {recentRegTab === 'Events' && (
                            (() => {
-                             const eventList = dateFilteredEvents.length > 0 ? dateFilteredEvents : [
-                               { _id: 'e1', title: 'Temple Car Festival 2025', category: 'Cultural', organizer: 'Mariamman Kovil', status: 'Pending Review', createdAt: new Date() },
-                               { _id: 'e2', title: 'Wind Farms Expo 2025', category: 'Business', organizer: 'Coimbatore Chamber', status: 'Approved', createdAt: new Date(Date.now() - 3600000) }
-                             ];
+                             const eventList = dateFilteredEvents;
+                             if (eventList.length === 0) {
+                               return (
+                                 <div className="flex flex-col items-center justify-center py-16 text-slate-400 text-xs font-bold font-sans">
+                                   No recent events registered.
+                                 </div>
+                               );
+                             }
                              return eventList.slice(0, 5).map((reg, idx) => {
                                const timeStr = reg.createdAt ? new Date(reg.createdAt).toLocaleDateString() : 'Just now';
                                return (
@@ -3542,10 +3549,14 @@ const handlePartnerAction = async (partnerId, action) => {
 
                          {recentRegTab === 'Blog Posts' && (
                            (() => {
-                             const blogList = dateFilteredBlogs.length > 0 ? dateFilteredBlogs : [
-                               { _id: 'b1', title: 'Top 10 Tourist Places in Udumalpet', authorName: 'Co-Founder Haris', status: 'Approved', createdAt: new Date() },
-                               { _id: 'b2', title: 'Guide to Thirumoorthi Dam Waterfalls', authorName: 'Ananth S.', status: 'Pending Review', createdAt: new Date(Date.now() - 7200000) }
-                             ];
+                             const blogList = dateFilteredBlogs;
+                             if (blogList.length === 0) {
+                               return (
+                                 <div className="flex flex-col items-center justify-center py-16 text-slate-400 text-xs font-bold font-sans">
+                                   No recent blog posts registered.
+                                 </div>
+                               );
+                             }
                              return blogList.slice(0, 5).map((reg, idx) => {
                                const timeStr = reg.createdAt ? new Date(reg.createdAt).toLocaleDateString() : 'Just now';
                                return (
@@ -3556,7 +3567,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
                                    <div className="flex items-center gap-3 text-left">
                                      <span className={`h-9 w-9 rounded-xl border flex items-center justify-center text-sm shadow-inner ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 text-[#027244]'}`}>
-                                       📖
+                                       📝
                                      </span>
                                      <div className="flex flex-col">
                                        <span className={`text-xs font-black leading-none ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{reg.title}</span>
