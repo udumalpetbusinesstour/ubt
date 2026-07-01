@@ -7578,7 +7578,13 @@ const handlePartnerAction = async (partnerId, action) => {
                         return;
                       }
 
-                      if (currentPass || newPass || confirmPass) {
+                      const isEmailChanging = emailVal !== (user?.email || 'superadmin@gmail.com');
+                      if (isEmailChanging && !currentPass) {
+                        alert('Current password is required to change your contact email address.');
+                        return;
+                      }
+
+                      if (newPass || confirmPass) {
                         if (!currentPass || !newPass || !confirmPass) {
                           alert('Please fill out current password, new password, and confirmation password to update your password.');
                           return;
@@ -7594,8 +7600,10 @@ const handlePartnerAction = async (partnerId, action) => {
                           fullName: nameVal,
                           email: emailVal
                         };
-                        if (newPass) {
+                        if (currentPass) {
                           payload.currentPassword = currentPass;
+                        }
+                        if (newPass) {
                           payload.newPassword = newPass;
                         }
 

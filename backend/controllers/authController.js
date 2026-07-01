@@ -236,6 +236,19 @@ const updateProfile = async (req, res, next) => {
     if (!user) {
       return sendError(res, 404, 'User account not found');
     }
+    // Secure credentials check: Require current password validation for email or password modifications
+    const isEmailChanging = req.body.email && req.body.email !== user.email;
+    const isPasswordChanging = !!req.body.newPassword;
+    
+    if (isEmailChanging || isPasswordChanging) {
+      if (!req.body.currentPassword) {
+        return sendError(res, 400, 'Current password is required to update email or password credentials');
+      }
+      const isMatch = await user.matchPassword(req.body.currentPassword);
+      if (!isMatch) {
+        return sendError(res, 400, 'Current password does not match database record');
+      }
+    }
 
     if (req.body.name || req.body.fullName) {
       const newName = req.body.name || req.body.fullName;
@@ -290,15 +303,8 @@ const updateProfile = async (req, res, next) => {
       }
     }
 
-    // Handle password update securely
+    // Handle password update securely (already validated up-front)
     if (req.body.newPassword) {
-      if (!req.body.currentPassword) {
-        return sendError(res, 400, 'Current password is required to save a new password');
-      }
-      const isMatch = await user.matchPassword(req.body.currentPassword);
-      if (!isMatch) {
-        return sendError(res, 400, 'Current password does not match database record');
-      }
       user.password = req.body.newPassword;
     }
 
