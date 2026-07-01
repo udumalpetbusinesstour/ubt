@@ -544,6 +544,31 @@ export default function Home() {
 
       // 2. Fetch all businesses to calculate category counts and average ratings dynamically
       try {
+        const catRes = await fetch('http://localhost:5000/api/categories');
+        const catData = await catRes.json();
+        const dbCategories = catData.success ? catData.data : [];
+
+        const getParentCategory = (subName) => {
+          if (!subName) return 'Others';
+          const dbCat = dbCategories.find(c => c.categoryName.toLowerCase() === subName.toLowerCase());
+          if (dbCat && dbCat.parentCategory && dbCat.parentCategory !== 'Others') {
+            return dbCat.parentCategory;
+          }
+          const availableCats = [
+            'Automotive', 'Beauty & Wellness', 'Education', 'Electronics', 'Food & Restaurants',
+            'Health & Medical', 'Home Services', 'Real Estate', 'Shopping', 'Manufacturing',
+            'Professional Services', 'Travel & Hospitality', 'Construction', 'Agriculture',
+            'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness', 'Public Sector'
+          ];
+          if (availableCats.some(p => p.toLowerCase() === subName.toLowerCase())) {
+            return subName;
+          }
+          if (dbCat && !dbCat.parentCategory) {
+            return dbCat.categoryName;
+          }
+          return 'Others';
+        };
+
         const res = await fetch('http://localhost:5000/api/businesses');
         const data = await res.json();
         if (data.success) {
@@ -560,14 +585,13 @@ export default function Home() {
             ratingSums[c] = 0;
           });
           data.data.forEach(biz => {
-            const cat = biz.category;
+            const catName = biz.category;
+            const parentCat = getParentCategory(catName || '');
             const rat = Number(biz.googleRating || biz.rating || 0);
-            if (counts[cat] !== undefined) {
-              counts[cat]++;
-              ratingSums[cat] += rat;
-            } else {
-              counts[cat] = 1;
-              ratingSums[cat] = rat;
+            
+            if (counts[parentCat] !== undefined) {
+              counts[parentCat]++;
+              ratingSums[parentCat] += rat;
             }
           });
           const avgRatings = {};
