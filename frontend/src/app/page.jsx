@@ -1233,87 +1233,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3.5 Sponsored Ads Auto-scrolling Banner Section */}
-      <section className="max-w-[1440px] w-full px-4 md:px-8 py-6 flex flex-col gap-4">
-        <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight flex items-center gap-2">
-              <Sparkles className="h-5.5 w-5.5 text-amber-500 fill-amber-500/20 animate-pulse shrink-0" />
-              Sponsored Ads
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">Exclusive flyer promotions from our premium verified sponsors</p>
-          </div>
-          <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded shadow-2xs shrink-0 mb-1">Promotions</span>
-        </div>
-
-        {sponsoredAds.length === 0 ? (
-          <div className="bg-gradient-to-br from-slate-50 to-emerald-50/15 border border-dashed border-slate-300 rounded-[24px] p-8 flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-6 shadow-sm">
-            <div className="flex items-center gap-4 flex-col md:flex-row">
-              <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-[#027244] flex items-center justify-center border border-emerald-100 shadow-3xs shrink-0">
-                <Rocket className="h-6 w-6" />
-              </div>
-              <div className="flex flex-col gap-1">
-                <h3 className="font-extrabold text-[#001c41] text-base font-sans tracking-tight">Promote your offers or business here</h3>
-                <p className="text-slate-500 text-xs font-semibold leading-relaxed max-w-xl">
-                  Get premium visibility by featuring your business or discount flyer right here on our homepage banner. Join our network of premium local sponsors today!
-                </p>
-              </div>
-            </div>
-            <button 
-              onClick={() => {
-                const isLoggedIn = !!localStorage.getItem('ubt_token');
-                if (isLoggedIn) {
-                  navigate('/dashboard?tab=Offers%20%26%20Promotions&subtab=promotions');
-                } else {
-                  navigate('/login?redirect=/dashboard?tab=Offers%20%26%20Promotions%26subtab%3Dpromotions');
-                }
-              }}
-              className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3.5 px-6 rounded-xl transition-all shadow-md shrink-0 flex items-center gap-2 border border-emerald-700/10 cursor-pointer"
-            >
-              Promote Now <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        ) : (
-          <div className="relative w-full">
-            {/* Carousel buttons */}
-            <button 
-              onClick={() => handleScrollSponsored('left')}
-              className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
-              aria-label="Scroll Sponsored Ads Left"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button 
-              onClick={() => handleScrollSponsored('right')}
-              className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
-              aria-label="Scroll Sponsored Ads Right"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-
-            <div 
-              ref={sponsoredAdsScrollRef}
-              className="flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
-            >
-              {sponsoredAds.map((ad, idx) => (
-                <div 
-                  key={idx}
-                  onClick={() => navigate(`/${ad.businessSlug || ad.businessId}`)}
-                  className="w-full md:w-[calc(50%-10px)] shrink-0 snap-start rounded-[20px] md:rounded-[28px] overflow-hidden aspect-[1920/900] bg-slate-900 shadow-md border border-slate-200 cursor-pointer hover:shadow-lg transition-shadow relative"
-                >
-                  {/* Poster Background */}
-                  <img
-                    src={window.getImageUrl(ad.offer.banner)}
-                    alt={ad.offer.title}
-                    className="absolute inset-0 w-full h-full object-cover select-none"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
-
       {/* 4. Featured Businesses Section (With side chevrons!) */}
       <section className="max-w-[1440px] w-full px-4 md:px-8 py-6 md:py-12 flex flex-col gap-4 md:gap-8 relative">
         <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
@@ -1454,6 +1373,87 @@ export default function Home() {
         </div>
       </div>
     </section>
+
+      {/* 4.5 Sponsored Ads Auto-scrolling Banner Section */}
+      <section className="max-w-[1440px] w-full px-4 md:px-8 py-6 flex flex-col gap-4">
+        <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight flex items-center gap-2">
+              <Sparkles className="h-5.5 w-5.5 text-amber-500 fill-amber-500/20 animate-pulse shrink-0" />
+              Sponsored Ads
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">Exclusive flyer promotions from our premium verified sponsors</p>
+          </div>
+          <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded shadow-2xs shrink-0 mb-1">Promotions</span>
+        </div>
+
+        {sponsoredAds.length === 0 ? (
+          <div className="bg-gradient-to-br from-slate-50 to-emerald-50/15 border border-dashed border-slate-300 rounded-[24px] p-8 flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-6 shadow-sm">
+            <div className="flex items-center gap-4 flex-col md:flex-row">
+              <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-[#027244] flex items-center justify-center border border-emerald-100 shadow-3xs shrink-0">
+                <Rocket className="h-6 w-6" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <h3 className="font-extrabold text-[#001c41] text-base font-sans tracking-tight">Promote your offers or business here</h3>
+                <p className="text-slate-500 text-xs font-semibold leading-relaxed max-w-xl">
+                  Get premium visibility by featuring your business or discount flyer right here on our homepage banner. Join our network of premium local sponsors today!
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={() => {
+                const isLoggedIn = !!localStorage.getItem('ubt_token');
+                if (isLoggedIn) {
+                  navigate('/dashboard?tab=Offers%20%26%20Promotions&subtab=promotions');
+                } else {
+                  navigate('/login?redirect=/dashboard?tab=Offers%20%26%20Promotions%26subtab%3Dpromotions');
+                }
+              }}
+              className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3.5 px-6 rounded-xl transition-all shadow-md shrink-0 flex items-center gap-2 border border-emerald-700/10 cursor-pointer"
+            >
+              Promote Now <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="relative w-full">
+            {/* Carousel buttons */}
+            <button 
+              onClick={() => handleScrollSponsored('left')}
+              className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+              aria-label="Scroll Sponsored Ads Left"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button 
+              onClick={() => handleScrollSponsored('right')}
+              className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+              aria-label="Scroll Sponsored Ads Right"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+
+            <div 
+              ref={sponsoredAdsScrollRef}
+              className="flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
+            >
+              {sponsoredAds.map((ad, idx) => (
+                <div 
+                  key={idx}
+                  onClick={() => navigate(`/${ad.businessSlug || ad.businessId}`)}
+                  className="w-full md:w-[calc(50%-10px)] shrink-0 snap-start rounded-[20px] md:rounded-[28px] overflow-hidden aspect-[1920/900] bg-slate-900 shadow-md border border-slate-200 cursor-pointer hover:shadow-lg transition-shadow relative"
+                >
+                  {/* Poster Background */}
+                  <img
+                    src={window.getImageUrl(ad.offer.banner)}
+                    alt={ad.offer.title}
+                    className="absolute inset-0 w-full h-full object-cover select-none"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
 
       {/* 5. Statistics Sections Band (Exact theme color match) */}
       <section className="w-full bg-[#001c41] text-white py-5 sm:py-8 px-4 border-y border-[#001430]">
