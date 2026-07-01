@@ -67,7 +67,14 @@ const renderStars = (rating, sizeClass = "h-3.5 w-3.5", emptyColor = "text-slate
     if (r >= starVal) {
       stars.push(<Star key={i} className={`${sizeClass} fill-current`} />);
     } else if (r >= starVal - 0.7) {
-      stars.push(<StarHalf key={i} className={`${sizeClass} fill-current`} />);
+      stars.push(
+        <div key={i} className="relative inline-block shrink-0">
+          <Star className={`${sizeClass} ${emptyColor}`} />
+          <div className="absolute inset-0 overflow-hidden text-amber-400">
+            <StarHalf className={`${sizeClass} fill-current`} />
+          </div>
+        </div>
+      );
     } else {
       stars.push(<Star key={i} className={`${sizeClass} ${emptyColor}`} />);
     }
