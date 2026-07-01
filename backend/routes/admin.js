@@ -812,19 +812,24 @@ router.delete('/sponsored-ads/:businessId/:promotionId', async (req, res, next) 
       return res.status(404).json({ success: false, message: 'Business not found' });
     }
 
-    const originalLength = business.promotions.length;
-    business.promotions = business.promotions.filter(p => 
-      p.id !== promotionId && 
-      p.get('id') !== promotionId && 
-      p._id.toString() !== promotionId
+    const promotion = business.promotions.find(p => 
+      p.id === promotionId || 
+      p.get('id') === promotionId || 
+      p._id.toString() === promotionId
     );
 
-    if (business.promotions.length === originalLength) {
+    if (!promotion) {
       return res.status(404).json({ success: false, message: 'Promotion not found' });
     }
 
+    // Remove sponsored status (hides from homepage ads and admin lists, preserves on merchant details profile)
+    promotion.isSponsored = false;
+    promotion.sponsoredStatus = 'none';
+    promotion.sponsoredExpiry = null;
+    promotion.sponsoredPrice = 0;
+
     await business.save();
-    res.json({ success: true, message: 'Sponsored promotion deleted from database successfully!' });
+    res.json({ success: true, message: 'Sponsored promotion hidden from homepage and admin dashboard successfully!' });
   } catch (error) {
     next(error);
   }

@@ -1576,7 +1576,7 @@ const handlePartnerAction = async (partnerId, action) => {
   };
 
   const handleDeleteSponsorAd = async (businessId, offerId) => {
-    const confirmed = await confirm("Are you sure you want to permanently delete this flyer promotion from the database?");
+    const confirmed = await confirm("Are you sure you want to remove sponsored status and hide this flyer from the homepage? (The flyer will remain on the merchant's business details page)");
     if (!confirmed) return;
     try {
       const storedToken = localStorage.getItem('ubt_token');
