@@ -56,19 +56,36 @@ if (typeof window !== 'undefined') {
     if (url.startsWith('data:image')) return url;
     
     const backendBase = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+    let cleanUrl = url;
 
-    // Replace old local references on production/staging environments
-    if (url.startsWith('http://localhost:5000')) {
-      return url.replace('http://localhost:5000', backendBase);
+    // Convert insecure http links to secure https on SSL environments (like staging/production) to prevent mixed-content blocking
+    if (window.location.protocol === 'https:' && cleanUrl.startsWith('http://') && !cleanUrl.includes('localhost') && !cleanUrl.includes('127.0.0.1')) {
+      cleanUrl = cleanUrl.replace('http://', 'https://');
+    }
+
+    // Replace old local references (both localhost and 127.0.0.1) on production/staging environments
+    if (cleanUrl.startsWith('http://localhost:5000')) {
+      const replaced = cleanUrl.replace('http://localhost:5000', backendBase);
+      if (replaced.includes('/uploads/')) {
+        return replaced.replace('/uploads/', '/api/uploads/');
+      }
+      return replaced;
+    }
+    if (cleanUrl.startsWith('http://127.0.0.1:5000')) {
+      const replaced = cleanUrl.replace('http://127.0.0.1:5000', backendBase);
+      if (replaced.includes('/uploads/')) {
+        return replaced.replace('/uploads/', '/api/uploads/');
+      }
+      return replaced;
     }
     
-    // Prefix relative paths with correct backend origin
-    if (url.startsWith('/uploads') || url.startsWith('uploads')) {
-      const cleanUrl = url.startsWith('/') ? url : `/${url}`;
-      return `${backendBase}${cleanUrl}`;
+    // Prefix relative paths with correct backend origin (routed via Nginx /api/uploads proxy)
+    if (cleanUrl.startsWith('/uploads') || cleanUrl.startsWith('uploads')) {
+      const formattedUrl = cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`;
+      return `${backendBase}/api${formattedUrl}`;
     }
     
-    return url;
+    return cleanUrl;
   };
 }
 

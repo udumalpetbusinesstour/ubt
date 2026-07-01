@@ -46,6 +46,7 @@ const path = require('path');
 
 // Static uploads folder fallback
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Route Mappings
 app.use('/api/auth', require('./routes/auth'));
