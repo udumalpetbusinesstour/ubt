@@ -1,5 +1,28 @@
 import React from 'react';
-import { Star, Search, MessageSquare, Trash2, RefreshCw } from 'lucide-react';
+import { Star, StarHalf, Search, MessageSquare, Trash2, RefreshCw } from 'lucide-react';
+
+const renderStars = (rating, sizeClass = "h-3.5 w-3.5", emptyColor = "text-slate-200") => {
+  const stars = [];
+  const r = rating ?? 0;
+  for (let i = 0; i < 5; i++) {
+    const starVal = i + 1;
+    if (r >= starVal) {
+      stars.push(<Star key={i} className={`${sizeClass} fill-current`} />);
+    } else if (r >= starVal - 0.7) {
+      stars.push(
+        <div key={i} className="relative inline-block shrink-0">
+          <Star className={`${sizeClass} ${emptyColor}`} />
+          <div className="absolute inset-0 overflow-hidden text-amber-400">
+            <StarHalf className={`${sizeClass} fill-current`} />
+          </div>
+        </div>
+      );
+    } else {
+      stars.push(<Star key={i} className={`${sizeClass} ${emptyColor}`} />);
+    }
+  }
+  return stars;
+};
 
 export default function ReviewsReputationTab({
   business,
@@ -162,9 +185,7 @@ export default function ReviewsReputationTab({
           <div className="flex flex-col text-left">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Overall Rating</span>
             <div className="flex items-center text-amber-400 gap-0.5 mt-1">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(overallAvgRating) ? 'fill-current' : 'text-slate-200 fill-none'}`} />
-              ))}
+              {renderStars(overallAvgRating, 'h-3.5 w-3.5', 'text-slate-200 fill-none')}
             </div>
             <span className="text-[10.5px] text-slate-450 font-bold mt-1">Based on {overallReviewsCount} local & Google reviews</span>
           </div>

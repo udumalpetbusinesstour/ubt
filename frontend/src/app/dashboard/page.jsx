@@ -6,7 +6,7 @@ import ReviewsReputationTab from '@/components/ReviewsReputationTab';
 import { compressImage } from '@/utils/imageCompression';
 import { 
   ShieldCheck, Sparkles, AlertTriangle, AlertCircle, Edit3, Image as ImageIcon, 
-  RefreshCw, Star, CreditCard, ChevronRight, ChevronLeft, ArrowLeft, Activity, PhoneCall, 
+  RefreshCw, Star, StarHalf, CreditCard, ChevronRight, ChevronLeft, ArrowLeft, Activity, PhoneCall, 
   MessageSquare, Plus, CheckCircle, Info, Bell, ExternalLink, Globe,
   Copy, Check, Share2, Gift, Upload, HelpCircle, Briefcase, Mail, Settings, Menu, X, Trash2, Search, Lock,
   FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin, LogOut, Facebook, Instagram, Phone, Users, Move, Utensils
@@ -21,6 +21,29 @@ const getDaysRemaining = (expiryDate) => {
   if (!expiryDate) return 0;
   const diff = new Date(expiryDate).getTime() - new Date().getTime();
   return Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 0);
+};
+
+const renderStars = (rating, sizeClass = "h-3.5 w-3.5", emptyColor = "text-slate-200") => {
+  const stars = [];
+  const r = rating ?? 0;
+  for (let i = 0; i < 5; i++) {
+    const starVal = i + 1;
+    if (r >= starVal) {
+      stars.push(<Star key={i} className={`${sizeClass} fill-current`} />);
+    } else if (r >= starVal - 0.7) {
+      stars.push(
+        <div key={i} className="relative inline-block shrink-0">
+          <Star className={`${sizeClass} ${emptyColor}`} />
+          <div className="absolute inset-0 overflow-hidden text-amber-400">
+            <StarHalf className={`${sizeClass} fill-current`} />
+          </div>
+        </div>
+      );
+    } else {
+      stars.push(<Star key={i} className={`${sizeClass} ${emptyColor}`} />);
+    }
+  }
+  return stars;
 };
 
 function DashboardContent() {
@@ -5361,9 +5384,7 @@ function DashboardContent() {
                             {localReviewsCount > 0 ? localAvgRating.toFixed(1) : '0.0'}
                           </span>
                           <div className="flex items-center text-amber-400 mt-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`h-2.5 w-2.5 ${i < Math.floor(localAvgRating) ? 'fill-current' : 'text-slate-200 fill-none'}`} />
-                            ))}
+                            {renderStars(localAvgRating, 'h-2.5 w-2.5', 'text-slate-200 fill-none')}
                           </div>
                           <span className="text-[8.5px] text-slate-400 font-semibold mt-0.5">Based on {localReviewsCount} reviews</span>
                         </div>
@@ -5376,9 +5397,7 @@ function DashboardContent() {
                             {googleReviewsCountVal > 0 ? googleAvgRatingVal.toFixed(1) : '0.0'}
                           </span>
                           <div className="flex items-center text-amber-400 mt-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`h-2.5 w-2.5 ${i < Math.floor(googleAvgRatingVal) ? 'fill-current' : 'text-slate-200 fill-none'}`} />
-                            ))}
+                            {renderStars(googleAvgRatingVal, 'h-2.5 w-2.5', 'text-slate-200 fill-none')}
                           </div>
                           <span className="text-[8.5px] text-slate-400 font-semibold mt-0.5">Based on {googleReviewsCountVal} reviews</span>
                         </div>
@@ -5802,9 +5821,7 @@ function DashboardContent() {
                       <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-300 mt-2">
                         <div className="flex items-center gap-1 bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg">
                           <div className="flex text-amber-400 shrink-0 gap-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(business.googleRating ?? 4.5) ? 'fill-current' : 'text-slate-700'}`} />
-                            ))}
+                            {renderStars(business.googleRating ?? 4.5, 'h-3.5 w-3.5', 'text-slate-700')}
                           </div>
                           <span className="font-black text-white ml-1">{(business.googleRating ?? 4.5).toFixed(1)}</span>
                           <span className="text-[10px] text-slate-405">({overallReviewsCount} Reviews)</span>
@@ -6311,9 +6328,7 @@ function DashboardContent() {
                               <div className="text-center flex flex-col gap-1 shrink-0 bg-white border border-slate-250 p-4 rounded-xl shadow-3xs min-w-[120px]">
                                 <span className="text-4xl font-black text-slate-800 leading-none">{(business?.googleRating ?? 4.5).toFixed(1)}</span>
                                 <div className="flex text-amber-400 gap-0.5 justify-center mt-1.5">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(business?.googleRating ?? 4.5) ? 'fill-current' : 'text-slate-200'}`} />
-                                  ))}
+                                  {renderStars(business?.googleRating ?? 4.5, 'h-3.5 w-3.5', 'text-slate-200')}
                                 </div>
                                 <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">Out of 5 Stars</span>
                               </div>
