@@ -642,7 +642,7 @@ router.get(['/sponsored-ads', '/homepage/sponsored-ads'], async (req, res) => {
     businesses.forEach(b => {
       if (b.promotions && b.promotions.length) {
         b.promotions.forEach(p => {
-          if (p.isSponsored && p.active !== false && p.sponsoredExpiry && new Date(p.sponsoredExpiry) > new Date()) {
+          if (p.isSponsored && p.active !== false && p.active !== 'false' && p.sponsoredExpiry && new Date(p.sponsoredExpiry) > new Date()) {
             ads.push({
               businessId: b._id,
               businessName: b.name,
