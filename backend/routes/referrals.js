@@ -257,6 +257,9 @@ router.get('/top', async (req, res, next) => {
       }
     }
 
+    // Sort final populated leaderboard in descending order of referralsCount
+    populatedLeaderboard.sort((a, b) => b.referralsCount - a.referralsCount);
+
     res.json({
       success: true,
       data: populatedLeaderboard.slice(0, 3)
