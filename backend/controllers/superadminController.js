@@ -157,7 +157,7 @@ const getRevenueAnalytics = async (req, res, next) => {
                   $and: [
                     { $eq: [{ $ifNull: ['$eventId', null] }, null] },
                     { $eq: [{ $ifNull: ['$isSponsoredAd', false] }, false] },
-                    { $ne: [{ $ifNull: ['$planType', ''], 'Sponsored Ad Promotion' }] }
+                    { $ne: [{ $ifNull: ['$planType', ''] }, 'Sponsored Ad Promotion'] }
                   ]
                 },
                 '$amount',
