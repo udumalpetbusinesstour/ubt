@@ -85,6 +85,26 @@ export default function AdminDashboard() {
     setTimeout(() => setToast(null), 3500);
   };
 
+  // Confirm Modal state
+  const [confirmModal, setConfirmModal] = useState({ 
+    isOpen: false, 
+    title: '', 
+    message: '', 
+    onConfirm: null 
+  });
+
+  const triggerConfirm = (title, message, onConfirm) => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
   // Tab navigation state
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [auditSubTab, setAuditSubTab] = useState('Businesses'); // Businesses | Blogs | Testimonials
@@ -1333,51 +1353,63 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleToggleSponsorAdActive = async (businessId, offerId, currentActive) => {
+  const handleToggleSponsorAdActive = (businessId, offerId, currentActive) => {
     const action = currentActive ? 'hide' : 'activate';
-    try {
-      const storedToken = localStorage.getItem('ubt_token');
-      const res = await fetch(`http://localhost:5000/api/admin/sponsored-ads/${businessId}/${offerId}/${action}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${storedToken}`
+    const actionVerb = currentActive ? 'Hide' : 'Activate';
+    
+    triggerConfirm(
+      `${actionVerb} Sponsored Ad`,
+      `Are you sure you want to ${action === 'hide' ? 'hide' : 'activate'} this sponsored ad flyer ${action === 'hide' ? 'from' : 'on'} the homepage?`,
+      async () => {
+        try {
+          const storedToken = localStorage.getItem('ubt_token');
+          const res = await fetch(`http://localhost:5000/api/admin/sponsored-ads/${businessId}/${offerId}/${action}`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${storedToken}`
+            }
+          });
+          const data = await res.json();
+          if (data.success) {
+            showToast(data.message || `Sponsored ad ${action}d successfully!`, 'success');
+            loadPlatformRealData();
+          } else {
+            showToast(data.message || `Failed to ${action} sponsored ad.`, 'error');
+          }
+        } catch (err) {
+          console.error(err);
+          showToast(`Error trying to ${action} sponsored ad.`, 'error');
         }
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast(data.message || `Sponsored ad ${action}d successfully!`, 'success');
-        loadPlatformRealData();
-      } else {
-        showToast(data.message || `Failed to ${action} sponsored ad.`, 'error');
       }
-    } catch (err) {
-      console.error(err);
-      showToast(`Error trying to ${action} sponsored ad.`, 'error');
-    }
+    );
   };
 
-  const handleDeleteSponsorAd = async (businessId, offerId) => {
-    const confirmed = await confirm("Are you sure you want to remove sponsored status and hide this flyer from the homepage? (The flyer will remain on the merchant's business details page)");
-    if (!confirmed) return;
-    try {
-      const storedToken = localStorage.getItem('ubt_token');
-      const res = await fetch(`http://localhost:5000/api/admin/sponsored-ads/${businessId}/${offerId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${storedToken}`
+  const handleDeleteSponsorAd = (businessId, offerId) => {
+    triggerConfirm(
+      `Delete Sponsored Ad (For Me)`,
+      `Are you sure you want to remove sponsored status and hide this flyer from the homepage? (The flyer will remain on the merchant's business details page)`,
+      async () => {
+        try {
+          const storedToken = localStorage.getItem('ubt_token');
+          const res = await fetch(`http://localhost:5000/api/admin/sponsored-ads/${businessId}/${offerId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${storedToken}`
+            }
+          });
+          const data = await res.json();
+          if (data.success) {
+            showToast(data.message || 'Sponsored ad deleted successfully!', 'success');
+            loadPlatformRealData();
+          } else {
+            showToast(data.message || 'Failed to delete sponsored ad.', 'error');
+          }
+        } catch (err) {
+          console.error(err);
+          showToast('Error trying to delete sponsored ad.', 'error');
         }
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast(data.message || 'Sponsored ad deleted successfully!', 'success');
-        loadPlatformRealData();
-      } else {
-        showToast(data.message || 'Failed to delete sponsored ad.', 'error');
       }
-    } catch (err) {
-      console.error(err);
-      showToast('Error deleting sponsored ad.', 'error');
-    }
+    );
   };
 
   const updatePresetCategory = async (catId, payload) => {
@@ -7552,6 +7584,44 @@ export default function AdminDashboard() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Modal Dialog */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fadeIn text-[#001c41]">
+          <div className="w-full max-w-md bg-white border border-slate-200 shadow-2xl rounded-[24px] p-6 flex flex-col gap-5 text-left font-sans">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="font-extrabold text-sm uppercase tracking-wider">{confirmModal.title}</h3>
+              <button 
+                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} 
+                className="text-slate-400 hover:text-slate-600 transition-colors border-none bg-transparent cursor-pointer"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+            <p className="text-xs font-semibold leading-relaxed text-slate-660">
+              {confirmModal.message}
+            </p>
+            <div className="flex justify-end gap-3 pt-2">
+              <button 
+                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                className="px-4 py-2 border border-slate-202 bg-white hover:bg-slate-50 text-slate-600 text-xs font-extrabold rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmModal.onConfirm}
+                className={`px-5 py-2 text-white text-xs font-extrabold rounded-xl shadow-md transition-colors cursor-pointer border-none ${
+                  confirmModal.title.toLowerCase().includes('delete')
+                    ? 'bg-rose-600 hover:bg-rose-700'
+                    : 'bg-[#027244] hover:bg-[#005934]'
+                }`}
+              >
+                Confirm
+              </button>
+            </div>
           </div>
         </div>
       )}
