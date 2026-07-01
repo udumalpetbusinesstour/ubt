@@ -3576,7 +3576,7 @@ const handlePartnerAction = async (partnerId, action) => {
                         <div className="flex items-center justify-between text-xs font-bold text-slate-400 border-t border-slate-850 pt-4">
                           <span>Active Admins</span>
                           <div className={`flex items-center gap-1.5 ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>
-                            <span className="font-extrabold">4</span>
+                            <span className="font-extrabold">{admins.filter(a => a.status === 'Active' || a.status === 'active').length}</span>
                             <span 
                               onClick={() => setActiveTab('Admin Management')}
                               className="text-[8.5px] text-[#027244] hover:underline cursor-pointer font-black"
@@ -7570,11 +7570,75 @@ const handlePartnerAction = async (partnerId, action) => {
                     <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Manage your login email credentials and secure password keys.</span>
                   </div>
 
-                  <div className="bg-white border border-slate-200 rounded-[28px] p-6 shadow-sm max-w-xl text-[#001c41] font-sans flex flex-col gap-5">
+                  <form 
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const nameVal = e.target.fullName.value;
+                      const emailVal = e.target.email.value;
+                      const currentPass = e.target.currentPassword.value;
+                      const newPass = e.target.newPassword.value;
+                      const confirmPass = e.target.confirmPassword.value;
+
+                      if (!nameVal || !emailVal) {
+                        alert('Full Name and Email address are required.');
+                        return;
+                      }
+
+                      if (currentPass || newPass || confirmPass) {
+                        if (!currentPass || !newPass || !confirmPass) {
+                          alert('Please fill out current password, new password, and confirmation password to update your password.');
+                          return;
+                        }
+                        if (newPass !== confirmPass) {
+                          alert('New password and confirm password fields do not match.');
+                          return;
+                        }
+                      }
+
+                      try {
+                        const payload = {
+                          fullName: nameVal,
+                          email: emailVal
+                        };
+                        if (newPass) {
+                          payload.currentPassword = currentPass;
+                          payload.newPassword = newPass;
+                        }
+
+                        const res = await fetch('http://localhost:5000/api/auth/profile', {
+                          method: 'PUT',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
+                          },
+                          body: JSON.stringify(payload)
+                        });
+                        
+                        const data = await res.json();
+                        if (res.ok && data.success) {
+                          alert('Credentials updated successfully!');
+                          if (setUser && data.data) {
+                            setUser(data.data);
+                          }
+                          // Clear password fields
+                          e.target.currentPassword.value = '';
+                          e.target.newPassword.value = '';
+                          e.target.confirmPassword.value = '';
+                        } else {
+                          alert(data.message || 'Failed to update credentials.');
+                        }
+                      } catch (err) {
+                        console.error(err);
+                        alert('Network error updating profile settings.');
+                      }
+                    }}
+                    className="bg-white border border-slate-200 rounded-[28px] p-6 shadow-sm max-w-xl text-[#001c41] font-sans flex flex-col gap-5"
+                  >
                     <div className="flex flex-col gap-1 text-[11px] font-bold">
                       <span>Full Name</span>
                       <input 
                         type="text"
+                        name="fullName"
                         defaultValue={user?.fullName || 'Super Administrator'}
                         className="border border-slate-200 p-2.5 rounded-xl text-xs bg-slate-50 focus:outline-none"
                       />
@@ -7583,25 +7647,58 @@ const handlePartnerAction = async (partnerId, action) => {
                       <span>Contact Email Address</span>
                       <input 
                         type="email"
+                        name="email"
                         defaultValue={user?.email || 'superadmin@gmail.com'}
                         className="border border-slate-200 p-2.5 rounded-xl text-xs bg-slate-50 focus:outline-none"
                       />
                     </div>
-                    <div className="flex flex-col gap-1 text-[11px] font-bold">
-                      <span>Change Password</span>
-                      <input 
-                        type="password"
-                        placeholder="••••••••"
-                        className="border border-slate-200 p-2.5 rounded-xl text-xs bg-slate-50 focus:outline-none focus:border-[#027244]"
-                      />
+
+                    <div className="border-t border-slate-100 pt-4 mt-1">
+                      <span className="font-extrabold text-xs uppercase tracking-wider text-slate-400">Change Password</span>
+                      <span className="text-[10px] text-slate-400 font-semibold mt-1 block mb-3">Leave blank if you do not want to change your password.</span>
+                      
+                      <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-1 text-[11px] font-bold">
+                          <span>Current Password</span>
+                          <input 
+                            type="password"
+                            name="currentPassword"
+                            placeholder="Current Password"
+                            className="border border-slate-200 p-2.5 rounded-xl text-xs bg-slate-50 focus:outline-none focus:border-[#027244]"
+                          />
+                        </div>
+                        
+                        <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2">
+                          <div className="flex flex-col gap-1 text-[11px] font-bold">
+                            <span>New Password</span>
+                            <input 
+                              type="password"
+                              name="newPassword"
+                              placeholder="New Password"
+                              className="border border-slate-200 p-2.5 rounded-xl text-xs bg-slate-50 focus:outline-none focus:border-[#027244]"
+                            />
+                          </div>
+                          
+                          <div className="flex flex-col gap-1 text-[11px] font-bold">
+                            <span>Confirm New Password</span>
+                            <input 
+                              type="password"
+                              name="confirmPassword"
+                              placeholder="Confirm New Password"
+                              className="border border-slate-200 p-2.5 rounded-xl text-xs bg-slate-50 focus:outline-none focus:border-[#027244]"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
+
                     <button 
-                      onClick={() => alert('Credentials updated successfully!')}
-                      className="py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer mt-2"
+                      type="submit"
+                      className="py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer mt-2 border-none"
                     >
                       Update Profile
                     </button>
-                  </div>
+                  </form>
                 </div>
               )}
 
