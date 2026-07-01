@@ -6279,7 +6279,10 @@ function DashboardContent() {
                             </div>
                           )}
                         </div>
-                                        {/* TAB 4: REVIEWS */}
+                      </div>
+                    )}
+
+                    {/* TAB 4: REVIEWS */}
                     {previewTab === 'reviews' && (() => {
                       const allReviewsList = [
                         ...(localReviews || []).map(r => ({ ...r, isGoogle: r.source === 'google' || r.isGoogle || false })),
@@ -6376,8 +6379,7 @@ function DashboardContent() {
                           </div>
                         </div>
                       );
-                    })()}        </div>
-                    )}
+                    })()}
 
                     {/* TAB 5: OFFERS */}
                     {previewTab === 'offers' && (
