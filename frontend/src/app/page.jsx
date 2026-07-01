@@ -1,6 +1,28 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+const getCategorySlug = (name) => {
+  if (!name) return '/businesses';
+  if (name === 'More') return '/businesses?focus=categories';
+  
+  let targetName = name;
+  if (name === 'Hotels') targetName = 'Hotels & Lodges';
+  if (name === 'Shops') targetName = 'Shopping';
+  if (name === 'Services') targetName = 'Home Services';
+  if (name === 'Health') targetName = 'Health & Medical';
+  if (name === 'Automotive') targetName = 'Automobiles';
+  if (name === 'Real Estate') targetName = 'Real Estate & Construction';
+  if (name === 'Electronics') targetName = 'Electronics & Appliances';
+
+  const slug = targetName.toLowerCase()
+    .replace(/ & /g, '-and-')
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  return `/${slug}-in-udumalpet`;
+};
+
 const isGovernmentalOrPublic = (biz) => {
   if (!biz) return false;
   const parent = (biz.requestedParentCategory || '').toLowerCase();
@@ -689,7 +711,7 @@ export default function Home() {
           count: counts[name] || 0,
           avgRating: avgRatings[name] || 0,
           icon: iconMap[name] || <LayoutGrid className="h-7 w-7 text-slate-500" />,
-          path: `/businesses?category=${encodeURIComponent(name)}`
+          path: getCategorySlug(name)
         }))
         .sort((a, b) => {
           if (b.count !== a.count) {
@@ -948,6 +970,12 @@ export default function Home() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    if (!searchTerm.trim() && categoryTerm && categoryTerm !== 'All Categories') {
+      let slugUrl = getCategorySlug(categoryTerm);
+      if (locationTerm) slugUrl += `?locality=${encodeURIComponent(locationTerm)}`;
+      navigate(slugUrl);
+      return;
+    }
     let url = `/businesses?q=${encodeURIComponent(searchTerm)}`;
     if (locationTerm) url += `&locality=${encodeURIComponent(locationTerm)}`;
     if (categoryTerm && categoryTerm !== 'All Categories') url += `&category=${encodeURIComponent(categoryTerm)}`;
@@ -1070,7 +1098,7 @@ export default function Home() {
               {['Hotels', 'Shops', 'Services', 'Hospitals', 'Schools'].map((chip) => (
                 <Link 
                   key={chip} 
-                  to={`/businesses?category=${chip === 'Hospitals' ? 'Health' : chip === 'Schools' ? 'Education' : chip}`}
+                  to={getCategorySlug(chip === 'Hospitals' ? 'Health' : chip === 'Schools' ? 'Education' : chip)}
                   className="bg-white hover:bg-slate-50 border border-slate-200 py-1.5 px-3.5 rounded-lg transition-colors font-bold text-slate-600 shadow-sm hover:border-[#027244]"
                 >
                   {chip}
@@ -1183,7 +1211,7 @@ export default function Home() {
             {categoriesList.map((cat) => (
               <Link 
                 key={cat.name} 
-                to={cat.path}
+                to={getCategorySlug(cat.name)}
                 className="card-premium group rounded-2xl py-4.5 px-3 sm:py-6 sm:px-4 flex flex-col items-center justify-center gap-2.5 sm:gap-4 text-center cursor-pointer w-[130px] sm:w-[160px] shrink-0 snap-start"
               >
                 <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl flex items-center justify-center text-xl sm:text-2xl select-none transition-transform duration-500 ease-out-expo group-hover:scale-110 [&>svg]:h-5.5 [&>svg]:w-5.5 sm:[&>svg]:h-7 sm:[&>svg]:w-7">

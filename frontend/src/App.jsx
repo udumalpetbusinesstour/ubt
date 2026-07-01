@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useParams } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './app/page';
@@ -24,6 +24,17 @@ import UpdatePopup from './components/UpdatePopup';
 import BloodDonorsPage from './app/blood-donors/page';
 import PartnerRegister from './app/partner-register/page';
 import GlobalModalProvider from './components/GlobalModalProvider';
+
+function SlugRouteWrapper() {
+  const { id } = useParams();
+  const lowerId = (id || '').toLowerCase();
+  
+  if (lowerId.endsWith('-in-udumalpet')) {
+    return <BusinessesingsPage />;
+  } else {
+    return <BusinessDetail />;
+  }
+}
 
 function AppContent() {
   const location = useLocation();
@@ -94,7 +105,7 @@ function AppContent() {
           <Route path="/profile/:id" element={<UserProfile />} />
           <Route path="/blood-donors" element={<BloodDonorsPage />} />
           <Route path="/partner-register" element={<PartnerRegister />} />
-          <Route path="/:id" element={<BusinessDetail />} />
+          <Route path="/:id" element={<SlugRouteWrapper />} />
         </Routes>
       </main>
       {!hideNavAndFooter && <Footer />}

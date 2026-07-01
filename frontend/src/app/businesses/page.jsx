@@ -1,5 +1,5 @@
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useSearchParams, useNavigate, Link, useParams } from 'react-router-dom';
 import { 
   Search, MapPin, Grid, List, Star, ShieldCheck, HeartHandshake, PhoneCall, 
   Filter, RefreshCw, AlertCircle, Sparkles, Folder, Check, ArrowRight, ArrowLeft, 
@@ -223,6 +223,58 @@ function BusinessesList() {
   const [dbCategories, setDbCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  const { id: urlSlug } = useParams();
+
+  const normalizeRobust = (str) => {
+    if (!str) return '';
+    return str.toLowerCase()
+      .replace(/ & /g, '-and-')
+      .replace(/&/g, 'and')
+      .replace(/\band\b/g, '')
+      .replace(/[^a-z0-9]/g, '');
+  };
+
+  const getCategorySlug = (name) => {
+    if (!name) return '';
+    const slug = name.toLowerCase()
+      .replace(/ & /g, '-and-')
+      .replace(/&/g, 'and')
+      .replace(/[^a-z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    return `/${slug}-in-udumalpet`;
+  };
+
+  const resolvedFromSlug = useMemo(() => {
+    console.log('[SlugRoute] urlSlug is:', urlSlug, 'dbCategories length:', dbCategories.length);
+    if (!urlSlug || !urlSlug.toLowerCase().endsWith('-in-udumalpet')) {
+      return null;
+    }
+    const targetSlug = urlSlug.replace(/-in-udumalpet$/i, ''); // Remove '-in-udumalpet'
+    const normSlug = normalizeRobust(targetSlug);
+    console.log('[SlugRoute] targetSlug:', targetSlug, 'normSlug:', normSlug);
+    
+    for (const cat of dbCategories) {
+      const normCatName = normalizeRobust(cat.categoryName);
+      console.log('[SlugRoute] comparing category:', cat.categoryName, 'norm:', normCatName, 'with:', normSlug);
+      if (normCatName === normSlug) {
+        console.log('[SlugRoute] MATCHED category:', cat.categoryName);
+        return { type: 'category', value: cat.categoryName };
+      }
+      const matchedSub = (cat.subcategories || []).find(sub => {
+        const normSub = normalizeRobust(sub);
+        console.log('[SlugRoute] comparing subcategory:', sub, 'norm:', normSub, 'with:', normSlug);
+        return normSub === normSlug;
+      });
+      if (matchedSub) {
+        console.log('[SlugRoute] MATCHED subcategory:', matchedSub);
+        return { type: 'subcategory', value: matchedSub, parent: cat.categoryName };
+      }
+    }
+    console.log('[SlugRoute] NO MATCH FOUND');
+    return null;
+  }, [urlSlug, dbCategories]);
 
   const initialAnonForm = {
     name: '',
@@ -736,9 +788,9 @@ function BusinessesList() {
   const handleCategoryClick = async (categoryName) => {
     const parent = getParentCategory(categoryName);
     if (parent.toLowerCase() === categoryName.toLowerCase()) {
-      navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}`);
+      navigate(getCategorySlug(parent));
     } else {
-      navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}&subcategory=${encodeURIComponent(categoryName)}`);
+      navigate(getCategorySlug(categoryName));
     }
     
     // Background view increment
@@ -778,18 +830,29 @@ function BusinessesList() {
   };
 
   useEffect(() => {
-    const focusParam = searchParams.get('focus');
-    if (focusParam === 'categories') {
-      const catParam = searchParams.get('category');
-      const subParam = searchParams.get('subcategory');
-      setSelectedCategoryInExplore(catParam || null);
-      setSelectedSubcategoryInExplore(subParam || null);
+    if (resolvedFromSlug) {
+      if (resolvedFromSlug.type === 'category') {
+        setSelectedCategoryInExplore(resolvedFromSlug.value);
+        const subParam = searchParams.get('subcategory');
+        setSelectedSubcategoryInExplore(subParam || null);
+      } else {
+        setSelectedCategoryInExplore(resolvedFromSlug.parent);
+        setSelectedSubcategoryInExplore(resolvedFromSlug.value);
+      }
     } else {
-      setSelectedCategoryInExplore(null);
-      setSelectedSubcategoryInExplore(null);
+      const focusParam = searchParams.get('focus');
+      if (focusParam === 'categories') {
+        const catParam = searchParams.get('category');
+        const subParam = searchParams.get('subcategory');
+        setSelectedCategoryInExplore(catParam || null);
+        setSelectedSubcategoryInExplore(subParam || null);
+      } else {
+        setSelectedCategoryInExplore(null);
+        setSelectedSubcategoryInExplore(null);
+      }
     }
     setExplorePage(1);
-  }, [searchParams]);
+  }, [searchParams, urlSlug, resolvedFromSlug]);
 
   useEffect(() => {
     const fetchDbCategories = async () => {
@@ -813,7 +876,7 @@ function BusinessesList() {
     if (dbCategories.length > 0) {
       const catParam = searchParams.get('category');
       const focusParam = searchParams.get('focus');
-      if (!catParam && !focusParam) {
+      if (!catParam && !focusParam && !urlSlug) {
         const excludeParents = ['public sector', 'governmental organisations', 'government organisations', 'governmental organisation', 'government organisation', 'others'];
         
         const sortedDbCats = [...dbCategories].sort((a, b) => (b.views || 0) - (a.views || 0));
@@ -872,7 +935,7 @@ function BusinessesList() {
   // 1. Fetch businesses on searchParams change
   useEffect(() => {
     fetchBusinesses();
-  }, [searchParams]);
+  }, [searchParams, urlSlug, dbCategories]);
 
   // 2. Synchronize checked filter states from searchParams on load, param update, or dbCategories load
   useEffect(() => {
@@ -961,7 +1024,10 @@ function BusinessesList() {
       const q = searchParams.get('q');
       if (q) url += `q=${encodeURIComponent(q)}&`;
       
-      const cat = searchParams.get('category');
+      let cat = searchParams.get('category');
+      if (resolvedFromSlug) {
+        cat = resolvedFromSlug.value;
+      }
       if (cat && cat !== 'All Categories') url += `category=${encodeURIComponent(cat)}&`;
       
       const loc = searchParams.get('locality');
@@ -1001,7 +1067,10 @@ function BusinessesList() {
       if (q) {
         results = results.filter(b => b.name.toLowerCase().includes(q.toLowerCase()) || b.highlights.some(h => h.toLowerCase().includes(q.toLowerCase())));
       }
-      const cat = searchParams.get('category');
+      let cat = searchParams.get('category');
+      if (resolvedFromSlug) {
+        cat = resolvedFromSlug.value;
+      }
       if (cat && cat !== 'All Categories') {
         const catList = cat.split(',');
         results = results.filter(b => {
@@ -1337,7 +1406,7 @@ function BusinessesList() {
   };
 
   const focusParam = searchParams.get('focus');
-  const isCategoriesView = focusParam === 'categories';
+  const isCategoriesView = focusParam === 'categories' || !!resolvedFromSlug;
   const isAboutView = focusParam === 'about';
   const isContactView = focusParam === 'contact';
 
@@ -1882,7 +1951,7 @@ function BusinessesList() {
                                         body: JSON.stringify({ categoryName: cat.name })
                                       });
                                     } catch (e) {}
-                                    navigate(`/businesses?focus=categories&category=${encodeURIComponent(cat.name)}`);
+                                     navigate(getCategorySlug(cat.name));
                                   }}
                                   className="card-premium group rounded-3xl p-4 sm:p-6 cursor-pointer flex flex-col justify-between min-h-[7.5rem] sm:h-36 h-auto relative overflow-hidden bg-white border border-slate-200/65 hover:border-[#027244] transition-all"
                                 >
@@ -1954,7 +2023,7 @@ function BusinessesList() {
                         const parentIconStr = parentIconStringMap[selectedCategoryInExplore] || 'Store';
                         return (
                           <div 
-                            onClick={() => navigate(`/businesses?focus=categories&category=${encodeURIComponent(selectedCategoryInExplore)}&subcategory=All`)}
+                            onClick={() => navigate(`${getCategorySlug(selectedCategoryInExplore)}?subcategory=All`)}
                             className="bg-white border border-slate-200/60 rounded-2xl p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:border-emerald-100 hover:bg-emerald-50/30 transition-all duration-300 group"
                           >
                             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -1996,7 +2065,7 @@ function BusinessesList() {
                                } catch (err) {
                                  console.warn('Failed to increment category view:', err);
                                }
-                               navigate(`/businesses?focus=categories&category=${encodeURIComponent(selectedCategoryInExplore)}&subcategory=${encodeURIComponent(cat.categoryName)}`);
+                               navigate(getCategorySlug(cat.categoryName));
                              }}
                              className="bg-white border border-slate-200/60 rounded-2xl p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:border-emerald-100 hover:bg-emerald-50/30 transition-all duration-300 group"
                            >
@@ -2028,7 +2097,7 @@ function BusinessesList() {
                     <div className="flex flex-col gap-4 border-b border-slate-100 pb-4">
                       <div className="flex items-center gap-3">
                         <button 
-                          onClick={() => navigate(`/businesses?focus=categories&category=${encodeURIComponent(selectedCategoryInExplore)}`)}
+                          onClick={() => navigate(getCategorySlug(selectedCategoryInExplore))}
                           className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#027244] bg-slate-100 hover:bg-emerald-50/50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                         >
                           <ArrowLeft className="h-3.5 w-3.5" /> Back to {selectedCategoryInExplore}
@@ -2975,7 +3044,7 @@ function BusinessesList() {
                         <div 
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/businesses?category=${encodeURIComponent(biz.category)}`);
+                             navigate(getCategorySlug(biz.category));
                           }}
                           className="flex items-center gap-1.5 text-[10.5px] sm:text-xs text-slate-455 font-semibold mt-0.5 hover:text-[#027244] hover:underline cursor-pointer transition-colors duration-200 select-none group/badge w-fit"
                         >
