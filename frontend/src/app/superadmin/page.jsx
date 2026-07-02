@@ -3787,27 +3787,27 @@ const handlePartnerAction = async (partnerId, action) => {
                             });
                             setShowBizModal(true);
                           }}
-                          className={`flex items-center gap-3 p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
-                          <span className="text-sm font-black text-[#001c41] w-4 text-left">{top.rank}</span>
-                          <span className={`h-8 w-8 rounded-xl border flex items-center justify-center text-sm shrink-0 shadow-inner ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-                            {top.icon}
-                          </span>
-                          <div className="flex flex-col text-left flex-1 min-w-0">
-                            <span className={`text-xs font-black truncate leading-none ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{top.name}</span>
-
-                            <span className="text-[8px] text-slate-500 font-bold mt-1">{top.sector}</span>
+                          className={`flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
+                          <div className="flex items-center gap-3 flex-1 min-w-0 w-full">
+                            <span className="text-sm font-black text-[#001c41] w-4 text-left">{top.rank}</span>
+                            <span className={`h-8 w-8 rounded-xl border flex items-center justify-center text-sm shrink-0 shadow-inner ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+                              {top.icon}
+                            </span>
+                            <div className="flex flex-col text-left flex-1 min-w-0">
+                              <span className={`text-xs font-black truncate leading-none ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{top.name}</span>
+                              <span className="text-[8px] text-slate-500 font-bold mt-1">{top.sector}</span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3 text-right shrink-0">
-                            <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-6 justify-end sm:justify-start pl-14 sm:pl-0 shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
+                            <div className="flex flex-col gap-0.5 text-center sm:text-right">
                               <span className={`text-[10px] font-black ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{top.views}</span>
-
                               <span className="text-[8px] text-slate-500 font-bold">Views</span>
                             </div>
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-[10px] font-black text-emerald-450">★ {top.rate}</span>
+                            <div className="flex flex-col gap-0.5 text-center sm:text-right">
+                              <span className="text-[10px] font-black text-emerald-455">★ {top.rate}</span>
                               <span className="text-[8px] text-slate-500 font-bold">Rating</span>
                             </div>
-                            <div className="flex flex-col gap-0.5">
+                            <div className="flex flex-col gap-0.5 text-center sm:text-right">
                               <span className="text-[10px] font-black text-[#027244]">{top.leads}</span>
                               <span className="text-[8px] text-slate-500 font-bold">Leads</span>
                             </div>
@@ -5778,12 +5778,12 @@ const handlePartnerAction = async (partnerId, action) => {
 
                    <div className="w-full font-sans">
                     {/* SVG Premium Chart */}
-                    <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-6 font-sans ${
+                    <div className={`border rounded-[28px] p-4 sm:p-6 shadow-sm flex flex-col gap-6 font-sans ${
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                     }`}>
                       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                         <span className="font-extrabold text-xs uppercase tracking-wider text-slate-400">Monthly Revenue Graph (₹)</span>
-                        <div className="flex gap-2 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-fit border border-slate-200 dark:border-slate-800">
+                        <div className="flex flex-wrap gap-1.5 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-fit border border-slate-200 dark:border-slate-800">
                           {['total', 'subscription', 'event', 'ad'].map(type => (
                             <button
                               key={type}
