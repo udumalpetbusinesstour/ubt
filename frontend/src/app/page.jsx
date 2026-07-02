@@ -1045,7 +1045,7 @@ export default function Home() {
       {/* 1. Hero Section (Pixel Perfect Layout with User Uploaded Thirumoorthy Hills BG) */}
       <section className="w-full relative min-h-[500px] sm:min-h-[620px] bg-[#F8FAFC] flex items-center justify-center pt-4 pb-14 sm:pt-6 sm:pb-28 px-4 md:px-8 overflow-hidden z-0">
         
-        <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+        <div className="absolute inset-0 max-w-[1600px] mx-auto w-full h-full z-0 overflow-hidden">
           <img 
             src="/thirumoorthy_dam.png" 
             alt="Thirumoorthy Hills Background"
