@@ -4737,60 +4737,60 @@ function DashboardContent() {
               </div>
 
               {/* KPI Cards Row */}
-              <div className="flex lg:grid overflow-x-auto lg:overflow-x-visible gap-4 pb-3.5 lg:pb-0 w-full lg:grid-cols-4 snap-x snap-mandatory lg:snap-none scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full">
                 {/* Metric 1: Available Points */}
-                <div className="bg-white border border-slate-200 shadow-xs p-3 sm:p-4 rounded-2xl flex items-center gap-2.5 sm:gap-3.5 w-[165px] sm:w-[185px] lg:w-auto shrink-0 lg:shrink-0 lg:flex-1 snap-start">
-                  <div className="h-10.5 w-10.5 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100/50">
-                    <Gift className="h-5.5 w-5.5" />
+                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-3xl flex flex-col gap-3 w-full">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100/50">
+                    <Gift className="h-5 w-5" />
                   </div>
-                  <div className="flex flex-col overflow-hidden min-w-0 text-left">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-normal leading-tight">Available Points</span>
-                    <span className="text-lg font-black text-[#027244] leading-none mt-1.5">
+                  <div className="flex flex-col text-left">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-normal leading-tight">Available Points</span>
+                    <span className="text-xl font-black text-[#027244] leading-none mt-1.5 font-sans">
                       {referralsLoading ? '...' : (referralStats?.referralPoints || 0)} pts
                     </span>
-                    <span className="text-[9px] text-slate-400 font-bold mt-1.5 whitespace-normal">₹{referralsLoading ? '0' : (referralStats?.referralPoints || 0)} Value</span>
+                    <span className="text-[10px] text-slate-400 font-bold mt-1.5 whitespace-normal">₹{referralsLoading ? '0' : (referralStats?.referralPoints || 0)} Value</span>
                   </div>
                 </div>
 
                 {/* Metric 2: Total Referrals */}
-                <div className="bg-white border border-slate-200 shadow-xs p-3 sm:p-4 rounded-2xl flex items-center gap-2.5 sm:gap-3.5 w-[165px] sm:w-[185px] lg:w-auto shrink-0 lg:shrink-0 lg:flex-1 snap-start">
-                  <div className="h-10.5 w-10.5 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/50">
-                    <Users className="h-5.5 w-5.5" />
+                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-3xl flex flex-col gap-3 w-full">
+                  <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/50">
+                    <Users className="h-5 w-5" />
                   </div>
-                  <div className="flex flex-col overflow-hidden min-w-0 text-left">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-normal leading-tight">Total Referrals</span>
-                    <span className="text-lg font-black text-[#001c41] leading-none mt-1.5">
+                  <div className="flex flex-col text-left">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-normal leading-tight">Total Referrals</span>
+                    <span className="text-xl font-black text-[#001c41] leading-none mt-1.5 font-sans">
                       {referralsLoading ? '...' : (referralStats?.referrals?.filter(r => r.referredBusinessId)?.length || 0)}
                     </span>
-                    <span className="text-[9px] text-slate-400 font-bold mt-1.5 whitespace-normal">Invited Traders</span>
+                    <span className="text-[10px] text-slate-400 font-bold mt-1.5 whitespace-normal">Invited Traders</span>
                   </div>
                 </div>
 
                 {/* Metric 3: Successful Conversions */}
-                <div className="bg-white border border-slate-200 shadow-xs p-3 sm:p-4 rounded-2xl flex items-center gap-2.5 sm:gap-3.5 w-[165px] sm:w-[185px] lg:w-auto shrink-0 lg:shrink-0 lg:flex-1 snap-start">
-                  <div className="h-10.5 w-10.5 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100/50">
-                    <CheckCircle className="h-5.5 w-5.5" />
+                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-3xl flex flex-col gap-3 w-full">
+                  <div className="h-10 w-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100/50">
+                    <CheckCircle className="h-5 w-5" />
                   </div>
-                  <div className="flex flex-col overflow-hidden min-w-0 text-left">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-normal leading-tight">Completed Referrals</span>
-                    <span className="text-lg font-black text-purple-600 leading-none mt-1.5">
+                  <div className="flex flex-col text-left">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-normal leading-tight">Completed Referrals</span>
+                    <span className="text-xl font-black text-purple-600 leading-none mt-1.5 font-sans">
                       {referralsLoading ? '...' : (referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0)}
                     </span>
-                    <span className="text-[9px] text-slate-400 font-bold mt-1.5 whitespace-normal">Earned 99 pts each</span>
+                    <span className="text-[10px] text-slate-400 font-bold mt-1.5 whitespace-normal">Earned 99 pts each</span>
                   </div>
                 </div>
 
                 {/* Metric 4: Payouts requested */}
-                <div className="bg-white border border-slate-200 shadow-xs p-3 sm:p-4 rounded-2xl flex items-center gap-2.5 sm:gap-3.5 w-[165px] sm:w-[185px] lg:w-auto shrink-0 lg:shrink-0 lg:flex-1 snap-start">
-                  <div className="h-10.5 w-10.5 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100/50">
-                    <CreditCard className="h-5.5 w-5.5" />
+                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-3xl flex flex-col gap-3 w-full">
+                  <div className="h-10 w-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100/50">
+                    <CreditCard className="h-5 w-5" />
                   </div>
-                  <div className="flex flex-col overflow-hidden min-w-0 text-left">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-normal leading-tight">Redeemed Requests</span>
-                    <span className="text-lg font-black text-amber-600 leading-none mt-1.5">
+                  <div className="flex flex-col text-left">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-normal leading-tight">Redeemed Requests</span>
+                    <span className="text-xl font-black text-amber-600 leading-none mt-1.5 font-sans">
                       {redemptionsLoading ? '...' : (redemptionRequests?.length || 0)}
                     </span>
-                    <span className="text-[9px] text-slate-400 font-bold mt-1.5 whitespace-normal">Refund Payouts</span>
+                    <span className="text-[10px] text-slate-400 font-bold mt-1.5 whitespace-normal">Refund Payouts</span>
                   </div>
                 </div>
               </div>
