@@ -3606,7 +3606,7 @@ const handlePartnerAction = async (partnerId, action) => {
                       </div>
                       
                       <div className="flex-1 overflow-x-auto py-3">
-                        <table className={`w-full text-xs font-semibold ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                        <table className={`min-w-[900px] w-full text-xs font-semibold ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
 
                           <thead>
                             <tr className={`text-[9px] text-slate-500 uppercase tracking-widest border-b text-left ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
@@ -5059,7 +5059,7 @@ const handlePartnerAction = async (partnerId, action) => {
                       <div className={`overflow-x-auto border rounded-2xl ${
                         themeMode === 'dark' ? 'border-slate-800' : 'border-slate-200'
                       }`}>
-                        <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                        <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                           <thead className={`uppercase text-[9px] font-black tracking-wider border-b ${
                             themeMode === 'dark' ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-400'
                           }`}>
@@ -5651,7 +5651,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   <div className={`overflow-x-auto border rounded-[28px] ${
                     themeMode === 'dark' ? 'bg-slate-900/20 border-slate-800' : 'bg-white border-slate-200'
                   }`}>
-                    <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                    <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                       <thead className={`uppercase text-[9px] font-black tracking-wider border-b ${
                         themeMode === 'dark' ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-450'
                       }`}>
@@ -5831,7 +5831,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   }`}>
                     <h3 className="font-extrabold text-sm uppercase tracking-wider text-slate-450">Recent Platform Transactions</h3>
                     <div className="overflow-x-auto border border-slate-200/60 rounded-2xl">
-                      <table className="w-full border-collapse text-left text-xs font-semibold text-slate-650">
+                      <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-650">
                         <thead className={`uppercase text-[9px] font-black tracking-wider border-b ${
                           themeMode === 'dark' ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-450'
                         }`}>
@@ -6531,7 +6531,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   <div className={`border rounded-[28px] p-6 font-sans overflow-x-auto ${
                     themeMode === 'dark' ? 'bg-slate-900/20 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
-                    <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                    <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                       <thead className={`uppercase text-[9px] font-black tracking-wider border-b ${
                         themeMode === 'dark' ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-450'
                       }`}>
@@ -6627,7 +6627,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     <div className={`overflow-x-auto border rounded-[28px] ${
                       themeMode === 'dark' ? 'bg-slate-900/20 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                     }`}>
-                      <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                      <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                         <thead className={`uppercase text-[9px] font-black tracking-wider border-b ${
                           themeMode === 'dark' ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-450'
                         }`}>
@@ -6892,7 +6892,7 @@ const handlePartnerAction = async (partnerId, action) => {
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'
                     }`}>
                       <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-left text-xs font-semibold text-slate-400">
+                        <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-400">
                           <thead>
                             <tr className={`border-b ${
                               themeMode === 'dark' ? 'bg-slate-950 border-slate-850 text-slate-450' : 'bg-slate-50 border-slate-100 text-slate-500'
@@ -7074,7 +7074,7 @@ const handlePartnerAction = async (partnerId, action) => {
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'
                     }`}>
                       <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-left text-xs font-semibold text-slate-400">
+                        <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-400">
                           <thead>
                             <tr className={`border-b ${
                               themeMode === 'dark' ? 'bg-slate-950 border-slate-850 text-slate-455' : 'bg-slate-50 border-slate-100 text-slate-500'
@@ -7176,7 +7176,7 @@ const handlePartnerAction = async (partnerId, action) => {
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'
                     }`}>
                       <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-left text-xs font-semibold text-slate-400">
+                        <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-400">
                           <thead>
                             <tr className={`border-b ${
                               themeMode === 'dark' ? 'bg-slate-950 border-slate-850 text-slate-450' : 'bg-slate-50 border-slate-100 text-slate-500'
@@ -7282,7 +7282,7 @@ const handlePartnerAction = async (partnerId, action) => {
                       </div>
 
                       <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-left text-xs font-semibold text-slate-400">
+                        <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-400">
                           <thead>
                             <tr className={`border-b ${
                               themeMode === 'dark' ? 'bg-slate-950 border-slate-850 text-slate-450' : 'bg-slate-50 border-slate-100 text-slate-500'
@@ -7437,7 +7437,7 @@ const handlePartnerAction = async (partnerId, action) => {
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'
                     }`}>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="min-w-[900px] w-full text-left border-collapse">
                           <thead>
                             <tr className={`border-b ${
                               themeMode === 'dark' ? 'bg-slate-950/70 border-slate-800 text-slate-400' : 'bg-slate-50/70 border-slate-100 text-slate-500'
@@ -7556,7 +7556,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
+                      <table className="min-w-[900px] w-full border-collapse">
                         <thead>
                           <tr className={`border-b text-[10px] font-black uppercase tracking-wider text-left ${
                             themeMode === 'dark' ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-150 text-slate-505'
@@ -7898,7 +7898,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   <div className={`overflow-x-auto border rounded-[28px] transition-colors ${
                     themeMode === 'dark' ? 'bg-[#111827] border-slate-800' : 'bg-white border-slate-200'
                   }`}>
-                    <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                    <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                       <thead className={`uppercase text-[9px] font-black tracking-wider border-b transition-colors ${
                         themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-455'
                       }`}>

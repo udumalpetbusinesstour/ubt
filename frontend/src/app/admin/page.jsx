@@ -2420,7 +2420,7 @@ export default function AdminDashboard() {
                     {/* Sub-tab content */}
                     {auditSubTab === 'Businesses' && (
                       <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-                        <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                        <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                           <thead className="bg-slate-50 border-b border-slate-200 uppercase text-[9px] font-black text-slate-450 tracking-wider">
                             <tr>
                               <th className="p-4.5">Business Profile</th>
@@ -2781,7 +2781,7 @@ export default function AdminDashboard() {
 
                   <div className="bg-white border border-slate-200/80 shadow-xs rounded-[28px] overflow-hidden">
                     <div className="overflow-x-auto">
-                      <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                      <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                         <thead className="bg-slate-50 border-b border-slate-200 uppercase text-[9px] font-black text-slate-450 tracking-wider">
                           <tr>
                             <th className="p-4.5">Business / Owner</th>
@@ -3776,7 +3776,7 @@ export default function AdminDashboard() {
                       {/* SUBTAB 1: OVERRIDE */}
                       {subscriptionTab === 'override' && (
                         <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-                          <table className="w-full text-left text-xs font-semibold text-slate-650">
+                          <table className="min-w-[900px] w-full text-left text-xs font-semibold text-slate-650">
                             <thead className="bg-slate-50 border-b border-slate-200 text-[9px] font-black text-slate-450 uppercase tracking-widest">
                               <tr>
                                 <th className="p-4">Business Name</th>
@@ -3875,7 +3875,7 @@ export default function AdminDashboard() {
                       {/* SUBTAB 2: SUBSCRIPTIONS LIST */}
                       {subscriptionTab === 'subscriptions' && (
                         <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-                          <table className="w-full text-left text-xs font-semibold text-slate-650">
+                          <table className="min-w-[900px] w-full text-left text-xs font-semibold text-slate-650">
                             <thead className="bg-slate-50 border-b border-slate-200 text-[9px] font-black text-slate-450 uppercase tracking-widest">
                               <tr>
                                 <th className="p-4">Owner / Merchant</th>
@@ -3940,7 +3940,7 @@ export default function AdminDashboard() {
                       {/* SUBTAB 3: PAYMENTS LIST */}
                       {subscriptionTab === 'payments' && (
                         <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-                          <table className="w-full text-left text-xs font-semibold text-slate-650">
+                          <table className="min-w-[900px] w-full text-left text-xs font-semibold text-slate-650">
                             <thead className="bg-slate-50 border-b border-slate-200 text-[9px] font-black text-slate-450 uppercase tracking-widest">
                               <tr>
                                 <th className="p-4">Billing Date</th>
@@ -4319,7 +4319,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                        <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                           <thead>
                             <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[9px]">
                               <th className="py-3.5 px-6">Partner Identity</th>
@@ -4488,7 +4488,7 @@ export default function AdminDashboard() {
                   {referralSubTab === 'approvals_list' && (
                     <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden">
                       <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                        <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                           <thead>
                             <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[9px]">
                               <th className="py-3.5 px-6">Partner Identity</th>
@@ -4580,7 +4580,7 @@ export default function AdminDashboard() {
                   {referralSubTab === 'rejected_list' && (
                     <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden">
                       <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                        <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                           <thead>
                             <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[9px]">
                               <th className="py-3.5 px-6">Partner Identity</th>
@@ -4678,7 +4678,7 @@ export default function AdminDashboard() {
                       </div>
 
                       <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                        <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                           <thead>
                             <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[9px]">
                               <th className="py-3.5 px-6">Partner Details</th>
@@ -4881,7 +4881,7 @@ export default function AdminDashboard() {
                       {/* Referrals Moderation List Table */}
                       <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden font-sans">
                         <div className="overflow-x-auto">
-                          <table className="w-full border-collapse">
+                          <table className="min-w-[900px] w-full border-collapse">
                             <thead>
                               <tr className="bg-slate-50 border-b border-slate-150 text-[10px] font-black text-slate-450 uppercase tracking-wider text-left">
                                 <th className="px-6 py-4">Referrer (Invited By)</th>
@@ -5078,7 +5078,7 @@ export default function AdminDashboard() {
                       {/* Redemptions Table */}
                       <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden font-sans">
                         <div className="overflow-x-auto">
-                          <table className="w-full border-collapse">
+                          <table className="min-w-[900px] w-full border-collapse">
                             <thead>
                               <tr className="bg-slate-50 border-b border-slate-150 text-[10px] font-black text-slate-455 uppercase tracking-wider text-left">
                                 <th className="px-6 py-4">Merchant</th>
@@ -5191,7 +5191,7 @@ export default function AdminDashboard() {
                       {/* Business Points Table */}
                       <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden font-sans">
                         <div className="overflow-x-auto">
-                          <table className="w-full border-collapse">
+                          <table className="min-w-[900px] w-full border-collapse">
                             <thead>
                               <tr className="bg-slate-50 border-b border-slate-150 text-[10px] font-black text-slate-455 uppercase tracking-wider text-left">
                                 <th className="px-6 py-4">Business Name</th>
@@ -6181,7 +6181,7 @@ export default function AdminDashboard() {
                   ) : (
                     <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] overflow-hidden">
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="min-w-[900px] w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 text-[10px] font-black uppercase tracking-wider">
                               <th className="py-4 px-6">Email Address</th>
@@ -6240,7 +6240,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="overflow-x-auto border border-slate-200 rounded-[28px] bg-white">
-                    <table className="w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                    <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                       <thead className="uppercase text-[9px] font-black tracking-wider border-b bg-slate-50 border-slate-200 text-slate-455">
                         <tr>
                           <th className="p-4.5 w-12 text-center">
