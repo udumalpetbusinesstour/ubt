@@ -3955,27 +3955,24 @@ function DashboardContent() {
   // getDaysRemaining moved outside component to prevent TDZ error
 
   const copyReviewLink = async () => {
-    if (!business || !business._id) {
-      alert("Business details not loaded yet.");
-      return;
-    }
+    if (!business || !business._id) return;
     const url = `${window.location.origin}/${business.slug || business._id}?tab=reviews`;
     if (navigator.share) {
       try {
         await navigator.share({
           title: `${business.name} - Reviews`,
-          text: `Leave a review for ${business.name} on Udumalpet Business Tour:`,
+          text: `Share your experience or write a review for ${business.name} on Udumalpet Business Tour!`,
           url
         });
       } catch (err) {
         if (err.name !== 'AbortError') {
           navigator.clipboard.writeText(url);
-          alert("Review link copied to clipboard!");
+          alert("Review section link copied to clipboard!");
         }
       }
     } else {
       navigator.clipboard.writeText(url);
-      alert("Review link copied to clipboard!");
+      alert("Review section link copied to clipboard!");
     }
   };
 

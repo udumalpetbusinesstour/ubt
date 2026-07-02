@@ -287,7 +287,7 @@ async function validateAddressAndBoundary(address, pincode, userLat, userLng) {
 
         let geocodedPincode = '';
         for (const comp of result.address_components) {
-          if (comp.types.includes('postal_code')) {
+          if (comp.types && comp.types.includes('postal_code')) {
             geocodedPincode = comp.long_name;
             break;
           }
@@ -1113,12 +1113,12 @@ async function fetchLegacyDetails(placeId, cid, apiKey, extractedName, extracted
       let locality = 'Udumalpet';
       if (legacyResult.address_components) {
         for (const comp of legacyResult.address_components) {
-          if (comp.types.includes('postal_code')) {
+          if (comp.types && comp.types.includes('postal_code')) {
             pincode = comp.long_name;
           }
-          if (comp.types.includes('sublocality') || comp.types.includes('neighborhood')) {
+          if (comp.types && (comp.types.includes('sublocality') || comp.types.includes('neighborhood'))) {
             locality = comp.long_name;
-          } else if (!locality && comp.types.includes('locality')) {
+          } else if (!locality && comp.types && comp.types.includes('locality')) {
             locality = comp.long_name;
           }
         }
@@ -1205,12 +1205,12 @@ router.post('/google-autofill', async (req, res) => {
           let locality = '';
           if (result.addressComponents) {
             for (const comp of result.addressComponents) {
-              if (comp.types.includes('postal_code')) {
+              if (comp.types && comp.types.includes('postal_code')) {
                 pincode = comp.longText;
               }
-              if (comp.types.includes('sublocality') || comp.types.includes('neighborhood')) {
+              if (comp.types && (comp.types.includes('sublocality') || comp.types.includes('neighborhood'))) {
                 locality = comp.longText;
-              } else if (!locality && comp.types.includes('locality')) {
+              } else if (!locality && comp.types && comp.types.includes('locality')) {
                 locality = comp.longText;
               }
             }
@@ -1484,12 +1484,12 @@ router.post('/google-autofill-link', async (req, res) => {
             let locality = '';
             if (result.addressComponents) {
               for (const comp of result.addressComponents) {
-                if (comp.types.includes('postal_code')) {
+                if (comp.types && comp.types.includes('postal_code')) {
                   pincode = comp.longText;
                 }
-                if (comp.types.includes('sublocality') || comp.types.includes('neighborhood')) {
+                if (comp.types && (comp.types.includes('sublocality') || comp.types.includes('neighborhood'))) {
                   locality = comp.longText;
-                } else if (!locality && comp.types.includes('locality')) {
+                } else if (!locality && comp.types && comp.types.includes('locality')) {
                   locality = comp.longText;
                 }
               }
@@ -1700,7 +1700,7 @@ router.post('/validate-address', async (req, res) => {
         // Verify pincode in geocoded components
         let geocodedPincode = '';
         for (const comp of result.address_components) {
-          if (comp.types.includes('postal_code')) {
+          if (comp.types && comp.types.includes('postal_code')) {
             geocodedPincode = comp.long_name;
             break;
           }
