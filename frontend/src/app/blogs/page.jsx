@@ -557,7 +557,7 @@ export default function BlogsPage() {
       </section>
 
       {/* Main Content Wrap */}
-      <div className="max-w-[1600px] w-full px-4 md:px-8 mt-12 flex flex-col gap-12">
+      <div className="mx-auto max-w-[1600px] w-full px-4 md:px-8 mt-12 flex flex-col gap-12">
         
         {/* 2. Featured Articles Section (Only shown when viewing all categories and no active search filter) */}
         {activeCategory === 'All' && !searchQuery && featuredBlogs.length > 0 && (

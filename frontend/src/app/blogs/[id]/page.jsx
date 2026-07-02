@@ -356,7 +356,7 @@ export default function BlogDetail() {
     <div className="w-full flex flex-col items-center bg-[#F8FAFC] pb-16 font-sans">
       
       {/* Container */}
-      <div className="max-w-6xl w-full px-4 md:px-8 mt-8 flex flex-col gap-6 text-left">
+      <div className="mx-auto max-w-6xl w-full px-4 md:px-8 mt-8 flex flex-col gap-6 text-left">
         
         {/* Back Link */}
         <Link 

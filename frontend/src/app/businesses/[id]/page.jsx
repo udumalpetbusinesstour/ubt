@@ -1824,7 +1824,7 @@ Please confirm availability and delivery time.`;
       )}
 
       {/* Main Grid Content */}
-      <section className="max-w-[1600px] w-full px-4 md:px-8 py-10 relative">
+      <section className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-10 relative">
         <div 
           className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full"
           style={{

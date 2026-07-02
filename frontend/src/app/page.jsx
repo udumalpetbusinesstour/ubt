@@ -1045,8 +1045,7 @@ export default function Home() {
       {/* 1. Hero Section (Pixel Perfect Layout with User Uploaded Thirumoorthy Hills BG) */}
       <section className="w-full relative min-h-[500px] sm:min-h-[620px] bg-[#F8FAFC] flex items-center justify-center pt-4 pb-14 sm:pt-6 sm:pb-28 px-4 md:px-8 overflow-hidden z-0">
         
-        {/* Background Image wrapper to prevent scaling blur on ultra-wide screens */}
-        <div className="absolute inset-0 max-w-[1680px] 2xl:max-w-[1820px] mx-auto w-full h-full z-0 overflow-hidden">
+        <div className="absolute inset-0 max-w-[1600px] mx-auto w-full h-full z-0 overflow-hidden">
           <img 
             src="/thirumoorthy_dam.png" 
             alt="Thirumoorthy Hills Background"
@@ -1057,7 +1056,7 @@ export default function Home() {
         </div>
 
         {/* Hero main body */}
-        <div className="relative max-w-[1680px] 2xl:max-w-[1820px] w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center z-20">
+        <div className="relative max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center z-20">
           
           {/* Left panel: text & search */}
           <div className="lg:col-span-8 flex flex-col items-start text-left">
@@ -1176,7 +1175,7 @@ export default function Home() {
       </section>
 
       {/* 2. Four Trust Indicators Cards (Row as a single unified bar matching mockup) */}
-      <section className="max-w-[1600px] w-full px-4 md:px-8 z-10 -mt-8">
+      <section className="mx-auto max-w-[1600px] w-full px-4 md:px-8 z-10 -mt-8">
         <div className="bg-white border border-slate-200/30 rounded-[20px] shadow-none md:shadow-lg py-5 px-6 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-0 lg:divide-x lg:divide-slate-100">
           {[
             { icon: <ShieldCheck className="h-5.5 w-5.5 text-[#027244]" />, title: 'Verified Businesses', desc: 'All businesses are manually verified' },
@@ -1207,7 +1206,7 @@ export default function Home() {
       </section>
 
       {/* 3. Top Categories Section (Using premium vector icons) */}
-      <section className="max-w-[1600px] w-full px-4 md:px-8 py-6 md:py-10 flex flex-col gap-4 md:gap-8">
+      <section className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-6 md:py-10 flex flex-col gap-4 md:gap-8">
         <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
           <div>
             <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight">Top Categories</h2>
@@ -1258,7 +1257,7 @@ export default function Home() {
       </section>
 
       {/* 4. Featured Businesses Section (With side chevrons!) */}
-      <section className="max-w-[1600px] w-full px-4 md:px-8 py-6 md:py-12 flex flex-col gap-4 md:gap-8 relative">
+      <section className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-6 md:py-12 flex flex-col gap-4 md:gap-8 relative">
         <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
           <div>
             <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight">Featured Businesses</h2>
@@ -1399,7 +1398,7 @@ export default function Home() {
     </section>
 
       {/* 4.5 Sponsored Ads Auto-scrolling Banner Section */}
-      <section className="max-w-[1600px] w-full px-4 md:px-8 py-6 flex flex-col gap-4">
+      <section className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-6 flex flex-col gap-4">
         <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
           <div>
             <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight flex items-center gap-2">
@@ -1604,7 +1603,7 @@ export default function Home() {
       )}
 
       {/* 6. How It Works Section (Connected with dashed lines) */}
-      <section id="how-it-works" className="max-w-[1600px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col items-center gap-6 md:gap-12">
+      <section id="how-it-works" className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col items-center gap-6 md:gap-12">
         <div className="text-center max-w-md">
           <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">How It Works</h2>
           <p className="text-sm text-slate-500 font-medium mt-2">Connecting local buyers with verified businesses in four easy steps</p>
@@ -1808,7 +1807,7 @@ export default function Home() {
       </section>
 
       {/* How It Works for Businesses Section (Connected with dashed lines) */}
-      <section id="how-it-works-business" className="max-w-[1600px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col items-center gap-6 md:gap-12 border-t border-slate-200/50">
+      <section id="how-it-works-business" className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col items-center gap-6 md:gap-12 border-t border-slate-200/50">
         <div className="text-center max-w-md">
           <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Steps to Register</h2>
           <p className="text-sm text-slate-500 font-medium mt-2">Follow these simple steps to list and verify your business on Udumalpet Business Tour</p>
@@ -1905,7 +1904,7 @@ export default function Home() {
       </section>
 
       {/* 8. FAQ Section */}
-      <section id="faq" className="max-w-[1600px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col gap-6 md:gap-12 border-t border-slate-200/50">
+      <section id="faq" className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col gap-6 md:gap-12 border-t border-slate-200/50">
         
         {/* Header Block: Image left to FAQ heading */}
         <div className="w-full flex flex-col md:flex-row items-center gap-6 md:gap-10 text-center md:text-left">

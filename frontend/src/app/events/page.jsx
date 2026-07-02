@@ -1621,7 +1621,7 @@ export default function EventsPage() {
       </section>
 
       {/* 2. Main content grids */}
-      <section className="max-w-[1600px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <section className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* Left Column Listings (Col-span-3) */}
         <div className="lg:col-span-3 flex flex-col gap-6">

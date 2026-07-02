@@ -171,94 +171,96 @@ export default function Navbar() {
   return (
     <header className="w-full flex flex-col z-50 sticky top-0 bg-white shadow-xs">
       {/* Top Banner Bar */}
-      <div className="hidden lg:flex w-full bg-slate-50 border-b border-slate-200 py-2 px-4 md:px-8 text-xs text-slate-600 justify-between items-center">
-        <div className="flex items-center gap-1.5 font-medium">
-          <MapPin className="h-3.5 w-3.5 text-emerald-600" />
-          <span>Udumalpet, Tamil Nadu</span>
-        </div>
-        <div className="flex items-center gap-6 font-medium">
-          <Link to="/add-business" className="hover:text-emerald-600 transition-colors">
-            List Your Business
-          </Link>
-          {!user ? (
-            <>
-              <Link to={getNavbarAuthPath('/login')} className="hover:text-emerald-600 transition-colors">
-                Login
-              </Link>
-              <Link
-                to={getNavbarAuthPath('/register')}
-                className="bg-emerald-600 text-white font-semibold py-1 px-3.5 rounded hover:bg-emerald-700 transition-colors"
-              >
-                Register
-              </Link>
-            </>
-          ) : (
-            <div className="flex items-center gap-4">
-              {/* Notification bell */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative p-1 text-slate-600 hover:text-emerald-600"
+      <div className="hidden lg:flex w-full bg-slate-50 border-b border-slate-200 py-2 px-4 md:px-8 text-xs text-slate-600 items-center">
+        <div className="max-w-[1600px] w-full mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-1.5 font-medium">
+            <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+            <span>Udumalpet, Tamil Nadu</span>
+          </div>
+          <div className="flex items-center gap-6 font-medium">
+            <Link to="/add-business" className="hover:text-emerald-600 transition-colors">
+              List Your Business
+            </Link>
+            {!user ? (
+              <>
+                <Link to={getNavbarAuthPath('/login')} className="hover:text-emerald-600 transition-colors">
+                  Login
+                </Link>
+                <Link
+                  to={getNavbarAuthPath('/register')}
+                  className="bg-emerald-600 text-white font-semibold py-1 px-3.5 rounded hover:bg-emerald-700 transition-colors"
                 >
-                  <Bell className="h-4 w-4" />
-                  {notifications.length > 0 && (
-                    <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 animate-ping" />
+                  Register
+                </Link>
+              </>
+            ) : (
+              <div className="flex items-center gap-4">
+                {/* Notification bell */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className="relative p-1 text-slate-600 hover:text-emerald-600"
+                  >
+                    <Bell className="h-4 w-4" />
+                    {notifications.length > 0 && (
+                      <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 animate-ping" />
+                    )}
+                  </button>
+                  {showNotifications && (
+                    <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded shadow-xl py-2 z-50 text-slate-800">
+                      <div className="px-4 py-1.5 border-b border-slate-100 flex justify-between items-center">
+                        <span className="font-bold text-slate-700">Alerts ({notifications.length})</span>
+                        {notifications.length > 0 && (
+                          <button onClick={markAllRead} className="text-emerald-600 hover:underline text-[10px]">
+                            Clear all
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <div className="p-4 text-center text-slate-400 text-xs">No new notifications</div>
+                        ) : (
+                          notifications.map((n) => (
+                            <div key={n._id} className="p-3 border-b border-slate-50 hover:bg-slate-50 text-[11px] leading-relaxed">
+                               <p className="text-slate-600">{n.message}</p>
+                               <span className="text-[9px] text-slate-400 mt-1 block">
+                                 {new Date(n.createdAt).toLocaleDateString()}
+                               </span>
+                             </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   )}
-                </button>
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded shadow-xl py-2 z-50 text-slate-800">
-                    <div className="px-4 py-1.5 border-b border-slate-100 flex justify-between items-center">
-                      <span className="font-bold text-slate-700">Alerts ({notifications.length})</span>
-                      {notifications.length > 0 && (
-                        <button onClick={markAllRead} className="text-emerald-600 hover:underline text-[10px]">
-                          Clear all
-                        </button>
-                      )}
-                    </div>
-                    <div className="max-h-60 overflow-y-auto">
-                      {notifications.length === 0 ? (
-                        <div className="p-4 text-center text-slate-400 text-xs">No new notifications</div>
-                      ) : (
-                        notifications.map((n) => (
-                          <div key={n._id} className="p-3 border-b border-slate-50 hover:bg-slate-50 text-[11px] leading-relaxed">
-                             <p className="text-slate-600">{n.message}</p>
-                             <span className="text-[9px] text-slate-400 mt-1 block">
-                               {new Date(n.createdAt).toLocaleDateString()}
-                             </span>
-                           </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+                </div>
 
-              {user.role === 'superadmin' || user.role === 'admin' ? (
-                <Link
-                  to={user.role === 'superadmin' ? '/superadmin' : '/admin'}
-                  className="hover:text-emerald-600 font-semibold flex items-center gap-1"
+                {user.role === 'superadmin' || user.role === 'admin' ? (
+                  <Link
+                    to={user.role === 'superadmin' ? '/superadmin' : '/admin'}
+                    className="hover:text-emerald-600 font-semibold flex items-center gap-1"
+                  >
+                    <User className="h-3.5 w-3.5" />
+                    <span>Admin Panel</span>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/dashboard"
+                    className="hover:text-emerald-600 font-semibold flex items-center gap-1"
+                  >
+                    <User className="h-3.5 w-3.5" />
+                    <span>Dashboard</span>
+                  </Link>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="text-red-600 hover:text-red-800 font-semibold flex items-center gap-1 cursor-pointer bg-transparent border-none"
                 >
-                  <User className="h-3.5 w-3.5" />
-                  <span>Admin Panel</span>
-                </Link>
-              ) : (
-                <Link
-                  to="/dashboard"
-                  className="hover:text-emerald-600 font-semibold flex items-center gap-1"
-                >
-                  <User className="h-3.5 w-3.5" />
-                  <span>Dashboard</span>
-                </Link>
-              )}
-              <button
-                onClick={handleLogout}
-                className="text-red-600 hover:text-red-800 font-semibold flex items-center gap-1 cursor-pointer bg-transparent border-none"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                <span>Logout</span>
-              </button>
-            </div>
-          )}
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

@@ -1458,7 +1458,7 @@ function BusinessesList() {
         </section>
 
         {/* Content sections */}
-        <section className="max-w-6xl w-full px-4 md:px-8 py-12 text-left">
+        <section className="mx-auto max-w-6xl w-full px-4 md:px-8 py-12 text-left">
           <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 flex flex-col gap-6 font-sans">
             <h3 className="font-extrabold text-[#001c41] text-base border-b border-slate-100 pb-3">
               Official {docTitle} — Last Updated: {isTermsView ? 'June 2026' : 'May 30, 2026'}
@@ -1639,7 +1639,7 @@ function BusinessesList() {
         </section>
 
         {/* Content sections */}
-        <section className="max-w-6xl w-full px-4 md:px-8 py-12 grid grid-cols-1 md:grid-cols-5 gap-8">
+        <section className="mx-auto max-w-6xl w-full px-4 md:px-8 py-12 grid grid-cols-1 md:grid-cols-5 gap-8">
           
           {/* Left Column: Form (3 cols) */}
           <div className="md:col-span-3 bg-white border border-slate-200 shadow-sm rounded-3xl p-6 md:p-8 text-left flex flex-col gap-5">
@@ -1890,7 +1890,7 @@ function BusinessesList() {
         </section>
 
         {/* Main Two-Column Split Grid */}
-        <section className="max-w-[1600px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <section className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
           
           {/* Left Column: Main categories grid, search results, or subcategory drilldown */}
           <div className="lg:col-span-3 flex flex-col gap-6">
@@ -2862,7 +2862,7 @@ function BusinessesList() {
       )}
 
       {/* Main Two-column Content Grid */}
-      <section className="max-w-[1600px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <section className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* Mobile Filter Toggle Button */}
         <div className="lg:hidden flex items-center justify-between gap-4 w-full bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm mb-1.5 text-left col-span-1">
@@ -3209,7 +3209,7 @@ function BusinessesList() {
       </section>
 
       {/* Footer Trust Bar & Business Callout (Combined in one gorgeous container as per mockup crop) */}
-      <div className="max-w-[1600px] w-full border border-slate-200/80 bg-white rounded-3xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 mt-12 shadow-sm font-sans">
+      <div className="mx-auto max-w-[1600px] w-full border border-slate-200/80 bg-white rounded-3xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 mt-12 shadow-sm font-sans">
         
         {/* Left Col (Col-span-9): Solid Navy Blue panel with 4 trust columns separated by lines */}
         <div className="lg:col-span-9 bg-[#001c41] text-white p-7 grid grid-cols-2 md:grid-cols-4 gap-6 items-center">
