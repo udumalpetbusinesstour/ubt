@@ -7760,7 +7760,7 @@ function DashboardContent() {
                                     </div>
                                   </div>
 
-                                  <div className="flex items-center justify-between border-t border-slate-100 pt-3.5 mt-2">
+                                  <div className="flex flex-wrap items-center justify-between border-t border-slate-100 pt-3.5 mt-2 gap-2">
                                     <div className="flex flex-col text-left">
                                       {item.offerPrice ? (
                                         <div className="flex flex-col">
