@@ -4737,60 +4737,60 @@ function DashboardContent() {
               </div>
 
               {/* KPI Cards Row */}
-              <div className="flex overflow-x-auto gap-4 pb-3.5 w-full scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent snap-x snap-mandatory">
+              <div className="flex lg:grid overflow-x-auto lg:overflow-x-visible gap-4 pb-3.5 lg:pb-0 w-full lg:grid-cols-4 snap-x snap-mandatory lg:snap-none scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
                 {/* Metric 1: Available Points */}
-                <div className="bg-white border border-slate-200 shadow-xs p-3 sm:p-4 rounded-2xl flex items-center gap-2.5 sm:gap-3.5 w-[165px] sm:w-[185px] shrink-0 snap-start">
+                <div className="bg-white border border-slate-200 shadow-xs p-3 sm:p-4 rounded-2xl flex items-center gap-2.5 sm:gap-3.5 w-[165px] sm:w-[185px] lg:w-auto shrink-0 lg:shrink-0 lg:flex-1 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100/50">
                     <Gift className="h-5.5 w-5.5" />
                   </div>
                   <div className="flex flex-col overflow-hidden min-w-0 text-left">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Available Points</span>
-                    <span className="text-lg font-black text-[#027244] leading-none mt-1">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-normal leading-tight">Available Points</span>
+                    <span className="text-lg font-black text-[#027244] leading-none mt-1.5">
                       {referralsLoading ? '...' : (referralStats?.referralPoints || 0)} pts
                     </span>
-                    <span className="text-[9px] text-slate-400 font-bold mt-1.5 truncate">₹{referralsLoading ? '0' : (referralStats?.referralPoints || 0)} Value</span>
+                    <span className="text-[9px] text-slate-400 font-bold mt-1.5 whitespace-normal">₹{referralsLoading ? '0' : (referralStats?.referralPoints || 0)} Value</span>
                   </div>
                 </div>
 
                 {/* Metric 2: Total Referrals */}
-                <div className="bg-white border border-slate-200 shadow-xs p-3 sm:p-4 rounded-2xl flex items-center gap-2.5 sm:gap-3.5 w-[165px] sm:w-[185px] shrink-0 snap-start">
+                <div className="bg-white border border-slate-200 shadow-xs p-3 sm:p-4 rounded-2xl flex items-center gap-2.5 sm:gap-3.5 w-[165px] sm:w-[185px] lg:w-auto shrink-0 lg:shrink-0 lg:flex-1 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/50">
                     <Users className="h-5.5 w-5.5" />
                   </div>
                   <div className="flex flex-col overflow-hidden min-w-0 text-left">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Total Referrals</span>
-                    <span className="text-lg font-black text-[#001c41] leading-none mt-1">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-normal leading-tight">Total Referrals</span>
+                    <span className="text-lg font-black text-[#001c41] leading-none mt-1.5">
                       {referralsLoading ? '...' : (referralStats?.referrals?.filter(r => r.referredBusinessId)?.length || 0)}
                     </span>
-                    <span className="text-[9px] text-slate-400 font-bold mt-1.5 truncate">Invited Traders</span>
+                    <span className="text-[9px] text-slate-400 font-bold mt-1.5 whitespace-normal">Invited Traders</span>
                   </div>
                 </div>
 
                 {/* Metric 3: Successful Conversions */}
-                <div className="bg-white border border-slate-200 shadow-xs p-3 sm:p-4 rounded-2xl flex items-center gap-2.5 sm:gap-3.5 w-[165px] sm:w-[185px] shrink-0 snap-start">
+                <div className="bg-white border border-slate-200 shadow-xs p-3 sm:p-4 rounded-2xl flex items-center gap-2.5 sm:gap-3.5 w-[165px] sm:w-[185px] lg:w-auto shrink-0 lg:shrink-0 lg:flex-1 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100/50">
                     <CheckCircle className="h-5.5 w-5.5" />
                   </div>
                   <div className="flex flex-col overflow-hidden min-w-0 text-left">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Completed Referrals</span>
-                    <span className="text-lg font-black text-purple-600 leading-none mt-1">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-normal leading-tight">Completed Referrals</span>
+                    <span className="text-lg font-black text-purple-600 leading-none mt-1.5">
                       {referralsLoading ? '...' : (referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0)}
                     </span>
-                    <span className="text-[9px] text-slate-400 font-bold mt-1.5 truncate">Earned 99 pts each</span>
+                    <span className="text-[9px] text-slate-400 font-bold mt-1.5 whitespace-normal">Earned 99 pts each</span>
                   </div>
                 </div>
 
                 {/* Metric 4: Payouts requested */}
-                <div className="bg-white border border-slate-200 shadow-xs p-3 sm:p-4 rounded-2xl flex items-center gap-2.5 sm:gap-3.5 w-[165px] sm:w-[185px] shrink-0 snap-start">
+                <div className="bg-white border border-slate-200 shadow-xs p-3 sm:p-4 rounded-2xl flex items-center gap-2.5 sm:gap-3.5 w-[165px] sm:w-[185px] lg:w-auto shrink-0 lg:shrink-0 lg:flex-1 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100/50">
                     <CreditCard className="h-5.5 w-5.5" />
                   </div>
                   <div className="flex flex-col overflow-hidden min-w-0 text-left">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Redeemed Requests</span>
-                    <span className="text-lg font-black text-amber-600 leading-none mt-1">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-normal leading-tight">Redeemed Requests</span>
+                    <span className="text-lg font-black text-amber-600 leading-none mt-1.5">
                       {redemptionsLoading ? '...' : (redemptionRequests?.length || 0)}
                     </span>
-                    <span className="text-[9px] text-slate-400 font-bold mt-1.5 truncate">Refund Payouts</span>
+                    <span className="text-[9px] text-slate-400 font-bold mt-1.5 whitespace-normal">Refund Payouts</span>
                   </div>
                 </div>
               </div>
