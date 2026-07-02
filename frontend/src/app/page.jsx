@@ -1176,7 +1176,7 @@ export default function Home() {
       </section>
 
       {/* 2. Four Trust Indicators Cards (Row as a single unified bar matching mockup) */}
-      <section className="max-w-[1440px] w-full px-4 md:px-8 z-10 -mt-8">
+      <section className="max-w-[1600px] w-full px-4 md:px-8 z-10 -mt-8">
         <div className="bg-white border border-slate-200/30 rounded-[20px] shadow-none md:shadow-lg py-5 px-6 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-0 lg:divide-x lg:divide-slate-100">
           {[
             { icon: <ShieldCheck className="h-5.5 w-5.5 text-[#027244]" />, title: 'Verified Businesses', desc: 'All businesses are manually verified' },
@@ -1207,7 +1207,7 @@ export default function Home() {
       </section>
 
       {/* 3. Top Categories Section (Using premium vector icons) */}
-      <section className="max-w-[1440px] w-full px-4 md:px-8 py-6 md:py-10 flex flex-col gap-4 md:gap-8">
+      <section className="max-w-[1600px] w-full px-4 md:px-8 py-6 md:py-10 flex flex-col gap-4 md:gap-8">
         <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
           <div>
             <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight">Top Categories</h2>
@@ -1258,7 +1258,7 @@ export default function Home() {
       </section>
 
       {/* 4. Featured Businesses Section (With side chevrons!) */}
-      <section className="max-w-[1440px] w-full px-4 md:px-8 py-6 md:py-12 flex flex-col gap-4 md:gap-8 relative">
+      <section className="max-w-[1600px] w-full px-4 md:px-8 py-6 md:py-12 flex flex-col gap-4 md:gap-8 relative">
         <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
           <div>
             <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight">Featured Businesses</h2>
@@ -1399,7 +1399,7 @@ export default function Home() {
     </section>
 
       {/* 4.5 Sponsored Ads Auto-scrolling Banner Section */}
-      <section className="max-w-[1440px] w-full px-4 md:px-8 py-6 flex flex-col gap-4">
+      <section className="max-w-[1600px] w-full px-4 md:px-8 py-6 flex flex-col gap-4">
         <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
           <div>
             <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight flex items-center gap-2">
@@ -1481,7 +1481,7 @@ export default function Home() {
 
       {/* 5. Statistics Sections Band (Exact theme color match) */}
       <section className="w-full bg-[#001c41] text-white py-5 sm:py-8 px-4 border-y border-[#001430]">
-        <div className="max-w-[1440px] mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-10 text-center">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-10 text-center">
           {[
             { value: '500+', label: 'Businesses Listed', icon: <Users2 className="h-5 w-5 text-emerald-400" /> },
             { value: '50+', label: 'Categories Covered', icon: <LayoutGrid className="h-5 w-5 text-emerald-400" /> },
@@ -1502,12 +1502,12 @@ export default function Home() {
       {/* Top 10 Contributors Section (Horizontal scrollable row with manual scroll chevron controls) */}
       {topViewedBusinesses && topViewedBusinesses.length > 0 && (
         <section className="w-full py-6 md:py-12 flex flex-col gap-6 bg-white overflow-hidden border-b border-slate-100">
-          <div className="max-w-[1440px] mx-auto w-full px-4 md:px-8 flex flex-col gap-1 text-left">
+          <div className="max-w-[1600px] mx-auto w-full px-4 md:px-8 flex flex-col gap-1 text-left">
             <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Top 10 Contributors</h2>
             <p className="text-sm text-slate-500 font-medium">Leading local partners ranked by successful business referrals</p>
           </div>
           
-          <div className="max-w-[1440px] mx-auto w-full px-4 md:px-8">
+          <div className="max-w-[1600px] mx-auto w-full px-4 md:px-8">
             <div className="relative w-full">
               {/* Scroll Left Button */}
               <button 
@@ -1604,7 +1604,7 @@ export default function Home() {
       )}
 
       {/* 6. How It Works Section (Connected with dashed lines) */}
-      <section id="how-it-works" className="max-w-[1440px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col items-center gap-6 md:gap-12">
+      <section id="how-it-works" className="max-w-[1600px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col items-center gap-6 md:gap-12">
         <div className="text-center max-w-md">
           <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">How It Works</h2>
           <p className="text-sm text-slate-500 font-medium mt-2">Connecting local buyers with verified businesses in four easy steps</p>
@@ -1703,7 +1703,7 @@ export default function Home() {
 
       {/* 8. What People Say Section */}
       <section className="w-full bg-slate-50/50 py-8 md:py-16 border-t border-slate-200/50 relative">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-8 flex flex-col gap-6 md:gap-10 relative w-full">
+        <div className="max-w-[1600px] mx-auto px-4 md:px-8 flex flex-col gap-6 md:gap-10 relative w-full">
           
           <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
             <div>
@@ -1808,7 +1808,7 @@ export default function Home() {
       </section>
 
       {/* How It Works for Businesses Section (Connected with dashed lines) */}
-      <section id="how-it-works-business" className="max-w-[1440px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col items-center gap-6 md:gap-12 border-t border-slate-200/50">
+      <section id="how-it-works-business" className="max-w-[1600px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col items-center gap-6 md:gap-12 border-t border-slate-200/50">
         <div className="text-center max-w-md">
           <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Steps to Register</h2>
           <p className="text-sm text-slate-500 font-medium mt-2">Follow these simple steps to list and verify your business on Udumalpet Business Tour</p>
@@ -1905,7 +1905,7 @@ export default function Home() {
       </section>
 
       {/* 8. FAQ Section */}
-      <section id="faq" className="max-w-[1440px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col gap-6 md:gap-12 border-t border-slate-200/50">
+      <section id="faq" className="max-w-[1600px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col gap-6 md:gap-12 border-t border-slate-200/50">
         
         {/* Header Block: Image left to FAQ heading */}
         <div className="w-full flex flex-col md:flex-row items-center gap-6 md:gap-10 text-center md:text-left">
