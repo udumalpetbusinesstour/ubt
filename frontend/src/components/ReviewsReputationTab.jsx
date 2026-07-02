@@ -1,5 +1,6 @@
 import React from 'react';
-import { Star, Search, MessageSquare, Trash2 } from 'lucide-react';
+import { Star, StarHalf, Search, MessageSquare, Trash2, RefreshCw } from 'lucide-react';
+
 
 const renderStars = (rating, sizeClass = "h-3.5 w-3.5", emptyColor = "text-slate-200") => {
   const stars = [];
@@ -63,6 +64,58 @@ export default function ReviewsReputationTab({
   onLinkGoogleClick,
   onBusinessUpdate
 }) {
+  const [syncLoading, setSyncLoading] = React.useState(false);
+  const [syncError, setSyncError] = React.useState('');
+  const [syncSuccess, setSyncSuccess] = React.useState('');
+
+  const handleSyncGoogle = async () => {
+    if (!business || !business.googlePlaceId) return;
+    setSyncLoading(true);
+    setSyncError('');
+    setSyncSuccess('');
+    try {
+      const autofillRes = await fetch('http://localhost:5000/api/businesses/google-autofill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ placeId: business.googlePlaceId })
+      });
+      const autofillData = await autofillRes.json();
+      if (!autofillData.success || !autofillData.data) {
+        setSyncError(autofillData.message || 'Failed to fetch details from Google.');
+        return;
+      }
+      const googlePlace = autofillData.data;
+      const storedToken = token || localStorage.getItem('ubt_token');
+      const syncRes = await fetch(`http://localhost:5000/api/businesses/${business._id}/sync-google`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`
+        },
+        body: JSON.stringify({
+          googlePlaceId: googlePlace.googlePlaceId,
+          googleRating: googlePlace.googleRating,
+          googleReviewsCount: googlePlace.googleReviewsCount,
+          googleReviews: googlePlace.googleReviews
+        })
+      });
+      const syncData = await syncRes.json();
+      if (syncData.success) {
+        setSyncSuccess('Google reviews synced successfully!');
+        if (onBusinessUpdate) {
+          onBusinessUpdate(syncData.data);
+        }
+        setTimeout(() => setSyncSuccess(''), 3000);
+      } else {
+        setSyncError(syncData.message || 'Failed to sync Google reviews.');
+      }
+    } catch (err) {
+      setSyncError('Connection failed. Server might be offline.');
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 text-left animate-fadeIn">
       
@@ -70,7 +123,7 @@ export default function ReviewsReputationTab({
       <div className="bg-gradient-to-r from-white via-white to-emerald-50/15 border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex flex-col">
           <h3 className="font-extrabold text-[#001c41] text-base md:text-lg tracking-tight font-sans">Reviews & Reputation Management</h3>
-          <span className="text-[11px] text-slate-455 font-semibold mt-1">Audit local platform feedback, monitor rating metrics, and reply to customers</span>
+          <span className="text-[11px] text-slate-455 font-semibold mt-1">Audit local platform feedback, monitor rating metrics, sync Google reviews, and reply to customers</span>
         </div>
         <button 
           onClick={copyReviewLink}
@@ -80,20 +133,75 @@ export default function ReviewsReputationTab({
         </button>
       </div>
 
+      {/* Google Business Profile Sync Alert */}
+      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${business?.googlePlaceId ? 'bg-blue-50 text-blue-650' : 'bg-slate-50 text-slate-400'}`}>
+            <svg className="h-5.5 w-5.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <div className="flex flex-col">
+            <span className="font-extrabold text-xs text-slate-800">
+              {business?.googlePlaceId ? 'Google Business Profile Connected' : 'Google Business Profile Not Linked'}
+            </span>
+            <p className="text-[11px] text-slate-500 font-semibold leading-relaxed mt-0.5">
+              {business?.googlePlaceId 
+                ? `Sync your Google reviews directly from Google Maps (Linked ID: ${business.googlePlaceId})` 
+                : 'Connect your business to fetch reviews, show rating aggregates, and build trust.'}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          {business?.googlePlaceId ? (
+            <button
+              onClick={handleSyncGoogle}
+              disabled={syncLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs py-2.5 px-5 rounded-xl transition-all shadow-md hover:shadow-blue-700/10 cursor-pointer disabled:opacity-50 text-center border-none flex items-center justify-center gap-2"
+            >
+              {syncLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+              {syncLoading ? 'Syncing...' : 'Sync Google Reviews'}
+            </button>
+          ) : (
+            <button
+              onClick={onLinkGoogleClick}
+              className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-2.5 px-5 rounded-xl transition-all shadow-md hover:shadow-emerald-700/10 cursor-pointer text-center border-none animate-pulse"
+            >
+              Link Google Business
+            </button>
+          )}
+        </div>
+      </div>
+
+      {syncError && (
+        <div className="bg-red-50 border border-red-200 text-red-650 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-sm animate-shake">
+          <span>{syncError}</span>
+        </div>
+      )}
+
+      {syncSuccess && (
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-805 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-sm animate-fadeIn">
+          <span>{syncSuccess}</span>
+        </div>
+      )}
+
       {/* Stats overview cards grid using card-premium class */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* Aggregate rating card */}
         <div className="card-premium p-6 rounded-3xl flex items-center gap-4.5 bg-white">
           <div className="h-14 w-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center font-extrabold text-[#001c41] text-2xl shadow-inner uppercase shrink-0">
-            {localReviewsCount > 0 ? localAvgRating.toFixed(1) : '0.0'}
+            {overallReviewsCount > 0 ? overallAvgRating.toFixed(1) : '0.0'}
           </div>
           <div className="flex flex-col text-left">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Overall Rating</span>
             <div className="flex items-center text-amber-400 gap-0.5 mt-1">
-              {renderStars(localAvgRating, 'h-3.5 w-3.5', 'text-slate-200 fill-none')}
+              {renderStars(overallAvgRating, 'h-3.5 w-3.5', 'text-slate-200 fill-none')}
             </div>
-            <span className="text-[10.5px] text-slate-450 font-bold mt-1">Based on {localReviewsCount} platform reviews</span>
+            <span className="text-[10.5px] text-slate-450 font-bold mt-1">
+              Based on {overallReviewsCount} reviews
+              {business?.googlePlaceId && ` (${localReviewsCount} local, ${googleReviewsCountVal} Google)`}
+            </span>
           </div>
         </div>
 
@@ -101,14 +209,14 @@ export default function ReviewsReputationTab({
         <div className="card-premium p-6 rounded-3xl flex flex-col justify-center text-left gap-1 bg-white">
           <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-500">
             <span>Total Reviews Received</span>
-            <span className="text-slate-800 font-extrabold">{localReviewsCount}</span>
+            <span className="text-slate-800 font-extrabold">{overallReviewsCount}</span>
           </div>
           <div className="w-full bg-slate-100 h-2 rounded-full mt-1.5 overflow-hidden">
-            <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${localReviewsCount > 0 ? Math.min(100, (localReviewsCount / 50) * 100) : 0}%` }} />
+            <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${overallReviewsCount > 0 ? Math.min(100, (overallReviewsCount / 50) * 100) : 0}%` }} />
           </div>
           <div className="flex justify-between items-center text-[10px] text-slate-400 font-semibold mt-1">
             <span>Target: 50 reviews</span>
-            <span>{localReviewsCount >= 50 ? 'Goal Met!' : `${50 - localReviewsCount} to target`}</span>
+            <span>{overallReviewsCount >= 50 ? 'Goal Met!' : `${50 - overallReviewsCount} to target`}</span>
           </div>
         </div>
 
@@ -121,9 +229,9 @@ export default function ReviewsReputationTab({
             </span>
           </div>
           <p className="text-slate-550 text-[10.5px] font-semibold leading-relaxed mt-1">
-            {localReviewsCount > 0 ? (
+            {overallReviewsCount > 0 ? (
               <>
-                Your response rate is <strong>{responseRate}%</strong> on platform reviews. Maintaining active customer replies boosts search ranking placement!
+                Your response rate is <strong>{responseRate}%</strong> on platform reviews. Connected to Google to sync global business ratings!
               </>
             ) : (
               <>
@@ -169,7 +277,18 @@ export default function ReviewsReputationTab({
         {/* Reviews Stream Container */}
         <div className="flex flex-col divide-y divide-slate-100 p-6">
           {(() => {
-            const allReviewsList = (localReviews || []).map(r => ({ ...r, source: 'local', isGoogle: false }));
+            const allLocalReviews = (localReviews || []).map(r => ({ ...r, source: 'local', isGoogle: false }));
+            const allGoogleReviews = (business?.googleReviews || []).map(r => ({
+              id: r._id || `${r.authorName}-${r.rating}-${r.time}`,
+              authorName: r.authorName,
+              rating: r.rating,
+              text: r.text,
+              time: r.time,
+              createdAt: r.createdAt,
+              source: 'google',
+              isGoogle: true
+            }));
+            const allReviewsList = [...allLocalReviews, ...allGoogleReviews];
             
             // Remove duplicate reviews if any
             const uniqueReviews = Array.from(
@@ -220,9 +339,15 @@ export default function ReviewsReputationTab({
                           {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : rev.time}
                         </span>
                         
-                        <span className="bg-emerald-55/15 text-[#027244] border border-emerald-100 px-1.5 py-0.5 rounded text-[8px] font-black uppercase flex items-center gap-0.5 select-none leading-none">
-                          UBT Local
-                        </span>
+                        {rev.source === 'google' ? (
+                          <span className="bg-blue-50 text-blue-650 border border-blue-200 px-1.5 py-0.5 rounded text-[8px] font-black uppercase flex items-center gap-0.5 select-none leading-none">
+                            Google Review
+                          </span>
+                        ) : (
+                          <span className="bg-emerald-55/15 text-[#027244] border border-emerald-100 px-1.5 py-0.5 rounded text-[8px] font-black uppercase flex items-center gap-0.5 select-none leading-none">
+                            UBT Local
+                          </span>
+                        )}
                       </div>
 
                       {/* Stars rating */}
@@ -236,7 +361,7 @@ export default function ReviewsReputationTab({
                       </div>
 
                       <p className="text-slate-655 text-xs font-semibold leading-relaxed mt-1">
-                        "${rev.text}"
+                        "{rev.text}"
                       </p>
 
                       {/* Show administrative responses if exists */}
@@ -310,47 +435,49 @@ export default function ReviewsReputationTab({
                   </div>
 
                   {/* Moderation actions */}
-                  <div className="flex flex-row md:flex-col gap-1.5 shrink-0 self-end md:self-start mt-3 md:mt-0 pl-14 md:pl-0">
-                    {!ownerResponse && replyingReviewId !== rev.id && (
+                  {rev.source === 'local' && (
+                    <div className="flex flex-row md:flex-col gap-1.5 shrink-0 self-end md:self-start mt-3 md:mt-0 pl-14 md:pl-0">
+                      {!ownerResponse && replyingReviewId !== rev.id && (
+                        <button 
+                          onClick={() => setReplyingReviewId(rev.id)}
+                          className="py-1.5 px-3 border border-slate-200 text-slate-600 font-extrabold text-[10.5px] rounded-lg hover:bg-slate-50 transition-colors cursor-pointer flex items-center gap-1.5 hover:border-emerald-600 hover:text-emerald-700"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" /> Reply
+                        </button>
+                      )}
+                      
                       <button 
-                        onClick={() => setReplyingReviewId(rev.id)}
-                        className="py-1.5 px-3 border border-slate-200 text-slate-600 font-extrabold text-[10.5px] rounded-lg hover:bg-slate-50 transition-colors cursor-pointer flex items-center gap-1.5 hover:border-emerald-600 hover:text-emerald-700"
-                      >
-                        <MessageSquare className="h-3.5 w-3.5" /> Reply
-                      </button>
-                    )}
-                    
-                    <button 
-                      onClick={async () => {
-                        const activeToken = token || localStorage.getItem('ubt_token');
-                        if (await confirm('Are you sure you want to flag this review as spam?')) {
-                          try {
-                            const res = await fetch(`http://localhost:5000/api/reviews/${rev.id}/moderate`, {
-                              method: 'PUT',
-                              headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${activeToken}`
-                              },
-                              body: JSON.stringify({ action: 'spam' })
-                            });
-                            const data = await res.json();
-                            if (data.success) {
-                              const updated = localReviews.filter(r => r.id !== rev.id);
-                              setLocalReviews(updated);
-                            } else {
-                              alert(data.message || 'Failed to flag review');
+                        onClick={async () => {
+                          const activeToken = token || localStorage.getItem('ubt_token');
+                          if (await confirm('Are you sure you want to flag this review as spam?')) {
+                            try {
+                              const res = await fetch(`http://localhost:5000/api/reviews/${rev.id}/moderate`, {
+                                method: 'PUT',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  'Authorization': `Bearer ${activeToken}`
+                                },
+                                body: JSON.stringify({ action: 'spam' })
+                              });
+                              const data = await res.json();
+                              if (data.success) {
+                                const updated = localReviews.filter(r => r.id !== rev.id);
+                                setLocalReviews(updated);
+                              } else {
+                                alert(data.message || 'Failed to flag review');
+                              }
+                            } catch (err) {
+                              console.error('Error flagging review:', err);
+                              alert('Error connecting to backend server');
                             }
-                          } catch (err) {
-                            console.error('Error flagging review:', err);
-                            alert('Error connecting to backend server');
                           }
-                        }
-                      }}
-                      className="py-1.5 px-3 border border-red-100 text-red-500 font-extrabold text-[10.5px] rounded-lg hover:bg-red-50 transition-colors cursor-pointer flex items-center gap-1.5"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" /> Spam
-                    </button>
-                  </div>
+                        }}
+                        className="py-1.5 px-3 border border-red-100 text-red-500 font-extrabold text-[10.5px] rounded-lg hover:bg-red-50 transition-colors cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Spam
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             });
