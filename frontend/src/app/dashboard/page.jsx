@@ -5732,7 +5732,7 @@ function DashboardContent() {
                   <div className={`relative flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10 transition-opacity duration-300 ${isRepositioning ? 'opacity-10 pointer-events-none' : 'opacity-100'}`}>
                     <div className="flex flex-col gap-3 text-left w-full">
                       {/* Breadcrumbs */}
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                         <span>Dashboard</span>
                         <span className="text-slate-600">&gt;</span>
                         <span className="text-emerald-450">My Business Profile</span>
@@ -6602,16 +6602,16 @@ function DashboardContent() {
 
                         <div className="flex items-start gap-2.5 border-t border-slate-100 pt-3.5">
                           <Mail className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
-                          <div className="flex flex-col gap-0.5">
+                          <div className="flex flex-col gap-0.5 min-w-0">
                             <span className="text-[9px] text-slate-450 font-extrabold uppercase tracking-widest">Email Address</span>
-                            <span className="text-slate-800 font-extrabold">{business.email || 'N/A'}</span>
+                            <span className="text-slate-800 font-extrabold break-all">{business.email || 'N/A'}</span>
                           </div>
                         </div>
 
                         {business.website && (
                           <div className="flex items-start gap-2.5 border-t border-slate-100 pt-3.5">
                             <Globe className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
-                            <div className="flex flex-col gap-0.5">
+                            <div className="flex flex-col gap-0.5 min-w-0">
                               <span className="text-[9px] text-slate-450 font-extrabold uppercase tracking-widest">Website</span>
                               <a 
                                 href={business.website.startsWith('http') ? business.website : `https://${business.website}`} 
@@ -8023,7 +8023,7 @@ function DashboardContent() {
                                   blog.status === 'Approved'
                                     ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
                                     : blog.status === 'Rejected'
-                                      ? 'bg-red-50 border-red-200 text-red-650'
+                                      ? 'bg-red-50 border-red-200 text-red-655'
                                       : blog.status === 'Needs Revision'
                                         ? 'bg-amber-50 border-amber-300 text-amber-800 font-black animate-pulse'
                                         : 'bg-slate-50 border-slate-200 text-slate-500 animate-pulse'
@@ -8144,7 +8144,7 @@ function DashboardContent() {
                           </div>
 
                           {/* Action footer */}
-                          <div className="flex items-center justify-between border-t border-slate-100 pt-3 gap-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-t border-slate-100 pt-3 gap-3">
                             <Link 
                               to={`/blogs/${blog._id}`} 
                               className="text-[10px] font-extrabold text-[#027244] hover:text-[#005934] flex items-center gap-1 leading-none group cursor-pointer"
@@ -8152,7 +8152,7 @@ function DashboardContent() {
                               <Eye className="h-3.5 w-3.5 text-slate-400 shrink-0" /> View <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform shrink-0" />
                             </Link>
 
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto justify-end sm:justify-start">
                               <button 
                                 onClick={() => handleEditBlogClick(blog)}
                                 title="Edit / Correct Post"
@@ -8163,7 +8163,7 @@ function DashboardContent() {
                               <button 
                                 onClick={() => handleBlogDelete(blog._id)}
                                 title="Delete Blog"
-                                className="py-1.5 px-2 bg-red-50 hover:bg-red-100 text-red-650 font-extrabold text-[9.5px] rounded-lg transition-all cursor-pointer flex items-center gap-0.5 border border-red-100/10 shadow-2xs"
+                                className="py-1.5 px-2 bg-red-50 hover:bg-red-100 text-red-655 font-extrabold text-[9.5px] rounded-lg transition-all cursor-pointer flex items-center gap-0.5 border border-red-100/10 shadow-2xs"
                               >
                                 <Trash2 className="h-3 w-3" /> Delete
                               </button>

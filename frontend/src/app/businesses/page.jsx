@@ -210,7 +210,7 @@ function BusinessesList() {
   const [visibleCategoryLimit, setVisibleCategoryLimit] = useState(6);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [viewMode, setViewMode] = useState(typeof window !== 'undefined' && window.innerWidth < 768 ? 'grid' : 'list'); // list | grid
+  const [viewMode, setViewMode] = useState('list'); // list | grid
   const [sortBy, setSortBy] = useState('Most Relevant');
   const [currentPage, setCurrentPage] = useState(1);
   const [explorePage, setExplorePage] = useState(1);
@@ -1989,9 +1989,9 @@ function BusinessesList() {
                                     <span className="font-medium text-[#001c41] text-xs sm:text-sm md:text-[17px] leading-tight sm:leading-snug group-hover:text-[#027244] transition-colors duration-300 line-clamp-2">
                                       {cat.name}
                                     </span>
-                                    <div className="flex items-center justify-between w-full mt-1.5 text-[9px] sm:text-[10px] text-slate-455 font-extrabold uppercase tracking-wide leading-none">
+                                    <div className="flex items-center justify-between gap-1.5 w-full mt-1.5 text-[9px] sm:text-[10px] text-slate-455 font-extrabold uppercase tracking-wide leading-none">
                                       <span className="whitespace-nowrap">{count} Listings</span>
-                                      <span className="text-emerald-600 font-bold hover:underline whitespace-nowrap">Explore</span>
+                                      <span className="text-[#027244] font-black hover:underline whitespace-nowrap text-[8px] sm:text-[9px] uppercase tracking-wider">Explore</span>
                                     </div>
                                   </div>
                                 </div>

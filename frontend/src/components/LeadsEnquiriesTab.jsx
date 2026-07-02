@@ -171,7 +171,7 @@ export default function LeadsEnquiriesTab({
                     </div>
 
                     {/* Callback details grid */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="border border-slate-200 p-3.5 rounded-2xl flex flex-col gap-0.5 text-left bg-slate-50/30">
                         <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Mobile Number</span>
                         <span className="text-xs font-extrabold text-slate-800">{activeLead.phone}</span>
@@ -229,7 +229,7 @@ export default function LeadsEnquiriesTab({
                   {!activeLead.reply && (
                     <div className="p-6 bg-slate-50/40 flex flex-col gap-3">
                       <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest leading-none text-left">Quick Response Box</span>
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <input
                           type="text"
                           placeholder="Type your response email or text..."
@@ -278,7 +278,7 @@ export default function LeadsEnquiriesTab({
                             setLeadsList(updatedList);
                             setLeadReplyText('');
                           }}
-                          className="py-3 px-5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer transition-all border border-slate-800 btn-active-press"
+                          className="py-3 px-5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer transition-all border border-slate-800 btn-active-press w-full sm:w-auto shrink-0"
                         >
                           Submit
                         </button>

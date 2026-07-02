@@ -1222,7 +1222,7 @@ export default function Home() {
           {/* Scroll Left Button */}
           <button 
             onClick={() => handleScrollCategories('left')}
-            className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+            className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white/70 backdrop-blur-md border border-slate-200/60 hover:bg-slate-50 md:bg-white shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
             aria-label="Scroll Categories Left"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -1249,7 +1249,7 @@ export default function Home() {
           {/* Scroll Right Button */}
           <button 
             onClick={() => handleScrollCategories('right')}
-            className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+            className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white/70 backdrop-blur-md border border-slate-200/60 hover:bg-slate-50 md:bg-white shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
             aria-label="Scroll Categories Right"
           >
             <ChevronRight className="h-5 w-5" />
@@ -1273,14 +1273,14 @@ export default function Home() {
           {/* Carousel buttons */}
           <button 
             onClick={() => handleScrollFeatured('left')}
-            className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+            className="h-10 w-10 border border-slate-200/60 bg-white/70 backdrop-blur-md hover:bg-slate-50 md:bg-white rounded-full flex items-center justify-center absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
             aria-label="Scroll Featured Left"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <button 
             onClick={() => handleScrollFeatured('right')}
-            className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+            className="h-10 w-10 border border-slate-200/60 bg-white/70 backdrop-blur-md hover:bg-slate-50 md:bg-white rounded-full flex items-center justify-center absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
             aria-label="Scroll Featured Right"
           >
             <ChevronRight className="h-5 w-5" />
@@ -1443,14 +1443,14 @@ export default function Home() {
             {/* Carousel buttons */}
             <button 
               onClick={() => handleScrollSponsored('left')}
-              className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+              className="h-10 w-10 border border-slate-200/60 bg-white/70 backdrop-blur-md hover:bg-slate-50 md:bg-white rounded-full flex items-center justify-center absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
               aria-label="Scroll Sponsored Ads Left"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <button 
               onClick={() => handleScrollSponsored('right')}
-              className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+              className="h-10 w-10 border border-slate-200/60 bg-white/70 backdrop-blur-md hover:bg-slate-50 md:bg-white rounded-full flex items-center justify-center absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
               aria-label="Scroll Sponsored Ads Right"
             >
               <ChevronRight className="h-5 w-5" />
@@ -1512,7 +1512,7 @@ export default function Home() {
               {/* Scroll Left Button */}
               <button 
                 onClick={() => handleScrollTopViewed('left')}
-                className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+                className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white/70 backdrop-blur-md border border-slate-200/60 hover:bg-slate-50 md:bg-white shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
                 aria-label="Scroll Top Contributors Left"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -1593,7 +1593,7 @@ export default function Home() {
               {/* Scroll Right Button */}
               <button 
                 onClick={() => handleScrollTopViewed('right')}
-                className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+                className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white/70 backdrop-blur-md border border-slate-200/60 hover:bg-slate-50 md:bg-white shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
                 aria-label="Scroll Top Viewed Right"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -1614,7 +1614,7 @@ export default function Home() {
           {/* Scroll Left Button */}
           <button 
             onClick={() => handleScrollHowItWorks('left')}
-            className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95 md:hidden"
+            className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white/70 backdrop-blur-md border border-slate-200/60 hover:bg-slate-50 md:bg-white shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95 md:hidden"
             aria-label="Scroll How It Works Left"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -1691,7 +1691,7 @@ export default function Home() {
           {/* Scroll Right Button */}
           <button 
             onClick={() => handleScrollHowItWorks('right')}
-            className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95 md:hidden"
+            className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white/70 backdrop-blur-md border border-slate-200/60 hover:bg-slate-50 md:bg-white shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95 md:hidden"
             aria-label="Scroll How It Works Right"
           >
             <ChevronRight className="h-5 w-5" />
@@ -1738,7 +1738,7 @@ export default function Home() {
             {/* Scroll Left Button */}
             <button 
               onClick={() => handleScrollTestimonials('left')}
-              className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+              className="h-10 w-10 border border-slate-200/60 bg-white/70 backdrop-blur-md hover:bg-slate-50 md:bg-white rounded-full flex items-center justify-center absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
               aria-label="Scroll Testimonials Left"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -1787,7 +1787,7 @@ export default function Home() {
             {/* Scroll Right Button */}
             <button 
               onClick={() => handleScrollTestimonials('right')}
-              className="h-10 w-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
+              className="h-10 w-10 border border-slate-200/60 bg-white/70 backdrop-blur-md hover:bg-slate-50 md:bg-white rounded-full flex items-center justify-center absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 shadow-lg text-slate-600 z-20 hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95"
               aria-label="Scroll Testimonials Right"
             >
               <ChevronRight className="h-5 w-5" />
@@ -1818,7 +1818,7 @@ export default function Home() {
           {/* Scroll Left Button */}
           <button 
             onClick={() => handleScrollStepsRegister('left')}
-            className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95 md:hidden"
+            className="absolute left-1 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white/70 backdrop-blur-md border border-slate-200/60 hover:bg-slate-50 md:bg-white shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95 md:hidden"
             aria-label="Scroll Steps Register Left"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -1896,7 +1896,7 @@ export default function Home() {
           {/* Scroll Right Button */}
           <button 
             onClick={() => handleScrollStepsRegister('right')}
-            className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white border border-slate-200 hover:bg-slate-50 shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95 md:hidden"
+            className="absolute right-1 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white/70 backdrop-blur-md border border-slate-200/60 hover:bg-slate-50 md:bg-white shadow-lg text-slate-600 flex items-center justify-center hover:text-[#027244] cursor-pointer transition-all hover:scale-105 active:scale-95 md:hidden"
             aria-label="Scroll Steps Register Right"
           >
             <ChevronRight className="h-5 w-5" />
