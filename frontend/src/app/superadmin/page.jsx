@@ -4201,7 +4201,7 @@ const handlePartnerAction = async (partnerId, action) => {
                 <div className="flex flex-col gap-6 text-left animate-fadeIn">
                   
                   {/* Title Block */}
-                  <div className={`border shadow-xs rounded-[28px] p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <div className="flex flex-col text-left">
@@ -4564,11 +4564,11 @@ const handlePartnerAction = async (partnerId, action) => {
                                             return (
                                               <div 
                                                 key={cat._id} 
-                                                className={`border rounded-2xl p-3.5 flex justify-between items-center transition-all min-w-0 gap-3 bg-white dark:bg-slate-900 ${
+                                                className={`border rounded-2xl p-3.5 flex flex-col sm:flex-row justify-between items-stretch sm:items-center transition-all min-w-0 gap-3.5 bg-white dark:bg-slate-900 ${
                                                   themeMode === 'dark' ? 'border-slate-800 hover:border-slate-700' : 'border-slate-105 hover:border-slate-200 hover:bg-slate-50/40'
                                                 }`}
                                               >
-                                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                                <div className="flex items-center gap-2.5 min-w-0 w-full sm:flex-1">
                                                   <div className={`h-8 w-8 rounded-lg flex items-center justify-center font-black shrink-0 ${
                                                     themeMode === 'dark' ? 'bg-slate-900 text-emerald-455 border border-slate-800' : 'bg-emerald-50/80 text-[#027244] border-emerald-100'
                                                   }`}>
@@ -4581,7 +4581,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                                   </div>
                                                 </div>
 
-                                                <div className="flex gap-1.5 shrink-0">
+                                                <div className="flex gap-1.5 shrink-0 justify-end w-full sm:w-auto mt-2 sm:mt-0">
                                                   <button
                                                     onClick={async () => {
                                                       const newName = await prompt("Rename category:", cat.categoryName);
@@ -6107,7 +6107,7 @@ const handlePartnerAction = async (partnerId, action) => {
                 <div className="flex flex-col gap-6 text-left animate-fadeIn">
                   
                   {/* Tab header */}
-                  <div className={`border shadow-xs rounded-[28px] p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <div className="flex flex-col text-left">
@@ -6591,7 +6591,7 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* TAB 17: SUPPORT TICKETS */}
               {activeTab === 'Support Tickets' && (
                 <div className="flex flex-col gap-6 text-left animate-fadeIn">
-                  <div className={`border shadow-xs rounded-[28px] p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <div className="flex flex-col text-left font-sans">
@@ -6688,7 +6688,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   ) : (
                     <div className="flex flex-col gap-6 font-sans">
                       {/* Tabs for query filter */}
-                      <div className={`border shadow-xs rounded-[28px] p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
+                      <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
                         themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                       }`}>
                         <div className="flex flex-col text-left font-sans">
@@ -6810,7 +6810,7 @@ const handlePartnerAction = async (partnerId, action) => {
                 <div className="flex flex-col gap-6 text-left animate-fadeIn font-sans text-slate-800">
                   
                   {/* Header Dashboard Banner */}
-                  <div className={`border shadow-xs rounded-[28px] p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <div className="flex flex-col text-left font-sans">
@@ -6819,7 +6819,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     </div>
 
                     {/* Quick Stats */}
-                    <div className="flex items-center gap-4 text-xs font-semibold shrink-0">
+                    <div className="flex flex-wrap items-center gap-2.5 text-xs font-semibold shrink-0">
                       <div className={`border rounded-xl px-3.5 py-2 text-left ${themeMode === 'dark' ? 'bg-emerald-950/20 border-emerald-900' : 'bg-emerald-50 border-emerald-100'}`}>
                         <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block leading-none">Total Partners</span>
                         <span className={`text-sm font-black mt-1.5 block leading-none ${themeMode === 'dark' ? 'text-emerald-450' : 'text-[#027244]'}`}>{partners.length}</span>
@@ -6834,7 +6834,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   </div>
 
                   {/* Search and Filters */}
-                  <div className={`border shadow-sm rounded-[24px] p-5 flex flex-col sm:flex-row gap-4 justify-between items-center ${
+                  <div className={`border shadow-sm rounded-[24px] p-4 sm:p-5 flex flex-col sm:flex-row gap-4 justify-between items-center ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'
                   }`}>
                     <div className={`w-full sm:max-w-md border rounded-xl px-3.5 py-2 flex items-center gap-2 ${
@@ -7256,7 +7256,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     <div className={`border shadow-sm rounded-3xl overflow-hidden ${
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'
                     }`}>
-                      <div className="flex items-center gap-2 mb-2 px-6 pt-5">
+                      <div className="flex flex-wrap items-center gap-2 mb-2 px-4 sm:px-6 pt-5">
                         <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider mr-2">Filter status:</span>
                         {['All', 'Pending', 'Processed'].map(f => (
                           <button
@@ -7486,7 +7486,7 @@ const handlePartnerAction = async (partnerId, action) => {
               {activeTab === 'Referrals' && (
                 <div className="flex flex-col gap-6 text-left animate-fadeIn font-sans">
                   {/* Header Dashboard Banner */}
-                  <div className={`border shadow-xs rounded-[28px] p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <div className="flex flex-col text-left font-sans">

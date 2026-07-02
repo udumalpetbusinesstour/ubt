@@ -4237,7 +4237,7 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Quick Stats */}
-                    <div className="flex items-center gap-4 text-xs font-semibold shrink-0">
+                    <div className="flex flex-wrap items-center gap-2.5 text-xs font-semibold shrink-0">
                       <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-3.5 py-2 text-left">
                         <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block leading-none">Total Partners</span>
                         <span className="text-sm font-black text-[#027244] mt-1.5 block leading-none">{partners.length}</span>
@@ -4252,7 +4252,7 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Search and Filters */}
-                  <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-5 flex flex-col sm:flex-row gap-4 justify-between items-center">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] p-4 sm:p-5 flex flex-col sm:flex-row gap-4 justify-between items-center">
                     <div className="w-full sm:max-w-md border border-slate-200 bg-slate-50 rounded-xl px-3.5 py-2 flex items-center gap-2">
                       <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
                       <input
@@ -4300,8 +4300,8 @@ export default function AdminDashboard() {
                   {referralSubTab === 'partners_list' && (
                     <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden">
                       {/* Filter group */}
-                      <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                        <div className="flex items-center gap-1.5">
+                      <div className="px-4 sm:px-6 py-3 border-b border-slate-100 flex flex-wrap items-center gap-3 justify-between bg-slate-50/50">
+                        <div className="flex flex-wrap items-center gap-1.5">
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider mr-2">Filter By Status:</span>
                           {['All', 'Approved', 'Rejected'].map((status) => (
                             <button
@@ -4654,7 +4654,7 @@ export default function AdminDashboard() {
                   {/* Points Redemption Queue Sub-tab */}
                   {referralSubTab === 'queue' && (
                     <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden flex flex-col gap-2">
-                      <div className="flex items-center gap-2 mb-2 px-6 pt-5">
+                      <div className="flex flex-wrap items-center gap-2 mb-2 px-4 sm:px-6 pt-5">
                         <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider mr-2">Filter status:</span>
                         {['All', 'Pending', 'Processed'].map(f => (
                           <button
@@ -5754,9 +5754,9 @@ export default function AdminDashboard() {
                                             return (
                                               <div 
                                                 key={cat._id} 
-                                                className="border border-slate-200 rounded-2xl p-3.5 flex justify-between items-center transition-all bg-white min-w-0 gap-3 hover:border-slate-300 hover:bg-slate-50/40"
+                                                className="border border-slate-200 rounded-2xl p-3.5 flex flex-col sm:flex-row justify-between items-stretch sm:items-center transition-all bg-white min-w-0 gap-3.5 hover:border-slate-300 hover:bg-slate-50/40 w-full"
                                               >
-                                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                                <div className="flex items-center gap-2.5 min-w-0 w-full sm:flex-1">
                                                   <div className="h-8 w-8 rounded-lg flex items-center justify-center font-black shrink-0 bg-emerald-50/80 text-[#027244] border-emerald-100">
                                                     <Store className="h-4 w-4" />
                                                   </div>
@@ -5767,7 +5767,7 @@ export default function AdminDashboard() {
                                                   </div>
                                                 </div>
 
-                                                <div className="flex gap-1.5 shrink-0">
+                                                <div className="flex gap-1.5 shrink-0 justify-end w-full sm:w-auto mt-2 sm:mt-0">
                                                   <button
                                                     onClick={async () => {
                                                       const newName = await prompt("Rename category:", cat.categoryName);
