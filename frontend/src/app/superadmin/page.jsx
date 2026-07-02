@@ -2937,7 +2937,7 @@ const handlePartnerAction = async (partnerId, action) => {
         </header>
 
         {/* Workspace views content */}
-        <div className="p-4 md:p-8 flex-grow w-full max-w-full min-w-0 overflow-x-hidden">
+        <div className="p-4 md:p-8 flex-grow w-full max-w-full min-w-0 overflow-x-auto">
           {loading ? (
             <div className="py-32 flex flex-col items-center justify-center gap-3 text-slate-400">
               <RefreshCw className="h-8 w-8 text-emerald-600 animate-spin" />
@@ -4118,7 +4118,7 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* TAB 3: PENDING VERIFICATIONS */}
               {activeTab === 'Pending Verifications' && (
                 <div className="flex flex-col gap-6 text-left animate-fadeIn">
-                  <div className={`border shadow-xs rounded-[28px] p-6 ${
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 overflow-x-auto w-full max-w-full ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <h3 className="font-extrabold text-base leading-tight font-sans">Pending Audit Queue</h3>
@@ -4217,7 +4217,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     <div className="lg:col-span-2 flex flex-col gap-6">
                       
                       {/* Section 1: Pending Requests */}
-                      <div className={`border shadow-xs rounded-[28px] p-6 ${
+                      <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 overflow-x-auto w-full max-w-full ${
                         themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                       }`}>
                         <h4 className="font-extrabold text-xs uppercase tracking-wider mb-4 border-b pb-3 border-slate-200/10 flex items-center gap-2">
@@ -4442,7 +4442,7 @@ const handlePartnerAction = async (partnerId, action) => {
                       </div>
 
                       {/* Section 2: Preset Seeded Categories Grid */}
-                      <div className={`border shadow-xs rounded-[28px] p-6 ${
+                      <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 overflow-x-auto w-full max-w-full ${
                         themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                       }`}>
                         <div className="flex flex-col gap-4 mb-4 border-b pb-4 border-slate-200/10">
@@ -5154,7 +5154,7 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* TAB 6: BLOGS MODERATION */}
               {activeTab === 'Blogs Moderation' && (
                 <div className="flex flex-col gap-6 text-left animate-fadeIn">
-                  <div className={`border shadow-xs rounded-[28px] p-6 ${
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 overflow-x-auto w-full max-w-full ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <h3 className="font-extrabold text-base leading-tight font-sans">Blogs Moderation Desk</h3>
@@ -5241,7 +5241,7 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* TAB 7: EVENTS MODERATION */}
               {activeTab === 'Events Moderation' && (
                 <div className="flex flex-col gap-6 text-left animate-fadeIn">
-                  <div className={`border shadow-xs rounded-[28px] p-6 ${
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 overflow-x-auto w-full max-w-full ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <h3 className="font-extrabold text-base leading-tight font-sans">Events Moderation Desk</h3>
@@ -5543,7 +5543,7 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* TAB 8: REVIEWS MODERATION */}
               {activeTab === 'Reviews Moderation' && (
                 <div className="flex flex-col gap-6 text-left animate-fadeIn">
-                  <div className={`border shadow-xs rounded-[28px] p-6 ${
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 overflow-x-auto w-full max-w-full ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <h3 className="font-extrabold text-base leading-tight font-sans">Reviews Feed Moderation</h3>
@@ -5639,7 +5639,7 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* TAB 9: SUBSCRIPTIONS */}
               {activeTab === 'Subscriptions' && (
                 <div className="flex flex-col gap-6 text-left animate-fadeIn">
-                  <div className={`border shadow-xs rounded-[28px] p-6 ${
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 overflow-x-auto w-full max-w-full ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <h3 className="font-extrabold text-base leading-tight font-sans">Active & Expired Premium Subscriptions</h3>
@@ -5769,7 +5769,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     </div>
                   </div>
 
-                  <div className={`border shadow-xs rounded-[28px] p-6 ${
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 overflow-x-auto w-full max-w-full ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <h3 className="font-extrabold text-base leading-tight font-sans">Premium Billing Analytics</h3>
@@ -5903,7 +5903,7 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* TAB 11: ANALYTICS */}
               {activeTab === 'Analytics' && (
                 <div className="flex flex-col gap-6 text-left animate-fadeIn font-sans">
-                  <div className={`border shadow-xs rounded-[28px] p-6 ${
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 overflow-x-auto w-full max-w-full ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <h3 className="font-extrabold text-base leading-tight font-sans">Enterprise Platform Analytics</h3>
@@ -6478,7 +6478,7 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* TAB 14: SYSTEM LOGS */}
               {activeTab === 'System Logs' && (
                 <div className="flex flex-col gap-6 text-left animate-fadeIn font-sans">
-                  <div className={`border shadow-xs rounded-[28px] p-6 ${
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 overflow-x-auto w-full max-w-full ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <h3 className="font-extrabold text-base leading-tight font-sans">Suspicious Events & Telemetry Logs</h3>
@@ -6521,7 +6521,7 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* TAB 15: ACCESS CONTROL */}
               {activeTab === 'Access Control' && (
                 <div className="flex flex-col gap-6 text-left animate-fadeIn">
-                  <div className={`border shadow-xs rounded-[28px] p-6 ${
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 overflow-x-auto w-full max-w-full ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
                     <h3 className="font-extrabold text-base leading-tight font-sans">Role Permission Matrix</h3>

@@ -2258,7 +2258,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* Workspace views content */}
-        <div className="p-4 md:p-8 flex-1 w-full max-w-full min-w-0 overflow-x-hidden">
+        <div className="p-4 md:p-8 flex-1 w-full max-w-full min-w-0 overflow-x-auto">
           {loading ? (
             <div className="py-24 flex flex-col items-center justify-center gap-3 text-slate-400">
               <RefreshCw className="h-8 w-8 text-emerald-600 animate-spin" />
@@ -3417,7 +3417,7 @@ export default function AdminDashboard() {
               {/* TAB: BLOGS MODERATION */}
               {activeTab === 'Blogs' && (
                 <div className="flex flex-col gap-6 text-left">
-                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 sm:p-6 overflow-x-auto w-full max-w-full">
                     <h3 className="font-extrabold text-[#001c41] text-base">Blogs Moderation Desk</h3>
                     <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Audit community blogs, feature written items, or filter spam</span>
                   </div>
@@ -3478,7 +3478,7 @@ export default function AdminDashboard() {
 
               {activeTab === 'Events' && (
                 <div className="flex flex-col gap-6 text-left">
-                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 sm:p-6 overflow-x-auto w-full max-w-full">
                     <h3 className="font-extrabold text-[#001c41] text-base">Community Events Moderation</h3>
                     <span className="text-[10px] text-slate-455 font-semibold mt-0.5">Moderate event list sub-streams to maintain community relevance</span>
                   </div>
@@ -3563,7 +3563,7 @@ export default function AdminDashboard() {
               {/* TAB: REVIEWS FEED */}
               {activeTab === 'Reviews' && (
                 <div className="flex flex-col gap-6 text-left">
-                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 sm:p-6 overflow-x-auto w-full max-w-full">
                     <h3 className="font-extrabold text-[#001c41] text-base">Ratings & Reviews Moderation</h3>
                     <span className="text-[10px] text-slate-455 font-semibold mt-0.5">Purge spam, review duplicates, or filter inappropriate content</span>
                   </div>
@@ -3609,7 +3609,7 @@ export default function AdminDashboard() {
               {/* TAB: TESTIMONIALS MODERATION */}
               {activeTab === 'Testimonials' && (
                 <div className="flex flex-col gap-6 text-left">
-                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 sm:p-6 overflow-x-auto w-full max-w-full">
                     <h3 className="font-extrabold text-[#001c41] text-base font-sans leading-tight">Testimonials Moderation Desk</h3>
                     <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Audit community thoughts, publish reviews to home slider, or delete feedback</span>
                   </div>
@@ -3730,7 +3730,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 sm:p-6 overflow-x-auto w-full max-w-full">
                     <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                       <div className="flex flex-col">
                         <h3 className="font-extrabold text-[#001c41] text-base">Subscription Billings & Billing Audit</h3>
@@ -4013,7 +4013,7 @@ export default function AdminDashboard() {
               {/* TAB: NOTIFICATIONS HUB */}
               {activeTab === 'Notifications' && (
                 <div className="flex flex-col gap-6 text-left">
-                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 sm:p-6 overflow-x-auto w-full max-w-full">
                     <h3 className="font-extrabold text-[#001c41] text-base">Merchant Alerts & Notifications Broadcast</h3>
                     <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Send alerts, announcements, maintenance alerts, or expiry warnings directly</span>
                   </div>
@@ -5428,7 +5428,7 @@ export default function AdminDashboard() {
                     <div className="lg:col-span-2 flex flex-col gap-6">
                       
                       {/* Section 1: Pending Requests */}
-                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
+                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 sm:p-6 overflow-x-auto w-full max-w-full">
                         <h4 className="font-extrabold text-xs uppercase tracking-wider mb-4 border-b pb-3 border-slate-100 flex items-center gap-2 text-slate-800">
                           <Clock className="h-4.5 w-4.5 text-amber-500 animate-spin-slow" /> Custom Category Requests ({pendingCategories.length})
                         </h4>
@@ -5634,7 +5634,7 @@ export default function AdminDashboard() {
                       </div>
 
                       {/* Section 2: Preset Seeded Categories Grid */}
-                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
+                      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 sm:p-6 overflow-x-auto w-full max-w-full">
                         <div className="flex flex-col gap-4 mb-4 border-b pb-4 border-slate-100">
                           <div className="flex justify-between items-center flex-wrap gap-2">
                             <h4 className="font-extrabold text-xs uppercase tracking-wider flex items-center gap-2 text-slate-800">
