@@ -7576,17 +7576,17 @@ function DashboardContent() {
                   {/* Promotions Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {promotionsList.length > 0 ? (
-                      promotionsList.map((promo) => {
+                          promotionsList.map((promo) => {
                         const isAdExpired = promo.isSponsored && promo.sponsoredExpiry && new Date(promo.sponsoredExpiry) <= new Date();
                         const canPromote = (!promo.isSponsored || isAdExpired) && promo.sponsoredStatus !== 'pending';
 
                         return (
                           <div key={promo.id} className="card-premium rounded-3xl overflow-hidden flex flex-col relative bg-white border border-slate-150">
-                            <div className="h-44 bg-slate-50 overflow-hidden relative group select-none">
+                            <div className="h-32 sm:h-44 bg-slate-100 overflow-hidden relative group select-none flex items-center justify-center border-b border-slate-100">
                               <img 
                                 src={window.getImageUrl(promo.image)} 
                                 alt="Promotion Banner" 
-                                className="w-full h-full object-cover"
+                                className="max-w-full max-h-full object-contain"
                               />
                               
                               {/* Sponsorship Status Badge */}
@@ -8053,76 +8053,77 @@ function DashboardContent() {
                                 {blog.title}
                               </h4>
 
-                              {((blog.status === 'Needs Revision') || (blog.status === 'Pending Approval' && blog.revisionHistory && blog.revisionHistory.length > 0)) && (
-                                <div className={`mt-2.5 border rounded-2xl p-4 text-[11px] font-semibold leading-relaxed text-left flex flex-col gap-3 animate-fadeIn w-full ${
-                                  blog.status === 'Needs Revision' 
-                                    ? 'bg-amber-50/70 border-amber-200/60 text-amber-900' 
-                                    : 'bg-emerald-50/20 border-emerald-200/30 text-emerald-900'
-                                }`}>
-                                  <div className="flex items-start gap-1.5 border-b border-slate-205/30 pb-2">
-                                    <AlertTriangle className={`h-4 w-4 shrink-0 mt-0.5 ${blog.status === 'Needs Revision' ? 'text-amber-600' : 'text-[#027244]'}`} />
-                                    <span className={`font-extrabold uppercase tracking-wider text-[9.5px] ${blog.status === 'Needs Revision' ? 'text-amber-950' : 'text-emerald-950'}`}>
-                                      {blog.status === 'Needs Revision' ? '⚠️ Revision Chat & Discussion' : '💬 Active Vetting - Revision Chat History'}
-                                    </span>
-                                  </div>
-
-                                  {/* Chat bubble list */}
-                                  {blog.revisionHistory && blog.revisionHistory.length > 0 ? (
-                                    <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-1 bg-white/40 border border-slate-200/30 p-2.5 rounded-xl">
-                                      {blog.revisionHistory.map((item, idx) => {
-                                        const isAdmin = item.senderRole === 'admin' || item.senderRole === 'superadmin';
-                                        return (
-                                          <div 
-                                            key={idx} 
-                                            className={`flex flex-col max-w-[85%] rounded-2xl p-2.5 border text-[10.5px] ${
-                                              isAdmin 
-                                                ? 'bg-amber-100/50 border-amber-200/40 self-start text-left text-amber-950' 
-                                                : 'bg-emerald-50/50 border-emerald-250/20 self-end text-right text-[#001c41]'
-                                            }`}
-                                          >
-                                            <span className="text-[7.5px] font-black uppercase text-slate-400 tracking-wider mb-0.5">
-                                              {item.senderName} ({isAdmin ? 'Admin' : 'You'})
-                                            </span>
-                                            <p className="font-semibold whitespace-pre-wrap leading-snug">{item.message}</p>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  ) : (
-                                    <div className="bg-white/40 border border-amber-200/30 p-2.5 rounded-xl text-[10.5px]">
-                                      <span className="text-[7.5px] font-black uppercase text-slate-400 tracking-wider mb-0.5">Moderator suggestion</span>
-                                      <p className="font-semibold whitespace-pre-wrap leading-snug">{blog.revisionSuggestions}</p>
-                                    </div>
-                                  )}
-
-                                  {/* Reply chat input */}
-                                  <div className="flex gap-2 mt-0.5">
-                                    <input
-                                      type="text"
-                                      placeholder="Explain changes or reply..."
-                                      className="flex-1 bg-white border border-slate-200/80 rounded-xl px-3 py-2 text-[10.5px] font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100"
-                                      value={replyTexts[blog._id] || ''}
-                                      onChange={(e) => setReplyTexts(prev => ({ ...prev, [blog._id]: e.target.value }))}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                          handleSendRevisionComment(blog._id);
-                                        }
-                                      }}
-                                    />
-                                    <button
-                                      onClick={() => handleSendRevisionComment(blog._id)}
-                                      className={`px-3 py-2 text-white font-extrabold text-[10px] rounded-xl cursor-pointer transition-colors shadow-2xs ${
-                                        blog.status === 'Needs Revision' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-[#027244] hover:bg-[#005934]'
-                                      }`}
-                                    >
-                                      Send
-                                    </button>
-                                  </div>
-
-                                </div>
-                              )}
                             </div>
                           </div>
+
+                          {((blog.status === 'Needs Revision') || (blog.status === 'Pending Approval' && blog.revisionHistory && blog.revisionHistory.length > 0)) && (
+                            <div className={`mt-2 border rounded-2xl p-4 text-[11px] font-semibold leading-relaxed text-left flex flex-col gap-3 animate-fadeIn w-full ${
+                              blog.status === 'Needs Revision' 
+                                ? 'bg-amber-50/70 border-amber-200/60 text-amber-900' 
+                                : 'bg-emerald-50/20 border-emerald-200/30 text-emerald-900'
+                            }`}>
+                              <div className="flex items-start gap-1.5 border-b border-slate-205/30 pb-2">
+                                <AlertTriangle className={`h-4 w-4 shrink-0 mt-0.5 ${blog.status === 'Needs Revision' ? 'text-amber-600' : 'text-[#027244]'}`} />
+                                <span className={`font-extrabold uppercase tracking-wider text-[9.5px] ${blog.status === 'Needs Revision' ? 'text-amber-950' : 'text-emerald-950'}`}>
+                                  {blog.status === 'Needs Revision' ? '⚠️ Revision Chat & Discussion' : '💬 Active Vetting - Revision Chat History'}
+                                </span>
+                              </div>
+
+                              {/* Chat bubble list */}
+                              {blog.revisionHistory && blog.revisionHistory.length > 0 ? (
+                                <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-1 bg-white/40 border border-slate-200/30 p-2.5 rounded-xl">
+                                  {blog.revisionHistory.map((item, idx) => {
+                                    const isAdmin = item.senderRole === 'admin' || item.senderRole === 'superadmin';
+                                    return (
+                                      <div 
+                                        key={idx} 
+                                        className={`flex flex-col max-w-[85%] rounded-2xl p-2.5 border text-[10.5px] ${
+                                          isAdmin 
+                                            ? 'bg-amber-100/50 border-amber-200/40 self-start text-left text-amber-950' 
+                                            : 'bg-emerald-50/50 border-emerald-250/20 self-end text-right text-[#001c41]'
+                                        }`}
+                                      >
+                                        <span className="text-[7.5px] font-black uppercase text-slate-400 tracking-wider mb-0.5">
+                                          {item.senderName} ({isAdmin ? 'Admin' : 'You'})
+                                        </span>
+                                        <p className="font-semibold whitespace-pre-wrap leading-snug">{item.message}</p>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <div className="bg-white/40 border border-amber-200/30 p-2.5 rounded-xl text-[10.5px]">
+                                  <span className="text-[7.5px] font-black uppercase text-slate-400 tracking-wider mb-0.5">Moderator suggestion</span>
+                                  <p className="font-semibold whitespace-pre-wrap leading-snug">{blog.revisionSuggestions}</p>
+                                </div>
+                              )}
+
+                              {/* Reply chat input */}
+                              <div className="flex gap-2 mt-0.5">
+                                <input
+                                  type="text"
+                                  placeholder="Explain changes or reply..."
+                                  className="flex-1 bg-white border border-slate-200/80 rounded-xl px-3 py-2 text-[10.5px] font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100"
+                                  value={replyTexts[blog._id] || ''}
+                                  onChange={(e) => setReplyTexts(prev => ({ ...prev, [blog._id]: e.target.value }))}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      handleSendRevisionComment(blog._id);
+                                    }
+                                  }}
+                                />
+                                <button
+                                  onClick={() => handleSendRevisionComment(blog._id)}
+                                  className={`px-3 py-2 text-white font-extrabold text-[10px] rounded-xl cursor-pointer transition-colors shadow-2xs ${
+                                    blog.status === 'Needs Revision' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-[#027244] hover:bg-[#005934]'
+                                  }`}
+                                >
+                                  Send
+                                </button>
+                              </div>
+
+                            </div>
+                          )}
 
                           {/* Quick Option Toggles (Likes / Comments visibility switches) */}
                           <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200/60 flex flex-col gap-2.5 text-xs font-bold text-slate-700">
