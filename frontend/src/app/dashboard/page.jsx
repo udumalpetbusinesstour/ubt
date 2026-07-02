@@ -4739,11 +4739,11 @@ function DashboardContent() {
               {/* KPI Cards Row */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {/* Metric 1: Available Points */}
-                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-2xl flex items-center gap-3 sm:gap-4">
+                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                   <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100/50">
                     <Gift className="h-6 w-6" />
                   </div>
-                  <div className="flex flex-col overflow-hidden min-w-0">
+                  <div className="flex flex-col overflow-hidden min-w-0 text-left">
                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Available Points</span>
                     <span className="text-lg font-black text-[#027244] leading-tight mt-0.5">
                       {referralsLoading ? '...' : (referralStats?.referralPoints || 0)} pts
@@ -4753,11 +4753,11 @@ function DashboardContent() {
                 </div>
 
                 {/* Metric 2: Total Referrals */}
-                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-2xl flex items-center gap-3 sm:gap-4">
+                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                   <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/50">
                     <Users className="h-6 w-6" />
                   </div>
-                  <div className="flex flex-col overflow-hidden min-w-0">
+                  <div className="flex flex-col overflow-hidden min-w-0 text-left">
                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Total Referrals</span>
                     <span className="text-lg font-black text-[#001c41] leading-tight mt-0.5">
                       {referralsLoading ? '...' : (referralStats?.referrals?.filter(r => r.referredBusinessId)?.length || 0)}
@@ -4767,11 +4767,11 @@ function DashboardContent() {
                 </div>
 
                 {/* Metric 3: Successful Conversions */}
-                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-2xl flex items-center gap-3 sm:gap-4">
+                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                   <div className="h-12 w-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100/50">
                     <CheckCircle className="h-6 w-6" />
                   </div>
-                  <div className="flex flex-col overflow-hidden min-w-0">
+                  <div className="flex flex-col overflow-hidden min-w-0 text-left">
                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Completed Referrals</span>
                     <span className="text-lg font-black text-purple-600 leading-tight mt-0.5">
                       {referralsLoading ? '...' : (referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0)}
@@ -4781,11 +4781,11 @@ function DashboardContent() {
                 </div>
 
                 {/* Metric 4: Payouts requested */}
-                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-2xl flex items-center gap-3 sm:gap-4">
+                <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                   <div className="h-12 w-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100/50">
                     <CreditCard className="h-6 w-6" />
                   </div>
-                  <div className="flex flex-col overflow-hidden min-w-0">
+                  <div className="flex flex-col overflow-hidden min-w-0 text-left">
                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Redeemed Requests</span>
                     <span className="text-lg font-black text-amber-600 leading-tight mt-0.5">
                       {redemptionsLoading ? '...' : (redemptionRequests?.length || 0)}
