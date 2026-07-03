@@ -1533,7 +1533,7 @@ Please confirm availability and delivery time.`;
       )}
 
       {/* Premium Header Banner (Matching Image 5) */}
-      <section className="w-full relative bg-slate-900 text-white py-14 px-4 border-b border-slate-800/60 overflow-hidden">
+      <section className="w-full relative bg-slate-900 text-white border-b border-slate-800/60 overflow-hidden aspect-[4/3] sm:aspect-[16/9] md:aspect-[2.5/1] lg:aspect-[3.2/1] flex flex-col justify-end p-4 sm:p-6 md:p-8">
         {/* Background Image opacity filter */}
         <div 
           className="absolute inset-0 bg-cover cursor-pointer transition-opacity duration-300 hover:opacity-95" 
@@ -1558,7 +1558,7 @@ Please confirm availability and delivery time.`;
           </div>
         )}
 
-        <div className="relative max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10">
+        <div className="relative max-w-[1600px] w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10">
           <div className="flex flex-col gap-3 w-full">
             {/* Go Back button with Left Arrow */}
             <button 
