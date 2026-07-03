@@ -260,7 +260,7 @@ export default function BloodDonorsPage() {
       <div className="w-full bg-gradient-to-r from-red-800 via-rose-900 to-[#001c41] text-white py-16 px-4 md:px-8 shadow-md relative overflow-hidden select-none">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
         
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
           <div className="flex flex-col gap-3.5 max-w-xl text-left">
             <span className="px-3 py-1 bg-white/10 text-rose-350 border border-rose-500/20 text-[10px] font-black uppercase tracking-widest rounded-full w-fit flex items-center gap-1.5 backdrop-blur-xs select-none">
               <Sparkles className="h-3 w-3 animate-pulse" /> Life-Saving Initiative
@@ -276,7 +276,7 @@ export default function BloodDonorsPage() {
       </div>
 
       {/* 2. Main Grid Content */}
-      <div className="max-w-6xl mx-auto px-4 md:px-8 mt-12 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="max-w-[1600px] mx-auto px-4 md:px-8 mt-12 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* Left Column: Form Controls (lg:col-span-4) */}
         <div className="lg:col-span-4 flex flex-col gap-6">

@@ -1364,7 +1364,7 @@ Please confirm availability and delivery time.`;
 
   if (error || !business) {
     return (
-      <div className="w-full max-w-6xl mx-auto px-4 py-8 flex flex-col gap-6 text-left font-sans">
+      <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8 py-8 flex flex-col gap-6 text-left font-sans">
         <button 
           onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 text-xs font-extrabold text-slate-500 hover:text-[#027244] transition-colors cursor-pointer w-fit py-1.5 hover:-translate-x-0.5 transition-transform"

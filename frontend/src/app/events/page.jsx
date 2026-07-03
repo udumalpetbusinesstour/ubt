@@ -874,7 +874,7 @@ export default function EventsPage() {
   if (showListingWizard) {
     return (
       <div className="w-full min-h-screen bg-[#F8FAFC] py-12 px-4 md:px-8 font-sans">
-        <div className="max-w-6xl mx-auto flex flex-col gap-6">
+        <div className="max-w-[1600px] mx-auto flex flex-col gap-6">
           {/* Top Back navigation */}
           <button 
             onClick={() => setShowListingWizard(false)}

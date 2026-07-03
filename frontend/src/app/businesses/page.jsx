@@ -1458,7 +1458,7 @@ function BusinessesList() {
         </section>
 
         {/* Content sections */}
-        <section className="mx-auto max-w-6xl w-full px-4 md:px-8 py-12 text-left">
+        <section className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-12 text-left">
           <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 flex flex-col gap-6 font-sans">
             <h3 className="font-extrabold text-[#001c41] text-base border-b border-slate-100 pb-3">
               Official {docTitle} — Last Updated: {isTermsView ? 'June 2026' : 'May 30, 2026'}
@@ -1639,7 +1639,7 @@ function BusinessesList() {
         </section>
 
         {/* Content sections */}
-        <section className="mx-auto max-w-6xl w-full px-4 md:px-8 py-12 grid grid-cols-1 md:grid-cols-5 gap-8">
+        <section className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-12 grid grid-cols-1 md:grid-cols-5 gap-8">
           
           {/* Left Column: Form (3 cols) */}
           <div className="md:col-span-3 bg-white border border-slate-200 shadow-sm rounded-3xl p-6 md:p-8 text-left flex flex-col gap-5">
