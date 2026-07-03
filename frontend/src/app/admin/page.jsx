@@ -2301,7 +2301,7 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Overview Cards matching the UBT UI layout */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* Card 1: Pending Approvals */}
                     <div className="bg-amber-50/30 border border-amber-200/70 p-5 rounded-[22px] shadow-2xs flex justify-between items-center transition-all hover:-translate-y-0.5 hover:shadow">
                       <div className="flex flex-col gap-1 text-left">
