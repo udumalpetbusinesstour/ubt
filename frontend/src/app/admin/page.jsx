@@ -3459,8 +3459,8 @@ export default function AdminDashboard() {
                           }`}>
                             {b.status}
                           </span>
-                          <span className="text-[10.5px] font-extrabold text-[#027244] flex items-center gap-1 group-hover:underline">
-                            Touch to Audit & Moderate →
+                          <span className="text-[10px] font-black tracking-wide uppercase bg-[#027244] group-hover:bg-[#015230] text-white px-3.5 py-1.5 rounded-xl shadow-sm transition-colors duration-200">
+                            Moderate
                           </span>
                         </div>
                       </div>
