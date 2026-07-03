@@ -3143,7 +3143,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                     
                     {/* Platform Overview Line Chart Widget */}
-                    <div className={`lg:col-span-6 rounded-3xl border p-5 flex flex-col justify-between h-80 ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
+                    <div className={`lg:col-span-6 rounded-3xl border p-5 flex flex-col justify-between h-auto lg:h-96 ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
 
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
 
@@ -3227,7 +3227,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     </div>
 
                     {/* Businesses by Category Donut Chart Widget */}
-                    <div className={`lg:col-span-3 rounded-3xl border p-5 flex flex-col justify-between h-80 ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
+                    <div className={`lg:col-span-3 rounded-3xl border p-5 flex flex-col justify-between h-auto lg:h-96 ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
 
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
 
@@ -3274,7 +3274,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     </div>
 
                     {/* Pending Approvals Widget */}
-                    <div className={`lg:col-span-3 rounded-3xl border p-5 flex flex-col justify-between h-80 ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
+                    <div className={`lg:col-span-3 rounded-3xl border p-5 flex flex-col justify-between h-auto lg:h-96 ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
 
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
 
@@ -3366,7 +3366,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                     
                     {/* Recent Registrations Card */}
-                    <div className={`lg:col-span-5 rounded-3xl border p-5 flex flex-col h-[26rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
+                    <div className={`lg:col-span-5 rounded-3xl border p-5 flex flex-col h-auto lg:h-[26rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
 
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
 
@@ -3593,7 +3593,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     </div>
 
                     {/* Recent Transactions Card */}
-                    <div className={`lg:col-span-4 rounded-3xl border p-5 flex flex-col h-[26rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
+                    <div className={`lg:col-span-4 rounded-3xl border p-5 flex flex-col h-auto lg:h-[26rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
 
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
                         <span className="text-xs font-black uppercase tracking-widest text-slate-400">Recent Transactions</span>
@@ -3674,7 +3674,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     </div>
 
                     {/* System Summary Widget */}
-                    <div className={`lg:col-span-3 rounded-3xl border p-5 flex flex-col justify-between h-[26rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
+                    <div className={`lg:col-span-3 rounded-3xl border p-5 flex flex-col justify-between h-auto lg:h-[26rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
 
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
 
@@ -8392,37 +8392,19 @@ const handlePartnerAction = async (partnerId, action) => {
             <div className={`p-4 sm:p-6 border-t flex flex-col gap-2 shrink-0 ${
               themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-200'
             }`}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {selectedBiz.status !== 'Approved' && selectedBiz.status !== 'Rejected' && (
-                  <button 
-                    onClick={() => {
-                      handleAction(selectedBiz._id, 'reject');
-                      setSelectedBiz(prev => ({ ...prev, status: 'Rejected' }));
-                      setShowBizModal(false);
-                      showToast('Listing rejected and hidden from public.', 'error');
-                    }}
-                    className="py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 font-extrabold text-[11px] rounded-xl cursor-pointer text-center transition-colors border border-rose-500/25"
-                  >
-                    Reject listing
-                  </button>
-                )}
+              {selectedBiz.status !== 'Approved' && selectedBiz.status !== 'Rejected' && (
                 <button 
-                  onClick={async () => {
-                    const remarks = await window.prompt("Enter modification request comments:");
-                    if (remarks) {
-                      setSystemLogs(prev => [
-                        { time: new Date().toLocaleTimeString(), event: `SuperAdmin requested modifications for ${selectedBiz.name}. Comments: ${remarks}`, type: 'warning' },
-                        ...prev
-                      ]);
-                      alert("Modification details request sent to merchant mailbox.");
-                      setShowBizModal(false);
-                    }
+                  onClick={() => {
+                    handleAction(selectedBiz._id, 'reject');
+                    setSelectedBiz(prev => ({ ...prev, status: 'Rejected' }));
+                    setShowBizModal(false);
+                    showToast('Listing rejected and hidden from public.', 'error');
                   }}
-                  className="py-2.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 font-extrabold text-[11px] rounded-xl cursor-pointer text-center transition-colors border border-purple-500/25"
+                  className="w-full py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 font-extrabold text-[11px] rounded-xl cursor-pointer text-center transition-colors border border-rose-500/25"
                 >
-                  Mod Request
+                  Reject listing
                 </button>
-              </div>
+              )}
               <button 
                 onClick={() => window.open(`/businesses/${selectedBiz.slug || selectedBiz._id}`, '_blank')}
                 className="w-full py-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 font-extrabold text-[11px] rounded-xl cursor-pointer text-center transition-colors border border-blue-500/25 flex items-center justify-center gap-1.5"
