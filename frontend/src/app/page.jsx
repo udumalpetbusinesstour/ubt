@@ -1269,27 +1269,38 @@ export default function Home() {
         </div>
 
         <div className="relative w-full">
-          {/* Carousel buttons */}
+          {/* Mobile Carousel buttons */}
           <button 
             onClick={() => handleScrollFeatured('left')}
-            className="absolute left-2 md:-left-4 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent md:bg-white border-none md:border md:border-slate-200/60 shadow-none md:shadow-md rounded-full text-[#027244] md:text-slate-600 hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
-            aria-label="Scroll Featured Left"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90 sm:hidden"
+            aria-label="Scroll Featured Left Mobile"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <button 
             onClick={() => handleScrollFeatured('right')}
-            className="absolute right-2 md:-right-4 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent md:bg-white border-none md:border md:border-slate-200/60 shadow-none md:shadow-md rounded-full text-[#027244] md:text-slate-600 hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
-            aria-label="Scroll Featured Right"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90 sm:hidden"
+            aria-label="Scroll Featured Right Mobile"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
 
-          <div 
-            ref={featuredScrollRef}
-            className="flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-8 sm:px-0"
-          >
-          {featuredBusinesses.map((biz) => {
+          {/* Desktop centering and navigation wrapper */}
+          <div className="mx-auto relative max-w-full w-fit">
+            {/* Desktop Carousel buttons */}
+            <button 
+              onClick={() => handleScrollFeatured('left')}
+              className="absolute -left-12 top-1/2 -translate-y-1/2 z-10 h-9 w-9 lg:h-10 lg:w-10 flex items-center justify-center bg-white border border-slate-200/60 shadow-md rounded-full text-slate-700 hover:text-[#027244] cursor-pointer transition-all hover:scale-110 active:scale-90 hidden sm:flex"
+              aria-label="Scroll Featured Left Desktop"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+
+            <div 
+              ref={featuredScrollRef}
+              className="flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-8 sm:px-0"
+            >
+            {featuredBusinesses.map((biz) => {
             const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
             return (
               <div 
@@ -1394,8 +1405,18 @@ export default function Home() {
             );
           })}
         </div>
+
+        {/* Desktop Scroll Right Button */}
+        <button 
+          onClick={() => handleScrollFeatured('right')}
+          className="absolute -right-12 top-1/2 -translate-y-1/2 z-10 h-9 w-9 lg:h-10 lg:w-10 flex items-center justify-center bg-white border border-slate-200/60 shadow-md rounded-full text-slate-700 hover:text-[#027244] cursor-pointer transition-all hover:scale-110 active:scale-90 hidden sm:flex"
+          aria-label="Scroll Featured Right Desktop"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
       </div>
-    </section>
+    </div>
+  </section>
 
       {/* 4.5 Sponsored Ads Auto-scrolling Banner Section */}
       <section className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-6 flex flex-col gap-4">
@@ -1439,26 +1460,37 @@ export default function Home() {
           </div>
         ) : (
           <div className="relative w-full">
-            {/* Carousel buttons */}
+            {/* Mobile Scroll Buttons */}
             <button 
               onClick={() => handleScrollSponsored('left')}
-              className="absolute left-0.5 md:-left-4 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent md:bg-white border-none md:border md:border-slate-200/60 shadow-none md:shadow-lg rounded-full text-[#027244] md:text-slate-600 hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
-              aria-label="Scroll Sponsored Ads Left"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90 sm:hidden"
+              aria-label="Scroll Sponsored Ads Left Mobile"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <button 
               onClick={() => handleScrollSponsored('right')}
-              className="absolute right-0.5 md:-right-4 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent md:bg-white border-none md:border md:border-slate-200/60 shadow-none md:shadow-lg rounded-full text-[#027244] md:text-slate-600 hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
-              aria-label="Scroll Sponsored Ads Right"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90 sm:hidden"
+              aria-label="Scroll Sponsored Ads Right Mobile"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
 
-            <div 
-              ref={sponsoredAdsScrollRef}
-              className="flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
-            >
+            {/* Desktop centering and navigation wrapper */}
+            <div className="mx-auto relative max-w-full w-fit">
+              {/* Desktop Scroll Left Button */}
+              <button 
+                onClick={() => handleScrollSponsored('left')}
+                className="absolute -left-12 top-1/2 -translate-y-1/2 z-10 h-9 w-9 lg:h-10 lg:w-10 flex items-center justify-center bg-white border border-slate-200/60 shadow-md rounded-full text-slate-700 hover:text-[#027244] cursor-pointer transition-all hover:scale-110 active:scale-90 hidden sm:flex"
+                aria-label="Scroll Sponsored Ads Left Desktop"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+
+              <div 
+                ref={sponsoredAdsScrollRef}
+                className="flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth"
+              >
               {sponsoredAds.map((ad, idx) => (
                 <div 
                   key={idx}
@@ -1474,7 +1506,17 @@ export default function Home() {
                 </div>
               ))}
             </div>
+
+            {/* Desktop Scroll Right Button */}
+            <button 
+              onClick={() => handleScrollSponsored('right')}
+              className="absolute -right-12 top-1/2 -translate-y-1/2 z-10 h-9 w-9 lg:h-10 lg:w-10 flex items-center justify-center bg-white border border-slate-200/60 shadow-md rounded-full text-slate-700 hover:text-[#027244] cursor-pointer transition-all hover:scale-110 active:scale-90 hidden sm:flex"
+              aria-label="Scroll Sponsored Ads Right Desktop"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
           </div>
+        </div>
         )}
       </section>
 
@@ -1508,27 +1550,45 @@ export default function Home() {
           
           <div className="max-w-[1600px] mx-auto w-full px-4 md:px-8">
             <div className="relative w-full">
-              {/* Scroll Left Button */}
+              {/* Mobile Scroll Buttons */}
               <button 
                 onClick={() => handleScrollTopViewed('left')}
-                className="absolute left-2 md:-left-4 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent md:bg-white border-none md:border md:border-slate-200/60 shadow-none md:shadow-md rounded-full text-[#027244] md:text-slate-600 hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
-                aria-label="Scroll Top Contributors Left"
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90 sm:hidden"
+                aria-label="Scroll Top Contributors Left Mobile"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-
-              {/* The scrolling wrapper */}
-              <div 
-                ref={topViewedScrollRef}
-                className="flex overflow-x-auto gap-6 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-8 sm:px-0"
+              <button 
+                onClick={() => handleScrollTopViewed('right')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90 sm:hidden"
+                aria-label="Scroll Top Contributors Right Mobile"
               >
-                {topViewedBusinesses.map((biz) => {
-                  const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
-                  return (
-                    <div 
-                      key={biz._id}
-                      onClick={() => navigate(`/${biz.slug || biz._id}`)}
-                      className="w-[260px] sm:w-[285px] shrink-0 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 text-left snap-center sm:snap-start relative overflow-hidden"
+                <ChevronRight className="h-5 w-5" />
+              </button>
+
+              {/* Desktop centering and navigation wrapper */}
+              <div className="mx-auto relative max-w-full w-fit">
+                {/* Desktop Scroll Left Button */}
+                <button 
+                  onClick={() => handleScrollTopViewed('left')}
+                  className="absolute -left-12 top-1/2 -translate-y-1/2 z-10 h-9 w-9 lg:h-10 lg:w-10 flex items-center justify-center bg-white border border-slate-200/60 shadow-md rounded-full text-slate-700 hover:text-[#027244] cursor-pointer transition-all hover:scale-110 active:scale-90 hidden sm:flex"
+                  aria-label="Scroll Top Contributors Left Desktop"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+
+                {/* The scrolling wrapper */}
+                <div 
+                  ref={topViewedScrollRef}
+                  className="flex overflow-x-auto gap-6 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-8 sm:px-0"
+                >
+                  {topViewedBusinesses.map((biz) => {
+                    const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
+                    return (
+                      <div 
+                        key={biz._id}
+                        onClick={() => navigate(`/${biz.slug || biz._id}`)}
+                        className="w-[260px] sm:w-[285px] shrink-0 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 text-left snap-center sm:snap-start relative overflow-hidden"
                     >
                       {/* Logo/Image */}
                       {biz.logoUrl ? (
@@ -1589,15 +1649,16 @@ export default function Home() {
                 })}
               </div>
 
-              {/* Scroll Right Button */}
+              {/* Desktop Scroll Right Button */}
               <button 
                 onClick={() => handleScrollTopViewed('right')}
-                className="absolute right-2 md:-right-4 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent md:bg-white border-none md:border md:border-slate-200/60 shadow-none md:shadow-md rounded-full text-[#027244] md:text-slate-600 hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
-                aria-label="Scroll Top Viewed Right"
+                className="absolute -right-12 top-1/2 -translate-y-1/2 z-10 h-9 w-9 lg:h-10 lg:w-10 flex items-center justify-center bg-white border border-slate-200/60 shadow-md rounded-full text-slate-700 hover:text-[#027244] cursor-pointer transition-all hover:scale-110 active:scale-90 hidden sm:flex"
+                aria-label="Scroll Top Viewed Right Desktop"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
             </div>
+          </div>
           </div>
         </section>
       )}
@@ -1734,20 +1795,38 @@ export default function Home() {
           </div>
 
           <div className="relative w-full">
-            {/* Scroll Left Button */}
+            {/* Mobile Scroll Buttons */}
             <button 
               onClick={() => handleScrollTestimonials('left')}
-              className="absolute left-2 md:-left-4 lg:-left-5 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent md:bg-white border-none md:border md:border-slate-200/60 shadow-none md:shadow-md rounded-full text-[#027244] md:text-slate-600 hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
-              aria-label="Scroll Testimonials Left"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90 sm:hidden"
+              aria-label="Scroll Testimonials Left Mobile"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
-
-            <div 
-              ref={testimonialScrollRef}
-              className="w-full flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden animate-fadeIn scroll-smooth px-8 sm:px-0"
+            <button 
+              onClick={() => handleScrollTestimonials('right')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90 sm:hidden"
+              aria-label="Scroll Testimonials Right Mobile"
             >
-              {testimonials.map((t, idx) => (
+              <ChevronRight className="h-5 w-5" />
+            </button>
+
+            {/* Desktop centering and navigation wrapper */}
+            <div className="mx-auto relative max-w-full w-fit">
+              {/* Desktop Scroll Left Button */}
+              <button 
+                onClick={() => handleScrollTestimonials('left')}
+                className="absolute -left-12 top-1/2 -translate-y-1/2 z-10 h-9 w-9 lg:h-10 lg:w-10 flex items-center justify-center bg-white border border-slate-200/60 shadow-md rounded-full text-slate-700 hover:text-[#027244] cursor-pointer transition-all hover:scale-110 active:scale-90 hidden sm:flex"
+                aria-label="Scroll Testimonials Left Desktop"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+
+              <div 
+                ref={testimonialScrollRef}
+                className="w-full flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden animate-fadeIn scroll-smooth px-8 sm:px-0"
+              >
+                {testimonials.map((t, idx) => (
                 <div 
                   key={t._id || idx}
                   className="w-[280px] sm:w-[350px] bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-7 flex flex-col justify-between gap-4 shrink-0 snap-center sm:snap-start shadow-2xs hover:shadow-xs transition-all relative"
@@ -1783,15 +1862,16 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Scroll Right Button */}
+            {/* Desktop Scroll Right Button */}
             <button 
               onClick={() => handleScrollTestimonials('right')}
-              className="absolute right-2 md:-right-4 lg:-right-5 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent md:bg-white border-none md:border md:border-slate-200/60 shadow-none md:shadow-md rounded-full text-[#027244] md:text-slate-600 hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
-              aria-label="Scroll Testimonials Right"
+              className="absolute -right-12 top-1/2 -translate-y-1/2 z-10 h-9 w-9 lg:h-10 lg:w-10 flex items-center justify-center bg-white border border-slate-200/60 shadow-md rounded-full text-slate-700 hover:text-[#027244] cursor-pointer transition-all hover:scale-110 active:scale-90 hidden sm:flex"
+              aria-label="Scroll Testimonials Right Desktop"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>
+        </div>
 
           {/* Ask business owners, event managers, blog writers to share their thoughts */}
           <div className="flex flex-col items-center gap-3.5 mt-4">
