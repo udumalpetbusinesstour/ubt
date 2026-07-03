@@ -29,7 +29,13 @@ router.post('/', protect, runUpload(upload.single('image')), (req, res) => {
 
     let fileUrl = '';
     if (req.file.location) {
-      fileUrl = req.file.location; // S3 storage returns URL in 'location'
+      if (process.env.AWS_CDN_URL) {
+        const cdnBase = process.env.AWS_CDN_URL.endsWith('/') ? process.env.AWS_CDN_URL : `${process.env.AWS_CDN_URL}/`;
+        const cleanKey = req.file.key.startsWith('/') ? req.file.key.slice(1) : req.file.key;
+        fileUrl = `${cdnBase}${cleanKey}`;
+      } else {
+        fileUrl = req.file.location; // S3 storage returns URL in 'location'
+      }
     } else if (req.file.path && (req.file.path.startsWith('http://') || req.file.path.startsWith('https://'))) {
       fileUrl = req.file.path; // Cloudinary storage fallback
     } else if (req.file.filename) {
@@ -57,7 +63,13 @@ router.post('/public', runUpload(upload.single('image')), (req, res) => {
 
     let fileUrl = '';
     if (req.file.location) {
-      fileUrl = req.file.location; // S3 storage returns URL in 'location'
+      if (process.env.AWS_CDN_URL) {
+        const cdnBase = process.env.AWS_CDN_URL.endsWith('/') ? process.env.AWS_CDN_URL : `${process.env.AWS_CDN_URL}/`;
+        const cleanKey = req.file.key.startsWith('/') ? req.file.key.slice(1) : req.file.key;
+        fileUrl = `${cdnBase}${cleanKey}`;
+      } else {
+        fileUrl = req.file.location; // S3 storage returns URL in 'location'
+      }
     } else if (req.file.path && (req.file.path.startsWith('http://') || req.file.path.startsWith('https://'))) {
       fileUrl = req.file.path; // Cloudinary storage fallback
     } else if (req.file.filename) {
