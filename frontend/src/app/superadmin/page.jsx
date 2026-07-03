@@ -5572,7 +5572,7 @@ const handlePartnerAction = async (partnerId, action) => {
                             <div className="flex flex-col text-left font-sans">
                               <div className="flex items-center gap-2">
                                 <span className={`font-extrabold text-xs leading-none ${themeMode === 'dark' ? 'text-white' : 'text-slate-805'}`}>
-                                  {r.authorName} on {r.businessName}
+                                  {r.authorName} on <span className="text-[#027244] hover:underline cursor-pointer font-bold" onClick={(e) => { e.stopPropagation(); if (r.businessId) { window.open(`/businesses/${r.businessId}`, '_blank'); } else { alert('Business profile not found'); } }}>{r.businessName}</span>
                                 </span>
                                 {isHidden && (
                                   <span className="bg-slate-500/15 border border-slate-500/25 text-slate-400 text-[8px] font-black uppercase px-2 py-0.5 rounded-lg leading-none">

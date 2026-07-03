@@ -1193,38 +1193,29 @@ export default function AdminDashboard() {
         setEvents(evData.data);
       }
 
-      // Keep mock subscriptions and reviews for simple UI metrics
-      const mockReviews = [
-        {
-          _id: 'rev_1',
-          businessName: 'Vibrant Bakery & Cafe',
-          authorName: 'Ramesh K.',
-          rating: 1,
-          text: 'SPAM REVIEW: Earn Rs 5000 daily from home visit spamlink.com!',
-          status: 'flagged'
-        },
-        {
-          _id: 'rev_2',
-          businessName: 'R.K. Electricals',
-          authorName: 'Karthik S.',
-          rating: 5,
-          text: 'Excellent service! They came on time and fixed the inverter issue quickly. Very professional.',
-          status: 'approved'
+      // Fetch real reviews feed
+      try {
+        const revRes = await fetch('http://localhost:5000/api/reviews', { headers });
+        const revData = await revRes.json();
+        if (revData.success && Array.isArray(revData.data)) {
+          const formatted = revData.data.map(r => ({
+            _id: r._id,
+            businessId: r.businessId ? r.businessId._id : null,
+            businessName: r.businessId ? (r.businessId.name || r.businessId.businessName) : 'Unknown Business',
+            authorName: r.authorName,
+            rating: r.rating,
+            text: r.text || r.reviewText || '',
+            status: r.status || 'approved',
+            createdAt: r.createdAt
+          }));
+          setReviews(formatted);
+        } else {
+          setReviews([]);
         }
-      ];
-
-      const mockSubs = [
-        {
-          _id: 'sub_1',
-          businessName: 'R.K. Electricals',
-          planType: 'Monthly',
-          amount: 99,
-          paymentStatus: 'Paid',
-          expiryDate: new Date(new Date().getTime() + 15 * 24 * 60 * 60 * 1000)
-        }
-      ];
-
-      setReviews(mockReviews);
+      } catch (revErr) {
+        console.error('Error fetching admin reviews feed:', revErr);
+        setReviews([]);
+      }
       
       // Fetch admin subscriptions
       try {
@@ -1901,9 +1892,31 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleReviewAction = (revId, action) => {
-    if (action === 'delete') {
-      setReviews(prev => prev.filter(r => r._id !== revId));
+  const handleReviewAction = async (revId, action) => {
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/reviews/${revId}/moderate`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${activeToken || token}`
+        },
+        body: JSON.stringify({ action })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (action === 'delete') {
+          setReviews(prev => prev.filter(r => r._id !== revId));
+        } else {
+          setReviews(prev => prev.map(r => r._id === revId ? { ...r, status: action } : r));
+        }
+        alert(`Review status successfully updated!`);
+      } else {
+        alert(data.message || 'Failed to update review status.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error updating review status.');
     }
   };
 
@@ -3576,7 +3589,9 @@ export default function AdminDashboard() {
                             {r.authorName.charAt(0)}
                           </div>
                           <div className="flex flex-col text-left">
-                            <span className="font-extrabold text-xs text-slate-800 leading-none">{r.authorName} on {r.businessName}</span>
+                            <span className="font-extrabold text-xs text-slate-800 leading-none">
+                              {r.authorName} on <span className="text-[#027244] hover:underline cursor-pointer font-bold" onClick={(e) => { e.stopPropagation(); if (r.businessId) { window.open(`/businesses/${r.businessId}`, '_blank'); } else { alert('Business profile not found'); } }}>{r.businessName}</span>
+                            </span>
                             <div className="flex items-center gap-1.5 mt-1.5">
                               <div className="flex text-amber-400 gap-0.5 shrink-0">
                                 {[...Array(5)].map((_, i) => (
