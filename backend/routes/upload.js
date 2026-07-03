@@ -4,8 +4,8 @@ const multer = require('multer');
 const upload = require('../middleware/uploadMiddleware');
 const { protect } = require('../middleware/auth');
 
-// Helper: Calls multer middleware and catches ALL errors (including Cloudinary / file filter)
-// as JSON instead of letting them bubble up to Express''s default HTML error handler.
+// Helper: Calls multer middleware and catches ALL errors (including S3 / Cloudinary / file filter)
+// as JSON instead of letting them bubble up to Express's default HTML error handler.
 const runUpload = (middleware) => (req, res, next) => {
   middleware(req, res, (err) => {
     if (!err) return next();
@@ -13,7 +13,7 @@ const runUpload = (middleware) => (req, res, next) => {
       // e.g. "File too large", "Unexpected field"
       return res.status(400).json({ success: false, message: err.message });
     }
-    // Custom fileFilter rejections, Cloudinary API errors, etc.
+    // Custom fileFilter rejections, S3/Cloudinary API errors, etc.
     return res.status(500).json({ success: false, message: err.message || 'File upload failed' });
   });
 };
@@ -28,12 +28,12 @@ router.post('/', protect, runUpload(upload.single('image')), (req, res) => {
     }
 
     let fileUrl = '';
-    if (req.file.path && (req.file.path.startsWith('http://') || req.file.path.startsWith('https://'))) {
-      // Cloudinary — path is the remote CDN URL
-      fileUrl = req.file.path;
+    if (req.file.location) {
+      fileUrl = req.file.location; // S3 storage returns URL in 'location'
+    } else if (req.file.path && (req.file.path.startsWith('http://') || req.file.path.startsWith('https://'))) {
+      fileUrl = req.file.path; // Cloudinary storage fallback
     } else if (req.file.filename) {
-      // Local disk fallback
-      fileUrl = `/uploads/${req.file.filename}`;
+      fileUrl = `/uploads/${req.file.filename}`; // Local disk fallback
     }
 
     if (!fileUrl) {
@@ -56,10 +56,12 @@ router.post('/public', runUpload(upload.single('image')), (req, res) => {
     }
 
     let fileUrl = '';
-    if (req.file.path && (req.file.path.startsWith('http://') || req.file.path.startsWith('https://'))) {
-      fileUrl = req.file.path;
+    if (req.file.location) {
+      fileUrl = req.file.location; // S3 storage returns URL in 'location'
+    } else if (req.file.path && (req.file.path.startsWith('http://') || req.file.path.startsWith('https://'))) {
+      fileUrl = req.file.path; // Cloudinary storage fallback
     } else if (req.file.filename) {
-      fileUrl = `/uploads/${req.file.filename}`;
+      fileUrl = `/uploads/${req.file.filename}`; // Local disk fallback
     }
 
     if (!fileUrl) {

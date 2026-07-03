@@ -1,7 +1,33 @@
 const multer = require('multer');
+const { S3Client } = require('@aws-sdk/client-s3');
+const multerS3 = require('multer-s3');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const path = require('path');
+
+// Configure S3 client if credentials are present
+let s3Client = null;
+let s3Storage = null;
+
+if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_ACCESS_KEY_ID !== 'YOUR_AWS_ACCESS_KEY_ID') {
+  s3Client = new S3Client({
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+    region: process.env.AWS_REGION || 'ap-south-1',
+  });
+
+  s3Storage = multerS3({
+    s3: s3Client,
+    bucket: process.env.AWS_BUCKET_NAME,
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: function (req, file, cb) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, 'uploads/' + file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  });
+}
 
 // Configure Cloudinary Credentials (Ready for production env injection)
 cloudinary.config({
@@ -31,9 +57,12 @@ const localDiskStorage = multer.diskStorage({
   }
 });
 
-// Select storage dynamically: Use Cloudinary in production if API keys are set, otherwise fall back to local disk
+// Select storage dynamically: Prioritize AWS S3, then Cloudinary, then local disk
 const selectStorageEngine = () => {
-  if (process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_KEY !== 'cloudinary_key_123456789') {
+  if (s3Storage) {
+    console.log('[Multer Engine] AWS S3 Storage Active');
+    return s3Storage;
+  } else if (process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_KEY !== 'cloudinary_key_123456789') {
     console.log('[Multer Engine] Cloudinary Storage Active');
     return cloudinaryStorage;
   } else {
