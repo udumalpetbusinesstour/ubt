@@ -1221,7 +1221,7 @@ export default function Home() {
           {/* Scroll Left Button */}
           <button 
             onClick={() => handleScrollCategories('left')}
-            className="absolute left-2 md:left-4 xl:left-6 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+            className="absolute left-2 md:left-4 2xl:-left-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
             aria-label="Scroll Categories Left"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -1229,7 +1229,7 @@ export default function Home() {
 
           <div 
             ref={categoryScrollRef} 
-            className="mx-auto flex overflow-x-auto gap-4 pb-4 scrollbar-none snap-x snap-mandatory w-fit max-w-full scroll-smooth px-8 sm:px-0"
+            className="mx-auto flex overflow-x-auto gap-4 pb-4 scrollbar-none snap-x snap-mandatory w-fit max-w-full scroll-smooth px-8 md:px-12 2xl:px-0"
           >
             {categoriesList.map((cat) => (
               <Link 
@@ -1248,7 +1248,7 @@ export default function Home() {
           {/* Scroll Right Button */}
           <button 
             onClick={() => handleScrollCategories('right')}
-            className="absolute right-2 md:right-4 xl:right-6 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+            className="absolute right-2 md:right-4 2xl:-right-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
             aria-label="Scroll Categories Right"
           >
             <ChevronRight className="h-5 w-5" />
@@ -1272,7 +1272,7 @@ export default function Home() {
           {/* Scroll Left Button */}
           <button 
             onClick={() => handleScrollFeatured('left')}
-            className="absolute left-2 md:left-4 xl:left-6 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+            className="absolute left-2 md:left-4 2xl:-left-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
             aria-label="Scroll Featured Left"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -1280,7 +1280,7 @@ export default function Home() {
 
           <div 
             ref={featuredScrollRef}
-            className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-fit max-w-full scroll-smooth px-8 sm:px-0"
+            className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-fit max-w-full scroll-smooth px-8 md:px-12 2xl:px-0"
           >
             {featuredBusinesses.map((biz) => {
             const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
@@ -1391,7 +1391,7 @@ export default function Home() {
         {/* Scroll Right Button */}
         <button 
           onClick={() => handleScrollFeatured('right')}
-          className="absolute right-2 md:right-4 xl:right-6 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+          className="absolute right-2 md:right-4 2xl:-right-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
           aria-label="Scroll Featured Right"
         >
           <ChevronRight className="h-5 w-5" />
@@ -1444,7 +1444,7 @@ export default function Home() {
             {/* Scroll Left Button */}
             <button 
               onClick={() => handleScrollSponsored('left')}
-              className="absolute left-2 md:left-4 xl:left-6 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+              className="absolute left-2 md:left-4 2xl:-left-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
               aria-label="Scroll Sponsored Ads Left"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -1452,7 +1452,7 @@ export default function Home() {
 
             <div 
               ref={sponsoredAdsScrollRef}
-              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-fit max-w-full scroll-smooth"
+              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-fit max-w-full scroll-smooth px-8 md:px-12 2xl:px-0"
             >
               {sponsoredAds.map((ad, idx) => (
                 <div 
@@ -1473,7 +1473,7 @@ export default function Home() {
             {/* Scroll Right Button */}
             <button 
               onClick={() => handleScrollSponsored('right')}
-              className="absolute right-2 md:right-4 xl:right-6 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+              className="absolute right-2 md:right-4 2xl:-right-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
               aria-label="Scroll Sponsored Ads Right"
             >
               <ChevronRight className="h-5 w-5" />
@@ -1515,7 +1515,7 @@ export default function Home() {
               {/* Scroll Left Button */}
               <button 
                 onClick={() => handleScrollTopViewed('left')}
-                className="absolute left-2 md:left-4 xl:left-6 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+                className="absolute left-2 md:left-4 2xl:-left-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
                 aria-label="Scroll Top Contributors Left"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -1524,7 +1524,7 @@ export default function Home() {
               {/* The scrolling wrapper */}
               <div 
                 ref={topViewedScrollRef}
-                className="mx-auto flex overflow-x-auto gap-6 pb-4 scrollbar-none snap-x snap-mandatory w-fit max-w-full scroll-smooth px-8 sm:px-0"
+                className="mx-auto flex overflow-x-auto gap-6 pb-4 scrollbar-none snap-x snap-mandatory w-fit max-w-full scroll-smooth px-8 md:px-12 2xl:px-0"
               >
                   {topViewedBusinesses.map((biz) => {
                     const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
@@ -1596,7 +1596,7 @@ export default function Home() {
               {/* Scroll Right Button */}
               <button 
                 onClick={() => handleScrollTopViewed('right')}
-                className="absolute right-2 md:right-4 xl:right-6 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+                className="absolute right-2 md:right-4 2xl:-right-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
                 aria-label="Scroll Top Viewed Right"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -1741,7 +1741,7 @@ export default function Home() {
             {/* Scroll Left Button */}
             <button 
               onClick={() => handleScrollTestimonials('left')}
-              className="absolute left-2 md:left-4 xl:left-6 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+              className="absolute left-2 md:left-4 2xl:-left-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
               aria-label="Scroll Testimonials Left"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -1749,7 +1749,7 @@ export default function Home() {
 
             <div 
               ref={testimonialScrollRef}
-              className="mx-auto flex overflow-x-auto gap-6 pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden animate-fadeIn scroll-smooth px-8 sm:px-0 w-fit max-w-full"
+              className="mx-auto flex overflow-x-auto gap-6 pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden animate-fadeIn scroll-smooth px-8 md:px-12 2xl:px-0 w-fit max-w-full"
             >
                 {testimonials.map((t, idx) => (
                 <div 
@@ -1790,7 +1790,7 @@ export default function Home() {
             {/* Scroll Right Button */}
             <button 
               onClick={() => handleScrollTestimonials('right')}
-              className="absolute right-2 md:right-4 xl:right-6 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+              className="absolute right-2 md:right-4 2xl:-right-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
               aria-label="Scroll Testimonials Right"
             >
               <ChevronRight className="h-5 w-5" />
@@ -1938,7 +1938,7 @@ export default function Home() {
 
           <div 
             ref={faqScrollRef}
-            className="w-full flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth animate-fadeIn"
+            className="mx-auto flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth animate-fadeIn w-fit max-w-full px-8 md:px-12 2xl:px-0"
           >
           {[
             {
