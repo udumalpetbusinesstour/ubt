@@ -2861,7 +2861,7 @@ const handlePartnerAction = async (partnerId, action) => {
                 )}
               </button>
               {notificationsOpen && (
-                <div className="absolute -right-28 sm:right-0 mt-2.5 w-72 sm:w-80 bg-white border border-slate-200 rounded-2xl shadow-xl py-3 px-4 flex flex-col gap-2.5 animate-fadeIn z-20 text-[#001c41]">
+                <div className="fixed inset-x-4 top-16 sm:absolute sm:right-0 sm:left-auto sm:w-80 sm:top-auto sm:mt-2.5 bg-white border border-slate-200 rounded-2xl shadow-xl py-3 px-4 flex flex-col gap-2.5 animate-fadeIn z-20 text-[#001c41]">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                     <span className="font-extrabold text-xs text-slate-700">Notifications ({notifications.length})</span>
                     {notifications.length > 0 && (
