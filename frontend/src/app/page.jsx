@@ -1217,7 +1217,7 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="relative w-full">
+        <div className="mx-auto relative max-w-full w-fit">
           {/* Scroll Left Button */}
           <button 
             onClick={() => handleScrollCategories('left')}
@@ -1268,7 +1268,7 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="relative w-full">
+        <div className="mx-auto relative max-w-full w-fit">
           {/* Scroll Left Button */}
           <button 
             onClick={() => handleScrollFeatured('left')}
@@ -1440,7 +1440,7 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div className="relative w-full">
+          <div className="mx-auto relative max-w-full w-fit">
             {/* Scroll Left Button */}
             <button 
               onClick={() => handleScrollSponsored('left')}
@@ -1511,7 +1511,7 @@ export default function Home() {
           </div>
           
           <div className="max-w-[1600px] mx-auto w-full px-4 md:px-8">
-            <div className="relative w-full">
+            <div className="mx-auto relative max-w-full w-fit">
               {/* Scroll Left Button */}
               <button 
                 onClick={() => handleScrollTopViewed('left')}
@@ -1737,7 +1737,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative w-full">
+          <div className="mx-auto relative max-w-full w-fit">
             {/* Scroll Left Button */}
             <button 
               onClick={() => handleScrollTestimonials('left')}
@@ -1926,7 +1926,7 @@ export default function Home() {
         </div>
 
         {/* FAQs horizontally scrollable wrapper */}
-        <div className="relative w-full">
+        <div className="mx-auto relative max-w-full w-fit">
           {/* Scroll Left Button */}
           <button 
             onClick={() => handleScrollFaqs('left')}
