@@ -1440,7 +1440,7 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div className="mx-auto relative max-w-full w-fit">
+          <div className="relative w-full">
             {/* Scroll Left Button */}
             <button 
               onClick={() => handleScrollSponsored('left')}
@@ -1452,13 +1452,13 @@ export default function Home() {
 
             <div 
               ref={sponsoredAdsScrollRef}
-              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-fit max-w-full scroll-smooth px-8 md:px-12 2xl:px-0"
+              className="w-full flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory scroll-smooth px-8 md:px-12 2xl:px-0"
             >
               {sponsoredAds.map((ad, idx) => (
                 <div 
                   key={idx}
                   onClick={() => navigate(`/${ad.businessSlug || ad.businessId}`)}
-                  className="w-[280px] xs:w-[350px] sm:w-[500px] md:w-[600px] lg:w-[750px] shrink-0 snap-start rounded-[20px] md:rounded-[28px] overflow-hidden aspect-[1920/900] bg-slate-900 shadow-md border border-slate-200 cursor-pointer hover:shadow-none md:shadow-lg transition-shadow relative"
+                  className="w-[calc(100%-16px)] md:w-[calc((100%-20px)/2)] shrink-0 snap-start rounded-[20px] md:rounded-[28px] overflow-hidden aspect-[1920/900] bg-slate-900 shadow-md border border-slate-200 cursor-pointer hover:shadow-none md:shadow-lg transition-shadow relative"
                 >
                   {/* Poster Background */}
                   <img
