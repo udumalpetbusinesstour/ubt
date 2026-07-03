@@ -3425,31 +3425,31 @@ const handlePartnerAction = async (partnerId, action) => {
                             return bizList.slice(0, 5).map((reg, idx) => {
                               const timeStr = reg.createdAt ? new Date(reg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now';
                               return (
-                                 <div key={idx} 
-                                   onClick={() => { setSelectedBiz(reg); setShowBizModal(true); }}
-                                   className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
-                                   <div className="flex items-center gap-3 text-left">
-                                     <span className={`h-9 w-9 rounded-xl border flex items-center justify-center text-sm shadow-inner ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 text-[#027244]'}`}>
-                                       {getBizIcon(reg.category)}
-                                     </span>
-                                     <div className="flex flex-col">
-                                       <span className={`text-xs font-black leading-none ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{reg.name}</span>
-                                       <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-500 font-bold">
-                                         <span>{reg.category}</span>
-                                         <span>•</span>
-                                         <span>{reg.locality || 'Udumalpet'}</span>
-                                       </div>
-                                     </div>
-                                   </div>
-                                   <div className="flex flex-col items-end gap-1.5">
-                                     <span className="text-[8px] text-slate-500 font-bold">{timeStr}</span>
-                                     <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg border ${
-                                       reg.status === 'Approved' ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-450' : 'bg-amber-500/10 border-amber-500/25 text-amber-450'
-                                     }`}>
-                                       {reg.status}
-                                     </span>
-                                   </div>
-                                 </div>
+                                  <div key={idx} 
+                                    onClick={() => { setSelectedBiz(reg); setShowBizModal(true); }}
+                                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all min-w-0 w-full gap-2.5 ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
+                                    <div className="flex items-center gap-3 text-left min-w-0 flex-1">
+                                      <span className={`h-9 w-9 rounded-xl border flex items-center justify-center text-sm shadow-inner shrink-0 ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 text-[#027244]'}`}>
+                                        {getBizIcon(reg.category)}
+                                      </span>
+                                      <div className="flex flex-col min-w-0 flex-1">
+                                        <span className={`text-xs font-black leading-tight truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{reg.name}</span>
+                                        <div className="flex items-center gap-1 mt-1 text-[9px] text-slate-500 font-bold truncate">
+                                          <span className="truncate">{reg.category}</span>
+                                          <span className="shrink-0">•</span>
+                                          <span className="truncate">{reg.locality || 'Udumalpet'}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-1 shrink-0 text-right">
+                                      <span className="text-[8px] text-slate-500 font-bold shrink-0">{timeStr}</span>
+                                      <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg border shrink-0 truncate max-w-[95px] ${
+                                        reg.status === 'Approved' ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-450' : 'bg-amber-500/10 border-amber-500/25 text-amber-450'
+                                      }`}>
+                                        {reg.status}
+                                      </span>
+                                    </div>
+                                  </div>
                                );
                              });
                            })()
@@ -3468,34 +3468,34 @@ const handlePartnerAction = async (partnerId, action) => {
                              return list.slice(0, 5).map((u, idx) => {
                                const timeStr = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Just now';
                                return (
-                                 <div key={idx} 
-                                   onClick={() => {
-                                     setSelectedUser(u);
-                                     setShowUserModal(true);
-                                   }}
-                                   className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
-                                   <div className="flex items-center gap-3 text-left">
-                                     <span className={`h-9 w-9 rounded-xl border flex items-center justify-center text-sm shadow-inner ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 text-[#027244]'}`}>
-                                       👤
-                                     </span>
-                                     <div className="flex flex-col">
-                                       <span className={`text-xs font-black leading-none ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{u.fullName || u.name}</span>
-                                       <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-500 font-bold">
-                                         <span>{u.email}</span>
-                                         <span>•</span>
-                                         <span className="uppercase text-[8px] font-black">{u.role}</span>
-                                       </div>
-                                     </div>
-                                   </div>
-                                   <div className="flex flex-col items-end gap-1.5">
-                                     <span className="text-[8px] text-slate-500 font-bold">{timeStr}</span>
-                                     <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg border ${
-                                       u.status === 'Active' ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-450' : 'bg-rose-500/10 border-rose-500/25 text-rose-500'
-                                     }`}>
-                                       {u.status}
-                                     </span>
-                                   </div>
-                                 </div>
+                                    <div key={idx} 
+                                      onClick={() => {
+                                        setSelectedUser(u);
+                                        setShowUserModal(true);
+                                      }}
+                                      className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all min-w-0 w-full gap-2.5 ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
+                                      <div className="flex items-center gap-3 text-left min-w-0 flex-1">
+                                        <span className={`h-9 w-9 rounded-xl border flex items-center justify-center text-sm shadow-inner shrink-0 ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 text-[#027244]'}`}>
+                                          👤
+                                        </span>
+                                        <div className="flex flex-col min-w-0 flex-1">
+                                          <span className={`text-xs font-black leading-tight truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{u.fullName || u.name}</span>
+                                          <div className="flex items-center gap-1 mt-1 text-[9px] text-slate-500 font-bold truncate">
+                                            <span className="truncate">{u.email}</span>
+                                            <span className="shrink-0">•</span>
+                                            <span className="uppercase text-[8px] font-black shrink-0">{u.role}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex flex-col items-end gap-1 shrink-0 text-right">
+                                        <span className="text-[8px] text-slate-500 font-bold shrink-0">{timeStr}</span>
+                                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg border shrink-0 truncate max-w-[95px] ${
+                                          u.status === 'Active' ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-450' : 'bg-rose-500/10 border-rose-500/25 text-rose-500'
+                                        }`}>
+                                          {u.status}
+                                        </span>
+                                      </div>
+                                    </div>
                                );
                              });
                            })()
@@ -3514,34 +3514,34 @@ const handlePartnerAction = async (partnerId, action) => {
                              return eventList.slice(0, 5).map((reg, idx) => {
                                const timeStr = reg.createdAt ? new Date(reg.createdAt).toLocaleDateString() : 'Just now';
                                return (
-                                 <div key={idx} 
-                                   onClick={() => {
-                                     setEditingEvent(reg);
-                                     setShowEditEventModal(true);
-                                   }}
-                                   className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
-                                   <div className="flex items-center gap-3 text-left">
-                                     <span className={`h-9 w-9 rounded-xl border flex items-center justify-center text-sm shadow-inner ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 text-[#027244]'}`}>
-                                       📅
-                                     </span>
-                                     <div className="flex flex-col">
-                                       <span className={`text-xs font-black leading-none ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{reg.title}</span>
-                                       <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-500 font-bold">
-                                         <span>{reg.category || 'General'}</span>
-                                         <span>•</span>
-                                         <span>{reg.organizer}</span>
-                                       </div>
-                                     </div>
-                                   </div>
-                                   <div className="flex flex-col items-end gap-1.5">
-                                     <span className="text-[8px] text-slate-500 font-bold">{timeStr}</span>
-                                     <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg border ${
-                                       reg.status === 'Approved' || reg.status === 'approved' ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-450' : 'bg-amber-500/10 border-amber-500/25 text-amber-450'
-                                     }`}>
-                                       {reg.status}
-                                     </span>
-                                   </div>
-                                 </div>
+                                    <div key={idx} 
+                                      onClick={() => {
+                                        setEditingEvent(reg);
+                                        setShowEditEventModal(true);
+                                      }}
+                                      className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all min-w-0 w-full gap-2.5 ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
+                                      <div className="flex items-center gap-3 text-left min-w-0 flex-1">
+                                        <span className={`h-9 w-9 rounded-xl border flex items-center justify-center text-sm shadow-inner shrink-0 ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 text-[#027244]'}`}>
+                                          📅
+                                        </span>
+                                        <div className="flex flex-col min-w-0 flex-1">
+                                          <span className={`text-xs font-black leading-tight truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{reg.title}</span>
+                                          <div className="flex items-center gap-1 mt-1 text-[9px] text-slate-500 font-bold truncate">
+                                            <span className="truncate">{reg.category || 'General'}</span>
+                                            <span className="shrink-0">•</span>
+                                            <span className="truncate">{reg.organizer}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex flex-col items-end gap-1 shrink-0 text-right">
+                                        <span className="text-[8px] text-slate-500 font-bold shrink-0">{timeStr}</span>
+                                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg border shrink-0 truncate max-w-[95px] ${
+                                          reg.status === 'Approved' || reg.status === 'approved' ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-450' : 'bg-amber-500/10 border-amber-500/25 text-amber-450'
+                                        }`}>
+                                          {reg.status}
+                                        </span>
+                                      </div>
+                                    </div>
                                );
                              });
                            })()
@@ -3560,31 +3560,31 @@ const handlePartnerAction = async (partnerId, action) => {
                              return blogList.slice(0, 5).map((reg, idx) => {
                                const timeStr = reg.createdAt ? new Date(reg.createdAt).toLocaleDateString() : 'Just now';
                                return (
-                                 <div key={idx} 
-                                   onClick={() => {
-                                     setSelectedBlogModal(reg);
-                                   }}
-                                   className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
-                                   <div className="flex items-center gap-3 text-left">
-                                     <span className={`h-9 w-9 rounded-xl border flex items-center justify-center text-sm shadow-inner ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 text-[#027244]'}`}>
-                                       📝
-                                     </span>
-                                     <div className="flex flex-col">
-                                       <span className={`text-xs font-black leading-none ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{reg.title}</span>
-                                       <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-500 font-bold">
-                                         <span>By {reg.authorName || (reg.author && reg.author.fullName) || 'Admin'}</span>
-                                       </div>
-                                     </div>
-                                   </div>
-                                   <div className="flex flex-col items-end gap-1.5">
-                                     <span className="text-[8px] text-slate-500 font-bold">{timeStr}</span>
-                                     <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg border ${
-                                       reg.status === 'Approved' || reg.status === 'approved' ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-450' : 'bg-amber-500/10 border-amber-500/25 text-amber-450'
-                                     }`}>
-                                       {reg.status}
-                                     </span>
-                                   </div>
-                                 </div>
+                                    <div key={idx} 
+                                      onClick={() => {
+                                        setSelectedBlogModal(reg);
+                                      }}
+                                      className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer hover:shadow-md hover:border-[#027244] transition-all min-w-0 w-full gap-2.5 ${themeMode === 'dark' ? 'bg-slate-950/20 border-slate-850' : 'bg-slate-50/50 border-slate-100'}`}>
+                                      <div className="flex items-center gap-3 text-left min-w-0 flex-1">
+                                        <span className={`h-9 w-9 rounded-xl border flex items-center justify-center text-sm shadow-inner shrink-0 ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 text-[#027244]'}`}>
+                                          📝
+                                        </span>
+                                        <div className="flex flex-col min-w-0 flex-1">
+                                          <span className={`text-xs font-black leading-tight truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{reg.title}</span>
+                                          <div className="flex items-center gap-1 mt-1 text-[9px] text-slate-500 font-bold truncate">
+                                            <span className="truncate">By {reg.authorName || (reg.author && reg.author.fullName) || 'Admin'}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex flex-col items-end gap-1 shrink-0 text-right">
+                                        <span className="text-[8px] text-slate-500 font-bold shrink-0">{timeStr}</span>
+                                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg border shrink-0 truncate max-w-[95px] ${
+                                          reg.status === 'Approved' || reg.status === 'approved' ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-450' : 'bg-amber-500/10 border-amber-500/25 text-amber-450'
+                                        }`}>
+                                          {reg.status}
+                                        </span>
+                                      </div>
+                                    </div>
                                );
                              });
                            })()
