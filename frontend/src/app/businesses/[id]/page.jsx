@@ -1545,8 +1545,8 @@ Please confirm availability and delivery time.`;
             opacity: 0.85
           }} 
         />
-        {/* Sleek dark shadow gradient bottom-up - Increased darkness */}
-        <div className="absolute inset-0 bg-slate-950/80 bg-gradient-to-t from-slate-950 via-slate-950/85 to-slate-950/65" />
+        {/* Sleek dark shadow gradient bottom-up - Adjusted opacity to allow cover to show */}
+        <div className="absolute inset-0 bg-black/45 bg-gradient-to-t from-black/75 via-black/45 to-black/15" />
         
         {mediaError && (
           <div className="absolute top-4 left-4 right-4 bg-red-600 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl text-center z-30 shadow flex items-center justify-center gap-2 animate-fadeIn">
@@ -1568,34 +1568,43 @@ Please confirm availability and delivery time.`;
               <ArrowLeft className="h-4 w-4" /> Go Back
             </button>
             {/* Breadcrumbs */}
-            <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-white/70 uppercase tracking-wider">
+            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[10.5px] font-bold text-white/70 uppercase tracking-wider whitespace-normal break-words leading-relaxed">
               <Link to="/" className="hover:text-white transition-colors">Home</Link>
               <span className="text-white/40">&gt;</span>
               <Link to="/businesses" className="hover:text-white transition-colors">Businesses</Link>
               <span className="text-white/40">&gt;</span>
               <span className="text-white/85 hover:text-emerald-300 transition-colors cursor-pointer">{business.type}</span>
               <span className="text-white/40">&gt;</span>
-              <span className="text-white">{business.name}</span>
+              <span className="text-white break-all">{business.name}</span>
             </div>
             
             {/* Title Block with Logo and Verified Badge */}
-            <div className="flex items-center gap-4 mt-2 flex-wrap text-left">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-2 text-left min-w-0 w-full">
               {business.logoUrl ? (
                 <div 
                   onClick={() => setActivePhotoIndex('logo')}
                   title="Click to view logo"
                   className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-white shadow-md shrink-0 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-300"
                 >
-                  <img src={window.getImageUrl(business.logoUrl)} alt={`${business.name} Logo`} className="h-full w-full object-cover" />
+                  <img 
+                    src={window.getImageUrl(business.logoUrl)} 
+                    alt={`${business.name} Logo`} 
+                    className="h-full w-full object-cover" 
+                    onError={(e) => { 
+                      e.target.style.display = 'none'; 
+                      e.target.parentElement.innerHTML = `<span class="text-white font-extrabold text-xl uppercase">${business.name ? business.name.charAt(0) : 'B'}</span>`; 
+                      e.target.parentElement.classList.add('bg-gradient-to-tr', 'from-emerald-500', 'to-teal-650');
+                    }}
+                  />
                 </div>
               ) : (
                 <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-gradient-to-tr from-emerald-500 to-teal-650 shadow-md shrink-0 flex items-center justify-center font-extrabold text-white text-xl uppercase">
                   {business.name ? business.name.charAt(0) : 'B'}
                 </div>
               )}
-              <div className="flex flex-col gap-1.5 justify-center">
-                <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white font-sans">{business.name}</h1>
+              <div className="flex flex-col gap-1.5 justify-center min-w-0 flex-1 w-full">
+                <div className="flex flex-wrap items-center gap-3 w-full">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white font-sans break-words w-full">{business.name}</h1>
                   {business.isFoundingMember && (
                     <span className="bg-amber-550 text-white border border-amber-500/30 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm shrink-0">
                       <Sparkles className="h-3.5 w-3.5 text-white fill-current animate-pulse" /> Founding Member
