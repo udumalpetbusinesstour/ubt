@@ -811,7 +811,7 @@ const handlePartnerAction = async (partnerId, action) => {
           _id: 'partner1',
           fullName: 'Harish Mithra',
           email: 'harishmitharamalingam@gmail.com',
-          phone: '+91 89257 28260',
+          phone: '+91 97872 41221',
           role: 'partner',
           aadhaarNumber: '123456789012',
           address: 'Gandhi Nagar, Udumalpet',

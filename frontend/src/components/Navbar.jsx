@@ -418,7 +418,7 @@ export default function Navbar() {
               <div className="flex flex-col gap-2.5 text-xs font-semibold text-slate-600 mt-2">
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-[#027244] shrink-0" />
-                  <a href="tel:+918925728260" className="hover:text-[#027244] transition-colors">+91 89257 28260</a>
+                  <a href="tel:+919787241221" className="hover:text-[#027244] transition-colors">+91 97872 41221</a>
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-[#027244] shrink-0" />
