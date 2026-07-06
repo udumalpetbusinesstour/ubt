@@ -1600,99 +1600,21 @@ export default function Home() {
         </section>
       )}
 
-      {/* 6. How It Works Section (Connected with dashed lines) */}
-      <section id="how-it-works" className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col items-center gap-6 md:gap-12">
-        <div className="text-center max-w-md">
+      {/* 6. How It Works Section (Video Player) */}
+      <section id="how-it-works" className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col items-center gap-6 md:gap-8">
+        <div className="text-center max-w-xl">
           <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">How It Works</h2>
-          <p className="text-sm text-slate-500 font-medium mt-2">Connecting local buyers with verified businesses in four easy steps</p>
+          <p className="text-sm text-slate-500 font-medium mt-2">Watch this video to understand how Udumalpet Business Tour works</p>
         </div>
 
-        <div className="relative w-full">
-          {/* Scroll Left Button */}
-          <button 
-            onClick={() => handleScrollHowItWorks('left')}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90 md:hidden"
-            aria-label="Scroll How It Works Left"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-
-          <div 
-            ref={howItWorksScrollRef}
-            className="w-full flex overflow-x-auto gap-4 sm:gap-6 pb-4 scrollbar-none snap-x snap-mandatory scroll-smooth justify-start md:justify-center px-8 md:px-0"
-          >
-            {[
-              { 
-                num: 1, 
-                title: 'Search', 
-                desc: 'Find the best businesses in Udumalpet', 
-                icon: (
-                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
-                    <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    <path d="M14 15l3 3m-2.5-4a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" stroke="#001c41" strokeWidth="2" />
-                  </svg>
-                ) 
-              },
-              { 
-                num: 2, 
-                title: 'Explore', 
-                desc: 'View details, reviews and compare options', 
-                icon: (
-                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="10" cy="10" r="6" stroke="currentColor" strokeWidth="2.5" fill="#E6F2ED" />
-                    <path d="M15 15l5 5" stroke="#001c41" strokeWidth="3" strokeLinecap="round" />
-                    <path d="M8 10h4M10 8v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                ) 
-              },
-              { 
-                num: 3, 
-                title: 'Connect', 
-                desc: 'Call, WhatsApp or send enquiry easily', 
-                icon: (
-                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
-                    <path d="M14 2a5 5 0 015 5M13 5a2 2 0 012 2" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                ) 
-              },
-              { 
-                num: 4, 
-                title: 'Grow Together', 
-                desc: 'Support local businesses and grow together', 
-                icon: (
-                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
-                    <circle cx="8.5" cy="7" r="4" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
-                    <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#001c41" strokeWidth="2" />
-                  </svg>
-                ) 
-              }
-            ].map((step, idx) => (
-              <div key={step.num} className={`bg-white border border-slate-200/80 p-5 md:p-6 rounded-3xl shadow-sm hover:shadow-md transition-all relative flex flex-col items-center text-center gap-3.5 md:gap-4 ${idx < 3 ? 'step-connector' : ''} w-[240px] sm:w-[280px] shrink-0 snap-center md:snap-start`}>
-                {/* Number Badge */}
-                <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-[#027244] text-white font-extrabold flex items-center justify-center text-xs shadow z-10 border border-[#027244]">
-                  {step.num}
-                </div>
-                {/* Vector line icon */}
-                <div className="h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-emerald-50/50 border border-emerald-100/50 flex items-center justify-center shadow-sm mt-1 z-10">
-                  {step.icon}
-                </div>
-                <h4 className="font-extrabold text-[#001c41] text-base md:text-sm leading-none mt-1 z-10">{step.title}</h4>
-                <p className="text-sm md:text-[13px] text-slate-500 leading-relaxed font-medium max-w-[190px] md:max-w-[200px] z-10">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Scroll Right Button */}
-          <button 
-            onClick={() => handleScrollHowItWorks('right')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90 md:hidden"
-            aria-label="Scroll How It Works Right"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
+        <div className="w-full flex justify-center max-w-4xl mt-2 rounded-[28px] overflow-hidden border border-slate-200/65 shadow-2xl bg-slate-900/5 shadow-emerald-950/5">
+          <video 
+            src="/howitworks.mp4" 
+            controls 
+            playsInline
+            preload="metadata"
+            className="w-full aspect-video object-cover"
+          />
         </div>
       </section>
 
@@ -1804,100 +1726,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How It Works for Businesses Section (Connected with dashed lines) */}
-      <section id="how-it-works-business" className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col items-center gap-6 md:gap-12 border-t border-slate-200/50">
-        <div className="text-center max-w-md">
+      {/* How It Works for Businesses Section (Video Player) */}
+      <section id="how-it-works-business" className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-8 md:py-16 flex flex-col items-center gap-6 md:gap-8 border-t border-slate-200/50">
+        <div className="text-center max-w-xl">
           <h2 className="text-2xl font-extrabold text-[#001c41] tracking-tight">Steps to Register</h2>
-          <p className="text-sm text-slate-500 font-medium mt-2">Follow these simple steps to list and verify your business on Udumalpet Business Tour</p>
+          <p className="text-sm text-slate-500 font-medium mt-2">Watch this video guide to list and verify your business on Udumalpet Business Tour</p>
         </div>
 
-        <div className="relative w-full">
-          {/* Scroll Left Button */}
-          <button 
-            onClick={() => handleScrollStepsRegister('left')}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90 md:hidden"
-            aria-label="Scroll Steps Register Left"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-
-          <div 
-            ref={stepsRegisterScrollRef}
-            className="w-full flex overflow-x-auto gap-4 sm:gap-6 pb-4 scrollbar-none snap-x snap-mandatory scroll-smooth justify-start md:justify-center px-8 md:px-0"
-          >
-            {[
-              { 
-                num: 1, 
-                title: 'Create Account', 
-                desc: 'Sign up as a business owner in seconds with your basic contact info', 
-                icon: (
-                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
-                    <circle cx="12" cy="10" r="3" stroke="#001c41" strokeWidth="2" />
-                    <path d="M6 17c0-2 2-3 6-3s6 1 6 3" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
-                    <path d="M19 8h2m-1-1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                ) 
-              },
-              { 
-                num: 2, 
-                title: 'Choose Plan', 
-                desc: 'Select a highly affordable Monthly or Annual subscription plan', 
-                icon: (
-                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" strokeWidth="2.5" fill="#E6F2ED" />
-                    <path d="M3 10h18" stroke="#001c41" strokeWidth="2.5" />
-                    <rect x="7" y="14" width="4" height="2" rx="0.5" fill="#001c41" />
-                    <circle cx="16" cy="14" r="1.5" fill="currentColor" />
-                  </svg>
-                ) 
-              },
-              { 
-                num: 3, 
-                title: 'Add Business Info', 
-                desc: 'Provide your location, business category, working hours, and contact details', 
-                icon: (
-                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
-                    <path d="M12 11h4m-8 4h8M8 7h4" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                ) 
-              },
-              { 
-                num: 4, 
-                title: 'Get Verified & Go Live', 
-                desc: 'Submit your details for coordinator vetting to receive your verified badge and live status', 
-                icon: (
-                  <svg className="h-7 w-7 text-[#027244]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="2" fill="#E6F2ED" />
-                    <path d="M9 11l2 2 4-4" stroke="#001c41" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                ) 
-              }
-            ].map((step, idx) => (
-              <div key={step.num} className={`bg-white border border-slate-200/80 p-5 md:p-6 rounded-3xl shadow-sm hover:shadow-md transition-all relative flex flex-col items-center text-center gap-3.5 md:gap-4 ${idx < 3 ? 'step-connector' : ''} w-[240px] sm:w-[280px] shrink-0 snap-center md:snap-start`}>
-                {/* Number Badge */}
-                <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-[#027244] text-white font-extrabold flex items-center justify-center text-xs shadow z-10 border border-[#027244]">
-                  {step.num}
-                </div>
-                {/* Vector line icon */}
-                <div className="h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-emerald-50/50 border border-emerald-100/50 flex items-center justify-center shadow-sm mt-1 z-10">
-                  {step.icon}
-                </div>
-                <h4 className="font-extrabold text-[#001c41] text-base md:text-sm leading-none mt-1 z-10">{step.title}</h4>
-                <p className="text-sm md:text-[13px] text-slate-500 leading-relaxed font-medium max-w-[190px] md:max-w-[200px] z-10">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Scroll Right Button */}
-          <button 
-            onClick={() => handleScrollStepsRegister('right')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90 md:hidden"
-            aria-label="Scroll Steps Register Right"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
+        <div className="w-full flex justify-center max-w-4xl mt-2 rounded-[28px] overflow-hidden border border-slate-200/65 shadow-2xl bg-slate-900/5 shadow-emerald-950/5">
+          <video 
+            src="/businessownersteps.mp4" 
+            controls 
+            playsInline
+            preload="metadata"
+            className="w-full aspect-video object-cover"
+          />
         </div>
       </section>
 
