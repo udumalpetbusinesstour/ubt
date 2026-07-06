@@ -1609,7 +1609,7 @@ export default function Home() {
 
         <div className="w-full flex justify-center max-w-4xl mt-2 rounded-[28px] overflow-hidden border border-slate-200/65 shadow-2xl bg-slate-900/5 shadow-emerald-950/5">
           <video 
-            src="/howitworks.mp4" 
+            src="https://dev-cdn.udumalpet.business/howitworks.mp4" 
             controls 
             playsInline
             preload="metadata"
@@ -1735,7 +1735,7 @@ export default function Home() {
 
         <div className="w-full flex justify-center max-w-4xl mt-2 rounded-[28px] overflow-hidden border border-slate-200/65 shadow-2xl bg-slate-900/5 shadow-emerald-950/5">
           <video 
-            src="/businessownersteps.mp4" 
+            src="https://dev-cdn.udumalpet.business/businessownersteps.mp4" 
             controls 
             playsInline
             preload="metadata"
