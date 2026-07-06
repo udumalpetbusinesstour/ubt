@@ -671,6 +671,23 @@ router.post('/partners/:id/manual-verification', async (req, res, next) => {
   }
 });
 
+// @desc    Toggle Gold Partner status for a partner
+// @route   POST /api/admin/partners/:id/toggle-gold-status
+// @access  Private/Admin
+router.post('/partners/:id/toggle-gold-status', async (req, res, next) => {
+  try {
+    const partner = await User.findById(req.params.id);
+    if (!partner) {
+      return res.status(404).json({ success: false, message: 'Partner not found' });
+    }
+    partner.isGoldPartner = !partner.isGoldPartner;
+    await partner.save();
+    res.json({ success: true, message: `Gold Partner status toggled to ${partner.isGoldPartner ? 'Active' : 'Inactive'}`, data: partner });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // @desc    Get all pending sponsored ads
 // @route   GET /api/admin/sponsored-ads/pending
 // @access  Private/Admin

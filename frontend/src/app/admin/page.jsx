@@ -869,6 +869,29 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleToggleGoldStatus = async (partnerId) => {
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/admin/partners/${partnerId}/toggle-gold-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${activeToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message || 'Gold Partner status updated successfully!');
+        fetchPartners(); // Refresh partners list
+      } else {
+        alert(data.message || 'Failed to update Gold Partner status.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred. Failed to update Gold Partner status.');
+    }
+  };
+
   const handleDirLinkAutofill = async () => {
     if (!dirGmbLink.trim()) return;
     
@@ -4471,6 +4494,11 @@ export default function AdminDashboard() {
                                           <span className="font-extrabold text-slate-800 text-xs leading-none">
                                             {partner.fullName || partner.name}
                                           </span>
+                                          {partner.isGoldPartner && (
+                                            <span className="bg-amber-50 border border-amber-300 text-amber-700 px-1.5 py-0.2 rounded text-[7.5px] font-black uppercase flex items-center gap-0.5">
+                                              ★ Gold Partner
+                                            </span>
+                                          )}
                                           {!partner.isPartnerRegistered ? (
                                             <span className="bg-slate-100 border border-slate-200 text-slate-655 px-1.5 py-0.2 rounded text-[7.5px] font-black uppercase">
                                               Draft
@@ -4523,16 +4551,29 @@ export default function AdminDashboard() {
                                       )}
                                     </td>
                                     <td className="py-4 px-4 text-left font-sans">
-                                      <span className="text-xs font-black text-[#027244]">{partner.referralPoints || 0} Points</span>
+                        <span className="text-xs font-black text-[#027244]">{partner.referralPoints || 0} Points</span>
                                       <span className="text-[9.5px] text-slate-400 block mt-0.5">₹{partner.referralPoints || 0} Value</span>
                                     </td>
                                     <td className="py-4 px-4 text-center" onClick={(e) => e.stopPropagation()}>
                                       <div className="flex flex-col items-center justify-center gap-1.5">
                                         <div className="flex flex-wrap items-center justify-center gap-1.5">
                                           {partner.isPartnerApproved || partner.partnerStatus === 'approved' ? (
-                                            <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 select-none">
-                                              Approved
-                                            </span>
+                                            <div className="flex items-center gap-1.5">
+                                              <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 select-none">
+                                                Approved
+                                              </span>
+                                              <button
+                                                onClick={() => handleToggleGoldStatus(partner._id)}
+                                                className={`px-2 py-1 border font-black text-[9px] rounded-lg cursor-pointer transition-colors shadow-2xs ${
+                                                  partner.isGoldPartner
+                                                    ? 'bg-amber-500 hover:bg-amber-600 text-white border-transparent'
+                                                    : 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'
+                                                }`}
+                                                title={partner.isGoldPartner ? 'Remove Gold Partner Status' : 'Recognize as Gold Partner'}
+                                              >
+                                                {partner.isGoldPartner ? 'Remove Gold' : 'Make Gold'}
+                                              </button>
+                                            </div>
                                           ) : (
                                             <button
                                               onClick={() => handlePartnerAction(partner._id, 'approve')}

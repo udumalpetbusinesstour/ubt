@@ -131,6 +131,10 @@ const UserSchema = new mongoose.Schema({
   claimedBonuses: {
     type: [Number],
     default: [],
+  },
+  isGoldPartner: {
+    type: Boolean,
+    default: false,
   }
 }, {
   timestamps: true

@@ -4964,13 +4964,19 @@ function DashboardContent() {
                           const completedCount = referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0;
                           const isReached = completedCount >= item.target;
                           const isClaimed = referralStats?.claimedBonuses?.includes(item.target);
-                          
                           return (
                             <button
                               key={item.target}
                               type="button"
                               disabled={!isReached || isClaimed || claimingMilestone === item.target}
                               onClick={() => handleClaimMilestoneBonus(item.target)}
+                              title={
+                                isClaimed
+                                  ? 'This bonus has already been claimed!'
+                                  : isReached
+                                    ? `Click to claim your ₹${item.bonus} bonus!`
+                                    : `Refer ${item.target} businesses to avail this bonus!`
+                              }
                               className={`py-2 px-2.5 rounded-xl text-[10.5px] font-black transition-all flex flex-col items-center justify-center gap-1 cursor-pointer border shadow-2xs ${
                                 isClaimed
                                   ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed shadow-none'
