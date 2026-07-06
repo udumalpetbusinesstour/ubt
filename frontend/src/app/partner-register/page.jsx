@@ -164,8 +164,8 @@ export default function PartnerRegister() {
           <div className="flex flex-col gap-4 mt-2">
             {[
               {
-                title: '99 Points Per Referral',
-                desc: 'Earn 99 reward points immediately for every successful referred business that gets approved.',
+                title: '49 Points Per Referral',
+                desc: 'Earn 49 reward points immediately for every successful referred business that gets approved.',
                 icon: <Sparkles className="h-4.5 w-4.5 text-amber-500 fill-current" />,
                 bg: 'bg-amber-50 border-amber-100/30'
               },

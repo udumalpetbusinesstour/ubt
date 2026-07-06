@@ -113,6 +113,7 @@ export default function AdminDashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
 
   // Datasets states
   const [businesses, setBusinesses] = useState([]);
@@ -1987,27 +1988,85 @@ export default function AdminDashboard() {
   };
 
   // Filtered lists
-  const filteredBusinesses = businesses.filter(b => 
-    b.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (b.ownerName && b.ownerName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (b.ownerEmail && b.ownerEmail.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (b.locality && b.locality.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredBusinesses = businesses.filter(b => {
+    const matchesSearch = (b.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (b.ownerName && b.ownerName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (b.ownerEmail && b.ownerEmail.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (b.locality && b.locality.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+    if (!matchesSearch) return false;
+    
+    if (statusFilter === 'Pending') {
+      return b.status === 'Pending Verification' || b.status === 'Under Review';
+    }
+    if (statusFilter === 'Approved') {
+      return b.status === 'Approved';
+    }
+    if (statusFilter === 'Rejected') {
+      return b.status === 'Rejected';
+    }
+    return true;
+  });
   
-  const filteredBlogs = blogs.filter(b => 
-    b.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (b.authorName && b.authorName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (b.category && b.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    b.status.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredBlogs = blogs.filter(b => {
+    const matchesSearch = (b.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (b.authorName && b.authorName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (b.category && b.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (b.status || '').toLowerCase().includes(searchQuery.toLowerCase());
+      
+    if (!matchesSearch) return false;
+    
+    if (statusFilter === 'Pending') {
+      return b.status === 'Pending Approval';
+    }
+    if (statusFilter === 'Approved') {
+      return b.status === 'Approved';
+    }
+    if (statusFilter === 'Rejected') {
+      return b.status === 'Rejected';
+    }
+    return true;
+  });
 
-  const filteredEvents = events.filter(e => 
-    e.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (e.organizer && e.organizer.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (e.category && e.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (e.venue && e.venue.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    e.status.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredEvents = events.filter(e => {
+    const matchesSearch = (e.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (e.organizer && e.organizer.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (e.category && e.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (e.venue && e.venue.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (e.status || '').toLowerCase().includes(searchQuery.toLowerCase());
+      
+    if (!matchesSearch) return false;
+    
+    if (statusFilter === 'Pending') {
+      return e.status === 'Pending Review' || e.status === 'Pending Verification';
+    }
+    if (statusFilter === 'Approved') {
+      return e.status === 'Approved';
+    }
+    if (statusFilter === 'Rejected') {
+      return e.status === 'Rejected';
+    }
+    return true;
+  });
+
+  const filteredTestimonials = appTestimonials.filter(t => {
+    const matchesSearch = (t.authorName || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (t.text || t.content || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (t.status || '').toLowerCase().includes(searchQuery.toLowerCase());
+      
+    if (!matchesSearch) return false;
+    
+    if (statusFilter === 'Pending') {
+      return t.status === 'Pending';
+    }
+    if (statusFilter === 'Approved') {
+      return t.status === 'Approved';
+    }
+    if (statusFilter === 'Rejected') {
+      return t.status === 'Rejected';
+    }
+    return true;
+  });
 
   const filteredUsers = users.filter(u => 
     (u.fullName && u.fullName.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -2307,10 +2366,12 @@ export default function AdminDashboard() {
                       <div className="flex flex-col gap-1 text-left">
                         <span className="text-[10px] text-amber-600 font-black uppercase tracking-wider">Pending Approvals</span>
                         <span className="text-3xl font-black text-amber-700 mt-2 leading-none">
-                          {businesses.filter(b => !b.parentBusinessId && (b.status === 'Pending Verification' || b.status === 'Under Review')).length +
+                          {businesses.filter(b => b.status === 'Pending Verification' || b.status === 'Under Review').length +
                            blogs.filter(b => b.status === 'Pending Approval').length +
                            events.filter(e => e.status === 'Pending Review').length +
-                           appTestimonials.filter(t => t.status === 'Pending').length}
+                           appTestimonials.filter(t => t.status === 'Pending').length +
+                           pendingCategories.length +
+                           partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length}
                         </span>
                       </div>
                       <div className="h-10 w-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 border border-amber-100/50">
@@ -2370,8 +2431,21 @@ export default function AdminDashboard() {
                         </span>
                       </div>
 
-                      {/* Pill tabs container */}
-                      <div className="bg-slate-100/60 p-1 rounded-xl flex items-center self-start md:self-center overflow-x-auto shrink-0 border border-slate-200/30 w-full md:w-auto max-w-full min-w-0 scrollbar-none">
+                      <div className="flex flex-wrap items-center gap-3 self-start md:self-center shrink-0">
+                        {/* Status Filter Dropdown */}
+                        <select
+                          value={statusFilter}
+                          onChange={(e) => setStatusFilter(e.target.value)}
+                          className="bg-slate-50 border border-slate-250 px-3.5 py-2 rounded-xl text-xs font-black text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-105 cursor-pointer shadow-2xs hover:bg-slate-100 transition-colors"
+                        >
+                          <option value="All">All Statuses</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Approved">Approved</option>
+                          <option value="Rejected">Rejected</option>
+                        </select>
+
+                        {/* Pill tabs container */}
+                        <div className="bg-slate-100/60 p-1 rounded-xl flex items-center overflow-x-auto border border-slate-200/30 w-full md:w-auto max-w-full min-w-0 scrollbar-none">
                         <button
                           onClick={() => setAuditSubTab('Businesses')}
                           className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center shrink-0 ${
@@ -2429,6 +2503,7 @@ export default function AdminDashboard() {
                         </button>
                       </div>
                     </div>
+                  </div>
 
                     {/* Sub-tab content */}
                     {auditSubTab === 'Businesses' && (
@@ -2547,7 +2622,7 @@ export default function AdminDashboard() {
 
                     {auditSubTab === 'Blogs' && (
                       <div className="flex flex-col gap-4">
-                        {blogs.map(b => (
+                        {filteredBlogs.map(b => (
                           <div key={b._id} className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-5 flex flex-col gap-4">
                             <div className="flex justify-between items-start gap-4">
                               <div className="flex flex-col text-left font-sans">
@@ -2602,7 +2677,7 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                         ))}
-                        {blogs.length === 0 && (
+                        {filteredBlogs.length === 0 && (
                           <div className="p-8 text-center text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl">
                             No blogs waiting for verification.
                           </div>
@@ -2612,8 +2687,7 @@ export default function AdminDashboard() {
 
                     {auditSubTab === 'Events' && (
                       <div className="flex flex-col gap-4">
-                        {[...events]
-                          .filter(e => e.status === 'Pending Review')
+                        {[...filteredEvents]
                           .sort((a, b) => getEventSortWeight(a) - getEventSortWeight(b) || new Date(a.date) - new Date(b.date))
                           .map(e => {
                             const isExpired = new Date(e.endDate || e.date) < new Date();
@@ -2675,14 +2749,14 @@ export default function AdminDashboard() {
                               </div>
                             );
                           })}
-                        {events.filter(e => e.status === 'Pending Review').length === 0 && (
+                        {filteredEvents.length === 0 && (
                           <div className="p-8 text-center text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl">
                             No events waiting for verification.
                           </div>
                         )}
                       </div>
                     )}
-
+ 
                     {auditSubTab === 'Testimonials' && (
                       <div className="flex flex-col gap-4">
                         {testimonialsLoading ? (
@@ -2692,7 +2766,7 @@ export default function AdminDashboard() {
                           </div>
                         ) : (
                           <>
-                            {[...appTestimonials]
+                            {[...filteredTestimonials]
                               .sort((a, b) => {
                                 const weight = (status) => status === 'Pending' ? 0 : status === 'Approved' ? 1 : 2;
                                 return weight(a.status) - weight(b.status) || new Date(b.createdAt) - new Date(a.createdAt);
@@ -2726,13 +2800,13 @@ export default function AdminDashboard() {
                                           {t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-IN') : 'N/A'}
                                         </span>
                                       </div>
-
+ 
                                       <p className="text-[11.5px] text-slate-555 font-semibold mt-2 max-w-2xl leading-relaxed italic">
                                         "{t.text}"
                                       </p>
                                     </div>
                                   </div>
-
+ 
                                   <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                                     {t.status !== 'Approved' && (
                                       <button 
@@ -2762,7 +2836,7 @@ export default function AdminDashboard() {
                                   </div>
                                 </div>
                               ))}
-                            {appTestimonials.length === 0 && (
+                            {filteredTestimonials.length === 0 && (
                               <div className="p-8 text-center text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl">
                                 No app testimonials have been submitted yet.
                               </div>

@@ -210,7 +210,7 @@ router.get('/top', async (req, res, next) => {
         if (name && !existingNames.has(name)) {
           populatedLeaderboard.push({
             name,
-            referralsCount: Math.max(1, Math.floor((u.referralPoints || 0) / 99))
+            referralsCount: Math.max(1, Math.floor((u.referralPoints || 0) / (u.role === 'partner' ? 49 : 99)))
           });
           existingNames.add(name);
           if (populatedLeaderboard.length >= 3) break;

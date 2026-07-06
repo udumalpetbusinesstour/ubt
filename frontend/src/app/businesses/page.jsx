@@ -1868,7 +1868,7 @@ function BusinessesList() {
             <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white mt-3 md:mt-4 self-start font-sans order-2">
               Explore {selectedSubcategoryInExplore && selectedSubcategoryInExplore !== 'All' 
                 ? selectedSubcategoryInExplore 
-                : (selectedCategoryInExplore || 'Categories')}
+                : (selectedCategoryInExplore || 'Categories')} in Udumalpet
             </h1>
             <p className="hidden sm:block text-slate-400 text-xs font-semibold self-start mt-1.5 leading-relaxed order-3">
               Find local businesses and specialized services in Udumalpet

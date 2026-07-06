@@ -95,7 +95,7 @@ const registerUser = async (req, res, next) => {
         referrerId: referrer._id,
         referredUserId: user._id,
         status: 'pending',
-        points: 99,
+        points: referrer.role === 'partner' ? 49 : 99,
         antiFraudChecks: {
           selfReferral: false,
           duplicateMobile: false,

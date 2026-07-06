@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   ShieldCheck, Mail, Lock, Phone, Key, AlertCircle, Loader, 
-  User, Eye, EyeOff, BarChart2, Star, TrendingUp, Users, MapPin, ThumbsUp,
+  User, Eye, EyeOff, BarChart2, Star, TrendingUp, Users, MapPin, ThumbsUp, Coins,
   Calendar, Sparkles, Grid, BookOpen, FileEdit, MessageSquare, Activity, Headset, ArrowLeft
 } from 'lucide-react';
 
@@ -113,6 +113,74 @@ export default function Login() {
             <div className="flex flex-col gap-0.5">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Need Help?</span>
               <span className="text-xs text-[#001c41] font-extrabold mt-1 leading-normal">Our events support desk is here for you.</span>
+              <a href="tel:+918925728260" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 89257 28260</a>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (fromParam === 'partner') {
+      return (
+        <div className="order-2 lg:order-1 lg:w-[45%] bg-[#F0FDF4]/80 text-[#001c41] p-6 sm:p-10 flex flex-col justify-between relative border-b lg:border-b-0 lg:border-r border-slate-100">
+          <div className="flex flex-col gap-5 text-left">
+            <h2 className="text-3xl font-black tracking-tight text-[#001c41]">Welcome Back UBT Partner</h2>
+            <p className="text-slate-500 text-sm font-semibold max-w-xs leading-relaxed">
+              Help local businesses grow while earning rewards for every successful business you introduce.
+            </p>
+
+            <ul className="flex flex-col gap-5 mt-6 font-sans">
+              {[
+                { 
+                  title: '🤝 Share With Business Owners', 
+                  desc: 'Invite shops, startups, professionals and local businesses to join UBT.',
+                  icon: <Users className="h-4.5 w-4.5 text-[#027244]" />,
+                  bg: 'bg-emerald-50 border-emerald-100/50' 
+                },
+                { 
+                  title: '💰 Earn ₹49 Per Successful Registration',
+                  desc: 'Earn up to ₹4,900 by helping just 100 local businesses join UBT.',
+                  icon: <Coins className="h-4.5 w-4.5 text-[#001c41]" />,
+                  bg: 'bg-blue-50 border-blue-100/50'
+                },
+                { 
+                  title: '📈 Unlimited Earning Potential', 
+                  desc: 'There is no limit to the number of businesses you can refer.',
+                  icon: <TrendingUp className="h-4.5 w-4.5 text-purple-600" />,
+                  bg: 'bg-purple-50 border-purple-100/50'
+                },
+                { 
+                  title: '🌱 Grow Together', 
+                  desc: 'Support local businesses while building an additional source of income.',
+                  icon: <Sparkles className="h-4.5 w-4.5 text-amber-500 fill-current" />,
+                  bg: 'bg-amber-50 border-amber-100/50'
+                }
+              ].map((f, i) => (
+                <li key={i} className="flex gap-4 items-start font-sans">
+                  <span className={`h-9 w-9 rounded-full ${f.bg} flex items-center justify-center shrink-0 border shadow-sm`}>
+                    {f.icon}
+                  </span>
+                  <div className="flex flex-col gap-0.5">
+                    <h5 className="font-extrabold text-[#001c41] text-[13.5px] leading-tight">{f.title}</h5>
+                    <p className="text-[12.5px] text-slate-500 leading-normal font-semibold mt-0.5">{f.desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {/* Powerful Marketing Statement */}
+            <p className="text-[13px] text-slate-500 font-bold leading-relaxed mt-4 italic border-l-2 border-emerald-500 pl-3">
+              "Every business you help join UBT helps strengthen the Udumalpet business community—and rewards you for making the connection."
+            </p>
+          </div>
+
+          <div className="hidden lg:flex z-10 mt-10 p-4 sm:p-5 rounded-2xl bg-white/70 border border-emerald-100 items-start gap-4 shadow-sm text-left">
+            <div className="bg-[#E6F2ED] p-2.5 rounded-xl text-[#027244] border border-emerald-100/50 shrink-0">
+              <Headset className="h-5 w-5" />
+            </div>
+            <div className="flex flex-col gap-0.5 text-left">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">NEED HELP?</span>
+              <span className="text-xs text-[#001c41] font-extrabold mt-1 leading-normal">Our Partner Success Team is here to assist you.</span>
               <a href="tel:+918925728260" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 89257 28260</a>
             </div>
           </div>

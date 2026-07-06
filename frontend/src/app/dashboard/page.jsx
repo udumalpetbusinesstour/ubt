@@ -4800,7 +4800,7 @@ function DashboardContent() {
                 <div className="bg-white border border-slate-200 shadow-xs rounded-[24px] p-5 flex flex-col gap-3 text-left">
                   <h3 className="font-extrabold text-slate-800 text-sm border-b border-slate-100 pb-2">Referral Tracking & Link</h3>
                   <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                    Share your unique referral link with local businesses in Udumalpet. You will earn <span className="text-[#027244] font-bold">99 points</span> immediately once they register and their business is verified/approved by the admin.
+                    Share your unique referral link with local businesses in Udumalpet. You will earn <span className="text-[#027244] font-bold">{user?.role === 'partner' ? '49 points' : '99 points'}</span> immediately once they register and their business is verified/approved by the admin.
                   </p>
                   
                   {referralStats?.referralLink ? (
@@ -5061,48 +5061,48 @@ function DashboardContent() {
             <div className="flex flex-col lg:flex-row gap-8 animate-fadeIn text-left font-sans text-slate-800">
               
               {/* Left Column: Submit Query Form */}
-              <div className="flex-1 bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-6 md:p-8 flex flex-col gap-5">
+              <div className="flex-1 bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-5 flex flex-col gap-5">
                 <div className="flex items-center gap-3 flex-row text-left">
-                  <div className="h-12 w-12 bg-emerald-50 text-[#027244] rounded-2xl flex items-center justify-center border border-emerald-100 shadow-inner shrink-0">
-                    <MessageSquare className="h-5 w-5" />
+                  <div className="h-10 w-10 bg-emerald-50 text-[#027244] rounded-2xl flex items-center justify-center border border-emerald-100 shadow-inner shrink-0">
+                    <MessageSquare className="h-4.5 w-4.5" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-slate-800 text-lg md:text-xl font-sans">Inquire Admin Desk</h3>
-                    <p className="text-xs sm:text-sm md:text-base text-slate-455 font-semibold mt-1">Partner Query Box: Communicate directly with the platform administration</p>
+                    <h3 className="font-extrabold text-slate-800 text-sm font-sans">Inquire Admin Desk</h3>
+                    <p className="text-[11px] text-slate-400 font-semibold mt-1">Partner Query Box: Communicate directly with the platform administration</p>
                   </div>
                 </div>
 
                 {supportSuccess && (
-                  <div className="bg-emerald-50 border border-emerald-250 text-[#027244] rounded-xl p-3.5 text-xs sm:text-sm md:text-base font-bold flex items-center gap-2 animate-fadeIn text-left">
-                    <CheckCircle className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
+                  <div className="bg-emerald-50 border border-emerald-250 text-[#027244] rounded-xl p-3 text-xs font-bold flex items-center gap-2 animate-fadeIn text-left">
+                    <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
                     <span>{supportSuccess}</span>
                   </div>
                 )}
 
                 {supportError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3.5 text-xs sm:text-sm md:text-base font-bold flex items-center gap-2 animate-fadeIn text-left">
-                    <AlertCircle className="h-4.5 w-4.5 shrink-0" />
+                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-xs font-bold flex items-center gap-2 animate-fadeIn text-left">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>{supportError}</span>
                   </div>
                 )}
 
                 <form onSubmit={handleSupportQuerySubmit} className="flex flex-col gap-4">
                   <div className="flex flex-col gap-1.5 text-left">
-                    <span className="text-xs md:text-sm font-bold text-slate-505 uppercase tracking-widest">Write message to Administrator</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Write message to Administrator</span>
                     <textarea
                       placeholder="Type details of your inquiry, redemption delays, account setup assistance, or portal suggestions..."
                       value={newQueryMessage}
                       onChange={(e) => setNewQueryMessage(e.target.value)}
                       required
                       rows={5}
-                      className="w-full border border-slate-200 rounded-2xl p-4 text-xs sm:text-sm md:text-base bg-slate-50/30 focus:outline-[#027244] font-semibold leading-relaxed text-left"
+                      className="w-full border border-slate-200 rounded-2xl p-4 text-xs bg-slate-50/30 focus:outline-[#027244] font-semibold leading-relaxed text-left"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={supportLoading || !newQueryMessage.trim()}
-                    className="py-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs sm:text-sm md:text-base uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer w-full sm:w-fit px-6"
+                    className="py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer w-full sm:w-fit px-5"
                   >
                     {supportLoading ? 'Sending message...' : 'Send Message to Admin'}
                   </button>
@@ -5110,15 +5110,15 @@ function DashboardContent() {
               </div>
 
               {/* Right Column: Communications History */}
-              <div className="w-full lg:w-[48%] bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-6 md:p-8 flex flex-col gap-5 text-left">
-                <h3 className="font-extrabold text-slate-800 text-lg md:text-xl border-b border-slate-100 pb-2">Support Message Inbox</h3>
+              <div className="w-full lg:w-[48%] bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-5 flex flex-col gap-5 text-left">
+                <h3 className="font-extrabold text-slate-800 text-sm border-b border-slate-100 pb-2">Support Message Inbox</h3>
                 
                 {supportLoading && supportQueries.length === 0 ? (
                   <div className="py-12 flex justify-center text-slate-400">
-                    <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" />
+                    <RefreshCw className="h-5 w-5 animate-spin text-emerald-600" />
                   </div>
                 ) : supportQueries.length === 0 ? (
-                  <div className="py-16 bg-slate-50/50 border border-slate-200 border-dashed rounded-[20px] text-center text-xs sm:text-sm md:text-base font-semibold text-slate-400">
+                  <div className="py-16 bg-slate-50/50 border border-slate-200 border-dashed rounded-[20px] text-center text-xs font-semibold text-slate-400">
                     No communication logs found yet. Write a message above to contact our admin team.
                   </div>
                 ) : (
@@ -5126,36 +5126,36 @@ function DashboardContent() {
                     {[...supportQueries].reverse().map((query) => (
                       <div key={query._id} className="border border-slate-100 rounded-2xl p-4 bg-slate-50/20 flex flex-col gap-3 text-left">
                         <div className="flex justify-between items-start gap-2 border-b border-slate-100/50 pb-2">
-                          <span className="font-extrabold text-slate-800 text-xs sm:text-sm md:text-base truncate max-w-[180px]">
+                          <span className="font-extrabold text-slate-800 text-xs truncate max-w-[180px]">
                             {query.subject}
                           </span>
                           {query.status === 'Replied' ? (
-                            <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 px-2 py-0.5 rounded text-[10px] md:text-xs font-black uppercase">
+                            <span className="bg-emerald-50 text-emerald-700 border border-emerald-250/50 px-2 py-0.5 rounded text-[10px] font-black uppercase">
                               Replied
                             </span>
                           ) : (
-                            <span className="bg-amber-50 text-amber-700 border border-amber-200/50 px-2 py-0.5 rounded text-[10px] md:text-xs font-black uppercase animate-pulse">
+                            <span className="bg-amber-50 text-amber-700 border border-amber-250/50 px-2 py-0.5 rounded text-[10px] font-black uppercase animate-pulse">
                               Pending
                             </span>
                           )}
                         </div>
                         
                         <div className="flex flex-col gap-1 text-left">
-                          <span className="text-xs md:text-sm font-black text-slate-400 uppercase tracking-widest">Your Inquiry:</span>
-                          <p className="text-xs sm:text-sm md:text-base text-slate-550 leading-relaxed font-semibold">"{query.message}"</p>
-                          <span className="text-[10px] sm:text-xs text-slate-400 mt-0.5 block font-semibold">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your Inquiry:</span>
+                          <p className="text-xs text-slate-550 leading-relaxed font-semibold">"{query.message}"</p>
+                          <span className="text-[10px] text-slate-400 mt-0.5 block font-semibold">
                             Sent on {new Date(query.createdAt).toLocaleString()}
                           </span>
                         </div>
 
                         {query.status === 'Replied' && (
                           <div className="bg-emerald-50/30 border border-emerald-100/60 p-3.5 rounded-xl flex flex-col gap-1 mt-1 text-slate-700 text-left">
-                            <span className="text-xs md:text-sm font-black text-emerald-800 uppercase tracking-widest">Admin Response:</span>
-                            <p className="text-xs sm:text-sm md:text-base font-semibold leading-relaxed">
+                            <span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">Admin Response:</span>
+                            <p className="text-xs font-semibold leading-relaxed">
                               {query.replyMessage}
                             </p>
                             {query.repliedAt && (
-                              <span className="text-[10px] sm:text-xs text-[#027244]/80 font-semibold block">
+                              <span className="text-[10px] text-[#027244]/80 font-semibold block">
                                 Replied on {new Date(query.repliedAt).toLocaleString()}
                               </span>
                             )}
@@ -8773,7 +8773,7 @@ function DashboardContent() {
                     Refer. Earn. Redeem.
                   </h2>
                   <p className="text-xs md:text-sm text-slate-200 font-medium leading-relaxed mt-1">
-                    Refer new businesses to UBT and earn referral points. Once you reach 1,000 points, request a manual cash refund! (1 Referral = 99 Points)
+                    Refer new businesses to UBT and earn referral points. Once you reach 1,000 points, request a manual cash refund! (1 Referral = {user?.role === 'partner' ? 49 : 99} Points)
                   </p>
                 </div>
                 
@@ -8782,7 +8782,7 @@ function DashboardContent() {
                   <Gift className="h-7 w-7 text-amber-300 animate-pulse mb-1.5" />
                   <span className="text-[9px] uppercase font-black text-slate-300 tracking-wider">Available Points Balance</span>
                   <span className="text-2xl font-black mt-1 text-white">{referralStats?.referralPoints || 0} POINTS</span>
-                  <span className="text-[11px] font-bold text-emerald-300 mt-1">1 Business Referral = 99 Points</span>
+                  <span className="text-[11px] font-bold text-emerald-300 mt-1">1 Business Referral = {user?.role === 'partner' ? 49 : 99} Points</span>
                 </div>
               </div>
 
@@ -8792,7 +8792,7 @@ function DashboardContent() {
                 <div className="lg:col-span-2 bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4 text-left">
                   <h3 className="font-extrabold text-[#001c41] text-sm md:text-base tracking-tight">Your Unique Referral Link</h3>
                   <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                    Share your invite link with other local merchants in Udumalpet. When they register, complete their subscription payment, and get approved, you'll earn 99 points!
+                    Share your invite link with other local merchants in Udumalpet. When they register, complete their subscription payment, and get approved, you'll earn {user?.role === 'partner' ? 49 : 99} points!
                   </p>
 
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full mt-2">
