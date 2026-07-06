@@ -407,7 +407,8 @@ export default function ReferralModal({ isOpen, onClose }) {
                 )}
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
         {/* 4. WHY REFER BUSINESSES */}
         <section className="bg-white border-y border-slate-150 py-8 text-center flex flex-col gap-8">
