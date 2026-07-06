@@ -322,10 +322,10 @@ export default function ReferralModal({ isOpen, onClose }) {
                   <tbody className="divide-y divide-slate-100">
                     {[
                       { ref: '1 Business', base: '₹49', bonus: '—', total: '₹49' },
-                      { ref: '10 Businesses', base: '₹490', bonus: '+ ₹100 Bonus', total: '₹590' },
-                      { ref: '25 Businesses', base: '₹1,225', bonus: '+ ₹500 (+ ₹100 Prev = ₹600 cumulative)', total: '₹1,825' },
-                      { ref: '50 Businesses', base: '₹2,450', bonus: '+ ₹1,500 (+ ₹600 Prev = ₹2,100 cumulative)', total: '₹4,550' },
-                      { ref: '100 Businesses', base: '₹4,900', bonus: '+ ₹5,000 (+ ₹2,100 Prev = ₹7,100 cumulative)', total: '₹12,000 *' }
+                      { ref: '10 Businesses', base: '₹490', bonus: '+ ₹100', total: '₹590' },
+                      { ref: '25 Businesses', base: '₹1,225', bonus: '+ ₹500 (Total ₹600)', total: '₹1,825' },
+                      { ref: '50 Businesses', base: '₹2,450', bonus: '+ ₹1,500 (Total ₹2,100)', total: '₹4,550' },
+                      { ref: '100 Businesses', base: '₹4,900', bonus: '+ ₹5,000 (Total ₹7,100)', total: '₹12,000 *' }
                     ].map((row, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/50">
                         <td className="px-4 py-2 text-slate-800 font-extrabold">{row.ref}</td>
