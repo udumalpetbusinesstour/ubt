@@ -1156,7 +1156,7 @@ export default function Home() {
               className="mt-6 bg-amber-400 hover:bg-amber-500 text-slate-900 text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-full shadow-md animate-shake border border-amber-500/20 flex items-center gap-2 cursor-pointer transition-all"
             >
               <Gift className="h-4 w-4 text-[#027244] shrink-0 animate-bounce" />
-              Refer other business & earn rewards!
+              Join as Partner to Earn Rewards!
             </button>
 
           </div>

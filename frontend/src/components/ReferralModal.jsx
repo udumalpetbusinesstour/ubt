@@ -15,7 +15,7 @@ export default function ReferralModal({ isOpen, onClose }) {
     { name: 'ABC Traders', referralsCount: 21 }
   ]);
 
-  const [userRole, setUserRole] = useState('owner');
+  const [userRole, setUserRole] = useState('partner');
 
   useEffect(() => {
     // Check auth status
@@ -25,7 +25,8 @@ export default function ReferralModal({ isOpen, onClose }) {
     if (storedUser) {
       try {
         const u = JSON.parse(storedUser);
-        setUserRole(u.role || 'owner');
+        // We still check their actual role to show proper dashboard/join button links,
+        // but the presentation of milestones is partner-only.
       } catch (e) {}
     }
   }, [isOpen]);
@@ -165,23 +166,37 @@ export default function ReferralModal({ isOpen, onClose }) {
 
             {/* Action buttons */}
             <div className="flex flex-wrap items-center gap-3.5 mt-2">
-              <button 
-                onClick={handleActionClick}
-                className="py-3 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-98 border-none"
-              >
-                {isLoggedIn ? 'Go to My Referral Dashboard' : 'Login to Start Referring'}
-              </button>
-
-              {!isLoggedIn && (
-                <button
+              {isLoggedIn ? (
+                <button 
                   onClick={() => {
                     onClose();
-                    navigate('/register?from=partner');
+                    navigate('/dashboard');
                   }}
-                  className="py-3 px-6 bg-amber-400 hover:bg-amber-500 text-slate-900 font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-98 border-none animate-shake"
+                  className="py-3 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-98 border-none"
                 >
-                  Become a UBT Partner (Earn ₹49/ref)
+                  Go to My Partner Dashboard
                 </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      onClose();
+                      navigate('/register?from=partner');
+                    }}
+                    className="py-3 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-98 border-none"
+                  >
+                    Join as Partner to Earn Rewards
+                  </button>
+                  <button
+                    onClick={() => {
+                      onClose();
+                      navigate('/login?from=partner');
+                    }}
+                    className="py-3 px-6 bg-amber-400 hover:bg-amber-500 text-slate-900 font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-98 border-none"
+                  >
+                    Partner Login
+                  </button>
+                </>
               )}
             </div>
           </div>
