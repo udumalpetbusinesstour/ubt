@@ -40,6 +40,7 @@ router.get('/my-stats', protect, async (req, res, next) => {
         referralPoints: availablePoints,
         referralCredits: availablePoints, // 1 point = ₹1 credit
         isManualVerificationDone: !!user.isManualVerificationDone,
+        claimedBonuses: user.claimedBonuses || [],
         referralLink: (() => {
           if (!isSubscribed) return '';
           let frontendOrigin = 'https://udumalpet.business';
@@ -230,7 +231,7 @@ router.get('/top', async (req, res, next) => {
   }
 });
 
-// @desc    Redeem 1000 points for a manual refund request
+// @desc    Redeem points/earnings for a manual refund request
 // @route   POST /api/referrals/redeem
 // @access  Private
 router.post('/redeem', protect, async (req, res, next) => {
@@ -250,14 +251,28 @@ router.post('/redeem', protect, async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Manual verification required before requesting a refund. Please contact support.' });
     }
 
-    if (availablePoints < 1000) {
-      return res.status(400).json({ success: false, message: 'Minimum 1000 available points (excluding pending requests) required to redeem' });
+    const requestedAmount = req.body.points ? Number(req.body.points) : (user.role === 'partner' ? availablePoints : 1000);
+
+    if (user.role === 'partner') {
+      if (requestedAmount < 500) {
+        return res.status(400).json({ success: false, message: 'Minimum ₹500 balance (excluding pending requests) required to request a payout' });
+      }
+      if (requestedAmount > availablePoints) {
+        return res.status(400).json({ success: false, message: `Insufficient balance. Available to redeem: ₹${availablePoints}` });
+      }
+    } else {
+      if (requestedAmount < 1000) {
+        return res.status(400).json({ success: false, message: 'Minimum 1000 available points (excluding pending requests) required to redeem' });
+      }
+      if (requestedAmount > availablePoints) {
+        return res.status(400).json({ success: false, message: `Insufficient balance. Available to redeem: ${availablePoints} points` });
+      }
     }
 
     // Create redemption request
     const redemption = await Redemption.create({
       userId: user._id,
-      points: 1000,
+      points: requestedAmount,
       status: 'Pending Approval'
     });
 
@@ -266,8 +281,10 @@ router.post('/redeem', protect, async (req, res, next) => {
       const adminUsers = await User.find({ role: { $in: ['admin', 'superadmin'] } });
       const notifications = adminUsers.map(adminUser => ({
         userId: adminUser._id,
-        title: 'New Refund Redemption Request',
-        message: `Merchant "${user.fullName || user.name}" has requested a refund redemption of 1000 points.`,
+        title: 'New Payout Redemption Request',
+        message: user.role === 'partner'
+          ? `Partner "${user.fullName || user.name}" has requested a payout of ₹${requestedAmount}.`
+          : `Merchant "${user.fullName || user.name}" has requested a refund redemption of ${requestedAmount} points.`,
         type: 'refund_update'
       }));
       if (notifications.length > 0) {
@@ -281,7 +298,80 @@ router.post('/redeem', protect, async (req, res, next) => {
       success: true,
       message: 'Redemption request submitted successfully. Admin has been notified.',
       data: redemption,
-      newPoints: Math.max(0, availablePoints - 1000)
+      newPoints: Math.max(0, availablePoints - requestedAmount)
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Claim partner milestone bonus (100, 500, 1500, 5000)
+// @route   POST /api/referrals/claim-bonus
+// @access  Private
+router.post('/claim-bonus', protect, async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (user.role !== 'partner') {
+      return res.status(400).json({ success: false, message: 'Only platform partners can claim milestone bonuses' });
+    }
+
+    const { milestone } = req.body;
+    const milestoneNum = Number(milestone);
+
+    if (![10, 25, 50, 100].includes(milestoneNum)) {
+      return res.status(400).json({ success: false, message: 'Invalid milestone target' });
+    }
+
+    // Get completed referrals count
+    const completedCount = await Referral.countDocuments({
+      referrerId: user._id,
+      status: 'completed'
+    });
+
+    if (completedCount < milestoneNum) {
+      return res.status(400).json({
+        success: false,
+        message: `Milestone not reached. You have completed ${completedCount}/${milestoneNum} referrals.`
+      });
+    }
+
+    if (user.claimedBonuses && user.claimedBonuses.includes(milestoneNum)) {
+      return res.status(400).json({ success: false, message: 'Bonus for this milestone has already been claimed.' });
+    }
+
+    // Determine bonus amount
+    let bonusAmount = 0;
+    if (milestoneNum === 10) bonusAmount = 100;
+    else if (milestoneNum === 25) bonusAmount = 500;
+    else if (milestoneNum === 50) bonusAmount = 1500;
+    else if (milestoneNum === 100) bonusAmount = 5000;
+
+    user.referralPoints = (user.referralPoints || 0) + bonusAmount;
+    if (!user.claimedBonuses) user.claimedBonuses = [];
+    user.claimedBonuses.push(milestoneNum);
+    await user.save();
+
+    // Create notification
+    try {
+      await Notification.create({
+        userId: user._id,
+        title: 'Milestone Bonus Claimed!',
+        message: `Congratulations! You have claimed a bonus of ₹${bonusAmount} for reaching ${milestoneNum} successful referrals.`,
+        type: 'points_update'
+      });
+    } catch (err) {
+      console.error(err);
+    }
+
+    res.json({
+      success: true,
+      message: `Bonus of ₹${bonusAmount} claimed successfully!`,
+      newPoints: user.referralPoints,
+      claimedBonuses: user.claimedBonuses
     });
   } catch (error) {
     next(error);

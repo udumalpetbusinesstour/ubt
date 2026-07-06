@@ -127,6 +127,10 @@ const UserSchema = new mongoose.Schema({
   isManualVerificationDone: {
     type: Boolean,
     default: false,
+  },
+  claimedBonuses: {
+    type: [Number],
+    default: [],
   }
 }, {
   timestamps: true

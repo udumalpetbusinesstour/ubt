@@ -2877,32 +2877,69 @@ function DashboardContent() {
     }
   };
 
+  const [claimingMilestone, setClaimingMilestone] = useState(null);
+
+  const handleClaimMilestoneBonus = async (milestone) => {
+    setClaimingMilestone(milestone);
+    try {
+      const activeToken = token || localStorage.getItem('ubt_token');
+      const res = await fetch('http://localhost:5000/api/referrals/claim-bonus', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ milestone })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message || 'Milestone bonus claimed successfully!');
+        fetchReferralStats();
+      } else {
+        alert(data.message || 'Failed to claim bonus.');
+      }
+    } catch (err) {
+      console.error('Claim bonus error:', err);
+      alert('An error occurred. Please try again.');
+    } finally {
+      setClaimingMilestone(null);
+    }
+  };
+
   const handleRedeemPoints = async () => {
     if (!referralStats) return;
 
     if (!referralStats.isManualVerificationDone) {
-      alert('Manual verification required! Before requesting a refund, you must contact us and complete manual verification.');
+      alert('Manual verification required! Before requesting a payout, you must contact us and complete manual verification.');
       return;
     }
 
-    if ((referralStats.referralPoints || 0) < 1000) {
-      alert('You need at least 1,000 points to request a redemption.');
+    const minBalance = user?.role === 'partner' ? 500 : 1000;
+    if ((referralStats.referralPoints || 0) < minBalance) {
+      alert(user?.role === 'partner' ? 'You need a minimum balance of ₹500 to request a payout.' : 'You need at least 1,000 points to request a redemption.');
       return;
     }
 
-    if (!await window.confirm('Are you sure you want to redeem 1,000 points for a ₹1,000 cashback refund? 1,000 points will be deducted immediately.')) {
+    const confirmMsg = user?.role === 'partner'
+      ? `Are you sure you want to request a payout of ₹${referralStats.referralPoints}? Please note: The actual amount refunded will be a rounded-off amount of your requested amount.`
+      : 'Are you sure you want to redeem 1,000 points for a ₹1,000 cashback refund? 1,000 points will be deducted immediately.';
+
+    if (!await window.confirm(confirmMsg)) {
       return;
     }
 
     setRedemptionSubmitting(true);
     try {
       const activeToken = token || localStorage.getItem('ubt_token');
+      const bodyPayload = user?.role === 'partner' ? { points: referralStats.referralPoints } : {};
+
       const res = await fetch('http://localhost:5000/api/referrals/redeem', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${activeToken}`
-        }
+        },
+        body: JSON.stringify(bodyPayload)
       });
       const data = await res.json();
       if (data.success) {
@@ -4875,11 +4912,11 @@ function DashboardContent() {
                     <div className="flex justify-between items-center bg-slate-50 rounded-xl p-3.5 mt-3 w-full">
                       <div className="flex flex-col text-left">
                         <span className="text-xs text-slate-455 font-bold">
-                          {user?.role === 'partner' ? 'Total Earnings' : 'Redeemable Balance'}
+                          {user?.role === 'partner' ? 'Available Balance' : 'Redeemable Balance'}
                         </span>
                         <span className="text-base font-black text-[#027244] mt-0.5">
                           {user?.role === 'partner' ? (
-                            `₹${referralsLoading ? '...' : calculatePartnerEarnings(referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0)}`
+                            `₹${referralsLoading ? '...' : (referralStats?.referralPoints || 0)}`
                           ) : (
                             `${referralsLoading ? '...' : (referralStats?.referralPoints || 0)} Points`
                           )}
@@ -4887,11 +4924,11 @@ function DashboardContent() {
                       </div>
                       <div className="flex flex-col text-right">
                         <span className="text-xs text-slate-455 font-bold">
-                          {user?.role === 'partner' ? 'Milestone Bonus Included' : 'Cash Equivalency'}
+                          {user?.role === 'partner' ? 'Completed Referrals' : 'Cash Equivalency'}
                         </span>
                         <span className="text-base font-black text-slate-800 mt-0.5">
                           {user?.role === 'partner' ? (
-                            `₹${referralsLoading ? '...' : getPartnerMilestoneBonus(referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0)}`
+                            `${referralsLoading ? '...' : (referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0)}`
                           ) : (
                             `₹${referralsLoading ? '...' : (referralStats?.referralPoints || 0)}`
                           )}
@@ -4900,9 +4937,9 @@ function DashboardContent() {
                     </div>
                   </div>
 
-                  {/* Milestone Progress Bar for Partners */}
+                  {/* Milestone Progress Bar & Claim Buttons for Partners */}
                   {user?.role === 'partner' && !referralsLoading && (
-                    <div className="flex flex-col gap-2 mt-2 bg-slate-50/50 border border-slate-100 p-3 rounded-2xl">
+                    <div className="flex flex-col gap-2.5 mt-2 bg-slate-50/50 border border-slate-100 p-3.5 rounded-2xl">
                       <div className="flex justify-between items-center text-[10px] font-black text-slate-450 uppercase tracking-wider">
                         <span>Milestone Progress</span>
                         <span>
@@ -4915,11 +4952,40 @@ function DashboardContent() {
                           style={{ width: `${Math.min(100, ((referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0) / 100) * 100)}%` }}
                         />
                       </div>
-                      <div className="grid grid-cols-4 text-center text-[9px] font-bold text-slate-500 mt-1">
-                        <span className={referralStats?.referrals?.filter(r => r.status === 'completed')?.length >= 10 ? 'text-[#027244] font-black' : ''}>10 Ref (+₹100)</span>
-                        <span className={referralStats?.referrals?.filter(r => r.status === 'completed')?.length >= 25 ? 'text-[#027244] font-black' : ''}>25 Ref (+₹500)</span>
-                        <span className={referralStats?.referrals?.filter(r => r.status === 'completed')?.length >= 50 ? 'text-[#027244] font-black' : ''}>50 Ref (+₹1.5k)</span>
-                        <span className={referralStats?.referrals?.filter(r => r.status === 'completed')?.length >= 100 ? 'text-[#027244] font-black animate-pulse' : ''}>100 Ref (+₹5k)</span>
+                      
+                      {/* 4 buttons to avail milestone bonus */}
+                      <div className="grid grid-cols-2 gap-2 mt-1">
+                        {[
+                          { target: 10, bonus: 100 },
+                          { target: 25, bonus: 500 },
+                          { target: 50, bonus: 1500 },
+                          { target: 100, bonus: 5000 }
+                        ].map((item) => {
+                          const completedCount = referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0;
+                          const isReached = completedCount >= item.target;
+                          const isClaimed = referralStats?.claimedBonuses?.includes(item.target);
+                          
+                          return (
+                            <button
+                              key={item.target}
+                              type="button"
+                              disabled={!isReached || isClaimed || claimingMilestone === item.target}
+                              onClick={() => handleClaimMilestoneBonus(item.target)}
+                              className={`py-2 px-2.5 rounded-xl text-[10.5px] font-black transition-all flex flex-col items-center justify-center gap-1 cursor-pointer border shadow-2xs ${
+                                isClaimed
+                                  ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed shadow-none'
+                                  : isReached
+                                    ? 'bg-[#027244] hover:bg-[#005934] text-white border-transparent'
+                                    : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed'
+                              }`}
+                            >
+                              <span>{item.target} Referrals</span>
+                              <span className={isClaimed ? 'text-slate-400 font-bold' : isReached ? 'text-amber-300 font-black animate-pulse' : 'text-[#027244] font-bold'}>
+                                {isClaimed ? '✓ Claimed' : isReached ? `Avail ₹${item.bonus}!` : `₹${item.bonus} Bonus`}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -4959,7 +5025,7 @@ function DashboardContent() {
                       !referralStats || 
                       !referralStats?.isManualVerificationDone || 
                       (user?.role === 'partner' 
-                        ? calculatePartnerEarnings(referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0) === 0
+                        ? (referralStats?.referralPoints || 0) < 500
                         : (referralStats?.referralPoints || 0) < 1000
                       )
                     }
@@ -4972,11 +5038,17 @@ function DashboardContent() {
                     ) : !referralStats || !referralStats?.isManualVerificationDone ? (
                       'Manual Verification Required to Redeem'
                     ) : user?.role === 'partner' ? (
-                      `Request Payout (₹${calculatePartnerEarnings(referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0)})`
+                      `Request Payout (₹${referralStats?.referralPoints || 0})`
                     ) : (
                       'Request Cashback Refund (₹1,000)'
                     )}
                   </button>
+
+                  {user?.role === 'partner' && (
+                    <p className="text-[10px] text-slate-450 font-bold text-center mt-1 select-none">
+                      * The amount refunded will be a rounded-off amount of the requested payout amount.
+                    </p>
+                  )}
                 </div>
               </div>
 

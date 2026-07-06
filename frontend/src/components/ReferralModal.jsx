@@ -266,9 +266,13 @@ export default function ReferralModal({ isOpen, onClose }) {
                   04
                 </span>
               </div>
-              <h4 className="font-extrabold text-[13.5px] text-[#001c41]">You Redeem for Cashback</h4>
+              <h4 className="font-extrabold text-[13.5px] text-[#001c41]">
+                {userRole === 'partner' ? 'You Request Payout' : 'You Redeem for Cashback'}
+              </h4>
               <p className="text-slate-500 text-[12px] font-medium leading-relaxed max-w-[180px]">
-                You earn points that can be redeemed for a direct ₹1,000 cashback refund from the admin.
+                {userRole === 'partner'
+                  ? 'Request payout once your balance is at least ₹500 (the amount is rounded-off).'
+                  : 'You earn points that can be redeemed for a direct ₹1,000 cashback refund from the admin.'}
               </p>
             </div>
 
@@ -354,7 +358,7 @@ export default function ReferralModal({ isOpen, onClose }) {
               <div className="flex flex-col gap-0.5 text-slate-700 leading-normal text-xs">
                 {userRole === 'partner' ? (
                   <>
-                    <span className="font-extrabold text-slate-800">Milestone bonuses are paid out automatically along with your base earnings.</span>
+                    <span className="font-extrabold text-slate-800">Earn ₹49 per referral. Avail milestone bonuses once reached, and request payout when balance is at least ₹500.</span>
                     <span className="text-[#027244] font-black mt-0.5">* Reaching 100 referrals awards you "Gold Partner" recognition status!</span>
                   </>
                 ) : (
@@ -420,7 +424,7 @@ export default function ReferralModal({ isOpen, onClose }) {
               <div className="flex flex-col gap-0.5 text-slate-700 leading-normal text-xs">
                 {userRole === 'partner' ? (
                   <>
-                    <span className="font-extrabold text-slate-800">Earnings are active once your referred businesses pay and active subscription starts.</span>
+                    <span className="font-extrabold text-slate-800">Earnings are active once referred businesses subscribe. Minimum payout is ₹500 (rounded-off).</span>
                     <span className="text-emerald-700 font-bold mt-0.5">Partner payouts are processed to your UPI/Bank Account within 2-3 business days.</span>
                   </>
                 ) : (
