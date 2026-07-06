@@ -116,35 +116,37 @@ router.post('/create-order', protect, async (req, res) => {
 
     const finalAmount = Math.round((planPrice - discountAmountRupees) * 100);
 
-    let order;
+    let subscriptionObj;
     if (!isMock) {
       try {
-        order = await razorpay.orders.create({
-          amount: finalAmount,
-          currency: 'INR',
-          receipt: `rcpt_sub_${businessId.toString().slice(-12)}_${Date.now()}`,
+        const totalCount = (planType.toLowerCase() === 'monthly' || planType.toLowerCase().includes('monthly')) ? 60 : 5;
+        subscriptionObj = await razorpay.subscriptions.create({
+          plan_id: planId,
+          total_count: totalCount,
+          quantity: 1,
+          customer_notify: 1,
           notes: {
             businessId: businessId.toString(),
             planType: planType
           }
         });
       } catch (err) {
-        console.error('Razorpay Order SDK creation failed. Error details:', err.message);
+        console.error('Razorpay Subscription SDK creation failed. Error details:', err.message);
         isMock = true;
       }
     }
 
     if (isMock) {
-      order = {
-        id: 'order_mock_' + Math.random().toString(36).substr(2, 9),
+      subscriptionObj = {
+        id: 'sub_mock_' + Math.random().toString(36).substr(2, 9),
         status: 'created'
       };
     }
 
     res.json({
       success: true,
-      isSubscription: false,
-      orderId: order.id,
+      isSubscription: true,
+      subscriptionId: subscriptionObj.id,
       amount: finalAmount,
       currency: 'INR',
       keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_mockKeyId12345',
