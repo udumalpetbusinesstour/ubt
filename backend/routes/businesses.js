@@ -703,7 +703,12 @@ router.get('/', async (req, res) => {
           allCategoriesToQuery.push(...subcats.map(c => c.categoryName));
         }
       }
-      conditions.push({ category: { $in: allCategoriesToQuery } });
+      conditions.push({
+        $or: [
+          { category: { $in: allCategoriesToQuery } },
+          { type: { $in: allCategoriesToQuery } }
+        ]
+      });
     }
 
     // Locality / Pincode filter

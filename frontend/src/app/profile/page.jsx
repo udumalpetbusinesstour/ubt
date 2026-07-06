@@ -342,9 +342,6 @@ export default function UserProfile() {
                   className="bg-white border border-slate-200/80 hover:border-slate-400 hover:shadow-md rounded-[24px] overflow-hidden flex flex-col cursor-pointer group"
                 >
                   <div className="h-36 bg-slate-100 bg-cover bg-center shrink-0 relative" style={{ backgroundImage: `url('${biz.coverImageUrl || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'}')` }}>
-                    {biz.isPremium && (
-                      <span className="absolute top-3 left-3 bg-amber-500 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-lg shadow-sm">Featured</span>
-                    )}
                   </div>
                   <div className="p-5 flex-grow flex flex-col justify-between gap-4">
                     <div className="flex flex-col gap-1.5">

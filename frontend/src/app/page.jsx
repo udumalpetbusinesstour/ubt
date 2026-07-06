@@ -554,12 +554,9 @@ export default function Home() {
           if (dbCat && dbCat.parentCategory && dbCat.parentCategory !== 'Others') {
             return dbCat.parentCategory;
           }
-          const availableCats = [
-            'Automotive', 'Beauty & Wellness', 'Education', 'Electronics', 'Food & Restaurants',
-            'Health & Medical', 'Home Services', 'Real Estate', 'Shopping', 'Manufacturing',
-            'Professional Services', 'Travel & Hospitality', 'Construction', 'Agriculture',
-            'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness', 'Public Sector'
-          ];
+          const availableCats = Array.from(
+            new Set(dbCategories.map(cat => cat.parentCategory).filter(p => p && p.trim() !== '' && p !== 'Others'))
+          );
           if (availableCats.some(p => p.toLowerCase() === subName.toLowerCase())) {
             return subName;
           }
@@ -574,12 +571,9 @@ export default function Home() {
         if (data.success) {
           const counts = {};
           const ratingSums = {};
-          const availableCategories = [
-            'Automotive', 'Beauty & Wellness', 'Education', 'Electronics', 'Food & Restaurants',
-            'Health & Medical', 'Home Services', 'Real Estate', 'Shopping', 'Manufacturing',
-            'Professional Services', 'Travel & Hospitality', 'Construction', 'Agriculture',
-            'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness', 'Public Sector'
-          ];
+          const availableCategories = Array.from(
+            new Set(dbCategories.map(cat => cat.parentCategory).filter(p => p && p.trim() !== '' && p !== 'Others'))
+          );
           availableCategories.forEach(c => {
             counts[c] = 0;
             ratingSums[c] = 0;
@@ -598,7 +592,7 @@ export default function Home() {
           Object.keys(counts).forEach(c => {
             avgRatings[c] = counts[c] > 0 ? (ratingSums[c] / counts[c]) : 0;
           });
-          updateDynamicCategories(counts, avgRatings);
+          updateDynamicCategories(counts, avgRatings, dbCategories);
         }
       } catch (err) {
         console.warn('API error, using standard fallback category counts.');
@@ -642,7 +636,7 @@ export default function Home() {
           'Sports & Fitness': 4.5,
           'Public Sector': 4.1
         };
-        updateDynamicCategories(mockCounts, mockAvgRatings);
+        updateDynamicCategories(mockCounts, mockAvgRatings, dbCategories);
       }
 
       // Fetch live approved sponsored ads
@@ -660,13 +654,19 @@ export default function Home() {
       }
     };
 
-    const updateDynamicCategories = (counts, avgRatings = {}) => {
-      const availableCategories = [
-        'Automotive', 'Beauty & Wellness', 'Education', 'Electronics', 'Food & Restaurants',
-        'Health & Medical', 'Home Services', 'Real Estate', 'Shopping', 'Manufacturing',
-        'Professional Services', 'Travel & Hospitality', 'Construction', 'Agriculture',
-        'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness', 'Public Sector'
-      ];
+    const updateDynamicCategories = (counts, avgRatings = {}, dbCats = []) => {
+      let availableCategories = Array.from(
+        new Set(dbCats.map(cat => cat.parentCategory).filter(p => p && p.trim() !== '' && p !== 'Others'))
+      );
+
+      if (availableCategories.length === 0) {
+        availableCategories = [
+          'Automotive', 'Beauty & Wellness', 'Education', 'Electronics', 'Food & Restaurants',
+          'Health & Medical', 'Home Services', 'Real Estate', 'Shopping', 'Manufacturing',
+          'Professional Services', 'Travel & Hospitality', 'Construction', 'Agriculture',
+          'Finance & Insurance', 'Events & Entertainment', 'Sports & Fitness', 'Public Sector'
+        ];
+      }
 
       const iconMap = {
         'Automotive': (
@@ -1300,12 +1300,6 @@ export default function Home() {
                   />
                   {isSubscribed && (
                     <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">
-                      {biz.isPremium && (
-                        <div className="bg-white border border-amber-100 px-1.5 py-0.5 rounded-lg shadow-xs flex items-center gap-0.5">
-                          <Sparkles className="h-3 w-3 text-amber-500 fill-current" />
-                          <span className="text-[8px] sm:text-[9px] font-black text-amber-600 uppercase tracking-wider">Premium</span>
-                        </div>
-                      )}
                       {biz.isFoundingMember && (
                         <div className="bg-amber-500 text-white px-1.5 py-0.5 rounded-lg shadow-xs flex items-center gap-0.5 border border-amber-600">
                           <Sparkles className="h-2.5 w-2.5 text-white fill-current" />

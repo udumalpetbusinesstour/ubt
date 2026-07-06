@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect, admin } = require('../middleware/auth');
 const Category = require('../models/Category');
+const Business = require('../models/Business');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
 
 // @desc    Get all categories
@@ -99,6 +100,11 @@ router.put('/rename-parent', protect, admin, async (req, res, next) => {
       { parentCategory: oldParentName.trim() },
       { $set: { parentCategory: newParentName.trim() } }
     );
+    // Propagate parent category name change to all business listings
+    await Business.updateMany(
+      { category: oldParentName.trim() },
+      { $set: { category: newParentName.trim() } }
+    );
     return sendSuccess(res, 200, `Parent category renamed. ${result.modifiedCount} subcategories updated.`, { modifiedCount: result.modifiedCount });
   } catch (err) {
     next(err);
@@ -117,6 +123,9 @@ router.put('/:id', protect, admin, async (req, res, next) => {
       return sendError(res, 404, 'Category classification not found');
     }
 
+    const oldSubName = category.categoryName;
+    const oldParentCategoryName = category.parentCategory;
+
     if (categoryName) category.categoryName = categoryName;
     if (icon !== undefined) category.icon = icon;
     if (image !== undefined) category.image = image;
@@ -124,6 +133,23 @@ router.put('/:id', protect, admin, async (req, res, next) => {
     if (parentCategory !== undefined) category.parentCategory = parentCategory;
 
     await category.save();
+
+    // Propagate subcategory name changes to existing businesses
+    if (categoryName && categoryName !== oldSubName) {
+      await Business.updateMany(
+        { type: oldSubName },
+        { $set: { type: categoryName } }
+      );
+    }
+
+    // Propagate main category association change to existing businesses
+    if (parentCategory !== undefined && parentCategory !== oldParentCategoryName) {
+      await Business.updateMany(
+        { type: category.categoryName },
+        { $set: { category: parentCategory } }
+      );
+    }
+
     return sendSuccess(res, 200, 'Category classification updated successfully', category);
   } catch (err) {
     next(err);
@@ -140,7 +166,15 @@ router.delete('/:id', protect, admin, async (req, res, next) => {
       return sendError(res, 404, 'Category classification not found');
     }
 
+    const categoryName = category.categoryName;
     await category.deleteOne();
+
+    // Re-assign all businesses under this deleted category to "Others"
+    await Business.updateMany(
+      { type: categoryName },
+      { $set: { category: 'Others', type: 'Others', categoryId: null } }
+    );
+
     return sendSuccess(res, 200, 'Category classification removed successfully');
   } catch (err) {
     next(err);

@@ -255,6 +255,14 @@ function BusinessesList() {
     const normSlug = normalizeRobust(targetSlug);
     console.log('[SlugRoute] targetSlug:', targetSlug, 'normSlug:', normSlug);
     
+    // Check if the slug matches any unique parentCategory dynamically
+    const uniqueParents = Array.from(new Set(dbCategories.map(c => c.parentCategory).filter(p => p && p.trim() !== '' && p !== 'Others')));
+    const matchedParent = uniqueParents.find(parent => normalizeRobust(parent) === normSlug);
+    if (matchedParent) {
+      console.log('[SlugRoute] MATCHED parent category:', matchedParent);
+      return { type: 'category', value: matchedParent };
+    }
+
     for (const cat of dbCategories) {
       const normCatName = normalizeRobust(cat.categoryName);
       console.log('[SlugRoute] comparing category:', cat.categoryName, 'norm:', normCatName, 'with:', normSlug);
@@ -2178,12 +2186,6 @@ function BusinessesList() {
                                 {/* Badge (Verified / Premium / Google Linked) */}
                                 {!isExpired && (
                                   <div className="absolute top-3 left-3 flex flex-wrap gap-1 z-10">
-                                    {biz.isPremium && (
-                                      <div className="bg-white border border-amber-100 px-2 py-0.5 rounded-lg shadow-xs flex items-center gap-1">
-                                        <Sparkles className="h-3.5 w-3.5 text-amber-500 fill-current" />
-                                        <span className="text-[9px] font-black text-amber-600 uppercase tracking-wider">Premium</span>
-                                      </div>
-                                    )}
                                     {biz.isFoundingMember && (
                                       <div className="bg-amber-500 text-white px-2 py-0.5 rounded-lg shadow-xs flex items-center gap-1 border border-amber-600">
                                         <Sparkles className="h-3.5 w-3.5 text-white fill-current" />
@@ -3003,12 +3005,6 @@ function BusinessesList() {
                       {/* Badge (Verified / Premium / Google Linked) */}
                       {!isExpired && (
                         <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">
-                          {biz.isPremium && (
-                            <div className="bg-white border border-amber-100 px-1.5 py-0.5 rounded-lg shadow-xs flex items-center gap-0.5">
-                              <Sparkles className="h-3 w-3 text-amber-500 fill-current" />
-                              <span className="text-[8px] sm:text-[9px] font-black text-amber-600 uppercase tracking-wider">Premium</span>
-                            </div>
-                          )}
                           {biz.isFoundingMember && (
                             <div className="bg-amber-500 text-white px-1.5 py-0.5 rounded-lg shadow-xs flex items-center gap-0.5 border border-amber-600">
                               <Sparkles className="h-2.5 w-2.5 text-white fill-current" />
