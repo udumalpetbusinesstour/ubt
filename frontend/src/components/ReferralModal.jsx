@@ -167,10 +167,22 @@ export default function ReferralModal({ isOpen, onClose }) {
             <div className="flex flex-wrap items-center gap-3.5 mt-2">
               <button 
                 onClick={handleActionClick}
-                className="py-3 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-98"
+                className="py-3 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-98 border-none"
               >
                 {isLoggedIn ? 'Go to My Referral Dashboard' : 'Login to Start Referring'}
               </button>
+
+              {!isLoggedIn && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    navigate('/register?from=partner');
+                  }}
+                  className="py-3 px-6 bg-amber-400 hover:bg-amber-500 text-slate-900 font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-98 border-none animate-shake"
+                >
+                  Become a UBT Partner (Earn ₹49/ref)
+                </button>
+              )}
             </div>
           </div>
 
