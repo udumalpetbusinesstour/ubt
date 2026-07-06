@@ -4797,7 +4797,7 @@ export default function AdminDashboard() {
                             onClick={() => setRedemptionStatusFilter(f)}
                             className={`px-3 py-1 rounded-lg text-[10px] font-black cursor-pointer transition-all border ${
                               redemptionStatusFilter === f
-                                ? 'bg-slate-855 text-white border-slate-855 shadow-2xs'
+                                ? 'bg-slate-800 text-white border-slate-800 shadow-2xs'
                                 : 'bg-slate-50 text-slate-550 border-slate-205 hover:bg-slate-100'
                             }`}
                           >

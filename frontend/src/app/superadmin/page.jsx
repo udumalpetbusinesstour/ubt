@@ -6137,7 +6137,7 @@ const handlePartnerAction = async (partnerId, action) => {
                             )}
                             <div className="flex flex-col gap-1">
                               <div className="flex justify-between items-center pr-12">
-                                <span className={`font-black text-sm ${themeMode === 'dark' ? 'text-white' : 'text-slate-855'}`}>{p.name}</span>
+                                <span className={`font-black text-sm ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{p.name}</span>
                               </div>
                               <span className="text-[8.5px] uppercase font-black tracking-widest text-[#027244] bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-lg select-none self-start mt-1">{p.duration}</span>
                             </div>
