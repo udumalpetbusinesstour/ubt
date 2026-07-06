@@ -112,7 +112,15 @@ export default function ReferralModal({ isOpen, onClose }) {
               Refer. Earn. <span className="text-[#027244]">Redeem.</span>
             </h1>
             <p className="text-slate-500 text-xs md:text-sm font-semibold leading-relaxed max-w-xl">
-              Refer new businesses to UBT and earn referral points. Registered business members earn <span className="text-[#027244] font-bold">99 points</span> per referral (11 referrals for ₹1,000 refund), while partners earn <span className="text-[#027244] font-bold">49 points</span> per referral (21 referrals for ₹1,000 payout).
+              {userRole === 'partner' ? (
+                <span>
+                  Refer new businesses to UBT and earn high cash payouts! As a partner, you earn <span className="text-[#027244] font-bold">₹49</span> for every successful business registration, plus massive milestone cash bonuses (up to <span className="text-[#027244] font-bold">₹9,900</span> total for 100 referrals).
+                </span>
+              ) : (
+                <span>
+                  Refer new businesses to UBT and earn referral points. Registered business members earn <span className="text-[#027244] font-bold">99 points</span> per referral (11 referrals for ₹1,000 refund), while partners earn <span className="text-[#027244] font-bold">49 points</span> per referral.
+                </span>
+              )}
             </p>
 
             {/* Quick Steps Row */}
@@ -135,7 +143,7 @@ export default function ReferralModal({ isOpen, onClose }) {
                 </div>
                 <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider">They Join & Subscribe</h4>
                 <p className="text-slate-500 text-[12px] font-medium leading-relaxed">
-                  When they join and complete payment, you earn points.
+                  When they join and complete payment, you earn your rewards.
                 </p>
               </div>
 
@@ -144,9 +152,13 @@ export default function ReferralModal({ isOpen, onClose }) {
                 <div className="h-9 w-9 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-100/60 text-[#027244] shrink-0">
                   <Gift className="h-4.5 w-4.5" />
                 </div>
-                <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider">₹1,000 Cashback</h4>
+                <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider">
+                  {userRole === 'partner' ? 'Earn Cash Payouts' : '₹1,000 Cashback'}
+                </h4>
                 <p className="text-slate-500 text-[12px] font-medium leading-relaxed">
-                  Redeem 1,000 points to claim a direct ₹1,000 cashback refund.
+                  {userRole === 'partner' 
+                    ? 'Get direct cash payouts from ₹49 up to ₹9,900 via UPI/Bank.'
+                    : 'Redeem 1,000 points to claim a direct ₹1,000 cashback refund.'}
                 </p>
               </div>
             </div>
