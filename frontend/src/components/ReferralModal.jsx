@@ -323,9 +323,9 @@ export default function ReferralModal({ isOpen, onClose }) {
                     {[
                       { ref: '1 Business', base: '₹49', bonus: '—', total: '₹49' },
                       { ref: '10 Businesses', base: '₹490', bonus: '+ ₹100 Bonus', total: '₹590' },
-                      { ref: '25 Businesses', base: '₹1,225', bonus: '+ ₹500 Bonus', total: '₹1,725' },
-                      { ref: '50 Businesses', base: '₹2,450', bonus: '+ ₹1,500 Bonus', total: '₹3,950' },
-                      { ref: '100 Businesses', base: '₹4,900', bonus: '+ ₹5,000 Bonus', total: '₹9,900 *' }
+                      { ref: '25 Businesses', base: '₹1,225', bonus: '+ ₹600 Bonus (cumulative)', total: '₹1,825' },
+                      { ref: '50 Businesses', base: '₹2,450', bonus: '+ ₹2,100 Bonus (cumulative)', total: '₹4,550' },
+                      { ref: '100 Businesses', base: '₹4,900', bonus: '+ ₹7,100 Bonus (cumulative)', total: '₹12,000 *' }
                     ].map((row, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/50">
                         <td className="px-4 py-2 text-slate-800 font-extrabold">{row.ref}</td>
@@ -409,10 +409,10 @@ export default function ReferralModal({ isOpen, onClose }) {
                   <span>First Milestone (10 Referrals)</span>
                   <span className="font-extrabold text-slate-800">₹490 + ₹100 Bonus = ₹590</span>
                 </div>
-                <div className="flex justify-between pt-1.5 text-xs">
-                  <span className="font-extrabold text-slate-800">Maximum Earning (100 Referrals)</span>
-                  <span className="font-black text-[#027244] text-sm">₹9,900 Payout</span>
-                </div>
+                 <div className="flex justify-between pt-1.5 text-xs">
+                   <span className="font-extrabold text-slate-800">Maximum Earning (100 Referrals)</span>
+                   <span className="font-black text-[#027244] text-sm">₹12,000 Payout</span>
+                 </div>
               </div>
             ) : (
               <div className="flex flex-col gap-3 font-semibold text-xs border border-slate-200/80 rounded-xl p-4 bg-slate-50/30">

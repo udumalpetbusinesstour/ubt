@@ -473,7 +473,7 @@ export default function Register() {
                 },
                 { 
                   title: '💰 Earn ₹49 Per Successful Registration',
-                  desc: 'Earn up to ₹4,900 by helping just 100 local businesses join UBT.',
+                  desc: 'Earn up to ₹12,000 (including ₹7,100 milestone bonuses) by helping just 100 local businesses join UBT.',
                   icon: <Coins className="h-4.5 w-4.5 text-[#001c41]" />,
                   bg: 'bg-blue-50 border-blue-100/50'
                 },
