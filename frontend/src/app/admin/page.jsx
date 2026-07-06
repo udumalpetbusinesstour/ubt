@@ -6743,8 +6743,15 @@ export default function AdminDashboard() {
       )}
 
       {/* PARTNER DETAIL REVIEW SLIDE-OVER MODAL */}
-      {showPartnerModal && selectedPartner && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-end p-0">
+      {showPartnerModal && selectedPartner && (() => {
+        const allPartnerRefs = referrals.filter(r => (r.referrerId?._id || r.referrerId) === selectedPartner._id);
+        const completedRefsCount = allPartnerRefs.filter(r => r.status === 'completed').length;
+        const partnerRedemptions = redemptions.filter(r => (r.userId?._id || r.userId) === selectedPartner._id);
+        const pendingPayouts = partnerRedemptions.filter(r => r.status === 'Pending Approval').reduce((sum, r) => sum + r.points, 0);
+        const completedPayouts = partnerRedemptions.filter(r => r.status === 'Refunded').reduce((sum, r) => sum + r.points, 0);
+
+        return (
+          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-end p-0">
           <div className="w-full max-w-2xl h-full shadow-2xl flex flex-col justify-between animate-slideLeft text-left font-sans bg-white text-[#001c41] border-l border-slate-200">
             
             {/* Modal Header */}
@@ -6783,6 +6790,11 @@ export default function AdminDashboard() {
                       {selectedPartner.isManualVerificationDone && (
                         <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-emerald-500 text-white shrink-0 shadow-2xs" title="Manually Verified Partner">
                           <Check className="h-2.5 w-2.5 stroke-[3]" />
+                        </span>
+                      )}
+                      {selectedPartner.isGoldPartner && (
+                        <span className="bg-amber-100 border border-amber-300 text-amber-800 px-1.5 py-0.5 rounded text-[7.5px] font-black uppercase flex items-center gap-0.5" title="Gold Partner Status">
+                          ★ Gold
                         </span>
                       )}
                     </span>
@@ -6934,6 +6946,85 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              {/* 1. Milestone Progress Card */}
+              <div className="p-4 border border-slate-200 bg-slate-50/40 rounded-2xl flex flex-col gap-3 text-left">
+                <div className="flex justify-between items-center text-[10px] font-black text-slate-450 uppercase tracking-wider">
+                  <span>Milestone Progress (out of 100)</span>
+                  <span className="font-extrabold text-[#027244]">
+                    {completedRefsCount} / 100 Completed Referrals
+                  </span>
+                </div>
+                <div className="w-full bg-slate-200/80 rounded-full h-2.5 overflow-hidden shadow-3xs">
+                  <div 
+                    className="bg-[#027244] h-full rounded-full transition-all duration-500" 
+                    style={{ width: `${Math.min(100, (completedRefsCount / 100) * 100)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between items-center text-[10.5px] text-slate-500 font-semibold mt-1">
+                  <span>Gold Badge Status:</span>
+                  <span className={`font-black uppercase text-[9px] px-2 py-0.5 rounded-full border ${
+                    selectedPartner.isGoldPartner || completedRefsCount >= 100
+                      ? 'bg-amber-50 text-amber-800 border-amber-250 animate-bounce'
+                      : 'bg-slate-100 text-slate-400 border-slate-200'
+                  }`}>
+                    {selectedPartner.isGoldPartner || completedRefsCount >= 100 ? '★ Gold Partner Reached' : 'Standard Partner'}
+                  </span>
+                </div>
+              </div>
+
+              {/* 2. Payout & Redemption Summary Card */}
+              <div className="p-4 border border-slate-200 bg-slate-50/40 rounded-2xl flex flex-col gap-3 text-left">
+                <span className="text-[10px] text-slate-455 font-black uppercase tracking-wider">Payout & Redemption Summary</span>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white border border-slate-150 p-3 rounded-xl flex flex-col gap-1 shadow-3xs">
+                    <span className="text-[9px] text-slate-400 font-bold uppercase leading-none">Pending Payouts</span>
+                    <span className="text-base font-black text-amber-600">
+                      ₹{pendingPayouts}
+                    </span>
+                    <span className="text-[9px] text-slate-400 font-semibold">
+                      {partnerRedemptions.filter(r => r.status === 'Pending Approval').length} pending request(s)
+                    </span>
+                  </div>
+                  <div className="bg-white border border-slate-150 p-3 rounded-xl flex flex-col gap-1 shadow-3xs">
+                    <span className="text-[9px] text-slate-400 font-bold uppercase leading-none">Completed Payouts</span>
+                    <span className="text-base font-black text-[#027244]">
+                      ₹{completedPayouts}
+                    </span>
+                    <span className="text-[9px] text-slate-400 font-semibold">
+                      {partnerRedemptions.filter(r => r.status === 'Refunded').length} payout(s) processed
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Gold Partner Status Administration Control */}
+              {selectedPartner.isPartnerApproved && (
+                <div className="p-4 border rounded-2xl flex justify-between items-center bg-amber-50/40 border-amber-200/50">
+                  <div className="flex flex-col gap-0.5 text-left pr-2">
+                    <span className="text-[10px] text-slate-450 font-black uppercase tracking-wider">Gold Partner Status Control</span>
+                    <span className="text-[11.5px] font-semibold text-slate-600">
+                      {selectedPartner.isGoldPartner 
+                        ? 'Partner is recognized as a Gold Partner (enabled special perks).' 
+                        : 'Standard Partner level. Promote if 100+ milestone achieved.'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      await handleToggleGoldStatus(selectedPartner._id);
+                      // Instantly update local selectedPartner state
+                      setSelectedPartner(prev => ({ ...prev, isGoldPartner: !prev.isGoldPartner }));
+                    }}
+                    className={`px-3 py-1.5 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-all shadow-2xs border shrink-0 ${
+                      selectedPartner.isGoldPartner
+                        ? 'bg-amber-500 hover:bg-amber-600 text-white border-transparent'
+                        : 'bg-white hover:bg-slate-50 text-amber-700 border-amber-200'
+                    }`}
+                  >
+                    {selectedPartner.isGoldPartner ? 'Remove Gold' : 'Make Gold Partner'}
+                  </button>
+                </div>
+              )}
+
               {/* Referrals Section */}
               <div className="flex flex-col gap-3">
                 <span className="text-[10.5px] font-black text-slate-450 uppercase tracking-widest border-b border-slate-100 pb-2">
@@ -7049,7 +7140,8 @@ export default function AdminDashboard() {
 
           </div>
         </div>
-      )}
+        );
+      })()}
 
 
       {/* 4. REPLY TO QUERY MODAL */}
