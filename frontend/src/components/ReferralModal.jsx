@@ -115,7 +115,7 @@ export default function ReferralModal({ isOpen, onClose }) {
             <p className="text-slate-500 text-xs md:text-sm font-semibold leading-relaxed max-w-xl">
               {userRole === 'partner' ? (
                 <span>
-                  Refer new businesses to UBT and earn high cash payouts! As a partner, you earn <span className="text-[#027244] font-bold">₹49</span> for every successful business registration, plus massive milestone cash bonuses (up to <span className="text-[#027244] font-bold">₹9,900</span> total for 100 referrals).
+                  Refer new businesses to UBT and earn high cash payouts! As a partner, you earn <span className="text-[#027244] font-bold">₹49</span> for every successful business registration, plus massive milestone cash bonuses (up to <span className="text-[#027244] font-bold">₹12,000</span> total for 100 referrals).
                 </span>
               ) : (
                 <span>
@@ -158,7 +158,7 @@ export default function ReferralModal({ isOpen, onClose }) {
                 </h4>
                 <p className="text-slate-500 text-[12px] font-medium leading-relaxed">
                   {userRole === 'partner' 
-                    ? 'Get direct cash payouts from ₹49 up to ₹9,900 via UPI/Bank.'
+                    ? 'Get direct cash payouts from ₹49 up to ₹12,000 via UPI/Bank.'
                     : 'Redeem 1,000 points to claim a direct ₹1,000 cashback refund.'}
                 </p>
               </div>
