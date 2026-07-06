@@ -250,41 +250,77 @@ export default function ReferralModal({ isOpen, onClose }) {
 
           </div>
         </section>
-
         {/* 3. CONVERSIONS AND CALCULATOR */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           {/* Left column - Earn More, Refund More */}
           <div className="bg-white border border-slate-200 shadow-2xs rounded-3xl p-5 md:p-6 flex flex-col gap-5 text-left">
             <div className="flex flex-col gap-0.5 border-b border-slate-100 pb-2.5">
-              <h3 className="text-base font-extrabold text-slate-800">Referral Point Milestones</h3>
-              <p className="text-xs text-slate-500 font-medium">Accumulate referral points and redeem 1,000 points for a ₹1,000 cashback refund.</p>
+              <h3 className="text-base font-extrabold text-slate-800">
+                {userRole === 'partner' ? 'Partner Milestone Bonuses' : 'Referral Point Milestones'}
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                {userRole === 'partner' 
+                  ? 'Unlock high cash bonuses as your successful business referral count grows.'
+                  : 'Accumulate referral points and redeem 1,000 points for a ₹1,000 cashback refund.'}
+              </p>
             </div>
 
-            <div className="overflow-hidden border border-slate-200/85 rounded-xl">
-              <table className="w-full text-xs font-bold text-slate-700 text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-black uppercase text-[9px] tracking-wider">
-                    <th className="px-4 py-2">Referrals</th>
-                    <th className="px-4 py-2">Points Earned</th>
-                    <th className="px-4 py-2">Redemption Option</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {[
-                    { ref: '1 Business', pts: `${userRole === 'partner' ? 49 : 99} Points`, val: 'Accumulate' },
-                    { ref: '5 Businesses', pts: `${(userRole === 'partner' ? 49 : 99) * 5} Points`, val: 'Accumulate' },
-                    { ref: '10 Businesses', pts: `${(userRole === 'partner' ? 49 : 99) * 10} Points`, val: 'Accumulate' },
-                    { ref: userRole === 'partner' ? '21 Businesses' : '11 Businesses', pts: `${(userRole === 'partner' ? 49 : 99) * (userRole === 'partner' ? 21 : 11)} Points`, val: 'Redeem for ₹1,000 Cashback' }
-                  ].map((row, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/50">
-                      <td className="px-4 py-2 text-slate-800 font-extrabold">{row.ref}</td>
-                      <td className="px-4 py-2 text-slate-500">{row.pts}</td>
-                      <td className="px-4 py-2 text-[#027244] font-black">{row.val}</td>
+            {userRole === 'partner' ? (
+              <div className="overflow-hidden border border-slate-200/85 rounded-xl">
+                <table className="w-full text-xs font-bold text-slate-700 text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-black uppercase text-[9px] tracking-wider">
+                      <th className="px-4 py-2">Referrals</th>
+                      <th className="px-4 py-2">Base Earnings</th>
+                      <th className="px-4 py-2">Milestone Bonus</th>
+                      <th className="px-4 py-2">Total Cash</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {[
+                      { ref: '1 Business', base: '₹49', bonus: '—', total: '₹49' },
+                      { ref: '10 Businesses', base: '₹490', bonus: '+ ₹100 Bonus', total: '₹590' },
+                      { ref: '25 Businesses', base: '₹1,225', bonus: '+ ₹500 Bonus', total: '₹1,725' },
+                      { ref: '50 Businesses', base: '₹2,450', bonus: '+ ₹1,500 Bonus', total: '₹3,950' },
+                      { ref: '100 Businesses', base: '₹4,900', bonus: '+ ₹5,000 Bonus', total: '₹9,900 *' }
+                    ].map((row, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/50">
+                        <td className="px-4 py-2 text-slate-800 font-extrabold">{row.ref}</td>
+                        <td className="px-4 py-2 text-slate-500">{row.base}</td>
+                        <td className="px-4 py-2 text-emerald-650">{row.bonus}</td>
+                        <td className="px-4 py-2 text-[#027244] font-black">{row.total}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="overflow-hidden border border-slate-200/85 rounded-xl">
+                <table className="w-full text-xs font-bold text-slate-700 text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-black uppercase text-[9px] tracking-wider">
+                      <th className="px-4 py-2">Referrals</th>
+                      <th className="px-4 py-2">Points Earned</th>
+                      <th className="px-4 py-2">Redemption Option</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {[
+                      { ref: '1 Business', pts: '99 Points', val: 'Accumulate' },
+                      { ref: '5 Businesses', pts: '495 Points', val: 'Accumulate' },
+                      { ref: '10 Businesses', pts: '990 Points', val: 'Accumulate' },
+                      { ref: '11 Businesses', pts: '1089 Points', val: 'Redeem for ₹1,000 Cashback' }
+                    ].map((row, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/50">
+                        <td className="px-4 py-2 text-slate-800 font-extrabold">{row.ref}</td>
+                        <td className="px-4 py-2 text-slate-500">{row.pts}</td>
+                        <td className="px-4 py-2 text-[#027244] font-black">{row.val}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             {/* conversion banner info */}
             <div className="bg-emerald-50/45 border border-emerald-100 rounded-2xl p-4 flex items-start gap-3">
@@ -292,8 +328,17 @@ export default function ReferralModal({ isOpen, onClose }) {
                 <Award className="h-4.5 w-4.5" />
               </div>
               <div className="flex flex-col gap-0.5 text-slate-700 leading-normal text-xs">
-                <span className="font-extrabold text-slate-800">Once you reach 1,000 points, redeem them on the {userRole === 'partner' ? 'partner workspace' : 'merchant dashboard'}.</span>
-                <span className="text-[#027244] font-black mt-0.5">1 Referral = {userRole === 'partner' ? 49 : 99} Points</span>
+                {userRole === 'partner' ? (
+                  <>
+                    <span className="font-extrabold text-slate-800">Milestone bonuses are paid out automatically along with your base earnings.</span>
+                    <span className="text-[#027244] font-black mt-0.5">* Reaching 100 referrals awards you "Gold Partner" recognition status!</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="font-extrabold text-slate-800">Once you reach 1,000 points, redeem them on the merchant dashboard.</span>
+                    <span className="text-[#027244] font-black mt-0.5">1 Referral = 99 Points</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -301,24 +346,47 @@ export default function ReferralModal({ isOpen, onClose }) {
           {/* Right column - Example calculator */}
           <div className="bg-white border border-slate-200 shadow-2xs rounded-3xl p-5 md:p-6 flex flex-col gap-5 text-left">
             <div className="flex flex-col gap-0.5 border-b border-slate-100 pb-2.5">
-              <h3 className="text-base font-extrabold text-slate-800">Example: How You Redeem</h3>
-              <p className="text-xs text-slate-500 font-medium">Step-by-step example showing manual refund redemption flows.</p>
+              <h3 className="text-base font-extrabold text-slate-800">
+                {userRole === 'partner' ? 'How Partner Payouts Work' : 'Example: How You Redeem'}
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                {userRole === 'partner' 
+                  ? 'Step-by-step payout logic and direct bank/UPI transfer details.'
+                  : 'Step-by-step example showing manual refund redemption flows.'}
+              </p>
             </div>
 
-            <div className="flex flex-col gap-3 font-semibold text-xs border border-slate-200/80 rounded-xl p-4 bg-slate-50/30">
-              <div className="flex justify-between border-b border-slate-100 pb-2 text-slate-500">
-                <span>Required Points for Cashback</span>
-                <span className="font-extrabold text-slate-850">1,000 Points</span>
+            {userRole === 'partner' ? (
+              <div className="flex flex-col gap-3 font-semibold text-xs border border-slate-200/80 rounded-xl p-4 bg-slate-50/30">
+                <div className="flex justify-between border-b border-slate-100 pb-2 text-slate-500">
+                  <span>Base Rate per Referral</span>
+                  <span className="font-extrabold text-slate-800">₹49 / registration</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100 pb-2 text-slate-500">
+                  <span>First Milestone (10 Referrals)</span>
+                  <span className="font-extrabold text-slate-800">₹490 + ₹100 Bonus = ₹590</span>
+                </div>
+                <div className="flex justify-between pt-1.5 text-xs">
+                  <span className="font-extrabold text-slate-800">Maximum Earning (100 Referrals)</span>
+                  <span className="font-black text-[#027244] text-sm">₹9,900 Payout</span>
+                </div>
               </div>
-              <div className="flex justify-between border-b border-slate-100 pb-2 text-slate-500">
-                <span>Successful Referred Businesses</span>
-                <span className="font-extrabold text-slate-800">{userRole === 'partner' ? '21 Businesses' : '11 Businesses'}</span>
+            ) : (
+              <div className="flex flex-col gap-3 font-semibold text-xs border border-slate-200/80 rounded-xl p-4 bg-slate-50/30">
+                <div className="flex justify-between border-b border-slate-100 pb-2 text-slate-500">
+                  <span>Required Points for Cashback</span>
+                  <span className="font-extrabold text-slate-850">1,000 Points</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100 pb-2 text-slate-500">
+                  <span>Successful Referred Businesses</span>
+                  <span className="font-extrabold text-slate-800">11 Businesses</span>
+                </div>
+                <div className="flex justify-between pt-1.5 text-xs">
+                  <span className="font-extrabold text-slate-800">Redeemable Value</span>
+                  <span className="font-black text-[#027244] text-sm">₹1,000 Cashback Refund</span>
+                </div>
               </div>
-              <div className="flex justify-between pt-1.5 text-xs">
-                <span className="font-extrabold text-slate-800">Redeemable Value</span>
-                <span className="font-black text-[#027244] text-sm">₹1,000 Cashback Refund</span>
-              </div>
-            </div>
+            )}
 
             {/* piggy banner info */}
             <div className="bg-emerald-50/45 border border-emerald-100 rounded-2xl p-4 flex items-start gap-3">
@@ -326,9 +394,17 @@ export default function ReferralModal({ isOpen, onClose }) {
                 <Coins className="h-4.5 w-4.5" />
               </div>
               <div className="flex flex-col gap-0.5 text-slate-700 leading-normal text-xs">
-                <span className="font-extrabold text-slate-800">Points are earned ONLY after success payment of referred member.</span>
-                <span className="text-emerald-700 font-bold mt-0.5">Manual cashback refund processed within 2-3 business days!</span>
-              </div>
+                {userRole === 'partner' ? (
+                  <>
+                    <span className="font-extrabold text-slate-800">Earnings are active once your referred businesses pay and active subscription starts.</span>
+                    <span className="text-emerald-700 font-bold mt-0.5">Partner payouts are processed to your UPI/Bank Account within 2-3 business days.</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="font-extrabold text-slate-800">Points are earned ONLY after success payment of referred member.</span>
+                    <span className="text-emerald-700 font-bold mt-0.5">Manual cashback refund processed within 2-3 business days!</span>
+                  </>
+                )}
             </div>
           </div>
         </section>

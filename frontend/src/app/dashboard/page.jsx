@@ -17,6 +17,18 @@ const getEventDefaultImage = (category) => {
   return '/default_event_cover.jpg';
 };
 
+const getPartnerMilestoneBonus = (n) => {
+  if (n >= 100) return 5000;
+  if (n >= 50) return 1500;
+  if (n >= 25) return 500;
+  if (n >= 10) return 100;
+  return 0;
+};
+
+const calculatePartnerEarnings = (n) => {
+  return (n * 49) + getPartnerMilestoneBonus(n);
+};
+
 const getDaysRemaining = (expiryDate) => {
   if (!expiryDate) return 0;
   const diff = new Date(expiryDate).getTime() - new Date().getTime();
@@ -4737,17 +4749,17 @@ function DashboardContent() {
 
               {/* KPI Cards Row */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full">
-                {/* Metric 1: Available Points */}
+                {/* Metric 1: Available Earnings */}
                 <div className="bg-white border border-slate-200 shadow-xs p-4 sm:p-5 rounded-3xl flex flex-col gap-3 w-full">
                   <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100/50">
                     <Gift className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-normal leading-tight">Available Points</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-normal leading-tight">Available Earnings</span>
                     <span className="text-xl font-black text-[#027244] leading-none mt-1.5 font-sans">
-                      {referralsLoading ? '...' : (referralStats?.referralPoints || 0)} pts
+                      ₹{referralsLoading ? '...' : calculatePartnerEarnings(referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0)}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-bold mt-1.5 whitespace-normal">₹{referralsLoading ? '0' : (referralStats?.referralPoints || 0)} Value</span>
+                    <span className="text-[10px] text-slate-400 font-bold mt-1.5 whitespace-normal">Base + Milestone Bonus</span>
                   </div>
                 </div>
 
@@ -4775,7 +4787,7 @@ function DashboardContent() {
                     <span className="text-xl font-black text-purple-600 leading-none mt-1.5 font-sans">
                       {referralsLoading ? '...' : (referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0)}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-bold mt-1.5 whitespace-normal">Earned 99 pts each</span>
+                    <span className="text-[10px] text-slate-400 font-bold mt-1.5 whitespace-normal">Earned ₹49 each</span>
                   </div>
                 </div>
 
@@ -4842,29 +4854,75 @@ function DashboardContent() {
                 <div className="bg-white border border-slate-200/80 shadow-xs rounded-[24px] p-5 flex flex-col gap-3 justify-between text-left">
                   <div>
                     <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                      <h3 className="font-extrabold text-slate-800 text-sm">Points Summary & Payouts</h3>
+                      <h3 className="font-extrabold text-slate-800 text-sm">
+                        {user?.role === 'partner' ? 'Earnings Summary & Payouts' : 'Points Summary & Payouts'}
+                      </h3>
                       <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${referralStats?.isManualVerificationDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
                         Verification: {referralStats?.isManualVerificationDone ? 'Done' : 'Required'}
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 font-semibold leading-relaxed mt-2">
-                      Earned points can be redeemed for cashback payouts when you reach a minimum balance of <span className="font-bold text-[#001c41]">1,000 points</span>. 1 Point = ₹1 credit.
+                      {user?.role === 'partner' ? (
+                        <>
+                          Your earned cash can be redeemed directly to your bank account or UPI. Earn base rate of <span className="font-bold text-[#001c41]">₹49 per referral</span> plus huge milestone cash bonuses!
+                        </>
+                      ) : (
+                        <>
+                          Earned points can be redeemed for cashback payouts when you reach a minimum balance of <span className="font-bold text-[#001c41]">1,000 points</span>. 1 Point = ₹1 credit.
+                        </>
+                      )}
                     </p>
                     <div className="flex justify-between items-center bg-slate-50 rounded-xl p-3.5 mt-3 w-full">
                       <div className="flex flex-col text-left">
-                        <span className="text-xs text-slate-455 font-bold">Redeemable Balance</span>
+                        <span className="text-xs text-slate-455 font-bold">
+                          {user?.role === 'partner' ? 'Total Earnings' : 'Redeemable Balance'}
+                        </span>
                         <span className="text-base font-black text-[#027244] mt-0.5">
-                          {referralsLoading ? '...' : (referralStats?.referralPoints || 0)} Points
+                          {user?.role === 'partner' ? (
+                            `₹${referralsLoading ? '...' : calculatePartnerEarnings(referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0)}`
+                          ) : (
+                            `${referralsLoading ? '...' : (referralStats?.referralPoints || 0)} Points`
+                          )}
                         </span>
                       </div>
                       <div className="flex flex-col text-right">
-                        <span className="text-xs text-slate-455 font-bold">Cash Equivalency</span>
+                        <span className="text-xs text-slate-455 font-bold">
+                          {user?.role === 'partner' ? 'Milestone Bonus Included' : 'Cash Equivalency'}
+                        </span>
                         <span className="text-base font-black text-slate-800 mt-0.5">
-                          ₹{referralsLoading ? '...' : (referralStats?.referralPoints || 0)}
+                          {user?.role === 'partner' ? (
+                            `₹${referralsLoading ? '...' : getPartnerMilestoneBonus(referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0)}`
+                          ) : (
+                            `₹${referralsLoading ? '...' : (referralStats?.referralPoints || 0)}`
+                          )}
                         </span>
                       </div>
                     </div>
                   </div>
+
+                  {/* Milestone Progress Bar for Partners */}
+                  {user?.role === 'partner' && !referralsLoading && (
+                    <div className="flex flex-col gap-2 mt-2 bg-slate-50/50 border border-slate-100 p-3 rounded-2xl">
+                      <div className="flex justify-between items-center text-[10px] font-black text-slate-450 uppercase tracking-wider">
+                        <span>Milestone Progress</span>
+                        <span>
+                          {referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0} / 100 Referrals
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-200/80 rounded-full h-2 overflow-hidden shadow-2xs">
+                        <div 
+                          className="bg-[#027244] h-full rounded-full transition-all duration-500" 
+                          style={{ width: `${Math.min(100, ((referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0) / 100) * 100)}%` }}
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 text-center text-[9px] font-bold text-slate-500 mt-1">
+                        <span className={referralStats?.referrals?.filter(r => r.status === 'completed')?.length >= 10 ? 'text-[#027244] font-black' : ''}>10 Ref (+₹100)</span>
+                        <span className={referralStats?.referrals?.filter(r => r.status === 'completed')?.length >= 25 ? 'text-[#027244] font-black' : ''}>25 Ref (+₹500)</span>
+                        <span className={referralStats?.referrals?.filter(r => r.status === 'completed')?.length >= 50 ? 'text-[#027244] font-black' : ''}>50 Ref (+₹1.5k)</span>
+                        <span className={referralStats?.referrals?.filter(r => r.status === 'completed')?.length >= 100 ? 'text-[#027244] font-black animate-pulse' : ''}>100 Ref (+₹5k)</span>
+                      </div>
+                    </div>
+                  )}
 
                   {!referralStats?.isManualVerificationDone && (
                     <div className="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-4 flex flex-col gap-2.5 text-left shadow-2xs my-1">
@@ -4896,7 +4954,15 @@ function DashboardContent() {
 
                   <button
                     onClick={handleRedeemPoints}
-                    disabled={redemptionSubmitting || !referralStats || !referralStats?.isManualVerificationDone || (referralStats?.referralPoints || 0) < 1000}
+                    disabled={
+                      redemptionSubmitting || 
+                      !referralStats || 
+                      !referralStats?.isManualVerificationDone || 
+                      (user?.role === 'partner' 
+                        ? calculatePartnerEarnings(referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0) === 0
+                        : (referralStats?.referralPoints || 0) < 1000
+                      )
+                    }
                     className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer mt-2"
                   >
                     {redemptionSubmitting ? (
@@ -4905,6 +4971,8 @@ function DashboardContent() {
                       </>
                     ) : !referralStats || !referralStats?.isManualVerificationDone ? (
                       'Manual Verification Required to Redeem'
+                    ) : user?.role === 'partner' ? (
+                      `Request Payout (₹${calculatePartnerEarnings(referralStats?.referrals?.filter(r => r.status === 'completed')?.length || 0)})`
                     ) : (
                       'Request Cashback Refund (₹1,000)'
                     )}
