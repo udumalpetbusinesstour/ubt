@@ -478,9 +478,9 @@ export default function ReferralModal({ isOpen, onClose }) {
               <div className="h-11 w-11 bg-emerald-50 rounded-full border border-emerald-100 flex items-center justify-center text-[#027244] shadow-2xs">
                 <Coins className="h-5 w-5" />
               </div>
-              <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider leading-tight">Earn Rewards Automatically</h4>
+              <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider leading-tight">Earn Cash Automatically</h4>
               <p className="text-slate-500 text-[12px] font-medium leading-relaxed max-w-[170px] mx-auto">
-                Earn points for every successful referral automatically.
+                Earn ₹49 cash for every successful business referral automatically.
               </p>
             </div>
 
@@ -489,9 +489,9 @@ export default function ReferralModal({ isOpen, onClose }) {
               <div className="h-11 w-11 bg-emerald-50 rounded-full border border-emerald-100 flex items-center justify-center text-[#027244] shadow-2xs">
                 <Gift className="h-5 w-5" />
               </div>
-              <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider leading-tight">₹1,000 Cashback Refund</h4>
+              <h4 className="font-extrabold text-[12px] text-[#001c41] uppercase tracking-wider leading-tight">Up to ₹12,000 Payouts</h4>
               <p className="text-slate-500 text-[12px] font-medium leading-relaxed max-w-[170px] mx-auto">
-                Accumulate 1,000 points and request a direct ₹1,000 cashback refund. The admin will contact you and process the refund manually!
+                Avail milestone bonuses (up to ₹7,100 additional) and request cash payouts directly to Bank/UPI.
               </p>
             </div>
 
