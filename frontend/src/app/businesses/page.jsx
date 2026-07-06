@@ -1874,7 +1874,7 @@ function BusinessesList() {
             </div>
 
             <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white mt-3 md:mt-4 self-start font-sans order-2">
-              Explore {selectedSubcategoryInExplore && selectedSubcategoryInExplore !== 'All' 
+              {selectedSubcategoryInExplore && selectedSubcategoryInExplore !== 'All' 
                 ? selectedSubcategoryInExplore 
                 : (selectedCategoryInExplore || 'Categories')} in Udumalpet
             </h1>
