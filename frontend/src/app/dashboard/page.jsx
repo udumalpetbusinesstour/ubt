@@ -4968,8 +4968,10 @@ function DashboardContent() {
                             <button
                               key={item.target}
                               type="button"
-                              disabled={!isReached || isClaimed || claimingMilestone === item.target}
-                              onClick={() => handleClaimMilestoneBonus(item.target)}
+                              onClick={() => {
+                                if (!isReached || isClaimed || claimingMilestone === item.target) return;
+                                handleClaimMilestoneBonus(item.target);
+                              }}
                               title={
                                 isClaimed
                                   ? 'This bonus has already been claimed!'
@@ -4977,12 +4979,12 @@ function DashboardContent() {
                                     ? `Click to claim your ₹${item.bonus} bonus!`
                                     : `Refer ${item.target} businesses to avail this bonus!`
                               }
-                              className={`py-2 px-2.5 rounded-xl text-[10.5px] font-black transition-all flex flex-col items-center justify-center gap-1 cursor-pointer border shadow-2xs ${
+                              className={`py-2 px-2.5 rounded-xl text-[10.5px] font-black transition-all flex flex-col items-center justify-center gap-1 border shadow-2xs ${
                                 isClaimed
                                   ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed shadow-none'
                                   : isReached
-                                    ? 'bg-[#027244] hover:bg-[#005934] text-white border-transparent'
-                                    : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed'
+                                    ? 'bg-[#027244] hover:bg-[#005934] text-white border-transparent cursor-pointer'
+                                    : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50/50 cursor-not-allowed opacity-60'
                               }`}
                             >
                               <span>{item.target} Referrals</span>
