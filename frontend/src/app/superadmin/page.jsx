@@ -3627,9 +3627,9 @@ const handlePartnerAction = async (partnerId, action) => {
                                     : (p.eventId ? (p.eventId.title || 'Event Posting Fee') : 'Platform Payment'),
                                   amt: '₹' + p.amount,
                                   status: p.paymentStatus === 'Paid' ? 'Success' : (p.status === 'Paid' ? 'Success' : 'Failed'),
-                                  time: p.paidAt || p.paymentDate || p.createdAt
-                                    ? new Date(p.paidAt || p.paymentDate || p.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true })
-                                    : 'N/A',
+                                    time: p.paidAt || p.paymentDate || p.createdAt
+                                      ? new Date(p.paidAt || p.paymentDate || p.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })
+                                      : 'N/A',
                                   raw: p
                                 }))
                               : (dateFilteredSubscriptions.length > 0
@@ -5858,7 +5858,7 @@ const handlePartnerAction = async (partnerId, action) => {
                             return (
                               <tr key={p._id} className={themeMode === 'dark' ? 'hover:bg-slate-900/30' : 'hover:bg-slate-50/50'}>
                                 <td className={`p-4 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                                  {p.paymentDate || p.createdAt ? new Date(p.paymentDate || p.createdAt).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A'}
+                                  {p.paymentDate || p.createdAt ? new Date(p.paymentDate || p.createdAt).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) : 'N/A'}
                                 </td>
                                 <td className="p-4 flex flex-col text-left">
                                   <span className={`font-extrabold text-xs sm:text-[13px] ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{userName}</span>

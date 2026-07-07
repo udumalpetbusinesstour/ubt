@@ -4081,7 +4081,7 @@ export default function AdminDashboard() {
                                 return (
                                   <tr key={pay._id} className="hover:bg-slate-50/50">
                                     <td className="p-4 text-slate-500 font-bold font-sans">
-                                      {pay.paymentDate || pay.createdAt ? new Date(pay.paymentDate || pay.createdAt).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A'}
+                                      {pay.paymentDate || pay.createdAt ? new Date(pay.paymentDate || pay.createdAt).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) : 'N/A'}
                                     </td>
                                     <td className="p-4 flex flex-col text-left">
                                       <span className="font-extrabold text-slate-800 text-xs sm:text-[13px]">{userName}</span>
