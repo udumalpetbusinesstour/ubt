@@ -122,23 +122,25 @@ const deployPlan = async (req, res, next) => {
  */
 const getRevenueAnalytics = async (req, res, next) => {
   try {
-    const payments = await Payment.find({ paymentStatus: 'Paid' })
+    const payments = await Payment.find({})
       .populate('userId', 'name fullName email')
       .populate('businessId', 'name')
       .populate('eventId', 'title')
-      .sort({ paidAt: -1 });
+      .sort({ createdAt: -1 });
 
-    const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
+    const paidPayments = payments.filter(p => p.paymentStatus === 'Paid' || p.status === 'Paid' || p.status === 'captured');
 
-    const subscriptionRevenue = payments
+    const totalRevenue = paidPayments.reduce((sum, p) => sum + p.amount, 0);
+
+    const subscriptionRevenue = paidPayments
       .filter(p => !p.eventId && !p.isSponsoredAd && p.planType !== 'Sponsored Ad Promotion')
       .reduce((sum, p) => sum + p.amount, 0);
 
-    const eventRevenue = payments
+    const eventRevenue = paidPayments
       .filter(p => p.eventId)
       .reduce((sum, p) => sum + p.amount, 0);
 
-    const adRevenue = payments
+    const adRevenue = paidPayments
       .filter(p => p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion')
       .reduce((sum, p) => sum + p.amount, 0);
 

@@ -1103,10 +1103,13 @@ router.post('/verify-sponsored-ad-payment', protect, async (req, res) => {
         paymentId: razorpayPaymentId || `pay_mock_ad_${Math.random().toString(36).substr(2, 9)}`,
         orderId: razorpayOrderId,
         amount: 99,
-        status: 'success',
+        status: 'Paid',
+        paymentStatus: 'Paid',
         planType: 'Sponsored Ad Promotion',
         isSponsoredAd: true,
-        promotionId: promotionId
+        promotionId: promotionId,
+        paymentDate: new Date(),
+        paidAt: new Date()
       });
     } catch (payErr) {
       console.error('Error logging payment details for sponsored ad:', payErr.message);

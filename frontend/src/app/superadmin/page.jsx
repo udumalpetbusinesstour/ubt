@@ -3622,12 +3622,14 @@ const handlePartnerAction = async (partnerId, action) => {
                             {((revenueAnalytics?.paymentsLog && revenueAnalytics.paymentsLog.length > 0)
                               ? revenueAnalytics.paymentsLog.map(p => ({
                                   id: p._id.toString().slice(-8).toUpperCase(),
-                                  name: p.businessId?.name || (p.eventId ? (p.eventId.title || 'Event Posting Fee') : 'Platform Payment'),
+                                  name: p.businessId?.name 
+                                    ? `${p.businessId.name}${p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion' ? ' (Sponsored Ad)' : ''}`
+                                    : (p.eventId ? (p.eventId.title || 'Event Posting Fee') : 'Platform Payment'),
                                   amt: '₹' + p.amount,
                                   status: p.paymentStatus === 'Paid' ? 'Success' : (p.status === 'Paid' ? 'Success' : 'Failed'),
-                                  time: p.paidAt 
-                                    ? new Date(p.paidAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-                                    : (p.paymentDate ? new Date(p.paymentDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'N/A'),
+                                  time: p.paidAt || p.paymentDate || p.createdAt
+                                    ? new Date(p.paidAt || p.paymentDate || p.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true })
+                                    : 'N/A',
                                   raw: p
                                 }))
                               : (dateFilteredSubscriptions.length > 0
@@ -5848,13 +5850,15 @@ const handlePartnerAction = async (partnerId, action) => {
                           {revenueAnalytics?.paymentsLog?.map(p => {
                             const userName = p.userId?.fullName || p.userId?.name || 'Unknown';
                             const userEmail = p.userId?.email || '';
-                            const bizName = p.businessId?.name || (p.eventId ? 'Event Posting Fee' : 'Platform Payment');
+                            const bizName = p.businessId?.name 
+                              ? `${p.businessId.name}${p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion' ? ' (Sponsored Ad)' : ''}`
+                              : (p.eventId ? 'Event Posting Fee' : 'Platform Payment');
                             const isPaid = p.paymentStatus === 'Paid' || p.status === 'Paid' || p.status === 'captured';
 
                             return (
                               <tr key={p._id} className={themeMode === 'dark' ? 'hover:bg-slate-900/30' : 'hover:bg-slate-50/50'}>
                                 <td className={`p-4 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                                  {p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : 'N/A'}
+                                  {p.paymentDate || p.createdAt ? new Date(p.paymentDate || p.createdAt).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A'}
                                 </td>
                                 <td className="p-4 flex flex-col text-left">
                                   <span className={`font-extrabold text-xs sm:text-[13px] ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{userName}</span>
