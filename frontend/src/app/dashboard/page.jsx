@@ -1063,45 +1063,6 @@ function DashboardContent() {
         return;
       }
 
-      // Sandbox mock order ID bypass
-      const isMockOrder = orderData.orderId && orderData.orderId.startsWith('order_mock_');
-      if (isMockOrder) {
-        console.log('[SANDBOX BYPASS] Mock ad order detected, skipping Razorpay overlay.');
-        try {
-          const verifyRes = await fetch('http://localhost:5000/api/payments/verify-sponsored-ad-payment', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${activeToken}`,
-            },
-            body: JSON.stringify({
-              businessId: business._id,
-              promotionId: promo.id,
-              razorpayOrderId: orderData.orderId,
-              razorpayPaymentId: 'pay_mock_ad_' + Math.random().toString(36).substr(2, 9),
-              razorpaySignature: ''
-            }),
-          });
-          const verifyData = await verifyRes.json();
-          if (verifyData.success) {
-            setBusiness(verifyData.business);
-            if (verifyData.business && verifyData.business.promotions) {
-              setPromotionsList(verifyData.business.promotions);
-            }
-            alert('Ad Payment Successful! Your promotion flyer has been submitted for Admin approval.');
-            fetchMyPayments();
-          } else {
-            alert(verifyData.message || 'Payment verification failed.');
-          }
-        } catch (err) {
-          console.error('Error verifying mock ad payment:', err);
-          alert('Error verifying payment status.');
-        } finally {
-          setAdPaymentLoadingMap(prev => ({ ...prev, [promo.id]: false }));
-        }
-        return;
-      }
-
       // Check if Razorpay Script is loaded
       const isRazorpayScriptLoaded = () => {
         return new Promise((resolve) => {
