@@ -631,8 +631,8 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
     <div className={isStep ? "w-full bg-white flex flex-col gap-6" : "w-full min-h-screen bg-[#F8FAFC] pt-6 pb-12 px-4 md:px-8 font-sans flex flex-col items-center"}>
       
       {!isStep && (
-        /* Header and Skip options */
-        <div className="max-w-5xl w-full flex justify-between items-center mb-6">
+        /* Header options */
+        <div className="max-w-5xl w-full flex justify-start items-center mb-6">
           <Link 
             to="/" 
             className="flex items-center gap-2 text-xs font-extrabold text-[#001c41] hover:text-[#027244] transition-all bg-white py-2.5 px-4 rounded-xl border border-slate-200 shadow-sm hover:shadow group"
@@ -640,13 +640,6 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
             <ArrowLeft className="h-4 w-4 text-slate-400 group-hover:text-[#027244] transition-colors" />
             <span>Back to Home</span>
           </Link>
-          <button 
-            onClick={handleSkip}
-            id="skip-payment-btn"
-            className="text-xs font-extrabold text-slate-650 hover:text-[#027244] transition-all bg-white py-2.5 px-5 rounded-xl border border-slate-250 shadow-sm hover:border-[#027244] cursor-pointer"
-          >
-            Skip for now <span className="font-sans ml-0.5">➔</span>
-          </button>
         </div>
       )}
 
@@ -798,18 +791,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
             })}
         </div>
 
-        {isStep && (
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={handleSkip}
-              id="skip-payment-btn"
-              className="py-3.5 px-8 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 hover:text-slate-800 font-extrabold text-xs rounded-xl transition-all shadow-sm cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
-            >
-              <span>Skip payment for now & proceed to next stage</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        )}
+
 
         {/* Everything You Get Bottom Section */}
         <div className="w-full border-t border-slate-100 pt-8 mt-6 flex flex-col gap-5 text-center">

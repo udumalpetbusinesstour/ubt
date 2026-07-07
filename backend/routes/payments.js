@@ -143,6 +143,28 @@ router.post('/create-order', protect, async (req, res) => {
       };
     }
 
+    // Create draft subscription record in MongoDB (to prevent lost webhooks)
+    let durationDays = dbPlan ? dbPlan.durationDays : (planType === 'Monthly' ? 28 : 365);
+    const startDate = new Date();
+    const endDate = new Date(startDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
+
+    await Subscription.create({
+      userId: req.user._id,
+      ownerId: req.user._id,
+      businessId: business._id,
+      plan: planType,
+      planName: planType,
+      amount: planPrice - discountAmountRupees,
+      amountPaid: planPrice - discountAmountRupees,
+      referralDiscount: discountAmountRupees,
+      status: 'pending',
+      razorpaySubscriptionId: subscriptionObj.id,
+      startDate,
+      endDate,
+      expiryDate: endDate,
+      autoRenew: true
+    });
+
     res.json({
       success: true,
       isSubscription: true,
@@ -319,25 +341,39 @@ router.post('/verify-payment', protect, async (req, res) => {
 
     const finalAmount = baseAmount - discountAmountRupees;
 
-    // Create Subscription
-    const subscription = await Subscription.create({
-      userId: req.user._id,
-      ownerId: req.user._id,
-      businessId: business._id,
-      plan: planType,
-      planName: planType,
-      amount: finalAmount,
-      amountPaid: finalAmount,
-      referralDiscount: discountAmountRupees,
-      status: subStatus,
-      razorpayOrderId: razorpayOrderId || undefined,
-      razorpaySubscriptionId: razorpaySubscriptionId || undefined,
-      razorpayPaymentId: razorpayPaymentId || 'pay_mock_' + Math.random().toString(36).substr(2, 9),
-      startDate,
-      endDate,
-      expiryDate: endDate,
-      autoRenew: !!razorpaySubscriptionId,
-    });
+    // Create or Update Subscription
+    let subscription = existingSub;
+    if (subscription) {
+      subscription.status = subStatus;
+      subscription.razorpayPaymentId = razorpayPaymentId || 'pay_mock_' + Math.random().toString(36).substr(2, 9);
+      subscription.startDate = startDate;
+      subscription.endDate = endDate;
+      subscription.expiryDate = endDate;
+      subscription.amount = finalAmount;
+      subscription.amountPaid = finalAmount;
+      subscription.referralDiscount = discountAmountRupees;
+      subscription.autoRenew = !!razorpaySubscriptionId;
+      await subscription.save();
+    } else {
+      subscription = await Subscription.create({
+        userId: req.user._id,
+        ownerId: req.user._id,
+        businessId: business._id,
+        plan: planType,
+        planName: planType,
+        amount: finalAmount,
+        amountPaid: finalAmount,
+        referralDiscount: discountAmountRupees,
+        status: subStatus,
+        razorpayOrderId: razorpayOrderId || undefined,
+        razorpaySubscriptionId: razorpaySubscriptionId || undefined,
+        razorpayPaymentId: razorpayPaymentId || 'pay_mock_' + Math.random().toString(36).substr(2, 9),
+        startDate,
+        endDate,
+        expiryDate: endDate,
+        autoRenew: !!razorpaySubscriptionId,
+      });
+    }
 
     // Create Payment record
     const payment = await Payment.create({
@@ -595,9 +631,10 @@ router.post('/webhook', async (req, res) => {
 
     // Validate signature
     try {
+      const rawPayload = req.rawBody ? req.rawBody.toString() : JSON.stringify(req.body);
       const generatedSignature = crypto
         .createHmac('sha256', webhookSecret)
-        .update(JSON.stringify(req.body))
+        .update(rawPayload)
         .digest('hex');
 
       if (signature === generatedSignature) {
@@ -605,7 +642,7 @@ router.post('/webhook', async (req, res) => {
       } else {
         try {
           Razorpay.validateWebhookSignature(
-            JSON.stringify(req.body),
+            rawPayload,
             signature,
             webhookSecret
           );

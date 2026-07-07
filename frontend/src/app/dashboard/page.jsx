@@ -1039,43 +1039,7 @@ function DashboardContent() {
     const activeToken = token || localStorage.getItem('ubt_token');
     if (!activeToken || !business) return;
 
-    const skipPayment = await window.confirm("Skip payment gateway and auto-submit ad promotion for testing?");
-    if (skipPayment) {
-      setAdPaymentLoadingMap(prev => ({ ...prev, [promo.id]: true }));
-      try {
-        const verifyRes = await fetch('http://localhost:5000/api/payments/verify-sponsored-ad-payment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${activeToken}`,
-          },
-          body: JSON.stringify({
-            businessId: business._id,
-            promotionId: promo.id,
-            razorpayOrderId: `order_mock_skip_${Date.now()}`,
-            razorpayPaymentId: `pay_mock_skip_${Date.now()}`,
-            razorpaySignature: ''
-          }),
-        });
-        const verifyData = await verifyRes.json();
-        if (verifyData.success) {
-          setBusiness(verifyData.business);
-          if (verifyData.business && verifyData.business.promotions) {
-            setPromotionsList(verifyData.business.promotions);
-          }
-          alert('Ad Promotion submitted successfully (Payment Bypassed)!');
-          if (typeof fetchMyPayments === 'function') fetchMyPayments();
-        } else {
-          alert(verifyData.message || 'Payment bypass verification failed.');
-        }
-      } catch (err) {
-        console.error('Error bypassing payment:', err);
-        alert('Error bypassing payment status.');
-      } finally {
-        setAdPaymentLoadingMap(prev => ({ ...prev, [promo.id]: false }));
-      }
-      return;
-    }
+
 
     setAdPaymentLoadingMap(prev => ({ ...prev, [promo.id]: true }));
     try {
@@ -3408,59 +3372,7 @@ function DashboardContent() {
     }
   };
 
-  const handleEventPaymentSkip = async (evtId) => {
-    setCompleteEventLoading(true);
-    setCompleteEventError('');
-    const activeToken = token || localStorage.getItem('ubt_token');
-    
-    try {
-      const verifyRes = await fetch('http://localhost:5000/api/payments/verify-event-payment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${activeToken}`,
-        },
-        body: JSON.stringify({
-          eventId: evtId,
-          razorpayOrderId: 'order_mock_skip_' + Math.random().toString(36).substr(2, 9),
-          razorpayPaymentId: 'pay_mock_skip_' + Math.random().toString(36).substr(2, 9),
-        }),
-      });
-      const verifyData = await verifyRes.json();
-      if (verifyData.success) {
-        setCompleteEventPaymentStatus('Paid');
-        fetchUserEvents();
-        
-        if (completeEvent && completeEvent.status === 'Approved') {
-          setCompleteEventStep(2);
-        } else {
-          setCompleteEventSuccess('Payment skipped! Your event has been submitted for admin review.');
-          setTimeout(() => {
-            setShowCompleteEventModal(false);
-            setCompleteEvent(null);
-            setCompleteEventSuccess('');
-          }, 3000);
-        }
-      } else {
-        setCompleteEventError(verifyData.message || 'Payment skip verification failed.');
-      }
-    } catch (err) {
-      console.warn('Skip payment fallback local verification...', err);
-      setCompleteEventPaymentStatus('Paid');
-      if (completeEvent && completeEvent.status === 'Approved') {
-        setCompleteEventStep(2);
-      } else {
-        setCompleteEventSuccess('Mock Mode: Payment skipped! Submitted for admin review.');
-        setTimeout(() => {
-          setShowCompleteEventModal(false);
-          setCompleteEvent(null);
-          setCompleteEventSuccess('');
-        }, 3000);
-      }
-    } finally {
-      setCompleteEventLoading(false);
-    }
-  };
+
 
   const handleCancelEventPayment = async (evtId) => {
     if (!evtId) return;
@@ -11190,14 +11102,7 @@ function DashboardContent() {
                   >
                     Cancel
                   </button>
-                   <button 
-                    type="button"
-                    onClick={() => handleEventPaymentSkip(completeEvent._id)}
-                    disabled={completeEventLoading}
-                    className="py-2.5 px-4 bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-800 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors disabled:opacity-50"
-                  >
-                    Skip Now
-                  </button>
+
                   <button 
                     type="button"
                     onClick={() => handleEventPaymentCheckout(completeEvent._id)}

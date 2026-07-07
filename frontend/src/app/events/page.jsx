@@ -670,37 +670,7 @@ export default function EventsPage() {
     }
   };
 
-  const handleEventPaymentSkip = async (evtId) => {
-    setSubmitLoading(true);
-    setErrorMsg('');
-    const activeToken = localStorage.getItem('ubt_token');
-    
-    try {
-      const verifyRes = await fetch('http://localhost:5000/api/payments/verify-event-payment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${activeToken}`,
-        },
-        body: JSON.stringify({
-          eventId: evtId,
-          razorpayOrderId: 'order_mock_skip_' + Math.random().toString(36).substr(2, 9),
-          razorpayPaymentId: 'pay_mock_skip_' + Math.random().toString(36).substr(2, 9),
-        }),
-      });
-      const verifyData = await verifyRes.json();
-      if (verifyData.success) {
-        setWizardStep('pending_approval_success');
-      } else {
-        setErrorMsg('Payment verification failed.');
-      }
-    } catch (err) {
-      console.warn('Network error during skip, performing mock success transition...', err);
-      setWizardStep('pending_approval_success');
-    } finally {
-      setSubmitLoading(false);
-    }
-  };
+
 
   // Successful payment transitions
   const handlePaymentProceed = () => {
@@ -1350,14 +1320,6 @@ export default function EventsPage() {
                   className="h-11 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="h-4 w-4" /> Back
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleEventPaymentSkip(registeredEvent?._id)}
-                  disabled={submitLoading}
-                  className="h-11 px-4 bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-800 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  Skip Now
                 </button>
                 <button
                   onClick={() => handleEventPaymentCheckout(registeredEvent?._id)}
