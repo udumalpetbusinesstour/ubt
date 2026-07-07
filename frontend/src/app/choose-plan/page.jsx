@@ -100,6 +100,34 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
           }
         }
 
+        if (currentBiz && currentBiz.subscriptionStatus !== 'active') {
+          try {
+            const syncRes = await fetch('http://localhost:5000/api/payments/sync-pending-status', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${authToken}`
+              },
+              body: JSON.stringify({ businessId: currentBiz._id })
+            });
+            const syncData = await syncRes.json();
+            if (syncData.success && syncData.status === 'active') {
+              console.log('[PAYMENT SYNC] Auto-synced premium plan activation successfully!');
+              currentBiz.subscriptionStatus = 'active';
+              currentBiz.isPremium = true;
+              setBusiness(currentBiz);
+              setPaymentSuccess(true);
+              if (onNext) {
+                setTimeout(() => {
+                  onNext(currentBiz);
+                }, 1500);
+              }
+            }
+          } catch (syncErr) {
+            console.warn('[PAYMENT SYNC] Failed to auto-sync status:', syncErr);
+          }
+        }
+
         // 3. Fetch referrals stats
         const refRes = await fetch('http://localhost:5000/api/referrals/my-stats', {
           headers: { Authorization: `Bearer ${authToken}` },

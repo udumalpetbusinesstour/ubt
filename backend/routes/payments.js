@@ -180,7 +180,145 @@ router.post('/create-order', protect, async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+// @desc    Sync pending Razorpay payment state (failsafe fallback for closed tabs/webhooks failure)
+// @route   POST /api/payments/sync-pending-status
+// @access  Private
+router.post('/sync-pending-status', protect, async (req, res) => {
+  try {
+    const { businessId, eventId } = req.body;
 
+    if (!businessId && !eventId) {
+      return res.status(400).json({ success: false, message: 'Business ID or Event ID is required' });
+    }
+
+    if (businessId) {
+      // Find the latest pending subscription for this business
+      const pendingSub = await Subscription.findOne({ businessId, status: 'pending' }).sort({ createdAt: -1 });
+      if (!pendingSub) {
+        return res.json({ success: false, message: 'No pending subscription found for this business' });
+      }
+
+      const subId = pendingSub.razorpaySubscriptionId;
+      if (!subId || subId.startsWith('sub_mock_') || !razorpay) {
+        return res.json({ success: false, message: 'No active gateway subscription to sync' });
+      }
+
+      // Query Razorpay API directly
+      try {
+        const rzpSub = await razorpay.subscriptions.fetch(subId);
+        console.log(`[PAYMENT SYNC] Razorpay subscription status for ${subId}: ${rzpSub.status}`);
+
+        if (rzpSub.status === 'active' || rzpSub.status === 'authenticated' || rzpSub.status === 'completed') {
+          // Process activation (Idempotency safe)
+          pendingSub.status = 'active';
+          pendingSub.amountPaid = pendingSub.amount;
+          await pendingSub.save();
+
+          // Mark business active
+          const business = await Business.findById(businessId);
+          if (business) {
+            business.subscriptionStatus = 'active';
+            business.subscriptionExpiry = pendingSub.endDate;
+            business.isPremium = true;
+            await business.save();
+          }
+
+          // Create payment record if it doesn't exist
+          let payment = await Payment.findOne({
+            $or: [{ paymentId: subId }, { razorpaySubscriptionId: subId }]
+          });
+          if (!payment) {
+            payment = await Payment.create({
+              userId: req.user._id,
+              businessId: businessId,
+              subscriptionId: pendingSub._id,
+              orderId: subId,
+              paymentId: `pay_sync_${Math.random().toString(36).substr(2, 9)}`,
+              razorpayOrderId: undefined,
+              razorpaySubscriptionId: subId,
+              razorpayPaymentId: undefined,
+              amount: pendingSub.amount,
+              paymentMethod: 'UPI',
+              status: 'Paid',
+              paymentStatus: 'Paid',
+              paymentDate: new Date(),
+              paidAt: new Date(),
+            });
+          }
+
+          return res.json({
+            success: true,
+            status: 'active',
+            message: 'Subscription successfully synced and activated!',
+            business,
+            subscription: pendingSub,
+            payment
+          });
+        }
+      } catch (rzpErr) {
+        console.error(`[PAYMENT SYNC] Razorpay fetch failed for sub ${subId}:`, rzpErr.message);
+      }
+    }
+
+    if (eventId) {
+      const event = await Event.findById(eventId);
+      if (!event) {
+        return res.status(404).json({ success: false, message: 'Event not found' });
+      }
+
+      const orderId = event.orderId || event.razorpayOrderId;
+      if (!orderId || orderId.startsWith('order_mock_') || !razorpay) {
+        return res.json({ success: false, message: 'No active gateway order to sync' });
+      }
+
+      try {
+        const rzpOrder = await razorpay.orders.fetch(orderId);
+        console.log(`[PAYMENT SYNC] Razorpay order status for ${orderId}: ${rzpOrder.status}`);
+
+        if (rzpOrder.status === 'paid') {
+          // Update event paymentStatus
+          event.paymentStatus = 'Paid';
+          await event.save();
+
+          // Create payment record if it doesn't exist
+          let payment = await Payment.findOne({
+            $or: [{ orderId: orderId }, { razorpayOrderId: orderId }]
+          });
+          if (!payment) {
+            payment = await Payment.create({
+              userId: req.user._id,
+              eventId: event._id,
+              orderId: orderId,
+              paymentId: `pay_sync_${Math.random().toString(36).substr(2, 9)}`,
+              razorpayOrderId: orderId,
+              razorpayPaymentId: undefined,
+              amount: 99,
+              paymentMethod: 'UPI',
+              status: 'Paid',
+              paymentStatus: 'Paid',
+              paymentDate: new Date(),
+              paidAt: new Date(),
+            });
+          }
+
+          return res.json({
+            success: true,
+            status: 'Paid',
+            message: 'Event payment successfully synced and activated!',
+            event,
+            payment
+          });
+        }
+      } catch (rzpErr) {
+        console.error(`[PAYMENT SYNC] Razorpay fetch failed for order ${orderId}:`, rzpErr.message);
+      }
+    }
+
+    return res.json({ success: false, message: 'Payment status not updated on Razorpay yet' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 // @desc    Verify Razorpay Signature & Activate Subscription
 // @route   POST /api/payments/verify-payment
 // @access  Private
