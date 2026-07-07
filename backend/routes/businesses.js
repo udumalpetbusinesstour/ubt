@@ -6,6 +6,8 @@ const Category = require('../models/Category');
 const Lead = require('../models/Lead');
 const { protect } = require('../middleware/auth');
 
+const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
 // Helper to scrape email address from website or fallback to host domain guess
 const scrapeEmail = async (url) => {
   if (!url) return '';
@@ -66,7 +68,6 @@ const checkAndExpireBusiness = async (business) => {
   if (business.subscriptionExpiry && new Date(business.subscriptionExpiry) < now && business.subscriptionStatus === 'active') {
     business.subscriptionStatus = 'expired';
     business.isPremium = false;
-    business.whatsapp = ''; // Clear WhatsApp contact link
     business.featured = false; // Turn off featured badges
     await business.save();
     console.log(`[Auto-Expire] Automatically cancelled subscription for business "${business.name}" (expired on ${business.subscriptionExpiry})`);
@@ -683,12 +684,13 @@ router.get('/', async (req, res) => {
 
     // Search query (matches name, description, services, brands)
     if (q) {
+      const escapedQ = escapeRegex(q);
       conditions.push({
         $or: [
-          { name: { $regex: q, $options: 'i' } },
-          { description: { $regex: q, $options: 'i' } },
-          { services: { $elemMatch: { $regex: q, $options: 'i' } } },
-          { brands: { $elemMatch: { $regex: q, $options: 'i' } } },
+          { name: { $regex: escapedQ, $options: 'i' } },
+          { description: { $regex: escapedQ, $options: 'i' } },
+          { services: { $elemMatch: { $regex: escapedQ, $options: 'i' } } },
+          { brands: { $elemMatch: { $regex: escapedQ, $options: 'i' } } },
         ]
       });
     }
@@ -716,7 +718,8 @@ router.get('/', async (req, res) => {
       const localityList = locality.split(',');
       const orConditions = [];
       localityList.forEach(loc => {
-        orConditions.push({ locality: { $regex: loc.trim(), $options: 'i' } });
+        const escapedLoc = escapeRegex(loc.trim());
+        orConditions.push({ locality: { $regex: escapedLoc, $options: 'i' } });
         orConditions.push({ pincode: loc.trim() });
       });
       

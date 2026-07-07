@@ -16,6 +16,8 @@ const Lead = require('../models/Lead');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
 const { sendEmail } = require('../utils/emailHelper');
 
+const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
 /**
  * Register administrative sub-desk staff
  */
@@ -1523,7 +1525,7 @@ const resolveCategoryReview = async (req, res, next) => {
       }
 
       // Check duplicate using exact match
-      const exists = await Category.findOne({ categoryName: { $regex: new RegExp(`^${finalName.trim()}$`, 'i') } });
+      const exists = await Category.findOne({ categoryName: { $regex: new RegExp(`^${escapeRegex(finalName.trim())}$`, 'i') } });
       if (exists) {
         business.categoryId = exists._id;
         business.category = exists.categoryName;
@@ -1555,7 +1557,7 @@ const resolveCategoryReview = async (req, res, next) => {
       
       if (resolvedParentCategory && resolvedParentCategory !== 'None' && resolvedParentCategory !== 'Others') {
         // Ensure parent category document exists in the collection to prevent orphans
-        let parentDoc = await Category.findOne({ categoryName: { $regex: new RegExp(`^${resolvedParentCategory.trim()}$`, 'i') } });
+        let parentDoc = await Category.findOne({ categoryName: { $regex: new RegExp(`^${escapeRegex(resolvedParentCategory.trim())}$`, 'i') } });
         if (!parentDoc) {
           parentDoc = await Category.create({
             categoryName: resolvedParentCategory.trim(),

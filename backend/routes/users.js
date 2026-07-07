@@ -127,10 +127,10 @@ router.put('/:id/status', admin, async (req, res, next) => {
         { status: 'Suspended', verificationStatus: 'suspended', isPremium: false, subscriptionStatus: 'none' }
       );
     } else {
-      // Auto reactivate business to Approved if they are reactivated
+      // Revert user's business listings to Pending Verification for moderation check upon account reactivation
       await Business.updateMany(
         { ownerId: user._id },
-        { status: 'Approved', verificationStatus: 'approved' }
+        { status: 'Pending Verification', verificationStatus: 'pending' }
       );
     }
 

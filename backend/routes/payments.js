@@ -265,8 +265,7 @@ router.post('/verify-payment', protect, async (req, res) => {
       (razorpayOrderId && (razorpayOrderId.startsWith('order_mock_') || razorpayOrderId === 'free_listing' || razorpayOrderId === 'public_sector_free' || razorpayOrderId.startsWith('free_admin_'))) ||
       (razorpaySubscriptionId && razorpaySubscriptionId.startsWith('sub_mock_')) ||
       isAdminUser || 
-      isPublicSector ||
-      !razorpaySignature
+      isPublicSector
     );
 
     if (isBypass) {
@@ -529,7 +528,7 @@ router.post('/verify-event-payment', protect, async (req, res) => {
     // Verify signature
     let isSignatureValid = false;
     const isAdminUser = req.user && (req.user.role === 'admin' || req.user.role === 'superadmin');
-    if (razorpayOrderId.startsWith('order_mock_') || razorpayOrderId === 'free_listing' || isAdminUser || !razorpaySignature) {
+    if (razorpayOrderId.startsWith('order_mock_') || razorpayOrderId === 'free_listing' || isAdminUser) {
       console.log('Event Sandbox/Mock/Admin Payment Bypass verified.');
       isSignatureValid = true;
     } else {
@@ -1070,10 +1069,7 @@ router.post('/verify-sponsored-ad-payment', protect, async (req, res) => {
 
     // Verify Payment Signature
     let isSignatureValid = false;
-    const isBypass = (
-      (razorpayOrderId && razorpayOrderId.startsWith('order_mock_')) ||
-      !razorpaySignature
-    );
+    const isBypass = (razorpayOrderId && razorpayOrderId.startsWith('order_mock_'));
 
     if (isBypass) {
       console.log('Sandbox/Mock Ad Payment Signature Bypass verified.');

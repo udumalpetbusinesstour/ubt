@@ -1,6 +1,8 @@
 const Category = require('../models/Category');
 const Business = require('../models/Business');
 
+const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
 /**
  * Ensures that the parent category and subcategory exist in the Category collection
  * for an approved business. Automatically links the business to the new Category ID.
@@ -24,7 +26,7 @@ const ensureCategoriesExist = async (business) => {
     // 1. Ensure the parent category document exists in the Category collection
     let parentDoc = null;
     if (requestedParentCategory.trim() !== 'Others' && requestedParentCategory.trim() !== '') {
-      parentDoc = await Category.findOne({ categoryName: { $regex: new RegExp(`^${requestedParentCategory.trim()}$`, 'i') } });
+      parentDoc = await Category.findOne({ categoryName: { $regex: new RegExp(`^${escapeRegex(requestedParentCategory.trim())}$`, 'i') } });
       if (!parentDoc) {
         parentDoc = await Category.create({
           categoryName: requestedParentCategory.trim(),
@@ -39,7 +41,7 @@ const ensureCategoriesExist = async (business) => {
     // 2. Ensure the subcategory document exists in the Category collection
     const subName = (category === 'Others' ? customCategoryName : category);
     if (subName && subName.trim() !== '' && subName.trim() !== 'Others') {
-      let subDoc = await Category.findOne({ categoryName: { $regex: new RegExp(`^${subName.trim()}$`, 'i') } });
+      let subDoc = await Category.findOne({ categoryName: { $regex: new RegExp(`^${escapeRegex(subName.trim())}$`, 'i') } });
       const expectedParent = parentDoc ? parentDoc.categoryName : requestedParentCategory.trim();
       if (!subDoc) {
         subDoc = await Category.create({

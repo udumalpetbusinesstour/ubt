@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Event = require('../models/Event');
 
+const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
 // Seed default events if collection is empty
 const seedDefaultEvents = async () => {
   try {
@@ -97,11 +99,12 @@ router.get('/', async (req, res) => {
 
     // Search Query (title, description, venue, organizer)
     if (search) {
+      const escapedSearch = escapeRegex(search);
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { venue: { $regex: search, $options: 'i' } },
-        { organizer: { $regex: search, $options: 'i' } }
+        { title: { $regex: escapedSearch, $options: 'i' } },
+        { description: { $regex: escapedSearch, $options: 'i' } },
+        { venue: { $regex: escapedSearch, $options: 'i' } },
+        { organizer: { $regex: escapedSearch, $options: 'i' } }
       ];
     }
 

@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { protect, admin } = require('../middleware/auth');
+
+const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 const Category = require('../models/Category');
 const Business = require('../models/Business');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
@@ -270,7 +272,7 @@ router.post('/view', async (req, res, next) => {
     
     const category = await Category.findOne({
       $or: [
-        { categoryName: { $regex: new RegExp(`^${categoryName}$`, 'i') } },
+        { categoryName: { $regex: new RegExp(`^${escapeRegex(categoryName)}$`, 'i') } },
         { slug: categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-') }
       ]
     });

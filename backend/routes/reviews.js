@@ -27,6 +27,11 @@ router.post('/:businessId', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Author name, rating, and review text are required' });
     }
 
+    const numericRating = Number(rating);
+    if (isNaN(numericRating) || numericRating < 1 || numericRating > 5) {
+      return res.status(400).json({ success: false, message: 'Rating must be a number between 1 and 5' });
+    }
+
     const business = await Business.findById(businessId);
     if (!business) {
       return res.status(404).json({ success: false, message: 'Business not found' });
@@ -36,7 +41,7 @@ router.post('/:businessId', async (req, res) => {
     const review = await Review.create({
       businessId,
       authorName,
-      rating: Number(rating),
+      rating: numericRating,
       text,
       source: 'local',
     });

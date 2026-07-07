@@ -450,7 +450,7 @@ router.put('/admin/redemptions/:id/refund', protect, admin, async (req, res, nex
       await Notification.create({
         userId: redemption.userId,
         title: 'Points Refund Processed',
-        message: `Your referral points redemption request for 1000 points has been marked as refunded. Remarks: ${redemption.remarks}`,
+        message: `Your referral points redemption request for ${redemption.points} points has been marked as refunded. Remarks: ${redemption.remarks}`,
         type: 'refund_update'
       });
     } catch (notifError) {
