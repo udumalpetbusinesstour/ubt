@@ -7495,11 +7495,15 @@ function DashboardContent() {
                                   {(campaign.active !== false) ? 'Pause' : 'Activate'}
                                 </button>
                                 <button
-                                  onClick={() => {
-                                    const updated = offersList.filter(c => 
-                                      !((c.id && c.id === campaign.id) || (c._id && c._id === campaign._id))
-                                    );
-                                    updateOffers(updated);
+                                  onClick={async () => {
+                                    if (await window.confirm('Are you sure you want to permanently delete this special offer?')) {
+                                      const updated = offersList.filter(c => {
+                                        if (campaign._id && c._id) return c._id !== campaign._id;
+                                        if (campaign.id && c.id) return c.id !== campaign.id;
+                                        return c.banner !== campaign.banner;
+                                      });
+                                      updateOffers(updated);
+                                    }
                                   }}
                                   className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[10px] font-black uppercase cursor-pointer btn-active-press"
                                 >
@@ -7719,11 +7723,15 @@ function DashboardContent() {
                                   )}
                                   
                                   <button
-                                    onClick={() => {
-                                      const updated = promotionsList.filter(p => 
-                                        !((p.id && p.id === promo.id) || (p._id && p._id === promo._id))
-                                      );
-                                      updatePromotions(updated);
+                                    onClick={async () => {
+                                      if (await window.confirm('Are you sure you want to permanently delete this flyer promotion?')) {
+                                        const updated = promotionsList.filter(p => {
+                                          if (promo._id && p._id) return p._id !== promo._id;
+                                          if (promo.id && p.id) return p.id !== promo.id;
+                                          return p.image !== promo.image;
+                                        });
+                                        updatePromotions(updated);
+                                      }
                                     }}
                                     className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[10px] font-black uppercase cursor-pointer btn-active-press"
                                   >
