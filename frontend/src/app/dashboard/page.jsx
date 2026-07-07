@@ -3328,45 +3328,8 @@ function DashboardContent() {
         rzp1.open();
       }
     } catch (err) {
-      console.warn('Razorpay popup blocked/failed, using Sandbox payment verification fallback...', err);
-      try {
-        const mockOrderId = 'order_mock_' + Math.random().toString(36).substr(2, 9);
-        const mockPaymentId = 'pay_mock_' + Math.random().toString(36).substr(2, 9);
-        
-        const verifyRes = await fetch('http://localhost:5000/api/payments/verify-event-payment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${activeToken}`,
-          },
-          body: JSON.stringify({
-            eventId: evtId,
-            razorpayOrderId: mockOrderId,
-            razorpayPaymentId: mockPaymentId,
-            razorpaySignature: '',
-          }),
-        });
-        const verifyData = await verifyRes.json();
-        if (verifyData.success) {
-          setCompleteEventPaymentStatus('Paid');
-          fetchUserEvents();
-          fetchMyPayments();
-          if (completeEvent && completeEvent.status === 'Approved') {
-            setCompleteEventStep(2);
-          } else {
-            setCompleteEventSuccess('Sandbox Payment verified! Your event has been submitted for admin review.');
-            setTimeout(() => {
-              setShowCompleteEventModal(false);
-              setCompleteEvent(null);
-              setCompleteEventSuccess('');
-            }, 3000);
-          }
-        } else {
-          setCompleteEventError(verifyData.message || 'Sandbox payment verification failed.');
-        }
-      } catch (innerErr) {
-        setCompleteEventError('Sandbox payment verification connection failed.');
-      }
+      console.error('Razorpay popup failed to open:', err);
+      setCompleteEventError('Could not open payment window. Please check your internet connection or popup blocker settings.');
     } finally {
       setCompleteEventLoading(false);
     }
@@ -3793,46 +3756,10 @@ function DashboardContent() {
       const rzp1 = new window.Razorpay(options);
       rzp1.open();
     } catch (err) {
-      console.warn('Razorpay popup blocked/failed, finalizing database via local Sandbox payment verification...', err);
-      try {
-        const mockSubId = orderData.subscriptionId || 'sub_mock_' + Math.random().toString(36).substr(2, 9);
-        const mockPaymentId = 'pay_mock_' + Math.random().toString(36).substr(2, 9);
-        
-        const verifyRes = await fetch('http://localhost:5000/api/payments/verify-payment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            businessId: business._id,
-            planType: planToUse,
-            razorpayOrderId: '',
-            razorpaySubscriptionId: mockSubId,
-            razorpayPaymentId: mockPaymentId,
-            razorpaySignature: '',
-            applyReferralPoints: applyReferralPoints,
-            redeemPointsAmount: Number(redeemPointsAmount || 0)
-          }),
-        });
-        const verifyData = await verifyRes.json();
-        if (verifyData.success) {
-          setBusiness(verifyData.business);
-          setPaymentSuccess(true);
-          setShowRenewModal(false);
-          fetchReferralStats();
-          fetchMyPayments();
-          setTimeout(() => setPaymentSuccess(false), 4000);
-        } else {
-          setError(verifyData.message || 'Sandbox payment verification failed.');
-        }
-      } catch (mockErr) {
-        console.error('Mock verification error:', mockErr);
-        setError('Sandbox verification failed.');
-      } finally {
-        setPaymentLoading(false);
-        setCheckoutPlan(null);
-      }
+      console.error('Razorpay popup failed to open:', err);
+      setError('Could not open payment window. Please check your internet connection or popup blocker settings.');
+      setPaymentLoading(false);
+      setCheckoutPlan(null);
     }
   };
 

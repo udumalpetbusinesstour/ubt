@@ -638,33 +638,8 @@ export default function EventsPage() {
         rzp1.open();
       }
     } catch (err) {
-      console.warn('Razorpay popup blocked/failed, using Sandbox payment verification fallback...', err);
-      try {
-        const mockOrderId = 'order_mock_' + Math.random().toString(36).substr(2, 9);
-        const mockPaymentId = 'pay_mock_' + Math.random().toString(36).substr(2, 9);
-        
-        const verifyRes = await fetch('http://localhost:5000/api/payments/verify-event-payment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${activeToken}`,
-          },
-          body: JSON.stringify({
-            eventId: evtId,
-            razorpayOrderId: mockOrderId,
-            razorpayPaymentId: mockPaymentId,
-            razorpaySignature: '',
-          }),
-        });
-        const verifyData = await verifyRes.json();
-        if (verifyData.success) {
-          setWizardStep('pending_approval_success');
-        } else {
-          throw new Error(verifyData.message || 'Sandbox verification failed.');
-        }
-      } catch (mockErr) {
-        setErrorMsg('Sandbox payment verification failed.');
-      }
+      console.error('Razorpay popup failed to open:', err);
+      setErrorMsg('Could not open payment window. Please check your internet connection or popup blocker settings.');
     } finally {
       setSubmitLoading(false);
     }
