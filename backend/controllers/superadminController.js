@@ -133,11 +133,15 @@ const getRevenueAnalytics = async (req, res, next) => {
     const totalRevenue = paidPayments.reduce((sum, p) => sum + p.amount, 0);
 
     const subscriptionRevenue = paidPayments
-      .filter(p => !p.eventId && !p.isSponsoredAd && p.planType !== 'Sponsored Ad Promotion')
+      .filter(p => {
+        const hasEventId = p.eventId || p.populated('eventId');
+        const hasAdId = p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion';
+        return !hasEventId && !hasAdId;
+      })
       .reduce((sum, p) => sum + p.amount, 0);
 
     const eventRevenue = paidPayments
-      .filter(p => p.eventId)
+      .filter(p => p.eventId || p.populated('eventId'))
       .reduce((sum, p) => sum + p.amount, 0);
 
     const adRevenue = paidPayments
@@ -146,7 +150,15 @@ const getRevenueAnalytics = async (req, res, next) => {
 
     // Group paid payments by month
     const monthlyRevenue = await Payment.aggregate([
-      { $match: { paymentStatus: 'Paid' } },
+      {
+        $match: {
+          $or: [
+            { paymentStatus: 'Paid' },
+            { status: 'Paid' },
+            { status: 'captured' }
+          ]
+        }
+      },
       {
         $group: {
           _id: {
@@ -206,6 +218,15 @@ const getRevenueAnalytics = async (req, res, next) => {
     ]);
     const referralDiscountTotal = referralDiscountStats[0]?.totalDiscount || 0;
 
+    const mappedPayments = payments.map(p => {
+      const obj = p.toObject ? p.toObject() : p;
+      return {
+        ...obj,
+        isEvent: !!p.eventId || !!p.populated('eventId'),
+        isSponsoredAd: p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion'
+      };
+    });
+
     return sendSuccess(res, 200, 'Platform revenue telemetry compiled successfully', {
       totalRevenue,
       subscriptionRevenue,
@@ -218,8 +239,8 @@ const getRevenueAnalytics = async (req, res, next) => {
       planCounts,
       monthlyRevenue,
       referralDiscountTotal,
-      paymentsLog: payments.slice(0, 15), // Return last 15 payments
-      allPayments: payments // Return all payments for charting
+      paymentsLog: mappedPayments.slice(0, 15), // Return last 15 payments
+      allPayments: mappedPayments // Return all payments for charting
     });
   } catch (err) {
     next(err);
@@ -238,7 +259,13 @@ const getSuperAdminStats = async (req, res, next) => {
     const eventQuery = { status: { $in: ['Approved', 'approved'] } };
     const blogQuery = { status: { $in: ['Pending Approval', 'Pending Review'] } };
     const reviewQuery = {};
-    const paymentQuery = { paymentStatus: 'Paid' };
+    const paymentQuery = {
+      $or: [
+        { paymentStatus: 'Paid' },
+        { status: 'Paid' },
+        { status: 'captured' }
+      ]
+    };
     const leadQuery = {};
 
     if (fromDate || toDate) {
@@ -255,7 +282,7 @@ const getSuperAdminStats = async (req, res, next) => {
       eventQuery.createdAt = dateRange;
       blogQuery.createdAt = dateRange;
       reviewQuery.createdAt = dateRange;
-      paymentQuery.paidAt = dateRange;
+      paymentQuery.createdAt = dateRange;
       leadQuery.createdAt = dateRange;
     }
 
@@ -276,7 +303,7 @@ const getSuperAdminStats = async (req, res, next) => {
     const now = new Date();
     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const revenueThisMonth = payments
-      .filter(p => p.paidAt && new Date(p.paidAt) >= startOfThisMonth)
+      .filter(p => (p.createdAt || p.paidAt) && new Date(p.createdAt || p.paidAt) >= startOfThisMonth)
       .reduce((sum, p) => sum + p.amount, 0);
     const revenueBeforeThisMonth = totalRevenue - revenueThisMonth;
     const revenuePct = revenueBeforeThisMonth > 0 

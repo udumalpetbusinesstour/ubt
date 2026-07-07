@@ -3624,7 +3624,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                   id: p._id.toString().slice(-8).toUpperCase(),
                                   name: p.businessId?.name 
                                     ? `${p.businessId.name}${p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion' ? ' (Sponsored Ad)' : ''}`
-                                    : (p.eventId ? (p.eventId.title || 'Event Posting Fee') : 'Platform Payment'),
+                                    : ((p.eventId || p.isEvent) ? (p.eventId?.title || 'Event Posting Fee') : 'Platform Payment'),
                                   amt: '₹' + p.amount,
                                   status: p.paymentStatus === 'Paid' ? 'Success' : (p.status === 'Paid' ? 'Success' : 'Failed'),
                                     time: p.createdAt || p.paidAt || p.paymentDate
@@ -5852,7 +5852,7 @@ const handlePartnerAction = async (partnerId, action) => {
                             const userEmail = p.userId?.email || '';
                             const bizName = p.businessId?.name 
                               ? `${p.businessId.name}${p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion' ? ' (Sponsored Ad)' : ''}`
-                              : (p.eventId ? 'Event Posting Fee' : 'Platform Payment');
+                              : ((p.eventId || p.isEvent) ? 'Event Posting Fee' : 'Platform Payment');
                             const isPaid = p.paymentStatus === 'Paid' || p.status === 'Paid' || p.status === 'captured';
 
                             return (
@@ -5867,7 +5867,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                 <td className="p-4">
                                   <div className="flex flex-col text-left">
                                     <span className={themeMode === 'dark' ? 'text-slate-300' : 'text-slate-700'}>{bizName}</span>
-                                    {p.eventId && <span className="text-[9px] text-emerald-600 font-black uppercase">Event listing</span>}
+                                    {(p.eventId || p.isEvent) && <span className="text-[9px] text-emerald-600 font-black uppercase">Event listing</span>}
                                   </div>
                                 </td>
                                 <td className="p-4 font-mono text-[10px] text-slate-500">

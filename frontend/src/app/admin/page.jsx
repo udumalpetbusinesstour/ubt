@@ -4075,7 +4075,7 @@ export default function AdminDashboard() {
                                 const userEmail = pay.userId?.email || '';
                                 const bizName = pay.businessId?.name || pay.businessId?.businessName
                                   ? `${pay.businessId?.name || pay.businessId?.businessName}${pay.isSponsoredAd || pay.planType === 'Sponsored Ad Promotion' ? ' (Sponsored Ad)' : ''}`
-                                  : (pay.eventId ? 'Event Posting Fee' : 'Platform Payment');
+                                  : ((pay.eventId || pay.isEvent) ? 'Event Posting Fee' : 'Platform Payment');
                                 const isPaid = pay.paymentStatus === 'Paid' || pay.status === 'Paid' || pay.status === 'captured';
                                 
                                 return (
@@ -4090,7 +4090,7 @@ export default function AdminDashboard() {
                                     <td className="p-4">
                                       <div className="flex flex-col text-left">
                                         <span className="font-bold text-slate-700">{bizName}</span>
-                                        {pay.eventId && <span className="text-[9px] text-[#027244] font-black uppercase">Event listing</span>}
+                                        {(pay.eventId || pay.isEvent) && <span className="text-[9px] text-[#027244] font-black uppercase">Event listing</span>}
                                       </div>
                                     </td>
                                     <td className="p-4 font-mono text-[10px] text-slate-500">

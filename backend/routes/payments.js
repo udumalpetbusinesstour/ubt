@@ -733,7 +733,16 @@ router.get('/my-history', protect, async (req, res) => {
       .populate('businessId')
       .sort({ createdAt: -1 });
 
-    res.json({ success: true, count: payments.length, data: payments });
+    const mapped = payments.map(p => {
+      const obj = p.toObject();
+      return {
+        ...obj,
+        isEvent: !!p.eventId || !!p.populated('eventId'),
+        isSponsoredAd: p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion'
+      };
+    });
+
+    res.json({ success: true, count: mapped.length, data: mapped });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -751,7 +760,16 @@ router.get('/admin/all', protect, admin, async (req, res) => {
       .populate('subscriptionId', 'plan planName')
       .sort({ createdAt: -1 });
 
-    res.json({ success: true, count: payments.length, data: payments });
+    const mapped = payments.map(p => {
+      const obj = p.toObject();
+      return {
+        ...obj,
+        isEvent: !!p.eventId || !!p.populated('eventId'),
+        isSponsoredAd: p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion'
+      };
+    });
+
+    res.json({ success: true, count: mapped.length, data: mapped });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

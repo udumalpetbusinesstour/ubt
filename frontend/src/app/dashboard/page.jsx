@@ -1386,6 +1386,34 @@ function DashboardContent() {
           const userBiz = data.data;
           setBusiness(userBiz);
           setPrimaryBusiness(userBiz);
+          
+          // Background auto-sync if subscription status is pending
+          if (userBiz.subscriptionStatus === 'pending') {
+            (async () => {
+              try {
+                console.log('[PAYMENT SYNC] Auto-syncing pending subscription on load...');
+                const syncRes = await fetch('http://localhost:5000/api/payments/sync-pending-status', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${authToken}`
+                  },
+                  body: JSON.stringify({ businessId: userBiz._id })
+                });
+                const syncData = await syncRes.json();
+                if (syncData.success && syncData.status === 'active') {
+                  console.log('[PAYMENT SYNC] Auto-synced premium plan activation successfully!');
+                  userBiz.subscriptionStatus = 'active';
+                  userBiz.isPremium = true;
+                  setBusiness({ ...userBiz });
+                  setPrimaryBusiness({ ...userBiz });
+                }
+              } catch (syncErr) {
+                console.warn('[PAYMENT SYNC] Failed to auto-sync status:', syncErr);
+              }
+            })();
+          }
+
           if (userBiz.offers) {
             setOffersList(userBiz.offers);
           } else {
@@ -2630,6 +2658,43 @@ function DashboardContent() {
       const data = await res.json();
       if (data.success) {
         setUserEvents(data.data);
+        
+        // Background auto-sync for any pending payment events
+        const pendingEvents = data.data.filter(evt => evt.paymentStatus === 'Pending');
+        if (pendingEvents.length > 0) {
+          (async () => {
+            let updated = false;
+            for (const pendingEvt of pendingEvents) {
+              try {
+                console.log('[PAYMENT SYNC] Auto-syncing pending event payment:', pendingEvt._id);
+                const syncRes = await fetch('http://localhost:5000/api/payments/sync-pending-status', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                  },
+                  body: JSON.stringify({ eventId: pendingEvt._id })
+                });
+                const syncData = await syncRes.json();
+                if (syncData.success && syncData.status === 'Paid') {
+                  console.log('[PAYMENT SYNC] Auto-synced event payment successfully!');
+                  updated = true;
+                }
+              } catch (syncErr) {
+                console.warn('[PAYMENT SYNC] Failed to auto-sync event:', syncErr);
+              }
+            }
+            if (updated) {
+              const freshRes = await fetch('http://localhost:5000/api/events/my-events', {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              const freshData = await freshRes.json();
+              if (freshData.success) {
+                setUserEvents(freshData.data);
+              }
+            }
+          })();
+        }
       } else {
         throw new Error('Backend failed');
       }
@@ -9243,11 +9308,11 @@ function DashboardContent() {
                               <td className="p-4">
                                 <div className="flex flex-col text-left">
                                   <span className="font-extrabold text-slate-800 text-xs sm:text-[13px] uppercase">
-                                    {p.subscriptionId?.planName || p.subscriptionId?.plan || (p.eventId ? 'Event Posting Fee' : 'Business Listing Subscription')}
+                                    {p.subscriptionId?.planName || p.subscriptionId?.plan || ((p.eventId || p.isEvent) ? 'Event Posting Fee' : 'Business Listing Subscription')}
                                   </span>
-                                  {p.eventId && (
+                                  {(p.eventId || p.isEvent) && (
                                     <span className="text-[10px] text-slate-400 font-semibold mt-0.5 truncate max-w-xs">
-                                      Event: {p.eventId.title}
+                                      Event: {p.eventId?.title || 'Deleted Event Listing'}
                                     </span>
                                   )}
                                 </div>
