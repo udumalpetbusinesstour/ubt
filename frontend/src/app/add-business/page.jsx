@@ -142,13 +142,13 @@ export default function AddBusiness() {
     googleBusinessLink: '',
     coordinates: { lat: 10.585, lng: 77.251 },
     timings: {
-      Monday: '9:00 AM - 8:00 PM',
-      Tuesday: '9:00 AM - 8:00 PM',
-      Wednesday: '9:00 AM - 8:00 PM',
-      Thursday: '9:00 AM - 8:00 PM',
-      Friday: '9:00 AM - 8:00 PM',
-      Saturday: '9:00 AM - 8:00 PM',
-      Sunday: '9:00 AM - 1:00 PM',
+      Monday: '',
+      Tuesday: '',
+      Wednesday: '',
+      Thursday: '',
+      Friday: '',
+      Saturday: '',
+      Sunday: '',
     },
   });
 
@@ -191,13 +191,13 @@ export default function AddBusiness() {
     googleBusinessLink: '',
     coordinates: { lat: 10.585, lng: 77.251 },
     timings: {
-      Monday: '9:00 AM - 8:00 PM',
-      Tuesday: '9:00 AM - 8:00 PM',
-      Wednesday: '9:00 AM - 8:00 PM',
-      Thursday: '9:00 AM - 8:00 PM',
-      Friday: '9:00 AM - 8:00 PM',
-      Saturday: '9:00 AM - 8:00 PM',
-      Sunday: '9:00 AM - 1:00 PM',
+      Monday: '',
+      Tuesday: '',
+      Wednesday: '',
+      Thursday: '',
+      Friday: '',
+      Saturday: '',
+      Sunday: '',
     },
     branches: [],
   });
@@ -723,9 +723,9 @@ export default function AddBusiness() {
             lat: d.latitude || d.coordinates?.lat || 10.585,
             lng: d.longitude || d.coordinates?.lng || 77.251
           },
-          timings: d.timings === null ? {
+          timings: (d.timings || d.openingHours) ? (d.timings || d.openingHours) : {
             Monday: '', Tuesday: '', Wednesday: '', Thursday: '', Friday: '', Saturday: '', Sunday: ''
-          } : (d.timings || d.openingHours || formData.timings),
+          },
         };
 
         if (d.name) {
@@ -1246,6 +1246,16 @@ export default function AddBusiness() {
       }
       if (!formData.highlights || !formData.highlights.trim()) {
         setError('Verified Highlights / Features (Green Tick Badges) is mandatory.');
+        return false;
+      }
+      if (!formData.timings || typeof formData.timings !== 'object' || Array.isArray(formData.timings)) {
+        setError('Business Hours configuration is required.');
+        return false;
+      }
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      const missingDay = days.find(day => !formData.timings[day] || !formData.timings[day].trim());
+      if (missingDay) {
+        setError(`Please specify business hours for ${missingDay} (e.g. "9:00 AM - 8:00 PM" or "Closed").`);
         return false;
       }
     } else if (currentStep === 4) {
