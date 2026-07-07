@@ -1,0 +1,68 @@
+[
+  {
+    "_id": "6a156aee7cf28dc306f8c405",
+    "businessId": "6a156aee7cf28dc306f8c3f3",
+    "authorName": "Haris B.",
+    "rating": 5,
+    "text": "Perfect customer response and absolute local support. Will use their services again!",
+    "source": "local",
+    "createdAt": "2026-05-26T09:42:06.871Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1569197cf28dc306f8c3f1",
+    "businessId": "6a1569187cf28dc306f8c3df",
+    "authorName": "Haris B.",
+    "rating": 5,
+    "text": "Perfect customer response and absolute local support. Will use their services again!",
+    "source": "local",
+    "createdAt": "2026-05-26T09:34:17.097Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1531cd988dc483a2a70194",
+    "businessId": "6a1531cd988dc483a2a70182",
+    "authorName": "Haris B.",
+    "rating": 5,
+    "text": "Perfect customer response and absolute local support. Will use their services again!",
+    "source": "local",
+    "createdAt": "2026-05-26T05:38:21.347Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1552727cf28dc306f8c371",
+    "businessId": "6a1552727cf28dc306f8c35f",
+    "authorName": "Haris B.",
+    "rating": 5,
+    "text": "Perfect customer response and absolute local support. Will use their services again!",
+    "source": "local",
+    "createdAt": "2026-05-26T07:57:38.620Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3b80a0afa35fd6a33c82df",
+    "businessId": "6a3943697b7f09c6f3c966f4",
+    "authorName": "Xx",
+    "rating": 5,
+    "text": "Test",
+    "status": "approved",
+    "source": "local",
+    "createdAt": "2026-06-24T07:00:48.305Z",
+    "updatedAt": "2026-06-24T07:00:48.305Z",
+    "reviewText": "Test",
+    "__v": 0
+  },
+  {
+    "_id": "6a423a2519cbaddccb8aef8c",
+    "businessId": "6a3b68bf256a18f85e44f909",
+    "authorName": "Test",
+    "rating": 5,
+    "text": "Perfect website development company ",
+    "status": "approved",
+    "source": "local",
+    "createdAt": "2026-06-29T09:25:57.851Z",
+    "updatedAt": "2026-06-29T09:25:57.851Z",
+    "reviewText": "Perfect website development company ",
+    "__v": 0
+  }
+]

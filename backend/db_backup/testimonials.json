@@ -1,0 +1,124 @@
+[
+  {
+    "_id": "6a1e772ca5bfdf24b1e1357f",
+    "authorName": "Harish Mithaa",
+    "role": "Business Owner",
+    "text": "Great platform to discover town listings in Udumalpet!",
+    "rating": 5,
+    "status": "Approved",
+    "createdAt": "2026-06-02T06:24:44.202Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1e8003faa73df7796ad290",
+    "authorName": "xxx",
+    "authorId": "6a1e5500a5bfdf24b1e1356c",
+    "authorEmail": "harishmitharamalingam@gmail.com",
+    "role": "Viewer",
+    "text": "---",
+    "rating": 5,
+    "status": "Approved",
+    "createdAt": "2026-06-02T07:02:27.258Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1e7faefaa73df7796ad28f",
+    "authorName": "Karthik S.",
+    "authorId": "6a1531bc988dc483a2a7017c",
+    "authorEmail": "karthik_1779782257953@ubt.com",
+    "role": "Viewer",
+    "text": "UDT Business Tour is incredibly useful for tourists and locals alike! Highly recommended!",
+    "rating": 5,
+    "status": "Approved",
+    "createdAt": "2026-06-02T07:01:02.424Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3a01509a26ef29f0769d24",
+    "authorName": "Ramanathan K.",
+    "role": "Other",
+    "text": "Excellent business directory for Udumalpet. Very helpful to find local shops.",
+    "rating": 5,
+    "status": "Approved",
+    "createdAt": "2026-05-24T03:45:20.452Z",
+    "googleLinked": true,
+    "__v": 0
+  },
+  {
+    "_id": "6a3a01509a26ef29f0769d39",
+    "authorName": "Santhosh Kumar",
+    "role": "Other",
+    "text": "Great platform! Found verified electric wiring services easily in Udumalpet.",
+    "rating": 5,
+    "status": "Rejected",
+    "createdAt": "2026-06-09T03:45:20.452Z",
+    "googleLinked": true,
+    "__v": 0
+  },
+  {
+    "_id": "6a3a01509a26ef29f0769d3a",
+    "authorName": "Meera Nair",
+    "role": "Other",
+    "text": "Very user friendly dashboard. Good initiatives to support local business tour.",
+    "rating": 4,
+    "status": "Approved",
+    "createdAt": "2026-06-02T03:45:20.452Z",
+    "googleLinked": true,
+    "__v": 0
+  },
+  {
+    "_id": "6a3a0829e1ddf8fbd81f359a",
+    "authorName": "ganesh moorthi",
+    "role": "Other",
+    "text": "Comfort place to purchase vestige products",
+    "rating": 5,
+    "status": "Approved",
+    "createdAt": "2022-03-09T14:21:27.768Z",
+    "googleLinked": true,
+    "__v": 0
+  },
+  {
+    "_id": "6a3a0829e1ddf8fbd81f359b",
+    "authorName": "Gokulkrishnan Silambam",
+    "role": "Other",
+    "text": "I like this product & bussiness plans.\nHere they are supportive and encouragive.\nThey are very much interested in clarifying doubts.\nEasy access from Udumalpet bus stand.\nThey provide meeting hall with 30 chairs and tables.\nBathroom facilities good.\nAll home,health, mens,womens oral care, personal care are available in all time..",
+    "rating": 5,
+    "status": "Approved",
+    "createdAt": "2019-11-30T09:54:57.394Z",
+    "googleLinked": true,
+    "__v": 0
+  },
+  {
+    "_id": "6a3a0829e1ddf8fbd81f359c",
+    "authorName": "monisha_ PREETHI",
+    "role": "Other",
+    "text": "Very good .\nAll products are available here .\nQuality products . 💯💯\nMany offers given. 👍👍\nOnce you use Vestige products . Definitely you will buy again",
+    "rating": 4,
+    "status": "Approved",
+    "createdAt": "2022-12-09T08:57:59.982Z",
+    "googleLinked": true,
+    "__v": 0
+  },
+  {
+    "_id": "6a3a0829e1ddf8fbd81f35a2",
+    "authorName": "Boopathy K",
+    "role": "Other",
+    "text": "Super Indian Make Products. Be Indian Buy Indian.",
+    "rating": 5,
+    "status": "Approved",
+    "createdAt": "2017-11-29T11:29:12.422Z",
+    "googleLinked": true,
+    "__v": 0
+  },
+  {
+    "_id": "6a3a0829e1ddf8fbd81f35a3",
+    "authorName": "prakav m",
+    "role": "Other",
+    "text": "Wish you wealth",
+    "rating": 5,
+    "status": "Approved",
+    "createdAt": "2020-12-15T17:12:07.228Z",
+    "googleLinked": true,
+    "__v": 0
+  }
+]

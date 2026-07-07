@@ -1,0 +1,218 @@
+[
+  {
+    "_id": "6a19797c0030bf628bf5d75d",
+    "title": "Exciting New Blog Post 1780054396734",
+    "content": "This is a test blog post to verify that the Mongoose pre-save hook TypeErrors are completely resolved.",
+    "coverImage": "",
+    "author": "6a196bf498b2f3c92a26ef83",
+    "authorName": "Harishmitha R",
+    "status": "Approved",
+    "featured": false,
+    "showLikes": false,
+    "showComments": false,
+    "likes": [],
+    "comments": [],
+    "createdAt": "2026-05-29T11:33:16.814Z",
+    "updatedAt": "2026-06-29T05:21:59.837Z",
+    "authorId": "6a196bf498b2f3c92a26ef83",
+    "thumbnail": "",
+    "slug": "exciting-new-blog-post-1780054396734",
+    "__v": 6,
+    "revisionSuggestions": "xxxxxxxxxxx",
+    "revisionHistory": [
+      {
+        "sender": "6a1932c5db737dcdb2522178",
+        "senderName": "UBT Administrator",
+        "senderRole": "admin",
+        "message": "xxxxxxxxxxx",
+        "_id": "6a1d0a3aa4f559a5f97f9a71",
+        "createdAt": "2026-06-01T04:27:38.505Z"
+      },
+      {
+        "sender": "6a1932c5db737dcdb2522178",
+        "senderName": "UBT Administrator",
+        "senderRole": "admin",
+        "message": "xxxxxxxxxxx",
+        "_id": "6a1d4c51f5b10360a016639c",
+        "createdAt": "2026-06-01T09:09:37.046Z"
+      },
+      {
+        "sender": "6a1d4cd8f5b10360a01663c1",
+        "senderName": "UBT",
+        "senderRole": "admin",
+        "message": "xxxxxxxxxxx",
+        "_id": "6a1d4d19f5b10360a01663e7",
+        "createdAt": "2026-06-01T09:12:57.305Z"
+      },
+      {
+        "sender": "6a1d4cd8f5b10360a01663c1",
+        "senderName": "UBT",
+        "senderRole": "admin",
+        "message": "xxxxxxxxxxx",
+        "_id": "6a1d4eee7a289ff8dd56c970",
+        "createdAt": "2026-06-01T09:20:46.498Z"
+      },
+      {
+        "sender": "6a1d4cd8f5b10360a01663c1",
+        "senderName": "UBT",
+        "senderRole": "admin",
+        "message": "xxxxxxxxxxx",
+        "_id": "6a1d503c7a289ff8dd56c983",
+        "createdAt": "2026-06-01T09:26:20.631Z"
+      }
+    ],
+    "views": 7
+  },
+  {
+    "_id": "6a26610398b492cc6528e794",
+    "title": "xx",
+    "category": "Business Tips",
+    "content": "-----------------------",
+    "coverImage": "",
+    "author": "6a1e5500a5bfdf24b1e1356c",
+    "authorName": "Harishmitha R",
+    "status": "Approved",
+    "revisionSuggestions": "",
+    "featured": false,
+    "showLikes": true,
+    "showComments": true,
+    "likes": [
+      "|guest_jzhhwyxhtmprw3ctf|::1",
+      "6a19562659cf690e89c7de0f|guest_61hw6p0sf|122.178.201.67"
+    ],
+    "revisionHistory": [
+      {
+        "sender": "6a1d4cd8f5b10360a01663c1",
+        "senderName": "UBT",
+        "senderRole": "admin",
+        "message": "change the banner image",
+        "_id": "6a26614a98b492cc6528e7b7",
+        "createdAt": "2026-06-08T06:29:30.327Z"
+      },
+      {
+        "sender": "6a1e5500a5bfdf24b1e1356c",
+        "senderName": "Harishmitha R",
+        "senderRole": "owner",
+        "message": "corrected",
+        "_id": "6a26618098b492cc6528e7ca",
+        "createdAt": "2026-06-08T06:30:24.757Z"
+      }
+    ],
+    "comments": [],
+    "createdAt": "2026-06-08T06:28:19.028Z",
+    "updatedAt": "2026-07-02T07:25:17.384Z",
+    "authorId": "6a1e5500a5bfdf24b1e1356c",
+    "thumbnail": "",
+    "slug": "xx",
+    "__v": 6,
+    "views": 6
+  },
+  {
+    "_id": "6a1979c20030bf628bf5d75e",
+    "title": "-",
+    "content": "-",
+    "coverImage": "",
+    "author": "6a196bf498b2f3c92a26ef83",
+    "authorName": "Harishmitha R",
+    "status": "Rejected",
+    "featured": false,
+    "showLikes": true,
+    "showComments": true,
+    "likes": [],
+    "comments": [],
+    "createdAt": "2026-05-29T11:34:26.751Z",
+    "updatedAt": "2026-06-26T06:48:39.015Z",
+    "authorId": "6a196bf498b2f3c92a26ef83",
+    "thumbnail": "",
+    "slug": "",
+    "__v": 3,
+    "revisionHistory": [
+      {
+        "sender": "6a1932c5db737dcdb2522178",
+        "senderName": "UBT Administrator",
+        "senderRole": "admin",
+        "message": "irrelavent conent",
+        "_id": "6a1a7271180fa73e5884dad3",
+        "createdAt": "2026-05-30T05:15:29.111Z"
+      },
+      {
+        "sender": "6a196bf498b2f3c92a26ef83",
+        "senderName": "Harishmitha R",
+        "senderRole": "owner",
+        "message": "i have updated",
+        "_id": "6a1a74c0180fa73e5884db25",
+        "createdAt": "2026-05-30T05:25:20.843Z"
+      },
+      {
+        "sender": "6a1d4cd8f5b10360a01663c1",
+        "senderName": "UBT",
+        "senderRole": "admin",
+        "message": "ghjh",
+        "_id": "6a1d4dfdf20723ad662e9efd",
+        "createdAt": "2026-06-01T09:16:45.675Z"
+      }
+    ],
+    "revisionSuggestions": "ghjh",
+    "category": "Business Tips",
+    "views": 0
+  },
+  {
+    "_id": "6a3ea9fbfe37716efc13c333",
+    "title": "Test blog",
+    "category": "Education",
+    "content": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since 1966, when designers at Letraset and James Mosley, the librarian at St Bride Printing Library in London, took a 1914 Cicero translation and scrambled it to make dummy text for Letraset's Body Type sheets. It has survived not only many decades, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised thanks to these sheets and more recently with desktop publishing software like Aldus PageMaker and Microsoft Word including versions of Lorem Ipsum.\n\nWhy do we use it?\nIt is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).\n\n\nWhere does it come from?\nContrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \"de Finibus Bonorum et Malorum\" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, \"Lorem ipsum dolor sit amet..\", comes from a line in section 1.10.32.\n\nThe standard chunk of Lorem Ipsum used since 1966 is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from \"de Finibus Bonorum et Malorum\" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham.\n\nWhere can I get some?\nThere are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text. All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true generator on the Internet. It uses a dictionary of over 200 Latin words, combined with a handful of model sentence structures, to generate Lorem Ipsum which looks reasonable. The generated Lorem Ipsum is therefore always free from repetition, injected humour, or non-characteristic words etc.",
+    "coverImage": "/uploads/image-1782491608094-858933782.png",
+    "author": "6a3ea6f4fe37716efc13c0e1",
+    "authorName": "Hariharasudhan Saravanan",
+    "status": "Approved",
+    "revisionSuggestions": "",
+    "featured": false,
+    "showLikes": true,
+    "showComments": true,
+    "likes": [
+      "|guest_jzhhwyxhtmprw3ctf|::1"
+    ],
+    "views": 5,
+    "revisionHistory": [],
+    "comments": [],
+    "createdAt": "2026-06-26T16:34:03.715Z",
+    "updatedAt": "2026-06-29T05:22:23.799Z",
+    "authorId": "6a3ea6f4fe37716efc13c0e1",
+    "thumbnail": "/uploads/image-1782491608094-858933782.png",
+    "slug": "test-blog",
+    "__v": 1
+  },
+  {
+    "_id": "6a3f68eb4241a47976e2cf34",
+    "title": "xxx",
+    "category": "Business Tips",
+    "content": "xxx",
+    "coverImage": "/uploads/image-1782540518817-826688229.jpeg",
+    "author": "6a3b6879256a18f85e44f908",
+    "authorName": "harishmitha",
+    "status": "Needs Revision",
+    "revisionSuggestions": "fwefw",
+    "featured": false,
+    "showLikes": true,
+    "showComments": true,
+    "likes": [],
+    "views": 0,
+    "revisionHistory": [
+      {
+        "sender": "6a1932c5db737dcdb2522178",
+        "senderName": "UBT Administrator",
+        "senderRole": "admin",
+        "message": "fwefw",
+        "_id": "6a3f6ad5640cf582507e70f3",
+        "createdAt": "2026-06-27T06:16:53.034Z"
+      }
+    ],
+    "comments": [],
+    "createdAt": "2026-06-27T06:08:43.210Z",
+    "updatedAt": "2026-06-27T06:16:53.045Z",
+    "authorId": "6a3b6879256a18f85e44f908",
+    "thumbnail": "/uploads/image-1782540518817-826688229.jpeg",
+    "slug": "xxx",
+    "__v": 1
+  }
+]

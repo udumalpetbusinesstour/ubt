@@ -550,7 +550,8 @@ export default function EventsPage() {
         throw new Error(orderData.message || 'Failed to create payment order');
       }
 
-      if (orderData.amount === 0 || orderData.orderId === 'free_listing') {
+      const isMockOrder = orderData.orderId && orderData.orderId.startsWith('order_mock_');
+      if (orderData.amount === 0 || orderData.orderId === 'free_listing' || isMockOrder) {
         const verifyRes = await fetch('http://localhost:5000/api/payments/verify-event-payment', {
           method: 'POST',
           headers: {
@@ -559,8 +560,8 @@ export default function EventsPage() {
           },
           body: JSON.stringify({
             eventId: evtId,
-            razorpayOrderId: 'free_listing',
-            razorpayPaymentId: 'pay_free_waived',
+            razorpayOrderId: orderData.orderId,
+            razorpayPaymentId: isMockOrder ? ('pay_mock_' + Math.random().toString(36).substr(2, 9)) : 'pay_free_waived',
           }),
         });
         const verifyData = await verifyRes.json();

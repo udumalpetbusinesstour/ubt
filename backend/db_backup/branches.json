@@ -1,0 +1,165 @@
+[
+  {
+    "_id": "6a27ad508bd1adbf62317f4a",
+    "businessId": "6a27a3a18bd1adbf62317f49",
+    "name": "Control N - CN Technologies Private Limited",
+    "address": "Sippi Opticals, 0, Katcheri St, opposite Udumalaipettai, Udumalaipettai, Tamil Nadu 642126, India",
+    "phone": "097872 41221",
+    "workingHours": "9:00 AM - 8:00 PM",
+    "latitude": 10.584237,
+    "longitude": 77.24822449999999,
+    "coordinates": {
+      "lat": 10.584237,
+      "lng": 77.24822449999999
+    },
+    "status": "Pending Verification",
+    "isPrimary": false,
+    "category": "Grocery Stores",
+    "type": "Individual / Sole Proprietor",
+    "description": "-",
+    "yearEstablished": 2022,
+    "employeeCount": "1 - 5",
+    "gstNumber": "-",
+    "services": [
+      "xxx",
+      "yyy"
+    ],
+    "brands": [
+      "x",
+      "y"
+    ],
+    "whatsapp": "097872 41221",
+    "email": "harishmitharamalingam@gmail.com",
+    "website": "https://controln.in/",
+    "instagram": "insta.com",
+    "facebook": "facebook.com",
+    "locality": "Udumalaipettai",
+    "pincode": "642126",
+    "logoUrl": "",
+    "coverImageUrl": "",
+    "galleryUrls": [],
+    "timings": {
+      "Monday": "9:00 AM - 8:00 PM",
+      "Tuesday": "9:00 AM - 8:00 PM",
+      "Wednesday": "9:00 AM - 8:00 PM",
+      "Thursday": "9:00 AM - 8:00 PM",
+      "Friday": "9:00 AM - 8:00 PM",
+      "Saturday": "9:00 AM - 8:00 PM",
+      "Sunday": "Closed"
+    },
+    "__v": 0,
+    "createdAt": "2026-06-09T06:06:08.036Z",
+    "updatedAt": "2026-06-09T06:06:08.036Z"
+  },
+  {
+    "_id": "6a27a3a18bd1adbf62317f49",
+    "businessId": "6a279a4f8bd1adbf62317eca",
+    "name": "Control N - CN Technologies Private Limited",
+    "address": "Sippi Opticals, 0, Katcheri St, opposite Udumalaipettai, Udumalaipettai, Tamil Nadu 642126, India",
+    "phone": "097872 41221",
+    "workingHours": "9:00 AM - 8:00 PM",
+    "latitude": 10.584237,
+    "longitude": 77.24822449999999,
+    "coordinates": {
+      "lat": 10.584237,
+      "lng": 77.24822449999999
+    },
+    "status": "Pending Verification",
+    "isPrimary": false,
+    "category": "Grocery Stores",
+    "type": "Individual / Sole Proprietor",
+    "description": "-",
+    "yearEstablished": 2022,
+    "employeeCount": "1 - 5",
+    "gstNumber": "-",
+    "services": [
+      "xxx",
+      "yyy"
+    ],
+    "brands": [
+      "x",
+      "y"
+    ],
+    "whatsapp": "097872 41221",
+    "email": "",
+    "website": "https://controln.in/",
+    "instagram": "",
+    "facebook": "",
+    "locality": "Udumalaipettai",
+    "pincode": "642126",
+    "logoUrl": "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150&q=80",
+    "coverImageUrl": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80",
+    "galleryUrls": [
+      "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=500&q=80",
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&q=80",
+      "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80"
+    ],
+    "timings": {
+      "Monday": "9:00 AM - 8:00 PM",
+      "Tuesday": "9:00 AM - 8:00 PM",
+      "Wednesday": "9:00 AM - 8:00 PM",
+      "Thursday": "9:00 AM - 8:00 PM",
+      "Friday": "9:00 AM - 8:00 PM",
+      "Saturday": "9:00 AM - 8:00 PM",
+      "Sunday": "Closed"
+    },
+    "__v": 0,
+    "createdAt": "2026-06-09T05:24:49.263Z",
+    "updatedAt": "2026-06-09T05:24:49.263Z"
+  },
+  {
+    "_id": "6a265bd798b492cc6528e758",
+    "businessId": "6a265abf98b492cc6528e754",
+    "name": "C N TECHNOLOGIES - Branch",
+    "address": "xxx",
+    "phone": "090369 64943",
+    "googleMapsLocation": "",
+    "googleBusinessLink": "",
+    "workingHours": "9:00 AM - 8:00 PM",
+    "branchManagerName": "",
+    "latitude": 10.5891,
+    "longitude": 77.2412,
+    "coordinates": {
+      "lat": 10.5891,
+      "lng": 77.2412
+    },
+    "status": "Pending Verification",
+    "isPrimary": false,
+    "category": "Agricultural Consultants",
+    "type": "Individual / Sole Proprietor",
+    "description": "-",
+    "yearEstablished": 2020,
+    "employeeCount": "5 - 10",
+    "gstNumber": "-",
+    "services": [
+      "websites"
+    ],
+    "brands": [],
+    "whatsapp": "090369 64943",
+    "email": "testubt@example.com",
+    "website": "https://cntechnologies.solutions/",
+    "instagram": "",
+    "facebook": "",
+    "locality": "udumalpet",
+    "pincode": "560083",
+    "logoUrl": "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150&q=80",
+    "coverImageUrl": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80",
+    "galleryUrls": [
+      "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80",
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&q=80",
+      "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80"
+    ],
+    "timings": {
+      "Monday": "Open 24 hours",
+      "Tuesday": "Open 24 hours",
+      "Wednesday": "Open 24 hours",
+      "Thursday": "Open 24 hours",
+      "Friday": "Open 24 hours",
+      "Saturday": "Open 24 hours",
+      "Sunday": "Open 24 hours"
+    },
+    "__v": 0,
+    "createdAt": "2026-06-08T06:06:15.172Z",
+    "updatedAt": "2026-06-08T06:06:15.172Z"
+  }
+]

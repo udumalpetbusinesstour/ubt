@@ -1,0 +1,90 @@
+[
+  {
+    "_id": "6a19173b15e02cda8fccb28a",
+    "key": "platform_config",
+    "pageLayout": {
+      "directoryLayout": "grid",
+      "themeAccent": "emerald",
+      "sidebarPosition": "left",
+      "glassmorphism": true,
+      "fontFamily": "sans"
+    },
+    "submissionFields": {
+      "gstNumber": {
+        "label": "GST Number",
+        "required": false,
+        "enabled": true
+      },
+      "yearEstablished": {
+        "label": "Year Established",
+        "required": true,
+        "enabled": true
+      },
+      "employeeCount": {
+        "label": "Employee Count Range",
+        "required": false,
+        "enabled": true
+      },
+      "languagesKnown": {
+        "label": "Languages Spoken",
+        "required": false,
+        "enabled": true
+      },
+      "timings": {
+        "label": "Business Opening Hours",
+        "required": true,
+        "enabled": true
+      },
+      "website": {
+        "label": "Website URL",
+        "required": false,
+        "enabled": true
+      },
+      "brochure": {
+        "label": "Upload PDF Catalog/Brochure",
+        "required": false,
+        "enabled": false
+      }
+    },
+    "formGuidelines": "Submit clear commercial details, locality coordinates, and contact details to get audited. Approved businesses get standard indexing, and active subscribers receive verified badges.",
+    "banners": [
+      {
+        "title": "Welcome to Udumalpet Business Tour",
+        "image": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80",
+        "subtitle": "Explore the green wind farms, shops, and resorts of Udumalpet.",
+        "link": "/businesses",
+        "active": true,
+        "_id": "6a19173b15e02cda8fccb28b"
+      }
+    ],
+    "permissionsMatrix": {
+      "superadmin": {
+        "businesses": true,
+        "blogs": true,
+        "events": true,
+        "subPlans": true,
+        "systemLogs": true,
+        "accessControl": true
+      },
+      "admin": {
+        "businesses": true,
+        "blogs": true,
+        "events": true,
+        "subPlans": false,
+        "systemLogs": false,
+        "accessControl": false
+      },
+      "owner": {
+        "businesses": false,
+        "blogs": false,
+        "events": false,
+        "subPlans": false,
+        "systemLogs": false,
+        "accessControl": false
+      }
+    },
+    "createdAt": "2026-05-29T04:34:03.586Z",
+    "updatedAt": "2026-07-02T11:25:57.739Z",
+    "__v": 0
+  }
+]

@@ -1,0 +1,134 @@
+[
+  {
+    "_id": "6a38da7425e7c27b42d4d959",
+    "businessId": "6a1fc07856c0ae24fdc9acd0",
+    "name": "hloo",
+    "phone": "12345",
+    "message": "Hello, I am interested in your services and would like to receive details.",
+    "status": "Responded",
+    "createdAt": "2026-06-22T06:47:16.792Z",
+    "__v": 0,
+    "reply": "okay",
+    "respondedAt": "2026-06-22T06:48:19.072Z"
+  },
+  {
+    "_id": "6a38dcaf25e7c27b42d4d9aa",
+    "businessId": "6a1fc07856c0ae24fdc9acd0",
+    "name": "hi",
+    "phone": "12345678",
+    "message": "Hello, I am interested in your services and would like to receive details.",
+    "status": "Pending",
+    "createdAt": "2026-06-22T06:56:47.036Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3aa8b3df5007ecae259fe7",
+    "businessId": "6a22a24d730287639a5a1f58",
+    "name": "Customer (Saved Contact)",
+    "phone": "+91 00000 00000",
+    "message": "Downloaded your business contact card to save to their phonebook.",
+    "status": "Pending",
+    "createdAt": "2026-06-23T15:39:31.476Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3aa8dddf5007ecae259fed",
+    "businessId": "6a22a24d730287639a5a1f58",
+    "name": "Customer (Call)",
+    "phone": "+91 00000 00000",
+    "message": "Initiated a phone call from your listing profile.",
+    "status": "Pending",
+    "createdAt": "2026-06-23T15:40:13.094Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3aa8f9df5007ecae259ff3",
+    "businessId": "6a22a24d730287639a5a1f58",
+    "name": "Customer (Map Directions)",
+    "phone": "+91 00000 00000",
+    "message": "Requested navigation directions to your business locality in Google Maps.",
+    "status": "Pending",
+    "createdAt": "2026-06-23T15:40:41.011Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3aa90bdf5007ecae259ff9",
+    "businessId": "6a22a24d730287639a5a1f58",
+    "name": "Customer (WhatsApp)",
+    "phone": "+91 00000 00000",
+    "message": "Opened WhatsApp chat from your listing profile.",
+    "status": "Pending",
+    "createdAt": "2026-06-23T15:40:59.815Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3aa911df5007ecae259fff",
+    "businessId": "6a22a24d730287639a5a1f58",
+    "name": "Customer (Email)",
+    "phone": "+91 00000 00000",
+    "message": "Initiated an email draft from your listing profile.",
+    "status": "Pending",
+    "createdAt": "2026-06-23T15:41:05.481Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3aa91adf5007ecae25a005",
+    "businessId": "6a22a24d730287639a5a1f58",
+    "name": "Customer (Map Directions)",
+    "phone": "+91 00000 00000",
+    "message": "Requested navigation directions to your business locality in Google Maps.",
+    "status": "Pending",
+    "createdAt": "2026-06-23T15:41:14.930Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d51394926c5f8b6c76961",
+    "businessId": "6a3b68bf256a18f85e44f909",
+    "name": "Customer (Map Directions)",
+    "phone": "+91 00000 00000",
+    "message": "Requested navigation directions to your business locality in Google Maps.",
+    "status": "Pending",
+    "createdAt": "2026-06-25T16:03:05.726Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3dfb588fd293ff29faee39",
+    "businessId": "6a3b68bf256a18f85e44f909",
+    "name": "Customer (Facebook)",
+    "phone": "+91 00000 00000",
+    "message": "Visited your Facebook page from your listing profile.",
+    "status": "Pending",
+    "createdAt": "2026-06-26T04:08:56.862Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3dfb5d8fd293ff29faee3f",
+    "businessId": "6a3b68bf256a18f85e44f909",
+    "name": "Customer (Instagram)",
+    "phone": "+91 00000 00000",
+    "message": "Visited your Instagram profile from your listing profile.",
+    "status": "Pending",
+    "createdAt": "2026-06-26T04:09:01.785Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e72bafe37716efc13be14",
+    "businessId": "6a3b68bf256a18f85e44f909",
+    "name": "Customer (Saved Contact)",
+    "phone": "+91 00000 00000",
+    "message": "Downloaded your business contact card to save to their phonebook.",
+    "status": "Pending",
+    "createdAt": "2026-06-26T12:38:18.302Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3f4a1bfe37716efc13c52f",
+    "businessId": "6a3ea73dfe37716efc13c0e2",
+    "name": "Customer (Map Directions)",
+    "phone": "+91 00000 00000",
+    "message": "Requested navigation directions to your business locality in Google Maps.",
+    "status": "Pending",
+    "createdAt": "2026-06-27T03:57:15.697Z",
+    "__v": 0
+  }
+]

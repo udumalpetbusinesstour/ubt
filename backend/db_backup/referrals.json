@@ -1,0 +1,38 @@
+[
+  {
+    "_id": "6a3a2819ed84f6cf3af99f04",
+    "referrerId": "6a1fc07656c0ae24fdc9acce",
+    "referredUserId": "6a3a2819ed84f6cf3af99f03",
+    "status": "pending",
+    "points": 10,
+    "rejectionReason": "",
+    "antiFraudChecks": {
+      "selfReferral": false,
+      "duplicateMobile": false,
+      "duplicateGST": false,
+      "duplicateBusiness": false
+    },
+    "createdAt": "2026-06-23T06:30:49.598Z",
+    "updatedAt": "2026-06-23T06:34:15.932Z",
+    "__v": 0,
+    "referredBusinessId": "6a3a2822ed84f6cf3af99f2d"
+  },
+  {
+    "_id": "6a3f821392c11039480e3674",
+    "referrerId": "6a3e9359fe37716efc13be71",
+    "referredUserId": "6a3f821292c11039480e3673",
+    "status": "completed",
+    "points": 99,
+    "rejectionReason": "",
+    "antiFraudChecks": {
+      "selfReferral": false,
+      "duplicateMobile": false,
+      "duplicateGST": false,
+      "duplicateBusiness": false
+    },
+    "createdAt": "2026-06-27T07:56:03.059Z",
+    "updatedAt": "2026-06-27T08:02:40.747Z",
+    "__v": 0,
+    "referredBusinessId": "6a3f824692c11039480e3675"
+  }
+]

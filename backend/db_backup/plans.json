@@ -1,0 +1,75 @@
+[
+  {
+    "_id": "6a22702d9ff72d2157494009",
+    "name": "monthly premium plan",
+    "type": "Monthly",
+    "price": 99,
+    "durationDays": 28,
+    "isOffer": false,
+    "offerText": "",
+    "features": [
+      "Premium Placement Badge",
+      "WhatsApp Button Link Active",
+      "UDT Verification Priority"
+    ],
+    "isActive": true,
+    "createdAt": "2026-06-05T06:43:57.194Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2271169ff72d215749402c",
+    "name": "yearly",
+    "type": "Yearly",
+    "price": 1400,
+    "durationDays": 30,
+    "isOffer": false,
+    "offerText": "",
+    "features": [
+      "Premium Placement Badge",
+      "WhatsApp Button Link Active",
+      "UDT Verification Priority"
+    ],
+    "isActive": false,
+    "createdAt": "2026-06-05T06:47:50.476Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a190e0752fc43a09fdd4a22",
+    "name": "Yearly Premium Plan",
+    "type": "Yearly",
+    "price": 999,
+    "durationDays": 365,
+    "description": "Maximize search priority, customer reviews visibility, and reach.",
+    "isOffer": true,
+    "offerText": "Save 15% (2 Months Free)",
+    "features": [
+      "Permanent Vetted Stamp",
+      "No ads on your listing",
+      "Infinite Event Promos",
+      "Customer Inquiry Lead SMS Integration",
+      "Direct co-founder desk helpline"
+    ],
+    "isActive": true,
+    "createdAt": "2026-05-29T03:54:47.368Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a190e0752fc43a09fdd4a21",
+    "name": "Monthly Premium Plan",
+    "type": "Monthly",
+    "price": 89,
+    "durationDays": 28,
+    "description": "Perfect for standard listing updates and regular local traffic.",
+    "isOffer": false,
+    "offerText": "",
+    "features": [
+      "Google Place integration",
+      "UDT Verification Badge Priority",
+      "WhatsApp Button Link",
+      "1 Day Events Listing Promotion"
+    ],
+    "isActive": false,
+    "createdAt": "2026-05-29T03:54:47.367Z",
+    "__v": 0
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "_id": "6a2d35fd81ab3ad89c0a268f",
+    "name": "Test User",
+    "mobile": "9876543210",
+    "area": "Test Area",
+    "createdAt": "2026-06-13T10:50:37.078Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2d360781ab3ad89c0a2691",
+    "name": "Test User 2",
+    "mobile": "9876543211",
+    "area": "Test Area 2",
+    "createdAt": "2026-06-13T10:50:47.910Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2d3d5420fde9f77e1deaa8",
+    "name": "Logger Test",
+    "mobile": "9443512345",
+    "area": "Vidyalayam",
+    "createdAt": "2026-06-13T11:21:56.860Z",
+    "__v": 0
+  }
+]

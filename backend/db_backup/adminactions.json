@@ -1,0 +1,2643 @@
+[
+  {
+    "_id": "6a1d3021f5b10360a0166340",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T07:09:21.713Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d4ce2f5b10360a01663d0",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T09:12:02.633Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a225fc3b480e71d2d20cef5",
+    "adminId": "6a2258f5b480e71d2d20ce28",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T05:33:55.761Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a228105730287639a5a1f11",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T07:55:49.694Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27d8938bd1adbf62318035",
+    "adminId": "6a19176b3644bf776a8035da",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T09:10:43.886Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27febb8bd1adbf623182ea",
+    "adminId": "6a19176b3644bf776a8035da",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"Local Music Festival\" - Set Status: Approved",
+    "createdAt": "2026-06-09T11:53:31.665Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a82b210071f61f64f4407",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:41:06.767Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a855810071f61f64f44a6",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:52:24.025Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a8e5e0b6f29d4c5240dfc",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T10:30:54.676Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d2600f5b10360a016626e",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T06:26:08.667Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2274319ff72d215749405e",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T07:01:05.008Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a9ab10b6f29d4c5240e99",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T11:23:29.707Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a9d420b6f29d4c5240f04",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T11:34:26.228Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a22665db480e71d2d20cf66",
+    "adminId": "6a2258f5b480e71d2d20ce28",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T06:02:05.747Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a22755a9ff72d2157494081",
+    "adminId": "6a2258f5b480e71d2d20ce28",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T07:06:02.752Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a22755a9ff72d2157494082",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T07:06:02.752Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a838410071f61f64f443d",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:44:36.699Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d29adf5b10360a01662e4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T06:41:49.890Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d4caff5b10360a01663c0",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T09:11:11.138Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a226fa79ff72d2157493fc0",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T06:41:43.169Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a226fd79ff72d2157494008",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T06:42:31.155Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27e4b48bd1adbf623181dc",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T10:02:28.199Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a9e600b6f29d4c5240f5c",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T11:39:12.993Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27ded28bd1adbf623180f7",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T09:37:22.931Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27e5398bd1adbf62318207",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T10:04:41.689Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27fec28bd1adbf62318302",
+    "adminId": "6a19176b3644bf776a8035da",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T11:53:38.464Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d4cd8f5b10360a01663c2",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "reactivate",
+    "remarks": "Created new administrative staff account: udumalpetbusinesstour@gmail.com (Full)",
+    "createdAt": "2026-06-01T09:11:52.985Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a22596eb480e71d2d20ce6b",
+    "adminId": "6a2258f5b480e71d2d20ce28",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"Test Expo 2026\" - Set Status: Approved",
+    "createdAt": "2026-06-05T05:06:54.896Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2262f0b480e71d2d20cf16",
+    "adminId": "6a2258f5b480e71d2d20ce28",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T05:47:28.752Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a226fc99ff72d2157493fd2",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T06:42:17.277Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a226fcf9ff72d2157493fe4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T06:42:23.047Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2270c49ff72d215749402a",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T06:46:28.732Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a228117730287639a5a1f23",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T07:56:07.292Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27fb298bd1adbf6231826d",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T11:38:17.672Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27fea88bd1adbf623182e9",
+    "adminId": "6a19176b3644bf776a8035da",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T11:53:12.503Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a7e5d10071f61f64f4338",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:22:37.677Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a7ef910071f61f64f4353",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:25:13.700Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2280a5730287639a5a1ef0",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T07:54:13.753Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a292f8b6510c7e431c8b117",
+    "adminId": "6a19176b3644bf776a8035da",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-10T09:34:03.464Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a86310b6f29d4c5240c99",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:56:01.138Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a86a90b6f29d4c5240ccc",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:58:01.302Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a8e5b0b6f29d4c5240df7",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T10:30:51.886Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d2bdcf5b10360a0166312",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T06:51:08.595Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27de818bd1adbf623180bc",
+    "adminId": "6a19176b3644bf776a8035da",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T09:36:01.277Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27fe378bd1adbf623182bc",
+    "adminId": "6a19176b3644bf776a8035da",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T11:51:19.152Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a841510071f61f64f446f",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:47:01.795Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d2bcff5b10360a01662fb",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T06:50:55.823Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27d8918bd1adbf6231801e",
+    "adminId": "6a19176b3644bf776a8035da",
+    "targetBusinessId": "6a265bd798b492cc6528e758",
+    "actionType": "feature_toggle",
+    "remarks": "Toggled listing featured priority tag to: true",
+    "createdAt": "2026-06-09T09:10:41.290Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27f3c18bd1adbf62318242",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T11:06:41.807Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a862f0b6f29d4c5240c96",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:55:59.908Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d240ef5b10360a0166257",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T06:17:50.861Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a225971b480e71d2d20ce6d",
+    "adminId": "6a2258f5b480e71d2d20ce28",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"Test Expo 2026\" - Set Status: Approved",
+    "createdAt": "2026-06-05T05:06:57.686Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a225974b480e71d2d20ce80",
+    "adminId": "6a2258f5b480e71d2d20ce28",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T05:07:00.625Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a225f48b480e71d2d20ced4",
+    "adminId": "6a2258f5b480e71d2d20ce28",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T05:31:52.777Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a9ab00b6f29d4c5240e93",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T11:23:28.238Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d23d9f5b10360a0166240",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T06:16:57.126Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d275ef5b10360a0166292",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T06:31:58.317Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d2c2bf5b10360a0166329",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T06:52:27.097Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2258ffb480e71d2d20ce49",
+    "adminId": "6a2258f5b480e71d2d20ce28",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T05:05:03.678Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27dfdd8bd1adbf6231812a",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T09:41:49.328Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a7a9f10071f61f64f42c3",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:06:39.895Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a7f0110071f61f64f436e",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:25:21.684Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a838410071f61f64f443a",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:44:36.315Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d311cf5b10360a0166364",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T07:13:32.338Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a225929b480e71d2d20ce6a",
+    "adminId": "6a2258f5b480e71d2d20ce28",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T05:05:45.683Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a225976b480e71d2d20ce92",
+    "adminId": "6a2258f5b480e71d2d20ce28",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T05:07:02.826Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a226fd49ff72d2157493ff6",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T06:42:28.509Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a228141730287639a5a1f35",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T07:56:49.154Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a229011730287639a5a1f56",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T09:00:01.974Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a798e10071f61f64f4290",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:02:06.149Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a823510071f61f64f43d4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:39:01.070Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a8dcb0b6f29d4c5240dc6",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T10:28:27.490Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2276919ff72d21574940a3",
+    "adminId": "6a2258f5b480e71d2d20ce28",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T07:11:13.443Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27d6e38bd1adbf6231801d",
+    "adminId": "6a19176b3644bf776a8035da",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T09:03:31.246Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27da358bd1adbf6231806b",
+    "adminId": "6a19176b3644bf776a8035da",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T09:17:41.077Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27e4aa8bd1adbf623181b1",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T10:02:18.035Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a292f546510c7e431c8b0ec",
+    "adminId": "6a19176b3644bf776a8035da",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-10T09:33:08.828Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a86ae0b6f29d4c5240cff",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:58:06.297Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a8a6f0b6f29d4c5240d80",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T10:14:07.556Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a9ab10b6f29d4c5240e96",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T11:23:29.387Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d2612f5b10360a0166285",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T06:26:26.759Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d288bf5b10360a01662a9",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T06:36:59.369Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1d302cf5b10360a0166357",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-01T07:09:32.777Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a227b2d730287639a5a1edd",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-05T07:30:53.832Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a27da338bd1adbf62318068",
+    "adminId": "6a19176b3644bf776a8035da",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-09T09:17:39.501Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a7f3a10071f61f64f43a1",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:26:18.425Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a841710071f61f64f4473",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T09:47:04.000Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2a95070b6f29d4c5240e2f",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-11T10:59:19.403Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2be0b6ab332c1431e01b40",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-12T10:34:30.402Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2be1c2ab332c1431e01b8a",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-12T10:38:58.821Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2be387ab332c1431e01ba4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-12T10:46:31.095Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2be3edab332c1431e01bb4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a265abf98b492cc6528e754",
+    "actionType": "suspend",
+    "remarks": "Super Admin moderation update",
+    "createdAt": "2026-06-12T10:48:13.538Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2be8c1ab332c1431e01bfd",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-12T11:08:49.949Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2be976ab332c1431e01c17",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-12T11:11:50.324Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2beadbab332c1431e01c31",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-12T11:17:47.596Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2bec2dab332c1431e01c60",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-12T11:23:25.614Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2bec888f28275b75519cc9",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-12T11:24:56.622Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2bee024ea5ebacdcb6668b",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-12T11:31:14.029Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2bf0984ea5ebacdcb666e0",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-12T11:42:16.616Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3aad15df5007ecae25a732",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-23T15:58:13.854Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ca8bee5cf4c1951713b9f",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T04:04:14.254Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ca8c4e5cf4c1951713ba8",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T04:04:20.961Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cab12e5cf4c1951713bc0",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T04:14:10.211Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cac17e5cf4c1951713be7",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T04:18:31.811Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cac23e5cf4c1951713bf0",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T04:18:43.826Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cb079e5cf4c1951713c08",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T04:37:13.918Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cb198e5cf4c1951713c2f",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T04:42:00.922Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cb1a4e5cf4c1951713c38",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T04:42:12.934Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cb4d3e5cf4c1951713c7e",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T04:55:47.672Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cb4dae5cf4c1951713c87",
+    "adminId": "6a3cb402e5cf4c1951713c39",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T04:55:54.931Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cb4dfe5cf4c1951713c90",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T04:55:59.956Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cb4e7e5cf4c1951713c99",
+    "adminId": "6a3cb402e5cf4c1951713c39",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T04:56:07.600Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cb751e5cf4c1951713cd4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T05:06:25.997Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cb79de5cf4c1951713cf1",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T05:07:41.020Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cb831e5cf4c1951713d18",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T05:10:09.013Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cb83ce5cf4c1951713d21",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T05:10:20.337Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cb862e5cf4c1951713d39",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T05:10:58.028Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cbcd8e5cf4c1951713d60",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T05:30:00.594Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cbce4e5cf4c1951713d69",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T05:30:12.879Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cbecde5cf4c1951713d81",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T05:38:21.317Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cc207e5cf4c1951713da8",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T05:52:07.073Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cc213e5cf4c1951713db1",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T05:52:19.077Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cc5f9e5cf4c1951713e8c",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T06:08:57.403Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cc5fee5cf4c1951713e95",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T06:09:02.231Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cc79ee5cf4c1951713f66",
+    "adminId": "6a3cb402e5cf4c1951713c39",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T06:15:58.752Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cc7a6e5cf4c1951713f6f",
+    "adminId": "6a3cb402e5cf4c1951713c39",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T06:16:06.297Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cc7b8e5cf4c1951713f7d",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T06:16:24.630Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cc7bee5cf4c1951713f81",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T06:16:30.155Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cc9d5e5cf4c1951713fa8",
+    "adminId": "6a3cb402e5cf4c1951713c39",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T06:25:25.742Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cc9e9e5cf4c1951713fb1",
+    "adminId": "6a3cb402e5cf4c1951713c39",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T06:25:45.011Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cd111f0663ed35c4bb59f",
+    "adminId": "6a3cb402e5cf4c1951713c39",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T06:56:17.972Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cd11bf0663ed35c4bb5ad",
+    "adminId": "6a3cb402e5cf4c1951713c39",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T06:56:27.331Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cd238f0663ed35c4bb5ed",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T07:01:12.211Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cd242f0663ed35c4bb5f6",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T07:01:22.136Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cd3e3f0663ed35c4bb5f7",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "reject",
+    "remarks": "Permanently deleted spam comment review from feed.",
+    "createdAt": "2026-06-25T07:08:19.505Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cd3f1f0663ed35c4bb60f",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T07:08:33.357Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cd50ef0663ed35c4bb636",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T07:13:18.102Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cd51af0663ed35c4bb63f",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T07:13:30.104Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cdb3f280e77e47d2f7682",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T07:39:43.915Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cdbfb280e77e47d2f76a9",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T07:42:51.219Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cdeb4cae612f95004d410",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T07:54:28.048Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cec50f0663ed35c4bb666",
+    "adminId": "6a3cb402e5cf4c1951713c39",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T08:52:32.078Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cec59f0663ed35c4bb66f",
+    "adminId": "6a3cb402e5cf4c1951713c39",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T08:52:41.080Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ced23f0663ed35c4bb696",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T08:56:03.542Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ced2df0663ed35c4bb69f",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T08:56:13.431Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ced34f0663ed35c4bb6a0",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated manual subscription record state to: active",
+    "createdAt": "2026-06-25T08:56:20.036Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ced47f0663ed35c4bb6b8",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T08:56:39.092Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ced70f0663ed35c4bb6b9",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated manual subscription record state to: expired",
+    "createdAt": "2026-06-25T08:57:20.416Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ced82f0663ed35c4bb6d1",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T08:57:38.530Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d0e7ff0663ed35c4bb886",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T11:18:23.505Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d0e80f0663ed35c4bb889",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T11:18:24.119Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d0e8cf0663ed35c4bb89a",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T11:18:36.109Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d0e8cf0663ed35c4bb89b",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T11:18:36.119Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d0f6ff0663ed35c4bb8c7",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T11:22:23.523Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d0f7ff0663ed35c4bb8d0",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T11:22:39.569Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d129a45f60bd118204167",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T11:35:54.263Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d129c45f60bd11820416b",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T11:35:56.125Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d12a145f60bd11820416f",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T11:36:01.135Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d12a645f60bd118204173",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-25T11:36:06.147Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e0b1fc4693411f5a0a6c7",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T05:16:15.159Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e0bbac4693411f5a0a6c8",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"xxx\" - Set Status: Rejected",
+    "createdAt": "2026-06-26T05:18:50.749Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e0bbdc4693411f5a0a6ca",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"xxx\" - Set Status: Rejected",
+    "createdAt": "2026-06-26T05:18:53.649Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e0bc0c4693411f5a0a6e3",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T05:18:56.109Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e0bc2c4693411f5a0a6fb",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T05:18:58.375Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e0bc6c4693411f5a0a6fc",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"xx\" - Set Status: Rejected",
+    "createdAt": "2026-06-26T05:19:02.040Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e0bc8c4693411f5a0a715",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T05:19:04.543Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e0bdfc4693411f5a0a72d",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T05:19:27.771Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e0c03c4693411f5a0a72e",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"xxx\" - Set Status: Approved",
+    "createdAt": "2026-06-26T05:20:03.220Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e0c08c4693411f5a0a747",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T05:20:08.257Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e20788fd293ff29faf12c",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T06:47:20.932Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e20938fd293ff29faf12d",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"xxx\" - Set Status: Rejected",
+    "createdAt": "2026-06-26T06:47:47.316Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e20958fd293ff29faf12f",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"xxx\" - Set Status: Rejected",
+    "createdAt": "2026-06-26T06:47:49.591Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e20988fd293ff29faf131",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"xx\" - Set Status: Approved",
+    "createdAt": "2026-06-26T06:47:52.176Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e209e8fd293ff29faf174",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T06:47:58.466Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e209f8fd293ff29faf175",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"xx\" - Set Status: Rejected",
+    "createdAt": "2026-06-26T06:47:59.994Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e20a48fd293ff29faf18e",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T06:48:04.455Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e20b28fd293ff29faf18f",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"Udumalpet Startup Meet 2025\" - Set Status: Approved",
+    "createdAt": "2026-06-26T06:48:18.424Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e20b68fd293ff29faf1a7",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T06:48:22.785Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e20c78fd293ff29faf1ab",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated blog post \"-\" - Set Status: Rejected",
+    "createdAt": "2026-06-26T06:48:39.071Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e20cb8fd293ff29faf1c4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T06:48:43.503Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e20f78fd293ff29faf1f1",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T06:49:27.581Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e21648fd293ff29faf1f2",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"xx\" - Set Status: Approved",
+    "createdAt": "2026-06-26T06:51:16.798Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e21698fd293ff29faf20b",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T06:51:21.174Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e27088fd293ff29faf220",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3e0df3c4693411f5a0a776",
+    "actionType": "approve",
+    "remarks": "Super Admin moderation update",
+    "createdAt": "2026-06-26T07:15:20.713Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e27148fd293ff29faf239",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T07:15:32.684Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e27258fd293ff29faf23a",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"xx\" - Set Status: Rejected",
+    "createdAt": "2026-06-26T07:15:49.019Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e27298fd293ff29faf253",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T07:15:53.399Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e2d4f8fd293ff29faf280",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T07:42:07.914Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e401d8fd293ff29faf2ad",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T09:02:21.902Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e4b078fd293ff29faf2da",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T09:48:55.004Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e9411fe37716efc13be93",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T15:00:33.309Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3e9650fe37716efc13beb5",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T15:10:08.110Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea5b9fe37716efc13bf88",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T16:15:53.588Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea5bcfe37716efc13bf94",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3e9777fe37716efc13beb7",
+    "actionType": "approve",
+    "remarks": "Super Admin moderation update",
+    "createdAt": "2026-06-26T16:15:56.901Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea5befe37716efc13bfa0",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3e70aefe37716efc13bcb0",
+    "actionType": "approve",
+    "remarks": "Super Admin moderation update",
+    "createdAt": "2026-06-26T16:15:58.405Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea5bffe37716efc13bfa3",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3e7047fe37716efc13bcaf",
+    "actionType": "approve",
+    "remarks": "Super Admin moderation update",
+    "createdAt": "2026-06-26T16:15:59.612Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea5c8fe37716efc13c020",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T16:16:08.805Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea5cdfe37716efc13c024",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3e702efe37716efc13bcae",
+    "actionType": "approve",
+    "remarks": "Super Admin moderation update",
+    "createdAt": "2026-06-26T16:16:13.257Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea5cefe37716efc13c027",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3e6972fe37716efc13bc7c",
+    "actionType": "approve",
+    "remarks": "Super Admin moderation update",
+    "createdAt": "2026-06-26T16:16:14.294Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea5cefe37716efc13c02b",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T16:16:14.686Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea5dffe37716efc13c080",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T16:16:31.252Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea68ffe37716efc13c0a4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3b9d933f6d19371c005411",
+    "actionType": "approve",
+    "remarks": "Super Admin moderation update",
+    "createdAt": "2026-06-26T16:19:27.186Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea69bfe37716efc13c0d1",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T16:19:39.854Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea808fe37716efc13c230",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T16:25:44.737Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea80afe37716efc13c23d",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3ea73dfe37716efc13c0e2",
+    "actionType": "approve",
+    "remarks": "Super Admin moderation update",
+    "createdAt": "2026-06-26T16:25:46.896Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea80cfe37716efc13c244",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3ea73dfe37716efc13c0e2",
+    "actionType": "feature_toggle",
+    "remarks": "Toggled listing featured priority tag to: true",
+    "createdAt": "2026-06-26T16:25:48.054Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea813fe37716efc13c2af",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3e9777fe37716efc13beb7",
+    "actionType": "feature_toggle",
+    "remarks": "Toggled listing featured priority tag to: true",
+    "createdAt": "2026-06-26T16:25:55.569Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea824fe37716efc13c2e4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T16:26:12.331Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea825fe37716efc13c2e8",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T16:26:13.536Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3ea826fe37716efc13c2ec",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T16:26:14.855Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3eaa08fe37716efc13c36d",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T16:34:16.102Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3eaa0efe37716efc13c36e",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated blog post \"Test blog\" - Set Status: Approved",
+    "createdAt": "2026-06-26T16:34:22.883Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3eaa15fe37716efc13c3a5",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T16:34:29.064Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3eac19fe37716efc13c3dd",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T16:43:05.427Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3eac1bfe37716efc13c3df",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3eaaabfe37716efc13c3a7",
+    "actionType": "approve",
+    "remarks": "Super Admin moderation update",
+    "createdAt": "2026-06-26T16:43:07.291Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3eac25fe37716efc13c416",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-26T16:43:17.504Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3f563d4241a47976e2caa6",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-27T04:49:01.746Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3f564d4241a47976e2cab1",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3f562a4241a47976e2c9a0",
+    "actionType": "approve",
+    "remarks": "Super Admin moderation update",
+    "createdAt": "2026-06-27T04:49:17.820Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3f56594241a47976e2cafe",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-27T04:49:29.816Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3f819792c11039480e3634",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-27T07:53:59.452Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3f839c92c11039480e381d",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-27T08:02:36.259Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3f83a092c11039480e3829",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3f824692c11039480e3675",
+    "actionType": "approve",
+    "remarks": "Super Admin moderation update",
+    "createdAt": "2026-06-27T08:02:40.772Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3f83a592c11039480e3830",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3f824692c11039480e3675",
+    "actionType": "feature_toggle",
+    "remarks": "Toggled listing featured priority tag to: true",
+    "createdAt": "2026-06-27T08:02:45.761Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3f83b092c11039480e38db",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-27T08:02:56.078Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3f83b192c11039480e38de",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-27T08:02:57.192Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3f991e51475c07f14b97cc",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-27T09:34:22.219Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3f9ac7ae4369d989fbca1f",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-27T09:41:27.014Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3f9b823d45a43ec60a0336",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-27T09:44:34.605Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3f9b8c3d45a43ec60a033a",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-27T09:44:44.092Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a421666c778a1b76222abac",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T06:53:26.599Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a421668c778a1b76222abaf",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T06:53:28.048Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4216adc778a1b76222abb0",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"--\" - Set Status: Approved",
+    "createdAt": "2026-06-29T06:54:37.946Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4216b3c778a1b76222ac08",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T06:54:43.021Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a421f3773aca133c0d6a261",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T07:31:03.814Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a421f3973aca133c0d6a265",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T07:31:05.667Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a42249373aca133c0d6ab8c",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T07:53:55.318Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a42249473aca133c0d6ab90",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T07:53:56.880Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a422f0119cbaddccb8aee12",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T08:38:25.890Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a42310b73aca133c0d6ad91",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T08:47:07.967Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a42310c73aca133c0d6ad94",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T08:47:08.978Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a42311c73aca133c0d6ae49",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T08:47:24.004Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4231a373aca133c0d6af17",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T08:49:39.787Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a42493a73aca133c0d6cc5c",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T10:30:18.927Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a424bedad5b7acb567f21b9",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T10:41:49.979Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a424c3cad5b7acb567f24d3",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T10:43:08.478Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a42583f9037200e23df0bd2",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T11:34:23.843Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4258439037200e23df0bd6",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T11:34:27.316Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a42588e9037200e23df0cfe",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T11:35:42.316Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4258939037200e23df0d02",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-29T11:35:47.982Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a434da5d2ab933a4f687f9d",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T05:01:25.154Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a434da6d2ab933a4f687fa1",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T05:01:26.595Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a434eedd2ab933a4f68807e",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T05:06:53.537Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43522a31c3923384875908",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T05:20:42.218Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43522c31c392338487590b",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T05:20:44.041Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4353c131c39233848759e7",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T05:27:29.910Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4353c331c39233848759eb",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T05:27:31.312Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43544031c3923384875bd3",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T05:29:36.329Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a435c7831c3923384875dbe",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T06:04:40.964Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a435c7a31c3923384875dc2",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T06:04:42.883Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43601231c3923384875f85",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T06:20:02.504Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43601331c3923384875f88",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T06:20:03.049Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a436698d8f26d7503c996aa",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T06:47:52.559Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4366b3d8f26d7503c996ab",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "targetBusinessId": "6a3f4e24fe37716efc13c607",
+    "actionType": "suspend",
+    "remarks": "Super Admin moderation update",
+    "createdAt": "2026-06-30T06:48:19.520Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4366c5d8f26d7503c99717",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T06:48:37.062Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43686531c3923384876580",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T06:55:33.522Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43686831c3923384876584",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T06:55:36.115Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4374f0d8f26d7503c99916",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T07:49:04.175Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4378ecd8f26d7503c99b9b",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T08:06:04.989Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a437a4ed8f26d7503c99d96",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T08:11:58.217Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a437a71d8f26d7503c99e98",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T08:12:33.640Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a437a79d8f26d7503c99f11",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T08:12:41.072Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4386c631c3923384877154",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T09:05:10.835Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4386eb31c39233848772b7",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T09:05:47.026Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4386ec31c39233848772ba",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T09:05:48.656Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a438a4631c39233848774d6",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T09:20:06.020Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a438aff31c39233848777c6",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T09:23:11.890Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a438b0231c39233848777ca",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T09:23:14.788Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a438c1b31c3923384877a3c",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T09:27:55.913Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a438e4231c3923384877a52",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated manual subscription record state to: active",
+    "createdAt": "2026-06-30T09:37:06.328Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a438e4731c3923384877abd",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T09:37:11.942Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43969b31c3923384877b9a",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T10:12:43.660Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43969c31c3923384877b9d",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T10:12:44.685Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43976431c3923384877c08",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T10:16:04.092Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43988031c3923384877c1e",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"ddd\" - Set Status: Hidden",
+    "createdAt": "2026-06-30T10:20:48.335Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43988531c3923384877c89",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T10:20:53.158Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43988931c3923384877c8a",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Moderated event flyer \"ddd\" - Set Status: Approved",
+    "createdAt": "2026-06-30T10:20:57.530Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43988e31c3923384877cf5",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T10:21:02.407Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43995631c3923384877dd2",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T10:24:22.933Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43995731c3923384877dd5",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T10:24:23.585Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439b0631c3923384877eb4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T10:31:34.378Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439b0631c3923384877eb5",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T10:31:34.385Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43a74d31c392338487873f",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T11:23:57.981Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43a9b231c392338487881c",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-06-30T11:34:10.796Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44b4d9c7b9e90dc7cb4ad0",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T06:34:01.107Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44b4dac7b9e90dc7cb4ad4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T06:34:02.668Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44b64cc7b9e90dc7cb4bc4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T06:40:12.732Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44b64ec7b9e90dc7cb4bc8",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T06:40:14.247Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44b823c7b9e90dc7cb4ea4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T06:48:03.490Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44b825c7b9e90dc7cb4ea8",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T06:48:05.000Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44bb61c7b9e90dc7cb50d1",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:01:53.732Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44bb63c7b9e90dc7cb50d4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:01:55.666Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44bcb11cbd90e2498cc84a",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:07:29.110Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44bcbc1cbd90e2498cc8c4",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:07:40.273Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44bd801cbd90e2498ccbc8",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:10:56.913Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44bd881cbd90e2498ccc51",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:11:04.986Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44bd8d1cbd90e2498cccd0",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:11:09.307Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44bd9bc7b9e90dc7cb52bf",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:11:23.746Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44bdadc7b9e90dc7cb53af",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:11:41.109Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44bdaec7b9e90dc7cb53b3",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:11:42.653Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44be01c7b9e90dc7cb54eb",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:13:05.562Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44be03c7b9e90dc7cb54ef",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:13:07.147Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44c0ca0fc38b9be1332f82",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:24:58.504Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44c0cc0fc38b9be1332f86",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:25:00.384Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44c0d20fc38b9be1333029",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:25:06.726Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44c1760fc38b9be13330c7",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T07:27:50.706Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44e9f9ac5615650c1071f2",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T10:20:41.038Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44eaf0ac5615650c10748f",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T10:24:48.342Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44ed90ee2ae05dd2fcd759",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T10:36:00.029Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44ed91ee2ae05dd2fcd75c",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T10:36:01.049Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44f304a28c7676552a52a8",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-01T10:59:16.703Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a45f54882d7d83234219e78",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-02T05:21:12.077Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a45f54982d7d83234219e7b",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-02T05:21:13.011Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a45fa0582d7d83234219fce",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-02T05:41:25.552Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a45ff3782d7d8323421a107",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-02T06:03:35.584Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4604d082d7d8323421a240",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-02T06:27:28.707Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4604d282d7d8323421a243",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-02T06:27:30.578Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4612634f8664da876beedf",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-02T07:25:23.190Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a464ac510fbfb2f098c7629",
+    "adminId": "6a19562659cf690e89c7de0f",
+    "actionType": "approve",
+    "remarks": "Updated platform configuration matrices (banners, page layouts, access policies).",
+    "createdAt": "2026-07-02T11:25:57.762Z",
+    "__v": 0
+  }
+]

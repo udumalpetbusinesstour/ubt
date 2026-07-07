@@ -320,6 +320,55 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
         return;
       }
 
+      // Sandbox mock order / subscription ID bypass
+      const isMockOrder = (orderData.subscriptionId && orderData.subscriptionId.startsWith('sub_mock_')) || (orderData.orderId && orderData.orderId.startsWith('order_mock_'));
+      
+      if (isMockOrder) {
+        console.log('[SANDBOX BYPASS] Mock order/subscription detected, skipping Razorpay overlay.');
+        try {
+          const mockPaymentId = 'pay_mock_' + Math.random().toString(36).substr(2, 9);
+          const verifyRes = await fetch('http://localhost:5000/api/payments/verify-payment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              businessId: business._id,
+              planType: planToUse,
+              razorpayOrderId: orderData.orderId || '',
+              razorpaySubscriptionId: orderData.subscriptionId || '',
+              razorpayPaymentId: mockPaymentId,
+              razorpaySignature: '',
+              applyReferralPoints: applyReferralPoints,
+              redeemPointsAmount: Number(redeemPointsAmount || 0)
+            }),
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.success) {
+            setPaymentSuccess(true);
+            if (isStep && onNext) {
+              setTimeout(() => {
+                onNext(verifyData.business);
+              }, 1500);
+            } else {
+              setTimeout(() => {
+                navigate('/add-business');
+              }, 1500);
+            }
+          } else {
+            setError(verifyData.message || 'Payment verification failed.');
+          }
+        } catch (mockErr) {
+          console.error('Mock verification error:', mockErr);
+          setError('Sandbox verification failed.');
+        } finally {
+          setPaymentLoading(false);
+          setCheckoutPlan(null);
+        }
+        return;
+      }
+
       // Check if Razorpay Script is loaded
       const isRazorpayScriptLoaded = () => {
         return new Promise((resolve) => {
