@@ -109,7 +109,8 @@ router.put('/rename-parent', protect, admin, async (req, res, next) => {
     );
     await Business.updateMany(
       { "categories.category": oldParentName.trim() },
-      { $set: { "categories.$.category": newParentName.trim() } }
+      { $set: { "categories.$[elem].category": newParentName.trim() } },
+      { arrayFilters: [{ "elem.category": oldParentName.trim() }] }
     );
     return sendSuccess(res, 200, `Parent category renamed. ${result.modifiedCount} subcategories updated.`, { modifiedCount: result.modifiedCount });
   } catch (err) {
@@ -146,9 +147,17 @@ router.put('/:id', protect, admin, async (req, res, next) => {
         { type: oldSubName },
         { $set: { type: categoryName } }
       );
+      // Update by categoryId
+      await Business.updateMany(
+        { "categories.categoryId": category._id },
+        { $set: { "categories.$[elem].type": categoryName } },
+        { arrayFilters: [{ "elem.categoryId": category._id }] }
+      );
+      // Fallback update by type (for legacy items)
       await Business.updateMany(
         { "categories.type": oldSubName },
-        { $set: { "categories.$.type": categoryName } }
+        { $set: { "categories.$[elem].type": categoryName } },
+        { arrayFilters: [{ "elem.type": oldSubName }] }
       );
     }
 
@@ -158,9 +167,17 @@ router.put('/:id', protect, admin, async (req, res, next) => {
         { type: category.categoryName },
         { $set: { category: parentCategory } }
       );
+      // Update by categoryId
+      await Business.updateMany(
+        { "categories.categoryId": category._id },
+        { $set: { "categories.$[elem].category": parentCategory } },
+        { arrayFilters: [{ "elem.categoryId": category._id }] }
+      );
+      // Fallback update by type (for legacy items)
       await Business.updateMany(
         { "categories.type": category.categoryName },
-        { $set: { "categories.$.category": parentCategory } }
+        { $set: { "categories.$[elem].category": parentCategory } },
+        { arrayFilters: [{ "elem.type": category.categoryName }] }
       );
     }
 
