@@ -113,7 +113,36 @@ const registerUser = async (req, res, next) => {
         to: email,
         subject: 'Email Verification OTP - UBT',
         text: `Hello ${resolvedName},\n\nWelcome to Udumalpet Business Tour!\n\nYour 6-digit verification code is: ${otp}\n\nAlternatively, you can verify your email directly by clicking the link below:\n${verifyLink}\n\nIt is valid for 10 minutes.\n\nBest regards,\nUBT Team`,
-        html: `<p>Hello <strong>${resolvedName}</strong>,</p><p>Welcome to Udumalpet Business Tour!</p><p>Your 6-digit verification code is: <strong style="font-size: 18px; color: #027244;">${otp}</strong></p><p>Alternatively, you can click the button below to verify your email address automatically:</p><p><a href="${verifyLink}" style="display: inline-block; background-color: #027244; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Verify Email Address</a></p><p>Or copy and paste this link in your browser:<br/><a href="${verifyLink}">${verifyLink}</a></p><p>It is valid for 10 minutes.</p><p>Best regards,<br/>UBT Team</p>`
+        html: `
+          <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 32px 24px; border: 1px solid #e2e8f0; border-radius: 24px; text-align: center; background-color: #ffffff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);">
+            <h2 style="color: #027244; margin-bottom: 24px; font-size: 22px; font-weight: 800; tracking-tight: -0.5px;">Udumalpet Business Tour</h2>
+            
+            <p style="font-size: 15px; color: #334155; line-height: 1.6; margin-bottom: 20px;">
+              Hello <strong>${resolvedName}</strong>,<br/>
+              Welcome to Udumalpet Business Tour!
+            </p>
+            
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Your 6-Digit Verification Code</p>
+            <div style="display: inline-block; background-color: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 12px 32px; font-size: 26px; font-weight: 900; color: #027244; letter-spacing: 4px; margin-bottom: 24px;">
+              ${otp}
+            </div>
+            
+            <p style="font-size: 14px; color: #475569; line-height: 1.5; margin-bottom: 16px;">
+              Alternatively, you can verify your email instantly by clicking the button below:
+            </p>
+            
+            <div style="margin-bottom: 28px;">
+              <a href="${verifyLink}" style="display: inline-block; background-color: #027244; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 12px; font-weight: 850; font-size: 13.5px; box-shadow: 0 4px 10px rgba(2, 114, 68, 0.2);">
+                Verify Email Address
+              </a>
+            </div>
+            
+            <p style="font-size: 11px; color: #94a3b8; line-height: 1.6;">
+              If you did not request this verification, please ignore this email.<br/>
+              Link expires in 10 minutes.
+            </p>
+          </div>
+        `
       });
     } catch (emailErr) {
       console.error('Failed to send verification email during registration:', emailErr);
@@ -166,7 +195,36 @@ const loginUser = async (req, res, next) => {
             to: user.email,
             subject: 'Email Verification OTP - UBT',
             text: `Hello ${user.name || 'Member'},\n\nYour 6-digit verification code is: ${otp}\n\nAlternatively, you can verify your email directly by clicking the link below:\n${verifyLink}\n\nIt will expire in 10 minutes.\n\nBest regards,\nUBT Team`,
-            html: `<p>Hello <strong>${user.name || 'Member'}</strong>,</p><p>Your 6-digit verification code is: <strong style="font-size: 18px; color: #027244;">${otp}</strong></p><p>Alternatively, you can click the button below to verify your email address automatically:</p><p><a href="${verifyLink}" style="display: inline-block; background-color: #027244; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Verify Email Address</a></p><p>Or copy and paste this link in your browser:<br/><a href="${verifyLink}">${verifyLink}</a></p><p>It will expire in 10 minutes.</p><p>Best regards,<br/>UBT Team</p>`
+            html: `
+              <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 32px 24px; border: 1px solid #e2e8f0; border-radius: 24px; text-align: center; background-color: #ffffff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);">
+                <h2 style="color: #027244; margin-bottom: 24px; font-size: 22px; font-weight: 800; tracking-tight: -0.5px;">Udumalpet Business Tour</h2>
+                
+                <p style="font-size: 15px; color: #334155; line-height: 1.6; margin-bottom: 20px;">
+                  Hello <strong>${user.name || 'Member'}</strong>,<br/>
+                  Please verify your email address to log in to Udumalpet Business Tour.
+                </p>
+                
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Your 6-Digit Verification Code</p>
+                <div style="display: inline-block; background-color: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 12px 32px; font-size: 26px; font-weight: 900; color: #027244; letter-spacing: 4px; margin-bottom: 24px;">
+                  ${otp}
+                </div>
+                
+                <p style="font-size: 14px; color: #475569; line-height: 1.5; margin-bottom: 16px;">
+                  Alternatively, you can verify your email instantly by clicking the button below:
+                </p>
+                
+                <div style="margin-bottom: 28px;">
+                  <a href="${verifyLink}" style="display: inline-block; background-color: #027244; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 12px; font-weight: 850; font-size: 13.5px; box-shadow: 0 4px 10px rgba(2, 114, 68, 0.2);">
+                    Verify Email Address
+                  </a>
+                </div>
+                
+                <p style="font-size: 11px; color: #94a3b8; line-height: 1.6;">
+                  If you did not request this verification, please ignore this email.<br/>
+                  Link expires in 10 minutes.
+                </p>
+              </div>
+            `
           });
         } catch (emailErr) {
           console.error('Failed to send verification email during login:', emailErr);
@@ -686,7 +744,36 @@ const resendVerificationOtp = async (req, res, next) => {
         to: user.email,
         subject: 'Email Verification OTP - UBT',
         text: `Hello ${user.name || 'Member'},\n\nYour 6-digit verification code is: ${otp}\n\nAlternatively, you can verify your email directly by clicking the link below:\n${verifyLink}\n\nIt will expire in 10 minutes.\n\nBest regards,\nUBT Team`,
-        html: `<p>Hello <strong>${user.name || 'Member'}</strong>,</p><p>Your 6-digit verification code is: <strong style="font-size: 18px; color: #027244;">${otp}</strong></p><p>Alternatively, you can click the button below to verify your email address automatically:</p><p><a href="${verifyLink}" style="display: inline-block; background-color: #027244; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Verify Email Address</a></p><p>Or copy and paste this link in your browser:<br/><a href="${verifyLink}">${verifyLink}</a></p><p>It will expire in 10 minutes.</p><p>Best regards,<br/>UBT Team</p>`
+        html: `
+          <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 32px 24px; border: 1px solid #e2e8f0; border-radius: 24px; text-align: center; background-color: #ffffff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);">
+            <h2 style="color: #027244; margin-bottom: 24px; font-size: 22px; font-weight: 800; tracking-tight: -0.5px;">Udumalpet Business Tour</h2>
+            
+            <p style="font-size: 15px; color: #334155; line-height: 1.6; margin-bottom: 20px;">
+              Hello <strong>${user.name || 'Member'}</strong>,<br/>
+              Here is your requested email verification code.
+            </p>
+            
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Your 6-Digit Verification Code</p>
+            <div style="display: inline-block; background-color: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 12px 32px; font-size: 26px; font-weight: 900; color: #027244; letter-spacing: 4px; margin-bottom: 24px;">
+              ${otp}
+            </div>
+            
+            <p style="font-size: 14px; color: #475569; line-height: 1.5; margin-bottom: 16px;">
+              Alternatively, you can verify your email instantly by clicking the button below:
+            </p>
+            
+            <div style="margin-bottom: 28px;">
+              <a href="${verifyLink}" style="display: inline-block; background-color: #027244; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 12px; font-weight: 850; font-size: 13.5px; box-shadow: 0 4px 10px rgba(2, 114, 68, 0.2);">
+                Verify Email Address
+              </a>
+            </div>
+            
+            <p style="font-size: 11px; color: #94a3b8; line-height: 1.6;">
+              If you did not request this verification, please ignore this email.<br/>
+              Link expires in 10 minutes.
+            </p>
+          </div>
+        `
       });
     } catch (emailErr) {
       console.error('Failed to send verification email:', emailErr);
