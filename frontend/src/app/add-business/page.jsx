@@ -1666,7 +1666,7 @@ export default function AddBusiness() {
 
                 {/* Google Business Profile Link */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Google Business Profile Link <span className="text-red-500">*</span></label>
+                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Google Business Profile Link <span className="text-slate-400 font-semibold normal-case">(optional)</span></label>
                   <input
                     type="url"
                     placeholder="https://maps.app.goo.gl/..."
@@ -2033,7 +2033,7 @@ export default function AddBusiness() {
 
                 {/* Google Business Profile Link */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Google Business Profile Link <span className="text-red-500">*</span></label>
+                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Google Business Profile Link <span className="text-slate-400 font-semibold normal-case">(optional)</span></label>
                   <input
                     type="url"
                     placeholder="https://maps.app.goo.gl/..."
