@@ -323,7 +323,7 @@ const BusinessSchema = new mongoose.Schema({
       {
         categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
         category: String,
-        type: String,
+        type: { type: String },
         customCategoryName: String,
         categoryStatus: { type: String, enum: ['Normal', 'Pending Review'], default: 'Normal' }
       }
