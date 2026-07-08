@@ -14,13 +14,20 @@ const seedAdministrativeCredentials = async () => {
   try {
     const User = require('./models/User');
     
-    // 1. Seed Super Admin: superadmin@gmail.com / 123456
-    const superadminExists = await User.findOne({ email: 'superadmin@gmail.com' });
+    // 1. Purge old default superadmin and demote other superadmins to admin
+    await User.deleteOne({ email: 'superadmin@gmail.com' });
+    await User.updateMany(
+      { email: { $ne: 'udumalpetbusinesstour@gmail.com' }, role: 'superadmin' },
+      { role: 'admin' }
+    );
+    
+    // 2. Seed Super Admin: udumalpetbusinesstour@gmail.com / 123456
+    const superadminExists = await User.findOne({ email: 'udumalpetbusinesstour@gmail.com' });
     if (!superadminExists) {
       await User.create({
         name: 'UBT Super Administrator',
         fullName: 'UBT Super Administrator',
-        email: 'superadmin@gmail.com',
+        email: 'udumalpetbusinesstour@gmail.com',
         phone: '+91 99999 99999',
         mobileNumber: '+91 99999 99999',
         password: '123456', // Automatically hashes pre-save
@@ -28,7 +35,11 @@ const seedAdministrativeCredentials = async () => {
         isVerified: true,
         status: 'Active'
       });
-      console.log('--- Seed SUCCESS: Superadmin console enabled (superadmin@gmail.com / 123456) ---');
+      console.log('--- Seed SUCCESS: Superadmin console enabled (udumalpetbusinesstour@gmail.com / 123456) ---');
+    } else if (superadminExists.role !== 'superadmin') {
+      superadminExists.role = 'superadmin';
+      await superadminExists.save();
+      console.log('--- Role synced: udumalpetbusinesstour@gmail.com set to superadmin ---');
     }
 
     // 2. Seed Standard Admin: admin@gmail.com / 123456
