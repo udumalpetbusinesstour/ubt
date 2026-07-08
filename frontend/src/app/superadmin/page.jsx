@@ -4578,8 +4578,8 @@ const handlePartnerAction = async (partnerId, action) => {
                                                   </div>
                                                   <div className="flex flex-col text-left min-w-0 flex-1">
                                                     <span className={`font-bold text-xs truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{cat.categoryName}</span>
-                                                    <span className="text-[9px] text-slate-400 mt-1 font-medium truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
-                                                    <span className="text-[9.5px] text-emerald-650 font-semibold mt-1.5 leading-none">{count} active businesses</span>
+                                                    <span className="text-[9px] text-slate-400 mt-1 font-medium truncate leading-normal">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
+                                                    <span className="text-[9.5px] text-emerald-650 font-semibold mt-1.5 leading-normal">{count} active businesses</span>
                                                   </div>
                                                 </div>
 
@@ -4648,9 +4648,9 @@ const handlePartnerAction = async (partnerId, action) => {
                                             </div>
                                             <div className="flex flex-col text-left min-w-0 flex-1">
                                               <span className={`font-bold text-xs truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{cat.categoryName}</span>
-                                              <span className="text-[9.5px] text-slate-450 dark:text-slate-400 font-medium mt-1 leading-none truncate">Main: {cat.parentCategory || 'Others'}</span>
-                                              <span className="text-[9px] text-slate-400 mt-1.5 font-medium truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
-                                              <span className="text-[9.5px] text-emerald-650 font-medium mt-2 leading-none">{count} active businesses</span>
+                                              <span className="text-[9.5px] text-slate-450 dark:text-slate-400 font-medium mt-1 leading-normal truncate">Main: {cat.parentCategory || 'Others'}</span>
+                                              <span className="text-[9px] text-slate-400 mt-1.5 font-medium truncate leading-normal">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
+                                              <span className="text-[9.5px] text-emerald-650 font-medium mt-2 leading-normal">{count} active businesses</span>
                                             </div>
                                           </div>
 
