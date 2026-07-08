@@ -963,8 +963,22 @@ function BusinessesList() {
       }
     });
     allBusinesses.forEach(biz => {
-      const parentCat = getParentCategory(biz.category || '');
-      counts[parentCat] = (counts[parentCat] || 0) + 1;
+      const parentCats = new Set();
+      if (biz.categories && biz.categories.length > 0) {
+        biz.categories.forEach(c => {
+          if (c.categoryStatus !== 'Pending Review') {
+            const parent = getParentCategory(c.category || '');
+            if (parent) parentCats.add(parent);
+          }
+        });
+      } else {
+        const parent = getParentCategory(biz.category || '');
+        if (parent) parentCats.add(parent);
+      }
+      
+      parentCats.forEach(parent => {
+        counts[parent] = (counts[parent] || 0) + 1;
+      });
     });
     setCategoryCounts(counts);
   }, [allBusinesses, dbCategories]);
