@@ -32,9 +32,9 @@ cd frontend
 npm run build
 cd ..
 
-echo "🚀 6. Deploying built frontend assets to Nginx staging..."
-rm -rf /var/www/staging/*
-cp -r frontend/dist/* /var/www/staging/
+echo "🚀 6. Deploying built frontend assets to Nginx Production..."
+rm -rf /var/www/html/*
+cp -r frontend/dist/* /var/www/html/
 
 echo "🔄 7. Restarting ubt-backend PM2 process..."
 # Attempt to restart the process; if it doesn't exist, start it
@@ -44,5 +44,5 @@ echo "🌐 8. Reloading Nginx configuration..."
 systemctl reload nginx
 
 echo "=========================================="
-echo "✅ VPS Deployment Completed Successfully!"
+echo "✅ VPS Production Deployment Completed Successfully!"
 echo "=========================================="
