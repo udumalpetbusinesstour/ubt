@@ -6678,8 +6678,10 @@ export default function AdminDashboard() {
                         <button
                           type="button"
                           onClick={async () => {
-                            const updatedCats = selectedBiz.categories.filter((_, i) => i !== idx);
-                            await handleSaveBizCategories(updatedCats);
+                            if (window.confirm(`Are you sure you want to remove the category "${parentName} › ${subName}"?`)) {
+                              const updatedCats = selectedBiz.categories.filter((_, i) => i !== idx);
+                              await handleSaveBizCategories(updatedCats);
+                            }
                           }}
                           className="text-emerald-600 hover:text-emerald-850 font-black cursor-pointer"
                         >
