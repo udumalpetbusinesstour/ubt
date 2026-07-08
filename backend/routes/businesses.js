@@ -1087,16 +1087,18 @@ async function fetchLegacyDetails(placeId, cid, apiKey, extractedName, extracted
     if (legacyData.status === 'OK' && legacyData.result) {
       const legacyResult = legacyData.result;
       
+      let hasGmbHours = false;
       let timings = {
-        Monday: '9:00 AM - 8:00 PM',
-        Tuesday: '9:00 AM - 8:00 PM',
-        Wednesday: '9:00 AM - 8:00 PM',
-        Thursday: '9:00 AM - 8:00 PM',
-        Friday: '9:00 AM - 8:00 PM',
-        Saturday: '9:00 AM - 8:00 PM',
-        Sunday: 'Closed',
+        Monday: '',
+        Tuesday: '',
+        Wednesday: '',
+        Thursday: '',
+        Friday: '',
+        Saturday: '',
+        Sunday: '',
       };
       if (legacyResult.opening_hours && legacyResult.opening_hours.weekday_text) {
+        hasGmbHours = true;
         for (const text of legacyResult.opening_hours.weekday_text) {
           const parts = text.split(': ');
           if (parts.length >= 2) {
@@ -1108,6 +1110,8 @@ async function fetchLegacyDetails(placeId, cid, apiKey, extractedName, extracted
           }
         }
       }
+      
+      const finalTimings = hasGmbHours ? timings : null;
       
       const legacyReviews = (legacyResult.reviews || []).map(r => ({
         authorName: r.author_name || 'A Google User',
@@ -1146,8 +1150,8 @@ async function fetchLegacyDetails(placeId, cid, apiKey, extractedName, extracted
         googleRating: legacyResult.rating || 0,
         googleReviewsCount: legacyResult.user_ratings_total || 0,
         googleReviews: legacyReviews,
-        timings,
-        openingHours: timings,
+        timings: finalTimings,
+        openingHours: finalTimings,
         pincode,
         locality
       };
@@ -1509,13 +1513,13 @@ router.post('/google-autofill-link', async (req, res) => {
 
             let hasGmbHours = false;
             const timings = {
-              Monday: '9:00 AM - 8:00 PM',
-              Tuesday: '9:00 AM - 8:00 PM',
-              Wednesday: '9:00 AM - 8:00 PM',
-              Thursday: '9:00 AM - 8:00 PM',
-              Friday: '9:00 AM - 8:00 PM',
-              Saturday: '9:00 AM - 8:00 PM',
-              Sunday: 'Closed',
+              Monday: '',
+              Tuesday: '',
+              Wednesday: '',
+              Thursday: '',
+              Friday: '',
+              Saturday: '',
+              Sunday: '',
             };
 
             if (result.regularOpeningHours && result.regularOpeningHours.weekdayDescriptions) {
@@ -1532,8 +1536,7 @@ router.post('/google-autofill-link', async (req, res) => {
               }
             }
 
-            const isPublic = isPublicSector(result.types, result.displayName?.text);
-            const finalTimings = (isPublic && !hasGmbHours) ? null : timings;
+            const finalTimings = hasGmbHours ? timings : null;
 
             let googleReviews = (result.reviews || []).map(r => ({
               authorName: r.authorAttribution?.displayName || 'A Google User',
