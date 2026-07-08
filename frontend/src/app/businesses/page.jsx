@@ -211,7 +211,7 @@ function BusinessesList() {
   const [showAllLocalities, setShowAllLocalities] = useState(false);
 
   const [businesses, setBusinesses] = useState([]);
-  const [visibleCategoryLimit, setVisibleCategoryLimit] = useState(6);
+  const [visibleCategoryLimit, setVisibleCategoryLimit] = useState(12);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [viewMode, setViewMode] = useState('list'); // list | grid
@@ -359,7 +359,7 @@ function BusinessesList() {
 
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
-        setVisibleCategoryLimit((prev) => prev + 6);
+        setVisibleCategoryLimit((prev) => prev + 12);
       }
     }, {
       rootMargin: '150px'
