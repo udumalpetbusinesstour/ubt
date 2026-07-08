@@ -4595,6 +4595,13 @@ const handlePartnerAction = async (partnerId, action) => {
                                                     Move
                                                   </button>
                                                   <button
+                                                    onClick={() => setMovingCategory(cat)}
+                                                    className="h-7 px-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[9.5px]"
+                                                    title="Move"
+                                                  >
+                                                    Move
+                                                  </button>
+                                                  <button
                                                     onClick={async () => {
                                                       const newName = await prompt("Rename category:", cat.categoryName);
                                                       if (!newName || newName === cat.categoryName) return;
@@ -4665,6 +4672,13 @@ const handlePartnerAction = async (partnerId, action) => {
                                           </div>
 
                                           <div className="flex gap-1.5 shrink-0">
+                                            <button
+                                              onClick={() => setMovingCategory(cat)}
+                                              className="h-7 px-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[9.5px]"
+                                              title="Move"
+                                            >
+                                              Move
+                                            </button>
                                             <button
                                               onClick={() => setMovingCategory(cat)}
                                               className="h-7 px-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[9.5px]"
