@@ -41,7 +41,7 @@ import {
   ChevronLeft, ChevronRight, HelpCircle, Eye, MessageSquare, Play, Sparkles, X, Gift, Rocket,
   Hotel, Store, Wrench, HeartPulse, GraduationCap, Home as HouseIcon, Car, LayoutGrid,
   FileEdit, PhoneCall, Smile, Users2, Tv, Utensils, Building, ShoppingBag, Factory, 
-  Briefcase, Compass, Sprout, CreditCard, Dumbbell, Landmark
+  Briefcase, Compass, Sprout, CreditCard, Dumbbell, Landmark, Laptop, BookOpen, Zap
 } from 'lucide-react';
 
 const mockFeatured = [
@@ -677,8 +677,24 @@ export default function Home() {
             <circle cx="17.5" cy="16.5" r="1.5" fill="#fff" />
           </svg>
         ),
+        'Automobile Services': (
+          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 8h-1V5a2 2 0 00-2-2H8a2 2 0 00-2 2v3H5a3 3 0 00-3 3v6a2 2 0 002 2h1v2a2 2 0 002 2h1a2 2 0 002-2v-2h8v2a2 2 0 002 2h1a2 2 0 002-2v-2h1a2 2 0 002-2v-6a3 3 0 00-3-3z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+            <rect x="5" y="10" width="14" height="4" fill="#001c41" rx="1" />
+            <circle cx="6.5" cy="16.5" r="1.5" fill="#fff" />
+            <circle cx="17.5" cy="16.5" r="1.5" fill="#fff" />
+          </svg>
+        ),
         'Beauty & Wellness': <Sparkles className="h-7 w-7 text-pink-500" />,
+        'Beauty Salons & Spa': <Sparkles className="h-7 w-7 text-pink-500" />,
         'Education': (
+          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3L1 9l11 6 11-6-11-6z" fill="#027244" />
+            <path d="M5 12.5V17c0 1.66 3.13 3 7 3s7-1.34 7-3v-4.5" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+            <path d="M17 11.5v5.5M12 15v5" stroke="#001c41" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        ),
+        'Schools & Colleges': (
           <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 3L1 9l11 6 11-6-11-6z" fill="#027244" />
             <path d="M5 12.5V17c0 1.66 3.13 3 7 3s7-1.34 7-3v-4.5" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
@@ -696,7 +712,23 @@ export default function Home() {
             <path d="M9 16h6v6H9v-6z" fill="#027244" />
           </svg>
         ),
+        'Restaurants & Food': (
+          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="2" width="16" height="20" rx="2" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+            <rect x="7" y="5" width="3" height="3" rx="0.5" fill="#001c41" />
+            <rect x="14" y="5" width="3" height="3" rx="0.5" fill="#001c41" />
+            <rect x="7" y="10" width="3" height="3" rx="0.5" fill="#001c41" />
+            <rect x="14" y="10" width="3" height="3" rx="0.5" fill="#001c41" />
+            <path d="M9 16h6v6H9v-6z" fill="#027244" />
+          </svg>
+        ),
         'Health & Medical': (
+          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+            <path d="M12 6v10M7 11h10" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        ),
+        'Doctors & Healthcare': (
           <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
             <path d="M12 6v10M7 11h10" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
@@ -718,15 +750,28 @@ export default function Home() {
             <rect x="8" y="14" width="8" height="8" fill="#001c41" rx="1" />
           </svg>
         ),
+        'Grocery & Food Stores': (
+          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 9l1-5h16l1 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
+            <path d="M3 9h18L20 4H4L3 9z" fill="#027244" />
+            <path d="M6 9v2m4-2v2m4-2v2m4-2v2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+            <rect x="8" y="14" width="8" height="8" fill="#001c41" rx="1" />
+          </svg>
+        ),
         'Manufacturing': <Factory className="h-7 w-7 text-slate-600" />,
         'Professional Services': <Briefcase className="h-7 w-7 text-emerald-600" />,
         'Travel & Hospitality': <Compass className="h-7 w-7 text-purple-600" />,
+        'Travel & Transport': <Compass className="h-7 w-7 text-purple-600" />,
         'Construction': <Wrench className="h-7 w-7 text-orange-600" />,
         'Agriculture': <Sprout className="h-7 w-7 text-green-600" />,
+        'Agriculture & Farming': <Sprout className="h-7 w-7 text-green-600" />,
         'Finance & Insurance': <CreditCard className="h-7 w-7 text-blue-600" />,
         'Events & Entertainment': <Sparkles className="h-7 w-7 text-pink-500" />,
         'Sports & Fitness': <Dumbbell className="h-7 w-7 text-emerald-600" />,
-        'Public Sector': <Landmark className="h-7 w-7 text-slate-500" />
+        'Public Sector': <Landmark className="h-7 w-7 text-slate-500" />,
+        'IT & Digital Services': <Laptop className="h-7 w-7 text-blue-600" />,
+        'Books & Stationery': <BookOpen className="h-7 w-7 text-emerald-600" />,
+        'Electrical & Solar': <Zap className="h-7 w-7 text-yellow-500" />
       };
 
       const sorted = availableCategories

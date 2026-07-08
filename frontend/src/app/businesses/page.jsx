@@ -804,23 +804,34 @@ function BusinessesList() {
     });
   });
 
-  const getParentCategory = (subName) => {
-    if (!subName) return 'Others';
-    // 1. Exact DB match
-    const dbCat = dbCategories.find(c => c.categoryName.toLowerCase() === subName.toLowerCase());
-    if (dbCat && dbCat.parentCategory && dbCat.parentCategory !== 'Others') {
-      return dbCat.parentCategory;
-    }
-    // 2. If it is itself a main category
-    if (dynamicAvailableCategories.some(p => p.toLowerCase() === subName.toLowerCase())) {
-      return subName;
-    }
-    // 3. If it exists in db and has no parentCategory, it is a main category itself
-    if (dbCat && !dbCat.parentCategory) {
-      return dbCat.categoryName;
-    }
-    return 'Others';
-  };
+  const getParentCategory = useMemo(() => {
+    const lookup = {};
+    dbCategories.forEach(c => {
+      if (c.categoryName) {
+        lookup[c.categoryName.toLowerCase()] = c.parentCategory || 'Others';
+      }
+    });
+    
+    const dynamicAvailableCatsSet = new Set(dynamicAvailableCategories.map(p => p.toLowerCase()));
+
+    return (subName) => {
+      if (!subName) return 'Others';
+      const lowerSub = subName.toLowerCase();
+      const parent = lookup[lowerSub];
+      if (parent && parent !== 'Others') {
+        return parent;
+      }
+      if (dynamicAvailableCatsSet.has(lowerSub)) {
+        return subName;
+      }
+      // If it exists in db and has no parentCategory, it is a main category itself
+      const dbCat = dbCategories.find(c => c.categoryName.toLowerCase() === lowerSub);
+      if (dbCat && !dbCat.parentCategory) {
+        return dbCat.categoryName;
+      }
+      return 'Others';
+    };
+  }, [dbCategories, dynamicAvailableCategories]);
 
   const handleCategoryClick = async (categoryName) => {
     const parent = getParentCategory(categoryName);
