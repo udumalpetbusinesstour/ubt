@@ -166,6 +166,8 @@ export default function AdminDashboard() {
   const [isFoundingMemberCheck, setIsFoundingMemberCheck] = useState(false);
   const [modalCatQuery, setModalCatQuery] = useState('');
   const [showModalCatDropdown, setShowModalCatDropdown] = useState(false);
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  const [editForm, setEditForm] = useState({});
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -194,8 +196,25 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (selectedBiz) {
       setIsFoundingMemberCheck(selectedBiz.isFoundingMember || false);
+      setEditForm({
+        ownerName: selectedBiz.ownerName || '',
+        phone: selectedBiz.phone || '',
+        email: selectedBiz.email || '',
+        website: selectedBiz.website || '',
+        address: selectedBiz.address || '',
+        locality: selectedBiz.locality || '',
+        pincode: selectedBiz.pincode || '',
+        gstNumber: selectedBiz.gstNumber || '',
+        yearEstablished: selectedBiz.yearEstablished || '',
+        employeeCount: selectedBiz.employeeCount || '1 - 5',
+        name: selectedBiz.name || '',
+        highlights: Array.isArray(selectedBiz.highlights) ? selectedBiz.highlights.join(', ') : (selectedBiz.highlights || '')
+      });
+      setIsEditingDetails(false);
     } else {
       setIsFoundingMemberCheck(false);
+      setIsEditingDetails(false);
+      setEditForm({});
     }
   }, [selectedBiz]);
   
@@ -1071,6 +1090,61 @@ export default function AdminDashboard() {
       fetchNewsletterSubscribers();
     }
   }, [activeTab]);
+
+  const handleUpdateBizDetails = async () => {
+    try {
+      const token = localStorage.getItem('ubt_token');
+      const highlightsList = typeof editForm.highlights === 'string'
+        ? editForm.highlights.split(',').map(h => h.trim()).filter(Boolean)
+        : [];
+        
+      const res = await fetch(`http://localhost:5000/api/businesses/${selectedBiz._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: editForm.name,
+          ownerName: editForm.ownerName,
+          phone: editForm.phone,
+          email: editForm.email,
+          website: editForm.website,
+          address: editForm.address,
+          locality: editForm.locality,
+          pincode: editForm.pincode,
+          gstNumber: editForm.gstNumber,
+          yearEstablished: editForm.yearEstablished,
+          employeeCount: editForm.employeeCount,
+          highlights: highlightsList
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Update selectedBiz
+        setSelectedBiz(prev => ({
+          ...prev,
+          ...editForm,
+          highlights: highlightsList
+        }));
+        
+        // Update businesses in state
+        setBusinesses(prev => prev.map(b => b._id === selectedBiz._id ? {
+          ...b,
+          ...editForm,
+          highlights: highlightsList
+        } : b));
+        
+        setIsEditingDetails(false);
+        showToast('Business details updated successfully!', 'success');
+      } else {
+        alert(data.message || 'Failed to update details.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error updating details.');
+    }
+  };
 
   const handleSaveBizCategories = async (updatedCats) => {
     try {
@@ -6560,14 +6634,31 @@ export default function AdminDashboard() {
             <div className="p-4 sm:p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
               <div className="flex flex-col text-left min-w-0 flex-1 pr-3">
                 <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest">Vetting Workspace</span>
-                <h3 className="font-extrabold text-slate-800 text-base mt-1 truncate">{selectedBiz.name}</h3>
+                {isEditingDetails ? (
+                  <input
+                    type="text"
+                    value={editForm.name || ''}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    className="font-extrabold text-slate-800 text-sm mt-1 border border-slate-200 rounded px-2 py-1 w-full focus:outline-none focus:border-[#027244] bg-white"
+                  />
+                ) : (
+                  <h3 className="font-extrabold text-slate-800 text-base mt-1 truncate">{selectedBiz.name}</h3>
+                )}
               </div>
-              <button 
-                onClick={() => { setShowBizModal(false); setSelectedBiz(null); }}
-                className="h-8.5 w-8.5 rounded-xl hover:bg-slate-200/80 flex items-center justify-center text-slate-450 hover:text-slate-700 transition-colors cursor-pointer shrink-0"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => setIsEditingDetails(!isEditingDetails)}
+                  className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10px] font-extrabold cursor-pointer transition-colors"
+                >
+                  {isEditingDetails ? 'Cancel' : 'Edit details'}
+                </button>
+                <button 
+                  onClick={() => { setShowBizModal(false); setSelectedBiz(null); }}
+                  className="h-8.5 w-8.5 rounded-xl hover:bg-slate-200/80 flex items-center justify-center text-slate-450 hover:text-slate-700 transition-colors cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Scrollable Body */}
@@ -6619,22 +6710,56 @@ export default function AdminDashboard() {
                 <div className="flex flex-col gap-2.5 text-xs font-semibold text-slate-500">
                   <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
                     <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Merchant Full Name</span>
-                    <span className="font-bold text-slate-800">{selectedBiz.ownerName}</span>
+                    {isEditingDetails ? (
+                      <input
+                        type="text"
+                        value={editForm.ownerName || ''}
+                        onChange={(e) => setEditForm({ ...editForm, ownerName: e.target.value })}
+                        className="border border-slate-200 rounded px-2.5 py-1 text-xs w-full sm:max-w-xs text-slate-800 font-semibold focus:outline-none focus:border-[#027244] bg-white text-left sm:text-right"
+                      />
+                    ) : (
+                      <span className="font-bold text-slate-800">{selectedBiz.ownerName}</span>
+                    )}
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
                     <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Mobile Phone</span>
-                    <span className="font-bold text-slate-800">{selectedBiz.phone}</span>
+                    {isEditingDetails ? (
+                      <input
+                        type="text"
+                        value={editForm.phone || ''}
+                        onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                        className="border border-slate-200 rounded px-2.5 py-1 text-xs w-full sm:max-w-xs text-slate-800 font-semibold focus:outline-none focus:border-[#027244] bg-white text-left sm:text-right"
+                      />
+                    ) : (
+                      <span className="font-bold text-slate-800">{selectedBiz.phone}</span>
+                    )}
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
                     <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Email Address</span>
-                    <span className="font-bold text-slate-800 break-all">{selectedBiz.email || 'N/A'}</span>
+                    {isEditingDetails ? (
+                      <input
+                        type="text"
+                        value={editForm.email || ''}
+                        onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                        className="border border-slate-200 rounded px-2.5 py-1 text-xs w-full sm:max-w-xs text-slate-800 font-semibold focus:outline-none focus:border-[#027244] bg-white text-left sm:text-right"
+                      />
+                    ) : (
+                      <span className="font-bold text-slate-800 break-all">{selectedBiz.email || 'N/A'}</span>
+                    )}
                   </div>
-                  {selectedBiz.website && (
-                    <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
-                      <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Website</span>
-                      <span className="font-bold text-emerald-700 break-all">{selectedBiz.website}</span>
-                    </div>
-                  )}
+                  <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
+                    <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Website</span>
+                    {isEditingDetails ? (
+                      <input
+                        type="text"
+                        value={editForm.website || ''}
+                        onChange={(e) => setEditForm({ ...editForm, website: e.target.value })}
+                        className="border border-slate-200 rounded px-2.5 py-1 text-xs w-full sm:max-w-xs text-slate-800 font-semibold focus:outline-none focus:border-[#027244] bg-white text-left sm:text-right"
+                      />
+                    ) : (
+                      <span className="font-bold text-emerald-700 break-all">{selectedBiz.website || 'N/A'}</span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -6645,15 +6770,42 @@ export default function AdminDashboard() {
                 <div className="flex flex-col gap-2.5 text-xs font-semibold text-slate-500">
                   <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
                     <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Street Address</span>
-                    <span className="font-bold text-slate-805 text-left sm:text-right">{selectedBiz.address}</span>
+                    {isEditingDetails ? (
+                      <input
+                        type="text"
+                        value={editForm.address || ''}
+                        onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                        className="border border-slate-200 rounded px-2.5 py-1 text-xs w-full sm:max-w-xs text-slate-800 font-semibold focus:outline-none focus:border-[#027244] bg-white text-left sm:text-right"
+                      />
+                    ) : (
+                      <span className="font-bold text-slate-805 text-left sm:text-right">{selectedBiz.address}</span>
+                    )}
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
                     <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Locality</span>
-                    <span className="font-bold text-slate-805">{selectedBiz.locality}</span>
+                    {isEditingDetails ? (
+                      <input
+                        type="text"
+                        value={editForm.locality || ''}
+                        onChange={(e) => setEditForm({ ...editForm, locality: e.target.value })}
+                        className="border border-slate-200 rounded px-2.5 py-1 text-xs w-full sm:max-w-xs text-slate-800 font-semibold focus:outline-none focus:border-[#027244] bg-white text-left sm:text-right"
+                      />
+                    ) : (
+                      <span className="font-bold text-slate-805">{selectedBiz.locality}</span>
+                    )}
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
                     <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Pincode Boundary</span>
-                    <span className="font-bold text-slate-800">{selectedBiz.pincode}</span>
+                    {isEditingDetails ? (
+                      <input
+                        type="text"
+                        value={editForm.pincode || ''}
+                        onChange={(e) => setEditForm({ ...editForm, pincode: e.target.value })}
+                        className="border border-slate-200 rounded px-2.5 py-1 text-xs w-full sm:max-w-xs text-slate-800 font-semibold focus:outline-none focus:border-[#027244] bg-white text-left sm:text-right"
+                      />
+                    ) : (
+                      <span className="font-bold text-slate-800">{selectedBiz.pincode}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -6803,16 +6955,58 @@ export default function AdminDashboard() {
                 <div className="flex flex-col gap-2.5 text-xs font-semibold text-slate-500">
                   <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
                     <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">GST Number (Taxation)</span>
-                    <span className="font-extrabold text-slate-800 tracking-wider break-all">{selectedBiz.gstNumber || 'N/A (Cottage/Unregistered)'}</span>
+                    {isEditingDetails ? (
+                      <input
+                        type="text"
+                        value={editForm.gstNumber || ''}
+                        onChange={(e) => setEditForm({ ...editForm, gstNumber: e.target.value })}
+                        className="border border-slate-200 rounded px-2.5 py-1 text-xs w-full sm:max-w-xs text-slate-800 font-semibold focus:outline-none focus:border-[#027244] bg-white text-left sm:text-right"
+                      />
+                    ) : (
+                      <span className="font-extrabold text-slate-800 tracking-wider break-all">{selectedBiz.gstNumber || 'N/A (Cottage/Unregistered)'}</span>
+                    )}
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
                     <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Established Year</span>
-                    <span className="font-bold text-slate-800">{selectedBiz.yearEstablished || '2012'}</span>
+                    {isEditingDetails ? (
+                      <input
+                        type="text"
+                        value={editForm.yearEstablished || ''}
+                        onChange={(e) => setEditForm({ ...editForm, yearEstablished: e.target.value })}
+                        className="border border-slate-200 rounded px-2.5 py-1 text-xs w-full sm:max-w-xs text-slate-800 font-semibold focus:outline-none focus:border-[#027244] bg-white text-left sm:text-right"
+                      />
+                    ) : (
+                      <span className="font-bold text-slate-800">{selectedBiz.yearEstablished || '2012'}</span>
+                    )}
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
                     <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Staff count</span>
-                    <span className="font-bold text-slate-800">{selectedBiz.employeeCount || '10 - 20'}</span>
+                    {isEditingDetails ? (
+                      <select
+                        value={editForm.employeeCount || '1 - 5'}
+                        onChange={(e) => setEditForm({ ...editForm, employeeCount: e.target.value })}
+                        className="border border-slate-200 rounded px-2.5 py-1 text-xs w-full sm:max-w-xs text-slate-800 font-semibold focus:outline-none focus:border-[#027244] bg-white text-left sm:text-right"
+                      >
+                        <option value="1 - 5">1 - 5 employees</option>
+                        <option value="5 - 15">5 - 15 employees</option>
+                        <option value="15 - 50">15 - 50 employees</option>
+                        <option value="50+">50+ employees</option>
+                      </select>
+                    ) : (
+                      <span className="font-bold text-slate-800">{selectedBiz.employeeCount || '1 - 5'}</span>
+                    )}
                   </div>
+                  {isEditingDetails && (
+                    <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
+                      <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Highlights (comma separated)</span>
+                      <input
+                        type="text"
+                        value={editForm.highlights || ''}
+                        onChange={(e) => setEditForm({ ...editForm, highlights: e.target.value })}
+                        className="border border-slate-200 rounded px-2.5 py-1 text-xs w-full sm:max-w-xs text-slate-800 font-semibold focus:outline-none focus:border-[#027244] bg-white text-left sm:text-right"
+                      />
+                    </div>
+                  )}
                   <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
                     <span className="text-[10px] sm:text-xs text-slate-400 sm:text-slate-500 uppercase sm:normal-case font-bold sm:font-semibold">Maps Connection PlaceId</span>
                     <span className="font-bold text-blue-650 truncate max-w-[200px]">{selectedBiz.googlePlaceId || 'Not connected'}</span>
@@ -6905,6 +7099,14 @@ export default function AdminDashboard() {
 
             {/* Modal Action Footer */}
             <div className="p-4 sm:p-6 border-t border-slate-200 bg-slate-50 flex flex-col gap-4 shrink-0">
+              {isEditingDetails && (
+                <button
+                  onClick={handleUpdateBizDetails}
+                  className="w-full py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl text-center shadow shadow-emerald-800/10 block cursor-pointer transition-colors"
+                >
+                  Save Updated Details
+                </button>
+              )}
               {selectedBiz.status !== 'Approved' && selectedBiz.status !== 'Rejected' && (
                 <label className="flex items-center gap-2 px-1 cursor-pointer select-none">
                   <input
