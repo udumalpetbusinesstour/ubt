@@ -708,7 +708,9 @@ router.get('/', async (req, res) => {
       conditions.push({
         $or: [
           { category: { $in: allCategoriesToQuery } },
-          { type: { $in: allCategoriesToQuery } }
+          { type: { $in: allCategoriesToQuery } },
+          { 'categories.category': { $in: allCategoriesToQuery } },
+          { 'categories.type': { $in: allCategoriesToQuery } }
         ]
       });
     }
@@ -1947,6 +1949,8 @@ router.post('/anonymous-add', async (req, res) => {
 
 // @desc    Create a new business listing (Pending Approval)
 // @route   POST /api/businesses
+// @desc    Register a new business listing
+// @route   POST /api/businesses
 // @access  Private
 router.post('/', protect, async (req, res) => {
   try {
@@ -1987,11 +1991,12 @@ router.post('/', protect, async (req, res) => {
       menuUrls,
       isFoodBusiness,
       languagesKnown,
-      serviceArea
+      serviceArea,
+      categories
     } = req.body;
 
     // 0. Final validation of required fields
-    if (!name || !category || !type || !description || !phone || !whatsapp || !pincode ||
+    if (!name || !description || !phone || !whatsapp || !pincode ||
         !services || (Array.isArray(services) && services.length === 0) ||
         !brands || (Array.isArray(brands) && brands.length === 0) ||
         !highlights || (Array.isArray(highlights) && highlights.length === 0) ||
@@ -2000,6 +2005,30 @@ router.post('/', protect, async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Validation failed: Please fill in all required business profile details.',
+      });
+    }
+
+    // Validate categories array or single fields fallback
+    let resolvedCategories = categories;
+    if (!resolvedCategories || !Array.isArray(resolvedCategories) || resolvedCategories.length === 0) {
+      if (!category || !category.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Validation failed: Please select at least one category.',
+        });
+      }
+      resolvedCategories = [{
+        category: requestedParentCategory || 'Others',
+        type: category,
+        customCategoryName: customCategoryName || '',
+        categoryStatus: categoryStatus || 'Normal'
+      }];
+    }
+
+    if (resolvedCategories.length > 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed: You can select at most 5 categories.',
       });
     }
 
@@ -2129,6 +2158,7 @@ router.post('/', protect, async (req, res) => {
       offers: offers || [],
       languagesKnown: languagesKnown || '',
       serviceArea: serviceArea || '',
+      categories: resolvedCategories
     };
 
     // If user is referred, run anti-fraud checks before creating/updating
@@ -2304,6 +2334,15 @@ router.put('/:id', protect, async (req, res) => {
       }
     }
 
+    if (req.body.categories && Array.isArray(req.body.categories)) {
+      if (req.body.categories.length === 0) {
+        return res.status(400).json({ success: false, message: 'Please select at least one category.' });
+      }
+      if (req.body.categories.length > 5) {
+        return res.status(400).json({ success: false, message: 'You can select at most 5 categories.' });
+      }
+    }
+
     // Do not allow updating status or subscription via standard PUT (must be approved via Admin or Payments routes)
     delete req.body.status;
     delete req.body.subscriptionStatus;
@@ -2316,10 +2355,8 @@ router.put('/:id', protect, async (req, res) => {
       req.body.googleLinked = true;
     }
 
-    business = await Business.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    Object.assign(business, req.body);
+    await business.save();
 
     // Save branches if provided
     if (req.body.branches && Array.isArray(req.body.branches)) {

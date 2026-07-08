@@ -1521,13 +1521,22 @@ const resolveCategoryReview = async (req, res, next) => {
       if (!cat) {
         return sendError(res, 404, 'Selected category does not exist');
       }
-      business.categoryId = cat._id;
-      business.category = cat.categoryName;
-      business.customCategoryName = null;
-      if (cat.parentCategory) {
-        business.requestedParentCategory = cat.parentCategory;
+      const targetEntry = business.categories.find(c => c.categoryStatus === 'Pending Review' && (c.customCategoryName === business.customCategoryName || !business.customCategoryName));
+      if (targetEntry) {
+        targetEntry.categoryId = cat._id;
+        targetEntry.category = cat.parentCategory || parentCategory || cat.categoryName;
+        targetEntry.type = cat.categoryName;
+        targetEntry.customCategoryName = '';
+        targetEntry.categoryStatus = 'Normal';
+      } else {
+        business.categories = [{
+          categoryId: cat._id,
+          category: cat.parentCategory || parentCategory || cat.categoryName,
+          type: cat.categoryName,
+          customCategoryName: '',
+          categoryStatus: 'Normal'
+        }];
       }
-      business.categoryStatus = 'Normal';
       await business.save();
 
       // Log action
@@ -1557,10 +1566,22 @@ const resolveCategoryReview = async (req, res, next) => {
       // Check duplicate using exact match
       const exists = await Category.findOne({ categoryName: { $regex: new RegExp(`^${escapeRegex(finalName.trim())}$`, 'i') } });
       if (exists) {
-        business.categoryId = exists._id;
-        business.category = exists.categoryName;
-        business.customCategoryName = null;
-        business.categoryStatus = 'Normal';
+        const targetEntry = business.categories.find(c => c.categoryStatus === 'Pending Review' && (c.customCategoryName === business.customCategoryName || !business.customCategoryName));
+        if (targetEntry) {
+          targetEntry.categoryId = exists._id;
+          targetEntry.category = exists.parentCategory || resolvedParentCategory || exists.categoryName;
+          targetEntry.type = exists.categoryName;
+          targetEntry.customCategoryName = '';
+          targetEntry.categoryStatus = 'Normal';
+        } else {
+          business.categories = [{
+            categoryId: exists._id,
+            category: exists.parentCategory || resolvedParentCategory || exists.categoryName,
+            type: exists.categoryName,
+            customCategoryName: '',
+            categoryStatus: 'Normal'
+          }];
+        }
         
         // Correct parent category of existing category document if mismatched
         const expectedParent = resolvedParentCategory && resolvedParentCategory !== 'None' && resolvedParentCategory !== 'Others' ? resolvedParentCategory.trim() : null;
@@ -1604,10 +1625,22 @@ const resolveCategoryReview = async (req, res, next) => {
 
       const newCat = await Category.create(categoryData);
 
-      business.categoryId = newCat._id;
-      business.category = newCat.categoryName;
-      business.customCategoryName = null;
-      business.categoryStatus = 'Normal';
+      const targetEntry = business.categories.find(c => c.categoryStatus === 'Pending Review' && (c.customCategoryName === business.customCategoryName || !business.customCategoryName));
+      if (targetEntry) {
+        targetEntry.categoryId = newCat._id;
+        targetEntry.category = newCat.parentCategory || resolvedParentCategory || newCat.categoryName;
+        targetEntry.type = newCat.categoryName;
+        targetEntry.customCategoryName = '';
+        targetEntry.categoryStatus = 'Normal';
+      } else {
+        business.categories = [{
+          categoryId: newCat._id,
+          category: newCat.parentCategory || resolvedParentCategory || newCat.categoryName,
+          type: newCat.categoryName,
+          customCategoryName: '',
+          categoryStatus: 'Normal'
+        }];
+      }
       if (business.status === 'Approved') {
         business.subscriptionStatus = 'active';
       }

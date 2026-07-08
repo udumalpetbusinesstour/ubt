@@ -6,7 +6,9 @@ import {
   ChevronDown, ChevronUp, Users, Car, GraduationCap, Tv, Utensils, 
   HeartPulse, Home as HomeIcon, Building, ShoppingBag, Factory, Compass, 
   Wrench, Sprout, CreditCard, Dumbbell, Briefcase, Mail, Info, Clock,
-  Activity, Leaf, Coins, Camera, Plane, Landmark, Store, X, Globe, Upload
+  Activity, Leaf, Coins, Camera, Plane, Landmark, Store, X, Globe, Upload,
+  Zap, Smartphone, Hotel, Laptop, Gem, Scale, Heart, Truck, Smile, PawPrint,
+  Printer, Sun, Key, Shield, Droplet
 } from 'lucide-react';
 import AboutUsView from '../../components/AboutUsView';
 
@@ -16,7 +18,9 @@ const lucideIcons = {
   ChevronDown, ChevronUp, Users, Car, GraduationCap, Tv, Utensils, 
   HeartPulse, HomeIcon, Building, ShoppingBag, Factory, Compass, 
   Wrench, Sprout, CreditCard, Dumbbell, Briefcase, Mail, Info, Clock,
-  Activity, Leaf, Coins, Camera, Plane, Landmark, Store, X, Globe, Upload
+  Activity, Leaf, Coins, Camera, Plane, Landmark, Store, X, Globe, Upload,
+  Zap, Smartphone, Hotel, Laptop, Gem, Scale, Heart, Truck, Smile, PawPrint,
+  Printer, Sun, Key, Shield, Droplet
 };
 
 const renderCategoryIcon = (iconName, className = "h-4.5 w-4.5") => {
@@ -733,29 +737,52 @@ function BusinessesList() {
   const [contactSuccess, setContactSuccess] = useState(null);
   const [contactError, setContactError] = useState('');
 
-  const categoryDetails = [
-    { name: 'Automotive', icon: <Car className="h-4.5 w-4.5 text-red-500" />, bg: 'bg-red-50' },
-    { name: 'Beauty & Wellness', icon: <Sparkles className="h-4.5 w-4.5 text-pink-500" />, bg: 'bg-pink-50' },
-    { name: 'Education', icon: <GraduationCap className="h-4.5 w-4.5 text-blue-500" />, bg: 'bg-blue-50' },
-    { name: 'Electronics', icon: <Tv className="h-4.5 w-4.5 text-emerald-500" />, bg: 'bg-emerald-50' },
-    { name: 'Food & Restaurants', icon: <Utensils className="h-4.5 w-4.5 text-amber-500" />, bg: 'bg-amber-50' },
-    { name: 'Health & Medical', icon: <HeartPulse className="h-4.5 w-4.5 text-red-500" />, bg: 'bg-red-50' },
-    { name: 'Home Services', icon: <HomeIcon className="h-4.5 w-4.5 text-teal-500" />, bg: 'bg-teal-50' },
-    { name: 'Real Estate', icon: <Building className="h-4.5 w-4.5 text-indigo-500" />, bg: 'bg-indigo-50' },
-    { name: 'Shopping', icon: <ShoppingBag className="h-4.5 w-4.5 text-amber-500" />, bg: 'bg-amber-50' },
-    { name: 'Manufacturing', icon: <Factory className="h-4.5 w-4.5 text-slate-500" />, bg: 'bg-slate-50' },
-    { name: 'Professional Services', icon: <Briefcase className="h-4.5 w-4.5 text-emerald-500" />, bg: 'bg-emerald-50' },
-    { name: 'Travel & Hospitality', icon: <Compass className="h-4.5 w-4.5 text-purple-500" />, bg: 'bg-purple-50' },
-    { name: 'Construction', icon: <Wrench className="h-4.5 w-4.5 text-orange-500" />, bg: 'bg-orange-50' },
-    { name: 'Agriculture', icon: <Sprout className="h-4.5 w-4.5 text-green-500" />, bg: 'bg-green-50' },
-    { name: 'Finance & Insurance', icon: <CreditCard className="h-4.5 w-4.5 text-blue-500" />, bg: 'bg-blue-50' },
-    { name: 'Events & Entertainment', icon: <Sparkles className="h-4.5 w-4.5 text-pink-500" />, bg: 'bg-pink-50' },
-    { name: 'Sports & Fitness', icon: <Dumbbell className="h-4.5 w-4.5 text-emerald-500" />, bg: 'bg-emerald-50' },
-    { name: 'Public Sector', icon: <Landmark className="h-4.5 w-4.5 text-slate-500" />, bg: 'bg-slate-50' }
-  ];
+  const parentCategoryStylesMap = {
+    'Agriculture & Farming': { icon: 'Leaf', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    'Automobile Services': { icon: 'Car', bg: 'bg-red-50', text: 'text-red-500' },
+    'Baby & Kids Stores': { icon: 'ShoppingBag', bg: 'bg-pink-50', text: 'text-pink-500' },
+    'Beauty Salons & Spa': { icon: 'Sparkles', bg: 'bg-pink-50', text: 'text-pink-500' },
+    'Books & Stationery': { icon: 'BookOpen', bg: 'bg-blue-50', text: 'text-blue-500' },
+    'Builders & Contractors': { icon: 'Building', bg: 'bg-indigo-50', text: 'text-indigo-500' },
+    'Building Materials': { icon: 'Building', bg: 'bg-slate-50', text: 'text-slate-500' },
+    'Business Services': { icon: 'Briefcase', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+    'Clothing & Fashion': { icon: 'ShoppingBag', bg: 'bg-amber-50', text: 'text-amber-500' },
+    'Doctors & Healthcare': { icon: 'Activity', bg: 'bg-red-50', text: 'text-red-500' },
+    'Electrical & Solar': { icon: 'Zap', bg: 'bg-amber-50', text: 'text-amber-500' },
+    'Electronics & Mobiles': { icon: 'Smartphone', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+    'Finance & Insurance': { icon: 'Coins', bg: 'bg-blue-50', text: 'text-blue-500' },
+    'Furniture & Home Decor': { icon: 'HomeIcon', bg: 'bg-teal-50', text: 'text-teal-500' },
+    'Grocery & Food Stores': { icon: 'ShoppingBag', bg: 'bg-amber-50', text: 'text-amber-500' },
+    'Home Services': { icon: 'Wrench', bg: 'bg-teal-50', text: 'text-teal-500' },
+    'Hotels & Lodges': { icon: 'Hotel', bg: 'bg-purple-50', text: 'text-purple-500' },
+    'Internet & Telecom': { icon: 'Globe', bg: 'bg-blue-50', text: 'text-blue-500' },
+    'IT & Digital Services': { icon: 'Laptop', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+    'Jewellery Shops': { icon: 'Gem', bg: 'bg-amber-50', text: 'text-amber-500' },
+    'Legal & Document Services': { icon: 'Scale', bg: 'bg-slate-50', text: 'text-slate-500' },
+    'Manufacturers & Industries': { icon: 'Factory', bg: 'bg-slate-50', text: 'text-slate-500' },
+    'NGOs & Social Services': { icon: 'Heart', bg: 'bg-red-50', text: 'text-red-500' },
+    'Packers & Movers': { icon: 'Truck', bg: 'bg-orange-50', text: 'text-orange-500' },
+    'Personal Services': { icon: 'Smile', bg: 'bg-indigo-50', text: 'text-indigo-500' },
+    'Pet & Veterinary Services': { icon: 'PawPrint', bg: 'bg-green-50', text: 'text-green-500' },
+    'Photography & Video': { icon: 'Camera', bg: 'bg-purple-50', text: 'text-purple-500' },
+    'Printing & Advertising': { icon: 'Printer', bg: 'bg-slate-50', text: 'text-slate-500' },
+    'Real Estate': { icon: 'Building', bg: 'bg-indigo-50', text: 'text-indigo-500' },
+    'Religious Services': { icon: 'Sun', bg: 'bg-amber-50', text: 'text-amber-500' },
+    'Rental Services': { icon: 'Key', bg: 'bg-blue-50', text: 'text-blue-500' },
+    'Repair Services': { icon: 'Wrench', bg: 'bg-orange-50', text: 'text-orange-500' },
+    'Restaurants & Food': { icon: 'Utensils', bg: 'bg-amber-50', text: 'text-amber-500' },
+    'Schools & Colleges': { icon: 'GraduationCap', bg: 'bg-blue-50', text: 'text-blue-500' },
+    'Security Services': { icon: 'Shield', bg: 'bg-slate-50', text: 'text-slate-500' },
+    'Shops & Retail Stores': { icon: 'Store', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+    'Sports & Fitness': { icon: 'Dumbbell', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+    'Training & Coaching': { icon: 'GraduationCap', bg: 'bg-blue-50', text: 'text-blue-500' },
+    'Travel & Transport': { icon: 'Plane', bg: 'bg-purple-50', text: 'text-purple-500' },
+    'Water & Environmental Services': { icon: 'Droplet', bg: 'bg-blue-50', text: 'text-blue-500' },
+    'Wedding & Event Services': { icon: 'Camera', bg: 'bg-pink-50', text: 'text-pink-500' },
+    'Public Sector': { icon: 'Landmark', bg: 'bg-slate-50', text: 'text-slate-500' }
+  };
 
   // Build dynamicCategoryDetails and dynamicAvailableCategories fully from dbCategories
-  const dynamicCategoryDetails = [...categoryDetails];
   const parentCategoryViews = {};
   dbCategories.forEach(cat => {
     if (cat.parentCategory) {
@@ -767,15 +794,14 @@ function BusinessesList() {
     new Set(dbCategories.map(cat => cat.parentCategory).filter(p => p && p.trim() !== '' && p !== 'Others'))
   ).sort((a, b) => (parentCategoryViews[b] || 0) - (parentCategoryViews[a] || 0));
 
-  // Merge any DB main-category-only items into dynamicCategoryDetails
+  const dynamicCategoryDetails = [];
   dynamicAvailableCategories.forEach(parentName => {
-    if (!dynamicCategoryDetails.some(c => c.name.toLowerCase() === parentName.toLowerCase())) {
-      dynamicCategoryDetails.push({
-        name: parentName,
-        icon: renderCategoryIcon('Store', "h-4.5 w-4.5 text-emerald-500"),
-        bg: 'bg-emerald-50'
-      });
-    }
+    const styles = parentCategoryStylesMap[parentName] || { icon: 'Store', bg: 'bg-emerald-50', text: 'text-emerald-500' };
+    dynamicCategoryDetails.push({
+      name: parentName,
+      icon: renderCategoryIcon(styles.icon, `h-4.5 w-4.5 ${styles.text}`),
+      bg: styles.bg
+    });
   });
 
   const getParentCategory = (subName) => {

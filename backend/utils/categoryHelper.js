@@ -9,40 +9,52 @@ const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
  */
 const ensureCategoriesExist = async (business) => {
   try {
-    let { requestedParentCategory, category, customCategoryName } = business;
+    let categories = business.categories;
 
-    if (!category) return;
-
-    // Force governmental subcategories to always be nested under "Governmental organisations" unless requested parent category is "Public Sector"
-    const govSubcategories = ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'];
-    const subNameClean = (category === 'Others' ? customCategoryName : category)?.trim();
-    if (subNameClean && govSubcategories.includes(subNameClean.toLowerCase()) && requestedParentCategory !== 'Public Sector') {
-      requestedParentCategory = 'Governmental organisations';
-      business.requestedParentCategory = 'Governmental organisations';
-    }
-
-    if (!requestedParentCategory) return;
-
-    // 1. Ensure the parent category document exists in the Category collection
-    let parentDoc = null;
-    if (requestedParentCategory.trim() !== 'Others' && requestedParentCategory.trim() !== '') {
-      parentDoc = await Category.findOne({ categoryName: { $regex: new RegExp(`^${escapeRegex(requestedParentCategory.trim())}$`, 'i') } });
-      if (!parentDoc) {
-        parentDoc = await Category.create({
-          categoryName: requestedParentCategory.trim(),
-          parentCategory: null,
-          icon: 'Building',
-          description: `Auto-created parent category for approved listing: ${business.name}`
-        });
-        console.log(`[CATEGORY SYNC] Auto-created parent category document: "${parentDoc.categoryName}"`);
+    if (!categories || !Array.isArray(categories) || categories.length === 0) {
+      if (business.category) {
+        categories = [{
+          category: business.category,
+          type: business.type || business.category,
+          customCategoryName: business.customCategoryName || '',
+          categoryStatus: business.categoryStatus || 'Normal'
+        }];
+      } else {
+        return;
       }
     }
 
-    // 2. Ensure the subcategory document exists in the Category collection
-    const subName = (category === 'Others' ? customCategoryName : category);
-    if (subName && subName.trim() !== '' && subName.trim() !== 'Others') {
+    let needsSave = false;
+    const updatedCategories = [];
+
+    for (let entry of categories) {
+      let subName = entry.type || entry.category;
+      if (subName === 'Others') {
+        subName = entry.customCategoryName;
+      }
+      if (!subName) continue;
+      subName = subName.trim();
+
+      let parentName = entry.category || 'Others';
+
+      // 1. Ensure the parent category document exists in the Category collection
+      let parentDoc = null;
+      if (parentName.trim() !== 'Others' && parentName.trim() !== '') {
+        parentDoc = await Category.findOne({ categoryName: { $regex: new RegExp(`^${escapeRegex(parentName.trim())}$`, 'i') } });
+        if (!parentDoc) {
+          parentDoc = await Category.create({
+            categoryName: parentName.trim(),
+            parentCategory: null,
+            icon: 'Building',
+            description: `Auto-created parent category for approved listing: ${business.name}`
+          });
+          console.log(`[CATEGORY SYNC] Auto-created parent category document: "${parentDoc.categoryName}"`);
+        }
+      }
+
+      // 2. Ensure the subcategory document exists in the Category collection
       let subDoc = await Category.findOne({ categoryName: { $regex: new RegExp(`^${escapeRegex(subName.trim())}$`, 'i') } });
-      const expectedParent = parentDoc ? parentDoc.categoryName : requestedParentCategory.trim();
+      const expectedParent = parentDoc ? parentDoc.categoryName : parentName.trim();
       if (!subDoc) {
         subDoc = await Category.create({
           categoryName: subName.trim(),
@@ -57,29 +69,25 @@ const ensureCategoriesExist = async (business) => {
         console.log(`[CATEGORY SYNC] Corrected parent category of existing subcategory "${subDoc.categoryName}" to "${expectedParent}"`);
       }
 
-      // 3. Link the business to this concrete category in the database
-      let needsSave = false;
-      if (!business.categoryId || business.categoryId.toString() !== subDoc._id.toString()) {
-        business.categoryId = subDoc._id;
-        needsSave = true;
-      }
-      if (business.category !== subDoc.categoryName) {
-        business.category = subDoc.categoryName;
-        needsSave = true;
-      }
-      if (business.customCategoryName !== '') {
-        business.customCategoryName = '';
-        needsSave = true;
-      }
-      if (business.categoryStatus !== 'Normal') {
-        business.categoryStatus = 'Normal';
-        needsSave = true;
-      }
+      // 3. Update entry fields
+      const updatedEntry = {
+        categoryId: subDoc._id,
+        category: expectedParent,
+        type: subDoc.categoryName,
+        customCategoryName: '',
+        categoryStatus: 'Normal'
+      };
 
-      if (needsSave) {
-        await business.save({ validateBeforeSave: false });
-        console.log(`[CATEGORY SYNC] Linked business "${business.name}" to category "${subDoc.categoryName}" (ID: ${subDoc._id})`);
+      if (!entry.categoryId || entry.categoryId.toString() !== subDoc._id.toString() || entry.category !== expectedParent || entry.type !== subDoc.categoryName || entry.customCategoryName !== '' || entry.categoryStatus !== 'Normal') {
+        needsSave = true;
       }
+      updatedCategories.push(updatedEntry);
+    }
+
+    if (needsSave || business.categories.length !== updatedCategories.length) {
+      business.categories = updatedCategories;
+      await business.save({ validateBeforeSave: false });
+      console.log(`[CATEGORY SYNC] Linked business "${business.name}" to ${updatedCategories.length} categories.`);
     }
   } catch (err) {
     console.error('Error in ensureCategoriesExist helper:', err);

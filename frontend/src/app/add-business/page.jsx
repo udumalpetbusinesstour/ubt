@@ -159,6 +159,7 @@ export default function AddBusiness() {
     customCategoryName: '',
     requestedParentCategory: '',
     categoryStatus: 'Normal',
+    categories: [],
     type: 'Individual / Sole Proprietor',
     description: '',
     yearEstablished: '',
@@ -204,6 +205,9 @@ export default function AddBusiness() {
 
   const [isCustomLocality, setIsCustomLocality] = useState(false);
   const [isCustomMain, setIsCustomMain] = useState(false);
+  const [selMain, setSelMain] = useState('');
+  const [selSub, setSelSub] = useState('');
+  const [customSub, setCustomSub] = useState('');
   const [isBranchCustomLocality, setIsBranchCustomLocality] = useState(false);
 
   // Sync locality type classification based on value borders
@@ -1215,16 +1219,8 @@ export default function AddBusiness() {
         setError('You must select and validate a valid Udumalpet area pincode to proceed.');
         return false;
       }
-      if (!formData.requestedParentCategory || !formData.requestedParentCategory.trim()) {
-        setError('Please select a main category.');
-        return false;
-      }
-      if (!formData.category || !formData.category.trim()) {
-        setError('Please select a subcategory.');
-        return false;
-      }
-      if (formData.category === 'Others' && (!formData.customCategoryName || !formData.customCategoryName.trim())) {
-        setError('Please specify your custom subcategory name.');
+      if (!formData.categories || !Array.isArray(formData.categories) || formData.categories.length === 0) {
+        setError('Please add at least one category.');
         return false;
       }
     } else if (currentStep === 3) {
@@ -2235,181 +2231,223 @@ export default function AddBusiness() {
                       />
                     </div>
 
-                    {/* Main Category Selector / Input */}
-                    <div className="flex flex-col gap-1.5 text-left">
-                      <div className="flex justify-between items-center">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Main Category <span className="text-red-500">*</span></label>
-                        {(isCustomMain || (formData.requestedParentCategory !== '' && !getDynamicMainCategories().includes(formData.requestedParentCategory))) && (
+                    {/* Multi-category Selector */}
+                    <div className="flex flex-col gap-4 border border-slate-100 p-4 bg-slate-50/50 rounded-2xl">
+                      <div className="flex flex-col gap-1 text-left">
+                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Selected Categories ({formData.categories?.length || 0}/5) <span className="text-red-500">*</span></label>
+                        {(!formData.categories || formData.categories.length === 0) ? (
+                          <span className="text-xs text-slate-400 font-semibold italic">No categories added yet. Please add at least one below.</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {formData.categories.map((cat, idx) => (
+                              <div key={idx} className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold py-1.5 px-3 rounded-xl flex items-center gap-2 shadow-sm animate-fadeIn">
+                                <span>
+                                  {cat.category} &gt; {cat.type === 'Others' ? cat.customCategoryName : cat.type}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updatedCats = formData.categories.filter((_, i) => i !== idx);
+                                    const updated = {
+                                      ...formData,
+                                      categories: updatedCats,
+                                      category: updatedCats[0]?.type || '',
+                                      requestedParentCategory: updatedCats[0]?.category || '',
+                                      customCategoryName: updatedCats[0]?.customCategoryName || '',
+                                      categoryStatus: updatedCats[0]?.categoryStatus || 'Normal'
+                                    };
+                                    setFormData(updated);
+                                    saveDraft(updated);
+                                  }}
+                                  className="text-emerald-600 hover:text-emerald-850 font-black cursor-pointer focus:outline-none"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Add new category inputs */}
+                      {(!formData.categories || formData.categories.length < 5) && (
+                        <div className="border-t border-slate-200/60 pt-4 flex flex-col gap-4">
+                          <span className="text-xs font-bold text-slate-800 uppercase tracking-wide text-left">Add Category</span>
+
+                          {/* Main Category */}
+                          <div className="flex flex-col gap-1.5 text-left">
+                            <div className="flex justify-between items-center">
+                              <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Main Category</label>
+                              {(isCustomMain || (selMain !== '' && !getDynamicMainCategories().includes(selMain))) && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIsCustomMain(false);
+                                    setSelMain('');
+                                    setSelSub('');
+                                    setCustomSub('');
+                                  }}
+                                  className="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline focus:outline-none cursor-pointer"
+                                >
+                                  Choose Standard
+                                </button>
+                              )}
+                            </div>
+                            {(isCustomMain || (selMain !== '' && !getDynamicMainCategories().includes(selMain))) ? (
+                              <input
+                                type="text"
+                                placeholder="Specify Custom Main Category (e.g. Tourism Services, Logistics)"
+                                value={getDynamicMainCategories().includes(selMain) ? '' : selMain}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setSelMain(val);
+                                  setSelSub('Others');
+                                }}
+                                className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                              />
+                            ) : (
+                              <select
+                                value={getDynamicMainCategories().includes(selMain) ? selMain : ''}
+                                onChange={(e) => {
+                                  const parentVal = e.target.value;
+                                  if (parentVal === 'Others') {
+                                    setIsCustomMain(true);
+                                    setSelMain('');
+                                    setSelSub('Others');
+                                    setCustomSub('');
+                                  } else {
+                                    setSelMain(parentVal);
+                                    setSelSub('');
+                                    setCustomSub('');
+                                  }
+                                }}
+                                className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
+                              >
+                                <option value="">-- Choose Main Category --</option>
+                                {getDynamicMainCategories().map(cat => (
+                                  <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                                <option value="Others">Others</option>
+                              </select>
+                            )}
+                          </div>
+
+                          {/* Subcategory */}
+                          {selMain !== '' && (
+                            <div className="flex flex-col gap-1.5 text-left animate-fadeIn">
+                              <div className="flex justify-between items-center">
+                                <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Subcategory</label>
+                                {selSub === 'Others' && !(isCustomMain || (selMain !== '' && !getDynamicMainCategories().includes(selMain))) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const subs = getDynamicSubcategories(selMain);
+                                      setSelSub(subs[0] || '');
+                                      setCustomSub('');
+                                    }}
+                                    className="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline focus:outline-none cursor-pointer"
+                                  >
+                                    Choose Standard
+                                  </button>
+                                )}
+                              </div>
+                              {selSub === 'Others' ? (
+                                <div className="flex flex-col gap-1.5 text-left animate-fadeIn">
+                                  <input
+                                    type="text"
+                                    placeholder="Specify Custom Subcategory (e.g. EV Charging Station)"
+                                    value={customSub}
+                                    onChange={(e) => setCustomSub(e.target.value)}
+                                    className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                                  />
+                                  <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 mt-2 flex flex-col gap-1.5 text-xs text-left animate-fadeIn">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-extrabold text-blue-900">Category Status:</span>
+                                      <span className="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide">
+                                        Pending Review
+                                      </span>
+                                    </div>
+                                    <p className="text-blue-750 font-semibold leading-relaxed">
+                                      "Your custom category request will be dynamically verified and approved/linked by superadmin upon publication."
+                                    </p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <select
+                                  value={getDynamicSubcategories(selMain).includes(selSub) ? selSub : ''}
+                                  onChange={(e) => {
+                                    const subVal = e.target.value;
+                                    setSelSub(subVal);
+                                    setCustomSub('');
+                                  }}
+                                  className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
+                                >
+                                  <option value="">-- Choose Subcategory --</option>
+                                  {getDynamicSubcategories(selMain).map(sub => (
+                                    <option key={sub} value={sub}>{sub}</option>
+                                  ))}
+                                  <option value="Others">Others (Custom Category)</option>
+                                </select>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Add Category Button */}
                           <button
                             type="button"
                             onClick={() => {
-                              setIsCustomMain(false);
-                              const updated = {
-                                ...formData,
-                                requestedParentCategory: '',
-                                category: '',
-                                customCategoryName: '',
-                                categoryStatus: 'Normal'
-                              };
-                              setFormData(updated);
-                              saveDraft(updated);
-                            }}
-                            className="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline focus:outline-none cursor-pointer"
-                          >
-                            Choose Standard
-                          </button>
-                        )}
-                      </div>
-                      {(isCustomMain || (formData.requestedParentCategory !== '' && !getDynamicMainCategories().includes(formData.requestedParentCategory))) ? (
-                        <input
-                          type="text"
-                          placeholder="Specify Custom Main Category (e.g. Tourism Services, Logistics)"
-                          value={getDynamicMainCategories().includes(formData.requestedParentCategory) ? '' : formData.requestedParentCategory}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            const updated = {
-                              ...formData,
-                              requestedParentCategory: val,
-                              category: 'Others',
-                              categoryStatus: 'Pending Review'
-                            };
-                            setFormData(updated);
-                            saveDraft(updated);
-                          }}
-                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                        />
-                      ) : (
-                        <select
-                          name="requestedParentCategory"
-                          value={getDynamicMainCategories().includes(formData.requestedParentCategory) ? formData.requestedParentCategory : ''}
-                          onChange={(e) => {
-                            const parentVal = e.target.value;
-                            if (parentVal === 'Others') {
-                              setIsCustomMain(true);
-                              const updated = {
-                                ...formData,
-                                requestedParentCategory: '',
-                                category: 'Others',
-                                customCategoryName: '',
-                                categoryStatus: 'Pending Review'
-                              };
-                              setFormData(updated);
-                              saveDraft(updated);
-                            } else {
-                              const isGov = parentVal.toLowerCase() === 'governmental organisations' || parentVal.toLowerCase() === 'public sector';
-                              let currentTimings = formData.timings;
-                              const isDefault = currentTimings && currentTimings.Monday === '9:00 AM - 8:00 PM' && currentTimings.Sunday === 'Closed';
-                              if (isGov && isDefault) {
-                                currentTimings = {
-                                  Monday: '', Tuesday: '', Wednesday: '', Thursday: '', Friday: '', Saturday: '', Sunday: ''
-                                };
+                              const finalMain = selMain.trim();
+                              const finalSub = selSub === 'Others' ? 'Others' : selSub.trim();
+                              const finalCustomSub = selSub === 'Others' ? customSub.trim() : '';
+
+                              if (!finalMain) return;
+                              if (!finalSub || (finalSub === 'Others' && !finalCustomSub)) return;
+
+                              const subnameToCheck = finalSub === 'Others' ? finalCustomSub.toLowerCase() : finalSub.toLowerCase();
+                              const isDuplicate = formData.categories?.some(cat => {
+                                const subname = cat.type === 'Others' ? cat.customCategoryName.toLowerCase() : cat.type.toLowerCase();
+                                return subname === subnameToCheck;
+                              });
+
+                              if (isDuplicate) {
+                                alert('This category has already been added to your selection.');
+                                return;
                               }
+
+                              const newCat = {
+                                category: finalMain,
+                                type: finalSub,
+                                customCategoryName: finalCustomSub,
+                                categoryStatus: (finalSub === 'Others' || !getDynamicMainCategories().includes(finalMain)) ? 'Pending Review' : 'Normal'
+                              };
+
+                              const updatedCats = [...(formData.categories || []), newCat];
                               const updated = {
                                 ...formData,
-                                requestedParentCategory: parentVal,
-                                category: '',
-                                customCategoryName: '',
-                                categoryStatus: 'Normal',
-                                timings: currentTimings
+                                categories: updatedCats,
+                                category: updatedCats[0]?.type || '',
+                                requestedParentCategory: updatedCats[0]?.category || '',
+                                customCategoryName: updatedCats[0]?.customCategoryName || '',
+                                categoryStatus: updatedCats[0]?.categoryStatus || 'Normal'
                               };
+
                               setFormData(updated);
                               saveDraft(updated);
-                            }
-                          }}
-                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
-                        >
-                          <option value="">-- Choose Main Category --</option>
-                          {getDynamicMainCategories().map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
-                          ))}
-                          <option value="Others">Others</option>
-                        </select>
+
+                              // Reset
+                              setSelMain('');
+                              setSelSub('');
+                              setCustomSub('');
+                              setIsCustomMain(false);
+                            }}
+                            disabled={!selMain || !selSub || (selSub === 'Others' && !customSub.trim())}
+                            className="w-fit self-end py-2 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow transition-colors cursor-pointer"
+                          >
+                            + Add Category
+                          </button>
+                        </div>
                       )}
                     </div>
-
-                    {/* Subcategory Selector / Input */}
-                    {formData.requestedParentCategory !== '' && (
-                      <div className="flex flex-col gap-1.5 text-left animate-fadeIn">
-                        <div className="flex justify-between items-center">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Subcategory <span className="text-red-500">*</span></label>
-                          {formData.category === 'Others' && !(isCustomMain || (formData.requestedParentCategory !== '' && !getDynamicMainCategories().includes(formData.requestedParentCategory))) && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const subs = getDynamicSubcategories(formData.requestedParentCategory);
-                                const subVal = subs[0] || '';
-                                const updated = {
-                                  ...formData,
-                                  category: subVal,
-                                  customCategoryName: '',
-                                  categoryStatus: 'Normal'
-                                };
-                                setFormData(updated);
-                                saveDraft(updated);
-                              }}
-                              className="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline focus:outline-none cursor-pointer"
-                            >
-                              Choose Standard
-                            </button>
-                          )}
-                        </div>
-                        {formData.category === 'Others' ? (
-                          <div className="flex flex-col gap-1.5 text-left animate-fadeIn">
-                            <input
-                              type="text"
-                              placeholder="Specify Custom Subcategory (e.g. EV Charging Station, Solar Solutions)"
-                              value={formData.customCategoryName || ''}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                const updated = {
-                                  ...formData,
-                                  customCategoryName: val,
-                                  categoryStatus: 'Pending Review'
-                                };
-                                setFormData(updated);
-                                saveDraft(updated);
-                              }}
-                              className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                            />
-                            <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 mt-2 flex flex-col gap-1.5 text-xs text-left animate-fadeIn">
-                              <div className="flex items-center gap-2">
-                                <span className="font-extrabold text-blue-900">Category Status:</span>
-                                <span className="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide">
-                                  Pending Review
-                                </span>
-                              </div>
-                              <p className="text-blue-750 font-semibold leading-relaxed">
-                                "Your custom category request will be dynamically verified and approved/linked by superadmin upon publication."
-                              </p>
-                            </div>
-                          </div>
-                        ) : (
-                          <select
-                            name="category"
-                            value={getDynamicSubcategories(formData.requestedParentCategory).includes(formData.category) ? formData.category : ''}
-                            onChange={(e) => {
-                              const subVal = e.target.value;
-                              const isCustomParent = !getDynamicMainCategories().includes(formData.requestedParentCategory);
-                              const updated = {
-                                ...formData,
-                                category: subVal,
-                                customCategoryName: '',
-                                categoryStatus: (subVal === 'Others' || isCustomParent) ? 'Pending Review' : 'Normal'
-                              };
-                              setFormData(updated);
-                              saveDraft(updated);
-                            }}
-                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
-                          >
-                            <option value="">-- Choose Subcategory --</option>
-                            {getDynamicSubcategories(formData.requestedParentCategory).map(sub => (
-                              <option key={sub} value={sub}>{sub}</option>
-                            ))}
-                            <option value="Others">Others (Custom Category)</option>
-                          </select>
-                        )}
-                      </div>
-                    )}
 
                     <div className="flex flex-col gap-2">
                       <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Business Type <span className="text-red-500">*</span></label>

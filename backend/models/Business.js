@@ -309,16 +309,25 @@ const BusinessSchema = new mongoose.Schema({
        banner: { type: String }
      }
    ],
-   promotions: [
-     {
-       id: { type: String },
-       image: { type: String },
-       active: { type: Boolean, default: true },
-       isSponsored: { type: Boolean, default: false },
-       sponsoredStatus: { type: String, enum: ['none', 'pending', 'approved', 'rejected'], default: 'none' },
-       sponsoredExpiry: { type: Date }
-     }
-   ]
+    promotions: [
+      {
+        id: { type: String },
+        image: { type: String },
+        active: { type: Boolean, default: true },
+        isSponsored: { type: Boolean, default: false },
+        sponsoredStatus: { type: String, enum: ['none', 'pending', 'approved', 'rejected'], default: 'none' },
+        sponsoredExpiry: { type: Date }
+      }
+    ],
+    categories: [
+      {
+        categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
+        category: String,
+        type: String,
+        customCategoryName: String,
+        categoryStatus: { type: String, enum: ['Normal', 'Pending Review'], default: 'Normal' }
+      }
+    ]
 }, {
   timestamps: true
 });
@@ -330,8 +339,24 @@ BusinessSchema.pre('save', async function() {
   if (this.galleryUrls && this.galleryUrls.length && (!this.galleryImages || !this.galleryImages.length)) this.galleryImages = this.galleryUrls;
   if (this.galleryImages && this.galleryImages.length && (!this.galleryUrls || !this.galleryUrls.length)) this.galleryUrls = this.galleryImages;
   
-  if (this.category && (this.isModified('category') || !this.type)) {
-    this.type = this.category;
+  if (this.categories && this.categories.length > 0) {
+    if (this.categories.length > 5) {
+      throw new Error('You can choose at most 5 categories.');
+    }
+    const primary = this.categories[0];
+    this.categoryId = primary.categoryId;
+    this.category = primary.category;
+    this.type = primary.type || primary.category;
+    this.customCategoryName = primary.customCategoryName || '';
+    this.categoryStatus = primary.categoryStatus || 'Normal';
+  } else if (this.category) {
+    this.categories = [{
+      categoryId: this.categoryId,
+      category: this.category,
+      type: this.type || this.category,
+      customCategoryName: this.customCategoryName || '',
+      categoryStatus: this.categoryStatus || 'Normal'
+    }];
   }
 
   if (this.status) {
