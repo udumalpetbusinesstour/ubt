@@ -1755,15 +1755,15 @@ function BusinessesList() {
       return allBusinesses.filter(biz => {
         if (biz.status !== 'Approved') return false;
 
-        const parent = getParentCategory(biz.category || '');
-        const parentMatches = parent.toLowerCase() === selectedCategoryInExplore.toLowerCase() ||
+        const parentMatches = (biz.categories && biz.categories.some(c => c.category.toLowerCase() === selectedCategoryInExplore.toLowerCase())) ||
+                              getParentCategory(biz.category || '').toLowerCase() === selectedCategoryInExplore.toLowerCase() ||
                               (biz.requestedParentCategory && biz.requestedParentCategory.toLowerCase() === selectedCategoryInExplore.toLowerCase());
                               
         if (!parentMatches) return false;
 
         if (selectedSubcategoryInExplore && selectedSubcategoryInExplore !== 'All') {
-          const bizSub = (biz.category === 'Others' ? biz.customCategoryName : biz.category) || '';
-          const bizSubMatches = bizSub.toLowerCase() === selectedSubcategoryInExplore.toLowerCase();
+          const bizSubMatches = (biz.categories && biz.categories.some(c => (c.type === 'Others' ? c.customCategoryName : c.type).toLowerCase() === selectedSubcategoryInExplore.toLowerCase())) ||
+                                (biz.category === 'Others' ? biz.customCategoryName : biz.category)?.toLowerCase() === selectedSubcategoryInExplore.toLowerCase();
           if (!bizSubMatches) return false;
         }
         return true;
@@ -1893,7 +1893,7 @@ function BusinessesList() {
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4.5 text-left">
                     {searchResults.map((cat) => {
-                      const count = allBusinesses.filter(b => b.category?.toLowerCase() === cat.categoryName.toLowerCase()).length;
+                      const count = allBusinesses.filter(b => b.status === 'Approved' && (b.category?.toLowerCase() === cat.categoryName.toLowerCase() || (b.categories && b.categories.some(c => (c.type === 'Others' ? c.customCategoryName : c.type)?.toLowerCase() === cat.categoryName.toLowerCase())))).length;
                       return (
                         <div 
                            key={cat._id}
@@ -2052,7 +2052,7 @@ function BusinessesList() {
 
                       {/* Other related subcategories */}
                       {relatedSubcategories.map((cat) => {
-                        const count = allBusinesses.filter(b => b.category?.toLowerCase() === cat.categoryName.toLowerCase()).length;
+                        const count = allBusinesses.filter(b => b.status === 'Approved' && (b.category?.toLowerCase() === cat.categoryName.toLowerCase() || (b.categories && b.categories.some(c => (c.type === 'Others' ? c.customCategoryName : c.type)?.toLowerCase() === cat.categoryName.toLowerCase())))).length;
                         return (
                            <div 
                              key={cat._id}
@@ -2358,7 +2358,7 @@ function BusinessesList() {
               ) : (
                 <div className="flex flex-col gap-2 max-h-[560px] overflow-y-auto pr-1">
                   {hotCategories.map((cat) => {
-                    const count = allBusinesses.filter(b => b.category?.toLowerCase() === cat.categoryName.toLowerCase()).length;
+                    const count = allBusinesses.filter(b => b.status === 'Approved' && (b.category?.toLowerCase() === cat.categoryName.toLowerCase() || (b.categories && b.categories.some(c => (c.type === 'Others' ? c.customCategoryName : c.type)?.toLowerCase() === cat.categoryName.toLowerCase())))).length;
                     return (
                       <div 
                         key={cat._id}

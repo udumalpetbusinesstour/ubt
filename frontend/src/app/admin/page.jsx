@@ -164,6 +164,8 @@ export default function AdminDashboard() {
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [showPartnerModal, setShowPartnerModal] = useState(false);
   const [isFoundingMemberCheck, setIsFoundingMemberCheck] = useState(false);
+  const [modalCatQuery, setModalCatQuery] = useState('');
+  const [showModalCatDropdown, setShowModalCatDropdown] = useState(false);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -1069,6 +1071,59 @@ export default function AdminDashboard() {
       fetchNewsletterSubscribers();
     }
   }, [activeTab]);
+
+  const handleSaveBizCategories = async (updatedCats) => {
+    try {
+      if (updatedCats.length === 0) {
+        alert('A business must have at least one category.');
+        return;
+      }
+      const token = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/businesses/${selectedBiz._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          categories: updatedCats,
+          category: updatedCats[0]?.type || '',
+          requestedParentCategory: updatedCats[0]?.category || '',
+          customCategoryName: updatedCats[0]?.customCategoryName || '',
+          categoryStatus: updatedCats[0]?.categoryStatus || 'Normal'
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Update selectedBiz state
+        setSelectedBiz(prev => ({
+          ...prev,
+          categories: updatedCats,
+          category: updatedCats[0]?.type || '',
+          requestedParentCategory: updatedCats[0]?.category || '',
+          customCategoryName: updatedCats[0]?.customCategoryName || '',
+          categoryStatus: updatedCats[0]?.categoryStatus || 'Normal'
+        }));
+        
+        // Update businesses list state so table changes reflect immediately!
+        setBusinesses(prev => prev.map(b => b._id === selectedBiz._id ? {
+          ...b,
+          categories: updatedCats,
+          category: updatedCats[0]?.type || '',
+          requestedParentCategory: updatedCats[0]?.category || '',
+          customCategoryName: updatedCats[0]?.customCategoryName || '',
+          categoryStatus: updatedCats[0]?.categoryStatus || 'Normal'
+        } : b));
+        
+        showToast('Categories updated successfully!', 'success');
+      } else {
+        alert(data.message || 'Failed to update categories.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error updating categories.');
+    }
+  };
 
   useEffect(() => {
     const fetchSelectedBizBranches = async () => {
@@ -2581,9 +2636,20 @@ export default function AdminDashboard() {
                                   </div>
                                 </td>
                                 <td className="p-4.5">
-                                  <div className="flex flex-col">
-                                    <span className="font-bold text-slate-700 text-xs">{b.type}</span>
-                                    <span className="text-[10px] text-slate-400 mt-1 font-semibold">{b.locality}</span>
+                                  <div className="flex flex-col gap-1.5 text-left">
+                                    {b.categories && b.categories.length > 0 ? (
+                                      b.categories.map((c, idx) => (
+                                        <div key={idx} className="font-bold text-slate-700 text-xs leading-normal">
+                                          {c.type === 'Others' ? c.customCategoryName : c.type}
+                                          <span className="text-[9.5px] text-slate-400 font-semibold ml-1 block">
+                                            ({c.category})
+                                          </span>
+                                        </div>
+                                      ))
+                                    ) : (
+                                      <span className="font-bold text-slate-700 text-xs">{b.type}</span>
+                                    )}
+                                    <span className="text-[9.5px] text-[#027244] mt-1 font-extrabold tracking-wide uppercase">{b.locality}</span>
                                   </div>
                                 </td>
                                 <td className="p-4.5 font-bold text-slate-700 text-xs">
@@ -6601,6 +6667,113 @@ export default function AdminDashboard() {
                     <span className="font-bold text-slate-800">{selectedBiz.pincode}</span>
                   </div>
                 </div>
+              </div>
+
+              {/* Vetted Categories & Subcategories Editor */}
+              <div className="flex flex-col gap-3.5 border-t border-slate-100 pt-4.5">
+                <span className="font-extrabold text-xs text-slate-800 border-b border-slate-100 pb-1.5 uppercase tracking-wider">Categories & Subcategories</span>
+                
+                {/* Currently Vetted Categories List */}
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {(selectedBiz.categories || []).map((cat, idx) => (
+                    <div key={idx} className="bg-emerald-50 border border-emerald-250 text-emerald-800 text-[10.5px] font-bold py-1.5 px-3 rounded-xl flex items-center gap-2 shadow-2xs">
+                      <span>
+                        {cat.type === 'Others' ? cat.customCategoryName : cat.type}
+                        <span className="text-[9px] text-slate-400 font-semibold ml-1">
+                          ({cat.category})
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const updatedCats = selectedBiz.categories.filter((_, i) => i !== idx);
+                          await handleSaveBizCategories(updatedCats);
+                        }}
+                        className="text-emerald-600 hover:text-emerald-850 font-black cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  {(selectedBiz.categories || []).length === 0 && (
+                    <span className="text-xs text-slate-400 font-semibold italic">No categories selected.</span>
+                  )}
+                </div>
+
+                {/* Add new category dropdown */}
+                {(selectedBiz.categories || []).length < 5 && (
+                  <div className="flex flex-col gap-1.5 text-left relative font-sans mt-2">
+                    <label className="text-[10px] font-extrabold text-slate-450 uppercase tracking-widest">Add Category / Subcategory</label>
+                    <input
+                      type="text"
+                      placeholder="Search subcategory to add..."
+                      value={modalCatQuery}
+                      onFocus={() => setShowModalCatDropdown(true)}
+                      onBlur={() => setTimeout(() => setShowModalCatDropdown(false), 250)}
+                      onChange={(e) => {
+                        setModalCatQuery(e.target.value);
+                        setShowModalCatDropdown(true);
+                      }}
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244]"
+                    />
+
+                    {showModalCatDropdown && (
+                      <div className="absolute top-[100%] left-0 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 max-h-48 overflow-y-auto z-50 text-xs font-bold divide-y divide-slate-100">
+                        {(() => {
+                          const query = modalCatQuery.toLowerCase().trim();
+                          const filtered = presetCategories.filter(cat => 
+                            cat.categoryName && 
+                            cat.categoryName.toLowerCase().includes(query) &&
+                            cat.categoryName !== 'Others'
+                          );
+                          
+                          const uniqueFiltered = [];
+                          const seenNames = new Set();
+                          filtered.forEach(cat => {
+                            if (!seenNames.has(cat.categoryName.toLowerCase())) {
+                              seenNames.add(cat.categoryName.toLowerCase());
+                              uniqueFiltered.push(cat);
+                            }
+                          });
+
+                          return uniqueFiltered.map(cat => (
+                            <div
+                              key={cat._id}
+                              onClick={async () => {
+                                const isDuplicate = (selectedBiz.categories || []).some(c => 
+                                  (c.type === 'Others' ? c.customCategoryName.toLowerCase() : c.type.toLowerCase()) === cat.categoryName.toLowerCase()
+                                );
+                                if (isDuplicate) {
+                                  alert('This category is already added.');
+                                  return;
+                                }
+                                const updatedCats = [
+                                  ...(selectedBiz.categories || []),
+                                  {
+                                    categoryId: cat._id,
+                                    category: cat.parentCategory || 'Others',
+                                    type: cat.categoryName,
+                                    customCategoryName: '',
+                                    categoryStatus: 'Normal'
+                                  }
+                                ];
+                                await handleSaveBizCategories(updatedCats);
+                                setModalCatQuery('');
+                                setShowModalCatDropdown(false);
+                              }}
+                              className="p-2.5 hover:bg-slate-50 cursor-pointer flex justify-between items-center text-left"
+                            >
+                              <span className="text-slate-800 font-bold">{cat.categoryName}</span>
+                              <span className="text-[9.5px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                                {cat.parentCategory}
+                              </span>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Uploaded Photos and Timings specifications */}
