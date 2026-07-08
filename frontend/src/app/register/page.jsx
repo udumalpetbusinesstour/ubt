@@ -57,7 +57,9 @@ export default function Register() {
     setError('');
     try {
       const refCode = searchParams.get('ref') || '';
-      const res = await fetch('http://localhost:5000/api/auth/register', {
+      const redirect = searchParams.get('redirect') || '';
+      const registerUrl = `http://localhost:5000/api/auth/register${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`;
+      const res = await fetch(registerUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

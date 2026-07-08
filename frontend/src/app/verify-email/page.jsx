@@ -8,6 +8,7 @@ export default function VerifyEmail() {
   
   const email = searchParams.get('email');
   const token = searchParams.get('token');
+  const redirect = searchParams.get('redirect');
 
   const [status, setStatus] = useState('verifying'); // verifying | success | error
   const [message, setMessage] = useState('');
@@ -46,10 +47,14 @@ export default function VerifyEmail() {
               setCountdown((prev) => {
                 if (prev <= 1) {
                   clearInterval(interval);
-                  if (userData.role === 'partner') {
-                    navigate('/partner-register');
+                  if (redirect && redirect !== '/' && redirect !== '/login' && redirect !== '/register') {
+                    navigate(redirect);
                   } else {
-                    navigate('/add-business');
+                    if (userData.role === 'partner') {
+                      navigate('/partner-register');
+                    } else {
+                      navigate('/add-business');
+                    }
                   }
                 }
                 return prev - 1;
@@ -72,7 +77,7 @@ export default function VerifyEmail() {
     };
 
     performVerification();
-  }, [email, token, navigate]);
+  }, [email, token, navigate, redirect]);
 
   return (
     <div className="w-full flex flex-col items-center bg-[#F8FAFC] py-16 px-4 md:px-8 font-sans min-h-[85vh] justify-center animate-fadeIn">
@@ -96,10 +101,10 @@ export default function VerifyEmail() {
         {/* Verification Success */}
         {status === 'success' && (
           <div className="flex flex-col items-center gap-4 py-4 animate-scaleUp">
-            <div className="h-16 w-16 rounded-full bg-emerald-100 text-emerald-650 flex items-center justify-center border border-emerald-200 shadow">
+            <div className="h-16 w-16 rounded-full bg-emerald-100 text-emerald-655 flex items-center justify-center border border-emerald-200 shadow">
               <CheckCircle2 className="h-9 w-9 animate-bounce text-emerald-600" />
             </div>
-            <h3 className="text-2xl font-black text-slate-850 tracking-tight mt-2">
+            <h3 className="text-2xl font-black text-slate-855 tracking-tight mt-2">
               Verification Successful!
             </h3>
             <p className="text-xs text-slate-500 font-semibold px-4 leading-relaxed animate-fadeIn">
@@ -107,21 +112,25 @@ export default function VerifyEmail() {
             </p>
             
             <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 mt-2 text-xs font-semibold text-emerald-850 w-full max-w-sm">
-              Redirecting you to dashboard in <span className="font-black text-emerald-650 text-sm">{countdown}</span> seconds...
+              Redirecting you to your destination in <span className="font-black text-emerald-650 text-sm">{countdown}</span> seconds...
             </div>
 
             <button
               onClick={() => {
                 const user = JSON.parse(localStorage.getItem('ubt_user') || '{}');
-                if (user.role === 'partner') {
-                  navigate('/partner-register');
+                if (redirect && redirect !== '/' && redirect !== '/login' && redirect !== '/register') {
+                  navigate(redirect);
                 } else {
-                  navigate('/add-business');
+                  if (user.role === 'partner') {
+                    navigate('/partner-register');
+                  } else {
+                    navigate('/add-business');
+                  }
                 }
               }}
               className="mt-4 w-full max-w-xs py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 transition-all group"
             >
-              <span>Go to Dashboard Now</span>
+              <span>Go to Destination Now</span>
               <ArrowRight className="h-4 w-4 text-white group-hover:translate-x-1 transition-transform" />
             </button>
           </div>

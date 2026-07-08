@@ -106,7 +106,8 @@ const registerUser = async (req, res, next) => {
     }
 
     const origin = req.get('origin') || 'https://udumalpet.business';
-    const verifyLink = `${origin}/verify-email?email=${encodeURIComponent(email)}&token=${otp}`;
+    const redirectParam = req.query.redirect ? `&redirect=${encodeURIComponent(req.query.redirect)}` : '';
+    const verifyLink = `${origin}/verify-email?email=${encodeURIComponent(email)}&token=${otp}${redirectParam}`;
 
     try {
       await sendEmail({
@@ -188,7 +189,8 @@ const loginUser = async (req, res, next) => {
         await user.save();
 
         const origin = req.get('origin') || 'https://udumalpet.business';
-        const verifyLink = `${origin}/verify-email?email=${encodeURIComponent(user.email)}&token=${otp}`;
+        const redirectParam = req.query.redirect ? `&redirect=${encodeURIComponent(req.query.redirect)}` : '';
+        const verifyLink = `${origin}/verify-email?email=${encodeURIComponent(user.email)}&token=${otp}${redirectParam}`;
 
         try {
           await sendEmail({
@@ -737,7 +739,8 @@ const resendVerificationOtp = async (req, res, next) => {
     await user.save();
 
     const origin = req.get('origin') || 'https://udumalpet.business';
-    const verifyLink = `${origin}/verify-email?email=${encodeURIComponent(user.email)}&token=${otp}`;
+    const redirectParam = req.query.redirect ? `&redirect=${encodeURIComponent(req.query.redirect)}` : '';
+    const verifyLink = `${origin}/verify-email?email=${encodeURIComponent(user.email)}&token=${otp}${redirectParam}`;
 
     try {
       await sendEmail({
