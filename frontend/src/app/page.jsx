@@ -1719,64 +1719,70 @@ export default function Home() {
 
           <div className="mx-auto relative max-w-full w-fit">
             {/* Scroll Left Button */}
-            <button 
-              onClick={() => handleScrollTestimonials('left')}
-              className="absolute left-2 md:left-4 2xl:-left-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
-              aria-label="Scroll Testimonials Left"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
+            {testimonials && testimonials.length > 1 && (
+              <button 
+                onClick={() => handleScrollTestimonials('left')}
+                className="absolute left-2 md:left-4 2xl:-left-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+                aria-label="Scroll Testimonials Left"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+            )}
 
-            <div 
-              ref={testimonialScrollRef}
-              className="mx-auto flex overflow-x-auto gap-6 pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden animate-fadeIn scroll-smooth px-8 md:px-12 2xl:px-0 w-fit max-w-full"
-            >
-                {testimonials.map((t, idx) => (
-                <div 
-                  key={t._id || idx}
-                  className="w-[280px] sm:w-[350px] bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-7 flex flex-col justify-between gap-4 shrink-0 snap-center sm:snap-start shadow-2xs hover:shadow-xs transition-all relative"
-                >
-                  <div className="flex flex-col gap-3 sm:gap-4">
-                    {/* Review stars */}
-                    <div className="flex items-center text-amber-400">
-                      {[...Array(t.rating || 5)].map((_, i) => (
-                        <Star key={i} className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-current" />
-                      ))}
-                      {[...Array(5 - (t.rating || 5))].map((_, i) => (
-                        <Star key={i + 10} className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-200" />
-                      ))}
+            {testimonials && testimonials.length > 0 && (
+              <div 
+                ref={testimonialScrollRef}
+                className="mx-auto flex overflow-x-auto gap-6 pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden animate-fadeIn scroll-smooth px-8 md:px-12 2xl:px-0 w-fit max-w-full"
+              >
+                  {testimonials.map((t, idx) => (
+                  <div 
+                    key={t._id || idx}
+                    className="w-[280px] sm:w-[350px] bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-7 flex flex-col justify-between gap-4 shrink-0 snap-center sm:snap-start shadow-2xs hover:shadow-xs transition-all relative"
+                  >
+                    <div className="flex flex-col gap-3 sm:gap-4">
+                      {/* Review stars */}
+                      <div className="flex items-center text-amber-400">
+                        {[...Array(t.rating || 5)].map((_, i) => (
+                          <Star key={i} className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-current" />
+                        ))}
+                        {[...Array(5 - (t.rating || 5))].map((_, i) => (
+                          <Star key={i + 10} className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-200" />
+                        ))}
+                      </div>
+                      
+                      <p className="text-slate-600 font-semibold italic text-xs sm:text-[13px] leading-relaxed">
+                        {t.text ? `"${t.text}"` : ''}
+                      </p>
                     </div>
-                    
-                    <p className="text-slate-600 font-semibold italic text-xs sm:text-[13px] leading-relaxed">
-                      {t.text ? `"${t.text}"` : ''}
-                    </p>
-                  </div>
 
-                  <div className="flex items-center gap-2 sm:gap-3 mt-1 border-t border-slate-100/70 pt-3 sm:pt-4">
-                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border border-slate-200 bg-[#E6F2ED] text-[#027244] font-black text-[10px] sm:text-xs flex items-center justify-center select-none shadow-2xs uppercase">
-                      {(t.authorName || '').slice(0, 2)}
-                    </div>
-                    <div className="text-left flex flex-col gap-0.5">
-                      <span className="font-extrabold text-[11px] sm:text-xs text-slate-800 leading-none">{t.authorName || ''}</span>
-                      {t.role && t.role.trim() && (
-                        <span className="text-[8px] sm:text-[9px] font-bold text-[#027244] uppercase tracking-wider bg-emerald-50 border border-emerald-100 rounded-sm px-1.5 py-0.5 leading-none inline-block mt-0.5">
-                          {t.role.trim()}
-                        </span>
-                      )}
+                    <div className="flex items-center gap-2 sm:gap-3 mt-1 border-t border-slate-100/70 pt-3 sm:pt-4">
+                      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border border-slate-200 bg-[#E6F2ED] text-[#027244] font-black text-[10px] sm:text-xs flex items-center justify-center select-none shadow-2xs uppercase">
+                        {(t.authorName || '').slice(0, 2)}
+                      </div>
+                      <div className="text-left flex flex-col gap-0.5">
+                        <span className="font-extrabold text-[11px] sm:text-xs text-slate-800 leading-none">{t.authorName || ''}</span>
+                        {t.role && t.role.trim() && (
+                          <span className="text-[8px] sm:text-[9px] font-bold text-[#027244] uppercase tracking-wider bg-emerald-50 border border-emerald-100 rounded-sm px-1.5 py-0.5 leading-none inline-block mt-0.5">
+                            {t.role.trim()}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             {/* Scroll Right Button */}
-            <button 
-              onClick={() => handleScrollTestimonials('right')}
-              className="absolute right-2 md:right-4 2xl:-right-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
-              aria-label="Scroll Testimonials Right"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
+            {testimonials && testimonials.length > 1 && (
+              <button 
+                onClick={() => handleScrollTestimonials('right')}
+                className="absolute right-2 md:right-4 2xl:-right-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+                aria-label="Scroll Testimonials Right"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            )}
           </div>
 
           {/* Ask business owners, event managers, blog writers, or visitors to share their thoughts */}
