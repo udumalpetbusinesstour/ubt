@@ -6700,7 +6700,10 @@ export default function AdminDashboard() {
                                 onClick={async (e) => {
                                   e.stopPropagation();
                                   e.preventDefault();
-                                  if (window.confirm(`Are you sure you want to remove the category "${parentName} › ${subName}"?`)) {
+                                  console.log("Delete button clicked for category:", parentName, "›", subName);
+                                  const confirmed = window.confirm(`Are you sure you want to remove the category "${parentName} › ${subName}"?`);
+                                  console.log("User confirmation response:", confirmed);
+                                  if (confirmed) {
                                     const updatedCats = selectedBiz.categories.filter((_, i) => i !== originalIndex);
                                     await handleSaveBizCategories(updatedCats);
                                   }
