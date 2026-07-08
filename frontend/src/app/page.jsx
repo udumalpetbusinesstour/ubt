@@ -841,7 +841,7 @@ export default function Home() {
             } else if (parsed.role === 'event_manager') {
               loggedInRole = 'Event Manager';
             } else if (parsed.role === 'viewer' || parsed.role === 'user') {
-              loggedInRole = 'Viewer';
+              loggedInRole = 'Visitor / User';
             }
           }
         } catch (e) {
@@ -1011,7 +1011,7 @@ export default function Home() {
           } else if (parsed.role === 'event_manager') {
             loggedInRole = 'Event Manager';
           } else if (parsed.role === 'viewer' || parsed.role === 'user') {
-            loggedInRole = 'Viewer';
+            loggedInRole = 'Visitor / User';
           }
         }
       } catch (e) {
@@ -1644,13 +1644,13 @@ export default function Home() {
               }
 
               return (
-                <div className="w-full flex items-center justify-center py-10 px-4 bg-slate-50 border border-dashed border-slate-200 rounded-3xl max-w-xl mx-auto my-2">
+                <div className="w-full flex items-center justify-center py-12 px-4 bg-slate-50 border border-dashed border-slate-200 rounded-3xl max-w-xl mx-auto my-2">
                   <div className="flex flex-col items-center text-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center animate-pulse">
                       <Users className="h-6 w-6" />
                     </div>
-                    <p className="text-sm font-extrabold text-[#001c41] tracking-tight">Refer others to be in top 10 contributors</p>
-                    <p className="text-xs text-slate-450 font-medium max-w-xs leading-relaxed">
+                    <p className="text-base sm:text-lg font-extrabold text-[#001c41] tracking-tight">Refer others to be in top 10 contributors</p>
+                    <p className="text-xs sm:text-sm text-slate-500 font-semibold max-w-sm leading-relaxed mt-1">
                       Help grow our community by inviting trusted business owners to join UBT.
                     </p>
                   </div>
@@ -1748,7 +1748,7 @@ export default function Home() {
                     </div>
                     
                     <p className="text-slate-600 font-semibold italic text-xs sm:text-[13px] leading-relaxed">
-                      "{t.text || ''}"
+                      {t.text ? `"${t.text}"` : ''}
                     </p>
                   </div>
 
@@ -1758,9 +1758,11 @@ export default function Home() {
                     </div>
                     <div className="text-left flex flex-col gap-0.5">
                       <span className="font-extrabold text-[11px] sm:text-xs text-slate-800 leading-none">{t.authorName || ''}</span>
-                      <span className="text-[8px] sm:text-[9px] font-bold text-[#027244] uppercase tracking-wider bg-emerald-50 border border-emerald-100 rounded-sm px-1.5 py-0.5 leading-none inline-block mt-0.5">
-                        {t.role || 'Business Owner'}
-                      </span>
+                      {t.role && t.role.trim() && (
+                        <span className="text-[8px] sm:text-[9px] font-bold text-[#027244] uppercase tracking-wider bg-emerald-50 border border-emerald-100 rounded-sm px-1.5 py-0.5 leading-none inline-block mt-0.5">
+                          {t.role.trim()}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1777,9 +1779,9 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Ask business owners, event managers, blog writers to share their thoughts */}
+          {/* Ask business owners, event managers, blog writers, or visitors to share their thoughts */}
           <div className="flex flex-col items-center gap-3.5 mt-4">
-            <span className="text-sm text-slate-500 font-medium">Are you a Business Owner, Event Manager, or Blog Writer using UBT?</span>
+            <span className="text-sm text-slate-500 font-medium">Are you a Business Owner, Event Manager, Blog Writer, or Visitor using UBT?</span>
             <button
               onClick={handleShareThoughtsClick}
               className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-8 rounded-xl transition-all shadow-md hover:shadow-none md:shadow-lg flex items-center gap-1.5 cursor-pointer"
@@ -1974,7 +1976,7 @@ export default function Home() {
                     <option value="Business Owner">Business Owner</option>
                     <option value="Event Manager">Event Manager</option>
                     <option value="Blog Writer">Blog Writer</option>
-                    <option value="Viewer">Viewer</option>
+                    <option value="Visitor / User">Visitor / User</option>
                     <option value="Other">Other Community Member</option>
                   </select>
                 </div>
