@@ -13,22 +13,13 @@ async function main() {
   const Testimonial = mongoose.connection.db.collection('testimonials');
   const Event = mongoose.connection.db.collection('events');
 
-  // 1. Delete mock GMB testimonials
-  const tResult = await Testimonial.deleteMany({
-    authorName: { $in: ['Ramanathan K.', 'Santhosh Kumar', 'Meera Nair'] }
-  });
-  console.log(`✓ Deleted ${tResult.deletedCount} mock testimonials from database.`);
+  // 1. Delete ALL testimonials from database
+  const tResult = await Testimonial.deleteMany({});
+  console.log(`✓ Deleted ${tResult.deletedCount} testimonials from database.`);
 
-  // 2. Delete mock seeded events
-  const eResult = await Event.deleteMany({
-    title: { $in: [
-      'Udumalpet Marathon 2025',
-      'Arulmigu Subramanya Swamy Temple Festival',
-      'Udumalpet Startup Meet 2025',
-      'Carnatic Music Concert'
-    ] }
-  });
-  console.log(`✓ Deleted ${eResult.deletedCount} mock events from database.`);
+  // 2. Delete ALL events from database
+  const eResult = await Event.deleteMany({});
+  console.log(`✓ Deleted ${eResult.deletedCount} events from database.`);
 
   await mongoose.disconnect();
   console.log('Disconnected from MongoDB.');
