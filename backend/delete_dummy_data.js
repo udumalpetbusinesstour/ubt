@@ -13,9 +13,9 @@ async function main() {
   const Testimonial = mongoose.connection.db.collection('testimonials');
   const Event = mongoose.connection.db.collection('events');
 
-  // 1. Delete ALL testimonials from database
-  const tResult = await Testimonial.deleteMany({});
-  console.log(`✓ Deleted ${tResult.deletedCount} testimonials from database.`);
+  // 1. Mark ALL current testimonials as Rejected (so they disappear from homepage and aren't re-imported by cron)
+  const tResult = await Testimonial.updateMany({}, { $set: { status: 'Rejected' } });
+  console.log(`✓ Marked ${tResult.modifiedCount} testimonials as Rejected in database.`);
 
   // 2. Delete ALL events from database
   const eResult = await Event.deleteMany({});

@@ -122,7 +122,9 @@ router.delete('/:id', protect, admin, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Testimonial not found.' });
     }
 
-    await testimonial.deleteOne();
+    // Soft delete/Reject so Google Review cron does not re-import it
+    testimonial.status = 'Rejected';
+    await testimonial.save();
     res.json({ success: true, message: 'Testimonial deleted successfully.' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
