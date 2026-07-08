@@ -108,13 +108,6 @@ const initializeServer = async () => {
     const { syncAllApprovedCategories } = require('./utils/categoryHelper');
     await syncAllApprovedCategories();
 
-    // 8. Purge existing mock seeded events and testimonials from the database
-    console.log('[Boot] Purging existing mock events and GMB testimonials...');
-    const Testimonial = require('./models/Testimonial');
-    await Testimonial.deleteMany({ authorName: { $in: ['Ramanathan K.', 'Santhosh Kumar', 'Meera Nair'] } });
-    const Event = require('./models/Event');
-    await Event.deleteMany({ title: { $in: ['Udumalpet Marathon 2025', 'Arulmigu Subramanya Swamy Temple Festival', 'Udumalpet Startup Meet 2025', 'Carnatic Music Concert'] } });
-
     console.log('UBT Backend Subsystems initialized and synced successfully.');
   } catch (error) {
     console.error('API bootloader initialization sequence failed:', error.message);
