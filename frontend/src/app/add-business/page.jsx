@@ -1704,7 +1704,8 @@ export default function AddBusiness() {
                     disabled={autofillLoading}
                     onClick={async () => {
                       if (!formData.googleBusinessLink) {
-                        setError("Please enter your Google Business Profile link.");
+                        setError('');
+                        setEligibilityMethod('pincode');
                         return;
                       }
                       setError("");
@@ -2071,7 +2072,8 @@ export default function AddBusiness() {
                     disabled={branchAutofillLoading}
                     onClick={async () => {
                       if (!branchForm.googleBusinessLink) {
-                        setError("Please enter your Google Business Profile link.");
+                        setError('');
+                        setBranchEligibilityMethod('pincode');
                         return;
                       }
                       setError("");
