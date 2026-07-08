@@ -2264,7 +2264,7 @@ export default function AddBusiness() {
                             {formData.categories.map((cat, idx) => (
                               <div key={idx} className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold py-1.5 px-3 rounded-xl flex items-center gap-2 shadow-sm animate-fadeIn">
                                 <span>
-                                  {cat.category} &gt; {cat.type === 'Others' ? cat.customCategoryName : cat.type}
+                                  {cat.type === 'Others' ? cat.customCategoryName : cat.type}
                                 </span>
                                 <button
                                   type="button"
@@ -2331,7 +2331,7 @@ export default function AddBusiness() {
                                     }
                                   });
 
-                                  const suggestions = uniqueFiltered.slice(0, 10);
+                                  const suggestions = uniqueFiltered;
                                   const items = [];
 
                                   suggestions.forEach(cat => {
@@ -2376,9 +2376,6 @@ export default function AddBusiness() {
                                         className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/80 cursor-pointer flex justify-between items-center transition-colors text-left"
                                       >
                                         <span className="text-slate-850 dark:text-slate-200 font-bold">{cat.categoryName}</span>
-                                        <span className="text-[10px] text-slate-400 font-bold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
-                                          {cat.parentCategory || 'Others'}
-                                        </span>
                                       </div>
                                     );
                                   });
