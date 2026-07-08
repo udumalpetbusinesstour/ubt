@@ -6662,37 +6662,57 @@ export default function AdminDashboard() {
               <div className="flex flex-col gap-3.5 border-t border-slate-100 pt-4.5">
                 <span className="font-extrabold text-xs text-slate-800 border-b border-slate-100 pb-1.5 uppercase tracking-wider">Categories & Subcategories</span>
                 
-                {/* Currently Vetted Categories List */}
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {(selectedBiz.categories || []).map((cat, idx) => {
-                    const matched = presetCategories.find(c => c._id === cat.categoryId);
-                    const parentName = matched ? matched.parentCategory : cat.category;
-                    const subName = matched ? matched.categoryName : (cat.type === 'Others' ? cat.customCategoryName : cat.type);
-                    return (
-                      <div key={idx} className="bg-emerald-50 border border-emerald-250 text-emerald-800 text-[10.5px] font-bold py-1.5 px-3 rounded-xl flex items-center gap-2 shadow-2xs">
-                        <span>
-                          <span className="text-slate-500 font-extrabold uppercase text-[9px] tracking-wider">{parentName}</span>
-                          <span className="text-slate-400 font-normal mx-1.5">›</span>
-                          <span className="text-emerald-850 font-extrabold">{subName}</span>
+                {/* Grouped Vetted Categories List */}
+                <div className="flex flex-col gap-3 mt-1.5 text-left">
+                  {(() => {
+                    const groupedCategories = {};
+                    (selectedBiz.categories || []).forEach((cat, idx) => {
+                      const matched = presetCategories.find(c => c._id === cat.categoryId);
+                      const parentName = matched ? matched.parentCategory : cat.category;
+                      const subName = matched ? matched.categoryName : (cat.type === 'Others' ? cat.customCategoryName : cat.type);
+                      
+                      if (!groupedCategories[parentName]) {
+                        groupedCategories[parentName] = [];
+                      }
+                      groupedCategories[parentName].push({
+                        originalIndex: idx,
+                        subName,
+                        cat
+                      });
+                    });
+
+                    const parentNames = Object.keys(groupedCategories);
+                    if (parentNames.length === 0) {
+                      return <span className="text-xs text-slate-400 font-semibold italic">No categories selected.</span>;
+                    }
+
+                    return parentNames.map((parentName) => (
+                      <div key={parentName} className="bg-slate-50/70 border border-slate-200/60 rounded-2xl p-3 flex flex-col gap-2">
+                        <span className="text-[9px] font-black text-slate-450 uppercase tracking-widest border-b border-slate-100 pb-1 w-fit">
+                          {parentName}
                         </span>
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            if (window.confirm(`Are you sure you want to remove the category "${parentName} › ${subName}"?`)) {
-                              const updatedCats = selectedBiz.categories.filter((_, i) => i !== idx);
-                              await handleSaveBizCategories(updatedCats);
-                            }
-                          }}
-                          className="text-emerald-600 hover:text-emerald-850 font-black cursor-pointer"
-                        >
-                          ✕
-                        </button>
+                        <div className="flex flex-wrap gap-2 mt-0.5">
+                          {groupedCategories[parentName].map(({ originalIndex, subName }) => (
+                            <div key={originalIndex} className="bg-white border border-slate-200/80 hover:border-emerald-250 text-slate-700 hover:text-emerald-800 text-[10.5px] font-bold py-1.5 px-3 rounded-xl flex items-center gap-1.5 shadow-3xs transition-colors">
+                              <span>{subName}</span>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (window.confirm(`Are you sure you want to remove the category "${parentName} › ${subName}"?`)) {
+                                    const updatedCats = selectedBiz.categories.filter((_, i) => i !== originalIndex);
+                                    await handleSaveBizCategories(updatedCats);
+                                  }
+                                }}
+                                className="text-slate-400 hover:text-red-600 font-black cursor-pointer shrink-0 ml-0.5"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    );
-                  })}
-                  {(selectedBiz.categories || []).length === 0 && (
-                    <span className="text-xs text-slate-400 font-semibold italic">No categories selected.</span>
-                  )}
+                    ));
+                  })()}
                 </div>
 
                 {/* Add new category dropdown */}
