@@ -291,6 +291,9 @@ function BusinessesList() {
     return null;
   }, [urlSlug, dbCategories]);
 
+  const focusParam = searchParams.get('focus');
+  const isCategoriesView = focusParam === 'categories' || !!resolvedFromSlug;
+
   const initialAnonForm = {
     name: '',
     requestedParentCategory: 'Public Sector',
@@ -1467,8 +1470,6 @@ function BusinessesList() {
     return pages;
   };
 
-  const focusParam = searchParams.get('focus');
-  const isCategoriesView = focusParam === 'categories' || !!resolvedFromSlug;
   const isAboutView = focusParam === 'about';
   const isContactView = focusParam === 'contact';
 
