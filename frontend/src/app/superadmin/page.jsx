@@ -444,6 +444,7 @@ export default function SuperAdminDashboard() {
   const [selectedPresetForMerge, setSelectedPresetForMerge] = useState('');
   const [customNewCategoryName, setCustomNewCategoryName] = useState('');
   const [customNewCategoryIcon, setCustomNewCategoryIcon] = useState('Store');
+  const [customNewCategoryParent, setCustomNewCategoryParent] = useState('');
 
   const fetchQueries = async () => {
     setQueriesLoading(true);
@@ -925,8 +926,8 @@ const handlePartnerAction = async (partnerId, action) => {
     }
   }, [fromDate, toDate]);
 
-  const loadPlatformRealData = async () => {
-    setLoading(true);
+  const loadPlatformRealData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const headers = { 'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` };
       
@@ -1270,12 +1271,13 @@ const handlePartnerAction = async (partnerId, action) => {
       const customName = selectedBiz.customCategoryName || '';
       setCustomNewCategoryName(customName);
       setCustomNewCategoryIcon(mapKeywordToIcon(customName));
+      setCustomNewCategoryParent('');
       setSelectedPresetForAssign('');
       setSelectedPresetForMerge('');
     }
   }, [selectedBiz]);
 
-  const handleResolveCategory = async (bizId, action, categoryId = null, newCategoryName = '', icon = '') => {
+  const handleResolveCategory = async (bizId, action, categoryId = null, newCategoryName = '', icon = '', parentCategory = '') => {
     try {
       const res = await fetch('http://localhost:5000/api/superadmin/category-review/resolve', {
         method: 'POST',
@@ -1288,14 +1290,15 @@ const handlePartnerAction = async (partnerId, action) => {
           action,
           categoryId,
           newCategoryName,
-          icon
+          icon,
+          parentCategory
         })
       });
       const data = await res.json();
       if (data.success) {
         alert(data.message || 'Category resolved successfully!');
         // Refresh data
-        loadPlatformRealData();
+        loadPlatformRealData(true);
         // Update selectedBiz state inline
         setSelectedBiz(prev => ({
           ...prev,
@@ -1329,7 +1332,7 @@ const handlePartnerAction = async (partnerId, action) => {
       });
       if (res.ok) {
         alert(`Admin status toggled successfully to ${nextStatus}!`);
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -1357,7 +1360,7 @@ const handlePartnerAction = async (partnerId, action) => {
       if (data.success) {
         alert('New Admin role registered successfully! Default password is: password123');
         setNewAdmin({ fullName: '', email: '', permissions: 'Full' });
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         alert(data.message || 'Failed to generate admin desk.');
       }
@@ -1380,7 +1383,7 @@ const handlePartnerAction = async (partnerId, action) => {
       });
       const data = await res.json();
       if (data.success) {
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         throw new Error(data.message);
       }
@@ -1419,7 +1422,7 @@ const handlePartnerAction = async (partnerId, action) => {
         alert('Plan configurations updated successfully!');
         setEditingPlan(null);
         fetchPlans();
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         alert(data.message || 'Failed to update plan.');
       }
@@ -1456,7 +1459,7 @@ const handlePartnerAction = async (partnerId, action) => {
       });
       if (res.ok) {
         alert(`Listing marked as ${nextStatus} successfully!`);
-        loadPlatformRealData();
+        loadPlatformRealData(true);
         return true;
       }
     } catch (err) {
@@ -1472,7 +1475,7 @@ const handlePartnerAction = async (partnerId, action) => {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` }
       });
       if (res.ok) {
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -1488,7 +1491,7 @@ const handlePartnerAction = async (partnerId, action) => {
         });
         if (res.ok) {
           alert('Listing and its cascaded assets deleted successfully!');
-          loadPlatformRealData();
+          loadPlatformRealData(true);
         }
       } catch (err) {
         console.error(err);
@@ -1509,7 +1512,7 @@ const handlePartnerAction = async (partnerId, action) => {
       if (data.success || res.ok) {
         alert('User registration deleted successfully.');
         setSignups(prev => prev.filter(u => u._id !== userId));
-        loadPlatformRealData(); // refresh everything to update cascades
+        loadPlatformRealData(true); // refresh everything to update cascades
       } else {
         alert(data.message || 'Failed to delete signup.');
       }
@@ -1573,7 +1576,7 @@ const handlePartnerAction = async (partnerId, action) => {
       
       alert(`Bulk delete complete. Successfully deleted: ${deletedCount} users. Failed: ${failedCount}.`);
       setSelectedSignups([]);
-      loadPlatformRealData();
+      loadPlatformRealData(true);
     } catch (err) {
       console.error(err);
       alert('An error occurred during bulk deletion.');
@@ -1593,7 +1596,7 @@ const handlePartnerAction = async (partnerId, action) => {
       const data = await res.json();
       if (data.success) {
         showToast(data.message || `Sponsored ad ${action}ed successfully!`, 'success');
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         showToast(data.message || `Failed to ${action} sponsored ad.`, 'error');
       }
@@ -1622,7 +1625,7 @@ const handlePartnerAction = async (partnerId, action) => {
           const data = await res.json();
           if (data.success) {
             showToast(data.message || `Sponsored ad ${action}d successfully!`, 'success');
-            loadPlatformRealData();
+            loadPlatformRealData(true);
           } else {
             showToast(data.message || `Failed to ${action} sponsored ad.`, 'error');
           }
@@ -1650,7 +1653,7 @@ const handlePartnerAction = async (partnerId, action) => {
           const data = await res.json();
           if (data.success) {
             showToast(data.message || 'Sponsored ad deleted successfully!', 'success');
-            loadPlatformRealData();
+            loadPlatformRealData(true);
           } else {
             showToast(data.message || 'Failed to delete sponsored ad.', 'error');
           }
@@ -1721,7 +1724,7 @@ const handlePartnerAction = async (partnerId, action) => {
       setDirectAdPreview('');
       setDirectAdExpiryDays(30);
 
-      loadPlatformRealData();
+      loadPlatformRealData(true);
     } catch (err) {
       console.error(err);
       setDirectAdError(err.message || 'An error occurred during submission');
@@ -1779,7 +1782,7 @@ const handlePartnerAction = async (partnerId, action) => {
         setShowExtendSubModal(false);
         setSelectedBizForExtend(null);
         setCustomExtendDays('');
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -1806,7 +1809,7 @@ const handlePartnerAction = async (partnerId, action) => {
       if (res.ok && data.success) {
         alert(`Successfully activated premium subscription for Business ID ${directExtendBizId.trim()} for ${directExtendDays} days!`);
         setDirectExtendBizId('');
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         alert(data.message || 'Failed to activate subscription. Please check if the Business ID is correct.');
       }
@@ -1833,7 +1836,7 @@ const handlePartnerAction = async (partnerId, action) => {
       });
       if (res.ok) {
         alert(`Account status updated to ${nextStatus}!`);
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -1857,7 +1860,7 @@ const handlePartnerAction = async (partnerId, action) => {
         body: JSON.stringify({ status, suggestions })
       });
       if (res.ok) {
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -1878,7 +1881,7 @@ const handlePartnerAction = async (partnerId, action) => {
       const data = await res.json();
       if (data.success) {
         alert('Blog post successfully deleted!');
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         alert(data.message || 'Failed to delete blog.');
       }
@@ -1904,7 +1907,7 @@ const handlePartnerAction = async (partnerId, action) => {
         body: JSON.stringify({ status })
       });
       if (res.ok) {
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -1919,7 +1922,7 @@ const handlePartnerAction = async (partnerId, action) => {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` }
         });
         if (res.ok) {
-          loadPlatformRealData();
+          loadPlatformRealData(true);
         }
       } else {
         const res = await fetch(`http://localhost:5000/api/superadmin/reviews/${revId}/status`, {
@@ -1931,7 +1934,7 @@ const handlePartnerAction = async (partnerId, action) => {
           body: JSON.stringify({ status: action })
         });
         if (res.ok) {
-          loadPlatformRealData();
+          loadPlatformRealData(true);
         }
       }
     } catch (err) {
@@ -1950,7 +1953,7 @@ const handlePartnerAction = async (partnerId, action) => {
         body: JSON.stringify({ replyText: 'Status moderate check', status: nextStatus })
       });
       if (res.ok) {
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -1973,7 +1976,7 @@ const handlePartnerAction = async (partnerId, action) => {
         setShowTicketModal(false);
         setTicketReplyText('');
         setSelectedTicket(null);
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -1999,7 +2002,7 @@ const handlePartnerAction = async (partnerId, action) => {
       const data = await res.json();
       if (data.success) {
         alert(data.message || "Category request resolved successfully!");
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         alert(data.message || "Failed to resolve request.");
       }
@@ -2022,7 +2025,7 @@ const handlePartnerAction = async (partnerId, action) => {
       const data = await res.json();
       if (data.success) {
         alert("Category renamed successfully!");
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -2046,7 +2049,7 @@ const handlePartnerAction = async (partnerId, action) => {
       const data = await res.json();
       if (data.success) {
         alert(`Main category renamed! ${data.data?.modifiedCount || 0} subcategories updated.`);
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         alert('Error: ' + (data.message || 'Rename failed'));
       }
@@ -2067,7 +2070,7 @@ const handlePartnerAction = async (partnerId, action) => {
       const data = await res.json();
       if (data.success) {
         alert("Category removed successfully!");
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -2090,7 +2093,7 @@ const handlePartnerAction = async (partnerId, action) => {
         alert("Administrative account configurations saved.");
         setShowEditAdminModal(false);
         setEditingAdmin(null);
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -2117,7 +2120,7 @@ const handlePartnerAction = async (partnerId, action) => {
         setShowMerchantNoticeModal(false);
         setMerchantForNotice(null);
         setMerchantNoticeText('');
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -2143,7 +2146,7 @@ const handlePartnerAction = async (partnerId, action) => {
         alert("Blog article post updated.");
         setShowEditBlogModal(false);
         setEditingBlog(null);
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -2202,7 +2205,7 @@ const handlePartnerAction = async (partnerId, action) => {
         alert("Event flyer details successfully saved.");
         setShowEditEventModal(false);
         setEditingEvent(null);
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -4585,6 +4588,13 @@ const handlePartnerAction = async (partnerId, action) => {
 
                                                 <div className="flex gap-1.5 shrink-0 justify-end w-full sm:w-auto mt-2 sm:mt-0">
                                                   <button
+                                                    onClick={() => setMovingCategory(cat)}
+                                                    className="h-7 px-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[9.5px]"
+                                                    title="Move"
+                                                  >
+                                                    Move
+                                                  </button>
+                                                  <button
                                                     onClick={async () => {
                                                       const newName = await prompt("Rename category:", cat.categoryName);
                                                       if (!newName || newName === cat.categoryName) return;
@@ -4655,6 +4665,13 @@ const handlePartnerAction = async (partnerId, action) => {
                                           </div>
 
                                           <div className="flex gap-1.5 shrink-0">
+                                            <button
+                                              onClick={() => setMovingCategory(cat)}
+                                              className="h-7 px-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[9.5px]"
+                                              title="Move"
+                                            >
+                                              Move
+                                            </button>
                                             <button
                                               onClick={async () => {
                                                 const newName = await prompt("Rename category:", cat.categoryName);
@@ -4786,7 +4803,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                 setPresetNewMainName('');
                                 setPresetNewSubName('');
                                 setPresetSelectedMain('');
-                                loadPlatformRealData();
+                                loadPlatformRealData(true);
                               } else {
                                 const errData = await createRes.json();
                                 alert(errData.message || 'Failed to create category.');
@@ -4927,7 +4944,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                 const data = await mergeRes.json();
                                 if (data.success) {
                                   alert(data.message || "Categories successfully merged!");
-                                  loadPlatformRealData();
+                                  loadPlatformRealData(true);
                                 } else {
                                   alert(data.message || "Merge execution failed.");
                                 }
@@ -6091,7 +6108,7 @@ const handlePartnerAction = async (partnerId, action) => {
                             setNoticeSuccess(true);
                             setNewNotice({ title: '', message: '', type: 'announcement' });
                             setTimeout(() => setNoticeSuccess(false), 4000);
-                            loadPlatformRealData();
+                            loadPlatformRealData(true);
                           }
                         } catch (err) {
                           console.error(err);
@@ -8249,9 +8266,27 @@ const handlePartnerAction = async (partnerId, action) => {
                             </span>
                           </span>
                         </div>
+
+                        <div className="flex flex-col gap-1 text-left mt-2">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase">Map to Main Category</label>
+                          <select
+                            value={customNewCategoryParent}
+                            onChange={(e) => setCustomNewCategoryParent(e.target.value)}
+                            className={`w-full text-xs rounded-xl px-3 py-2 outline-none font-bold ${
+                              themeMode === 'dark' ? 'bg-slate-900 border border-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-800'
+                            }`}
+                          >
+                            <option value="">-- Choose Main Category --</option>
+                            {Array.from(new Set(presetCategories.map(c => c.parentCategory).filter(Boolean))).sort().map(p => (
+                              <option key={p} value={p}>{p}</option>
+                            ))}
+                            <option value="Others">Others</option>
+                          </select>
+                        </div>
+  
                         <button
                           disabled={!customNewCategoryName.trim()}
-                          onClick={() => handleResolveCategory(selectedBiz._id, 'create', null, customNewCategoryName, customNewCategoryIcon)}
+                          onClick={() => handleResolveCategory(selectedBiz._id, 'create', null, customNewCategoryName, customNewCategoryIcon, customNewCategoryParent)}
                           className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer disabled:opacity-40 transition-colors uppercase tracking-wider"
                         >
                           Create & Link Category
@@ -8949,7 +8984,7 @@ const handlePartnerAction = async (partnerId, action) => {
                         alert('Account profile and all cascade assets permanently purged.');
                         setShowUserModal(false);
                         setSelectedUser(null);
-                        loadPlatformRealData();
+                        loadPlatformRealData(true);
                       }
                     } catch (err) {
                       console.error(err);
@@ -10543,6 +10578,82 @@ const handlePartnerAction = async (partnerId, action) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      
+      {/* Move Category Modal */}
+      {movingCategory && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-4 text-left font-sans">
+            <div className="flex flex-col gap-1">
+              <h3 className="font-extrabold text-sm uppercase tracking-wider text-[#027244] dark:text-emerald-500">Move Subcategory</h3>
+              <span className="text-[10px] text-slate-400 font-bold">Re-associate category under a different main classification</span>
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-bold text-slate-500">Subcategory to Move</span>
+              <span className="text-sm font-extrabold text-slate-800 dark:text-white bg-slate-100 dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                {movingCategory.categoryName}
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold text-slate-500">Select New Main Category</label>
+              <select
+                value={movingCategory.parentCategory || ''}
+                onChange={(e) => setMovingCategory({ ...movingCategory, parentCategory: e.target.value })}
+                className="w-full text-xs rounded-xl px-3 py-2 outline-none font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-850 dark:text-white"
+              >
+                <option value="">-- Select Parent Category --</option>
+                {Array.from(new Set(presetCategories.map(c => c.parentCategory).filter(Boolean))).sort().map(parent => (
+                  <option key={parent} value={parent}>{parent}</option>
+                ))}
+                <option value="Others">Others</option>
+              </select>
+            </div>
+
+            <div className="flex gap-2.5 mt-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setMovingCategory(null)}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-550 dark:text-slate-300 font-extrabold text-[10.5px] rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors uppercase tracking-wider"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const catId = movingCategory._id;
+                  const newParent = movingCategory.parentCategory || 'Others';
+                  try {
+                    const res = await fetch(`http://localhost:5000/api/categories/${catId}`, {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
+                      },
+                      body: JSON.stringify({ parentCategory: newParent })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      alert(`Successfully moved "${movingCategory.categoryName}" under "${newParent}"!`);
+                      setMovingCategory(null);
+                      loadPlatformRealData(true);
+                    } else {
+                      alert(data.message || 'Failed to move category.');
+                    }
+                  } catch (err) {
+                    console.error(err);
+                    alert('Network error moving category.');
+                  }
+                }}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors uppercase tracking-wider"
+              >
+                Confirm Move
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -142,6 +142,7 @@ export default function AdminDashboard() {
   const [pendingSponsoredAds, setPendingSponsoredAds] = useState([]);
   const [approvedSponsoredAds, setApprovedSponsoredAds] = useState([]);
   const [presetCategories, setPresetCategories] = useState([]);
+  const [movingCategory, setMovingCategory] = useState(null);
   const [mainCategorySearch, setMainCategorySearch] = useState('');
   const [subcategorySearch, setSubcategorySearch] = useState('');
   const [expandedMainCategories, setExpandedMainCategories] = useState({});
@@ -1169,8 +1170,8 @@ export default function AdminDashboard() {
     }
   };
 
-  const loadPlatformRealData = async () => {
-    setLoading(true);
+  const loadPlatformRealData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const storedToken = localStorage.getItem('ubt_token');
       const headers = { 'Authorization': `Bearer ${storedToken}` };
@@ -1342,7 +1343,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (res.ok && data.success) {
         alert(data.message || "Category request resolved successfully!");
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         alert(data.message || "Failed to resolve category request.");
       }
@@ -1365,7 +1366,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (data.success) {
         showToast(data.message || `Sponsored ad ${action}ed successfully!`, 'success');
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         showToast(data.message || `Failed to ${action} sponsored ad.`, 'error');
       }
@@ -1394,7 +1395,7 @@ export default function AdminDashboard() {
           const data = await res.json();
           if (data.success) {
             showToast(data.message || `Sponsored ad ${action}d successfully!`, 'success');
-            loadPlatformRealData();
+            loadPlatformRealData(true);
           } else {
             showToast(data.message || `Failed to ${action} sponsored ad.`, 'error');
           }
@@ -1422,7 +1423,7 @@ export default function AdminDashboard() {
           const data = await res.json();
           if (data.success) {
             showToast(data.message || 'Sponsored ad deleted successfully!', 'success');
-            loadPlatformRealData();
+            loadPlatformRealData(true);
           } else {
             showToast(data.message || 'Failed to delete sponsored ad.', 'error');
           }
@@ -1493,7 +1494,7 @@ export default function AdminDashboard() {
       setDirectAdPreview('');
       setDirectAdExpiryDays(30);
 
-      loadPlatformRealData();
+      loadPlatformRealData(true);
     } catch (err) {
       console.error(err);
       setDirectAdError(err.message || 'An error occurred during submission');
@@ -1515,7 +1516,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (data.success) {
         alert("Category renamed successfully!");
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -1539,7 +1540,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (data.success) {
         alert(`Main category renamed! ${data.data?.modifiedCount || 0} subcategories updated.`);
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         alert('Error: ' + (data.message || 'Rename failed'));
       }
@@ -1560,7 +1561,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (data.success) {
         alert("Category removed successfully!");
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       }
     } catch (err) {
       console.error(err);
@@ -1601,7 +1602,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (data.success) {
         alert(`Business successfully marked as ${nextStatus}!`);
-        loadPlatformRealData();
+        loadPlatformRealData(true);
         return true;
       } else {
         alert(data.message || 'Failed to update business status.');
@@ -1684,7 +1685,7 @@ export default function AdminDashboard() {
         const data = await res.json();
         if (data.success) {
           alert('Listing and its cascaded assets deleted successfully!');
-          loadPlatformRealData();
+          loadPlatformRealData(true);
         } else {
           alert(data.message || 'Failed to delete listing.');
         }
@@ -1708,7 +1709,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (data.success) {
         alert('Plan manually activated successfully for 30 days!');
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         alert(data.message || 'Failed to activate subscription.');
       }
@@ -1738,7 +1739,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (data.success) {
         alert(data.message || 'Action executed successfully!');
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         alert(data.message || 'Failed to update subscription status.');
       }
@@ -1833,7 +1834,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (data.success) {
         alert(`Blog status successfully set to ${status}!`);
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         alert(data.message || 'Failed to update blog status.');
       }
@@ -1857,7 +1858,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (data.success) {
         alert('Blog post successfully deleted!');
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         alert(data.message || 'Failed to delete blog.');
       }
@@ -1882,7 +1883,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (data.success) {
         alert(`Event status successfully set to ${status}!`);
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         alert(data.message || 'Failed to update event status.');
       }
@@ -1906,7 +1907,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (data.success) {
         alert('Event successfully deleted!');
-        loadPlatformRealData();
+        loadPlatformRealData(true);
       } else {
         alert(data.message || 'Failed to delete event.');
       }
@@ -1964,7 +1965,7 @@ export default function AdminDashboard() {
       if (data.success) {
         alert('User registration deleted successfully.');
         setUsers(prev => prev.filter(u => u._id !== userId));
-        loadPlatformRealData(); // refresh everything to update cascades
+        loadPlatformRealData(true); // refresh everything to update cascades
       } else {
         alert(data.message || 'Failed to delete signup.');
       }
@@ -2003,7 +2004,7 @@ export default function AdminDashboard() {
       
       alert(`Bulk delete complete. Successfully deleted: ${deletedCount} users. Failed: ${failedCount}.`);
       setSelectedSignups([]);
-      loadPlatformRealData();
+      loadPlatformRealData(true);
     } catch (err) {
       console.error(err);
       alert('An error occurred during bulk deletion.');
@@ -6101,7 +6102,7 @@ export default function AdminDashboard() {
                                 setPresetNewMainName('');
                                 setPresetNewSubName('');
                                 setPresetSelectedMain('');
-                                loadPlatformRealData();
+                                loadPlatformRealData(true);
                               } else {
                                 const errData = await createRes.json();
                                 alert(errData.message || 'Failed to create category.');
@@ -6232,7 +6233,7 @@ export default function AdminDashboard() {
                                 const data = await mergeRes.json();
                                 if (data.success) {
                                   alert(data.message || "Categories successfully merged!");
-                                  loadPlatformRealData();
+                                  loadPlatformRealData(true);
                                 } else {
                                   alert(data.message || "Merge execution failed.");
                                 }
@@ -8027,6 +8028,82 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      
+      {/* Move Category Modal */}
+      {movingCategory && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-4 text-left font-sans">
+            <div className="flex flex-col gap-1">
+              <h3 className="font-extrabold text-sm uppercase tracking-wider text-[#027244] dark:text-emerald-500">Move Subcategory</h3>
+              <span className="text-[10px] text-slate-400 font-bold">Re-associate category under a different main classification</span>
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-bold text-slate-500">Subcategory to Move</span>
+              <span className="text-sm font-extrabold text-slate-800 dark:text-white bg-slate-100 dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                {movingCategory.categoryName}
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold text-slate-500">Select New Main Category</label>
+              <select
+                value={movingCategory.parentCategory || ''}
+                onChange={(e) => setMovingCategory({ ...movingCategory, parentCategory: e.target.value })}
+                className="w-full text-xs rounded-xl px-3 py-2 outline-none font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-850 dark:text-white"
+              >
+                <option value="">-- Select Parent Category --</option>
+                {Array.from(new Set(presetCategories.map(c => c.parentCategory).filter(Boolean))).sort().map(parent => (
+                  <option key={parent} value={parent}>{parent}</option>
+                ))}
+                <option value="Others">Others</option>
+              </select>
+            </div>
+
+            <div className="flex gap-2.5 mt-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setMovingCategory(null)}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-550 dark:text-slate-300 font-extrabold text-[10.5px] rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors uppercase tracking-wider"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const catId = movingCategory._id;
+                  const newParent = movingCategory.parentCategory || 'Others';
+                  try {
+                    const res = await fetch(`http://localhost:5000/api/categories/${catId}`, {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('ubt_token')}`
+                      },
+                      body: JSON.stringify({ parentCategory: newParent })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      alert(`Successfully moved "${movingCategory.categoryName}" under "${newParent}"!`);
+                      setMovingCategory(null);
+                      loadPlatformRealData(true);
+                    } else {
+                      alert(data.message || 'Failed to move category.');
+                    }
+                  } catch (err) {
+                    console.error(err);
+                    alert('Network error moving category.');
+                  }
+                }}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors uppercase tracking-wider"
+              >
+                Confirm Move
+              </button>
+            </div>
           </div>
         </div>
       )}

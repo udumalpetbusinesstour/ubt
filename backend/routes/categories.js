@@ -107,6 +107,10 @@ router.put('/rename-parent', protect, admin, async (req, res, next) => {
       { category: oldParentName.trim() },
       { $set: { category: newParentName.trim() } }
     );
+    await Business.updateMany(
+      { "categories.category": oldParentName.trim() },
+      { $set: { "categories.$.category": newParentName.trim() } }
+    );
     return sendSuccess(res, 200, `Parent category renamed. ${result.modifiedCount} subcategories updated.`, { modifiedCount: result.modifiedCount });
   } catch (err) {
     next(err);
@@ -142,6 +146,10 @@ router.put('/:id', protect, admin, async (req, res, next) => {
         { type: oldSubName },
         { $set: { type: categoryName } }
       );
+      await Business.updateMany(
+        { "categories.type": oldSubName },
+        { $set: { "categories.$.type": categoryName } }
+      );
     }
 
     // Propagate main category association change to existing businesses
@@ -149,6 +157,10 @@ router.put('/:id', protect, admin, async (req, res, next) => {
       await Business.updateMany(
         { type: category.categoryName },
         { $set: { category: parentCategory } }
+      );
+      await Business.updateMany(
+        { "categories.type": category.categoryName },
+        { $set: { "categories.$.category": parentCategory } }
       );
     }
 

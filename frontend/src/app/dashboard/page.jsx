@@ -507,6 +507,8 @@ function DashboardContent() {
   const [selMain, setSelMain] = useState('');
   const [selSub, setSelSub] = useState('');
   const [customSub, setCustomSub] = useState('');
+  const [categorySearchQuery, setCategorySearchQuery] = useState('');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [modalMarginTop, setModalMarginTop] = useState(20);
 
   const openModalAtClickLevel = (e, modalSetter, estimatedHeight = 550) => {
@@ -9769,177 +9771,155 @@ function DashboardContent() {
 
                     {/* Add Category Form Section */}
                     {(!editFields.categories || editFields.categories.length < 5) && (
-                      <div className="border border-slate-100 p-4 bg-slate-50/50 rounded-2xl flex flex-col gap-4">
-                        <span className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest text-left">Add Category</span>
+                      <div className="border border-slate-100 p-4 bg-slate-50/50 rounded-2xl flex flex-col gap-4 relative">
+                        <span className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest text-left font-sans">Add Category (Max 5)</span>
 
-                        {/* Main Category select */}
-                        <div className="flex flex-col gap-1 text-left">
-                          <div className="flex justify-between items-center">
-                            <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Main Category</label>
-                            {(isCustomMain || (selMain !== '' && !getDashboardDynamicMainCategories().includes(selMain))) && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setIsCustomMain(false);
-                                  setSelMain('');
-                                  setSelSub('');
-                                  setCustomSub('');
-                                }}
-                                className="text-[9px] text-[#027244] hover:text-[#005934] font-bold underline focus:outline-none cursor-pointer"
-                              >
-                                Choose Standard
-                              </button>
-                            )}
-                          </div>
-                          {(isCustomMain || (selMain !== '' && !getDashboardDynamicMainCategories().includes(selMain))) ? (
-                            <input
-                              type="text"
-                              placeholder="Specify Custom Main Category"
-                              value={getDashboardDynamicMainCategories().includes(selMain) ? '' : selMain}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setSelMain(val);
-                                setSelSub('Others');
-                              }}
-                              className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-white"
-                            />
-                          ) : (
-                            <select
-                              value={getDashboardDynamicMainCategories().includes(selMain) ? selMain : ''}
-                              onChange={(e) => {
-                                const parentVal = e.target.value;
-                                if (parentVal === 'Others') {
-                                  setIsCustomMain(true);
-                                  setSelMain('');
-                                  setSelSub('Others');
-                                  setCustomSub('');
-                                } else {
-                                  setSelMain(parentVal);
-                                  setSelSub('');
-                                  setCustomSub('');
+                        <div className="flex flex-col gap-1 text-left relative font-sans">
+                          <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Search Subcategory</label>
+                          <input
+                            type="text"
+                            placeholder="Type to search (e.g. Electrician, Web Design, Hotel...)"
+                            value={categorySearchQuery}
+                            onFocus={() => setShowCategoryDropdown(true)}
+                            onBlur={() => setTimeout(() => setShowCategoryDropdown(false), 250)}
+                            onChange={(e) => {
+                              setCategorySearchQuery(e.target.value);
+                              setShowCategoryDropdown(true);
+                            }}
+                            className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-white"
+                          />
+
+                          {showCategoryDropdown && (
+                            <div className="absolute top-[100%] left-0 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg mt-1 max-h-60 overflow-y-auto z-50 text-xs font-bold divide-y divide-slate-100/60 dark:divide-slate-800/80 font-sans">
+                              {(() => {
+                                const query = categorySearchQuery.toLowerCase().trim();
+                                let filtered = presetCategories.filter(cat => 
+                                  cat.categoryName && 
+                                  cat.categoryName.toLowerCase().includes(query) &&
+                                  cat.categoryName !== 'Others'
+                                );
+
+                                // Deduplicate
+                                const uniqueFiltered = [];
+                                const seenNames = new Set();
+                                filtered.forEach(cat => {
+                                  if (!seenNames.has(cat.categoryName.toLowerCase())) {
+                                    seenNames.add(cat.categoryName.toLowerCase());
+                                    uniqueFiltered.push(cat);
+                                  }
+                                });
+
+                                const suggestions = uniqueFiltered.slice(0, 10);
+                                const items = [];
+
+                                suggestions.forEach(cat => {
+                                  items.push(
+                                    <div
+                                      key={cat._id}
+                                      onClick={() => {
+                                        const subnameToCheck = cat.categoryName.toLowerCase();
+                                        const isDuplicate = editFields.categories?.some(c => {
+                                          const subname = c.type === 'Others' ? c.customCategoryName.toLowerCase() : c.type.toLowerCase();
+                                          return subname === subnameToCheck;
+                                        });
+
+                                        if (isDuplicate) {
+                                          alert('This category has already been added to your selection.');
+                                          return;
+                                        }
+
+                                        const newCat = {
+                                          categoryId: cat._id,
+                                          category: cat.parentCategory || 'Others',
+                                          type: cat.categoryName,
+                                          customCategoryName: '',
+                                          categoryStatus: 'Normal'
+                                        };
+
+                                        const updatedCats = [...(editFields.categories || []), newCat];
+                                        setEditFields(prev => ({
+                                          ...prev,
+                                          categories: updatedCats,
+                                          category: updatedCats[0]?.type || '',
+                                          requestedParentCategory: updatedCats[0]?.category || '',
+                                          customCategoryName: updatedCats[0]?.customCategoryName || '',
+                                          categoryStatus: updatedCats[0]?.categoryStatus || 'Normal'
+                                        }));
+
+                                        setCategorySearchQuery('');
+                                        setShowCategoryDropdown(false);
+                                      }}
+                                      className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/80 cursor-pointer flex justify-between items-center transition-colors text-left"
+                                    >
+                                      <span className="text-slate-850 dark:text-slate-200 font-bold">{cat.categoryName}</span>
+                                      <span className="text-[10px] text-slate-400 font-bold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                                        {cat.parentCategory || 'Others'}
+                                      </span>
+                                    </div>
+                                  );
+                                });
+
+                                if (query.length > 0 && !uniqueFiltered.some(c => c.categoryName.toLowerCase() === query)) {
+                                  items.push(
+                                    <div
+                                      key="custom-add"
+                                      onClick={() => {
+                                        const cleanName = categorySearchQuery.trim();
+                                        const subnameToCheck = cleanName.toLowerCase();
+                                        const isDuplicate = editFields.categories?.some(c => {
+                                          const subname = c.type === 'Others' ? c.customCategoryName.toLowerCase() : c.type.toLowerCase();
+                                          return subname === subnameToCheck;
+                                        });
+
+                                        if (isDuplicate) {
+                                          alert('This category has already been added.');
+                                          return;
+                                        }
+
+                                        const newCat = {
+                                          categoryId: null,
+                                          category: 'Others',
+                                          type: 'Others',
+                                          customCategoryName: cleanName,
+                                          categoryStatus: 'Pending Review'
+                                        };
+
+                                        const updatedCats = [...(editFields.categories || []), newCat];
+                                        setEditFields(prev => ({
+                                          ...prev,
+                                          categories: updatedCats,
+                                          category: updatedCats[0]?.type || '',
+                                          requestedParentCategory: updatedCats[0]?.category || '',
+                                          customCategoryName: updatedCats[0]?.customCategoryName || '',
+                                          categoryStatus: updatedCats[0]?.categoryStatus || 'Normal'
+                                        }));
+
+                                        setCategorySearchQuery('');
+                                        setShowCategoryDropdown(false);
+                                      }}
+                                      className="p-3 bg-emerald-500/5 hover:bg-emerald-500/10 dark:bg-emerald-500/5 dark:hover:bg-emerald-500/15 cursor-pointer text-emerald-650 flex justify-between items-center transition-colors text-left"
+                                    >
+                                      <span>+ Add custom category: "{categorySearchQuery.trim()}"</span>
+                                      <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold px-2 py-0.5 rounded text-[9px] uppercase tracking-wide font-sans">
+                                        Pending Review
+                                      </span>
+                                    </div>
+                                  );
                                 }
-                              }}
-                              className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-white cursor-pointer"
-                            >
-                              <option value="">-- Choose Main Category --</option>
-                              {getDashboardDynamicMainCategories().map(cat => (
-                                <option key={cat} value={cat}>{cat}</option>
-                              ))}
-                              <option value="Others">Others</option>
-                            </select>
+
+                                if (items.length === 0) {
+                                  return (
+                                    <div className="p-3 text-slate-400 italic text-center font-semibold">
+                                      Type to search subcategories...
+                                    </div>
+                                  );
+                                }
+
+                                return items;
+                              })()}
+                            </div>
                           )}
                         </div>
-
-                        {/* Subcategory select */}
-                        {selMain !== '' && (
-                          <div className="flex flex-col gap-1 text-left animate-fadeIn">
-                            <div className="flex justify-between items-center">
-                              <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Subcategory</label>
-                              {selSub === 'Others' && !(isCustomMain || (selMain !== '' && !getDashboardDynamicMainCategories().includes(selMain))) && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const subs = getDashboardDynamicSubcategories(selMain);
-                                    setSelSub(subs[0] || '');
-                                    setCustomSub('');
-                                  }}
-                                  className="text-[9px] text-[#027244] hover:text-[#005934] font-bold underline focus:outline-none cursor-pointer"
-                                >
-                                  Choose Standard
-                                </button>
-                              )}
-                            </div>
-                            {selSub === 'Others' ? (
-                              <div className="flex flex-col gap-1.5 text-left animate-fadeIn">
-                                <input
-                                  type="text"
-                                  placeholder="Specify Custom Subcategory"
-                                  value={customSub}
-                                  onChange={(e) => setCustomSub(e.target.value)}
-                                  className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-white"
-                                />
-                                <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-4 mt-2 flex flex-col gap-1.5 text-[10px] text-left animate-fadeIn">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-extrabold text-blue-900">Category Status:</span>
-                                    <span className="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full text-[9px] uppercase tracking-wide">
-                                      Pending Review
-                                    </span>
-                                  </div>
-                                  <p className="text-blue-750 font-semibold leading-relaxed">
-                                    "Your custom category request will be dynamically verified and approved/linked by superadmin upon publication."
-                                  </p>
-                                </div>
-                              </div>
-                            ) : (
-                              <select
-                                value={getDashboardDynamicSubcategories(selMain).includes(selSub) ? selSub : ''}
-                                onChange={(e) => {
-                                  const subVal = e.target.value;
-                                  setSelSub(subVal);
-                                  setCustomSub('');
-                                }}
-                                className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100 bg-white cursor-pointer"
-                              >
-                                <option value="">-- Choose Subcategory --</option>
-                                {getDashboardDynamicSubcategories(selMain).map(sub => (
-                                  <option key={sub} value={sub}>{sub}</option>
-                                ))}
-                                <option value="Others">Others (Custom Category)</option>
-                              </select>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Add Category Button */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const finalMain = selMain.trim();
-                            const finalSub = selSub === 'Others' ? 'Others' : selSub.trim();
-                            const finalCustomSub = selSub === 'Others' ? customSub.trim() : '';
-
-                            if (!finalMain) return;
-                            if (!finalSub || (finalSub === 'Others' && !finalCustomSub)) return;
-
-                            const subnameToCheck = finalSub === 'Others' ? finalCustomSub.toLowerCase() : finalSub.toLowerCase();
-                            const isDuplicate = editFields.categories?.some(cat => {
-                              const subname = cat.type === 'Others' ? cat.customCategoryName.toLowerCase() : cat.type.toLowerCase();
-                              return subname === subnameToCheck;
-                            });
-
-                            if (isDuplicate) {
-                              alert('This category has already been added to your selection.');
-                              return;
-                            }
-
-                            const newCat = {
-                              category: finalMain,
-                              type: finalSub,
-                              customCategoryName: finalCustomSub,
-                              categoryStatus: (finalSub === 'Others' || !getDashboardDynamicMainCategories().includes(finalMain)) ? 'Pending Review' : 'Normal'
-                            };
-
-                            const updatedCats = [...(editFields.categories || []), newCat];
-                            setEditFields(prev => ({
-                              ...prev,
-                              categories: updatedCats,
-                              category: updatedCats[0]?.type || '',
-                              requestedParentCategory: updatedCats[0]?.category || '',
-                              customCategoryName: updatedCats[0]?.customCategoryName || '',
-                              categoryStatus: updatedCats[0]?.categoryStatus || 'Normal'
-                            }));
-
-                            // Reset
-                            setSelMain('');
-                            setSelSub('');
-                            setCustomSub('');
-                            setIsCustomMain(false);
-                          }}
-                          disabled={!selMain || !selSub || (selSub === 'Others' && !customSub.trim())}
-                          className="w-fit self-end py-2 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-205 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-[10px] font-bold rounded-xl shadow transition-colors cursor-pointer"
-                        >
-                          + Add Category
-                        </button>
                       </div>
                     )}
                   </div>
