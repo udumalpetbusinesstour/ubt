@@ -5898,9 +5898,9 @@ export default function AdminDashboard() {
                                                     <Store className="h-4 w-4" />
                                                   </div>
                                                   <div className="flex flex-col text-left min-w-0 flex-1">
-                                                    <span className="font-extrabold text-xs truncate text-slate-800">{cat.categoryName}</span>
-                                                    <span className="text-[9px] text-slate-400 mt-1 font-semibold truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
-                                                    <span className="text-[9.5px] text-emerald-600 font-black mt-1.5 leading-none">{count} active businesses</span>
+                                                    <span className="font-bold text-xs truncate text-slate-800">{cat.categoryName}</span>
+                                                    <span className="text-[9px] text-slate-400 mt-1 font-medium truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
+                                                    <span className="text-[9.5px] text-emerald-600 font-semibold mt-1.5 leading-none">{count} active businesses</span>
                                                   </div>
                                                 </div>
 
@@ -5964,10 +5964,10 @@ export default function AdminDashboard() {
                                               <Store className="h-4.5 w-4.5" />
                                             </div>
                                             <div className="flex flex-col text-left min-w-0 flex-1">
-                                              <span className="font-extrabold text-xs truncate text-slate-800">{cat.categoryName}</span>
-                                              <span className="text-[9.5px] text-slate-450 font-bold mt-1 leading-none truncate">Main: {cat.parentCategory || 'Others'}</span>
-                                              <span className="text-[9px] text-slate-400 mt-1.5 font-semibold truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
-                                              <span className="text-[9.5px] text-emerald-655 font-black mt-2 leading-none">{count} active businesses</span>
+                                              <span className="font-bold text-xs truncate text-slate-800">{cat.categoryName}</span>
+                                              <span className="text-[9.5px] text-slate-450 font-medium mt-1 leading-none truncate">Main: {cat.parentCategory || 'Others'}</span>
+                                              <span className="text-[9px] text-slate-400 mt-1.5 font-medium truncate leading-none">Slug: {cat.slug || cat.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</span>
+                                              <span className="text-[9.5px] text-emerald-655 font-semibold mt-2 leading-none">{count} active businesses</span>
                                             </div>
                                           </div>
 
