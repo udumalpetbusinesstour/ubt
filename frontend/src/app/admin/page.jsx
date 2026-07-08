@@ -6697,7 +6697,9 @@ export default function AdminDashboard() {
                               <span>{subName}</span>
                               <button
                                 type="button"
-                                onClick={async () => {
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
                                   if (window.confirm(`Are you sure you want to remove the category "${parentName} › ${subName}"?`)) {
                                     const updatedCats = selectedBiz.categories.filter((_, i) => i !== originalIndex);
                                     await handleSaveBizCategories(updatedCats);
