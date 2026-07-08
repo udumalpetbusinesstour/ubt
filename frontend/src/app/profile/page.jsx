@@ -145,7 +145,7 @@ export default function UserProfile() {
 
       // Filter local mocks
       setBlogs(mockBlogs.filter(b => b.author === id));
-      setBusinesses(mockFeatured.filter(b => b.ownerId === id));
+      setBusinesses([]);
       setEvents(mockEvents.filter(e => e.ownerId === id));
     } finally {
       setLoading(false);

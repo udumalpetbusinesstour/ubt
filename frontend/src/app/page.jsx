@@ -213,7 +213,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [locationTerm, setLocationTerm] = useState('');
   const [categoryTerm, setCategoryTerm] = useState('All Categories');
-  const [featuredBusinesses, setFeaturedBusinesses] = useState(mockFeatured);
+  const [featuredBusinesses, setFeaturedBusinesses] = useState([]);
   const [topViewedBusinesses, setTopViewedBusinesses] = useState([]);
   const [sponsoredAds, setSponsoredAds] = useState([]);
   const [activeAdIndex, setActiveAdIndex] = useState(0);
@@ -328,31 +328,9 @@ export default function Home() {
   }, [topViewedBusinesses]);
 
   // Testimonials state
-  const fallbackTestimonials = [
-    {
-      _id: 'mock_t_1',
-      authorName: 'Karthik S.',
-      role: 'Business Owner',
-      rating: 5,
-      text: 'Udumalpet Business Tour helped me get more local customers. The enquiries and calls have increased significantly. Highly recommended for all local businesses!'
-    },
-    {
-      _id: 'mock_t_2',
-      authorName: 'Aravind Swamy',
-      role: 'Event Manager',
-      rating: 5,
-      text: 'Promoting local temple events and trade expos has never been this seamless. The user reach in Udumalpet and surrounding suburbs is absolutely incredible.'
-    },
-    {
-      _id: 'mock_t_3',
-      authorName: 'Deepa Ramakrishnan',
-      role: 'Blog Writer',
-      rating: 5,
-      text: 'Writing about local hidden gems and historic places near Udumalpet has finally found the perfect audience. A beautifully optimized directory app!'
-    }
-  ];
+  const fallbackTestimonials = [];
 
-  const [testimonials, setTestimonials] = useState(fallbackTestimonials);
+  const [testimonials, setTestimonials] = useState([]);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
 
   // Modal and submission state
@@ -523,13 +501,11 @@ export default function Home() {
           const sortedByRef = [...data.data].filter(b => b.subscriptionStatus === 'active' || isGovernmentalOrPublic(b)).sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
           setTopViewedBusinesses(sortedByRef.slice(0, 10));
         } else {
-          const sortedMock = [...mockFeatured].filter(b => b.subscriptionStatus === 'active' || isGovernmentalOrPublic(b)).sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
-          setTopViewedBusinesses(sortedMock.slice(0, 10));
+          setTopViewedBusinesses([]);
         }
       } catch (err) {
         console.warn('Backend server offline, running fallback top contributors sync.');
-        const sortedMock = [...mockFeatured].filter(b => b.subscriptionStatus === 'active' || isGovernmentalOrPublic(b)).sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
-        setTopViewedBusinesses(sortedMock.slice(0, 10));
+        setTopViewedBusinesses([]);
       }
 
       // 2. Fetch all businesses to calculate category counts and average ratings dynamically
