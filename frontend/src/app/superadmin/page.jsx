@@ -292,20 +292,10 @@ export default function SuperAdminDashboard() {
   const [revenueGraphType, setRevenueGraphType] = useState('total'); // total | subscription | event | ad
 
   // System activities logs
-  const [systemLogs, setSystemLogs] = useState([
-    { time: '11:42:15', event: 'Automatic expiry checker: Suspended 1 expired listing', type: 'system' },
-    { time: '11:40:02', event: 'User superadmin@gmail.com authenticated successfully', type: 'info' },
-    { time: '11:15:30', event: 'Database backup successfully uploaded to S3 grid', type: 'info' },
-    { time: '10:55:12', event: 'Payment failed warning: Txn #pay_123456 aborted by gateway', type: 'warning' },
-    { time: '10:14:02', event: 'API gateway operational and listening on PORT 5000', type: 'system' }
-  ]);
+  const [systemLogs, setSystemLogs] = useState([]);
 
   // Admins dataset states
-  const [admins, setAdmins] = useState([
-    { _id: 'adm_1', fullName: 'Haris R. (Co-Founder)', email: 'haris@ubt.com', role: 'admin', status: 'Active', permissions: 'Full', createdAt: new Date('2025-01-10') },
-    { _id: 'adm_2', fullName: 'Ananth S. (Moderator)', email: 'ananth@ubt.com', role: 'admin', status: 'Active', permissions: 'Moderation Only', createdAt: new Date('2025-02-15') },
-    { _id: 'adm_3', fullName: 'Local Clerk', email: 'clerk@ubt.com', role: 'admin', status: 'Suspended', permissions: 'Read Only', createdAt: new Date('2025-03-20') }
-  ]);
+  const [admins, setAdmins] = useState([]);
   const [signups, setSignups] = useState([]);
   const [selectedSignups, setSelectedSignups] = useState([]);
 
@@ -321,6 +311,7 @@ export default function SuperAdminDashboard() {
   const [queryFilter, setQueryFilter] = useState('All'); // All | Pending | Replied
   const [supportSubTab, setSupportSubTab] = useState('tickets'); // tickets | queries
   const [querySearch, setQuerySearch] = useState('');
+  const [movingCategory, setMovingCategory] = useState(null);
 
   // Referral System states
   const [referrals, setReferrals] = useState([]);
@@ -462,30 +453,8 @@ export default function SuperAdminDashboard() {
         throw new Error(data.message || 'Failed to fetch queries.');
       }
     } catch (err) {
-      console.warn('API error, using realistic mockup fallback queries.');
-      const mockQs = [
-        {
-          _id: 'q1',
-          name: 'Ramesh Krishnan',
-          email: 'ramesh@gmail.com',
-          subject: 'Verified Badge enquiry',
-          message: 'Hello, how can I apply for a verified badge for my shop (Sri Murugan Stores)? What documents are needed?',
-          status: 'Pending',
-          createdAt: new Date(new Date().getTime() - 2 * 60 * 60 * 1000).toISOString()
-        },
-        {
-          _id: 'q2',
-          name: 'Sarah John',
-          email: 'sarah@ubt.com',
-          subject: 'Banner advertising pricing',
-          message: 'I want to advertise my resort on your home banner slide. Can you share the pricing sheet and impressions data?',
-          status: 'Replied',
-          replyMessage: 'Hello Sarah, we have sent the media kit to your email. Our representative will follow up tomorrow.',
-          repliedAt: new Date(new Date().getTime() - 24 * 60 * 60 * 1000).toISOString(),
-          createdAt: new Date(new Date().getTime() - 36 * 60 * 60 * 1000).toISOString()
-        }
-      ];
-      setQueries(mockQs);
+      console.warn('API error, empty queries.');
+      setQueries([]);
     } finally {
       setQueriesLoading(false);
     }
@@ -540,30 +509,8 @@ export default function SuperAdminDashboard() {
         throw new Error(data.message || 'Failed to fetch referrals.');
       }
     } catch (err) {
-      console.warn('API error, using realistic mockup referrals.', err);
-      const mockRefs = [
-        {
-          _id: 'ref1',
-          referrerId: { fullName: 'Aravind Swamy', email: 'aravind@gmail.com', mobileNumber: '9443211111' },
-          referredUserId: { fullName: 'Balaji Sweet Stall Owner', email: 'balaji@gmail.com', mobileNumber: '9876543210' },
-          referredBusinessId: { name: 'Balaji Sweet Stall', gstNumber: '33AAAAA1111A1Z1', phone: '9876543210', status: 'Pending Verification', subscriptionStatus: 'active' },
-          status: 'pending',
-          points: 100,
-          antiFraudChecks: { selfReferral: false, duplicateMobile: true, duplicateGST: false, duplicateBusiness: false },
-          createdAt: new Date().toISOString()
-        },
-        {
-          _id: 'ref2',
-          referrerId: { fullName: 'Lakshmi Textiles', email: 'lakshmi@gmail.com', mobileNumber: '9443599999' },
-          referredUserId: { fullName: 'Sri Murugan Stores Owner', email: 'murugan@gmail.com', mobileNumber: '9123456780' },
-          referredBusinessId: { name: 'Sri Murugan Stores', gstNumber: '33BBBBB2222B2Z2', phone: '9123456780', status: 'Approved', subscriptionStatus: 'active' },
-          status: 'completed',
-          points: 100,
-          antiFraudChecks: { selfReferral: false, duplicateMobile: false, duplicateGST: false, duplicateBusiness: false },
-          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-        }
-      ];
-      setReferrals(mockRefs);
+      console.warn('API error, empty referrals.', err);
+      setReferrals([]);
     } finally {
       setReferralsLoading(false);
     }
@@ -585,13 +532,8 @@ export default function SuperAdminDashboard() {
         throw new Error(data.message || 'Failed to fetch subscribers.');
       }
     } catch (err) {
-      console.warn('API error, using realistic mockup fallback subscribers.');
-      const mockSubs = [
-        { _id: 's1', email: 'ramesh@gmail.com', createdAt: new Date(new Date().getTime() - 2 * 24 * 60 * 60 * 1000).toISOString() },
-        { _id: 's2', email: 'sarah@ubt.com', createdAt: new Date(new Date().getTime() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-        { _id: 's3', email: 'haris@gmail.com', createdAt: new Date(new Date().getTime() - 8 * 24 * 60 * 60 * 1000).toISOString() }
-      ];
-      setSubscribers(mockSubs);
+      console.warn('API error, empty subscribers.');
+      setSubscribers([]);
     } finally {
       setSubscribersLoading(false);
     }
@@ -806,22 +748,8 @@ const handlePartnerAction = async (partnerId, action) => {
         throw new Error(data.message || 'Failed to fetch partners.');
       }
     } catch (err) {
-      console.warn('API error, using mockup partners.', err);
-      setPartners([
-        {
-          _id: 'partner1',
-          fullName: 'Harish Mithra',
-          email: 'harishmitharamalingam@gmail.com',
-          phone: '+91 97872 41221',
-          role: 'partner',
-          aadhaarNumber: '123456789012',
-          address: 'Gandhi Nagar, Udumalpet',
-          isPartnerRegistered: true,
-          referralPoints: 198,
-          referralCode: 'HARISHM',
-          createdAt: new Date().toISOString()
-        }
-      ]);
+      console.warn('API error, empty partners.', err);
+      setPartners([]);
     } finally {
       setPartnersLoading(false);
     }
