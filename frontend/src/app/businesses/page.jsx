@@ -355,22 +355,6 @@ function BusinessesList() {
     })();
   }, []);
 
-  // Category dynamic scrolling observer
-  useEffect(() => {
-    const sentinel = document.getElementById('categories-scroll-sentinel');
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        setVisibleCategoryLimit((prev) => prev + 12);
-      }
-    }, {
-      rootMargin: '150px'
-    });
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [visibleCategoryLimit, selectedCategoryInExplore, isCategoriesView, categoriesSearchQuery]);
 
   const getDraftResumeStep = (biz) => {
     if (!biz) return 1;
@@ -2060,9 +2044,14 @@ function BusinessesList() {
                           </div>
 
                           {visibleCategoryLimit < sortedCats.length && (
-                            <div id="categories-scroll-sentinel" className="h-10 w-full flex items-center justify-center py-4 mt-4">
-                              <RefreshCw className="h-5 w-5 text-emerald-600 animate-spin mr-2" />
-                              <span className="text-[11px] font-bold text-slate-400">Loading more categories...</span>
+                            <div className="w-full flex items-center justify-center py-6 mt-4">
+                              <button
+                                onClick={() => setVisibleCategoryLimit((prev) => prev + 6)}
+                                className="flex flex-col items-center gap-1 bg-[#E6F2ED] hover:bg-[#D5EAE2] text-[#027244] hover:text-[#005934] font-black text-xs px-6 py-3 shadow-2xs hover:shadow-xs rounded-full border border-emerald-100/50 transition-all cursor-pointer group"
+                              >
+                                <span>Show More Categories</span>
+                                <ChevronDown className="h-4.5 w-4.5 animate-bounce group-hover:translate-y-0.5 transition-transform duration-300" />
+                              </button>
                             </div>
                           )}
                         </>
