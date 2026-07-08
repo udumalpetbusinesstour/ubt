@@ -205,45 +205,7 @@ const runUbtTestimonialsSync = async () => {
 
   // Fallback if Place ID is mock or empty or no API key
   if (!placeId || placeId === 'mock_ubt_place_id' || !apiKey) {
-    console.log('[GoogleReviewsCron] GOOGLE_PLACES_UBT_PLACE_ID is empty or set to mock. Seeding mock GMB testimonials...');
-    const mockReviews = [
-      {
-        authorName: 'Ramanathan K.',
-        rating: 5,
-        text: 'Excellent business directory for Udumalpet. Very helpful to find local shops.',
-        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-      },
-      {
-        authorName: 'Santhosh Kumar',
-        rating: 5,
-        text: 'Great platform! Found verified electric wiring services easily in Udumalpet.',
-        createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 14 days ago
-      },
-      {
-        authorName: 'Meera Nair',
-        rating: 4,
-        text: 'Very user friendly dashboard. Good initiatives to support local business tour.',
-        createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000), // 21 days ago
-      }
-    ];
-
-    let inserted = 0;
-    for (const r of mockReviews) {
-      const existing = await Testimonial.findOne({ authorName: r.authorName, text: r.text });
-      if (!existing) {
-        await Testimonial.create({
-          authorName: r.authorName,
-          role: 'Other',
-          text: r.text,
-          rating: r.rating,
-          status: 'Approved',
-          createdAt: r.createdAt,
-          googleLinked: true
-        });
-        inserted++;
-      }
-    }
-    console.log(`[GoogleReviewsCron] ✓ Seeded/Synced ${inserted} mock Google testimonials.`);
+    console.log('[GoogleReviewsCron] GOOGLE_PLACES_UBT_PLACE_ID is empty or set to mock. Bypassing mock GMB testimonials seeding.');
     return;
   }
 

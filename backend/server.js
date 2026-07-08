@@ -108,12 +108,12 @@ const initializeServer = async () => {
     const { syncAllApprovedCategories } = require('./utils/categoryHelper');
     await syncAllApprovedCategories();
 
-    // 7. Seed default events on boot
-    console.log('[Boot] Seeding default events if collection is empty...');
-    const { seedDefaultEvents } = require('./routes/events');
-    if (seedDefaultEvents) {
-      await seedDefaultEvents();
-    }
+    // 8. Purge existing mock seeded events and testimonials from the database
+    console.log('[Boot] Purging existing mock events and GMB testimonials...');
+    const Testimonial = require('./models/Testimonial');
+    await Testimonial.deleteMany({ authorName: { $in: ['Ramanathan K.', 'Santhosh Kumar', 'Meera Nair'] } });
+    const Event = require('./models/Event');
+    await Event.deleteMany({ title: { $in: ['Udumalpet Marathon 2025', 'Arulmigu Subramanya Swamy Temple Festival', 'Udumalpet Startup Meet 2025', 'Carnatic Music Concert'] } });
 
     console.log('UBT Backend Subsystems initialized and synced successfully.');
   } catch (error) {

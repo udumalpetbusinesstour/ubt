@@ -323,19 +323,8 @@ export default function EventDetail() {
         throw new Error('Not found');
       }
     } catch (err) {
-      console.warn('Backend server offline, searching mock events.');
-      const mockObj = mockEvents.find(e => e._id === id);
-      if (mockObj) {
-        let next = Number(localStorage.getItem(`ubt_views_${id}`) || 0);
-        if (!hasBeenViewed) {
-          next = next + 1;
-          localStorage.setItem(`ubt_views_${id}`, next);
-        }
-        mockObj.views = next;
-        setEvent(mockObj);
-      } else {
-        setEvent(null);
-      }
+      console.warn('Backend server offline.');
+      setEvent(null);
     } finally {
       setLoading(false);
     }
