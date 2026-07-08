@@ -367,7 +367,7 @@ function BusinessesList() {
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [visibleCategoryLimit, selectedCategoryInExplore]);
+  }, [visibleCategoryLimit, selectedCategoryInExplore, isCategoriesView, categoriesSearchQuery]);
 
   const getDraftResumeStep = (biz) => {
     if (!biz) return 1;
