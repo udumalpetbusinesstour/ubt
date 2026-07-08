@@ -2636,20 +2636,9 @@ export default function AdminDashboard() {
                                   </div>
                                 </td>
                                 <td className="p-4.5">
-                                  <div className="flex flex-col gap-1.5 text-left">
-                                    {b.categories && b.categories.length > 0 ? (
-                                      b.categories.map((c, idx) => (
-                                        <div key={idx} className="font-bold text-slate-700 text-xs leading-normal">
-                                          {c.type === 'Others' ? c.customCategoryName : c.type}
-                                          <span className="text-[9.5px] text-slate-400 font-semibold ml-1 block">
-                                            ({c.category})
-                                          </span>
-                                        </div>
-                                      ))
-                                    ) : (
-                                      <span className="font-bold text-slate-700 text-xs">{b.type}</span>
-                                    )}
-                                    <span className="text-[9.5px] text-[#027244] mt-1 font-extrabold tracking-wide uppercase">{b.locality}</span>
+                                  <div className="flex flex-col text-left">
+                                    <span className="font-bold text-slate-705 text-xs">{b.type}</span>
+                                    <span className="text-[10px] text-slate-400 mt-1 font-semibold">{b.locality}</span>
                                   </div>
                                 </td>
                                 <td className="p-4.5 font-bold text-slate-700 text-xs">
@@ -6675,26 +6664,30 @@ export default function AdminDashboard() {
                 
                 {/* Currently Vetted Categories List */}
                 <div className="flex flex-wrap gap-2 mt-1">
-                  {(selectedBiz.categories || []).map((cat, idx) => (
-                    <div key={idx} className="bg-emerald-50 border border-emerald-250 text-emerald-800 text-[10.5px] font-bold py-1.5 px-3 rounded-xl flex items-center gap-2 shadow-2xs">
-                      <span>
-                        {cat.type === 'Others' ? cat.customCategoryName : cat.type}
-                        <span className="text-[9px] text-slate-400 font-semibold ml-1">
-                          ({cat.category})
+                  {(selectedBiz.categories || []).map((cat, idx) => {
+                    const matched = presetCategories.find(c => c._id === cat.categoryId);
+                    const parentName = matched ? matched.parentCategory : cat.category;
+                    const subName = matched ? matched.categoryName : (cat.type === 'Others' ? cat.customCategoryName : cat.type);
+                    return (
+                      <div key={idx} className="bg-emerald-50 border border-emerald-250 text-emerald-800 text-[10.5px] font-bold py-1.5 px-3 rounded-xl flex items-center gap-2 shadow-2xs">
+                        <span>
+                          <span className="text-slate-500 font-extrabold uppercase text-[9px] tracking-wider">{parentName}</span>
+                          <span className="text-slate-400 font-normal mx-1.5">›</span>
+                          <span className="text-emerald-850 font-extrabold">{subName}</span>
                         </span>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          const updatedCats = selectedBiz.categories.filter((_, i) => i !== idx);
-                          await handleSaveBizCategories(updatedCats);
-                        }}
-                        className="text-emerald-600 hover:text-emerald-850 font-black cursor-pointer"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const updatedCats = selectedBiz.categories.filter((_, i) => i !== idx);
+                            await handleSaveBizCategories(updatedCats);
+                          }}
+                          className="text-emerald-600 hover:text-emerald-850 font-black cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    );
+                  })}
                   {(selectedBiz.categories || []).length === 0 && (
                     <span className="text-xs text-slate-400 font-semibold italic">No categories selected.</span>
                   )}
