@@ -189,6 +189,18 @@ router.delete('/:id', protect, admin, async (req, res, next) => {
       { $set: { category: 'Others', type: 'Others', categoryId: null } }
     );
 
+    // Re-assign inside the categories array of all businesses
+    await Business.updateMany(
+      { "categories.type": categoryName },
+      { 
+        $set: { 
+          "categories.$.category": "Others", 
+          "categories.$.type": "Others", 
+          "categories.$.categoryId": null 
+        } 
+      }
+    );
+
     return sendSuccess(res, 200, 'Category classification removed successfully');
   } catch (err) {
     next(err);
