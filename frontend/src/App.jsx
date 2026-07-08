@@ -12,6 +12,7 @@ import Dashboard from './app/dashboard/page';
 import Login from './app/login/page';
 import Register from './app/register/page';
 import ResetPassword from './app/reset-password/page';
+import VerifyEmail from './app/verify-email/page';
 import ChoosePlan from './app/choose-plan/page';
 import EventsPage from './app/events/page';
 import EventDetail from './app/events/[id]/page';
@@ -96,6 +97,7 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/choose-plan" element={<ChoosePlan />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:id" element={<EventDetail />} />

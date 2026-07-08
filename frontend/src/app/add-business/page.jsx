@@ -1776,6 +1776,16 @@ export default function AddBusiness() {
                   >
                     {autofillLoading ? 'Importing Details...' : 'Verify & Proceed'}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError('');
+                      setEligibilityMethod('pincode');
+                    }}
+                    className="py-3.5 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white"
+                  >
+                    Skip & Verify using Pincode
+                  </button>
                 </div>
               </div>
             )}
@@ -2128,6 +2138,16 @@ export default function AddBusiness() {
                     className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow disabled:opacity-50"
                   >
                     {branchAutofillLoading ? 'Importing Details...' : 'Verify & Proceed'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError('');
+                      setBranchEligibilityMethod('pincode');
+                    }}
+                    className="py-3.5 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white"
+                  >
+                    Skip & Verify using Pincode
                   </button>
                 </div>
               </div>

@@ -105,12 +105,15 @@ const registerUser = async (req, res, next) => {
       });
     }
 
+    const origin = req.get('origin') || 'https://udumalpet.business';
+    const verifyLink = `${origin}/verify-email?email=${encodeURIComponent(email)}&token=${otp}`;
+
     try {
       await sendEmail({
         to: email,
         subject: 'Email Verification OTP - UBT',
-        text: `Hello ${resolvedName},\n\nWelcome to Udumalpet Business Tour!\n\nYour 6-digit verification code is: ${otp}\n\nIt is valid for 10 minutes.\n\nBest regards,\nUBT Team`,
-        html: `<p>Hello <strong>${resolvedName}</strong>,</p><p>Welcome to Udumalpet Business Tour!</p><p>Your 6-digit verification code is: <strong style="font-size: 18px; color: #027244;">${otp}</strong></p><p>It is valid for 10 minutes.</p><p>Best regards,<br/>UBT Team</p>`
+        text: `Hello ${resolvedName},\n\nWelcome to Udumalpet Business Tour!\n\nYour 6-digit verification code is: ${otp}\n\nAlternatively, you can verify your email directly by clicking the link below:\n${verifyLink}\n\nIt is valid for 10 minutes.\n\nBest regards,\nUBT Team`,
+        html: `<p>Hello <strong>${resolvedName}</strong>,</p><p>Welcome to Udumalpet Business Tour!</p><p>Your 6-digit verification code is: <strong style="font-size: 18px; color: #027244;">${otp}</strong></p><p>Alternatively, you can click the button below to verify your email address automatically:</p><p><a href="${verifyLink}" style="display: inline-block; background-color: #027244; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Verify Email Address</a></p><p>Or copy and paste this link in your browser:<br/><a href="${verifyLink}">${verifyLink}</a></p><p>It is valid for 10 minutes.</p><p>Best regards,<br/>UBT Team</p>`
       });
     } catch (emailErr) {
       console.error('Failed to send verification email during registration:', emailErr);
@@ -155,12 +158,15 @@ const loginUser = async (req, res, next) => {
         user.emailVerificationOtpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
         await user.save();
 
+        const origin = req.get('origin') || 'https://udumalpet.business';
+        const verifyLink = `${origin}/verify-email?email=${encodeURIComponent(user.email)}&token=${otp}`;
+
         try {
           await sendEmail({
             to: user.email,
             subject: 'Email Verification OTP - UBT',
-            text: `Your 6-digit verification code is: ${otp}. It will expire in 10 minutes.`,
-            html: `<p>Your 6-digit verification code is: <strong style="font-size: 18px; color: #027244;">${otp}</strong></p><p>It will expire in 10 minutes.</p>`
+            text: `Hello ${user.name || 'Member'},\n\nYour 6-digit verification code is: ${otp}\n\nAlternatively, you can verify your email directly by clicking the link below:\n${verifyLink}\n\nIt will expire in 10 minutes.\n\nBest regards,\nUBT Team`,
+            html: `<p>Hello <strong>${user.name || 'Member'}</strong>,</p><p>Your 6-digit verification code is: <strong style="font-size: 18px; color: #027244;">${otp}</strong></p><p>Alternatively, you can click the button below to verify your email address automatically:</p><p><a href="${verifyLink}" style="display: inline-block; background-color: #027244; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Verify Email Address</a></p><p>Or copy and paste this link in your browser:<br/><a href="${verifyLink}">${verifyLink}</a></p><p>It will expire in 10 minutes.</p><p>Best regards,<br/>UBT Team</p>`
           });
         } catch (emailErr) {
           console.error('Failed to send verification email during login:', emailErr);
@@ -672,12 +678,15 @@ const resendVerificationOtp = async (req, res, next) => {
     user.emailVerificationOtpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
+    const origin = req.get('origin') || 'https://udumalpet.business';
+    const verifyLink = `${origin}/verify-email?email=${encodeURIComponent(user.email)}&token=${otp}`;
+
     try {
       await sendEmail({
         to: user.email,
         subject: 'Email Verification OTP - UBT',
-        text: `Your 6-digit verification code is: ${otp}. It will expire in 10 minutes.`,
-        html: `<p>Your 6-digit verification code is: <strong style="font-size: 18px; color: #027244;">${otp}</strong></p><p>It will expire in 10 minutes.</p>`
+        text: `Hello ${user.name || 'Member'},\n\nYour 6-digit verification code is: ${otp}\n\nAlternatively, you can verify your email directly by clicking the link below:\n${verifyLink}\n\nIt will expire in 10 minutes.\n\nBest regards,\nUBT Team`,
+        html: `<p>Hello <strong>${user.name || 'Member'}</strong>,</p><p>Your 6-digit verification code is: <strong style="font-size: 18px; color: #027244;">${otp}</strong></p><p>Alternatively, you can click the button below to verify your email address automatically:</p><p><a href="${verifyLink}" style="display: inline-block; background-color: #027244; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Verify Email Address</a></p><p>Or copy and paste this link in your browser:<br/><a href="${verifyLink}">${verifyLink}</a></p><p>It will expire in 10 minutes.</p><p>Best regards,<br/>UBT Team</p>`
       });
     } catch (emailErr) {
       console.error('Failed to send verification email:', emailErr);
