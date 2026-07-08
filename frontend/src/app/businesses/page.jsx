@@ -943,8 +943,8 @@ function BusinessesList() {
           setAllBusinesses(data.data);
         }
       } catch (err) {
-        console.warn('API error, using mockup standard fallback counts.');
-        setAllBusinesses(staticData);
+        console.warn('API error, empty counts.');
+        setAllBusinesses([]);
       }
     };
     fetchAllCounts();
@@ -1107,79 +1107,8 @@ function BusinessesList() {
         setBusinesses(results);
       }
     } catch (err) {
-      console.warn('API error, loading realistic backup businesses list.');
-      // Use global staticData constant
-
-      // Apply search queries manually for fallback
-      let results = [...staticData];
-      const q = searchParams.get('q');
-      if (q) {
-        results = results.filter(b => b.name.toLowerCase().includes(q.toLowerCase()) || b.highlights.some(h => h.toLowerCase().includes(q.toLowerCase())));
-      }
-      let cat = searchParams.get('category');
-      if (resolvedFromSlug) {
-        cat = resolvedFromSlug.value;
-      }
-      if (cat && cat !== 'All Categories') {
-        const catList = cat.split(',');
-        results = results.filter(b => {
-          return catList.some(singleCat => {
-            // Check if singleCat is a parent category in DB
-            const isParent = dynamicAvailableCategories.some(p => p.toLowerCase() === singleCat.toLowerCase());
-            if (isParent) {
-              // Match business category if it belongs to this parent
-              const parent = getParentCategory(b.category || '');
-              return parent.toLowerCase() === singleCat.toLowerCase() || b.category === singleCat;
-            } else {
-              return b.category === singleCat;
-            }
-          });
-        });
-      }
-      const loc = searchParams.get('locality');
-      if (loc && loc !== 'All Localities') {
-        const locList = loc.split(',');
-        results = results.filter(b => {
-          return locList.some(singleLoc => {
-            return (b.locality || '').toLowerCase().includes(singleLoc.toLowerCase()) || b.pincode === singleLoc;
-          });
-        });
-      }
-
-      const verifiedParam = searchParams.get('verified');
-      if (verifiedParam === 'true') {
-        results = results.filter(b => b.isAddressVerified || (b.googlePlaceId && b.googlePlaceId !== '') || (b.googleBusinessLink && b.googleBusinessLink !== '') || b.googleLinked);
-      }
-
-      const premiumParam = searchParams.get('type');
-      if (premiumParam === 'Premium') {
-        results = results.filter(b => b.isPremium);
-      }
-
-      const ratingParam = searchParams.get('rating');
-      if (ratingParam) {
-        const ratingVal = parseFloat(ratingParam);
-        results = results.filter(b => b.googleRating >= ratingVal);
-      }
-      
-      // Sort manually
-      results.sort((a, b) => {
-        // Active Premium rank boost
-        const aPrem = a.isPremium && a.subscriptionStatus === 'active';
-        const bPrem = b.isPremium && b.subscriptionStatus === 'active';
-        if (aPrem && !bPrem) return -1;
-        if (!aPrem && bPrem) return 1;
-
-        // Active vs Expired
-        const aActive = a.subscriptionStatus === 'active';
-        const bActive = b.subscriptionStatus === 'active';
-        if (aActive && !bActive) return -1;
-        if (!aActive && bActive) return 1;
-
-        return b.googleRating - a.googleRating;
-      });
-
-      setBusinesses(results);
+      console.warn('API error, empty results.');
+      setBusinesses([]);
     } finally {
       setLoading(false);
     }
@@ -2995,14 +2924,19 @@ function BusinessesList() {
           {/* Empty Results state */}
           {!loading && businesses.length === 0 && (
             <div className="bg-white border border-slate-200/60 rounded-3xl py-16 px-6 text-center shadow-sm flex flex-col items-center justify-center gap-4 text-slate-400">
-              <AlertCircle className="h-10 w-10 text-slate-300" />
+              <AlertCircle className="h-10 w-10 text-slate-300 animate-pulse" />
               <div>
-                <h4 className="font-extrabold text-slate-700 text-base leading-none">No businesses found</h4>
-                <p className="text-xs text-slate-400 font-semibold mt-2">Try resetting your category or location filters above.</p>
+                <h4 className="font-extrabold text-slate-700 text-base leading-none">No listings yet</h4>
+                <p className="text-xs text-slate-500 font-semibold mt-2">List yours if you are a business owner!</p>
               </div>
-              <button onClick={handleResetFilters} className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] text-white font-bold text-xs rounded-xl shadow transition-all cursor-pointer mt-2">
-                Clear Filters
-              </button>
+              <div className="flex gap-3 justify-center mt-2 flex-wrap">
+                <button onClick={() => navigate('/add-business')} className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] text-white font-bold text-xs rounded-xl shadow transition-all cursor-pointer">
+                  Register Your Business
+                </button>
+                <button onClick={handleResetFilters} className="py-2.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow transition-all cursor-pointer">
+                  Clear Filters
+                </button>
+              </div>
             </div>
           )}
 

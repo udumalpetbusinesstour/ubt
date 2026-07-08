@@ -41,7 +41,8 @@ import {
   ChevronLeft, ChevronRight, HelpCircle, Eye, MessageSquare, Play, Sparkles, X, Gift, Rocket,
   Hotel, Store, Wrench, HeartPulse, GraduationCap, Home as HouseIcon, Car, LayoutGrid,
   FileEdit, PhoneCall, Smile, Users2, Tv, Utensils, Building, ShoppingBag, Factory, 
-  Briefcase, Compass, Sprout, CreditCard, Dumbbell, Landmark, Laptop, BookOpen, Zap
+  Briefcase, Compass, Sprout, CreditCard, Dumbbell, Landmark, Laptop, BookOpen, Zap,
+  AlertCircle
 } from 'lucide-react';
 
 const mockFeatured = [
@@ -483,7 +484,7 @@ export default function Home() {
       try {
         const res = await fetch('http://localhost:5000/api/businesses?sort=reviews&limit=15');
         const data = await res.json();
-        const rawList = (data.success && data.data.length > 0) ? data.data : mockFeatured;
+        const rawList = (data.success && data.data && Array.isArray(data.data)) ? data.data : [];
         const listToProcess = rawList.filter(b => !isGovernmentalOrPublic(b) && b.subscriptionStatus === 'active');
 
         let totalRatingSum = 0;
@@ -510,19 +511,8 @@ export default function Home() {
         const sortedByBayesian = [...listToProcess].sort((a, b) => getBayesianScore(b) - getBayesianScore(a));
         setFeaturedBusinesses(sortedByBayesian.slice(0, 10));
       } catch (err) {
-        console.warn('Backend server offline, running fallback Bayesian featured businesses sync.');
-        const confidenceWeightM = 50;
-        const globalAvgC = 4.7;
-        const getBayesianScore = (b) => {
-          const R = Number(b.googleRating ?? b.rating ?? 0);
-          const v = Number(b.googleReviewsCount ?? b.reviewsCount ?? 0);
-          if (v === 0 && R === 0) return 0;
-          const bayesianTerm = (v / (v + confidenceWeightM)) * R + (confidenceWeightM / (v + confidenceWeightM)) * globalAvgC;
-          const volumeBonus = 0.1 * Math.log10(v + 1);
-          return bayesianTerm + volumeBonus;
-        };
-        const sortedMock = [...mockFeatured].filter(b => !isGovernmentalOrPublic(b) && b.subscriptionStatus === 'active').sort((a, b) => getBayesianScore(b) - getBayesianScore(a));
-        setFeaturedBusinesses(sortedMock.slice(0, 10));
+        console.warn('Backend server offline, setting empty featured businesses.');
+        setFeaturedBusinesses([]);
       }
 
       // 1b. Fetch top 10 contributor businesses (ranked by referrals)
@@ -1307,127 +1297,146 @@ export default function Home() {
 
         <div className="mx-auto relative max-w-full w-fit">
           {/* Scroll Left Button */}
-          <button 
-            onClick={() => handleScrollFeatured('left')}
-            className="absolute left-2 md:left-4 2xl:-left-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
-            aria-label="Scroll Featured Left"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
+          {featuredBusinesses && featuredBusinesses.length > 1 && (
+            <button 
+              onClick={() => handleScrollFeatured('left')}
+              className="absolute left-2 md:left-4 2xl:-left-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+              aria-label="Scroll Featured Left"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          )}
 
-          <div 
-            ref={featuredScrollRef}
-            className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-fit max-w-full scroll-smooth px-8 md:px-12 2xl:px-0"
-          >
-            {featuredBusinesses.map((biz) => {
-            const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
-            return (
-              <div 
-                key={biz._id} 
-                className="card-premium group rounded-2xl overflow-hidden flex flex-col cursor-pointer relative w-[280px] sm:w-[320px] shrink-0 snap-center sm:snap-start"
-                onClick={() => navigate(`/${biz.slug || biz._id}`)}
-              >
-                <div className="h-44 w-full overflow-hidden relative rounded-t-[15px]">
+          {featuredBusinesses && featuredBusinesses.length > 0 ? (
+            <div 
+              ref={featuredScrollRef}
+              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-fit max-w-full scroll-smooth px-8 md:px-12 2xl:px-0"
+            >
+              {featuredBusinesses.map((biz) => {
+                const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
+                return (
                   <div 
-                    className="h-full w-full bg-cover bg-center transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[15px]"
-                    style={{ 
-                      backgroundImage: `url('${window.getImageUrl(biz.coverImageUrl)}')`,
-                      filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
-                    }}
-                  />
-                  {isSubscribed && (
-                    <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">
-                      {biz.isFoundingMember && (
-                        <div className="bg-amber-500 text-white px-1.5 py-0.5 rounded-lg shadow-xs flex items-center gap-0.5 border border-amber-600">
-                          <Sparkles className="h-2.5 w-2.5 text-white fill-current" />
-                          <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider">Founding Member</span>
+                    key={biz._id} 
+                    className="card-premium group rounded-2xl overflow-hidden flex flex-col cursor-pointer relative w-[280px] sm:w-[320px] shrink-0 snap-center sm:snap-start"
+                    onClick={() => navigate(`/${biz.slug || biz._id}`)}
+                  >
+                    <div className="h-44 w-full overflow-hidden relative rounded-t-[15px]">
+                      <div 
+                        className="h-full w-full bg-cover bg-center transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[15px]"
+                        style={{ 
+                          backgroundImage: `url('${window.getImageUrl(biz.coverImageUrl)}')`,
+                          filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
+                        }}
+                      />
+                      {isSubscribed && (
+                        <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">
+                          {biz.isFoundingMember && (
+                            <div className="bg-amber-500 text-white px-1.5 py-0.5 rounded-lg shadow-xs flex items-center gap-0.5 border border-amber-600">
+                              <Sparkles className="h-2.5 w-2.5 text-white fill-current" />
+                              <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider">Founding Member</span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                  )}
-                </div>
-                <div 
-                  className={`p-5 flex-grow flex flex-col justify-between gap-3.5 bg-white ${!isSubscribed ? 'select-none pointer-events-none' : ''}`}
-                  style={{
-                    filter: !isSubscribed ? 'blur(3.5px)' : 'none'
-                  }}
-                >
-                  <div className="flex flex-col gap-1.5 text-left">
-                    <h4 className="font-extrabold text-sm text-[#001c41] leading-tight transition-colors duration-300 group-hover:text-[#027244]">{biz.name}</h4>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{biz.category}</span>
-                    <a 
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(biz.address ? `${biz.name}, ${biz.address}` : `${biz.name}, ${biz.locality || ''}, Udumalpet`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold mt-1 hover:text-emerald-500 transition-colors cursor-pointer group"
-                      title="View on Google Maps"
+                    <div 
+                      className={`p-5 flex-grow flex flex-col justify-between gap-3.5 bg-white ${!isSubscribed ? 'select-none pointer-events-none' : ''}`}
+                      style={{
+                        filter: !isSubscribed ? 'blur(3.5px)' : 'none'
+                      }}
                     >
-                      <MapPin className="h-3.5 w-3.5 text-slate-400 group-hover:text-emerald-500 shrink-0" />
-                      <span className="group-hover:underline">{biz.locality}</span>
-                    </a>
-                  </div>
-
-                  <div className="flex justify-between items-center border-t border-slate-100 pt-3 text-xs">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3.5 w-3.5 text-amber-400 fill-current" />
-                        <span className="font-bold text-slate-700">{biz.googleRating.toFixed(1)}</span>
-                        <span className="text-[10px] font-bold text-slate-400">({biz.googleReviewsCount})</span>
-                      </div>
-
-                      {/* Quick call and map location symbols */}
-                      <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3">
-                        <a 
-                          href={`tel:${biz.phone}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="h-6 w-6 rounded-full bg-emerald-50 text-[#027244] border border-emerald-100/50 flex items-center justify-center hover:bg-emerald-100 transition-colors cursor-pointer"
-                          title={`Call ${biz.name}`}
-                        >
-                          <Phone className="h-3.5 w-3.5" />
-                        </a>
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <h4 className="font-extrabold text-sm text-[#001c41] leading-tight transition-colors duration-300 group-hover:text-[#027244]">{biz.name}</h4>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{biz.category}</span>
                         <a 
                           href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(biz.address ? `${biz.name}, ${biz.address}` : `${biz.name}, ${biz.locality || ''}, Udumalpet`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="h-6 w-6 rounded-full bg-blue-50 text-blue-600 border border-blue-100/50 flex items-center justify-center hover:bg-blue-100 transition-colors cursor-pointer group"
+                          className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold mt-1 hover:text-emerald-500 transition-colors cursor-pointer group"
                           title="View on Google Maps"
                         >
-                          <MapPin className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+                          <MapPin className="h-3.5 w-3.5 text-slate-400 group-hover:text-emerald-500 shrink-0" />
+                          <span className="group-hover:underline">{biz.locality}</span>
                         </a>
                       </div>
+
+                      <div className="flex justify-between items-center border-t border-slate-100 pt-3 text-xs">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3.5 w-3.5 text-amber-400 fill-current" />
+                            <span className="font-bold text-slate-700">{biz.googleRating.toFixed(1)}</span>
+                            <span className="text-[10px] font-bold text-slate-400">({biz.googleReviewsCount})</span>
+                          </div>
+
+                          {/* Quick call and map location symbols */}
+                          <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3">
+                            <a 
+                              href={`tel:${biz.phone}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="h-6 w-6 rounded-full bg-emerald-50 text-[#027244] border border-emerald-100/50 flex items-center justify-center hover:bg-emerald-100 transition-colors cursor-pointer"
+                              title={`Call ${biz.name}`}
+                            >
+                              <Phone className="h-3.5 w-3.5" />
+                            </a>
+                            <a 
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(biz.address ? `${biz.name}, ${biz.address}` : `${biz.name}, ${biz.locality || ''}, Udumalpet`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="h-6 w-6 rounded-full bg-blue-50 text-blue-600 border border-blue-100/50 flex items-center justify-center hover:bg-blue-100 transition-colors cursor-pointer group"
+                              title="View on Google Maps"
+                            >
+                              <MapPin className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+                            </a>
+                          </div>
+                        </div>
+                        <Link 
+                          to={`/${biz.slug || biz._id}`}
+                          className="text-[10px] font-bold text-[#027244] hover:underline flex items-center gap-0.5"
+                        >
+                          View Details
+                        </Link>
+                      </div>
                     </div>
-                    <Link 
-                      to={`/${biz.slug || biz._id}`}
-                      className="text-[10px] font-bold text-[#027244] hover:underline flex items-center gap-0.5"
-                    >
-                      View Details
-                    </Link>
+
+                    {/* Glassmorphism Lock Overlay for Inactive Subscriptions */}
+                    {!isSubscribed && (
+                      <div 
+                        onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
+                        className="absolute inset-0 bg-slate-900/10 backdrop-blur-xs z-20 transition-all duration-300 hover:bg-slate-900/15 cursor-pointer"
+                      />
+                    )}
                   </div>
-                </div>
-
-                {/* Glassmorphism Lock Overlay for Inactive Subscriptions */}
-                {!isSubscribed && (
-                  <div 
-                    onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
-                    className="absolute inset-0 bg-slate-900/10 backdrop-blur-xs z-20 transition-all duration-300 hover:bg-slate-900/15 cursor-pointer"
-                  />
-                )}
+                );
+              })}
+            </div>
+          ) : (
+            <div className="w-full flex flex-col items-center justify-center py-12 px-4 bg-slate-50 border border-dashed border-slate-200 rounded-3xl max-w-xl mx-auto my-2 text-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center animate-pulse">
+                <AlertCircle className="h-6 w-6" />
               </div>
-            );
-          })}
-        </div>
+              <p className="text-base sm:text-lg font-extrabold text-[#001c41] tracking-tight">No listings yet</p>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold max-w-sm leading-relaxed mt-1">
+                List yours if you are a business owner!
+              </p>
+              <Link to="/add-business" className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer mt-1">
+                Register Your Business
+              </Link>
+            </div>
+          )}
 
-        {/* Scroll Right Button */}
-        <button 
-          onClick={() => handleScrollFeatured('right')}
-          className="absolute right-2 md:right-4 2xl:-right-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
-          aria-label="Scroll Featured Right"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      </div>
+          {/* Scroll Right Button */}
+          {featuredBusinesses && featuredBusinesses.length > 1 && (
+            <button 
+              onClick={() => handleScrollFeatured('right')}
+              className="absolute right-2 md:right-4 2xl:-right-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+              aria-label="Scroll Featured Right"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          )}
+        </div>
   </section>
 
       {/* 4.5 Sponsored Ads Auto-scrolling Banner Section */}
