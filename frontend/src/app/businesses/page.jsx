@@ -177,7 +177,7 @@ const staticData = [
 ];
 
 function BusinessesList() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
 
