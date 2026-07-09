@@ -1177,10 +1177,6 @@ export default function AddBusiness() {
         setError('Branch Services / Products Offered is mandatory.');
         return false;
       }
-      if (!branchForm.brands || !branchForm.brands.trim()) {
-        setError('Branch Brands We Deal With is mandatory.');
-        return false;
-      }
       if (!branchForm.serviceArea || !branchForm.serviceArea.trim()) {
         setError('Branch Service Area Limits is mandatory.');
         return false;
@@ -1226,10 +1222,6 @@ export default function AddBusiness() {
     } else if (currentStep === 3) {
       if (!formData.services || !formData.services.trim()) {
         setError('Services / Products Offered is mandatory.');
-        return false;
-      }
-      if (!formData.brands || !formData.brands.trim()) {
-        setError('Brands We Deal With is mandatory.');
         return false;
       }
       if (!formData.serviceArea || !formData.serviceArea.trim()) {
@@ -2576,7 +2568,7 @@ export default function AddBusiness() {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Brands We Deal With <span className="text-red-500">*</span></label>
+                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Brands We Deal With <span className="text-slate-400 font-semibold lowercase text-[10px]">(Optional)</span></label>
                     <input
                       type="text"
                       name="brands"
@@ -3115,7 +3107,7 @@ export default function AddBusiness() {
                       </div>
 
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Brands Dealt With <span className="text-red-500">*</span></label>
+                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Brands Dealt With <span className="text-slate-400 font-semibold lowercase text-[10px]">(Optional)</span></label>
                         <input
                           type="text"
                           name="brands"

@@ -24,10 +24,7 @@ export default function LeadsEnquiriesTab({
           <span className="text-[11px] text-slate-450 font-semibold mt-1">Aggregate direct customer inquiries, receive phone callback requests, and initiate instant WhatsApp replies</span>
         </div>
         <div className="bg-emerald-55/15 text-[#027244] border border-emerald-100 px-3.5 py-1.5 rounded-2xl text-[11px] font-black uppercase inline-flex items-center gap-1.5 shrink-0 select-none shadow-xs font-sans">
-          <Mail className="h-3.5 w-3.5" /> {(leadsList || []).filter(l => {
-            const isClickLog = l.name.startsWith('Customer (');
-            return l.status !== 'Rectified' && !isClickLog;
-          }).length} Active Enquiries
+          <Mail className="h-3.5 w-3.5" /> {(leadsList || []).filter(l => l.status !== 'Rectified').length} Active Leads & Enquiries
         </div>
       </div>
 
@@ -57,8 +54,6 @@ export default function LeadsEnquiriesTab({
           <div className="flex-grow overflow-y-auto divide-y divide-slate-100">
             {leadsList
               .filter(l => {
-                const isClickLog = l.name.startsWith('Customer (');
-                if (isClickLog) return false;
                 if (leadFilter === 'Urgent' && l.name !== 'Suresh Kumar' && l.name !== 'Kavin Prakash') return false;
                 if (leadFilter === 'Responded' && !l.responded) return false;
                 return true;
@@ -66,6 +61,7 @@ export default function LeadsEnquiriesTab({
               .map((lead) => {
                 const originalIdx = leadsList.findIndex(l => l._id ? l._id === lead._id : l.name === lead.name);
                 const isSelected = selectedLeadIdx === originalIdx;
+                const isClickLog = lead.name.startsWith('Customer (');
                 
                 return (
                   <button
@@ -82,10 +78,16 @@ export default function LeadsEnquiriesTab({
                         <span className="font-extrabold text-slate-800 truncate leading-snug">{lead.name}</span>
                         <span className="text-[9px] font-semibold text-slate-400 shrink-0">{lead.time}</span>
                       </div>
-                      <span className="text-[10px] text-slate-500 font-semibold truncate mt-0.5">{lead.category}</span>
+                      <span className="text-[10px] text-slate-500 font-semibold truncate mt-0.5">
+                        {isClickLog ? lead.message : lead.category}
+                      </span>
                       
                       <div className="flex items-center gap-1.5 mt-1.5">
-                        {lead.name === 'Suresh Kumar' || lead.name === 'Kavin Prakash' ? (
+                        {isClickLog ? (
+                          <span className="bg-emerald-50 text-emerald-600 border border-emerald-100/60 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide leading-none">
+                            Profile Touchpoint
+                          </span>
+                        ) : lead.name === 'Suresh Kumar' || lead.name === 'Kavin Prakash' ? (
                           <span className="bg-rose-50 text-rose-600 border border-rose-100/60 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide leading-none">
                             Urgent Callback
                           </span>

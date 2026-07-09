@@ -2031,7 +2031,6 @@ router.post('/', protect, async (req, res) => {
     // 0. Final validation of required fields
     if (!name || !description || !phone || !whatsapp || !pincode ||
         !services || (Array.isArray(services) && services.length === 0) ||
-        !brands || (Array.isArray(brands) && brands.length === 0) ||
         !highlights || (Array.isArray(highlights) && highlights.length === 0) ||
         !languagesKnown || !languagesKnown.trim() ||
         !serviceArea || !serviceArea.trim()) {

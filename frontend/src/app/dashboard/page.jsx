@@ -5264,14 +5264,14 @@ function DashboardContent() {
 
             <>
               {(user?.isFoundingMember || business?.isFoundingMember) && (
-                <div className="bg-gradient-to-r from-amber-550 via-amber-600 to-yellow-500 text-white rounded-3xl p-6 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 border border-amber-400/20 text-left animate-fadeIn mb-2 shrink-0">
+                <div className="bg-orange-500 text-white rounded-3xl p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4 border border-orange-600 text-left animate-fadeIn mb-4 shrink-0">
                   <div className="flex items-start gap-4">
                     <div className="p-3 bg-white/10 rounded-2xl text-white shrink-0 flex items-center justify-center">
                       <Sparkles className="h-6 w-6 text-white fill-current animate-pulse" />
                     </div>
                     <div className="flex flex-col">
                       <h3 className="font-extrabold text-sm md:text-base text-white">Congratulations, You are a Founding Member! 🌟</h3>
-                      <p className="text-xs text-amber-100 font-medium leading-relaxed mt-1">
+                      <p className="text-xs text-white/95 font-semibold leading-relaxed mt-1">
                         As one of the first 100 premium businesses on Udumalpet Business Tour, you have been awarded the exclusive **Founding Member** badge. Your business profile carries this tag permanently on the directory.
                       </p>
                     </div>
@@ -5306,7 +5306,9 @@ function DashboardContent() {
                 {/* WhatsApp Clicks */}
                 <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-emerald-55/15 text-emerald-600 flex items-center justify-center shrink-0">
-                    <MessageSquare className="h-4.5 w-4.5" />
+                    <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
+                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.455L0 24zm6.59-4.846c1.6.95 3.497 1.45 5.416 1.451 5.48.002 9.941-4.447 9.944-9.932.002-2.657-1.03-5.155-2.905-7.03C17.228 1.758 14.725.72 12.01.72c-5.485 0-9.946 4.448-9.948 9.934-.001 1.914.502 3.78 1.457 5.385l-.993 3.626 3.712-.971zm11.367-8.306c-.3-.15-1.77-.875-2.045-.975-.275-.1-.475-.15-.675.15-.2.3-.775.975-.95 1.175-.175.2-.35.225-.65.075-1.04-.52-1.786-.96-2.52-2.22-.19-.33.19-.307.545-1.01.075-.15.038-.282-.018-.393-.056-.113-.475-1.144-.65-1.569-.17-.413-.345-.356-.475-.363-.125-.007-.27-.009-.415-.009-.145 0-.38.054-.58.27-.2.22-.76.743-.76 1.812 0 1.07.778 2.102.887 2.25.11.148 1.53 2.336 3.706 3.28.518.225.922.36 1.24.462.52.165.992.142 1.365.087.416-.062 1.77-.725 2.02-1.388.25-.663.25-1.23.175-1.35-.075-.12-.275-.17-.575-.32z"/>
+                    </svg>
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">WhatsApp Clicks</span>
@@ -5427,38 +5429,49 @@ function DashboardContent() {
 
                     {/* Leads list stream */}
                     <div className="flex flex-col divide-y divide-slate-100">
-                      {leadsList.filter(l => !l.name.startsWith('Customer (')).length === 0 ? (
+                      {leadsList.length === 0 ? (
                         <p className="text-slate-400 font-semibold italic text-xs py-5.5 text-center">No customer leads received yet</p>
                       ) : (
                         leadsList
-                          .filter(l => !l.name.startsWith('Customer ('))
                           .slice(0, 5)
-                          .map((lead, idx) => (
-                          <div key={lead._id || idx} className="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 first:pt-0 last:pb-0 gap-3">
-                            <div className="flex items-center gap-3.5">
-                              <div className={`h-9 w-9 rounded-full ${lead.color || 'bg-slate-100 text-slate-600'} flex items-center justify-center font-extrabold text-xs shadow-inner shrink-0 select-none`}>
-                                {lead.initial}
-                              </div>
-                              <div className="flex flex-col text-left min-w-0">
-                                <span className="font-extrabold text-slate-800 text-xs truncate leading-snug">{lead.name}</span>
-                                <span className="text-[10px] text-slate-400 font-semibold mt-0.5 leading-none">{lead.category}</span>
-                              </div>
-                            </div>
+                          .map((lead, idx) => {
+                            const isClickLog = lead.name.startsWith('Customer (');
+                            const hasDummyPhone = !lead.phone || lead.phone.includes('00000');
+                            return (
+                              <div key={lead._id || idx} className="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 first:pt-0 last:pb-0 gap-3">
+                                <div className="flex items-center gap-3.5">
+                                  <div className={`h-9 w-9 rounded-full ${lead.color || 'bg-slate-100 text-slate-600'} flex items-center justify-center font-extrabold text-xs shadow-inner shrink-0 select-none`}>
+                                    {lead.initial}
+                                  </div>
+                                  <div className="flex flex-col text-left min-w-0">
+                                    <span className="font-extrabold text-slate-800 text-xs truncate leading-snug">{lead.name}</span>
+                                    <span className="text-[10px] text-slate-400 font-semibold mt-0.5 leading-none">
+                                      {isClickLog ? lead.message : lead.category}
+                                    </span>
+                                  </div>
+                                </div>
 
-                            <div className="flex items-center justify-between sm:justify-end gap-6 self-stretch sm:self-auto shrink-0 pl-12 sm:pl-0">
-                              <a 
-                                href={`tel:${lead.phone}`}
-                                className="text-[10.5px] font-bold text-slate-600 hover:text-emerald-600 flex items-center gap-1.5 transition-colors cursor-pointer group bg-slate-50 hover:bg-emerald-50 px-3 py-1.5 rounded-lg border border-slate-200/60"
-                              >
-                                <PhoneCall className="h-3 w-3 text-slate-400 group-hover:text-emerald-600" />
-                                <span>{lead.phone}</span>
-                              </a>
-                              <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-wide font-sans">
-                                {lead.time}
-                              </span>
-                            </div>
-                          </div>
-                        ))
+                                <div className="flex items-center justify-between sm:justify-end gap-6 self-stretch sm:self-auto shrink-0 pl-12 sm:pl-0">
+                                  {!hasDummyPhone ? (
+                                    <a 
+                                      href={`tel:${lead.phone}`}
+                                      className="text-[10.5px] font-bold text-slate-600 hover:text-emerald-600 flex items-center gap-1.5 transition-colors cursor-pointer group bg-slate-50 hover:bg-emerald-50 px-3 py-1.5 rounded-lg border border-slate-200/60"
+                                    >
+                                      <PhoneCall className="h-3 w-3 text-slate-400 group-hover:text-emerald-600" />
+                                      <span>{lead.phone}</span>
+                                    </a>
+                                  ) : (
+                                    <span className="bg-emerald-50 text-emerald-600 border border-emerald-100/60 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide leading-none">
+                                      Touchpoint
+                                    </span>
+                                  )}
+                                  <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-wide font-sans">
+                                    {lead.time}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })
                       )}
                     </div>
 
@@ -5596,7 +5609,7 @@ function DashboardContent() {
                       {/* Actions Links with logo labels */}
                       <div className="flex flex-col gap-2.5">
                         <a 
-                          href="https://google.com" 
+                          href={business?.googleBusinessLink || (business?.googlePlaceId ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.name)}&query_place_id=${business.googlePlaceId}` : `https://www.google.com/search?q=${encodeURIComponent((business?.name || '') + ' Udumalpet')}`)} 
                           target="_blank" 
                           rel="noreferrer"
                           className="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 hover:border-emerald-500 rounded-xl text-slate-700 hover:text-[#001c41] text-[10.5px] font-extrabold flex items-center justify-between transition-all"
