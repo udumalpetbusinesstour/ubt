@@ -1828,6 +1828,22 @@ function BusinessesList() {
       return pages;
     };
 
+    if (urlSlug && dbCategories.length === 0) {
+      return (
+        <div className="w-full min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center gap-4 font-sans">
+          <div className="flex flex-col items-center gap-3">
+            <div className="relative flex items-center justify-center">
+              <div className="animate-ping absolute inline-flex h-12 w-12 rounded-full bg-emerald-400 opacity-20"></div>
+              <div className="relative rounded-full h-12 w-12 border-4 border-slate-200 border-t-[#027244] animate-spin"></div>
+            </div>
+            <span className="text-xs font-bold text-slate-500 tracking-wider uppercase animate-pulse mt-2">
+              Loading Directory Listings...
+            </span>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="w-full flex flex-col items-center bg-[#F8FAFC]">
         {/* Header Banner */}
