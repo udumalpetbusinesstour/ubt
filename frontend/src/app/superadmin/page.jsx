@@ -4576,7 +4576,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                                 <div className="flex gap-1.5 shrink-0 justify-end w-full sm:w-auto mt-2 sm:mt-0">
                                                   <button
                                                     onClick={() => setMovingCategory(cat)}
-                                                    className="h-7 px-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[9.5px]"
+                                                    className="h-7 px-2 rounded-lg border border-slate-250 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-800 dark:text-slate-200 font-extrabold text-[9.5px]"
                                                     title="Move"
                                                   >
                                                     Move
@@ -4587,7 +4587,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                                       if (!newName || newName === cat.categoryName) return;
                                                       updatePresetCategory(cat._id, { categoryName: newName });
                                                     }}
-                                                    className="h-7 px-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[9.5px]"
+                                                    className="h-7 px-2 rounded-lg border border-slate-250 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-800 dark:text-slate-200 font-extrabold text-[9.5px]"
                                                     title="Rename"
                                                   >
                                                     Edit
@@ -4654,14 +4654,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                           <div className="flex gap-1.5 shrink-0">
                                             <button
                                               onClick={() => setMovingCategory(cat)}
-                                              className="h-7 px-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[9.5px]"
-                                              title="Move"
-                                            >
-                                              Move
-                                            </button>
-                                            <button
-                                              onClick={() => setMovingCategory(cat)}
-                                              className="h-7 px-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[9.5px]"
+                                              className="h-7 px-2 rounded-lg border border-slate-250 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-800 dark:text-slate-200 font-extrabold text-[9.5px]"
                                               title="Move"
                                             >
                                               Move
@@ -4672,7 +4665,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                                 if (!newName || newName === cat.categoryName) return;
                                                 updatePresetCategory(cat._id, { categoryName: newName });
                                               }}
-                                              className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-550 dark:text-slate-300 font-extrabold text-[10px]"
+                                              className="h-7 w-7 rounded-lg border border-slate-250 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-800 dark:text-slate-200 font-extrabold text-[10px]"
                                               title="Edit Category Name"
                                             >
                                               Edit
