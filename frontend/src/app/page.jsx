@@ -42,7 +42,7 @@ import {
   Hotel, Store, Wrench, HeartPulse, GraduationCap, Home as HouseIcon, Car, LayoutGrid,
   FileEdit, PhoneCall, Smile, Users2, Tv, Utensils, Building, ShoppingBag, Factory, 
   Briefcase, Compass, Sprout, CreditCard, Dumbbell, Landmark, Laptop, BookOpen, Zap,
-  AlertCircle
+  AlertCircle, Smartphone
 } from 'lucide-react';
 
 const mockFeatured = [
@@ -737,7 +737,13 @@ export default function Home() {
         'Public Sector': <Landmark className="h-7 w-7 text-slate-500" />,
         'IT & Digital Services': <Laptop className="h-7 w-7 text-blue-600" />,
         'Books & Stationery': <BookOpen className="h-7 w-7 text-emerald-600" />,
-        'Electrical & Solar': <Zap className="h-7 w-7 text-yellow-500" />
+        'Electrical & Solar': <Zap className="h-7 w-7 text-yellow-500" />,
+        'Hotels & Lodges': <Hotel className="h-7 w-7 text-purple-600" />,
+        'Electronics & Mobiles': <Smartphone className="h-7 w-7 text-emerald-600" />,
+        'Wedding & Event Services': <Sparkles className="h-7 w-7 text-pink-500" />,
+        'Repair Services': <Wrench className="h-7 w-7 text-orange-600" />,
+        'Shops': <ShoppingBag className="h-7 w-7 text-emerald-600" />,
+        'Shops & Showrooms': <ShoppingBag className="h-7 w-7 text-emerald-600" />
       };
 
       const sorted = availableCategories
