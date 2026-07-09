@@ -4135,50 +4135,55 @@ export default function AdminDashboard() {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 font-medium">
-                              {subscriptions.map(sub => {
-                                const ownerName = sub.ownerId?.fullName || sub.ownerId?.name || 'Unknown';
-                                const ownerEmail = sub.ownerId?.email || '';
-                                const bizName = sub.businessId?.name || sub.businessId?.businessName || 'N/A';
-                                const isActive = sub.status === 'active';
-                                const isPending = sub.status === 'pending';
-                                
-                                return (
-                                  <tr key={sub._id} className="hover:bg-slate-50/50">
-                                    <td className="p-4 flex flex-col text-left">
-                                      <span className="font-extrabold text-slate-800 text-xs sm:text-[13px]">{ownerName}</span>
-                                      {ownerEmail && <span className="text-[10px] text-slate-400 font-semibold mt-0.5">{ownerEmail}</span>}
-                                    </td>
-                                    <td className="p-4 font-bold text-slate-700">{bizName}</td>
-                                    <td className="p-4 uppercase text-[10px] font-extrabold text-slate-800">{sub.planName || sub.plan}</td>
-                                    <td className="p-4 font-black text-slate-800">₹{sub.amountPaid || sub.amount}</td>
-                                    <td className="p-4 text-emerald-600 font-extrabold">₹{sub.referralDiscount || 0}</td>
-                                    <td className="p-4 font-bold text-slate-500">
-                                      <div className="flex flex-col text-[10.5px]">
-                                        <span>S: {sub.startDate ? new Date(sub.startDate).toLocaleDateString() : 'N/A'}</span>
-                                        <span>E: {sub.expiryDate || sub.endDate ? new Date(sub.expiryDate || sub.endDate).toLocaleDateString() : 'N/A'}</span>
-                                      </div>
-                                    </td>
-                                    <td className="p-4">
-                                      <span className={`px-2.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
-                                        isActive 
-                                          ? 'bg-emerald-50 border-emerald-250 text-emerald-700' 
-                                          : isPending 
-                                            ? 'bg-amber-50 border-amber-250 text-amber-600'
-                                            : 'bg-rose-50 border-rose-250 text-rose-700'
-                                      }`}>
-                                        {sub.status}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                              {subscriptions.length === 0 && (
-                                <tr>
-                                  <td colSpan="7" className="p-8 text-center text-slate-400 text-xs font-bold leading-normal">
-                                    No platform subscription records found.
-                                  </td>
-                                </tr>
-                              )}
+                              {(() => {
+                                const validSubs = subscriptions.filter(sub => sub.status === 'active' || sub.status === 'expired' || sub.status === 'refunded');
+                                if (validSubs.length === 0) {
+                                  return (
+                                    <tr>
+                                      <td colSpan="7" className="p-8 text-center text-slate-400 text-xs font-bold leading-normal">
+                                        No platform subscription records found.
+                                      </td>
+                                    </tr>
+                                  );
+                                }
+                                return validSubs.map(sub => {
+                                  const ownerName = sub.ownerId?.fullName || sub.ownerId?.name || 'Unknown';
+                                  const ownerEmail = sub.ownerId?.email || '';
+                                  const bizName = sub.businessId?.name || sub.businessId?.businessName || 'N/A';
+                                  const isActive = sub.status === 'active';
+                                  const isPending = sub.status === 'pending';
+                                  
+                                  return (
+                                    <tr key={sub._id} className="hover:bg-slate-50/50">
+                                      <td className="p-4 flex flex-col text-left">
+                                        <span className="font-extrabold text-slate-800 text-xs sm:text-[13px]">{ownerName}</span>
+                                        {ownerEmail && <span className="text-[10px] text-slate-400 font-semibold mt-0.5">{ownerEmail}</span>}
+                                      </td>
+                                      <td className="p-4 font-bold text-slate-700">{bizName}</td>
+                                      <td className="p-4 uppercase text-[10px] font-extrabold text-slate-800">{sub.planName || sub.plan}</td>
+                                      <td className="p-4 font-black text-slate-800">₹{sub.amountPaid || sub.amount}</td>
+                                      <td className="p-4 text-emerald-600 font-extrabold">₹{sub.referralDiscount || 0}</td>
+                                      <td className="p-4 font-bold text-slate-500">
+                                        <div className="flex flex-col text-[10.5px]">
+                                          <span>S: {sub.startDate ? new Date(sub.startDate).toLocaleDateString() : 'N/A'}</span>
+                                          <span>E: {sub.expiryDate || sub.endDate ? new Date(sub.expiryDate || sub.endDate).toLocaleDateString() : 'N/A'}</span>
+                                        </div>
+                                      </td>
+                                      <td className="p-4">
+                                        <span className={`px-2.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
+                                          isActive 
+                                            ? 'bg-emerald-50 border-emerald-250 text-emerald-700' 
+                                            : isPending 
+                                              ? 'bg-amber-50 border-amber-250 text-amber-600'
+                                              : 'bg-rose-50 border-rose-250 text-rose-700'
+                                        }`}>
+                                          {sub.status}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  );
+                                });
+                              })()}
                             </tbody>
                           </table>
                         </div>
