@@ -667,10 +667,10 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                   className={`py-2 px-6 rounded-full text-xs font-black transition-all cursor-pointer ${
                     selectedPlan === p.name
                       ? 'bg-[#027244] text-white shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
+                      : 'text-slate-550 hover:text-slate-700'
                   }`}
                 >
-                  {p.name.replace(' Subscription', '').replace(' Plan', '')}
+                  {p.name.replace(' Subscription', '').replace(' Plan', '').replace(/\b\w/g, c => c.toUpperCase())}
                 </button>
               ))}
             </div>
@@ -725,10 +725,10 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                     </div>
                     
                     <div className="flex flex-col gap-1">
-                      <h3 className="font-extrabold text-slate-800 text-base">{p.name}</h3>
+                      <h3 className="font-extrabold text-slate-800 text-base">{p.name ? p.name.replace(/\b\w/g, c => c.toUpperCase()) : ''}</h3>
                       <div className="flex items-baseline justify-center gap-1.5 mt-1">
                         <span className="text-3xl font-extrabold text-[#001c41]">
-                          ₹{getDiscountedPrice(p.price)}
+                          ₹{user && (user.role === 'admin' || user.role === 'superadmin') ? p.price : getDiscountedPrice(p.price)}
                         </span>
                         <span className="text-xs text-slate-400 font-semibold">/ {p.durationDays} Days</span>
                       </div>
@@ -756,36 +756,26 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                     </div>
                   </div>
 
-                  <button
-                    disabled={paymentLoading}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (isStep) {
+                  {isStep && (
+                    <button
+                      disabled={paymentLoading}
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handlePaymentCheckout(p.name);
-                      } else {
-                        if (!token) {
-                          navigate('/login?redirect=/add-business');
-                        } else {
-                          navigate('/add-business');
-                        }
-                      }
-                    }}
-                    className={`mt-8 py-3 transition-all w-full rounded-xl font-extrabold text-xs cursor-pointer shadow-md active:scale-98 disabled:opacity-50 ${
-                      isSelected
-                        ? 'bg-[#027244] hover:bg-[#005934] text-white'
-                        : 'bg-white hover:bg-emerald-50 border border-[#027244] text-[#027244] hover:text-[#005934]'
-                    }`}
-                  >
-                    {isStep ? (
-                      paymentLoading && checkoutPlan === p.name 
+                      }}
+                      className={`mt-8 py-3 transition-all w-full rounded-xl font-extrabold text-xs cursor-pointer shadow-md active:scale-98 disabled:opacity-50 ${
+                        isSelected
+                          ? 'bg-[#027244] hover:bg-[#005934] text-white'
+                          : 'bg-white hover:bg-emerald-50 border border-[#027244] text-[#027244] hover:text-[#005934]'
+                      }`}
+                    >
+                      {paymentLoading && checkoutPlan === p.name 
                         ? 'Activating...' 
                         : (user && (user.role === 'admin' || user.role === 'superadmin') 
                             ? 'Activate Free Admin Plan' 
-                            : `Start ${p.type} Plan`)
-                    ) : (
-                      'Get Started'
-                    )}
-                  </button>
+                            : `Start ${p.type} Plan`)}
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -971,9 +961,9 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
 
         {/* Frequently Asked Questions Section */}
         <div className="w-full border-t border-slate-100 pt-8 mt-6 flex flex-col gap-6 text-center font-sans animate-fadeIn">
-          <div className="text-center flex flex-col items-center gap-1">
-            <h3 className="font-extrabold text-[#001c41] text-base tracking-tight">Frequently Asked Questions</h3>
-            <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Find quick answers to common queries about our subscription plans</p>
+          <div className="text-center flex flex-col items-center gap-1.5">
+            <h3 className="font-extrabold text-[#001c41] text-lg md:text-xl tracking-tight">Frequently Asked Questions</h3>
+            <p className="text-xs text-slate-400 font-semibold mt-1">Find quick answers to common queries about our subscription plans</p>
           </div>
 
           <div className="w-full flex flex-col gap-3 text-left">
@@ -1004,7 +994,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                   <span className="h-5 w-5 rounded-full bg-emerald-50 text-[#027244] font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5 border border-emerald-100">
                     Q
                   </span>
-                  <h4 className="text-xs font-black text-slate-800 leading-snug">
+                  <h4 className="text-sm md:text-base font-black text-slate-800 leading-snug">
                     {faq.q}
                   </h4>
                 </div>
@@ -1012,7 +1002,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                   <span className="h-5 w-5 rounded-full bg-slate-50 text-slate-400 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5 border border-slate-100">
                     A
                   </span>
-                  <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
+                  <p className="text-xs md:text-sm text-slate-500 leading-relaxed font-medium">
                     {faq.a}
                   </p>
                 </div>
