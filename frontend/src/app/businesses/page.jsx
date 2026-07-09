@@ -1972,6 +1972,21 @@ function BusinessesList() {
                     </div>
 
                     {(() => {
+                      if (categoriesLoading && dbCategories.length === 0) {
+                        return (
+                          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4.5 text-left animate-pulse">
+                            {[...Array(9)].map((_, i) => (
+                              <div key={i} className="card-premium rounded-3xl p-4 sm:p-6 min-h-[7.5rem] sm:h-36 h-auto bg-white border border-slate-200/60 flex flex-col justify-between">
+                                <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-slate-150" />
+                                <div className="flex flex-col gap-2 mt-3">
+                                  <div className="h-4 bg-slate-200 rounded w-2/3" />
+                                  <div className="h-3.5 bg-slate-150 rounded w-1/3" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
                       const sortedCats = [...dynamicCategoryDetails].sort((a, b) => (categoryCounts[b.name] || 0) - (categoryCounts[a.name] || 0));
                       const visibleCats = sortedCats.slice(0, visibleCategoryLimit);
                       return (
