@@ -1861,7 +1861,7 @@ function BusinessesList() {
                   {selectedSubcategoryInExplore && selectedSubcategoryInExplore !== 'All' ? (
                     <>
                       <button 
-                        onClick={() => navigate(getCategorySlug(selectedCategoryInExplore))} 
+                        onClick={() => setSearchParams({ focus: 'categories', category: selectedCategoryInExplore })} 
                         className="hover:text-emerald-450 transition-colors bg-transparent border-none p-0 cursor-pointer font-bold text-xs text-slate-300 hover:underline"
                       >
                         {selectedCategoryInExplore}
@@ -2005,7 +2005,7 @@ function BusinessesList() {
                                         body: JSON.stringify({ categoryName: cat.name })
                                       });
                                     } catch (e) {}
-                                     navigate(getCategorySlug(cat.name));
+                                     setSearchParams({ focus: 'categories', category: cat.name });
                                   }}
                                   className="card-premium group rounded-3xl p-4 sm:p-6 cursor-pointer flex flex-col justify-between min-h-[7.5rem] sm:h-36 h-auto relative overflow-hidden bg-white border border-slate-200/65 hover:border-[#027244] transition-all"
                                 >
@@ -2050,7 +2050,7 @@ function BusinessesList() {
                        <div className="flex flex-col gap-2">
                          <div className="flex items-center gap-3">
                            <button 
-                             onClick={() => navigate('/businesses?focus=categories')}
+                             onClick={() => setSearchParams({ focus: 'categories' })}
                              className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#027244] bg-slate-100 hover:bg-emerald-50/50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                            >
                              <ArrowLeft className="h-3.5 w-3.5" /> Back to Categories
@@ -2082,7 +2082,7 @@ function BusinessesList() {
                         const parentIconStr = parentIconStringMap[selectedCategoryInExplore] || 'Store';
                         return (
                           <div 
-                            onClick={() => navigate(`${getCategorySlug(selectedCategoryInExplore)}?subcategory=All`)}
+                            onClick={() => setSearchParams({ focus: 'categories', category: selectedCategoryInExplore, subcategory: 'All' })}
                             className="bg-white border border-slate-200/60 rounded-2xl p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:border-emerald-100 hover:bg-emerald-50/30 transition-all duration-300 group"
                           >
                             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -2124,7 +2124,7 @@ function BusinessesList() {
                                } catch (err) {
                                  console.warn('Failed to increment category view:', err);
                                }
-                               navigate(getCategorySlug(cat.categoryName));
+                               setSearchParams({ focus: 'categories', category: selectedCategoryInExplore, subcategory: cat.categoryName });
                              }}
                              className="bg-white border border-slate-200/60 rounded-2xl p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:border-emerald-100 hover:bg-emerald-50/30 transition-all duration-300 group"
                            >
@@ -2156,7 +2156,7 @@ function BusinessesList() {
                     <div className="flex flex-col gap-4 border-b border-slate-100 pb-4">
                       <div className="flex items-center gap-3">
                         <button 
-                          onClick={() => navigate(getCategorySlug(selectedCategoryInExplore))}
+                          onClick={() => setSearchParams({ focus: 'categories', category: selectedCategoryInExplore })}
                           className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#027244] bg-slate-100 hover:bg-emerald-50/50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                         >
                           <ArrowLeft className="h-3.5 w-3.5" /> Back to {selectedCategoryInExplore}
