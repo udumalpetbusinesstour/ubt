@@ -1296,27 +1296,15 @@ export default function Home() {
                     className="card-premium group rounded-2xl overflow-hidden flex flex-col cursor-pointer relative w-[280px] sm:w-[320px] shrink-0 snap-center sm:snap-start"
                     onClick={() => navigate(`/${biz.slug || biz._id}`)}
                   >
-                     <div className="h-44 w-full overflow-hidden relative rounded-t-[15px] bg-slate-50/85 border-b border-slate-100 flex items-center justify-center p-3 select-none">
-                       {/* Ambient blur background for premium visual integration */}
-                       <div 
-                         className="absolute inset-0 bg-cover bg-center opacity-20 blur-md transition-transform duration-700 ease-out-expo group-hover:scale-105"
-                         style={{ 
-                           backgroundImage: `url('${window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"}')`
+                     <div className="w-full aspect-square overflow-hidden relative rounded-t-[15px] bg-slate-50 border-b border-slate-100">
+                       <img 
+                         src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"} 
+                         alt={biz.name}
+                         className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[15px]"
+                         style={{
+                           filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
                          }}
                        />
-                       {/* Centered square logo frame */}
-                       <div 
-                         className="h-32 w-32 rounded-2xl bg-white shadow-md border border-slate-150 flex items-center justify-center overflow-hidden relative z-10 transition-transform duration-500 group-hover:scale-104"
-                         style={{
-                           filter: !isSubscribed ? 'blur(5px) grayscale(30%)' : 'none'
-                         }}
-                       >
-                         <img 
-                           src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"} 
-                           alt={biz.name}
-                           className="h-full w-full object-contain p-2.5"
-                         />
-                       </div>
                       {isSubscribed && (
                         <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">
                           {biz.isFoundingMember && (

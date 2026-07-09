@@ -341,22 +341,12 @@ export default function UserProfile() {
                   onClick={() => navigate(`/businesses/${biz.slug || biz._id}`)}
                   className="bg-white border border-slate-200/80 hover:border-slate-400 hover:shadow-md rounded-[24px] overflow-hidden flex flex-col cursor-pointer group"
                 >
-                   <div className="h-36 bg-slate-50 border-b border-slate-100 shrink-0 relative flex items-center justify-center p-2.5 overflow-hidden select-none">
-                     {/* Ambient blur background */}
-                     <div 
-                       className="absolute inset-0 bg-cover bg-center opacity-20 blur-md transition-transform duration-700 ease-out-expo group-hover:scale-105"
-                       style={{ 
-                         backgroundImage: `url('${(typeof window !== 'undefined' && window.getImageUrl ? window.getImageUrl(biz.logoUrl) : biz.logoUrl) || (typeof window !== 'undefined' && window.getImageUrl ? window.getImageUrl(biz.coverImageUrl) : biz.coverImageUrl) || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'}')`
-                       }}
+                   <div className="w-full aspect-square overflow-hidden relative rounded-t-[23px] bg-slate-50 border-b border-slate-100 shrink-0">
+                     <img 
+                       src={(typeof window !== 'undefined' && window.getImageUrl ? window.getImageUrl(biz.logoUrl) : biz.logoUrl) || (typeof window !== 'undefined' && window.getImageUrl ? window.getImageUrl(biz.coverImageUrl) : biz.coverImageUrl) || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'} 
+                       alt={biz.name || biz.businessName}
+                       className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[23px]"
                      />
-                     {/* Centered square logo frame */}
-                     <div className="h-28 w-28 rounded-2xl bg-white shadow-md border border-slate-150 flex items-center justify-center overflow-hidden relative z-10 transition-transform duration-500 group-hover:scale-104">
-                       <img 
-                         src={(typeof window !== 'undefined' && window.getImageUrl ? window.getImageUrl(biz.logoUrl) : biz.logoUrl) || (typeof window !== 'undefined' && window.getImageUrl ? window.getImageUrl(biz.coverImageUrl) : biz.coverImageUrl) || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'} 
-                         alt={biz.name || biz.businessName}
-                         className="h-full w-full object-contain p-2"
-                       />
-                     </div>
                    </div>
                   <div className="p-5 flex-grow flex flex-col justify-between gap-4">
                     <div className="flex flex-col gap-1.5">
