@@ -6042,7 +6042,7 @@ export default function AdminDashboard() {
                                                 <div className="flex gap-1.5 shrink-0 justify-end w-full sm:w-auto mt-2 sm:mt-0">
                                                   <button
                                                     onClick={() => setMovingCategory(cat)}
-                                                    className="h-7 px-2 rounded-lg border border-slate-250 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-800 dark:text-slate-200 font-extrabold text-[9.5px]"
+                                                    className="h-7 px-2 rounded-lg border border-slate-250 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-black dark:text-slate-200 font-extrabold text-[9.5px]"
                                                     title="Move"
                                                   >
                                                     Move
@@ -6116,7 +6116,7 @@ export default function AdminDashboard() {
                                           <div className="flex gap-1.5 shrink-0">
                                             <button
                                               onClick={() => setMovingCategory(cat)}
-                                              className="h-7 px-2 rounded-lg border border-slate-250 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-slate-800 dark:text-slate-200 font-extrabold text-[9.5px]"
+                                              className="h-7 px-2 rounded-lg border border-slate-250 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 flex items-center justify-center cursor-pointer text-black dark:text-slate-200 font-extrabold text-[9.5px]"
                                               title="Move"
                                             >
                                               Move

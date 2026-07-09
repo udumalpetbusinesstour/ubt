@@ -1578,7 +1578,7 @@ Please confirm availability and delivery time.`;
           }} 
         />
         {/* Sleek dark shadow gradient bottom-up - Adjusted opacity to allow cover to show */}
-        <div className="absolute inset-0 bg-black/45 bg-gradient-to-t from-black/75 via-black/45 to-black/15" />
+        <div className="absolute inset-0 bg-black/15 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
         
         {mediaError && (
           <div className="absolute top-4 left-4 right-4 bg-red-600 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl text-center z-30 shadow flex items-center justify-center gap-2 animate-fadeIn">

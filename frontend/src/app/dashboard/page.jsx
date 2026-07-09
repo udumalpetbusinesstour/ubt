@@ -5339,7 +5339,7 @@ function DashboardContent() {
                 </div>
               )}
               {/* 3. KPI CARDS ROW (8 Horizontal premium aligned widgets) */}
-              <div className="flex overflow-x-auto gap-4 pb-3.5 w-full scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent snap-x snap-mandatory">
+              <div className="flex overflow-x-auto gap-4 pt-3 pb-3.5 w-full scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent snap-x snap-mandatory">
                 
                 {/* Total Leads */}
                 <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[180px] sm:w-[200px] shrink-0 snap-start">
@@ -9626,7 +9626,7 @@ function DashboardContent() {
 
                     <div className="flex flex-col items-center gap-2.5 w-full">
                       <div className="flex flex-col gap-0.5">
-                        <h3 className="font-extrabold text-slate-800 text-sm">{p.name}</h3>
+                        <h3 className="font-extrabold text-slate-800 text-sm">{p.name ? p.name.replace(/\b\w/g, c => c.toUpperCase()) : ''}</h3>
                         <div className="flex items-baseline justify-center gap-1 mt-0.5">
                           <span className="text-2xl font-extrabold text-[#001c41]">
                             ₹{getDiscountedPrice(p.price)}
