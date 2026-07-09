@@ -1285,6 +1285,7 @@ function BusinessesList() {
       }
     }
     let cleanNum = whatsapp.replace(/[^0-9]/g, '');
+    cleanNum = cleanNum.replace(/^0+/, '');
     if (cleanNum.length === 10) {
       cleanNum = '91' + cleanNum;
     }

@@ -1341,6 +1341,7 @@ export default function BusinessDetail() {
   const handleWhatsApp = (whatsapp, name) => {
     trackClick('whatsapp');
     let cleanNum = whatsapp.replace(/[^0-9]/g, '');
+    cleanNum = cleanNum.replace(/^0+/, '');
     if (cleanNum.length === 10) {
       cleanNum = '91' + cleanNum;
     }
@@ -1371,6 +1372,7 @@ export default function BusinessDetail() {
     trackClick('whatsapp');
     let number = business.whatsapp || business.phone || '';
     let cleanNum = number.replace(/[^0-9]/g, '');
+    cleanNum = cleanNum.replace(/^0+/, '');
     if (cleanNum.length === 10) {
       cleanNum = '91' + cleanNum;
     }
