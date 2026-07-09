@@ -997,15 +997,34 @@ export default function Home() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (!searchTerm.trim() && categoryTerm && categoryTerm !== 'All Categories') {
-      let slugUrl = getCategorySlug(categoryTerm);
+    
+    // Smart category override: If they searched for a keyword that doesn't match
+    // the currently selected category or its subcategories, reset to global search.
+    let targetCat = categoryTerm;
+    if (searchTerm.trim() && categoryTerm && categoryTerm !== 'All Categories') {
+      const query = searchTerm.toLowerCase();
+      const isSubOfCurrent = Array.isArray(dbCategories) && dbCategories.some(cat => 
+        cat.categoryName && cat.categoryName.toLowerCase().includes(query) && 
+        cat.parentCategory === categoryTerm
+      );
+      const isCurrentCat = categoryTerm.toLowerCase().includes(query);
+      
+      if (!isSubOfCurrent && !isCurrentCat) {
+        targetCat = 'All Categories';
+        setCategoryTerm('All Categories');
+      }
+    }
+
+    if (!searchTerm.trim() && targetCat && targetCat !== 'All Categories') {
+      let slugUrl = getCategorySlug(targetCat);
       if (locationTerm) slugUrl += `?locality=${encodeURIComponent(locationTerm)}`;
       navigate(slugUrl);
       return;
     }
+    
     let url = `/businesses?q=${encodeURIComponent(searchTerm)}`;
     if (locationTerm) url += `&locality=${encodeURIComponent(locationTerm)}`;
-    if (categoryTerm && categoryTerm !== 'All Categories') url += `&category=${encodeURIComponent(categoryTerm)}`;
+    if (targetCat && targetCat !== 'All Categories') url += `&category=${encodeURIComponent(targetCat)}`;
     navigate(url);
   };
 

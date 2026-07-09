@@ -1144,7 +1144,26 @@ function BusinessesList() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    triggerQueryUpdate(selectedCategory, selectedLocality);
+    
+    // Smart category override: If they searched for a keyword that doesn't match
+    // the currently selected category or its subcategories, reset to global search.
+    let targetCat = selectedCategory;
+    if (searchTerm.trim() && selectedCategory !== 'All Categories') {
+      const query = searchTerm.toLowerCase();
+      const isSubOfCurrent = Array.isArray(dbCategories) && dbCategories.some(cat => 
+        cat.categoryName && cat.categoryName.toLowerCase().includes(query) && 
+        cat.parentCategory === selectedCategory
+      );
+      const isCurrentCat = selectedCategory.toLowerCase().includes(query);
+      
+      if (!isSubOfCurrent && !isCurrentCat) {
+        targetCat = 'All Categories';
+        setSelectedCategory('All Categories');
+        setCheckedCategories({});
+      }
+    }
+    
+    triggerQueryUpdate(targetCat, selectedLocality);
   };
 
   const triggerQueryUpdate = (newCat, newLoc, newVerified, newPremium, newRating, newSearch) => {

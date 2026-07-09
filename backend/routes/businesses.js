@@ -707,13 +707,17 @@ router.get('/', async (req, res) => {
 
     const conditions = [];
 
-    // Search query (matches name, description, services, brands)
+    // Search query (matches name, businessName, description, category, type, locality, services, brands)
     if (q) {
       const escapedQ = escapeRegex(q);
       conditions.push({
         $or: [
           { name: { $regex: escapedQ, $options: 'i' } },
+          { businessName: { $regex: escapedQ, $options: 'i' } },
           { description: { $regex: escapedQ, $options: 'i' } },
+          { category: { $regex: escapedQ, $options: 'i' } },
+          { type: { $regex: escapedQ, $options: 'i' } },
+          { locality: { $regex: escapedQ, $options: 'i' } },
           { services: { $elemMatch: { $regex: escapedQ, $options: 'i' } } },
           { brands: { $elemMatch: { $regex: escapedQ, $options: 'i' } } },
         ]
