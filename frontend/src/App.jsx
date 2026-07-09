@@ -93,7 +93,9 @@ function AppContent() {
           <Route path="/add-business" element={<AddBusiness />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/superadmin" element={<SuperAdminDashboard />} />
+          <Route path="/superadmin/:tab" element={<SuperAdminDashboard />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/:tab" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/reset-password" element={<ResetPassword />} />

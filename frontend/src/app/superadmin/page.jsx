@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams, useParams } from 'react-router-dom';
 import { 
   ShieldCheck, RefreshCw, Star, Check, X, AlertCircle, AlertTriangle, 
   ArrowRight, Eye, Grid, Shield, CreditCard, LayoutDashboard, Store, BookOpen, Calendar, 
@@ -111,12 +111,11 @@ export default function SuperAdminDashboard() {
   };
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = superadminSlugToTab(searchParams.get('tab'));
+  const { tab: urlTab } = useParams();
+  const activeTab = superadminSlugToTab(urlTab || searchParams.get('tab'));
   const setActiveTab = (tab) => {
-    setSearchParams(params => {
-      params.set('tab', superadminTabToSlug(tab));
-      return params;
-    }, { replace: false });
+    const slug = superadminTabToSlug(tab);
+    navigate(`/superadmin/${slug}${window.location.search}`);
   };
   const [recentRegTab, setRecentRegTab] = useState('Businesses');
   const [auditSubTab, setAuditSubTab] = useState('Businesses'); // Businesses | Blogs | Testimonials

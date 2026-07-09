@@ -1,5 +1,5 @@
 import { useState, useEffect, Suspense, useRef } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link, useParams } from 'react-router-dom';
 import MockGoogleMaps from '@/components/MockGoogleMaps';
 import LeadsEnquiriesTab from '@/components/LeadsEnquiriesTab';
 import ReviewsReputationTab from '@/components/ReviewsReputationTab';
@@ -126,6 +126,12 @@ const slugToTab = (slug) => {
 function DashboardContent() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { tab: urlTab } = useParams();
+
+  const changeTab = (tabLabelOrSlug) => {
+    const slug = tabToSlug(tabLabelOrSlug);
+    navigate(`/dashboard/${slug}${window.location.search}`);
+  };
 
   const formatEventDateRange = (startDate, endDate) => {
     if (!startDate) return 'N/A';
@@ -540,7 +546,7 @@ function DashboardContent() {
   const [completeEventImageError, setCompleteEventImageError] = useState('');
 
   // Navigation Sidebar States
-  const [activeTab, setActiveTab] = useState(slugToTab(searchParams.get('tab')));
+  const [activeTab, setActiveTab] = useState(slugToTab(urlTab || searchParams.get('tab')));
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
@@ -1416,9 +1422,9 @@ function DashboardContent() {
     }
   }, []);
 
-  // 2. React parameter sync and tab changes (RUNS ON SEARCHPARAMS CHANGE)
+  // 2. React parameter sync and tab changes (RUNS ON SEARCHPARAMS OR PATH PARAM CHANGE)
   useEffect(() => {
-    const tabParam = searchParams.get('tab');
+    const tabParam = urlTab || searchParams.get('tab');
     if (tabParam) {
       setActiveTab(slugToTab(tabParam));
     } else {
@@ -1430,7 +1436,7 @@ function DashboardContent() {
     } else if (searchParams.get('message') === 'profile_updated') {
       setSuccessBanner('Your business profile details have been successfully updated and saved!');
     }
-  }, [searchParams]);
+  }, [searchParams, urlTab]);
 
   const fetchUserBusiness = async (authToken) => {
     setLoading(true);
@@ -1552,7 +1558,7 @@ function DashboardContent() {
           setProfileCompletion(Math.min(score, 100));
         } else {
           setBusiness(null);
-          if (!searchParams.get('tab')) {
+          if (!urlTab && !searchParams.get('tab')) {
             setActiveTab('Dashboard');
           }
         }
@@ -4220,7 +4226,7 @@ function DashboardContent() {
                 if (link.onClick) {
                   link.onClick();
                 } else {
-                  setSearchParams({ tab: tabToSlug(link.label) });
+                  changeTab(link.label);
                 }
                 setSidebarOpen(false);
               }}
@@ -5531,7 +5537,7 @@ function DashboardContent() {
 
                     {/* Wide View All Leads CTA Button */}
                     <button 
-                      onClick={() => setSearchParams({ tab: 'leads' })}
+                      onClick={() => changeTab('leads')}
                       className="w-full mt-4 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-extrabold text-xs rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1"
                     >
                       View All Active Leads <ChevronRight className="h-3.5 w-3.5" />
@@ -5549,7 +5555,7 @@ function DashboardContent() {
                           <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Rating scores aggregate summary</span>
                         </div>
                         <button 
-                          onClick={() => setSearchParams({ tab: 'Reviews & Reputation' })}
+                          onClick={() => changeTab('Reviews & Reputation')}
                           className="text-[10px] font-extrabold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer uppercase"
                         >
                           View All
@@ -5636,7 +5642,7 @@ function DashboardContent() {
                       </div>
 
                       <button 
-                        onClick={() => setSearchParams({ tab: 'Reviews & Reputation' })}
+                        onClick={() => changeTab('Reviews & Reputation')}
                         className="w-full mt-4 py-2.5 border border-slate-200 text-slate-600 font-extrabold text-[10.5px] rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
                       >
                         Manage Reviews
@@ -5714,7 +5720,7 @@ function DashboardContent() {
                       {[
                         { label: 'Edit Business Details', icon: <Edit3 className="h-4 w-4 text-emerald-600" />, desc: 'Update your business information', action: () => { setEditTab('general'); setShowEditModal(true); } },
                         { label: 'Upload Photos', icon: <ImageIcon className="h-4 w-4 text-blue-600" />, desc: 'Add or update photos & videos', action: () => setShowUploadModal(true) },
-                        { label: 'Add Offer / Promotion', icon: <Sparkles className="h-4 w-4 text-amber-500" />, desc: 'Create new offers for customers', action: () => { setSearchParams({ tab: 'Offers & Promotions' }); setShowAddOffer(true); } },
+                        { label: 'Add Offer / Promotion', icon: <Sparkles className="h-4 w-4 text-amber-500" />, desc: 'Create new offers for customers', action: () => { changeTab('Offers & Promotions'); setShowAddOffer(true); } },
                         { label: 'Share Your Profile', icon: <Globe className="h-4 w-4 text-purple-600" />, desc: 'Share your profile with customers', action: copyProfileLink }
                       ].map((act, idx) => (
                         <button 
@@ -6500,7 +6506,7 @@ function DashboardContent() {
                               <h3 className="text-base font-extrabold text-slate-800 font-sans">Customer Ratings & Synced Feedback</h3>
                               <button
                                 type="button"
-                                onClick={() => setSearchParams({ tab: 'Reviews & Reputation' })}
+                                onClick={() => changeTab('Reviews & Reputation')}
                                 className="shrink-0 py-2 px-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl flex items-center gap-1.5 transition-all shadow cursor-pointer border-none"
                               >
                                 <Star className="h-3.5 w-3.5" /> Manage
@@ -6569,7 +6575,7 @@ function DashboardContent() {
                             <h3 className="text-base font-extrabold text-slate-800 font-sans">Active Promotional Offers</h3>
                             <button
                               type="button"
-                              onClick={() => setSearchParams({ tab: 'Offers & Promotions' })}
+                              onClick={() => changeTab('Offers & Promotions')}
                               className="text-[#027244] hover:text-[#005934] font-extrabold text-xs flex items-center gap-0.5 transition-colors border-none bg-transparent cursor-pointer"
                             >
                               Manage <ChevronRight className="h-4 w-4" />
@@ -6660,7 +6666,7 @@ function DashboardContent() {
                             </div>
                             <button
                               type="button"
-                              onClick={() => setSearchParams({ tab: 'Branches' })}
+                              onClick={() => changeTab('Branches')}
                               className="shrink-0 py-2 px-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl flex items-center gap-1.5 transition-all shadow cursor-pointer border-none"
                             >
                               <Users className="h-3.5 w-3.5" /> Manage Branches
