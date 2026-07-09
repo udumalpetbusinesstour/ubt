@@ -2572,7 +2572,7 @@ const handlePartnerAction = async (partnerId, action) => {
   const maxPlanRatioVal = Math.max(...planRatioData.map(d => d.val), 1);
 
   return (
-    <div className={`min-h-screen flex font-sans text-left transition-colors duration-300 ${
+    <div className={`w-full h-screen flex font-sans text-left transition-colors duration-300 overflow-hidden ${
       themeMode === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-800'
     }`}>
       

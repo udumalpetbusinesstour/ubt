@@ -2232,7 +2232,7 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-800 text-left">
+    <div className="w-full h-screen bg-[#F8FAFC] flex font-sans text-slate-800 text-left overflow-hidden">
       
       {/* Toast Notification */}
       {toast && (
