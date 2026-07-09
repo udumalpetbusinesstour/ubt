@@ -5342,69 +5342,69 @@ function DashboardContent() {
               <div className="flex overflow-x-auto gap-4 pb-3.5 w-full scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent snap-x snap-mandatory">
                 
                 {/* Total Leads */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[180px] sm:w-[200px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                     <Plus className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Total Leads</span>
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Total Leads</span>
                     <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{leadsList.length}</span>
                   </div>
                 </div>
 
                 {/* Directory Views */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[180px] sm:w-[200px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                     <Eye className="h-4.5 w-4.5" />
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Directory Views</span>
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Directory Views</span>
                     <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.views ?? 0}</span>
                   </div>
                 </div>
 
                 {/* Call Clicks */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[180px] sm:w-[200px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                     <PhoneCall className="h-4.5 w-4.5" />
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Call Clicks</span>
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Call Clicks</span>
                     <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.callClicks ?? 0}</span>
                   </div>
                 </div>
 
                 {/* WhatsApp Clicks */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[180px] sm:w-[200px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-emerald-55/15 text-emerald-600 flex items-center justify-center shrink-0">
                     <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
                       <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.455L0 24zm6.59-4.846c1.6.95 3.497 1.45 5.416 1.451 5.48.002 9.941-4.447 9.944-9.932.002-2.657-1.03-5.155-2.905-7.03C17.228 1.758 14.725.72 12.01.72c-5.485 0-9.946 4.448-9.948 9.934-.001 1.914.502 3.78 1.457 5.385l-.993 3.626 3.712-.971zm11.367-8.306c-.3-.15-1.77-.875-2.045-.975-.275-.1-.475-.15-.675.15-.2.3-.775.975-.95 1.175-.175.2-.35.225-.65.075-1.04-.52-1.786-.96-2.52-2.22-.19-.33.19-.307.545-1.01.075-.15.038-.282-.018-.393-.056-.113-.475-1.144-.65-1.569-.17-.413-.345-.356-.475-.363-.125-.007-.27-.009-.415-.009-.145 0-.38.054-.58.27-.2.22-.76.743-.76 1.812 0 1.07.778 2.102.887 2.25.11.148 1.53 2.336 3.706 3.28.518.225.922.36 1.24.462.52.165.992.142 1.365.087.416-.062 1.77-.725 2.02-1.388.25-.663.25-1.23.175-1.35-.075-.12-.275-.17-.575-.32z"/>
                     </svg>
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">WhatsApp Clicks</span>
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">WhatsApp Clicks</span>
                     <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.whatsappClicks ?? 0}</span>
                   </div>
                 </div>
 
                 {/* Website Clicks */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[180px] sm:w-[200px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-teal-50 text-teal-650 flex items-center justify-center shrink-0">
                     <Globe className="h-4.5 w-4.5" />
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Website Clicks</span>
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Website Clicks</span>
                     <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.websiteClicks ?? 0}</span>
                   </div>
                 </div>
 
                 {/* Social Clicks */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[180px] sm:w-[200px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center shrink-0">
                     <Users className="h-4.5 w-4.5" />
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Social Clicks</span>
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Social Clicks</span>
                     <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">
                       {((business.facebookClicks || 0) + (business.instagramClicks || 0)) || 0}
                     </span>
@@ -5412,12 +5412,12 @@ function DashboardContent() {
                 </div>
 
                 {/* Average Rating */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[180px] sm:w-[200px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
                     <Star className="h-4.5 w-4.5 fill-current" />
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Avg Rating</span>
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Avg Rating</span>
                     <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">
                       {overallReviewsCount > 0 ? overallAvgRating.toFixed(1) : '0.0'}
                     </span>
@@ -5428,7 +5428,7 @@ function DashboardContent() {
                 </div>
 
                 {/* Listing Status */}
-                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[180px] sm:w-[200px] shrink-0 snap-start">
                   <div className={`h-10.5 w-10.5 rounded-xl flex items-center justify-center shrink-0 ${
                     isGmbVerified ? 'bg-emerald-50 text-emerald-600' :
                     business.status === 'Approved' ? 'bg-blue-50 text-blue-600' :
@@ -5448,7 +5448,7 @@ function DashboardContent() {
                     )}
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Status</span>
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Status</span>
                     <span className={`text-[12.5px] font-extrabold leading-none mt-1.5 truncate ${
                       isGmbVerified ? 'text-[#027244]' :
                       business.status === 'Approved' ? 'text-blue-650' :
@@ -5457,8 +5457,7 @@ function DashboardContent() {
                       business.status === 'Rejected' ? 'text-rose-600' : 'text-amber-550'
                     }`}>
                       {isGmbVerified ? 'Verified' : 
-                       business.status === 'Approved' ? 'Approved' : 
-                       business.status === 'Under Review' ? 'In Review' : 
+                       business.status === 'Approved' ? 'Approved' :                        business.status === 'Under Review' ? 'In Review' : 
                        business.status === 'Suspended' ? 'Suspended' : 
                        business.status === 'Rejected' ? 'Rejected' : 'Pending'}
                     </span>
