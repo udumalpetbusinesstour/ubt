@@ -824,10 +824,18 @@ function BusinessesList() {
     const parent = getParentCategory(categoryName);
     
     if (isCategoriesView) {
-      if (parent.toLowerCase() === categoryName.toLowerCase()) {
-        setSearchParams({ focus: 'categories', category: parent });
+      if (urlSlug) {
+        if (parent.toLowerCase() === categoryName.toLowerCase()) {
+          navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}`);
+        } else {
+          navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}&subcategory=${encodeURIComponent(categoryName)}`);
+        }
       } else {
-        setSearchParams({ focus: 'categories', category: parent, subcategory: categoryName });
+        if (parent.toLowerCase() === categoryName.toLowerCase()) {
+          setSearchParams({ focus: 'categories', category: parent });
+        } else {
+          setSearchParams({ focus: 'categories', category: parent, subcategory: categoryName });
+        }
       }
     } else {
       if (parent.toLowerCase() === categoryName.toLowerCase()) {
@@ -853,10 +861,18 @@ function BusinessesList() {
     const parent = parentCatName || getParentCategory(categoryName);
     
     if (isCategoriesView) {
-      if (parent.toLowerCase() === categoryName.toLowerCase()) {
-        setSearchParams({ focus: 'categories', category: parent });
+      if (urlSlug) {
+        if (parent.toLowerCase() === categoryName.toLowerCase()) {
+          navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}`);
+        } else {
+          navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}&subcategory=${encodeURIComponent(categoryName)}`);
+        }
       } else {
-        setSearchParams({ focus: 'categories', category: parent, subcategory: categoryName });
+        if (parent.toLowerCase() === categoryName.toLowerCase()) {
+          setSearchParams({ focus: 'categories', category: parent });
+        } else {
+          setSearchParams({ focus: 'categories', category: parent, subcategory: categoryName });
+        }
       }
     } else {
       if (parent.toLowerCase() === categoryName.toLowerCase()) {
@@ -1879,7 +1895,13 @@ function BusinessesList() {
                   {selectedSubcategoryInExplore && selectedSubcategoryInExplore !== 'All' ? (
                     <>
                       <button 
-                        onClick={() => setSearchParams({ focus: 'categories', category: selectedCategoryInExplore })} 
+                        onClick={() => {
+                          if (urlSlug) {
+                            navigate(`/businesses?focus=categories&category=${encodeURIComponent(selectedCategoryInExplore)}`);
+                          } else {
+                            setSearchParams({ focus: 'categories', category: selectedCategoryInExplore });
+                          }
+                        }} 
                         className="hover:text-emerald-450 transition-colors bg-transparent border-none p-0 cursor-pointer font-bold text-xs text-slate-300 hover:underline"
                       >
                         {selectedCategoryInExplore}
@@ -2023,7 +2045,11 @@ function BusinessesList() {
                                         body: JSON.stringify({ categoryName: cat.name })
                                       });
                                     } catch (e) {}
-                                     setSearchParams({ focus: 'categories', category: cat.name });
+                                    if (urlSlug) {
+                                      navigate(`/businesses?focus=categories&category=${encodeURIComponent(cat.name)}`);
+                                    } else {
+                                      setSearchParams({ focus: 'categories', category: cat.name });
+                                    }
                                   }}
                                   className="card-premium group rounded-3xl p-4 sm:p-6 cursor-pointer flex flex-col justify-between min-h-[7.5rem] sm:h-36 h-auto relative overflow-hidden bg-white border border-slate-200/65 hover:border-[#027244] transition-all"
                                 >
@@ -2068,7 +2094,13 @@ function BusinessesList() {
                        <div className="flex flex-col gap-2">
                          <div className="flex items-center gap-3">
                            <button 
-                             onClick={() => setSearchParams({ focus: 'categories' })}
+                             onClick={() => {
+                                if (urlSlug) {
+                                  navigate('/businesses?focus=categories');
+                                } else {
+                                  setSearchParams({ focus: 'categories' });
+                                }
+                              }}
                              className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#027244] bg-slate-100 hover:bg-emerald-50/50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                            >
                              <ArrowLeft className="h-3.5 w-3.5" /> Back to Categories
@@ -2100,7 +2132,13 @@ function BusinessesList() {
                         const parentIconStr = parentIconStringMap[selectedCategoryInExplore] || 'Store';
                         return (
                           <div 
-                            onClick={() => setSearchParams({ focus: 'categories', category: selectedCategoryInExplore, subcategory: 'All' })}
+                            onClick={() => {
+                              if (urlSlug) {
+                                navigate(`/businesses?focus=categories&category=${encodeURIComponent(selectedCategoryInExplore)}&subcategory=All`);
+                              } else {
+                                setSearchParams({ focus: 'categories', category: selectedCategoryInExplore, subcategory: 'All' });
+                              }
+                            }}
                             className="bg-white border border-slate-200/60 rounded-2xl p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:border-emerald-100 hover:bg-emerald-50/30 transition-all duration-300 group"
                           >
                             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -2142,7 +2180,11 @@ function BusinessesList() {
                                } catch (err) {
                                  console.warn('Failed to increment category view:', err);
                                }
-                               setSearchParams({ focus: 'categories', category: selectedCategoryInExplore, subcategory: cat.categoryName });
+                               if (urlSlug) {
+                                 navigate(`/businesses?focus=categories&category=${encodeURIComponent(selectedCategoryInExplore)}&subcategory=${encodeURIComponent(cat.categoryName)}`);
+                               } else {
+                                 setSearchParams({ focus: 'categories', category: selectedCategoryInExplore, subcategory: cat.categoryName });
+                               }
                              }}
                              className="bg-white border border-slate-200/60 rounded-2xl p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:border-emerald-100 hover:bg-emerald-50/30 transition-all duration-300 group"
                            >
@@ -2174,7 +2216,13 @@ function BusinessesList() {
                     <div className="flex flex-col gap-4 border-b border-slate-100 pb-4">
                       <div className="flex items-center gap-3">
                         <button 
-                          onClick={() => setSearchParams({ focus: 'categories', category: selectedCategoryInExplore })}
+                          onClick={() => {
+                            if (urlSlug) {
+                              navigate(`/businesses?focus=categories&category=${encodeURIComponent(selectedCategoryInExplore)}`);
+                            } else {
+                              setSearchParams({ focus: 'categories', category: selectedCategoryInExplore });
+                            }
+                          }}
                           className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#027244] bg-slate-100 hover:bg-emerald-50/50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                         >
                           <ArrowLeft className="h-3.5 w-3.5" /> Back to {selectedCategoryInExplore}
