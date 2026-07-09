@@ -82,20 +82,25 @@ function AppContent() {
                            location.pathname.startsWith('/superadmin') ||
                            location.pathname.startsWith('/partner-register');
 
+  const getMainPageKey = (pathname) => {
+    if (pathname.startsWith('/dashboard')) return '/dashboard';
+    if (pathname.startsWith('/superadmin')) return '/superadmin';
+    if (pathname.startsWith('/admin')) return '/admin';
+    return pathname;
+  };
+
   return (
     <div className="w-full min-h-screen flex flex-col justify-between bg-[#F8FAFC]">
       {!hideNavAndFooter && <Navbar />}
-      <main key={location.pathname} className="flex-grow animate-page-entrance">
+      <main key={getMainPageKey(location.pathname)} className="flex-grow animate-page-entrance">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/businesses" element={<BusinessesingsPage />} />
           <Route path="/businesses/:id" element={<BusinessDetail />} />
           <Route path="/add-business" element={<AddBusiness />} />
           <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/superadmin" element={<SuperAdminDashboard />} />
-          <Route path="/superadmin/:tab" element={<SuperAdminDashboard />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard/:tab" element={<Dashboard />} />
+          <Route path="/superadmin/:tab?" element={<SuperAdminDashboard />} />
+          <Route path="/dashboard/:tab?" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/reset-password" element={<ResetPassword />} />
