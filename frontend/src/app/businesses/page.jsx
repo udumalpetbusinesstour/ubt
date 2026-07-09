@@ -2150,14 +2150,27 @@ function BusinessesList() {
                               onClick={() => navigate(`/businesses/${biz.slug || biz._id}`)}
                             >
                               {/* Cover image (Blurred if subscription is expired!) */}
-                              <div className="shrink-0 overflow-hidden relative h-48 md:w-64 rounded-l-[23px]">
+                              <div className="shrink-0 overflow-hidden relative h-48 w-full md:w-48 rounded-t-[23px] md:rounded-l-[23px] md:rounded-tr-none bg-slate-50/85 flex items-center justify-center p-3 border-b md:border-b-0 md:border-r border-slate-100 select-none">
+                                {/* Ambient blur background */}
                                 <div 
-                                  className="h-full w-full bg-cover bg-center transition-transform duration-750 ease-out-expo group-hover:scale-105 rounded-l-[23px]"
-                                  style={{
-                                    backgroundImage: `url('${window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"}')`,
-                                    filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
+                                  className="absolute inset-0 bg-cover bg-center opacity-20 blur-md transition-transform duration-750 ease-out-expo group-hover:scale-105"
+                                  style={{ 
+                                    backgroundImage: `url('${window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"}')`
                                   }}
                                 />
+                                {/* Centered square logo frame */}
+                                <div 
+                                  className="h-36 w-36 rounded-2xl bg-white shadow-md border border-slate-150 flex items-center justify-center overflow-hidden relative z-10 transition-transform duration-500 group-hover:scale-104"
+                                  style={{
+                                    filter: !isSubscribed ? 'blur(5px) grayscale(30%)' : 'none'
+                                  }}
+                                >
+                                  <img 
+                                    src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"} 
+                                    alt={biz.name}
+                                    className="h-full w-full object-contain p-2.5"
+                                  />
+                                </div>
                                 {/* Badge (Verified / Premium / Google Linked) */}
                                 {!isExpired && (
                                   <div className="absolute top-3 left-3 flex flex-wrap gap-1 z-10">
@@ -2985,19 +2998,36 @@ function BusinessesList() {
                   >
                     {/* Cover image (Blurred if subscription is expired!) */}
                     <div
-                      className={`shrink-0 overflow-hidden relative ${
-                        viewMode === 'list' ? 'h-48 md:w-64 rounded-l-[23px]' : 'h-36 sm:h-56 w-full rounded-t-[23px]'
+                      className={`shrink-0 overflow-hidden relative bg-slate-50/85 flex items-center justify-center p-3 select-none border-slate-100 ${
+                        viewMode === 'list' 
+                          ? 'h-48 w-full md:w-48 rounded-t-[23px] md:rounded-l-[23px] md:rounded-tr-none border-b md:border-b-0 md:border-r' 
+                          : 'h-36 sm:h-56 w-full rounded-t-[23px] border-b'
                       }`}
                     >
+                      {/* Ambient blur background */}
                       <div 
-                        className={`h-full w-full bg-cover bg-center transition-transform duration-750 ease-out-expo group-hover:scale-105 ${
-                          viewMode === 'list' ? 'rounded-l-[23px]' : 'rounded-t-[23px]'
-                        }`}
-                        style={{
-                          backgroundImage: `url('${window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"}')`,
-                          filter: !isSubscribed ? 'blur(4px) grayscale(30%)' : 'none'
+                        className="absolute inset-0 bg-cover bg-center opacity-20 blur-md transition-transform duration-750 ease-out-expo group-hover:scale-105"
+                        style={{ 
+                          backgroundImage: `url('${window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"}')`
                         }}
                       />
+                      {/* Centered square logo frame */}
+                      <div 
+                        className={`rounded-2xl bg-white shadow-md border border-slate-150 flex items-center justify-center overflow-hidden relative z-10 transition-transform duration-500 group-hover:scale-104 ${
+                          viewMode === 'list'
+                            ? 'h-36 w-36'
+                            : 'h-28 sm:h-44 w-28 sm:w-44'
+                        }`}
+                        style={{
+                          filter: !isSubscribed ? 'blur(4px) grayscale(30%)' : 'none'
+                        }}
+                      >
+                        <img 
+                          src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"} 
+                          alt={biz.name}
+                          className="h-full w-full object-contain p-2.5"
+                        />
+                      </div>
                       {/* Badge (Verified / Premium / Google Linked) */}
                       {!isExpired && (
                         <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">
