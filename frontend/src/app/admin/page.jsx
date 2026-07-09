@@ -7123,6 +7123,53 @@ export default function AdminDashboard() {
                   <span className="text-xs font-bold text-slate-700">Award "Founding Member" Badge upon approval</span>
                 </label>
               )}
+              {(selectedBiz.status === 'Approved' || selectedBiz.status === 'Rejected') && (
+                <div className="flex flex-col gap-2 p-3 bg-white border border-slate-200 rounded-2xl text-left">
+                  <div className="flex items-center justify-between gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={isFoundingMemberCheck}
+                        onChange={(e) => setIsFoundingMemberCheck(e.target.checked)}
+                        className="h-4.5 w-4.5 rounded text-[#027244] focus:ring-[#027244] border-slate-300 cursor-pointer"
+                      />
+                      <span className="text-xs font-extrabold text-slate-700">Founding Member Badge</span>
+                    </label>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(`http://localhost:5000/api/admin/businesses/${selectedBiz._id}/status`, {
+                            method: 'PUT',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ 
+                              status: selectedBiz.status,
+                              isFoundingMember: isFoundingMemberCheck
+                            })
+                          });
+                          const data = await res.json();
+                          if (data.success) {
+                            alert("Founding Member status updated successfully!");
+                            setSelectedBiz(prev => ({ ...prev, isFoundingMember: isFoundingMemberCheck }));
+                            setBusinesses(prev => prev.map(b => b._id === selectedBiz._id ? { ...b, isFoundingMember: isFoundingMemberCheck } : b));
+                            loadPlatformRealData(true);
+                          } else {
+                            alert(data.message || 'Failed to update Founding Member status.');
+                          }
+                        } catch (err) {
+                          console.error(err);
+                          alert('Error saving status.');
+                        }
+                      }}
+                      className="py-1.5 px-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10px] rounded-lg cursor-pointer transition-colors shadow-2xs uppercase border-none shrink-0"
+                    >
+                      Update Badge
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="flex flex-col sm:flex-row gap-3">
                 {selectedBiz.status !== 'Approved' && selectedBiz.status !== 'Rejected' && (
                   <button 
