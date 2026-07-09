@@ -38,7 +38,7 @@ export default function LeadsEnquiriesTab({
             
             {/* Inbox Filters */}
             <div className="flex gap-1.5">
-              {['All', 'Urgent', 'Responded'].map((filter) => (
+              {['All', 'Responded'].map((filter) => (
                 <button
                   key={filter}
                   onClick={() => setLeadFilter(filter)}
@@ -54,7 +54,6 @@ export default function LeadsEnquiriesTab({
           <div className="flex-grow overflow-y-auto divide-y divide-slate-100">
             {leadsList
               .filter(l => {
-                if (leadFilter === 'Urgent' && l.name !== 'Suresh Kumar' && l.name !== 'Kavin Prakash') return false;
                 if (leadFilter === 'Responded' && !l.responded) return false;
                 return true;
               })
@@ -86,10 +85,6 @@ export default function LeadsEnquiriesTab({
                         {isClickLog ? (
                           <span className="bg-emerald-50 text-emerald-600 border border-emerald-100/60 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide leading-none">
                             Profile Touchpoint
-                          </span>
-                        ) : lead.name === 'Suresh Kumar' || lead.name === 'Kavin Prakash' ? (
-                          <span className="bg-rose-50 text-rose-600 border border-rose-100/60 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide leading-none">
-                            Urgent Callback
                           </span>
                         ) : (
                           <span className="bg-blue-50 text-blue-600 border border-blue-100/60 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide leading-none">
@@ -123,7 +118,16 @@ export default function LeadsEnquiriesTab({
                       <div className="flex flex-col text-left font-sans">
                         <h4 className="font-extrabold text-slate-800 text-sm md:text-base leading-snug">{activeLead.name}</h4>
                         <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Enquiry Category: {activeLead.category}</span>
-                        <span className="text-[9.5px] text-slate-400 font-bold mt-0.5">Received via Website Link • {activeLead.time}</span>
+                        <span className="text-[9.5px] text-slate-400 font-bold mt-0.5">
+                          Received via {
+                            activeLead.name === 'Customer (Call)' ? 'Profile Phone Call' :
+                            activeLead.name === 'Customer (Website)' ? 'Profile Website Link' :
+                            activeLead.name === 'Customer (Email)' ? 'Profile Email Draft' :
+                            activeLead.name === 'Customer (Facebook)' ? 'Profile Facebook Page' :
+                            activeLead.name === 'Customer (Map Directions)' ? 'Profile Map Directions' :
+                            'Enquiry Form'
+                          } • {activeLead.time}
+                        </span>
                       </div>
                     </div>
 
