@@ -1284,8 +1284,12 @@ function BusinessesList() {
         console.error('Failed to track whatsapp click:', err);
       }
     }
-    const cleanNum = whatsapp.replace(/[^0-9]/g, '');
-    window.open(`https://wa.me/${cleanNum}?text=Hello%20${encodeURIComponent(name)},%20I%20saw%20your%20listing%20on%20Udumalpet%20Business%20Tour.`);
+    let cleanNum = whatsapp.replace(/[^0-9]/g, '');
+    if (cleanNum.length === 10) {
+      cleanNum = '91' + cleanNum;
+    }
+    const textMsg = `Hello ${name}, I saw your listing on Udumalpet Business Tour.`;
+    window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(textMsg)}`);
   };
 
   const handleContactSubmit = async (e) => {

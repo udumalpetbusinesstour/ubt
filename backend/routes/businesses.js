@@ -792,7 +792,7 @@ router.get('/', async (req, res) => {
     }
 
     // Execute query
-    let businesses = await Business.find(query);
+    let businesses = await Business.find(query).populate('ownerId', 'email phone mobileNumber');
 
     // Update active vs expired subscriptions on the fly, inherit parent subscription for branches, and attach branchCount
     const now = new Date();
@@ -1792,20 +1792,20 @@ router.get('/:id', async (req, res) => {
     let business;
     if (isObjectId) {
       business = skipInc
-        ? await Business.findById(idOrSlug)
-        : await Business.findByIdAndUpdate(idOrSlug, { $inc: { views: 1 } }, { new: true });
+        ? await Business.findById(idOrSlug).populate('ownerId', 'email phone mobileNumber')
+        : await Business.findByIdAndUpdate(idOrSlug, { $inc: { views: 1 } }, { new: true }).populate('ownerId', 'email phone mobileNumber');
     } else {
       const searchSlug = idOrSlug.toLowerCase();
       business = skipInc
-        ? await Business.findOne({ slug: searchSlug })
-        : await Business.findOneAndUpdate({ slug: searchSlug }, { $inc: { views: 1 } }, { new: true });
+        ? await Business.findOne({ slug: searchSlug }).populate('ownerId', 'email phone mobileNumber')
+        : await Business.findOneAndUpdate({ slug: searchSlug }, { $inc: { views: 1 } }, { new: true }).populate('ownerId', 'email phone mobileNumber');
         
       if (!business) {
         // Fallback: try searching by name or businessName
         const nameRegex = new RegExp(`^${idOrSlug.replace(/[-_]/g, ' ')}$`, 'i');
         business = skipInc
-          ? await Business.findOne({ $or: [{ name: nameRegex }, { businessName: nameRegex }] })
-          : await Business.findOneAndUpdate({ $or: [{ name: nameRegex }, { businessName: nameRegex }] }, { $inc: { views: 1 } }, { new: true });
+          ? await Business.findOne({ $or: [{ name: nameRegex }, { businessName: nameRegex }] }).populate('ownerId', 'email phone mobileNumber')
+          : await Business.findOneAndUpdate({ $or: [{ name: nameRegex }, { businessName: nameRegex }] }, { $inc: { views: 1 } }, { new: true }).populate('ownerId', 'email phone mobileNumber');
       }
     }
 

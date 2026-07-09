@@ -1312,10 +1312,40 @@ export default function BusinessDetail() {
     window.open(`tel:${phone}`);
   };
 
+  const getDisplayEmail = () => {
+    if (business?.email && business.email.trim() && business.email.toLowerCase() !== 'n/a') {
+      return business.email.trim();
+    }
+    if (business?.ownerId && typeof business.ownerId === 'object' && business.ownerId.email) {
+      return business.ownerId.email.trim();
+    }
+    return '';
+  };
+
+  const getDisplayWhatsapp = () => {
+    if (business?.whatsapp && business.whatsapp.trim() && business.whatsapp.toLowerCase() !== 'n/a') {
+      return business.whatsapp.trim();
+    }
+    if (business?.ownerId && typeof business.ownerId === 'object') {
+      const parentNum = business.ownerId.phone || business.ownerId.mobileNumber;
+      if (parentNum && parentNum.trim() && parentNum.toLowerCase() !== 'n/a') {
+        return parentNum.trim();
+      }
+    }
+    if (business?.phone && business.phone.trim() && business.phone.toLowerCase() !== 'n/a') {
+      return business.phone.trim();
+    }
+    return '';
+  };
+
   const handleWhatsApp = (whatsapp, name) => {
     trackClick('whatsapp');
-    const cleanNum = whatsapp.replace(/[^0-9]/g, '');
-    window.open(`https://wa.me/${cleanNum}?text=Hello%20${encodeURIComponent(name)},%20I%20saw%2520your%20listing%20on%20UBT.`);
+    let cleanNum = whatsapp.replace(/[^0-9]/g, '');
+    if (cleanNum.length === 10) {
+      cleanNum = '91' + cleanNum;
+    }
+    const textMsg = `Hello ${name}, I saw your listing on UBT.`;
+    window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(textMsg)}`);
   };
 
   const handleShare = async () => {
@@ -1750,9 +1780,9 @@ Please confirm availability and delivery time.`;
                 </a>
 
                 {/* Email Action */}
-                {business.email && (
+                {getDisplayEmail() && (
                   <a 
-                    href={`mailto:${business.email}`}
+                    href={`mailto:${getDisplayEmail()}`}
                     title="Send Email"
                     onClick={() => trackClick('email')}
                     className="h-10 w-10 bg-blue-500/10 border border-blue-500/25 hover:bg-blue-500/25 text-blue-400 hover:scale-105 active:scale-95 transition-all cursor-pointer rounded-xl flex items-center justify-center shadow-sm"
@@ -1762,9 +1792,9 @@ Please confirm availability and delivery time.`;
                 )}
 
                 {/* WhatsApp Action */}
-                {!isExpired && business.whatsapp && !isGovernmentalOrPublic(business) && (
+                {!isExpired && getDisplayWhatsapp() && !isGovernmentalOrPublic(business) && (
                   <button 
-                    onClick={() => handleWhatsApp(business.whatsapp, business.name)}
+                    onClick={() => handleWhatsApp(getDisplayWhatsapp(), business.name)}
                     title="Chat on WhatsApp"
                     className="h-10 w-10 bg-emerald-500/10 border border-emerald-500/25 hover:bg-emerald-500/25 text-emerald-400 hover:scale-105 active:scale-95 transition-all cursor-pointer rounded-xl flex items-center justify-center shadow-sm"
                   >
@@ -1953,7 +1983,7 @@ Please confirm availability and delivery time.`;
                         </div>
                       )}
 
-                      {business.email && (
+                      {getDisplayEmail() && (
                         <div className="flex items-start gap-4">
                           <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
                             <Mail className="h-5 w-5" />
@@ -1961,11 +1991,11 @@ Please confirm availability and delivery time.`;
                           <div className="flex flex-col text-left">
                             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Official Email</span>
                             <a 
-                              href={`mailto:${business.email}`}
+                              href={`mailto:${getDisplayEmail()}`}
                               onClick={() => trackClick('email')}
                               className="font-extrabold text-slate-800 hover:text-emerald-600 text-sm mt-2 break-all"
                             >
-                              {business.email}
+                              {getDisplayEmail()}
                             </a>
                           </div>
                         </div>
