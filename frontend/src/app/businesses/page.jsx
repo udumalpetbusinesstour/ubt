@@ -822,10 +822,19 @@ function BusinessesList() {
 
   const handleCategoryClick = async (categoryName) => {
     const parent = getParentCategory(categoryName);
-    if (parent.toLowerCase() === categoryName.toLowerCase()) {
-      navigate(getCategorySlug(parent));
+    
+    if (isCategoriesView) {
+      if (parent.toLowerCase() === categoryName.toLowerCase()) {
+        setSearchParams({ focus: 'categories', category: parent });
+      } else {
+        setSearchParams({ focus: 'categories', category: parent, subcategory: categoryName });
+      }
     } else {
-      navigate(getCategorySlug(categoryName));
+      if (parent.toLowerCase() === categoryName.toLowerCase()) {
+        navigate(getCategorySlug(parent));
+      } else {
+        navigate(getCategorySlug(categoryName));
+      }
     }
     
     // Background view increment
@@ -842,10 +851,19 @@ function BusinessesList() {
 
   const handleHotCategoryClick = async (categoryName, parentCatName) => {
     const parent = parentCatName || getParentCategory(categoryName);
-    if (parent.toLowerCase() === categoryName.toLowerCase()) {
-      navigate(getCategorySlug(parent));
+    
+    if (isCategoriesView) {
+      if (parent.toLowerCase() === categoryName.toLowerCase()) {
+        setSearchParams({ focus: 'categories', category: parent });
+      } else {
+        setSearchParams({ focus: 'categories', category: parent, subcategory: categoryName });
+      }
     } else {
-      navigate(getCategorySlug(categoryName));
+      if (parent.toLowerCase() === categoryName.toLowerCase()) {
+        navigate(getCategorySlug(parent));
+      } else {
+        navigate(getCategorySlug(categoryName));
+      }
     }
     
     // Background view increment

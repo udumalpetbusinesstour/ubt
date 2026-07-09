@@ -1,5 +1,71 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import * as lucideIcons from 'lucide-react';
+
+const renderCategoryIcon = (iconName, className = "h-5.5 w-5.5 sm:h-7 sm:w-7") => {
+  const IconComp = lucideIcons[iconName] || lucideIcons.Store;
+  return <IconComp className={className} />;
+};
+
+const categoryStylesMap = {
+  'Agriculture & Farming': { icon: 'Leaf', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+  'Agriculture': { icon: 'Leaf', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+  'Automotive': { icon: 'Car', bg: 'bg-red-50', text: 'text-red-500' },
+  'Automobile Services': { icon: 'Car', bg: 'bg-red-50', text: 'text-red-500' },
+  'Baby & Kids Stores': { icon: 'ShoppingBag', bg: 'bg-pink-50', text: 'text-pink-500' },
+  'Beauty & Wellness': { icon: 'Sparkles', bg: 'bg-pink-50', text: 'text-pink-500' },
+  'Beauty Salons & Spa': { icon: 'Sparkles', bg: 'bg-pink-50', text: 'text-pink-500' },
+  'Books & Stationery': { icon: 'BookOpen', bg: 'bg-blue-50', text: 'text-blue-500' },
+  'Builders & Contractors': { icon: 'Building', bg: 'bg-indigo-50', text: 'text-indigo-500' },
+  'Building Materials': { icon: 'Building', bg: 'bg-slate-50', text: 'text-slate-500' },
+  'Business Services': { icon: 'Briefcase', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+  'Clothing & Fashion': { icon: 'ShoppingBag', bg: 'bg-amber-50', text: 'text-amber-500' },
+  'Education': { icon: 'GraduationCap', bg: 'bg-blue-50', text: 'text-blue-500' },
+  'Doctors & Healthcare': { icon: 'Activity', bg: 'bg-red-50', text: 'text-red-500' },
+  'Electrical & Solar': { icon: 'Zap', bg: 'bg-amber-50', text: 'text-amber-500' },
+  'Electronics & Mobiles': { icon: 'Smartphone', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+  'Electronics': { icon: 'Smartphone', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+  'Finance & Insurance': { icon: 'Coins', bg: 'bg-blue-50', text: 'text-blue-500' },
+  'Furniture & Home Decor': { icon: 'Home', bg: 'bg-teal-50', text: 'text-teal-500' },
+  'Grocery & Food Stores': { icon: 'ShoppingBag', bg: 'bg-amber-50', text: 'text-amber-500' },
+  'Home Services': { icon: 'Wrench', bg: 'bg-teal-50', text: 'text-teal-500' },
+  'Hotels & Lodges': { icon: 'Hotel', bg: 'bg-purple-50', text: 'text-purple-500' },
+  'Internet & Telecom': { icon: 'Globe', bg: 'bg-blue-50', text: 'text-blue-500' },
+  'IT & Digital Services': { icon: 'Laptop', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+  'Jewellery Shops': { icon: 'Gem', bg: 'bg-amber-50', text: 'text-amber-500' },
+  'Legal & Document Services': { icon: 'Scale', bg: 'bg-slate-50', text: 'text-slate-500' },
+  'Manufacturers & Industries': { icon: 'Factory', bg: 'bg-slate-50', text: 'text-slate-500' },
+  'Manufacturing': { icon: 'Factory', bg: 'bg-slate-50', text: 'text-slate-500' },
+  'NGOs & Social Services': { icon: 'Heart', bg: 'bg-red-50', text: 'text-red-500' },
+  'Packers & Movers': { icon: 'Truck', bg: 'bg-orange-50', text: 'text-orange-500' },
+  'Personal Services': { icon: 'Smile', bg: 'bg-indigo-50', text: 'text-indigo-500' },
+  'Pet & Veterinary Services': { icon: 'PawPrint', bg: 'bg-green-50', text: 'text-green-500' },
+  'Photography & Video': { icon: 'Camera', bg: 'bg-purple-50', text: 'text-purple-500' },
+  'Printing & Advertising': { icon: 'Printer', bg: 'bg-slate-50', text: 'text-slate-500' },
+  'Real Estate': { icon: 'Building', bg: 'bg-indigo-50', text: 'text-indigo-500' },
+  'Religious Services': { icon: 'Sun', bg: 'bg-amber-50', text: 'text-amber-500' },
+  'Rental Services': { icon: 'Key', bg: 'bg-blue-50', text: 'text-blue-500' },
+  'Repair Services': { icon: 'Wrench', bg: 'bg-orange-50', text: 'text-orange-500' },
+  'Restaurants & Food': { icon: 'Utensils', bg: 'bg-amber-50', text: 'text-amber-500' },
+  'Food & Restaurants': { icon: 'Utensils', bg: 'bg-amber-50', text: 'text-amber-500' },
+  'Schools & Colleges': { icon: 'GraduationCap', bg: 'bg-blue-50', text: 'text-blue-500' },
+  'Security Services': { icon: 'Shield', bg: 'bg-slate-50', text: 'text-slate-500' },
+  'Shops & Retail Stores': { icon: 'Store', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+  'Sports & Fitness': { icon: 'Dumbbell', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+  'Training & Coaching': { icon: 'GraduationCap', bg: 'bg-blue-50', text: 'text-blue-500' },
+  'Public Sector': { icon: 'Landmark', bg: 'bg-slate-50', text: 'text-slate-500' },
+  'Wedding & Event Services': { icon: 'Sparkles', bg: 'bg-pink-50', text: 'text-pink-500' },
+  'Shops': { icon: 'ShoppingBag', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+  'Shops & Showrooms': { icon: 'ShoppingBag', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+  'Professional Services': { icon: 'Briefcase', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+  'Travel & Hospitality': { icon: 'Compass', bg: 'bg-purple-50', text: 'text-purple-500' },
+  'Travel & Transport': { icon: 'Compass', bg: 'bg-purple-50', text: 'text-purple-500' },
+  'Construction': { icon: 'Wrench', bg: 'bg-orange-50', text: 'text-orange-500' },
+  'Events & Entertainment': { icon: 'Sparkles', bg: 'bg-pink-50', text: 'text-pink-500' },
+  'Health & Medical': { icon: 'Activity', bg: 'bg-red-50', text: 'text-red-500' },
+  'Shopping': { icon: 'ShoppingBag', bg: 'bg-emerald-50', text: 'text-emerald-500' },
+  'More': { icon: 'LayoutGrid', bg: 'bg-emerald-50', text: 'text-[#027244]' }
+};
 
 const getCategorySlug = (name) => {
   if (!name) return '/businesses';
@@ -634,126 +700,18 @@ export default function Home() {
         ];
       }
 
-      const iconMap = {
-        'Automotive': (
-          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 8h-1V5a2 2 0 00-2-2H8a2 2 0 00-2 2v3H5a3 3 0 00-3 3v6a2 2 0 002 2h1v2a2 2 0 002 2h1a2 2 0 002-2v-2h8v2a2 2 0 002 2h1a2 2 0 002-2v-2h1a2 2 0 002-2v-6a3 3 0 00-3-3z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
-            <rect x="5" y="10" width="14" height="4" fill="#001c41" rx="1" />
-            <circle cx="6.5" cy="16.5" r="1.5" fill="#fff" />
-            <circle cx="17.5" cy="16.5" r="1.5" fill="#fff" />
-          </svg>
-        ),
-        'Automobile Services': (
-          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 8h-1V5a2 2 0 00-2-2H8a2 2 0 00-2 2v3H5a3 3 0 00-3 3v6a2 2 0 002 2h1v2a2 2 0 002 2h1a2 2 0 002-2v-2h8v2a2 2 0 002 2h1a2 2 0 002-2v-2h1a2 2 0 002-2v-6a3 3 0 00-3-3z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
-            <rect x="5" y="10" width="14" height="4" fill="#001c41" rx="1" />
-            <circle cx="6.5" cy="16.5" r="1.5" fill="#fff" />
-            <circle cx="17.5" cy="16.5" r="1.5" fill="#fff" />
-          </svg>
-        ),
-        'Beauty & Wellness': <Sparkles className="h-7 w-7 text-pink-500" />,
-        'Beauty Salons & Spa': <Sparkles className="h-7 w-7 text-pink-500" />,
-        'Education': (
-          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 3L1 9l11 6 11-6-11-6z" fill="#027244" />
-            <path d="M5 12.5V17c0 1.66 3.13 3 7 3s7-1.34 7-3v-4.5" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
-            <path d="M17 11.5v5.5M12 15v5" stroke="#001c41" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        ),
-        'Schools & Colleges': (
-          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 3L1 9l11 6 11-6-11-6z" fill="#027244" />
-            <path d="M5 12.5V17c0 1.66 3.13 3 7 3s7-1.34 7-3v-4.5" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
-            <path d="M17 11.5v5.5M12 15v5" stroke="#001c41" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        ),
-        'Electronics': <Tv className="h-7 w-7 text-emerald-500" />,
-        'Food & Restaurants': (
-          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="4" y="2" width="16" height="20" rx="2" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
-            <rect x="7" y="5" width="3" height="3" rx="0.5" fill="#001c41" />
-            <rect x="14" y="5" width="3" height="3" rx="0.5" fill="#001c41" />
-            <rect x="7" y="10" width="3" height="3" rx="0.5" fill="#001c41" />
-            <rect x="14" y="10" width="3" height="3" rx="0.5" fill="#001c41" />
-            <path d="M9 16h6v6H9v-6z" fill="#027244" />
-          </svg>
-        ),
-        'Restaurants & Food': (
-          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="4" y="2" width="16" height="20" rx="2" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
-            <rect x="7" y="5" width="3" height="3" rx="0.5" fill="#001c41" />
-            <rect x="14" y="5" width="3" height="3" rx="0.5" fill="#001c41" />
-            <rect x="7" y="10" width="3" height="3" rx="0.5" fill="#001c41" />
-            <rect x="14" y="10" width="3" height="3" rx="0.5" fill="#001c41" />
-            <path d="M9 16h6v6H9v-6z" fill="#027244" />
-          </svg>
-        ),
-        'Health & Medical': (
-          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
-            <path d="M12 6v10M7 11h10" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        ),
-        'Doctors & Healthcare': (
-          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
-            <path d="M12 6v10M7 11h10" stroke="#001c41" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        ),
-        'Home Services': <HouseIcon className="h-7 w-7 text-teal-600" />,
-        'Real Estate': (
-          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 10.5V20a2 2 0 002 2h14a2 2 0 002-2v-9.5" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
-            <path d="M12 3L2 12h3v8h14v-8h3L12 3z" fill="#027244" />
-            <rect x="9" y="13" width="6" height="7" fill="#001c41" />
-          </svg>
-        ),
-        'Shopping': (
-          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 9l1-5h16l1 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
-            <path d="M3 9h18L20 4H4L3 9z" fill="#027244" />
-            <path d="M6 9v2m4-2v2m4-2v2m4-2v2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
-            <rect x="8" y="14" width="8" height="8" fill="#001c41" rx="1" />
-          </svg>
-        ),
-        'Grocery & Food Stores': (
-          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 9l1-5h16l1 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" fill="#E6F2ED" stroke="#027244" strokeWidth="2" />
-            <path d="M3 9h18L20 4H4L3 9z" fill="#027244" />
-            <path d="M6 9v2m4-2v2m4-2v2m4-2v2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
-            <rect x="8" y="14" width="8" height="8" fill="#001c41" rx="1" />
-          </svg>
-        ),
-        'Manufacturing': <Factory className="h-7 w-7 text-slate-600" />,
-        'Professional Services': <Briefcase className="h-7 w-7 text-emerald-600" />,
-        'Travel & Hospitality': <Compass className="h-7 w-7 text-purple-600" />,
-        'Travel & Transport': <Compass className="h-7 w-7 text-purple-600" />,
-        'Construction': <Wrench className="h-7 w-7 text-orange-600" />,
-        'Agriculture': <Sprout className="h-7 w-7 text-green-600" />,
-        'Agriculture & Farming': <Sprout className="h-7 w-7 text-green-600" />,
-        'Finance & Insurance': <CreditCard className="h-7 w-7 text-blue-600" />,
-        'Events & Entertainment': <Sparkles className="h-7 w-7 text-pink-500" />,
-        'Sports & Fitness': <Dumbbell className="h-7 w-7 text-emerald-600" />,
-        'Public Sector': <Landmark className="h-7 w-7 text-slate-500" />,
-        'IT & Digital Services': <Laptop className="h-7 w-7 text-blue-600" />,
-        'Books & Stationery': <BookOpen className="h-7 w-7 text-emerald-600" />,
-        'Electrical & Solar': <Zap className="h-7 w-7 text-yellow-500" />,
-        'Hotels & Lodges': <Hotel className="h-7 w-7 text-purple-600" />,
-        'Electronics & Mobiles': <Smartphone className="h-7 w-7 text-emerald-600" />,
-        'Wedding & Event Services': <Sparkles className="h-7 w-7 text-pink-500" />,
-        'Repair Services': <Wrench className="h-7 w-7 text-orange-600" />,
-        'Shops': <ShoppingBag className="h-7 w-7 text-emerald-600" />,
-        'Shops & Showrooms': <ShoppingBag className="h-7 w-7 text-emerald-600" />
-      };
-
       const sorted = availableCategories
-        .map(name => ({
-          name,
-          count: counts[name] || 0,
-          avgRating: avgRatings[name] || 0,
-          icon: iconMap[name] || <LayoutGrid className="h-7 w-7 text-slate-500" />,
-          path: getCategorySlug(name)
-        }))
+        .map(name => {
+          const styles = categoryStylesMap[name] || { icon: 'Store', bg: 'bg-emerald-50', text: 'text-emerald-500' };
+          return {
+            name,
+            count: counts[name] || 0,
+            avgRating: avgRatings[name] || 0,
+            icon: renderCategoryIcon(styles.icon, `h-5.5 w-5.5 sm:h-7 sm:w-7 ${styles.text}`),
+            bg: styles.bg,
+            path: getCategorySlug(name)
+          };
+        })
         .sort((a, b) => {
           if (b.count !== a.count) {
             return b.count - a.count;
@@ -765,14 +723,8 @@ export default function Home() {
       // 12th item is More pointing to Explore Categories
       sorted.push({
         name: 'More',
-        icon: (
-          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="3" width="7" height="7" rx="1.5" fill="#027244" />
-            <rect x="14" y="3" width="7" height="7" rx="1.5" fill="#001c41" />
-            <rect x="3" y="14" width="7" height="7" rx="1.5" fill="#001c41" />
-            <rect x="14" y="14" width="7" height="7" rx="1.5" fill="#027244" />
-          </svg>
-        ),
+        icon: renderCategoryIcon('LayoutGrid', 'h-5.5 w-5.5 sm:h-7 sm:w-7 text-[#027244]'),
+        bg: 'bg-emerald-50',
         path: '/businesses?focus=categories'
       });
 
@@ -1265,7 +1217,7 @@ export default function Home() {
                 to={cat.name === 'More' ? '/businesses?focus=categories' : `/businesses?category=${encodeURIComponent(cat.name)}`}
                 className="card-premium group rounded-2xl py-4.5 px-3 sm:py-6 sm:px-4 flex flex-col items-center justify-center gap-2.5 sm:gap-4 text-center cursor-pointer w-[130px] sm:w-[160px] shrink-0 snap-center sm:snap-start"
               >
-                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl flex items-center justify-center text-xl sm:text-2xl select-none transition-transform duration-500 ease-out-expo group-hover:scale-110 [&>svg]:h-5.5 [&>svg]:w-5.5 sm:[&>svg]:h-7 sm:[&>svg]:w-7">
+                <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full ${cat.bg || 'bg-emerald-50'} flex items-center justify-center select-none transition-transform duration-500 ease-out-expo group-hover:scale-110 shadow-2xs`}>
                   {cat.icon}
                 </div>
                 <span className="text-xs sm:text-[17px] font-medium text-slate-700 transition-colors duration-300 group-hover:text-[#027244] line-clamp-2 min-h-[2rem] flex items-center justify-center">{cat.name}</span>
