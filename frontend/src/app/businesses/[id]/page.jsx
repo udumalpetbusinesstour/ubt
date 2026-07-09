@@ -1731,10 +1731,14 @@ Please confirm availability and delivery time.`;
                 <span className="font-black text-white ml-1">{business.views || 0}</span>
                 <span className="text-[10px] text-white/75">Views</span>
               </div>
-              {business.category && (
+              {((business.categories && business.categories.length > 0) || business.category) && (
                 <>
                   <span className="text-white/40">•</span>
-                  <span className="text-white font-bold bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-1 rounded-lg">{business.category}</span>
+                  <span className="text-white font-bold bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-1 rounded-lg">
+                    {Array.from(new Set((business.categories || []).map(c => c.category).filter(Boolean))).length > 0
+                      ? Array.from(new Set(business.categories.map(c => c.category).filter(Boolean))).join(', ')
+                      : (business.category || '')}
+                  </span>
                 </>
               )}
               <span className="text-white/40">•</span>
@@ -1931,7 +1935,11 @@ Please confirm availability and delivery time.`;
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Business Category</span>
-                        <span className="font-extrabold text-slate-800 text-sm mt-2">{business.category}</span>
+                        <span className="font-extrabold text-slate-800 text-sm mt-2">
+                          {Array.from(new Set((business.categories || []).map(c => c.category).filter(Boolean))).length > 0
+                            ? Array.from(new Set(business.categories.map(c => c.category).filter(Boolean))).join(', ')
+                            : (business.category || '')}
+                        </span>
                       </div>
                     </div>
                   )}
@@ -1942,7 +1950,11 @@ Please confirm availability and delivery time.`;
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Business Type</span>
-                        <span className="font-extrabold text-slate-800 text-sm mt-2">{business.type}</span>
+                        <span className="font-extrabold text-slate-800 text-sm mt-2">
+                          {(business.categories || []).map(c => c.type === 'Others' ? c.customCategoryName : c.type).filter(Boolean).length > 0
+                            ? business.categories.map(c => c.type === 'Others' ? c.customCategoryName : c.type).filter(Boolean).join(', ')
+                            : (business.type || '')}
+                        </span>
                       </div>
                     </div>
                   )}

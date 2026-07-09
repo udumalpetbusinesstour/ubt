@@ -9,7 +9,7 @@ import {
   RefreshCw, Star, StarHalf, CreditCard, ChevronRight, ChevronLeft, ArrowLeft, Activity, PhoneCall, 
   MessageSquare, Plus, CheckCircle, Info, Bell, ExternalLink, Globe,
   Copy, Check, Share2, Gift, Upload, HelpCircle, Briefcase, Mail, Settings, Menu, X, Trash2, Search, Lock,
-  FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin, LogOut, Facebook, Instagram, Phone, Users, Move, Utensils
+  FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin, LogOut, Facebook, Instagram, Phone, Users, Move, Utensils, Folder
 } from 'lucide-react';
 
 
@@ -6024,7 +6024,11 @@ function DashboardContent() {
                           <span className="text-[10px] text-slate-405">({overallReviewsCount} Reviews)</span>
                         </div>
                         <span className="text-slate-600">•</span>
-                        <span className="text-emerald-450 font-bold bg-emerald-500/5 border border-emerald-500/15 px-2.5 py-1 rounded-lg">{business.type}</span>
+                        <span className="text-emerald-450 font-bold bg-emerald-500/5 border border-emerald-500/15 px-2.5 py-1 rounded-lg">
+                          {(business.categories || []).map(c => c.type === 'Others' ? c.customCategoryName : c.type).filter(Boolean).length > 0
+                            ? business.categories.map(c => c.type === 'Others' ? c.customCategoryName : c.type).filter(Boolean).join(', ')
+                            : (business.type || '')}
+                        </span>
                         <span className="text-slate-600">•</span>
                         <div className="flex items-center gap-1.5 text-slate-400">
                           <MapPin className="h-4 w-4 text-emerald-550" />
@@ -6197,13 +6201,33 @@ function DashboardContent() {
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-y-5 gap-x-6 text-slate-700 text-xs">
+                            {business.category && (
+                              <div className="flex items-start gap-3">
+                                <div className="p-2 rounded-xl bg-slate-100 text-slate-500 shrink-0">
+                                  <Folder className="h-4.5 w-4.5" />
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Business Category</span>
+                                  <span className="font-extrabold text-slate-800 mt-1">
+                                    {Array.from(new Set((business.categories || []).map(c => c.category).filter(Boolean))).length > 0
+                                      ? Array.from(new Set(business.categories.map(c => c.category).filter(Boolean))).join(', ')
+                                      : business.category}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
                             <div className="flex items-start gap-3">
                               <div className="p-2 rounded-xl bg-slate-100 text-slate-500 shrink-0">
                                 <Briefcase className="h-4.5 w-4.5" />
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Business Type</span>
-                                <span className="font-extrabold text-slate-800 mt-1">{business.type}</span>
+                                <span className="font-extrabold text-slate-800 mt-1">
+                                  {(business.categories || []).map(c => c.type === 'Others' ? c.customCategoryName : c.type).filter(Boolean).length > 0
+                                    ? business.categories.map(c => c.type === 'Others' ? c.customCategoryName : c.type).filter(Boolean).join(', ')
+                                    : business.type}
+                                </span>
                               </div>
                             </div>
 
