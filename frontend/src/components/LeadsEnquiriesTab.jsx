@@ -74,7 +74,19 @@ export default function LeadsEnquiriesTab({
                     
                     <div className="flex-grow flex flex-col overflow-hidden">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-extrabold text-slate-800 truncate leading-snug">{lead.name}</span>
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+                          <span className="font-extrabold text-slate-800 truncate leading-snug">{lead.name}</span>
+                          {lead.status === 'Rectified' && (
+                            <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide leading-none shrink-0 flex items-center gap-0.5 select-none">
+                              ✓ Rectified
+                            </span>
+                          )}
+                          {(lead.status === 'Responded' || lead.responded) && lead.status !== 'Rectified' && (
+                            <span className="bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide leading-none shrink-0 flex items-center gap-0.5 select-none">
+                              ✓ Responded
+                            </span>
+                          )}
+                        </div>
                         <span className="text-[9px] font-semibold text-slate-400 shrink-0">{lead.time}</span>
                       </div>
                       <span className="text-[10px] text-slate-500 font-semibold truncate mt-0.5">
@@ -214,84 +226,7 @@ export default function LeadsEnquiriesTab({
                       </div>
                     </div>
 
-                    {/* Show simulated replies if exists */}
-                    {activeLead.reply && (
-                      <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-4 mt-2 animate-fadeIn">
-                        <span className="text-[9.5px] font-extrabold text-[#027244] uppercase tracking-widest leading-none">Your Reply</span>
-                        <div className="bg-emerald-50/30 border border-emerald-100 p-4 rounded-2xl mt-1 flex gap-2.5">
-                          <div className="h-6 w-6 rounded-full bg-[#027244] text-white flex items-center justify-center text-[9px] font-black shrink-0 shadow-2xs">
-                            R
-                          </div>
-                          <p className="text-slate-600 text-xs font-semibold leading-normal">
-                            {activeLead.reply}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
                   </div>
-
-                  {/* Quick reply action box with premium button tactile feedback */}
-                  {!activeLead.reply && (
-                    <div className="p-6 bg-slate-50/40 flex flex-col gap-3">
-                      <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest leading-none text-left">Quick Response Box</span>
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <input
-                          type="text"
-                          placeholder="Type your response email or text..."
-                          value={leadReplyText}
-                          onChange={(e) => setLeadReplyText(e.target.value)}
-                          className="flex-grow border border-slate-200 rounded-xl px-4 py-3 text-xs bg-white focus:outline-emerald-600 font-semibold shadow-3xs"
-                        />
-                        <button
-                          onClick={async () => {
-                            if (!leadReplyText.trim()) return;
-                            if (activeLead._id) {
-                              const activeToken = token || localStorage.getItem('ubt_token');
-                              try {
-                                const res = await fetch(`http://localhost:5000/api/leads/${activeLead._id}/reply`, {
-                                  method: 'PUT',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                    Authorization: `Bearer ${activeToken}`
-                                  },
-                                  body: JSON.stringify({ reply: leadReplyText })
-                                });
-                                const data = await res.json();
-                                if (data.success) {
-                                  const updatedList = [...leadsList];
-                                  updatedList[selectedLeadIdx] = {
-                                    ...activeLead,
-                                    reply: leadReplyText,
-                                    responded: true
-                                  };
-                                  setLeadsList(updatedList);
-                                  setLeadReplyText('');
-                                  return;
-                                }
-                              } catch (err) {
-                                console.warn('Failed to reply via API, applying offline fallback updates', err);
-                              }
-                            }
-                            
-                            // Offline fallback update
-                            const updatedList = [...leadsList];
-                            updatedList[selectedLeadIdx] = {
-                              ...activeLead,
-                              reply: leadReplyText,
-                              responded: true
-                            };
-                            setLeadsList(updatedList);
-                            setLeadReplyText('');
-                          }}
-                          className="py-3 px-5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer transition-all border border-slate-800 btn-active-press w-full sm:w-auto shrink-0"
-                        >
-                          Submit
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
                 </div>
               );
             })()
