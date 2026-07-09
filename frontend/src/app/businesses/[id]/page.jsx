@@ -1591,7 +1591,7 @@ Please confirm availability and delivery time.`;
         )}
 
         <div className="relative max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10">
-          <div className="flex flex-col gap-3 w-full">
+          <div className="flex flex-col gap-3 w-full drop-shadow-[0_4px_8px_rgba(0,0,0,0.95)]">
             {/* Go Back button with Left Arrow */}
             <button 
               onClick={() => navigate(-1)}

@@ -4270,7 +4270,7 @@ function DashboardContent() {
 
         {/* Upgrade Plan Callout Widget */}
         {business && (
-          <div className="m-4.5 p-4 bg-slate-900/40 border border-slate-850 rounded-2xl flex flex-col gap-2 relative overflow-hidden shadow-sm hidden lg:flex">
+          <div className="m-4.5 p-4 bg-slate-900/40 border border-slate-850 rounded-2xl flex flex-col gap-2 relative overflow-hidden shadow-sm hidden lg:flex shrink-0">
             <div className="absolute -right-8 -top-8 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
             <h5 className="text-[11px] font-extrabold text-amber-400 flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5 fill-current" /> Upgrade Your Plan
@@ -5339,7 +5339,7 @@ function DashboardContent() {
                 </div>
               )}
               {/* 3. KPI CARDS ROW (8 Horizontal premium aligned widgets) */}
-              <div className="flex overflow-x-auto gap-4 pt-3 pb-3.5 w-full scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent snap-x snap-mandatory">
+              <div className="flex overflow-x-auto gap-4 pt-4 pb-4 px-1 w-full scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent snap-x snap-mandatory shrink-0">
                 
                 {/* Total Leads */}
                 <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[180px] sm:w-[200px] shrink-0 snap-start">
@@ -5916,7 +5916,7 @@ function DashboardContent() {
                   )}
                   
                   <div className={`relative flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10 transition-opacity duration-300 ${isRepositioning ? 'opacity-10 pointer-events-none' : 'opacity-100'}`}>
-                    <div className="flex flex-col gap-3 text-left w-full">
+                    <div className="flex flex-col gap-3 text-left w-full drop-shadow-[0_4px_8px_rgba(0,0,0,0.95)]">
                       {/* Breadcrumbs */}
                       <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                         <span>Dashboard</span>
