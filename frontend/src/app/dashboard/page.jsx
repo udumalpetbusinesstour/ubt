@@ -5352,6 +5352,17 @@ function DashboardContent() {
                   </div>
                 </div>
 
+                {/* Directory Views */}
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
+                  <div className="h-10.5 w-10.5 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <Eye className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="flex flex-col text-left overflow-hidden min-w-0">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest truncate">Directory Views</span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.views ?? 0}</span>
+                  </div>
+                </div>
+
                 {/* Call Clicks */}
                 <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[165px] sm:w-[185px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
