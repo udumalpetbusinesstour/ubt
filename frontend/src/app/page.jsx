@@ -1316,28 +1316,37 @@ export default function Home() {
                       )}
                     </div>
                     <div 
-                      className={`p-5 flex-grow flex flex-col justify-between gap-3.5 bg-white ${!isSubscribed ? 'select-none pointer-events-none' : ''}`}
-                      style={{
-                        filter: !isSubscribed ? 'blur(3.5px)' : 'none'
-                      }}
+                      className={`p-5 flex-grow flex flex-col justify-between gap-3.5 bg-white`}
                     >
-                      <div className="flex flex-col gap-1.5 text-left">
+                      <div className="flex flex-col gap-1.5 text-left relative z-30">
                         <h4 className="font-extrabold text-sm text-[#001c41] leading-tight transition-colors duration-300 group-hover:text-[#027244]">{biz.name}</h4>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{biz.category}</span>
-                        <a 
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(biz.address ? `${biz.name}, ${biz.address}` : `${biz.name}, ${biz.locality || ''}, Udumalpet`)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold mt-1 hover:text-emerald-500 transition-colors cursor-pointer group"
-                          title="View on Google Maps"
+                        <div 
+                          className="flex flex-col gap-1.5"
+                          style={{
+                            filter: !isSubscribed ? 'blur-[4.5px] select-none pointer-events-none' : 'none'
+                          }}
                         >
-                          <MapPin className="h-3.5 w-3.5 text-slate-400 group-hover:text-emerald-500 shrink-0" />
-                          <span className="group-hover:underline">{biz.locality}</span>
-                        </a>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{biz.category}</span>
+                          <a 
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(biz.address ? `${biz.name}, ${biz.address}` : `${biz.name}, ${biz.locality || ''}, Udumalpet`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold mt-1 hover:text-emerald-500 transition-colors cursor-pointer group"
+                            title="View on Google Maps"
+                          >
+                            <MapPin className="h-3.5 w-3.5 text-slate-400 group-hover:text-emerald-500 shrink-0" />
+                            <span className="group-hover:underline">{biz.locality}</span>
+                          </a>
+                        </div>
                       </div>
 
-                      <div className="flex justify-between items-center border-t border-slate-100 pt-3 text-xs">
+                      <div 
+                        className="flex justify-between items-center border-t border-slate-100 pt-3 text-xs relative z-30"
+                        style={{
+                          filter: !isSubscribed ? 'blur-[4.5px] select-none pointer-events-none' : 'none'
+                        }}
+                      >
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-1">
                             <Star className="h-3.5 w-3.5 text-amber-400 fill-current" />
@@ -1380,8 +1389,17 @@ export default function Home() {
                     {!isSubscribed && (
                       <div 
                         onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
-                        className="absolute inset-0 bg-slate-900/10 backdrop-blur-xs z-20 transition-all duration-300 hover:bg-slate-900/15 cursor-pointer"
-                      />
+                        className="absolute inset-0 bg-transparent hover:bg-slate-900/5 z-20 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer p-4 text-center"
+                      >
+                        <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-2.5 flex flex-col items-center gap-1 shadow-lg max-w-[150px]">
+                          <svg className="h-4.5 w-4.5 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                          <span className="text-[9px] font-black uppercase tracking-widest text-white select-none">
+                            Profile Locked
+                          </span>
+                        </div>
+                      </div>
                     )}
                   </div>
                 );
@@ -1581,25 +1599,26 @@ export default function Home() {
                             )}
                             
                             {/* Content details */}
-                            <div 
-                              className={`flex flex-col justify-between overflow-hidden flex-grow ${!isSubscribed ? 'select-none pointer-events-none' : ''}`}
-                              style={{
-                                filter: !isSubscribed ? 'blur(3px)' : 'none'
-                              }}
-                            >
-                              <div className="flex flex-col gap-0.5">
+                            <div className="flex flex-col justify-between overflow-hidden flex-grow">
+                              <div className="flex flex-col gap-0.5 relative z-30">
                                 <h4 className="font-extrabold text-sm text-[#001c41] truncate" title={biz.name}>{biz.name}</h4>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide truncate">{biz.category}</span>
-                              </div>
-                              
-                              <div className="flex items-center gap-3 mt-1.5">
-                                <div className="flex items-center gap-0.5 text-xs text-amber-500 font-extrabold">
-                                  <Star className="h-3.5 w-3.5 fill-current" />
-                                  <span>{(biz.googleRating || 0).toFixed(1)}</span>
-                                </div>
-                                <div className="flex items-center gap-1 text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
-                                  <Users className="h-3.5 w-3.5 text-emerald-600" />
-                                  <span>{biz.referrals || biz.referralCount || 0} referrals</span>
+                                <div 
+                                  className="flex flex-col gap-0.5"
+                                  style={{
+                                    filter: !isSubscribed ? 'blur-[3px] select-none pointer-events-none' : 'none'
+                                  }}
+                                >
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide truncate">{biz.category}</span>
+                                  <div className="flex items-center gap-3 mt-1.5">
+                                    <div className="flex items-center gap-0.5 text-xs text-amber-500 font-extrabold">
+                                      <Star className="h-3.5 w-3.5 fill-current" />
+                                      <span>{(biz.googleRating || 0).toFixed(1)}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
+                                      <Users className="h-3.5 w-3.5 text-emerald-600" />
+                                      <span>{biz.referrals || biz.referralCount || 0} referrals</span>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -1608,8 +1627,17 @@ export default function Home() {
                             {!isSubscribed && (
                               <div 
                                 onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
-                                className="absolute inset-0 bg-slate-900/10 backdrop-blur-xs z-20 transition-all duration-300 hover:bg-slate-900/15 cursor-pointer"
-                              />
+                                className="absolute inset-0 bg-transparent hover:bg-slate-900/5 z-20 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer p-2 text-center"
+                              >
+                                <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-2 flex flex-col items-center gap-1 shadow-lg max-w-[140px]">
+                                  <svg className="h-4 w-4 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                  </svg>
+                                  <span className="text-[8.5px] font-black uppercase tracking-widest text-white select-none">
+                                    Locked
+                                  </span>
+                                </div>
+                              </div>
                             )}
                           </div>
                         );

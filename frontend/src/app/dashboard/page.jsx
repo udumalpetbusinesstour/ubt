@@ -1296,6 +1296,7 @@ function DashboardContent() {
     }
   };
 
+  // 1. Initial configuration and authentication load (RUNS ONCE ON MOUNT)
   useEffect(() => {
     const storedToken = localStorage.getItem('ubt_token');
     const storedUser = localStorage.getItem('ubt_user');
@@ -1358,10 +1359,15 @@ function DashboardContent() {
     } catch (err) {
       navigate('/login?redirect=/dashboard', { replace: true });
     }
+  }, []);
 
+  // 2. React parameter sync and tab changes (RUNS ON SEARCHPARAMS CHANGE)
+  useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam) {
       setActiveTab(tabParam);
+    } else {
+      setActiveTab('Dashboard');
     }
 
     if (searchParams.get('message') === 'listing_created') {
@@ -3689,6 +3695,24 @@ function DashboardContent() {
     if (!business) return;
 
     const planToUse = planOverride || selectedPlan;
+
+    // Prohibit paying again if the plan is already active with autopay enabled
+    const isCurrentPlanActive = business.subscriptionStatus === 'active' && business.isAutopayEnabled === true;
+    if (isCurrentPlanActive) {
+      const activePlanLower = (business.subscriptionPlan || '').toLowerCase();
+      const planToUseLower = (planToUse || '').toLowerCase();
+      const isMonthlyActive = activePlanLower.includes('monthly') || activePlanLower.includes('pro plan') || activePlanLower.includes('custom');
+      const isYearlyActive = activePlanLower.includes('yearly') || activePlanLower.includes('year');
+      
+      const isCheckingOutMonthly = planToUseLower.includes('monthly') || planToUseLower === 'monthly';
+      const isCheckingOutYearly = planToUseLower.includes('yearly') || planToUseLower === 'yearly';
+
+      if ((isMonthlyActive && isCheckingOutMonthly) || (isYearlyActive && isCheckingOutYearly)) {
+        alert(`Already this plan is active: ${business.subscriptionPlan}. Autopay is enabled, so you do not need to pay again.`);
+        return;
+      }
+    }
+
     setCheckoutPlan(planToUse);
     setPaymentLoading(true);
     setError('');
@@ -9384,21 +9408,22 @@ function DashboardContent() {
               setShowRenewModal(false);
             }
           }}
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-none z-50 flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto text-left"
         >
           <div 
-            className="max-w-4xl w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-6 animate-scaleUp text-left max-h-[90vh] overflow-y-auto scrollbar-none relative my-auto"
+            className="max-w-3xl w-full bg-white rounded-[32px] p-6 md:p-8 flex flex-col relative animate-scaleUp shadow-2xl max-h-[92vh] overflow-y-auto"
           >
-            
-            {/* Close button */}
-            {!isMandatorySubscription && (
-              <button 
-                onClick={() => setShowRenewModal(false)} 
-                className="absolute right-6 top-6 text-slate-400 hover:text-slate-600 h-8 w-8 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center cursor-pointer transition-colors z-10"
-              >
-                <X className="h-4.5 w-4.5" />
-              </button>
-            )}
+            <div className="w-full flex flex-col gap-4 relative">
+              
+              {/* Close button */}
+              {!isMandatorySubscription && (
+                <button 
+                  onClick={() => setShowRenewModal(false)} 
+                  className="absolute right-0 top-0 text-slate-400 hover:text-slate-600 h-10 w-10 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center cursor-pointer transition-colors z-10"
+                >
+                  <X className="h-5.5 w-5.5" />
+                </button>
+              )}
 
             {isMandatorySubscription && (
               <div className="bg-emerald-50 border border-emerald-250 rounded-2xl p-4.5 text-xs text-[#027244] font-semibold flex items-start gap-2.5 shadow-sm animate-fadeIn">
@@ -9415,63 +9440,14 @@ function DashboardContent() {
               </div>
             )}
 
-            <div className="text-center flex flex-col items-center gap-1">
-              <span className="text-[10px] font-black uppercase text-[#027244] tracking-wider">Premium Access</span>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-[#001c41] tracking-tight">Choose Your Plan</h2>
-              <p className="text-xs text-slate-400 font-semibold max-w-md mt-1">Select the subscription package that best fits your business goals</p>
-            </div>
-            {/* Quick business & subscription stats overview banner */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full bg-[#F8FAFC] border border-slate-200/60 p-4.5 rounded-2xl">
-              <div className="flex flex-col text-left">
-                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Current Plan</span>
-                <span className={`text-xs font-black mt-1.5 w-fit px-2 py-0.5 rounded uppercase tracking-wide border ${
-                  business?.subscriptionStatus === 'active' 
-                    ? 'bg-emerald-50 text-[#027244] border-emerald-100' 
-                    : 'bg-amber-50 text-amber-700 border-amber-200/60'
-                }`}>
-                  {business?.subscriptionStatus === 'active' ? 'Active Pro Plan' : 'Inactive Plan'}
-                </span>
-              </div>
-              <div className="flex flex-col text-left sm:border-l sm:border-slate-200 sm:pl-4">
-                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Listing Status</span>
-                <span className={`text-xs font-black mt-1.5 w-fit px-2.5 py-0.5 rounded-full uppercase tracking-wider border ${
-                  business?.status === 'Approved'
-                    ? 'bg-emerald-50 text-[#027244] border-emerald-100'
-                    : 'bg-amber-50 text-amber-700 border-amber-200/60'
-                }`}>
-                  {business?.status || 'Pending Vetting'}
-                </span>
-              </div>
-              <div className="flex flex-col text-left sm:border-l sm:border-slate-200 sm:pl-4">
-                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Referral Points</span>
-                <span className="text-xs font-extrabold text-slate-800 mt-1.5">
-                  {referralStats?.referralPoints || 0} Points
-                </span>
-              </div>
-            </div>
-
-            {/* Toggle selector */}
-            <div className="flex justify-center mt-2">
-              <div className="bg-slate-100 border border-slate-200 p-1 rounded-full flex items-center gap-1 w-fit shadow-inner">
-                {paymentPlans.map((p) => (
-                  <button
-                    key={p._id || p.id}
-                    type="button"
-                    onClick={() => handlePlanSelect(p.name)}
-                    className={`py-2 px-6 rounded-full text-xs font-black transition-all cursor-pointer ${
-                      selectedPlan === p.name
-                        ? 'bg-[#027244] text-white shadow-sm'
-                        : 'text-slate-500 hover:text-slate-700'
-                    }`}
-                  >
-                    {p.name.replace(' Subscription', '').replace(' Plan', '')}
-                  </button>
-                ))}
-              </div>
+            <div className="text-center flex flex-col items-center gap-0.5">
+              <span className="text-[9px] font-black uppercase text-[#027244] tracking-wider">Premium Access</span>
+              <h2 className="text-xl md:text-2xl font-extrabold text-[#001c41] tracking-tight">Choose Your Plan</h2>
+              <p className="text-[11px] text-slate-400 font-semibold max-w-md mt-0.5">Select the subscription package that best fits your business goals</p>
             </div>
 
             {/* Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 w-full">
+            <div key={selectedPlan} className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 w-full animate-fadeIn">
               {paymentPlans.map((p) => {
                 const isSelected = selectedPlan === p.name || (selectedPlan === 'Monthly' && p.type === 'Monthly') || (selectedPlan === 'Yearly' && p.type === 'Yearly');
                 const defaultFeatures = [
@@ -9486,18 +9462,51 @@ function DashboardContent() {
                   <div 
                     key={p._id || p.id}
                     onClick={() => handlePlanSelect(p.name)}
-                    className={`bg-white border-2 rounded-[24px] p-6 flex flex-col justify-between items-center text-center shadow-md relative transition-all duration-300 cursor-pointer ${
+                    className={`bg-white border-2 rounded-[20px] p-4.5 pt-7 flex flex-col justify-between items-center text-center shadow-md relative transition-all duration-300 cursor-pointer ${
                       isSelected
                         ? 'border-[#027244] ring-2 ring-emerald-100 bg-emerald-50/5'
                         : 'border-slate-250 hover:border-[#027244]/50'
                     }`}
                   >
-                    {/* Popular / Offer Badge */}
-                    {(p.isOffer || p.type === 'Yearly') && (
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#027244] text-white text-[9px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider shadow">
-                        {p.type === 'Yearly' && !p.isOffer ? 'Most Popular' : (p.offerText || 'Special Offer')}
-                      </div>
-                    )}
+                    {/* Current Plan Badge */}
+                    {(() => {
+                      const activePlanLower = (business?.subscriptionPlan || '').toLowerCase();
+                      const currentPlanType = (activePlanLower.includes('monthly') || activePlanLower.includes('pro plan')) 
+                        ? 'Monthly' 
+                        : (activePlanLower.includes('yearly') || activePlanLower.includes('year'))
+                          ? 'Yearly'
+                          : null;
+
+                      const isCurrentPlan = business?.subscriptionStatus === 'active' && currentPlanType === p.type;
+                      if (!isCurrentPlan) return null;
+                      return (
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#027244] text-white text-[9.5px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-md z-10 border border-[#005934] animate-pulse">
+                          Current Active Plan
+                        </div>
+                      );
+                    })()}
+
+                    {/* Popular / Offer Badge (Hidden if this is the current active plan) */}
+                    {(() => {
+                      const activePlanLower = (business?.subscriptionPlan || '').toLowerCase();
+                      const currentPlanType = (activePlanLower.includes('monthly') || activePlanLower.includes('pro plan')) 
+                        ? 'Monthly' 
+                        : (activePlanLower.includes('yearly') || activePlanLower.includes('year'))
+                          ? 'Yearly'
+                          : null;
+                      const isCurrentPlan = business?.subscriptionStatus === 'active' && currentPlanType === p.type;
+                      
+                      if (isCurrentPlan) return null;
+                      
+                      if (p.isOffer || p.type === 'Yearly') {
+                        return (
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#027244] text-white text-[9px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider shadow">
+                            {p.type === 'Yearly' && !p.isOffer ? 'Most Popular' : (p.offerText || 'Special Offer')}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
 
                     {/* Ribbon */}
                     {p.isOffer && p.offerText && (
@@ -9508,100 +9517,96 @@ function DashboardContent() {
                       </div>
                     )}
 
-                    <div className="flex flex-col items-center gap-4 w-full">
-                      {/* Icon */}
-                      <div className="h-12 w-12 rounded-full bg-emerald-50 border border-emerald-100 text-[#027244] flex items-center justify-center shadow-inner">
-                        <Calendar className="h-5.5 w-5.5" />
-                      </div>
-                      
-                      <div className="flex flex-col gap-1">
-                        <h3 className="font-extrabold text-slate-800 text-base">{p.name}</h3>
-                        <div className="flex items-baseline justify-center gap-1.5 mt-1">
-                          <span className="text-3xl font-extrabold text-[#001c41]">
+                    <div className="flex flex-col items-center gap-2.5 w-full">
+                      <div className="flex flex-col gap-0.5">
+                        <h3 className="font-extrabold text-slate-800 text-sm">{p.name}</h3>
+                        <div className="flex items-baseline justify-center gap-1 mt-0.5">
+                          <span className="text-2xl font-extrabold text-[#001c41]">
                             ₹{getDiscountedPrice(p.price)}
                           </span>
-                          <span className="text-xs text-slate-400 font-semibold">/ {p.durationDays} Days</span>
+                          <span className="text-[10px] text-slate-400 font-semibold">/ {p.durationDays} Days</span>
                         </div>
                         {p.type === 'Yearly' && (
-                          <div className="flex items-center justify-center gap-2 text-[10px] font-black mt-0.5">
+                          <div className="flex items-center justify-center gap-1.5 text-[9px] font-black mt-0.5">
                             <span className="text-slate-400 line-through">₹{monthlyPrice * 12}</span>
-                            <span className="text-[#027244] bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5">Save ₹{(monthlyPrice * 12) - p.price}</span>
+                            <span className="text-[#027244] bg-emerald-50 border border-emerald-100 rounded px-1 py-0.2">Save ₹{(monthlyPrice * 12) - p.price}</span>
                           </div>
                         )}
                         {p.description && (
-                          <p className="text-[11px] text-slate-400 font-semibold mt-1">{p.description}</p>
+                          <p className="text-[10px] text-slate-400 font-semibold mt-0.5 leading-tight">{p.description}</p>
                         )}
                       </div>
                       
-                      <div className="w-full border-t border-dashed border-slate-200 my-2" />
+                      <div className="w-full border-t border-dashed border-slate-200 my-1.5" />
                       
                       {/* Features */}
-                      <div className="flex flex-col gap-3.5 items-start w-full px-2 text-xs text-slate-655 font-semibold">
+                      <div className="flex flex-col gap-2 items-start w-full px-1 text-[11px] text-slate-655 font-semibold">
                         {featuresToUse.map((feature, fIdx) => (
-                          <div key={fIdx} className="flex items-center gap-2.5 text-left">
-                            <CheckCircle className="h-4 w-4 text-[#027244] shrink-0" />
+                          <div key={fIdx} className="flex items-center gap-2 text-left">
+                            <CheckCircle className="h-3.5 w-3.5 text-[#027244] shrink-0" />
                             <span>{feature}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePaymentCheckout(p.name);
-                      }}
-                      className={`mt-8 py-3 transition-all w-full rounded-xl font-extrabold text-xs cursor-pointer shadow-md active:scale-98 ${
-                        isSelected
-                          ? 'bg-[#027244] hover:bg-[#005934] text-white'
-                          : 'bg-white hover:bg-emerald-50 border border-[#027244] text-[#027244] hover:text-[#005934]'
-                      }`}
-                    >
-                      {paymentLoading && checkoutPlan === p.name ? 'Initializing...' : `Start ${p.type} Plan`}
-                    </button>
+                    {/* Render button text and style dynamically based on subscription states */}
+                    {(() => {
+                      const activePlanLower = (business?.subscriptionPlan || '').toLowerCase();
+                      const currentPlanType = (activePlanLower.includes('monthly') || activePlanLower.includes('pro plan')) 
+                        ? 'Monthly' 
+                        : (activePlanLower.includes('yearly') || activePlanLower.includes('year'))
+                          ? 'Yearly'
+                          : null;
+
+                      const isCurrentPlan = business?.subscriptionStatus === 'active' && currentPlanType === p.type;
+                      const isAutopay = business?.isAutopayEnabled === true;
+
+                      let btnLabel = `Start ${p.type} Plan`;
+                      let btnStyle = isSelected
+                        ? 'bg-[#027244] hover:bg-[#005934] text-white'
+                        : 'bg-white hover:bg-emerald-50 border border-[#027244] text-[#027244] hover:text-[#005934]';
+
+                      if (isCurrentPlan) {
+                        if (isAutopay) {
+                          btnLabel = 'Current Plan (Auto-Renewal Active)';
+                          btnStyle = 'bg-slate-100 border border-slate-300 text-slate-400 cursor-not-allowed';
+                        } else {
+                          btnLabel = 'Extend Current Plan (Queued Renewal)';
+                          btnStyle = 'bg-white hover:bg-amber-50 border border-amber-500 text-amber-600 hover:text-amber-700';
+                        }
+                      } else if (business?.subscriptionStatus === 'active' && currentPlanType && currentPlanType !== p.type) {
+                        btnLabel = `Switch to ${p.type} Plan`;
+                        btnStyle = 'bg-white hover:bg-emerald-50 border border-[#027244] text-[#027244] hover:text-[#005934]';
+                      }
+
+                      if (paymentLoading && checkoutPlan === p.name) {
+                        btnLabel = 'Initializing...';
+                      }
+
+                      return (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isCurrentPlan && isAutopay) {
+                              alert(`Already this plan is active: ${business.subscriptionPlan}. Autopay is enabled, so you do not need to pay again.`);
+                              return;
+                            }
+                            handlePaymentCheckout(p.name);
+                          }}
+                          disabled={paymentLoading || (isCurrentPlan && isAutopay)}
+                          className={`mt-4 py-2.5 transition-all w-full rounded-xl font-extrabold text-xs shadow-md active:scale-98 ${btnStyle} ${
+                            isCurrentPlan && isAutopay ? 'opacity-70 cursor-not-allowed active:scale-100' : 'cursor-pointer'
+                          }`}
+                        >
+                          {btnLabel}
+                        </button>
+                      );
+                    })()}
                   </div>
                 );
               })}
             </div>
-
-            {/* Everything You Get Bottom Section */}
-            <div className="w-full border-t border-slate-100 pt-6 mt-4 flex flex-col gap-4 text-center">
-              <h3 className="font-extrabold text-[#001c41] text-sm md:text-base tracking-tight">Everything You Get</h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-                {[
-                  {
-                    icon: <CreditCard className="h-5 w-5 text-[#027244]" />,
-                    title: 'Digital Visiting Card',
-                    desc: 'Professional digital profile with all your business information and contact details.'
-                  },
-                  {
-                    icon: <Globe className="h-5 w-5 text-[#027244]" />,
-                    title: 'Dedicated Landing Page',
-                    desc: 'Your own business page with a unique link to share with customers.'
-                  },
-                  {
-                    icon: <Calendar className="h-5 w-5 text-[#027244]" />,
-                    title: 'Event Posting',
-                    desc: 'Promote your events, offers, workshops and get more visibility.'
-                  },
-                  {
-                    icon: <BookOpen className="h-5 w-5 text-[#027244]" />,
-                    title: 'Business Blog Publishing',
-                    desc: 'Write blogs about your business, share knowledge and build trust.'
-                  }
-                ].map((item, idx) => (
-                  <div key={idx} className="bg-slate-50/50 border border-slate-200/60 rounded-2xl p-4 flex flex-col items-center text-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-white border border-slate-200 text-[#027244] flex items-center justify-center shadow-xs">
-                      {item.icon}
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="font-extrabold text-slate-800 text-xs leading-snug">{item.title}</span>
-                      <span className="text-[10px] text-slate-500 font-semibold leading-relaxed mt-0.5">{item.desc}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </div>

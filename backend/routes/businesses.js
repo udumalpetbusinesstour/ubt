@@ -65,12 +65,37 @@ const isPublicSector = (types, name = '', category = '', parentCategory = '') =>
 const checkAndExpireBusiness = async (business) => {
   if (!business) return business;
   const now = new Date();
-  if (business.subscriptionExpiry && new Date(business.subscriptionExpiry) < now && business.subscriptionStatus === 'active') {
-    business.subscriptionStatus = 'expired';
-    business.isPremium = false;
-    business.featured = false; // Turn off featured badges
-    await business.save();
-    console.log(`[Auto-Expire] Automatically cancelled subscription for business "${business.name}" (expired on ${business.subscriptionExpiry})`);
+  if (business.subscriptionExpiry && new Date(business.subscriptionExpiry) < now) {
+    const Subscription = require('../models/Subscription');
+    const queuedSub = await Subscription.findOne({
+      businessId: business._id,
+      status: 'queued'
+    }).sort({ startDate: 1 });
+
+    if (queuedSub) {
+      queuedSub.status = 'active';
+      await queuedSub.save();
+
+      // Mark other active plans for this business as expired
+      await Subscription.updateMany(
+        { businessId: business._id, status: 'active', _id: { $ne: queuedSub._id } },
+        { $set: { status: 'expired' } }
+      );
+
+      business.subscriptionStatus = 'active';
+      business.subscriptionExpiry = queuedSub.endDate;
+      business.isPremium = true;
+      await business.save();
+      console.log(`[Auto-Activate Queued] Activated queued subscription for business "${business.name}" (new expiry: ${business.subscriptionExpiry})`);
+    } else {
+      if (business.subscriptionStatus === 'active') {
+        business.subscriptionStatus = 'expired';
+        business.isPremium = false;
+        business.featured = false; // Turn off featured badges
+        await business.save();
+        console.log(`[Auto-Expire] Automatically expired subscription for business "${business.name}" (expired on ${business.subscriptionExpiry})`);
+      }
+    }
   }
   return business;
 };
@@ -942,33 +967,38 @@ router.get('/my-business', protect, async (req, res) => {
       business = listings[0];
     }
     
-    if (business) {
-      await checkAndExpireBusiness(business);
+    const Subscription = require('../models/Subscription');
+    const populatedListings = [];
+
+    for (let biz of listings) {
+      await checkAndExpireBusiness(biz);
       
-      const Subscription = require('../models/Subscription');
       const activeSub = await Subscription.findOne({
-        businessId: business._id,
+        businessId: biz._id,
         status: 'active'
       }).sort({ createdAt: -1 });
 
-      business = business.toObject();
+      let bizObj = biz.toObject();
 
       if (activeSub) {
-        business.subscriptionStart = activeSub.startDate;
-        business.subscriptionExpiry = activeSub.endDate;
-        business.subscriptionPlan = activeSub.plan || activeSub.planName || 'PRO PLAN';
-        business.isAutopayEnabled = !!activeSub.razorpaySubscriptionId;
+        bizObj.subscriptionStart = activeSub.startDate;
+        bizObj.subscriptionExpiry = activeSub.endDate;
+        bizObj.subscriptionPlan = activeSub.plan || activeSub.planName || 'PRO PLAN';
+        bizObj.isAutopayEnabled = !!activeSub.razorpaySubscriptionId && activeSub.autoRenew === true;
       } else {
-        if (business.subscriptionStatus === 'active') {
-          business.subscriptionStart = business.createdAt || new Date();
-          business.subscriptionPlan = 'PRO PLAN';
-          business.isAutopayEnabled = false;
+        if (bizObj.subscriptionStatus === 'active') {
+          bizObj.subscriptionStart = bizObj.createdAt || new Date();
+          bizObj.subscriptionPlan = 'PRO PLAN';
+          bizObj.isAutopayEnabled = false;
         }
       }
+      populatedListings.push(bizObj);
     }
+
+    business = populatedListings[0] || null;
     
     if (isAdminUser) {
-      res.json({ success: true, data: business, allBusinesses: listings });
+      res.json({ success: true, data: business, allBusinesses: populatedListings });
     } else {
       res.json({ success: true, data: business });
     }

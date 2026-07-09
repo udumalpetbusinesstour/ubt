@@ -119,7 +119,16 @@ const EventSchema = new mongoose.Schema({
   views: {
     type: Number,
     default: 0,
-  }
+  },
+  orderId: {
+    type: String,
+  },
+  razorpayOrderId: {
+    type: String,
+  },
+  razorpayPaymentId: {
+    type: String,
+  },
 }, {
   timestamps: true
 });
@@ -128,6 +137,9 @@ const EventSchema = new mongoose.Schema({
 EventSchema.pre('validate', async function() {
   if (this.ownerId && !this.authorId) this.authorId = this.ownerId;
   if (this.authorId && !this.ownerId) this.ownerId = this.authorId;
+
+  if (this.orderId && !this.razorpayOrderId) this.razorpayOrderId = this.orderId;
+  if (this.razorpayOrderId && !this.orderId) this.orderId = this.razorpayOrderId;
   
   if (this.coverImageUrl && !this.bannerImage) this.bannerImage = this.coverImageUrl;
   if (this.bannerImage && !this.coverImageUrl) this.coverImageUrl = this.bannerImage;

@@ -41,32 +41,7 @@ router.post('/create-order', protect, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Business not found' });
     }
 
-    // Cancel existing active subscriptions for this business if they exist
-    try {
-      const activeSubs = await Subscription.find({ businessId: business._id, status: 'active' });
-      for (const activeSub of activeSubs) {
-        console.log(`[SUBSCRIPTION CANCEL] Found active subscription ${activeSub._id} for business ${businessId}. Cancelling...`);
-        
-        // 1. Cancel in Razorpay gateway if live client exists and it's a real subscription
-        if (razorpay && activeSub.razorpaySubscriptionId && !activeSub.razorpaySubscriptionId.startsWith('sub_mock_')) {
-          try {
-            await razorpay.subscriptions.cancel(activeSub.razorpaySubscriptionId, {
-              cancel_at_cycle_end: false
-            });
-            console.log(`[SUBSCRIPTION CANCEL] Cancelled subscription ${activeSub.razorpaySubscriptionId} on Razorpay.`);
-          } catch (rzpErr) {
-            console.error(`[SUBSCRIPTION CANCEL] Razorpay cancellation failed for ${activeSub.razorpaySubscriptionId}:`, rzpErr.message);
-          }
-        }
-        
-        // 2. Turn off autoRenew (autopay) in database but KEEP the status active so user gets remaining days
-        activeSub.autoRenew = false;
-        await activeSub.save();
-        console.log(`[SUBSCRIPTION CANCEL] Disabled autoRenew on active subscription ${activeSub._id} in MongoDB (kept active).`);
-      }
-    } catch (subCancelErr) {
-      console.error('[SUBSCRIPTION CANCEL] Error searching/cancelling active subscriptions:', subCancelErr.message);
-    }
+    // Check if there is already an active subscription (optional logging/metadata check)
 
     const dbPlan = await Plan.findOne({
       $or: [
@@ -446,6 +421,20 @@ router.post('/verify-payment', protect, async (req, res) => {
     if (currentActive) {
       startDate = new Date(currentActive.endDate);
       subStatus = 'queued';
+
+      // Cancel the old active subscription at cycle end to prevent auto-renew double charge
+      if (razorpay && currentActive.razorpaySubscriptionId && !currentActive.razorpaySubscriptionId.startsWith('sub_mock_')) {
+        try {
+          await razorpay.subscriptions.cancel(currentActive.razorpaySubscriptionId, {
+            cancel_at_cycle_end: true
+          });
+          console.log(`[SUBSCRIPTION CANCEL] Cancelled auto-renew of old subscription ${currentActive.razorpaySubscriptionId} on Razorpay at cycle end.`);
+        } catch (rzpErr) {
+          console.error(`[SUBSCRIPTION CANCEL] Razorpay cancellation failed for old subscription ${currentActive.razorpaySubscriptionId}:`, rzpErr.message);
+        }
+      }
+      currentActive.autoRenew = false;
+      await currentActive.save();
     }
 
     const dbPlan = await Plan.findOne({
@@ -609,6 +598,11 @@ router.post('/create-event-order', protect, async (req, res) => {
         status: 'created',
       };
     }
+
+    // Save orderId to Event document for webhook tracking and recovery syncs
+    event.orderId = order.id;
+    event.razorpayOrderId = order.id;
+    await event.save();
 
     res.json({
       success: true,
@@ -904,14 +898,25 @@ router.post('/webhook', async (req, res) => {
         });
 
         if (localSub) {
-          localSub.status = 'expired';
+          const now = new Date();
+          if (localSub.endDate && new Date(localSub.endDate) <= now) {
+            localSub.status = 'expired';
+          }
+          localSub.autoRenew = false;
           await localSub.save();
 
           const business = await Business.findById(localSub.businessId);
           if (business) {
-            business.subscriptionStatus = 'expired';
-            business.isPremium = false;
-            await business.save();
+            const now = new Date();
+            // Only mark business as expired immediately if the expiry date has passed (or is not set)
+            if (!business.subscriptionExpiry || new Date(business.subscriptionExpiry) <= now) {
+              business.subscriptionStatus = 'expired';
+              business.isPremium = false;
+              await business.save();
+              console.log(`[Webhook Cancel/Halt] Expired business ${business.name} immediately.`);
+            } else {
+              console.log(`[Webhook Cancel/Halt] Kept business ${business.name} active since expiry ${business.subscriptionExpiry} is in the future.`);
+            }
           }
         }
       }
@@ -951,12 +956,27 @@ router.post('/webhook', async (req, res) => {
         });
       }
 
+      // Check if this is a sponsored ad payment
+      let isSponsoredAdPayment = false;
+      let adBusiness = null;
+      let adPromotionId = null;
+      const notes = paymentEntity.notes || {};
+      if (!subscription && !eventRecord && notes.promotionId && notes.businessId) {
+        isSponsoredAdPayment = true;
+        adPromotionId = notes.promotionId;
+        adBusiness = await Business.findById(notes.businessId);
+      }
+
       if (!payment) {
-        const userId = subscription ? (subscription.userId || subscription.ownerId) : (eventRecord ? eventRecord.ownerId : null);
+        const userId = subscription 
+          ? (subscription.userId || subscription.ownerId) 
+          : (eventRecord 
+              ? eventRecord.ownerId 
+              : (adBusiness ? adBusiness.ownerId : null));
         if (userId) {
           payment = await Payment.create({
             userId,
-            businessId: subscription ? subscription.businessId : undefined,
+            businessId: subscription ? subscription.businessId : (adBusiness ? adBusiness._id : undefined),
             subscriptionId: subscription ? subscription._id : undefined,
             eventId: eventRecord ? eventRecord._id : undefined,
             orderId: orderId,
@@ -967,6 +987,9 @@ router.post('/webhook', async (req, res) => {
             paymentMethod: paymentEntity.method || 'UPI',
             status: 'Paid',
             paymentStatus: 'Paid',
+            planType: isSponsoredAdPayment ? 'Sponsored Ad Promotion' : undefined,
+            isSponsoredAd: isSponsoredAdPayment ? true : undefined,
+            promotionId: isSponsoredAdPayment ? adPromotionId : undefined,
             paymentDate: new Date(),
             paidAt: new Date(),
           });
@@ -977,6 +1000,12 @@ router.post('/webhook', async (req, res) => {
         payment.paymentId = paymentId;
         payment.razorpayPaymentId = paymentId;
         payment.paymentMethod = paymentEntity.method || payment.paymentMethod;
+        if (isSponsoredAdPayment) {
+          payment.isSponsoredAd = true;
+          payment.planType = 'Sponsored Ad Promotion';
+          payment.promotionId = adPromotionId;
+          payment.businessId = adBusiness._id;
+        }
         payment.paidAt = new Date();
         payment.paymentDate = new Date();
         await payment.save();
@@ -1009,6 +1038,15 @@ router.post('/webhook', async (req, res) => {
       if (eventRecord) {
         eventRecord.paymentStatus = 'Paid';
         await eventRecord.save();
+      }
+
+      if (isSponsoredAdPayment && adBusiness) {
+        const promo = adBusiness.promotions.find(p => p._id.toString() === adPromotionId || p.id === adPromotionId);
+        if (promo) {
+          promo.sponsoredStatus = 'pending';
+          promo.isSponsored = false;
+          await adBusiness.save();
+        }
       }
     } else if (eventType === 'payment.failed') {
       if (!payload.payment) {

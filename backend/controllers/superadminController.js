@@ -163,8 +163,8 @@ const getRevenueAnalytics = async (req, res, next) => {
       {
         $group: {
           _id: {
-            year: { $year: '$paidAt' },
-            month: { $month: '$paidAt' }
+            year: { $year: { $ifNull: ['$paidAt', '$createdAt'] } },
+            month: { $month: { $ifNull: ['$paidAt', '$createdAt'] } }
           },
           total: { $sum: '$amount' },
           subscriptionTotal: {
@@ -1139,22 +1139,37 @@ const deleteReview = async (req, res, next) => {
  */
 const getSubscriptions = async (req, res, next) => {
   try {
-    const list = await Subscription.find()
+    const list = await Subscription.find({ status: { $ne: 'pending' } })
       .populate('businessId', 'name')
       .populate('ownerId', 'fullName email')
       .sort({ createdAt: -1 });
 
-    const formattedList = list.map(s => ({
-      _id: s._id,
-      businessName: s.businessId ? s.businessId.name : 'Unknown Listing',
-      planType: s.plan || s.planType || 'Custom',
-      amount: s.amount || 0,
-      expiryDate: s.expiryDate || s.endDate,
-      paymentStatus: s.status === 'active' ? 'Paid' : (s.status === 'expired' ? 'Expired' : 'Pending'),
-      autoRenew: s.autoRenew === true,
-      nextAutopayDate: s.autoRenew && (s.expiryDate || s.endDate) ? (s.expiryDate || s.endDate) : null,
-      createdAt: s.createdAt
-    }));
+    const formattedList = list.map(s => {
+      const now = new Date();
+      const expiry = s.expiryDate || s.endDate;
+      const isExpired = expiry && new Date(expiry) <= now;
+      
+      let computedStatus = 'Pending';
+      if (s.status === 'active' || s.status === 'queued') {
+        computedStatus = isExpired ? 'Expired' : 'Paid';
+      } else if (s.status === 'expired') {
+        computedStatus = 'Expired';
+      } else if (s.status === 'refunded') {
+        computedStatus = 'Refunded';
+      }
+
+      return {
+        _id: s._id,
+        businessName: s.businessId ? s.businessId.name : 'Unknown Listing',
+        planType: s.plan || s.planType || 'Custom',
+        amount: s.amount || 0,
+        expiryDate: expiry,
+        paymentStatus: computedStatus,
+        autoRenew: s.autoRenew === true,
+        nextAutopayDate: s.autoRenew && expiry && !isExpired ? expiry : null,
+        createdAt: s.createdAt
+      };
+    });
 
     return sendSuccess(res, 200, 'Subscriptions logs retrieved', formattedList);
   } catch (err) {

@@ -4,7 +4,7 @@ import {
   MapPin, Phone, Mail, Clock, ShieldCheck, HeartHandshake, Star, StarHalf, Share2, Heart, Award, 
   ArrowLeft, Send, CheckCircle2, MessageSquare, AlertCircle, RefreshCw, Calendar, Globe, Sparkles,
   Briefcase, Users, ChevronRight, Check, X, Facebook, Twitter, Edit3, Plus, Upload, Trash2, Instagram, Move, ImageIcon,
-  Utensils, Eye
+  Utensils, Eye, Folder
 } from 'lucide-react';
 
 
@@ -1572,8 +1572,12 @@ Please confirm availability and delivery time.`;
               <Link to="/" className="hover:text-white transition-colors">Home</Link>
               <span className="text-white/40">&gt;</span>
               <Link to="/businesses" className="hover:text-white transition-colors">Businesses</Link>
-              <span className="text-white/40">&gt;</span>
-              <span className="text-white/85 hover:text-emerald-300 transition-colors cursor-pointer">{business.type}</span>
+              {business.category && (
+                <>
+                  <span className="text-white/40">&gt;</span>
+                  <Link to={`/businesses?category=${encodeURIComponent(business.category)}`} className="hover:text-white hover:text-emerald-300 transition-colors">{business.category}</Link>
+                </>
+              )}
               <span className="text-white/40">&gt;</span>
               <span className="text-white break-all">{business.name}</span>
             </div>
@@ -1695,8 +1699,12 @@ Please confirm availability and delivery time.`;
                 <span className="font-black text-white ml-1">{business.views || 0}</span>
                 <span className="text-[10px] text-white/75">Views</span>
               </div>
-              <span className="text-white/40">•</span>
-              <span className="text-white font-bold bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-1 rounded-lg">{business.type}</span>
+              {business.category && (
+                <>
+                  <span className="text-white/40">•</span>
+                  <span className="text-white font-bold bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-1 rounded-lg">{business.category}</span>
+                </>
+              )}
               <span className="text-white/40">•</span>
               <a 
                 href={directionsUrl}
@@ -1882,6 +1890,17 @@ Please confirm availability and delivery time.`;
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 mt-2 p-1 text-slate-700">
+                  {!isGovernmentalOrPublic(business) && business.category && (
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">
+                        <Folder className="h-5 w-5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Business Category</span>
+                        <span className="font-extrabold text-slate-800 text-sm mt-2">{business.category}</span>
+                      </div>
+                    </div>
+                  )}
                   {!isGovernmentalOrPublic(business) && (
                     <div className="flex items-start gap-4">
                       <div className="p-3 rounded-xl bg-slate-100/90 text-slate-500 shrink-0">

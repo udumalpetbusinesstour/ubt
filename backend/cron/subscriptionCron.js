@@ -29,6 +29,16 @@ const runExpiryAudit = async () => {
         { businessId: sub.businessId, status: 'active', _id: { $ne: sub._id } },
         { $set: { status: 'expired' } }
       );
+
+      // Update Business model too to reflect new coverage dates
+      const business = await Business.findById(sub.businessId);
+      if (business) {
+        business.subscriptionStatus = 'active';
+        business.subscriptionExpiry = sub.endDate;
+        business.isPremium = true;
+        await business.save();
+        console.log(`[Cron Activation] Updated Business "${business.name}" expiry to ${business.subscriptionExpiry}`);
+      }
     }
 
     // Find all businesses with active premium status

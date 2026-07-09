@@ -2183,13 +2183,8 @@ function BusinessesList() {
                               </div>
 
                               {/* Content Body */}
-                              <div 
-                                className="p-6 flex-1 flex flex-col md:flex-row justify-between gap-5 text-left"
-                                style={{
-                                  filter: !isSubscribed ? 'blur-[3.5px] select-none pointer-events-none' : 'none'
-                                }}
-                              >
-                                <div className="flex flex-col gap-2">
+                              <div className="p-6 flex-1 flex flex-col md:flex-row justify-between gap-5 text-left relative">
+                                <div className="flex flex-col gap-2 flex-1 relative z-30">
                                   <Link
                                     to={`/businesses/${biz.slug || biz._id}`}
                                     className="font-black text-[19px] text-[#001c41] hover:text-[#027244] transition-colors leading-tight"
@@ -2197,44 +2192,56 @@ function BusinessesList() {
                                   >
                                     {biz.name}
                                   </Link>
-                                  <a 
-                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(biz.address ? `${biz.name}, ${biz.address}` : `${biz.name}, ${biz.locality || ''}, Udumalpet`)}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-1 text-xs font-semibold text-slate-500 mt-0.5 hover:text-[#027244] transition-colors cursor-pointer group"
-                                    onClick={(e) => e.stopPropagation()}
-                                    title="View on Google Maps"
+                                  <div 
+                                    className="flex flex-col gap-2"
+                                    style={{
+                                      filter: !isSubscribed ? 'blur-[4px] select-none pointer-events-none' : 'none'
+                                    }}
                                   >
-                                    <MapPin className="h-4 w-4 text-slate-400 group-hover:text-[#027244] shrink-0" />
-                                    <span className="group-hover:underline">{biz.locality}, Udumalpet</span>
-                                  </a>
-                                  <div className="flex items-center gap-1.5 text-xs text-slate-450 font-bold mt-0.5 select-none w-fit">
-                                    <Folder className="h-3.5 w-3.5 text-[#027244] shrink-0" />
-                                    <span>{biz.category}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1.5 mt-0.5 text-slate-600 text-xs">
-                                    <div className="flex text-amber-400 shrink-0">
-                                      {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className={`h-3 w-3 ${i < Math.floor(biz.googleRating || 0) ? 'fill-current' : 'text-slate-200'}`} />
-                                      ))}
+                                    <a 
+                                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(biz.address ? `${biz.name}, ${biz.address}` : `${biz.name}, ${biz.locality || ''}, Udumalpet`)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-1 text-xs font-semibold text-slate-500 mt-0.5 hover:text-[#027244] transition-colors cursor-pointer group"
+                                      onClick={(e) => e.stopPropagation()}
+                                      title="View on Google Maps"
+                                    >
+                                      <MapPin className="h-4 w-4 text-slate-400 group-hover:text-[#027244] shrink-0" />
+                                      <span className="group-hover:underline">{biz.locality}, Udumalpet</span>
+                                    </a>
+                                    <div className="flex items-center gap-1.5 text-xs text-slate-450 font-bold mt-0.5 select-none w-fit">
+                                      <Folder className="h-3.5 w-3.5 text-[#027244] shrink-0" />
+                                      <span>{biz.category}</span>
                                     </div>
-                                    <span className="font-extrabold">{(biz.googleRating || 0).toFixed(1)}</span>
-                                    <span className="text-[10px] text-slate-500 font-bold">({biz.googleReviewsCount || 0})</span>
-                                  </div>
-                                  {Array.isArray(biz.highlights) && (
-                                    <div className="flex flex-wrap items-center gap-4 mt-2">
-                                      {biz.highlights.map((h, i) => (
-                                        <div key={i} className="flex items-center gap-1 text-xs text-[#027244] font-semibold">
-                                          <span className="h-4 w-4 bg-emerald-50 rounded-full border border-emerald-100 flex items-center justify-center text-[9px] font-extrabold shrink-0">✓</span>
-                                          <span>{h}</span>
-                                        </div>
-                                      ))}
+                                    <div className="flex items-center gap-1.5 mt-0.5 text-slate-600 text-xs">
+                                      <div className="flex text-amber-400 shrink-0">
+                                        {[...Array(5)].map((_, i) => (
+                                          <Star key={i} className={`h-3 w-3 ${i < Math.floor(biz.googleRating || 0) ? 'fill-current' : 'text-slate-200'}`} />
+                                        ))}
+                                      </div>
+                                      <span className="font-extrabold">{(biz.googleRating || 0).toFixed(1)}</span>
+                                      <span className="text-[10px] text-slate-500 font-bold">({biz.googleReviewsCount || 0})</span>
                                     </div>
-                                  )}
+                                    {Array.isArray(biz.highlights) && (
+                                      <div className="flex flex-wrap items-center gap-4 mt-2 max-h-5 overflow-hidden">
+                                        {biz.highlights.map((h, i) => (
+                                          <div key={i} className="flex items-center gap-1 text-xs text-[#027244] font-semibold">
+                                            <span className="h-4 w-4 bg-emerald-50 rounded-full border border-emerald-100 flex items-center justify-center text-[9px] font-extrabold shrink-0">✓</span>
+                                            <span>{h}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
 
                                 {/* Right Panel Actions */}
-                                <div className="flex flex-col justify-center gap-2 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6 shrink-0 md:w-36">
+                                <div 
+                                  className="flex flex-col justify-center gap-2 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6 shrink-0 md:w-36 relative z-30"
+                                  style={{
+                                    filter: !isSubscribed ? 'blur-[4px] select-none pointer-events-none' : 'none'
+                                  }}
+                                >
                                   <button
                                     onClick={(e) => { e.stopPropagation(); handleCall(biz.phone, biz.name, biz._id); }}
                                     className="py-2.5 w-full border border-[#027244] hover:bg-emerald-50 text-[#027244] font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
@@ -2268,8 +2275,17 @@ function BusinessesList() {
                               {!isSubscribed && (
                                 <div 
                                   onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz.slug || biz._id}`); }}
-                                  className="absolute inset-0 bg-slate-900/10 backdrop-blur-xs z-20 transition-all duration-300 hover:bg-slate-900/15 cursor-pointer"
-                                />
+                                  className="absolute inset-0 bg-transparent hover:bg-slate-900/5 z-20 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer p-4 text-center"
+                                >
+                                  <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-3 flex flex-col items-center gap-1.5 shadow-lg max-w-[180px]">
+                                    <svg className="h-5 w-5 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white select-none">
+                                      Profile Locked
+                                    </span>
+                                  </div>
+                                </div>
                               )}
                             </div>
                           );
@@ -2997,8 +3013,7 @@ function BusinessesList() {
                           )}
                         </div>
                       )}
-
-                      {/* Subscription expired lock overlay */}
+                    </div>
                       {isExpired && (isOwner || isAdmin) && (
                         <div className="absolute inset-0 bg-slate-950/40 flex items-center justify-center text-center p-2 text-white z-10">
                           <span className="bg-red-650 text-[8px] sm:text-[9px] font-extrabold uppercase px-2 py-1 rounded shadow">
@@ -3006,16 +3021,9 @@ function BusinessesList() {
                           </span>
                         </div>
                       )}
-                    </div>
-
-                    {/* Content Body */}
-                    <div 
-                      className="p-4 sm:p-6 flex-1 flex flex-col md:flex-row justify-between gap-3 sm:gap-5"
-                      style={{
-                        filter: !isSubscribed ? 'blur-[3.5px] select-none pointer-events-none' : 'none'
-                      }}
-                    >
-                      <div className="flex flex-col gap-1.5 text-left">
+                     {/* Content Body */}
+                    <div className="p-4 sm:p-6 flex-1 flex flex-col md:flex-row justify-between gap-3 sm:gap-5 relative">
+                      <div className="flex flex-col gap-1.5 text-left relative z-30">
                         {/* Title */}
                         <Link
                           to={`/businesses/${biz.slug || biz._id}`}
@@ -3023,58 +3031,69 @@ function BusinessesList() {
                         >
                           {biz.name}
                         </Link>
-
-                        {/* Locality */}
-                        <a 
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(biz.address ? `${biz.name}, ${biz.address}` : `${biz.name}, ${biz.locality || ''}, Udumalpet`)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-[10.5px] sm:text-xs font-semibold text-slate-500 mt-0.5 hover:text-[#027244] transition-colors cursor-pointer group"
-                          onClick={(e) => e.stopPropagation()}
-                          title="View on Google Maps"
-                        >
-                          <MapPin className="h-3.5 w-3.5 text-slate-400 group-hover:text-[#027244] shrink-0" />
-                          <span className="group-hover:underline">{biz.locality}, Udumalpet</span>
-                        </a>
-
-                        {/* Category */}
                         <div 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                             navigate(getCategorySlug(biz.category));
+                          className="flex flex-col gap-1.5"
+                          style={{
+                            filter: !isSubscribed ? 'blur-[4px] select-none pointer-events-none' : 'none'
                           }}
-                          className="flex items-center gap-1.5 text-[10.5px] sm:text-xs text-slate-455 font-semibold mt-0.5 hover:text-[#027244] hover:underline cursor-pointer transition-colors duration-200 select-none group/badge w-fit"
                         >
-                          <Folder className="h-3 w-3 text-[#027244] shrink-0 transition-transform group-hover/badge:scale-110" />
-                          <span>{biz.category}</span>
-                        </div>
+                          {/* Locality */}
+                          <a 
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(biz.address ? `${biz.name}, ${biz.address}` : `${biz.name}, ${biz.locality || ''}, Udumalpet`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-[10.5px] sm:text-xs font-semibold text-slate-500 mt-0.5 hover:text-[#027244] transition-colors cursor-pointer group"
+                            onClick={(e) => e.stopPropagation()}
+                            title="View on Google Maps"
+                          >
+                            <MapPin className="h-3.5 w-3.5 text-slate-400 group-hover:text-[#027244] shrink-0" />
+                            <span className="group-hover:underline">{biz.locality}, Udumalpet</span>
+                          </a>
 
-                        {/* Rating */}
-                        <div className="flex items-center gap-1.5 mt-0.5 text-slate-600 text-[10.5px] sm:text-xs">
-                          <div className="flex text-amber-400 shrink-0">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`h-2.5 w-2.5 sm:h-3 sm:w-3 ${i < Math.floor(biz.googleRating || 0) ? 'fill-current' : 'text-slate-200'}`} />
-                            ))}
+                          {/* Category */}
+                          <div 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(getCategorySlug(biz.category));
+                            }}
+                            className="flex items-center gap-1.5 text-[10.5px] sm:text-xs text-slate-455 font-semibold mt-0.5 hover:text-[#027244] hover:underline cursor-pointer transition-colors duration-200 select-none group/badge w-fit"
+                          >
+                            <Folder className="h-3 w-3 text-[#027244] shrink-0 transition-transform group-hover/badge:scale-110" />
+                            <span>{biz.category}</span>
                           </div>
-                          <span className="font-extrabold">{(biz.googleRating || 0).toFixed(1)}</span>
-                          <span className="text-[9.5px] sm:text-xs text-slate-455 font-semibold">({biz.googleReviewsCount || 0})</span>
-                        </div>
 
-                        {/* Highlights Chips */}
-                        {Array.isArray(biz.highlights) && (
-                          <div className="hidden sm:flex flex-wrap items-center gap-4 mt-2">
-                            {biz.highlights.map((h, i) => (
-                              <div key={i} className="flex items-center gap-1 text-[11px] text-[#027244] font-semibold">
-                                <span className="h-4 w-4 bg-emerald-50 rounded-full border border-emerald-100 flex items-center justify-center text-[9px] font-extrabold shrink-0">✓</span>
-                                <span>{h}</span>
-                              </div>
-                            ))}
+                          {/* Rating */}
+                          <div className="flex items-center gap-1.5 mt-0.5 text-slate-600 text-[10.5px] sm:text-xs">
+                            <div className="flex text-amber-400 shrink-0">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} className={`h-2.5 w-2.5 sm:h-3 sm:w-3 ${i < Math.floor(biz.googleRating || 0) ? 'fill-current' : 'text-slate-200'}`} />
+                              ))}
+                            </div>
+                            <span className="font-extrabold">{(biz.googleRating || 0).toFixed(1)}</span>
+                            <span className="text-[9.5px] sm:text-xs text-slate-455 font-semibold">({biz.googleReviewsCount || 0})</span>
                           </div>
-                        )}
+
+                          {/* Highlights Chips */}
+                          {Array.isArray(biz.highlights) && (
+                            <div className="hidden sm:flex flex-wrap items-center gap-4 mt-2 max-h-5 overflow-hidden">
+                              {biz.highlights.map((h, i) => (
+                                <div key={i} className="flex items-center gap-1 text-[11px] text-[#027244] font-semibold">
+                                  <span className="h-4 w-4 bg-emerald-50 rounded-full border border-emerald-100 flex items-center justify-center text-[9px] font-extrabold shrink-0">✓</span>
+                                  <span>{h}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Right Panel Actions */}
-                      <div className="flex flex-col justify-center gap-1.5 sm:gap-2 border-t md:border-t-0 md:border-l border-slate-100 pt-3 sm:pt-4 md:pt-0 md:pl-6 shrink-0 md:w-36">
+                      <div 
+                        className="flex flex-col justify-center gap-1.5 sm:gap-2 border-t md:border-t-0 md:border-l border-slate-100 pt-3 sm:pt-4 md:pt-0 md:pl-6 shrink-0 md:w-36 relative z-30"
+                        style={{
+                          filter: !isSubscribed ? 'blur-[4px] select-none pointer-events-none' : 'none'
+                        }}
+                      >
                         {/* Call button */}
                         <button
                           onClick={() => handleCall(biz.phone, biz.name, biz._id)}
@@ -3111,8 +3130,17 @@ function BusinessesList() {
                     {!isSubscribed && (
                       <div 
                         onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz.slug || biz._id}`); }}
-                        className="absolute inset-0 bg-slate-900/10 backdrop-blur-xs z-20 transition-all duration-300 hover:bg-slate-900/15 cursor-pointer"
-                      />
+                        className="absolute inset-0 bg-transparent hover:bg-slate-900/5 z-20 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer p-4 text-center"
+                      >
+                        <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-3 flex flex-col items-center gap-1.5 shadow-lg max-w-[180px]">
+                          <svg className="h-5 w-5 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-white select-none">
+                            Profile Locked
+                          </span>
+                        </div>
+                      </div>
                     )}
                   </div>
                 );

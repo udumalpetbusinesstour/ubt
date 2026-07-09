@@ -5633,7 +5633,9 @@ const handlePartnerAction = async (partnerId, action) => {
                             onClick={() => { setSelectedTx(s); setShowTxModal(true); }}
                             className={`transition-colors cursor-pointer ${themeMode === 'dark' ? 'hover:bg-slate-900/30' : 'hover:bg-slate-50/50'}`}>
                             <td className={`p-4.5 font-extrabold text-xs sm:text-[13px] ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{s.businessName}</td>
-                            <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{s.planType} Plan</td>
+                            <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                              {s.planType ? (s.planType.toLowerCase().endsWith('plan') ? s.planType.replace(/\b\w/g, c => c.toUpperCase()) : s.planType.replace(/\b\w/g, c => c.toUpperCase()) + ' Plan') : 'Custom Plan'}
+                            </td>
                             <td className={`p-4.5 font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>₹{s.amount}</td>
                             <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{new Date(s.expiryDate).toLocaleDateString()}</td>
                             <td className="p-4.5">
