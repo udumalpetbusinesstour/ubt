@@ -68,6 +68,61 @@ const renderStars = (rating, sizeClass = "h-3.5 w-3.5", emptyColor = "text-slate
   return stars;
 };
 
+const tabToSlug = (tabName) => {
+  if (!tabName) return '';
+  const mapping = {
+    'Dashboard': 'dashboard',
+    'Business Details': 'details',
+    'Branches': 'branches',
+    'Menu': 'menu',
+    'Photos & Media': 'photos',
+    'Reviews & Reputation': 'reviews',
+    'Leads & Enquiries': 'leads',
+    'Subscription & Billing': 'billing',
+    'Offers & Promotions': 'offers',
+    'Referral & Rewards': 'referrals',
+    'Events': 'events',
+    'My Blogs': 'blogs',
+    'Settings': 'settings',
+    'Help & Support': 'support'
+  };
+  return mapping[tabName] || tabName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+};
+
+const slugToTab = (slug) => {
+  if (!slug) return 'Dashboard';
+  const mapping = {
+    'dashboard': 'Dashboard',
+    'details': 'Business Details',
+    'branches': 'Branches',
+    'menu': 'Menu',
+    'photos': 'Photos & Media',
+    'reviews': 'Reviews & Reputation',
+    'leads': 'Leads & Enquiries',
+    'billing': 'Subscription & Billing',
+    'offers': 'Offers & Promotions',
+    'referrals': 'Referral & Rewards',
+    'events': 'Events',
+    'blogs': 'My Blogs',
+    'settings': 'Settings',
+    'support': 'Help & Support'
+  };
+  const found = Object.keys(mapping).find(key => key.toLowerCase() === slug.toLowerCase());
+  if (found) return mapping[found];
+  
+  const displayTabs = [
+    'Dashboard', 'Business Details', 'Branches', 'Menu', 'Photos & Media', 
+    'Reviews & Reputation', 'Leads & Enquiries', 'Subscription & Billing', 
+    'Offers & Promotions', 'Referral & Rewards', 'Events', 'My Blogs', 
+    'Settings', 'Help & Support'
+  ];
+  const matchedDisplay = displayTabs.find(tab => 
+    tab.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') === slug.toLowerCase() ||
+    tab.toLowerCase() === slug.toLowerCase()
+  );
+  return matchedDisplay || 'Dashboard';
+};
+
 function DashboardContent() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -485,7 +540,7 @@ function DashboardContent() {
   const [completeEventImageError, setCompleteEventImageError] = useState('');
 
   // Navigation Sidebar States
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'Dashboard');
+  const [activeTab, setActiveTab] = useState(slugToTab(searchParams.get('tab')));
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
@@ -1365,7 +1420,7 @@ function DashboardContent() {
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam) {
-      setActiveTab(tabParam);
+      setActiveTab(slugToTab(tabParam));
     } else {
       setActiveTab('Dashboard');
     }
@@ -4166,7 +4221,7 @@ function DashboardContent() {
                 if (link.onClick) {
                   link.onClick();
                 } else {
-                  setSearchParams({ tab: link.label });
+                  setSearchParams({ tab: tabToSlug(link.label) });
                 }
                 setSidebarOpen(false);
               }}
@@ -5477,7 +5532,7 @@ function DashboardContent() {
 
                     {/* Wide View All Leads CTA Button */}
                     <button 
-                      onClick={() => setSearchParams({ tab: 'Leads & Enquiries' })}
+                      onClick={() => setSearchParams({ tab: 'leads' })}
                       className="w-full mt-4 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-extrabold text-xs rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1"
                     >
                       View All Active Leads <ChevronRight className="h-3.5 w-3.5" />
