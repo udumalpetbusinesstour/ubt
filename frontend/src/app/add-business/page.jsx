@@ -2878,8 +2878,9 @@ export default function AddBusiness() {
                       <h4 className="font-extrabold text-sm text-slate-800">Brand Identity Icons</h4>
                       
                       {/* Logo */}
-                      <div className="flex flex-col gap-1.5">
+                      <div className="flex flex-col gap-1.5 text-left">
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Business Logo</span>
+                        <span className="text-[9.5px] text-amber-600 font-bold leading-tight">Please upload a square image (e.g. 500x500 px) for best display results.</span>
                         <div className="flex items-center gap-4">
                           <div className="h-16 w-16 bg-slate-50 border border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 font-bold text-xs select-none overflow-hidden">
                             {uploadingLogo ? (
@@ -3360,6 +3361,7 @@ export default function AddBusiness() {
                           {/* Logo */}
                           <div className="flex flex-col gap-1.5 text-left">
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Branch Logo (Optional)</span>
+                            <span className="text-[9.5px] text-amber-600 font-bold leading-tight">Please upload a square image (e.g. 500x500 px) for best display results.</span>
                             <div className="flex items-center gap-4">
                               <div className="h-16 w-16 bg-slate-55 border border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 font-bold text-xs select-none">
                                 {branchLogoFile ? '✓ Logo' : 'Logo'}

@@ -1300,7 +1300,7 @@ export default function Home() {
                       <div 
                         className="h-full w-full bg-cover bg-center transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[15px]"
                         style={{ 
-                          backgroundImage: `url('${window.getImageUrl(biz.coverImageUrl)}')`,
+                          backgroundImage: `url('${window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"}')`,
                           filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
                         }}
                       />

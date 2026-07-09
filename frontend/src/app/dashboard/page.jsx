@@ -4110,8 +4110,7 @@ function DashboardContent() {
       { label: 'Photos & Media', icon: <ImageIcon className="h-4 w-4" /> },
       { label: 'Reviews & Reputation', icon: <Star className="h-4 w-4" /> },
       { label: 'Leads & Enquiries', icon: <Mail className="h-4 w-4" />, badge: (leadsList || []).filter(l => {
-        const isClickLog = l.name.startsWith('Customer (');
-        return l.status !== 'Rectified' && !isClickLog;
+        return l.status !== 'Rectified';
       }).length },
       { label: 'Subscription & Billing', icon: <CreditCard className="h-4 w-4" /> },
       { label: 'Offers & Promotions', icon: <Sparkles className="h-4 w-4" /> },
@@ -7097,7 +7096,7 @@ function DashboardContent() {
                 <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col gap-4">
                   <div className="border-b border-slate-100 pb-3">
                     <h4 className="font-extrabold text-slate-800 text-sm">Business Logo</h4>
-                    <span className="text-[10px] text-slate-400 font-semibold mt-0.5 block">Square logo shown on your listing card. (Max 5MB)</span>
+                    <span className="text-[10px] text-amber-600 font-bold mt-0.5 block leading-tight">Please upload a square image (e.g. 500x500 px) for best display results. (Max 5MB)</span>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="h-20 w-20 rounded-2xl border border-slate-200 bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
@@ -10307,7 +10306,7 @@ function DashboardContent() {
                             disabled={logoUploading}
                           />
                         </label>
-                        <span className="text-[9.5px] text-slate-400 font-semibold">Square JPG/PNG (Max 5MB)</span>
+                        <span className="text-[9.5px] text-amber-600 font-bold leading-tight">Please upload a square image (e.g. 500x500 px) for best display results. (Max 5MB)</span>
                       </div>
                     </div>
                   </div>
