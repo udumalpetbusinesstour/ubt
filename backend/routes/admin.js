@@ -5,6 +5,7 @@ const Business = require('../models/Business');
 const Subscription = require('../models/Subscription');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const { submitToGoogleIndexing } = require('../services/indexingService');
 
 const {
   moderateBusiness,
@@ -217,6 +218,19 @@ router.put('/businesses/:id/status', async (req, res, next) => {
     }
     
     await business.save({ validateBeforeSave: false });
+
+    // Google Indexing API submission if the listing becomes Approved or Deindexed
+    if (business.status === 'Approved') {
+      const targetUrl = `https://udumalpet.business/businesses/${business.slug || business._id}`;
+      submitToGoogleIndexing(targetUrl, 'URL_UPDATED').catch(err => {
+        console.error('[Google Indexing API Async Error] Approval submission failed:', err);
+      });
+    } else if (['Suspended', 'Rejected', 'Hidden'].includes(business.status)) {
+      const targetUrl = `https://udumalpet.business/businesses/${business.slug || business._id}`;
+      submitToGoogleIndexing(targetUrl, 'URL_DELETED').catch(err => {
+        console.error('[Google Indexing API Async Error] Deletion submission failed:', err);
+      });
+    }
 
     if (status === 'Approved') {
       const { checkAndCompleteReferralByBusiness } = require('../utils/referralHelper');
