@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { 
   MapPin, Phone, Mail, Clock, ShieldCheck, HeartHandshake, Star, StarHalf, Share2, Heart, Award, 
@@ -2218,7 +2219,7 @@ Please confirm availability and delivery time.`;
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2 h-80 animate-fadeIn">
                       <div 
                         className="md:col-span-3 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
-                        onClick={() => setActiveTab('photos')}
+                        onClick={(e) => { openLightbox(0, e); setActiveTab('photos'); }}
                         style={{ 
                           backgroundImage: `url('${displayGallery[0]}')`,
                           filter: isExpired ? 'blur(4px)' : 'none'
@@ -2258,7 +2259,7 @@ Please confirm availability and delivery time.`;
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2 h-80 animate-fadeIn">
                       <div 
                         className="md:col-span-3 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
-                        onClick={() => setActiveTab('photos')}
+                        onClick={(e) => { openLightbox(0, e); setActiveTab('photos'); }}
                         style={{ 
                           backgroundImage: `url('${displayGallery[0]}')`,
                           filter: isExpired ? 'blur(4px)' : 'none'
@@ -3345,7 +3346,7 @@ Please confirm availability and delivery time.`;
       )}
 
       {/* Google My Business Verification Modal */}
-      {showVerifyModal && (
+      {showVerifyModal && createPortal(
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
           <div className="max-w-md w-full bg-white border border-slate-200 shadow-2xl rounded-[32px] p-6 md:p-8 flex flex-col gap-6 animate-scaleUp text-left relative">
             
@@ -3369,26 +3370,27 @@ Please confirm availability and delivery time.`;
                   <path d="m9 12 2 2 4-4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
-              <h3 className="text-xl font-extrabold text-slate-800 tracking-tight mt-2 font-sans">Verify Your Business Listing</h3>
-              <p className="text-slate-500 text-xs font-semibold leading-relaxed font-sans">
-                Provide your Google Place ID to link your Google Business Profile. We will check that the addresses match and instantly verify your profile.
-              </p>
+              <div className="flex flex-col">
+                <h4 className="font-extrabold text-slate-800 text-sm">Link & Verify with Google</h4>
+                <p className="text-xs text-slate-450 font-semibold leading-relaxed mt-0.5">Connect your listing to Google Business Profile for sync trust reviews.</p>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-4 animate-fadeIn">
-              <div className="flex flex-col gap-1.5 font-sans">
-                <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Google Place ID</label>
-                <input
-                  type="text"
-                  placeholder="e.g. ChIJnUv03E3NqTsRHR_zk-gs78w"
-                  value={verifyPlaceId}
-                  onChange={(e) => setVerifyPlaceId(e.target.value)}
-                  className="py-3 px-4 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold w-full focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 text-slate-800"
-                />
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black text-slate-450 uppercase tracking-wide">Select your location on maps *</label>
+                <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-inner h-52 bg-slate-50 relative">
+                  {/* Embedded Leaflet Map */}
+                  <VerifyModalMapWrapper 
+                    business={business} 
+                    setVerifyPlaceId={setVerifyPlaceId}
+                    setVerifyError={setVerifyError}
+                  />
+                </div>
               </div>
 
               {verifyError && (
-                <div className="bg-red-50 border border-red-200 text-red-600 rounded-2xl p-4 text-xs font-semibold flex items-start gap-2.5 shadow-sm animate-shake">
+                <div className="bg-red-50 border border-red-200 text-red-800 rounded-2xl p-4 text-xs font-semibold flex items-start gap-2.5 shadow-sm animate-fadeIn">
                   <AlertCircle className="h-4.5 w-4.5 text-red-500 shrink-0 mt-0.5" />
                   <span>{verifyError}</span>
                 </div>
@@ -3411,10 +3413,11 @@ Please confirm availability and delivery time.`;
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
       {/* Lightbox / Full-screen Image Viewer Modal */}
-      {activePhotoIndex !== null && (
+      {activePhotoIndex !== null && createPortal(
         <div 
           className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-10 select-none animate-fadeIn"
           onClick={() => setActivePhotoIndex(null)}
@@ -3520,7 +3523,8 @@ Please confirm availability and delivery time.`;
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
     </div>
