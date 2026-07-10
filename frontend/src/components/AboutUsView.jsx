@@ -6,7 +6,11 @@ import {
 } from 'lucide-react';
 
 export default function AboutUsView() {
-  const pincodes = ['642126', '642154', '642112', '642207', '642128', '642120', '642158'];
+  const pincodes = [
+    '642126', '642207', '642154', '642112', '642205', 
+    '642122', '642204', '642201', '642203', '642102', 
+    '642128', '642113', '642206', '642132', '642111'
+  ];
 
   const specialties = [
     {
@@ -91,20 +95,15 @@ export default function AboutUsView() {
       <section className="max-w-[1440px] w-full px-4 md:px-8 py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
         <div className="lg:col-span-7 flex flex-col gap-5 text-left">
           <div className="inline-flex items-center gap-2 text-xs font-extrabold text-[#027244] uppercase tracking-widest bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full self-start">
-            <Compass className="h-3.5 w-3.5" /> Geographic Exclusivity
+            <Info className="h-3.5 w-3.5" /> About Us
           </div>
           
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-[#001c41] tracking-tight leading-tight">
-            Why Only Udumalpet? <br />
-            <span className="text-[#027244] font-extrabold">Eliminating the Search Noise.</span>
+            About Us
           </h2>
 
           <p className="text-slate-600 text-xs md:text-sm leading-relaxed font-semibold">
-            Nestled beautifully in the foothills of the Western Ghats, Udumalpet is a unique, self-sustaining hub. From being Tamil Nadu\'s windmill power capital to hosting vast networks of coconut farms and coir processing factories, our local economy is rich and diverse.
-          </p>
-          
-          <p className="text-slate-600 text-xs md:text-sm leading-relaxed font-semibold">
-            However, generic search engines and state-wide business portals dilute local searches. When you search for services, you are often flooded with listings from Coimbatore, Pollachi, or Tiruppur. 
+            Udumalpet Business Tour is a platform designed to connect people with trusted businesses in Udumalpet. It helps users easily discover shops, services, restaurants, and professionals across the town. Our platform makes it simple for businesses to improve their online presence and reach more customers. With a user-friendly experience and verified business information, we help people find the right services quickly. We are dedicated to supporting the growth of businesses in Udumalpet and building stronger connections within the business community.
           </p>
 
           <div className="p-5.5 bg-emerald-50/50 border border-emerald-100 rounded-3xl mt-2">
@@ -189,55 +188,65 @@ export default function AboutUsView() {
         </div>
       </section>
 
-      {/* 3. WHY THIS INITIATIVE? (BRIDGE DIGITAL DIVIDE) */}
+      {/* 3. MISSION & VISION SECTION (LEFT AND RIGHT SPLIT) */}
       <section className="w-full bg-[#001c41] text-white py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(2,114,68,0.08),transparent_50%)]" />
         
         <div className="max-w-[1440px] mx-auto px-4 md:px-8 relative z-10">
           <div className="text-center flex flex-col items-center gap-4 mb-16">
-            <div className="inline-flex items-center gap-2 text-xs font-extrabold text-emerald-300 uppercase tracking-widest bg-emerald-950/80 border border-emerald-800 px-3 py-1 rounded-full">
-              <Info className="h-3.5 w-3.5" /> Our Mission
-            </div>
             <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white max-w-2xl">
-              Why Was This Initiative Started?
+              Our Purpose & Commitment
             </h2>
             <p className="text-slate-400 text-xs md:text-sm font-semibold max-w-xl">
-              Building a custom digital grid where local business operators don\'t get left behind.
+              Building a custom digital grid where local business operators and citizens connect directly.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Card 1 */}
-            <div className="bg-slate-900/60 border border-slate-800/80 p-8 rounded-3xl flex flex-col gap-4 text-left hover:border-emerald-500/30 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
-              <div className="h-11 w-11 rounded-2xl bg-emerald-950 text-emerald-400 flex items-center justify-center border border-emerald-900/60 shadow-inner">
-                <Store className="h-5 w-5" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Left Card: Our Mission */}
+            <div className="bg-slate-900/60 border border-slate-800/80 p-8 md:p-10 rounded-3xl flex flex-col gap-5 text-left hover:border-emerald-500/30 transition-all duration-300 hover:scale-[1.01] shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="h-11 w-11 rounded-2xl bg-emerald-950 text-emerald-400 flex items-center justify-center border border-emerald-900/60 shadow-inner shrink-0">
+                  <Compass className="h-5.5 w-5.5" />
+                </div>
+                <h3 className="font-black text-lg md:text-xl text-slate-100 uppercase tracking-wide">Our Mission</h3>
               </div>
-              <h3 className="font-extrabold text-sm md:text-base text-slate-100">Digitizing Micro-Commerce</h3>
-              <p className="text-slate-400 text-xs leading-relaxed font-semibold">
-                Udumalpet\'s agricultural merchants, coir units, coconut traders, and neighborhood retailers often lack website builders or expensive technical resources. We provide them a robust digital presence instantly and for free.
+              <p className="text-slate-350 text-xs md:text-sm leading-relaxed font-semibold">
+                To empower local merchants and small business owners of Udumalpet by providing a free, verified, and premium digital portal. We aim to bridge the digital divide, eliminate middleman commission fees, and keep our regional economy thriving through direct, trust-first connections.
               </p>
+              <div className="flex flex-col gap-3 mt-2 border-t border-slate-800/60 pt-4 text-xs font-semibold text-slate-400">
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-400 font-bold">✓</span>
+                  <span>Digitizing micro-merchants and neighborhood shops</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-400 font-bold">✓</span>
+                  <span>100% direct client contacts via phone and WhatsApp</span>
+                </div>
+              </div>
             </div>
 
-            {/* Card 2 */}
-            <div className="bg-slate-900/60 border border-slate-800/80 p-8 rounded-3xl flex flex-col gap-4 text-left hover:border-emerald-500/30 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
-              <div className="h-11 w-11 rounded-2xl bg-emerald-950 text-emerald-400 flex items-center justify-center border border-emerald-900/60 shadow-inner">
-                <Users className="h-5 w-5" />
+            {/* Right Card: Our Vision */}
+            <div className="bg-slate-900/60 border border-slate-800/80 p-8 md:p-10 rounded-3xl flex flex-col gap-5 text-left hover:border-emerald-500/30 transition-all duration-300 hover:scale-[1.01] shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="h-11 w-11 rounded-2xl bg-teal-950 text-teal-400 flex items-center justify-center border border-teal-900/60 shadow-inner shrink-0">
+                  <Sparkles className="h-5.5 w-5.5" />
+                </div>
+                <h3 className="font-black text-lg md:text-xl text-slate-100 uppercase tracking-wide">Our Vision</h3>
               </div>
-              <h3 className="font-extrabold text-sm md:text-base text-slate-100">Direct Commission-Free Commerce</h3>
-              <p className="text-slate-400 text-xs leading-relaxed font-semibold">
-                Unlike national aggregators that charge merchants booking percentages or listing subscriptions, our platform guarantees direct buyer-to-seller interactions. Customers can tap to dial or message on WhatsApp instantly.
+              <p className="text-slate-350 text-xs md:text-sm leading-relaxed font-semibold">
+                To become the primary digital reference and commerce index for Udumalpet, seamlessly linking residents, tourists, and businesses. We envision a community-powered commercial grid where even the smallest local vendor gains equal digital exposure, fostering regional pride and town-wide growth.
               </p>
-            </div>
-
-            {/* Card 3 */}
-            <div className="bg-slate-900/60 border border-slate-800/80 p-8 rounded-3xl flex flex-col gap-4 text-left hover:border-emerald-500/30 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
-              <div className="h-11 w-11 rounded-2xl bg-emerald-950 text-emerald-400 flex items-center justify-center border border-emerald-900/60 shadow-inner">
-                <ShieldCheck className="h-5 w-5" />
+              <div className="flex flex-col gap-3 mt-2 border-t border-slate-800/60 pt-4 text-xs font-semibold text-slate-400">
+                <div className="flex items-center gap-2">
+                  <span className="text-teal-400 font-bold">✓</span>
+                  <span>Fostering economic growth inside the local community</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-teal-400 font-bold">✓</span>
+                  <span>Providing verified, clean, and spam-free directory details</span>
+                </div>
               </div>
-              <h3 className="font-extrabold text-sm md:text-base text-slate-100">Trust-First Verification</h3>
-              <p className="text-slate-400 text-xs leading-relaxed font-semibold">
-                Spam profiles, fake numbers, and out-of-town listings pollute consumer directories. Our admins manually cross-examine business locations and verify phone numbers before granting the "Verified" verification badge.
-              </p>
             </div>
           </div>
         </div>
