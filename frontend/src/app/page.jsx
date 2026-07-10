@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import * as lucideIcons from 'lucide-react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const renderCategoryIcon = (iconName, className = "h-5.5 w-5.5 sm:h-7 sm:w-7") => {
   const IconComp = lucideIcons[iconName] || lucideIcons.Store;
@@ -279,6 +281,111 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [locationTerm, setLocationTerm] = useState('');
   const [categoryTerm, setCategoryTerm] = useState('All Categories');
+
+  const [mapBiz, setMapBiz] = useState([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+
+  const defaultPins = [
+    { name: "Shree Vignesh Sound Service", lat: 10.5891, lng: 77.2512, category: "Sound Service" },
+    { name: "Thanvika Enterprises", lat: 10.5841, lng: 77.2485, category: "Office Supplies" },
+    { name: "Maatram Technologies", lat: 10.5921, lng: 77.2530, category: "Software Development" },
+    { name: "Legend Interior", lat: 10.5830, lng: 77.2395, category: "Interior Design" },
+    { name: "Raagam's Palate Restaurant", lat: 10.5878, lng: 77.2442, category: "Restaurant" },
+    { name: "Amaravathi Resorts", lat: 10.5960, lng: 77.2605, category: "Resorts & Hotels" },
+    { name: "Green Valley Resorts", lat: 10.5750, lng: 77.2285, category: "Resorts & Hotels" },
+    { name: "Thirumoorthy Textiles", lat: 10.5815, lng: 77.2498, category: "Textiles & Retail" }
+  ];
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Fetch approved listing coordinates for map pings
+  useEffect(() => {
+    fetch('http://localhost:5000/api/businesses')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const coordsList = data.data.filter(b => b.latitude && b.longitude);
+          setMapBiz(coordsList);
+        }
+      })
+      .catch(err => console.warn('Could not fetch map coords for home banner', err));
+  }, []);
+
+  // Initialize and update Homepage Leaflet map
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+    }
+
+    const map = L.map(mapRef.current, {
+      center: [10.5875, 77.248],
+      zoom: 14,
+      zoomControl: !isMobile,  // Show controls on desktop, hide on mobile
+      dragging: !isMobile,     // Dragging allowed on desktop, disabled on mobile to prevent scroll lock
+      scrollWheelZoom: false,  // Disable scroll zoom to prevent scroll hijack
+      doubleClickZoom: true,
+      touchZoom: false
+    });
+
+    // CartoDB Voyager light styled tiles blend perfectly with home page light colors
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; CartoDB'
+    }).addTo(map);
+
+    mapInstanceRef.current = map;
+
+    const pinsToUse = mapBiz.length >= 4 ? mapBiz : defaultPins;
+    pinsToUse.forEach(pin => {
+      const lat = parseFloat(pin.latitude || pin.lat);
+      const lng = parseFloat(pin.longitude || pin.lng);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const customRedIcon = L.divIcon({
+          html: `
+            <div class="relative flex items-center justify-center h-6 w-6">
+              <span class="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60 animate-ping"></span>
+              <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-600 border-2 border-white shadow-md"></span>
+            </div>
+          `,
+          className: 'custom-map-marker',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+
+        const marker = L.marker([lat, lng], { icon: customRedIcon }).addTo(map);
+        
+        // Show tooltip on hover
+        marker.bindTooltip(pin.name, {
+          permanent: false,
+          direction: 'top',
+          className: 'custom-map-tooltip',
+          offset: [0, -10]
+        });
+
+        // Navigate to public profile page when pin is clicked
+        marker.on('click', () => {
+          if (pin.slug || pin._id) {
+            navigate(`/businesses/${pin.slug || pin._id}`);
+          }
+        });
+      }
+    });
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [mapBiz, isMobile]);
   const [featuredBusinesses, setFeaturedBusinesses] = useState([]);
   const [topViewedBusinesses, setTopViewedBusinesses] = useState([]);
   const [sponsoredAds, setSponsoredAds] = useState([]);
@@ -1073,18 +1180,17 @@ export default function Home() {
   return (
     <div className="w-full flex flex-col items-center bg-[#F8FAFC]">
       
-      {/* 1. Hero Section (Pixel Perfect Layout with User Uploaded Thirumoorthy Hills BG) */}
+      {/* 1. Hero Section with Interactive Leaflet Map Background */}
       <section className="w-full relative min-h-[500px] sm:min-h-[620px] bg-[#F8FAFC] flex items-center justify-center pt-4 pb-14 sm:pt-6 sm:pb-28 px-4 md:px-8 overflow-hidden z-0">
         
-        <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
-          <img 
-            src="/thirumoorthy_dam.png" 
-            alt="Thirumoorthy Hills Background"
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
-          />
-          {/* Dynamic Gradient Overlay that smoothly blends image to transparent without washing details */}
-          <div className="absolute inset-0 z-10 pointer-events-none select-none" style={{ background: "linear-gradient(to right, rgba(248, 250, 252, 0.35) 0%, rgba(248, 250, 252, 0.05) 70%, rgba(248, 250, 252, 0) 100%)" }} />
-        </div>
+        {/* Leaflet Map Background Container */}
+        <div ref={mapRef} className="absolute inset-0 z-0 h-full w-full opacity-90" />
+
+        {/* Ambient top right glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(2,114,68,0.06),transparent_50%)] z-10 pointer-events-none" />
+        
+        {/* Left-side blur and light theme overlay for wordings readability (desktop: left 60% blurred, mobile: full screen) */}
+        <div className="absolute inset-0 md:right-[40%] bg-gradient-to-r from-[#F8FAFC] via-[#F8FAFC]/95 to-transparent backdrop-blur-xs z-10 pointer-events-none" />
 
         {/* Hero main body */}
         <div className="relative max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center z-20">
