@@ -2700,7 +2700,7 @@ export default function AdminDashboard() {
                                   </div>
                                   <div className="flex flex-col text-left min-w-0">
                                     <div className="flex items-center gap-1.5 flex-wrap">
-                                      <span className="font-extrabold text-slate-800 text-xs sm:text-[13px] leading-tight truncate">
+                                      <span className="font-extrabold text-slate-800 text-xs sm:text-[13px] leading-normal whitespace-normal break-words max-w-[250px] sm:max-w-[320px] line-clamp-3">
                                         {b.name}
                                       </span>
                                       {isBizDraft(b) && (
@@ -3065,7 +3065,7 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="flex flex-col text-left">
                                   <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className="font-extrabold text-slate-800 text-xs leading-none">{b.name}</span>
+                                    <span className="font-extrabold text-slate-800 text-xs leading-normal whitespace-normal break-words max-w-[250px] sm:max-w-[320px] line-clamp-3">{b.name}</span>
                                     {isBizDraft(b) && (
                                       <span className="bg-amber-100 border border-amber-250 text-amber-850 text-[7.5px] font-black px-1.5 py-0.5 rounded-md uppercase shrink-0 leading-none">
                                         Incomplete Reg
@@ -3249,7 +3249,7 @@ export default function AdminDashboard() {
                             </div>
                             <div className="flex flex-col gap-1 text-left min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="font-extrabold text-sm text-[#001c41] truncate leading-none">{b.name}</h4>
+                                <h4 className="font-extrabold text-sm text-[#001c41] leading-normal whitespace-normal break-words line-clamp-3">{b.name}</h4>
                                 {b.googlePlaceId && <span className="bg-blue-50 border border-blue-150 text-blue-600 text-[8px] font-black px-1.5 py-0.5 rounded uppercase shrink-0">Google</span>}
                                 {isBizDraft(b) && (
                                   <span className="bg-amber-100 border border-amber-250 text-amber-850 text-[8px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 leading-none">
@@ -4078,7 +4078,7 @@ export default function AdminDashboard() {
                                         )}
                                       </div>
                                       <div className="flex flex-col text-left">
-                                        <span className="font-extrabold text-slate-800 text-xs leading-none">{b.name}</span>
+                                        <span className="font-extrabold text-slate-800 text-xs leading-normal whitespace-normal break-words max-w-[250px] sm:max-w-[320px] line-clamp-3">{b.name}</span>
                                         <a 
                                           href={`/businesses/${b.slug || b._id}`}
                                           target="_blank"

@@ -4012,7 +4012,7 @@ const handlePartnerAction = async (partnerId, action) => {
                           <div className="p-5 flex-1 flex flex-col justify-between gap-4">
                             <div className="flex flex-col gap-1.5">
                               <div className="flex flex-col gap-0.5 text-left min-w-0">
-                                <h4 className={`font-black text-sm leading-tight truncate ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>
+                                <h4 className={`font-black text-sm leading-normal whitespace-normal break-words line-clamp-3 ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>
                                   {b.name}
                                 </h4>
                                 {isBizDraft(b) && (
@@ -4140,7 +4140,7 @@ const handlePartnerAction = async (partnerId, action) => {
                           </div>
                           <div className="flex flex-col gap-1 text-left min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <h4 className={`font-extrabold text-sm truncate leading-none ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{b.name}</h4>
+                              <h4 className={`font-extrabold text-sm leading-normal whitespace-normal break-words line-clamp-3 ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>{b.name}</h4>
                               {isBizDraft(b) && (
                                 <span className="bg-amber-100 border border-amber-250 text-amber-850 text-[8px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 leading-none">
                                   Registration Incomplete
