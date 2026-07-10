@@ -383,4 +383,12 @@ button:active, .btn-active-press:active, a.btn:active {
   border-top-color: #001c41 !important;
 }
 
+/* Progressive backdrop-blur style for homepage map banner */
+.gradual-blur-overlay {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+  -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+}
+
 

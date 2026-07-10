@@ -343,6 +343,19 @@ export default function Home() {
 
     mapInstanceRef.current = map;
 
+    // Custom label to correct OpenStreetMap spelling from Udumalapettai to Udumalaipettai
+    const cityLabelIcon = L.divIcon({
+      html: `
+        <div class="bg-[#fcfbf9]/95 border border-slate-200/50 rounded-lg px-2.5 py-1 shadow-xs select-none">
+          <span class="text-xs font-black text-slate-800 tracking-wide font-sans">Udumalaipettai</span>
+        </div>
+      `,
+      className: 'city-center-label-marker',
+      iconSize: [110, 30],
+      iconAnchor: [55, 15]
+    });
+    L.marker([10.5842, 77.2485], { icon: cityLabelIcon, zIndexOffset: -50 }).addTo(map);
+
     const pinsToUse = mapBiz.length >= 4 ? mapBiz : defaultPins;
     pinsToUse.forEach(pin => {
       const lat = parseFloat(pin.latitude || pin.lat);
@@ -350,9 +363,9 @@ export default function Home() {
       if (!isNaN(lat) && !isNaN(lng)) {
         const customRedIcon = L.divIcon({
           html: `
-            <div class="relative flex items-center justify-center h-6 w-6">
-              <span class="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60 animate-ping"></span>
-              <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-600 border-2 border-white shadow-md"></span>
+            <div class="relative flex items-center justify-center h-6 w-6 group">
+              <span class="absolute inline-flex h-5 w-5 rounded-full bg-red-500/25 border border-red-500/40"></span>
+              <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-600 border-2 border-white shadow-md transition-transform duration-200 group-hover:scale-125"></span>
             </div>
           `,
           className: 'custom-map-marker',
@@ -1190,7 +1203,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(2,114,68,0.06),transparent_50%)] z-10 pointer-events-none" />
         
         {/* Progressive/Gradual blur overlay towards the left */}
-        <div className="absolute inset-0 z-10 pointer-events-none gradual-blur-overlay" />
+        <div className="absolute inset-y-0 left-0 right-[40%] md:right-[50%] lg:right-[40%] z-10 pointer-events-none gradual-blur-overlay" />
         
         {/* Left-side light theme overlay for wordings readability (desktop: left 60% with smooth gradient transition, mobile: full screen) */}
         <div className="absolute inset-0 md:right-[40%] bg-gradient-to-r from-[#F8FAFC]/95 via-[#F8FAFC]/75 to-transparent z-10 pointer-events-none" />
