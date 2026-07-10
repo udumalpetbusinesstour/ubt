@@ -92,3 +92,6 @@ backend/scratch/
 # Temporary backend scraper, maps outputs, and debug text logs
 backend/*.html
 backend/*.txt
+
+# Sensitive secrets and keys
+backend/config/google-indexing-key.json
