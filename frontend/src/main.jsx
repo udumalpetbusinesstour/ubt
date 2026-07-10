@@ -44,10 +44,15 @@ if (typeof window !== 'undefined') {
 // In development (VITE_DEV_SERVER), the Vite proxy forwards /api → localhost:5000.
 // In production, the built frontend is served by Nginx on the same origin as the backend,
 // so we use window.location.origin (same host/port). VITE_API_URL can override this.
+let localApiUrl = 'http://localhost:5000';
+if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+  localApiUrl = `${window.location.protocol}//${window.location.hostname}:5000`;
+}
+
 const API_URL = import.meta.env.VITE_API_URL || 
   (import.meta.env.PROD && typeof window !== 'undefined' 
     ? window.location.origin
-    : 'http://localhost:5000');
+    : localApiUrl);
 
 // Global Image URL Resolver to dynamically prepend correct backend domain
 if (typeof window !== 'undefined') {

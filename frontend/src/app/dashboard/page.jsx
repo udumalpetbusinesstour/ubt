@@ -4329,17 +4329,17 @@ function DashboardContent() {
 
           {/* Active Business/Branch Switcher */}
           {primaryBusiness && branches && branches.length > 0 && (
-            <div className="hidden sm:flex items-center gap-2 bg-emerald-50/50 border border-emerald-150 rounded-xl px-2.5 py-1.5 shadow-3xs animate-fadeIn max-w-[150px] sm:max-w-none">
-              <span className="text-[9.5px] text-[#027244] font-black uppercase tracking-wider font-sans hidden md:inline">Active Office:</span>
+            <div className="hidden sm:flex items-center gap-1.5 bg-emerald-50/60 border border-emerald-150 rounded-xl px-2 py-1 shadow-3xs animate-fadeIn max-w-[130px] xs:max-w-[160px] sm:max-w-[200px] md:max-w-xs shrink">
+              <span className="text-[9px] text-[#027244] font-black uppercase tracking-wider font-sans hidden xl:inline shrink-0">Active Office:</span>
               <select
                 value={business?._id || ''}
                 onChange={(e) => {
                   handleSwitchBusiness(e.target.value);
                   setActiveTab('Business Details');
                 }}
-                className="bg-transparent border-none text-xs font-black text-[#001c41] outline-none cursor-pointer pr-3 font-sans max-w-full"
+                className="bg-transparent border-none text-[11px] font-black text-[#001c41] outline-none cursor-pointer pr-4 font-sans max-w-full truncate text-ellipsis"
               >
-                <option value={primaryBusiness._id}>{primaryBusiness.name} (Main Office)</option>
+                <option value={primaryBusiness._id}>{primaryBusiness.name} (Main)</option>
                 {branches.map((br) => (
                   <option key={br._id} value={br._id}>{br.name} (Branch)</option>
                 ))}
@@ -4353,11 +4353,11 @@ function DashboardContent() {
               <Link 
                 to={`/${business.slug || business._id}`}
                 target="_blank"
-                className="px-2.5 sm:px-4 py-1.5 sm:py-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-extrabold text-emerald-600 hover:text-emerald-700 flex items-center gap-2 transition-all shadow-xs cursor-pointer"
+                className="px-2 py-1.5 sm:px-3 sm:py-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-extrabold text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
               >
                 <Globe className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">
-                  {business.parentBusinessId ? 'View Branch Profile' : 'View Business Profile'}
+                <span className="hidden md:inline">
+                  {business.parentBusinessId ? 'View Branch' : 'View Profile'}
                 </span>
                 <ExternalLink className="h-3 w-3" />
               </Link>
@@ -4606,7 +4606,7 @@ function DashboardContent() {
                     <div className="flex flex-col gap-1 items-center">
                       <h3 className="font-extrabold text-slate-800 text-lg leading-tight">Complete Your Business Listing</h3>
                       <p className="text-xs text-slate-500 font-semibold max-w-sm mt-1 leading-relaxed">
-                        You have an incomplete registration draft for <strong className="text-slate-700">"{business?.name || 'Your Business'}"</strong>. Your payment is confirmed — complete the remaining steps to publish your listing and start receiving customer leads.
+                        You have an incomplete registration draft for <strong className="text-slate-700">"{business?.name || 'Your Business'}"</strong>. {(business?.isPaid || business?.subscriptionStatus === 'active' || business?.isPremium) ? "Your payment is confirmed — complete the remaining steps to publish your listing and start receiving customer leads." : "Complete the payment and the remaining steps to publish your listing and start receiving customer leads."}
                       </p>
                     </div>
                   </div>
