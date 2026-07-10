@@ -3099,13 +3099,15 @@ function BusinessesList() {
                 return (
                   <div
                     key={biz._id}
+                    onClick={() => navigate(`/businesses/${biz.slug || biz._id}`)}
                     className={`relative card-premium group rounded-3xl overflow-hidden flex cursor-pointer ${
                       viewMode === 'list' ? 'flex-col md:flex-row' : 'flex-col min-h-[350px] sm:min-h-[460px]'
                     }`}
                   >
                     {/* Cover image (Blurred if subscription is expired!) */}
                     <div
-                      className={`shrink-0 overflow-hidden relative bg-slate-50 border-slate-100 ${
+                      onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz.slug || biz._id}`); }}
+                      className={`shrink-0 overflow-hidden relative bg-slate-50 border-slate-100 cursor-pointer ${
                         viewMode === 'list' 
                           ? 'w-full aspect-square md:w-48 md:h-48 rounded-t-[23px] md:rounded-l-[23px] md:rounded-tr-none border-b md:border-b-0 md:border-r' 
                           : 'w-full aspect-square rounded-t-[23px] border-b'
