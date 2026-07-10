@@ -3056,13 +3056,19 @@ export default function AdminDashboard() {
                           {filteredBusinesses.map(b => (
                             <tr key={b._id} className="hover:bg-slate-50/50 transition-colors">
                               <td className="p-4.5 flex items-center gap-3">
-                                <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 border border-slate-200 flex items-center justify-center bg-gradient-to-br from-[#001c41] to-slate-800 text-white font-extrabold text-xs uppercase select-none">
+                                <a 
+                                  href={`/businesses/${b.slug || b._id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title="View Profile"
+                                  className="h-9 w-9 rounded-xl overflow-hidden shrink-0 border border-slate-200 flex items-center justify-center bg-gradient-to-br from-[#001c41] to-slate-800 text-white font-extrabold text-xs uppercase select-none hover:scale-105 transition-transform cursor-pointer"
+                                >
                                   {b.coverImageUrl ? (
                                     <img src={window.getImageUrl(b.coverImageUrl)} className="h-full w-full object-cover" alt={b.name} />
                                   ) : (
                                     (b.name || 'B').charAt(0)
                                   )}
-                                </div>
+                                </a>
                                 <div className="flex flex-col text-left">
                                   <div className="flex items-center gap-1.5 flex-wrap">
                                     <span className="font-extrabold text-slate-800 text-xs leading-normal whitespace-normal break-words max-w-[250px] sm:max-w-[320px] line-clamp-3">{b.name}</span>
@@ -3109,14 +3115,12 @@ export default function AdminDashboard() {
                               </td>
                               <td className="p-4.5 text-right">
                                 <div className="flex items-center justify-end gap-2">
-                                  <a 
-                                    href={`/businesses/${b.slug || b._id}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[10.5px] font-extrabold text-center leading-none shadow-2xs"
+                                  <button 
+                                    onClick={() => { setSelectedBiz(b); setShowBizModal(true); }}
+                                    className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[10.5px] font-extrabold text-center leading-none shadow-2xs cursor-pointer"
                                   >
-                                    View Profile
-                                  </a>
+                                    Vet Details
+                                  </button>
                                   {b.status !== 'Approved' && b.status !== 'Rejected' && (
                                     <>
                                       <button 
@@ -3240,13 +3244,19 @@ export default function AdminDashboard() {
                       {businesses.filter(b => b.status === 'Pending Verification' || b.status === 'Under Review').map(b => (
                         <div key={b._id} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col justify-between gap-5 hover:shadow-md transition-shadow">
                           <div className="flex gap-4">
-                            <div className="h-16 w-16 bg-gradient-to-br from-[#001c41] to-slate-900 rounded-2xl overflow-hidden shrink-0 border border-slate-200/55 flex items-center justify-center p-1 text-center select-none text-white/50 font-black text-[9px] uppercase tracking-wider leading-tight">
+                            <a 
+                              href={`/businesses/${b.slug || b._id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="View Profile"
+                              className="h-16 w-16 bg-gradient-to-br from-[#001c41] to-slate-900 rounded-2xl overflow-hidden shrink-0 border border-slate-200/55 flex items-center justify-center p-1 text-center select-none text-white/50 font-black text-[9px] uppercase tracking-wider leading-tight hover:scale-105 transition-transform cursor-pointer"
+                            >
                               {b.coverImageUrl ? (
                                 <img src={window.getImageUrl(b.coverImageUrl)} className="h-full w-full object-cover" alt={b.name} />
                               ) : (
                                 (b.name || 'B').slice(0, 3)
                               )}
-                            </div>
+                            </a>
                             <div className="flex flex-col gap-1 text-left min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h4 className="font-extrabold text-sm text-[#001c41] leading-normal whitespace-normal break-words line-clamp-3">{b.name}</h4>
@@ -4070,13 +4080,19 @@ export default function AdminDashboard() {
                                 return (
                                   <tr key={b._id} className="hover:bg-slate-50/50">
                                     <td className="p-4 flex items-center gap-3">
-                                      <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 border border-slate-200 flex items-center justify-center bg-gradient-to-br from-[#001c41] to-slate-800 text-white font-extrabold text-xs uppercase select-none">
+                                      <a 
+                                        href={`/businesses/${b.slug || b._id}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title="View Profile"
+                                        className="h-9 w-9 rounded-xl overflow-hidden shrink-0 border border-slate-200 flex items-center justify-center bg-gradient-to-br from-[#001c41] to-slate-800 text-white font-extrabold text-xs uppercase select-none hover:scale-105 transition-transform cursor-pointer"
+                                      >
                                         {b.coverImageUrl ? (
                                           <img src={window.getImageUrl(b.coverImageUrl)} className="h-full w-full object-cover" alt={b.name} />
                                         ) : (
                                           (b.name || 'B').charAt(0)
                                         )}
-                                      </div>
+                                      </a>
                                       <div className="flex flex-col text-left">
                                         <span className="font-extrabold text-slate-800 text-xs leading-normal whitespace-normal break-words max-w-[250px] sm:max-w-[320px] line-clamp-3">{b.name}</span>
                                         <a 
@@ -4110,14 +4126,12 @@ export default function AdminDashboard() {
                                     </td>
                                     <td className="p-4 text-right">
                                       <div className="flex gap-2 justify-end">
-                                        <a 
-                                          href={`/businesses/${b.slug || b._id}`}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[9.5px] font-extrabold text-center leading-none shadow-xs flex items-center justify-center"
+                                        <button 
+                                          onClick={() => { setSelectedBiz(b); setShowBizModal(true); }}
+                                          className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[9.5px] font-extrabold text-center leading-none shadow-xs flex items-center justify-center cursor-pointer"
                                         >
-                                          View Profile
-                                        </a>
+                                          Vet Details
+                                        </button>
                                         {user?.role === 'superadmin' && (
                                           <button 
                                             onClick={() => handleManualSubscription(b._id)}
