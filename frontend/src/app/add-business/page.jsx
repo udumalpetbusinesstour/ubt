@@ -1684,14 +1684,7 @@ export default function AddBusiness() {
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 mt-2">
-                  <button
-                    type="button"
-                    onClick={() => navigate('/dashboard')}
-                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 bg-white"
-                  >
-                    <ArrowLeft className="h-4 w-4" /> Back
-                  </button>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-3 w-full">
                   <button
                     disabled={autofillLoading}
                     onClick={async () => {
@@ -1765,7 +1758,7 @@ export default function AddBusiness() {
                         setAutofillLoading(false);
                       }
                     }}
-                    className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow disabled:opacity-50"
+                    className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-1 order-first sm:order-none disabled:opacity-50"
                   >
                     {autofillLoading ? 'Importing Details...' : 'Verify & Proceed'}
                   </button>
@@ -1775,9 +1768,16 @@ export default function AddBusiness() {
                       setError('');
                       setEligibilityMethod('pincode');
                     }}
-                    className="py-3.5 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white"
+                    className="py-3.5 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white order-2 sm:order-none sm:w-auto text-center"
                   >
                     Skip & Verify using Pincode
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/dashboard')}
+                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-white order-last sm:order-none sm:w-auto"
+                  >
+                    <ArrowLeft className="h-4 w-4" /> Back
                   </button>
                 </div>
               </div>
@@ -2052,14 +2052,7 @@ export default function AddBusiness() {
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 mt-2">
-                  <button
-                    type="button"
-                    onClick={() => navigate('/dashboard')}
-                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 bg-white"
-                  >
-                    <ArrowLeft className="h-4 w-4" /> Back
-                  </button>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-3 w-full">
                   <button
                     disabled={branchAutofillLoading}
                     onClick={async () => {
@@ -2129,7 +2122,7 @@ export default function AddBusiness() {
                         setBranchAutofillLoading(false);
                       }
                     }}
-                    className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow disabled:opacity-50"
+                    className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-1 order-first sm:order-none disabled:opacity-50"
                   >
                     {branchAutofillLoading ? 'Importing Details...' : 'Verify & Proceed'}
                   </button>
@@ -2139,9 +2132,16 @@ export default function AddBusiness() {
                       setError('');
                       setBranchEligibilityMethod('pincode');
                     }}
-                    className="py-3.5 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white"
+                    className="py-3.5 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white order-2 sm:order-none sm:w-auto text-center"
                   >
                     Skip & Verify using Pincode
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/dashboard')}
+                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-white order-last sm:order-none sm:w-auto"
+                  >
+                    <ArrowLeft className="h-4 w-4" /> Back
                   </button>
                 </div>
               </div>

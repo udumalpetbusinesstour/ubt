@@ -5850,7 +5850,7 @@ function DashboardContent() {
                 : []
             )).filter(Boolean).map(url => window.getImageUrl(url));
             const galleryCount = displayGallery.length;
-            const mainImage = window.getImageUrl(business.coverImageUrl) || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80";
+            const mainImage = window.getImageUrl(business.coverImageUrl) || "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80";
             const remainingCount = Math.max(0, galleryCount - 5);
             const isExpired = business.subscriptionStatus === 'expired';
 
@@ -10357,7 +10357,7 @@ function DashboardContent() {
                     <div className="flex flex-col gap-3">
                       <div className="h-32 w-full rounded-2xl border border-slate-200 overflow-hidden bg-slate-55 relative flex items-center justify-center">
                         <img 
-                          src={window.getImageUrl(editFields.coverImageUrl) || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80"} 
+                          src={window.getImageUrl(editFields.coverImageUrl) || "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80"} 
                           alt="Cover Preview" 
                           className="w-full h-full object-cover"
                         />

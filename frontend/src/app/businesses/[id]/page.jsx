@@ -148,7 +148,7 @@ export default function BusinessDetail() {
 
   const displayGallery = business ? Array.from(new Set(business.galleryUrls || [])).filter(Boolean).map(url => window.getImageUrl(url)) : [];
   const galleryCount = displayGallery.length;
-  const mainImage = business ? (window.getImageUrl(business.coverImageUrl) || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80") : "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80";
+  const mainImage = business ? (window.getImageUrl(business.coverImageUrl) || "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80") : "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80";
 
   const [mediaError, setMediaError] = useState('');
   const directionsUrl = business
