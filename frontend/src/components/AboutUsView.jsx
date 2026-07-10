@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Compass, Info, Check, ShieldCheck, Users, Sparkles, 
   MapPin, Store, Calendar, ArrowRight, Activity, Award 
 } from 'lucide-react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 export default function AboutUsView() {
   const pincodes = [
@@ -51,6 +53,28 @@ export default function AboutUsView() {
   ];
 
   const [activeSlide, setActiveSlide] = useState(0);
+  const [mapBiz, setMapBiz] = useState([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+
+  const defaultPins = [
+    { name: "Shree Vignesh Sound Service", lat: 10.5891, lng: 77.2512, category: "Sound Service" },
+    { name: "Thanvika Enterprises", lat: 10.5841, lng: 77.2485, category: "Office Supplies" },
+    { name: "Maatram Technologies", lat: 10.5921, lng: 77.2530, category: "Software Development" },
+    { name: "Legend Interior", lat: 10.5830, lng: 77.2395, category: "Interior Design" },
+    { name: "Raagam's Palate Restaurant", lat: 10.5878, lng: 77.2442, category: "Restaurant" },
+    { name: "Amaravathi Resorts", lat: 10.5960, lng: 77.2605, category: "Resorts & Hotels" },
+    { name: "Green Valley Resorts", lat: 10.5750, lng: 77.2285, category: "Resorts & Hotels" },
+    { name: "Thirumoorthy Textiles", lat: 10.5815, lng: 77.2498, category: "Textiles & Retail" }
+  ];
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -59,31 +83,112 @@ export default function AboutUsView() {
     return () => clearInterval(timer);
   }, [specialties.length]);
 
+  // Fetch approved listing coordinates for map pins
+  useEffect(() => {
+    fetch('http://localhost:5000/api/businesses')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const coordsList = data.data.filter(b => b.latitude && b.longitude);
+          setMapBiz(coordsList);
+        }
+      })
+      .catch(err => console.warn('Could not fetch map coords', err));
+  }, []);
+
+  // Initialize and update Map
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+    }
+
+    const map = L.map(mapRef.current, {
+      center: [10.5875, 77.248],
+      zoom: 14,
+      zoomControl: false,
+      dragging: !isMobile, // Disable dragging on mobile to allow natural page scrolling
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      touchZoom: false
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; CartoDB'
+    }).addTo(map);
+
+    mapInstanceRef.current = map;
+
+    const pinsToUse = mapBiz.length >= 4 ? mapBiz : defaultPins;
+    pinsToUse.forEach(pin => {
+      const lat = parseFloat(pin.latitude || pin.lat);
+      const lng = parseFloat(pin.longitude || pin.lng);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const customIcon = L.divIcon({
+          html: `
+            <div class="relative flex items-center justify-center h-6 w-6">
+              <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-[#027244] border-2 border-white shadow-md"></span>
+            </div>
+          `,
+          className: 'custom-map-marker',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+
+        const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+        marker.bindPopup(`
+          <div style="color: #001c41; font-family: sans-serif; padding: 4px 8px; text-align: left;">
+            <h5 style="margin: 0 0 4px 0; font-weight: 800; font-size: 12px; line-height: 1.2;">${pin.name}</h5>
+            <p style="margin: 0; font-size: 10px; color: #64748b; font-weight: 600;">${pin.category || 'Local Listing'}</p>
+          </div>
+        `);
+      }
+    });
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [mapBiz, isMobile]);
+
   return (
     <div className="w-full flex flex-col items-center bg-[#F8FAFC] font-sans overflow-hidden">
       
+      {/* 1. TOP HERO BANNER WITH UDUMALPET MAP BACKGROUND */}
       <section 
-        className="w-full relative min-h-[340px] bg-[#001c41] text-white py-16 px-4 md:px-8 border-b border-slate-800 flex flex-col justify-center"
+        className="w-full relative min-h-[460px] bg-[#001c41] text-white py-16 px-4 md:px-8 border-b border-slate-800 flex flex-col justify-center overflow-hidden"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(2,114,68,0.15),transparent_50%)]" />
+        {/* Leaflet Map Background Container */}
+        <div ref={mapRef} className="absolute inset-0 z-0 h-full w-full opacity-70" />
+
+        {/* Ambient top right glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(2,114,68,0.12),transparent_50%)] z-10 pointer-events-none" />
         
-        <div className="relative max-w-[1440px] mx-auto w-full flex flex-col items-center z-10 text-center">
-          <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-extrabold uppercase tracking-widest bg-emerald-950/60 border border-emerald-800/60 px-3.5 py-1.5 rounded-full mb-5 shadow-inner">
+        {/* Left-side blur and navy overlay for text readability (desktop: left 3/5ths, mobile: full screen) */}
+        <div className="absolute inset-0 md:right-[40%] bg-gradient-to-r from-[#001c41] via-[#001c41]/95 to-[#001c41]/40 backdrop-blur-xs z-10 pointer-events-none" />
+
+        {/* Content Container */}
+        <div className="relative max-w-[1440px] mx-auto w-full z-20 text-left flex flex-col items-start">
+          <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-extrabold uppercase tracking-widest bg-emerald-950/80 border border-emerald-800/60 px-3.5 py-1.5 rounded-full mb-5 shadow-inner">
             <MapPin className="h-3.5 w-3.5" /> Exclusively Udumalpet
           </div>
 
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tight text-white max-w-4xl leading-tight">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tight text-white max-w-2xl leading-tight">
             Connecting Udumalpet’s Commerce <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-455 via-teal-255 to-white">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-white">
               With the Digital World
             </span>
           </h1>
           
-          <p className="text-slate-300 text-xs md:text-base font-semibold mt-4 leading-relaxed max-w-2xl">
+          <p className="text-slate-350 text-xs md:text-sm font-semibold mt-4 leading-relaxed max-w-xl">
             A premium, localized directory and events hub crafted solely to elevate, verify, and spotlight the businesses, cottage industries, agriculture, and festivals of our home region.
           </p>
 
-          <div className="flex items-center gap-2 mt-8 text-xs font-bold text-slate-400 bg-slate-900/40 px-4 py-2 rounded-xl border border-slate-800/40">
+          <div className="flex items-center gap-2 mt-8 text-xs font-bold text-slate-400 bg-slate-900/60 px-4 py-2 rounded-xl border border-slate-800/40">
             <Link to="/" className="hover:text-emerald-400 transition-colors">Home</Link>
             <span className="text-slate-600">&gt;</span>
             <span className="text-slate-200">About Us</span>
