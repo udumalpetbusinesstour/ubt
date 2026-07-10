@@ -2482,7 +2482,7 @@ export default function AddBusiness() {
                     </div>
 
                     {/* Udumalpet Pincode Badge */}
-                    <div className="flex justify-between items-center bg-emerald-50/30 border border-emerald-200/60 p-4.5 rounded-2xl mt-3 select-none">
+                    <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center bg-emerald-50/30 border border-emerald-200/60 p-4 sm:p-4.5 rounded-2xl mt-3 select-none">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider">Verified Location Pincode</span>
                         <span className="text-xs text-slate-700 font-bold">{formData.pincode} - Udumalpet Area Eligible</span>
@@ -2492,7 +2492,7 @@ export default function AddBusiness() {
                           setIsPincodeVerified(false);
                           setFormData(prev => ({ ...prev, pincode: '' }));
                         }}
-                        className="py-1.5 px-3.5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-[11px] rounded-xl transition-colors cursor-pointer"
+                        className="py-1.5 px-3.5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-[11px] rounded-xl transition-colors cursor-pointer shrink-0"
                       >
                         Change Pincode
                       </button>
@@ -2626,8 +2626,8 @@ export default function AddBusiness() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50 p-4.5 rounded-2xl border border-slate-150">
                       {formData.timings && typeof formData.timings === 'object' && !Array.isArray(formData.timings) ? (
                         Object.keys(formData.timings).map((day) => (
-                          <div key={day} className="flex items-center justify-between gap-4">
-                            <span className="text-xs font-bold text-slate-600 w-24 shrink-0">{day}</span>
+                          <div key={day} className="flex items-center justify-between gap-2 sm:gap-4">
+                            <span className="text-xs font-bold text-slate-600 w-20 sm:w-24 shrink-0">{day}</span>
                             <input
                               type="text"
                               value={formData.timings[day] || ''}
@@ -2638,7 +2638,7 @@ export default function AddBusiness() {
                                 saveDraft(updated);
                               }}
                               placeholder="e.g. 9:00 AM - 8:00 PM or Closed"
-                              className="flex-1 py-2 px-3 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                              className="flex-1 min-w-0 py-2 px-3 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
                             />
                           </div>
                         ))
@@ -3003,7 +3003,7 @@ export default function AddBusiness() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Udumalpet Pincode Badge */}
                         <div className="flex flex-col gap-1.5 md:col-span-2 text-left">
-                          <div className="flex justify-between items-center bg-emerald-50/30 border border-emerald-200/60 p-4 rounded-2xl select-none">
+                          <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center bg-emerald-50/30 border border-emerald-200/60 p-4 rounded-2xl select-none">
                             <div className="flex flex-col gap-0.5">
                               <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider">Verified Branch Pincode</span>
                               <span className="text-xs text-slate-700 font-bold">{branchForm.pincode} - Udumalpet Area Eligible</span>
@@ -3013,7 +3013,7 @@ export default function AddBusiness() {
                                 setIsBranchEligibilityVerified(false);
                                 setBranchForm(prev => ({ ...prev, pincode: '' }));
                               }}
-                              className="py-1.5 px-3.5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-[11px] rounded-xl transition-colors cursor-pointer"
+                              className="py-1.5 px-3.5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-[11px] rounded-xl transition-colors cursor-pointer shrink-0"
                             >
                               Change Pincode
                             </button>
@@ -3166,8 +3166,8 @@ export default function AddBusiness() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50 p-4.5 rounded-2xl border border-slate-150">
                           {branchForm.timings && typeof branchForm.timings === 'object' && !Array.isArray(branchForm.timings) ? (
                             Object.keys(branchForm.timings).map((day) => (
-                              <div key={day} className="flex items-center justify-between gap-4">
-                                <span className="text-xs font-bold text-slate-600 w-24 shrink-0">{day}</span>
+                              <div key={day} className="flex items-center justify-between gap-2 sm:gap-4">
+                                <span className="text-xs font-bold text-slate-600 w-20 sm:w-24 shrink-0">{day}</span>
                                 <input
                                   type="text"
                                   value={branchForm.timings[day] || ''}
@@ -3176,7 +3176,7 @@ export default function AddBusiness() {
                                     setBranchForm(prev => ({ ...prev, timings: newTimings }));
                                   }}
                                   placeholder="e.g. 9:00 AM - 8:00 PM or Closed"
-                                  className="flex-1 py-2 px-3 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+                                  className="flex-1 min-w-0 py-2 px-3 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
                                 />
                               </div>
                             ))
@@ -3504,11 +3504,11 @@ export default function AddBusiness() {
               )}
 
               {/* Navigation Buttons */}
-              <div className="border-t border-slate-100 pt-6 mt-4 flex justify-between items-center bg-white">
+              <div className="border-t border-slate-100 pt-6 mt-4 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-white">
                 {(isBranchMode || currentStep > 1) ? (
                   <button 
                     onClick={handleBack}
-                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer text-slate-700 bg-white"
+                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-slate-700 bg-white order-last sm:order-first"
                   >
                     <ArrowLeft className="h-4 w-4" /> Back
                   </button>
@@ -3518,20 +3518,20 @@ export default function AddBusiness() {
                       setIsPincodeVerified(false);
                       setFormData(prev => ({ ...prev, pincode: '' }));
                     }}
-                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer text-slate-700 bg-white"
+                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-slate-700 bg-white order-last sm:order-first"
                   >
                     <ArrowLeft className="h-4 w-4" /> Change Pincode
                   </button>
                 )}
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 order-first sm:order-last">
                   {!isBranchMode && (
                     <button
                       onClick={() => {
                         saveDraft(formData);
                         alert("Progress saved as a draft successfully!");
                       }}
-                      className="py-3.5 px-5 border border-slate-300 hover:border-slate-400 text-slate-655 hover:text-slate-800 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white"
+                      className="py-3.5 px-5 border border-slate-300 hover:border-slate-400 text-slate-655 hover:text-slate-800 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white text-center order-last sm:order-first"
                     >
                       Save & Continue Later
                     </button>
@@ -3540,7 +3540,7 @@ export default function AddBusiness() {
                   {isBranchMode ? (
                     <button 
                       onClick={handleNext}
-                      className="py-3.5 px-6 bg-[#027244] hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow shadow-emerald-700/20 cursor-pointer"
+                      className="py-3.5 px-6 bg-[#027244] hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow shadow-emerald-700/20 cursor-pointer w-full sm:w-auto"
                     >
                       {branchStep < 4 ? 'Save & Continue' : 'Save Branch'} <ArrowRight className="h-4 w-4" />
                     </button>
@@ -3548,7 +3548,7 @@ export default function AddBusiness() {
                     currentStep !== 1 && (
                       <button 
                         onClick={handleNext}
-                        className="py-3.5 px-6 bg-[#027244] hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow shadow-emerald-700/20 cursor-pointer"
+                        className="py-3.5 px-6 bg-[#027244] hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow shadow-emerald-700/20 cursor-pointer w-full sm:w-auto"
                       >
                         Save & Continue <ArrowRight className="h-4 w-4" />
                       </button>
@@ -3557,7 +3557,7 @@ export default function AddBusiness() {
                     <button 
                       onClick={handleFormSubmit}
                       disabled={loading}
-                      className="py-3.5 px-8 bg-[#027244] hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow shadow-emerald-700/25 cursor-pointer disabled:opacity-70"
+                      className="py-3.5 px-8 bg-[#027244] hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow shadow-emerald-700/25 cursor-pointer disabled:opacity-70 w-full sm:w-auto"
                     >
                       {loading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                       <span>{isEditing ? 'Save Profile Changes' : 'Submit & List Business'}</span>

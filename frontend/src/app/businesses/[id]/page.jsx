@@ -121,6 +121,16 @@ export default function BusinessDetail() {
 
   const [activeTab, setActiveTab] = useState('overview'); // overview | services | photos | reviews | offers | about | map
   const [activePhotoIndex, setActivePhotoIndex] = useState(null);
+  const [touchPosition, setTouchPosition] = useState(null);
+
+  const openLightbox = (index, e) => {
+    if (e && typeof e.clientX === 'number' && typeof e.clientY === 'number') {
+      setTouchPosition({ x: e.clientX, y: e.clientY });
+    } else {
+      setTouchPosition(null);
+    }
+    setActivePhotoIndex(index);
+  };
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -171,8 +181,10 @@ export default function BusinessDetail() {
       if (e.key === 'Escape') {
         setActivePhotoIndex(null);
       } else if (e.key === 'ArrowRight' && typeof activePhotoIndex === 'number') {
+        setTouchPosition(null);
         setActivePhotoIndex(prev => (prev < displayGallery.length - 1 ? prev + 1 : prev));
       } else if (e.key === 'ArrowLeft' && typeof activePhotoIndex === 'number') {
+        setTouchPosition(null);
         setActivePhotoIndex(prev => (prev > 0 ? prev - 1 : prev));
       }
     };
@@ -1569,7 +1581,7 @@ Please confirm availability and delivery time.`;
         {/* Background Image opacity filter */}
         <div 
           className="absolute inset-0 bg-cover cursor-pointer transition-opacity duration-300 hover:opacity-95" 
-          onClick={() => setActivePhotoIndex('cover')}
+          onClick={(e) => openLightbox('cover', e)}
           title="Click to view full cover photo"
           style={{ 
             backgroundImage: `url('${mainImage}')`,
@@ -1618,7 +1630,7 @@ Please confirm availability and delivery time.`;
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-2 text-left min-w-0 w-full">
               {business.logoUrl ? (
                 <div 
-                  onClick={() => setActivePhotoIndex('logo')}
+                  onClick={(e) => openLightbox('logo', e)}
                   title="Click to view logo"
                   className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-white shadow-md shrink-0 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-300"
                 >
@@ -2149,7 +2161,7 @@ Please confirm availability and delivery time.`;
                     <div className="grid grid-cols-1 gap-3 mt-2 animate-fadeIn">
                       <div 
                         className="h-80 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
-                        onClick={() => { setActivePhotoIndex(0); setActiveTab('photos'); }}
+                        onClick={(e) => { openLightbox(0, e); setActiveTab('photos'); }}
                         style={{ 
                           backgroundImage: `url('${displayGallery[0]}')`,
                           filter: isExpired ? 'blur(4px)' : 'none'
@@ -2164,7 +2176,7 @@ Please confirm availability and delivery time.`;
                         <div 
                           key={idx}
                           className="rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
-                          onClick={() => { setActivePhotoIndex(idx); setActiveTab('photos'); }}
+                          onClick={(e) => { openLightbox(idx, e); setActiveTab('photos'); }}
                           style={{ 
                             backgroundImage: `url('${url}')`,
                             filter: isExpired ? 'blur(4px)' : 'none'
@@ -2178,7 +2190,7 @@ Please confirm availability and delivery time.`;
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-2 h-80 animate-fadeIn">
                       <div 
                         className="md:col-span-3 rounded-[24px] bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group cursor-pointer"
-                        onClick={() => { setActivePhotoIndex(0); setActiveTab('photos'); }}
+                        onClick={(e) => { openLightbox(0, e); setActiveTab('photos'); }}
                         style={{ 
                           backgroundImage: `url('${displayGallery[0]}')`,
                           filter: isExpired ? 'blur(4px)' : 'none'
@@ -2191,7 +2203,7 @@ Please confirm availability and delivery time.`;
                           <div 
                             key={idx}
                             className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
-                            onClick={() => { setActivePhotoIndex(idx + 1); setActiveTab('photos'); }}
+                            onClick={(e) => { openLightbox(idx + 1, e); setActiveTab('photos'); }}
                             style={{ 
                               backgroundImage: `url('${url}')`,
                               filter: isExpired ? 'blur(4px)' : 'none'
@@ -2217,7 +2229,7 @@ Please confirm availability and delivery time.`;
                       <div className="md:col-span-2 grid grid-rows-2 gap-3 h-full">
                         <div 
                           className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
-                          onClick={() => { setActivePhotoIndex(1); setActiveTab('photos'); }}
+                          onClick={(e) => { openLightbox(1, e); setActiveTab('photos'); }}
                           style={{ 
                             backgroundImage: `url('${displayGallery[1]}')`,
                             filter: isExpired ? 'blur(4px)' : 'none'
@@ -2230,7 +2242,7 @@ Please confirm availability and delivery time.`;
                             <div 
                               key={idx}
                               className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
-                              onClick={() => { setActivePhotoIndex(idx + 2); setActiveTab('photos'); }}
+                              onClick={(e) => { openLightbox(idx + 2, e); setActiveTab('photos'); }}
                               style={{ 
                                 backgroundImage: `url('${url}')`,
                                 filter: isExpired ? 'blur(4px)' : 'none'
@@ -2262,7 +2274,7 @@ Please confirm availability and delivery time.`;
                             <div 
                               key={idx}
                               className="rounded-[20px] bg-cover bg-center border border-slate-200 shadow-2xs relative overflow-hidden group cursor-pointer"
-                              onClick={() => { setActivePhotoIndex(idx + 1); setActiveTab('photos'); }}
+                              onClick={(e) => { openLightbox(idx + 1, e); setActiveTab('photos'); }}
                               style={{ 
                                 backgroundImage: `url('${url}')`,
                                 filter: isExpired ? 'blur(4px)' : 'none'
@@ -2544,7 +2556,7 @@ Please confirm availability and delivery time.`;
                   {displayGallery.map((url, idx) => (
                     <div 
                       key={idx} 
-                      onClick={() => setActivePhotoIndex(idx)}
+                      onClick={(e) => openLightbox(idx, e)}
                       className="h-44 rounded-2xl bg-cover bg-center border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow cursor-pointer" 
                       style={{ 
                         backgroundImage: `url('${url}')`,
@@ -3410,72 +3422,103 @@ Please confirm availability and delivery time.`;
           {/* Close Button */}
           <button 
             onClick={() => setActivePhotoIndex(null)}
-            className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 z-55"
+            className="absolute top-4 right-4 bg-slate-900/80 hover:bg-slate-900 text-white border border-white/10 h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 z-55"
             title="Close (Esc)"
           >
             <X className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
 
-          {/* Left Arrow Navigation */}
+          {/* Left Arrow Navigation (Desktop Only) */}
           {typeof activePhotoIndex === 'number' && activePhotoIndex > 0 && (
             <button 
-              onClick={(e) => { e.stopPropagation(); setActivePhotoIndex(idx => idx - 1); }}
-              className="absolute left-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 z-55"
+              onClick={(e) => { e.stopPropagation(); setTouchPosition(null); setActivePhotoIndex(idx => idx - 1); }}
+              className="hidden md:flex absolute left-6 bg-slate-900/80 hover:bg-slate-900 text-white border border-white/10 h-12 w-12 rounded-full items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 z-55"
               title="Previous (Left Arrow)"
             >
-              <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 rotate-180" />
+              <ChevronRight className="h-6 w-6 rotate-180" />
             </button>
           )}
 
-          {/* Right Arrow Navigation */}
+          {/* Right Arrow Navigation (Desktop Only) */}
           {typeof activePhotoIndex === 'number' && activePhotoIndex < displayGallery.length - 1 && (
             <button 
-              onClick={(e) => { e.stopPropagation(); setActivePhotoIndex(idx => idx + 1); }}
-              className="absolute right-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 z-55"
+              onClick={(e) => { e.stopPropagation(); setTouchPosition(null); setActivePhotoIndex(idx => idx + 1); }}
+              className="hidden md:flex absolute right-6 bg-slate-900/80 hover:bg-slate-900 text-white border border-white/10 h-12 w-12 rounded-full items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 z-55"
               title="Next (Right Arrow)"
             >
-              <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
+              <ChevronRight className="h-6 w-6" />
             </button>
           )}
 
-          {/* Image Container */}
+          {/* Zoom Wrapper (scales from the coordinates of touch/click) */}
           <div 
-            className="relative max-w-full max-h-[85vh] flex flex-col items-center gap-4 animate-scaleUp"
-            onClick={(e) => e.stopPropagation()}
+            className="absolute inset-0 flex items-center justify-center p-4 sm:p-10 pointer-events-none animate-scaleUp"
+            style={touchPosition ? { transformOrigin: `${touchPosition.x}px ${touchPosition.y}px` } : undefined}
           >
-            <img 
-              src={
-                activePhotoIndex === 'logo'
-                  ? window.getImageUrl(business.logoUrl)
-                  : activePhotoIndex === 'cover'
-                    ? mainImage
-                    : displayGallery[activePhotoIndex]
-              } 
-              alt={
-                activePhotoIndex === 'logo'
-                  ? 'Logo'
-                  : activePhotoIndex === 'cover'
-                    ? 'Cover image'
-                    : `Gallery view ${activePhotoIndex + 1}`
-              }
-              className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/10"
-            />
-            {/* Image counter indicator */}
-            {typeof activePhotoIndex === 'number' && (
-              <div className="px-4 py-1.5 bg-black/60 border border-white/15 rounded-full text-white text-xs font-extrabold font-mono tracking-wider shadow-sm">
-                {activePhotoIndex + 1} / {displayGallery.length}
+            <div 
+              className="relative max-w-full max-h-[85vh] flex flex-col items-center gap-4 pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img 
+                src={
+                  activePhotoIndex === 'logo'
+                    ? window.getImageUrl(business.logoUrl)
+                    : activePhotoIndex === 'cover'
+                      ? mainImage
+                      : displayGallery[activePhotoIndex]
+                } 
+                alt={
+                  activePhotoIndex === 'logo'
+                    ? 'Logo'
+                    : activePhotoIndex === 'cover'
+                      ? 'Cover image'
+                      : `Gallery view ${activePhotoIndex + 1}`
+                }
+                className="max-w-full max-h-[75vh] sm:max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/10"
+              />
+
+              {/* Controls container (Mobile navigation + Counter) - perfectly visible, never overlapping image content */}
+              <div className="flex items-center gap-3 mt-1 select-none">
+                {/* Mobile Left Arrow */}
+                {typeof activePhotoIndex === 'number' && activePhotoIndex > 0 && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setTouchPosition(null); setActivePhotoIndex(idx => idx - 1); }}
+                    className="md:hidden bg-slate-900/90 text-white border border-white/10 h-10 w-10 rounded-full flex items-center justify-center hover:bg-slate-800 transition-all cursor-pointer shadow-md"
+                    title="Previous"
+                  >
+                    <ChevronRight className="h-5 w-5 rotate-180" />
+                  </button>
+                )}
+
+                {/* Counter / Label */}
+                {typeof activePhotoIndex === 'number' && (
+                  <div className="px-4 py-2 bg-slate-900/90 border border-white/10 rounded-full text-white text-xs font-extrabold font-mono tracking-wider shadow-md">
+                    {activePhotoIndex + 1} / {displayGallery.length}
+                  </div>
+                )}
+                {activePhotoIndex === 'logo' && (
+                  <div className="px-4 py-2 bg-slate-900/90 border border-white/10 rounded-full text-white text-xs font-extrabold tracking-wider shadow-md">
+                    Business Logo
+                  </div>
+                )}
+                {activePhotoIndex === 'cover' && (
+                  <div className="px-4 py-2 bg-slate-900/90 border border-white/10 rounded-full text-white text-xs font-extrabold tracking-wider shadow-md">
+                    Cover Photo
+                  </div>
+                )}
+
+                {/* Mobile Right Arrow */}
+                {typeof activePhotoIndex === 'number' && activePhotoIndex < displayGallery.length - 1 && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setTouchPosition(null); setActivePhotoIndex(idx => idx + 1); }}
+                    className="md:hidden bg-slate-900/90 text-white border border-white/10 h-10 w-10 rounded-full flex items-center justify-center hover:bg-slate-800 transition-all cursor-pointer shadow-md"
+                    title="Next"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                )}
               </div>
-            )}
-            {activePhotoIndex === 'logo' && (
-              <div className="px-4 py-1.5 bg-black/60 border border-white/15 rounded-full text-white text-xs font-extrabold tracking-wider shadow-sm">
-                Business Logo
-              </div>
-            )}
-            {activePhotoIndex === 'cover' && (
-              <div className="px-4 py-1.5 bg-black/60 border border-white/15 rounded-full text-white text-xs font-extrabold tracking-wider shadow-sm">
-                Cover Photo
-              </div>
-            )}
+            </div>
           </div>
         </div>
       )}
