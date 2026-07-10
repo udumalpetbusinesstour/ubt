@@ -245,14 +245,16 @@ function DashboardContent() {
   // Determine which registration step to resume at (so the CTA links to the right step)
   const resumeStep = (() => {
     if (!isRegistrationDraft || !business) return 1;
+    // Step 1 (Choose Plan / Payment): MUST complete payment before any other step
+    if (!business.subscriptionStatus || business.subscriptionStatus !== 'active') return 1;
     // Step 1 (Choose Plan / GMB check): no pincode yet
     if (!business.pincode) return 1;
-    // Step 2 (Basic Info): has pincode but no name, category, OR description
-    if (!business.name || !business.category || !business.description) return 2;
-    // Step 3 (Business Details): has name/category/description but no services or highlights
+    // Step 2 (Basic Info): has pincode but no name, category, type, OR description
+    if (!business.name || !business.category || !business.type || !business.description) return 2;
+    // Step 3 (Business Details): has name/category/description but no services
     if (!business.services || business.services.length === 0) return 3;
-    // Step 4 (Contact & Location): has services but no phone or address
-    if (!business.phone || !business.address) return 4;
+    // Step 4 (Contact & Location): has services but no phone, email, or address
+    if (!business.phone || !business.email || !business.address || !business.locality) return 4;
     // Step 5 (Photos & Media): all info but no images (or less than 3 total)
     if (totalPhotosCount < 3) return 5;
     // Step 6 (Review & Submit): everything is filled but not submitted yet (has draft tag)
@@ -4524,7 +4526,9 @@ function DashboardContent() {
                         { id: 5, name: 'Photos & Media' },
                         { id: 6, name: 'Review & Submit' }
                       ].map((s) => {
-                        const isCompleted = s.id < resumeStep;
+                        // Step 1 (Choose Plan) is only "completed" if payment was actually made
+                        const isCompleted = s.id < resumeStep &&
+                          (s.id !== 1 || business?.subscriptionStatus === 'active');
                         const isCurrent = s.id === resumeStep;
                         return (
                           <div

@@ -345,6 +345,9 @@ export default function AddBusiness() {
               if (biz.subscriptionStatus === 'active') {
                 setIsEditing(biz.status === 'Approved');
                 setIsPincodeVerified(true);
+              } else {
+                // Payment not done — force back to Step 1 regardless of URL param
+                setCurrentStep(1);
               }
               return;
             }
@@ -357,6 +360,9 @@ export default function AddBusiness() {
         if (biz.subscriptionStatus === 'active') {
           setIsEditing(biz.status === 'Approved');
           setIsPincodeVerified(true);
+        } else {
+          // Payment not yet completed — always start from Step 1 (Choose Plan)
+          setCurrentStep(1);
         }
       }
     } catch (err) {
@@ -1211,6 +1217,10 @@ export default function AddBusiness() {
         setError('Business Name is required. Please enter your business name.');
         return false;
       }
+      if (!formData.type || !formData.type.trim()) {
+        setError('Business Type is required. Please select a business type (e.g. Individual / Sole Proprietor).');
+        return false;
+      }
       if (!formData.description || !formData.description.trim()) {
         setError('Business Description is required. Please write a short description about your business.');
         return false;
@@ -1255,8 +1265,36 @@ export default function AddBusiness() {
         return false;
       }
     } else if (currentStep === 4) {
-      if (!formData.phone || !formData.whatsapp) {
-        setError('Phone number and WhatsApp are mandatory.');
+      if (!formData.phone || !formData.phone.trim()) {
+        setError('Phone Number is mandatory.');
+        return false;
+      }
+      if (!/^[0-9+\-\s]{7,15}$/.test(formData.phone.trim())) {
+        setError('Please enter a valid Phone Number (7-15 digits).');
+        return false;
+      }
+      if (!formData.whatsapp || !formData.whatsapp.trim()) {
+        setError('WhatsApp Number is mandatory.');
+        return false;
+      }
+      if (!/^[0-9+\-\s]{7,15}$/.test(formData.whatsapp.trim())) {
+        setError('Please enter a valid WhatsApp Number (7-15 digits).');
+        return false;
+      }
+      if (!formData.email || !formData.email.trim()) {
+        setError('Email Address is mandatory.');
+        return false;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+        setError('Please enter a valid Email Address (e.g. name@example.com).');
+        return false;
+      }
+      if (!formData.address || !formData.address.trim()) {
+        setError('Business Address is mandatory. Please enter your complete address.');
+        return false;
+      }
+      if (!formData.locality || !formData.locality.trim()) {
+        setError('Area / Locality is mandatory. Please select or enter your area.');
         return false;
       }
     } else if (currentStep === 5) {
@@ -2198,7 +2236,9 @@ export default function AddBusiness() {
                 
                 {(isBranchMode ? branchSteps : steps).map((step) => {
                   const isActive = step.id === (isBranchMode ? branchStep : currentStep);
-                  const isCompleted = step.id < (isBranchMode ? branchStep : currentStep);
+                  // Step 1 (Choose Plan) is only "completed" if payment is confirmed
+                  const isCompleted = step.id < (isBranchMode ? branchStep : currentStep) &&
+                    (step.id !== 1 || formData.subscriptionStatus === 'active');
                   return (
                     <div key={step.id} className="flex flex-col items-center gap-1.5 relative z-10 w-0 flex-1">
                       <div 
