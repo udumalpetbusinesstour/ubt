@@ -311,7 +311,15 @@ export default function Home() {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          const coordsList = data.data.filter(b => b.latitude && b.longitude);
+          const coordsList = data.data.map(b => {
+            const lat = b.latitude || b.coordinates?.lat;
+            const lng = b.longitude || b.coordinates?.lng;
+            return {
+              ...b,
+              latitude: lat,
+              longitude: lng
+            };
+          }).filter(b => b.latitude && b.longitude);
           setMapBiz(coordsList);
         }
       })
@@ -327,8 +335,8 @@ export default function Home() {
     }
 
     const map = L.map(mapRef.current, {
-      center: [10.5875, 77.248],
-      zoom: 14,
+      center: [10.582, 77.238],
+      zoom: 13,
       zoomControl: true,       // Zoom buttons visible everywhere
       dragging: true,          // Map can be dragged/moved on all screens (including mobile)
       scrollWheelZoom: true,   // Enable scroll wheel zoom
