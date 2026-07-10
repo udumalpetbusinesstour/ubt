@@ -1531,6 +1531,45 @@ const resolveCategoryReview = async (req, res, next) => {
       return sendError(res, 404, 'Business directory listing not found');
     }
 
+    if (action === 'mark_done') {
+      const finalName = business.customCategoryName || '';
+      if (!finalName) {
+        return sendError(res, 400, 'No custom category request name found on this business');
+      }
+
+      const exists = await Category.findOne({ categoryName: { $regex: new RegExp(`^${escapeRegex(finalName.trim())}$`, 'i') } });
+      if (!exists) {
+        return sendError(res, 400, `The category "${finalName}" does not exist in preset categories yet. Please create it first under Category Management, or choose "Map to Existing".`);
+      }
+
+      const targetEntry = business.categories.find(c => c.categoryStatus === 'Pending Review' && (c.customCategoryName === business.customCategoryName || !business.customCategoryName));
+      if (targetEntry) {
+        targetEntry.categoryId = exists._id;
+        targetEntry.category = exists.parentCategory || exists.categoryName;
+        targetEntry.type = exists.categoryName;
+        targetEntry.customCategoryName = '';
+        targetEntry.categoryStatus = 'Normal';
+      } else {
+        business.categories = [{
+          categoryId: exists._id,
+          category: exists.parentCategory || exists.categoryName,
+          type: exists.categoryName,
+          customCategoryName: '',
+          categoryStatus: 'Normal'
+        }];
+      }
+      await business.save();
+
+      await AdminAction.create({
+        adminId: req.user._id,
+        targetBusinessId: business._id,
+        actionType: 'approve',
+        remarks: `Marked custom category request "${finalName}" as done (linked to manual entry)`
+      });
+
+      return sendSuccess(res, 200, `Category request marked as done and linked to: ${exists.categoryName}`, business);
+    }
+
     if (action === 'assign' || action === 'merge') {
       const cat = await Category.findById(categoryId);
       if (!cat) {

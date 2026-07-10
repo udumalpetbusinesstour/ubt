@@ -3565,14 +3565,14 @@ export default function AdminDashboard() {
                                 {biz.requestedParentCategory && (
                                   <button
                                     onClick={async () => {
-                                      const confirmed = await confirm(`Approve new subcategory "${biz.customCategoryName}" nested under requested parent category "${biz.requestedParentCategory}"?`);
+                                      const confirmed = await confirm(`Mark custom category request "${biz.customCategoryName}" as done?\nThis will verify if it exists in preset categories and link it.`);
                                       if (confirmed) {
-                                        resolveCategoryRequest(biz._id, 'create', null, biz.customCategoryName, null, biz.requestedParentCategory);
+                                        resolveCategoryRequest(biz._id, 'mark_done');
                                       }
                                     }}
                                     className="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold rounded-xl transition-all shadow-sm cursor-pointer font-sans"
                                   >
-                                    Approve as Requested
+                                    Mark as Done
                                   </button>
                                 )}
                                 <select
@@ -5770,14 +5770,14 @@ export default function AdminDashboard() {
                                     <button
                                       type="button"
                                       onClick={async () => {
-                                        const confirmed = await confirm(`Approve new subcategory "${biz.customCategoryName}" nested under requested parent category "${biz.requestedParentCategory}"?`);
+                                        const confirmed = await confirm(`Mark custom category request "${biz.customCategoryName}" as done?\nThis will verify if it exists in preset categories and link it.`);
                                         if (confirmed) {
-                                          resolveCategoryRequest(biz._id, 'create', null, biz.customCategoryName, null, biz.requestedParentCategory);
+                                          resolveCategoryRequest(biz._id, 'mark_done');
                                         }
                                       }}
                                       className="py-1.5 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold rounded-xl transition-all shadow-sm cursor-pointer"
                                     >
-                                      Approve as Requested
+                                      Mark as Done
                                     </button>
                                   )}
                                 </div>
