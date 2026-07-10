@@ -1207,8 +1207,16 @@ export default function AddBusiness() {
   const validateStep = () => {
     setError('');
     if (currentStep === 2) {
-      if (!formData.name || !formData.description) {
-        setError('Business Name and description are mandatory.');
+      if (!formData.name || !formData.name.trim()) {
+        setError('Business Name is required. Please enter your business name.');
+        return false;
+      }
+      if (!formData.description || !formData.description.trim()) {
+        setError('Business Description is required. Please write a short description about your business.');
+        return false;
+      }
+      if (formData.description.trim().length < 20) {
+        setError('Business Description must be at least 20 characters. Please provide a more detailed description.');
         return false;
       }
       if (!formData.pincode) {
@@ -2471,7 +2479,9 @@ export default function AddBusiness() {
                     <div className="flex flex-col gap-1.5">
                       <div className="flex justify-between items-center">
                         <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Short Business Description <span className="text-red-500">*</span></label>
-                        <span className="text-[10px] text-slate-405 font-extrabold">{formData.description.length} / 250</span>
+                        <span className={`text-[10px] font-extrabold ${formData.description.length >= 20 ? 'text-emerald-600' : 'text-red-500'}`}>
+                          {formData.description.length} / 250 {formData.description.length > 0 && formData.description.length < 20 ? `(min 20)` : ''}
+                        </span>
                       </div>
                       <textarea
                         name="description"
@@ -2479,9 +2489,18 @@ export default function AddBusiness() {
                         onChange={handleInputChange}
                         rows="4"
                         maxLength={250}
-                        placeholder="Write a short description about your business..."
-                        className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 resize-none"
+                        placeholder="Write a short description about your business (minimum 20 characters)..."
+                        className={`w-full py-2.5 px-3.5 bg-white border rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 resize-none transition-colors ${
+                          formData.description.length > 0 && formData.description.length < 20
+                            ? 'border-red-400 bg-red-50/30'
+                            : 'border-slate-300'
+                        }`}
                       />
+                      {formData.description.length > 0 && formData.description.length < 20 && (
+                        <span className="text-[10px] text-red-500 font-bold">
+                          Please write at least {20 - formData.description.length} more characters.
+                        </span>
+                      )}
                     </div>
 
                     {/* Udumalpet Pincode Badge */}

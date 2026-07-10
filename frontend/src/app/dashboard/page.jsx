@@ -247,11 +247,11 @@ function DashboardContent() {
     if (!isRegistrationDraft || !business) return 1;
     // Step 1 (Choose Plan / GMB check): no pincode yet
     if (!business.pincode) return 1;
-    // Step 2 (Basic Info): has pincode but no name or category
-    if (!business.name || !business.category) return 2;
-    // Step 3 (Business Details): has name/category but no description
-    if (!business.description) return 3;
-    // Step 4 (Contact & Location): has description but no phone or address
+    // Step 2 (Basic Info): has pincode but no name, category, OR description
+    if (!business.name || !business.category || !business.description) return 2;
+    // Step 3 (Business Details): has name/category/description but no services or highlights
+    if (!business.services || business.services.length === 0) return 3;
+    // Step 4 (Contact & Location): has services but no phone or address
     if (!business.phone || !business.address) return 4;
     // Step 5 (Photos & Media): all info but no images (or less than 3 total)
     if (totalPhotosCount < 3) return 5;
