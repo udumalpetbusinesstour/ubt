@@ -1567,7 +1567,7 @@ function DashboardContent() {
       }
     } catch (err) {
       console.warn('Backend server offline, could not fetch business profile.');
-      setError('Connection to backend server failed. Please ensure the backend server is running.');
+      setError('Could not load your business data. Please refresh the page to try again.');
       setBusiness(null);
       setPrimaryBusiness(null);
     } finally {
@@ -4492,7 +4492,7 @@ function DashboardContent() {
                     <div className="flex flex-col gap-1 items-center">
                       <h3 className="font-extrabold text-slate-800 text-lg leading-tight">Complete Your Business Listing</h3>
                       <p className="text-xs text-slate-500 font-semibold max-w-sm mt-1 leading-relaxed">
-                        You have an incomplete registration draft for <strong className="text-slate-700">"{business?.name || 'Your Business'}"</strong>. {(business?.isPaid || business?.subscriptionStatus === 'active' || business?.isPremium) ? "Your payment is confirmed — complete the remaining steps to publish your listing and start receiving customer leads." : "Complete the payment and the remaining steps to publish your listing and start receiving customer leads."}
+                        You have an incomplete registration draft{business?.name ? <> for <strong className="text-slate-700">"{business.name}"</strong></> : ''}. {(business?.isPaid || business?.subscriptionStatus === 'active' || business?.isPremium) ? "Your payment is confirmed — complete the remaining steps to publish your listing and start receiving customer leads." : "Complete the payment and the remaining steps to publish your listing and start receiving customer leads."}
                       </p>
                     </div>
                   </div>

@@ -6,19 +6,19 @@ import ChoosePlan from '../choose-plan/page';
 import { compressImage } from '@/utils/imageCompression';
 
 const steps = [
-  { id: 1, name: 'Choose Plan' },
-  { id: 2, name: 'Basic Info' },
-  { id: 3, name: 'Business Details' },
-  { id: 4, name: 'Contact & Location' },
-  { id: 5, name: 'Photos & Media' },
-  { id: 6, name: 'Review & Submit' },
+  { id: 1, name: 'Choose Plan', shortName: 'Plan' },
+  { id: 2, name: 'Basic Info', shortName: 'Basic' },
+  { id: 3, name: 'Business Details', shortName: 'Details' },
+  { id: 4, name: 'Contact & Location', shortName: 'Contact' },
+  { id: 5, name: 'Photos & Media', shortName: 'Photos' },
+  { id: 6, name: 'Review & Submit', shortName: 'Review' },
 ];
 
 const branchSteps = [
-  { id: 1, name: 'Basic Info' },
-  { id: 2, name: 'Branch Details' },
-  { id: 3, name: 'Contact & Location' },
-  { id: 4, name: 'Photos & Media' },
+  { id: 1, name: 'Basic Info', shortName: 'Basic' },
+  { id: 2, name: 'Branch Details', shortName: 'Details' },
+  { id: 3, name: 'Contact & Location', shortName: 'Contact' },
+  { id: 4, name: 'Photos & Media', shortName: 'Photos' },
 ];
 
 
@@ -2180,11 +2180,11 @@ export default function AddBusiness() {
           {/* Left Column: Form & Stepper (lg:col-span-2) */}
           <div className="lg:col-span-2 flex flex-col gap-8">
                       {/* Step-by-Step progress indicators */}
-            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-              <div className="flex justify-between items-center relative">
-                <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-100 -translate-y-1/2 z-0" />
+            <div className="bg-white border border-slate-200 rounded-3xl p-4 md:p-6 shadow-sm">
+              <div className="flex justify-between items-start relative">
+                <div className="absolute top-4 left-0 w-full h-0.5 bg-slate-100 z-0" />
                 <div 
-                  className="absolute top-1/2 left-0 h-0.5 bg-emerald-500 -translate-y-1/2 z-0 transition-all duration-300"
+                  className="absolute top-4 left-0 h-0.5 bg-emerald-500 z-0 transition-all duration-300"
                   style={{ width: `${(((isBranchMode ? branchStep : currentStep) - 1) / ((isBranchMode ? branchSteps : steps).length - 1)) * 100}%` }}
                 />
                 
@@ -2192,9 +2192,9 @@ export default function AddBusiness() {
                   const isActive = step.id === (isBranchMode ? branchStep : currentStep);
                   const isCompleted = step.id < (isBranchMode ? branchStep : currentStep);
                   return (
-                    <div key={step.id} className="flex flex-col items-center gap-2 relative z-10">
+                    <div key={step.id} className="flex flex-col items-center gap-1.5 relative z-10 w-0 flex-1">
                       <div 
-                        className={`h-9 w-9 rounded-full font-bold text-xs flex items-center justify-center border shadow transition-all ${
+                        className={`h-8 w-8 rounded-full font-bold text-xs flex items-center justify-center border shadow transition-all ${
                           isCompleted 
                             ? 'bg-emerald-600 border-emerald-600 text-white' 
                             : isActive 
@@ -2204,8 +2204,11 @@ export default function AddBusiness() {
                       >
                         {isCompleted ? '✓' : step.id}
                       </div>
-                      <span className={`text-[10px] md:text-xs font-bold ${isActive ? 'text-slate-800' : 'text-slate-405'}`}>
-                        {step.name}
+                      <span className={`text-[9px] md:text-[11px] font-bold text-center leading-tight w-full px-0.5 ${
+                        isActive ? 'text-slate-800' : 'text-slate-400'
+                      }`}>
+                        <span className="hidden md:inline">{step.name}</span>
+                        <span className="inline md:hidden">{step.shortName}</span>
                       </span>
                     </div>
                   );

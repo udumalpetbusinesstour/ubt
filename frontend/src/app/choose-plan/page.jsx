@@ -59,44 +59,51 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
 
       if (authToken && isStep) {
         let currentBiz = null;
+
+        // Always fetch from server first to get the latest business state.
+        // Using initialBusiness._id if available saves an extra round-trip.
         if (initialBusiness && initialBusiness._id) {
           currentBiz = initialBusiness;
           setBusiness(currentBiz);
         } else {
-          // 1. Fetch user's business listing
-          const res = await fetch('http://localhost:5000/api/businesses/my-business', {
-            headers: { Authorization: `Bearer ${authToken}` },
-          });
-          const data = await res.json();
-          
-          if (data.success && data.data) {
-            currentBiz = data.data;
-            setBusiness(currentBiz);
-          } else {
-            // 2. Create a default business draft if one does not exist
-            const draftRes = await fetch('http://localhost:5000/api/businesses/draft', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${authToken}`,
-              },
-              body: JSON.stringify({
-                name: '',
-                city: 'Udumalpet',
-                state: 'Tamil Nadu',
-                description: '',
-                phone: '',
-                whatsapp: '',
-                pincode: '',
-              }),
+          // Fetch user's existing business / draft from server
+          try {
+            const res = await fetch('http://localhost:5000/api/businesses/my-business', {
+              headers: { Authorization: `Bearer ${authToken}` },
             });
-            const draftData = await draftRes.json();
-            if (draftData.success && draftData.data) {
-              currentBiz = draftData.data;
+            const data = await res.json();
+            if (data.success && data.data) {
+              currentBiz = data.data;
               setBusiness(currentBiz);
             } else {
-              setError('Could not initialize business registration draft.');
+              // No existing business — create a blank draft so payment can proceed
+              const draftRes = await fetch('http://localhost:5000/api/businesses/draft', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${authToken}`,
+                },
+                body: JSON.stringify({
+                  name: '',
+                  city: 'Udumalpet',
+                  state: 'Tamil Nadu',
+                  description: '',
+                  phone: '',
+                  whatsapp: '',
+                  pincode: '',
+                }),
+              });
+              const draftData = await draftRes.json();
+              if (draftData.success && draftData.data) {
+                currentBiz = draftData.data;
+                setBusiness(currentBiz);
+              } else {
+                setError('Could not initialize registration. Please refresh and try again.');
+              }
             }
+          } catch (fetchErr) {
+            console.warn('[ChoosePlan] Failed to fetch business from server:', fetchErr);
+            setError('Could not connect to server. Please check your internet connection and refresh.');
           }
         }
 
