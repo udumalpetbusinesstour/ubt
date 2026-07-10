@@ -514,6 +514,8 @@ export default function AddBusiness() {
   useEffect(() => {
     if (currentStep === 1 && formData.subscriptionStatus === 'active' && !isBranchMode) {
       setCurrentStep(2);
+    } else if (currentStep > 1 && (!formData.subscriptionStatus || formData.subscriptionStatus !== 'active') && !isBranchMode) {
+      setCurrentStep(1);
     }
   }, [currentStep, formData.subscriptionStatus, isBranchMode]);
 
@@ -3728,7 +3730,8 @@ export default function AddBusiness() {
               <div className="flex flex-col gap-3.5 mt-2">
                 {(isBranchMode ? branchSteps : steps).map((step) => {
                   const isActive = step.id === (isBranchMode ? branchStep : currentStep);
-                  const isCompleted = step.id < (isBranchMode ? branchStep : currentStep);
+                  const isCompleted = step.id < (isBranchMode ? branchStep : currentStep) &&
+                    (step.id !== 1 || formData.subscriptionStatus === 'active');
                   return (
                     <div key={step.id} className="flex items-center gap-3">
                       <div 
