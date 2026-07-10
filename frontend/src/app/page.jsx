@@ -1473,7 +1473,7 @@ export default function Home() {
                 <div 
                   key={idx}
                   onClick={() => navigate(`/${ad.businessSlug || ad.businessId}`)}
-                  className="w-[280px] xs:w-[350px] sm:w-[500px] md:w-[600px] lg:w-[750px] shrink-0 snap-start rounded-[20px] md:rounded-[28px] overflow-hidden aspect-[1920/900] bg-slate-900 shadow-md border border-slate-200 cursor-pointer hover:shadow-none md:shadow-lg transition-shadow relative"
+                  className="w-[280px] xs:w-[320px] sm:w-[500px] md:w-[600px] lg:w-[750px] shrink-0 snap-center md:snap-start rounded-[20px] md:rounded-[28px] overflow-hidden aspect-[1920/900] bg-slate-900 shadow-md border border-slate-200 cursor-pointer hover:shadow-none md:shadow-lg transition-shadow relative"
                 >
                   {/* Poster Background */}
                   <img
@@ -1874,7 +1874,7 @@ export default function Home() {
           ].map((faq, idx) => (
             <div 
               key={idx} 
-              className="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] shrink-0 snap-start bg-white border border-slate-200/80 rounded-3xl p-7 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-start select-none gap-4"
+              className="w-[280px] xs:w-[320px] sm:w-[450px] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] shrink-0 snap-center md:snap-start bg-white border border-slate-200/80 rounded-3xl p-7 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-start select-none gap-4"
             >
               <div className="flex items-start gap-3 w-full">
                 <span className="h-6 w-6 rounded-full bg-emerald-50 text-[#027244] font-black text-xs flex items-center justify-center shrink-0 mt-0.5 border border-emerald-100">
