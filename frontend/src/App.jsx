@@ -68,13 +68,16 @@ function AppContent() {
     }
   }, [location.pathname, location.hash]);
 
-  // Track navigation within the SPA session
-  useEffect(() => {
+  // Track navigation count synchronously during render (before children mount and check it)
+  if (typeof window !== 'undefined') {
     if (window.__spa_nav_count === undefined) {
       window.__spa_nav_count = 0;
     }
-    window.__spa_nav_count++;
-  }, [location.pathname]);
+    if (window.__spa_last_pathname !== location.pathname) {
+      window.__spa_last_pathname = location.pathname;
+      window.__spa_nav_count++;
+    }
+  }
 
 
   const hideNavAndFooter = location.pathname.startsWith('/dashboard') || 

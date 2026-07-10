@@ -1263,7 +1263,7 @@ export default function Home() {
           {featuredBusinesses && featuredBusinesses.length > 0 ? (
             <div 
               ref={featuredScrollRef}
-              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-fit max-w-full scroll-smooth px-[calc(50vw-140px)] sm:px-[calc(50vw-160px)] md:px-12 2xl:px-0"
+              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-[calc(50vw-140px)] sm:px-[calc(50vw-160px)] md:px-12 2xl:px-0"
             >
               {featuredBusinesses.map((biz) => {
                 const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
@@ -1467,7 +1467,7 @@ export default function Home() {
 
             <div 
               ref={sponsoredAdsScrollRef}
-              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-fit max-w-full scroll-smooth px-[calc(50vw-140px)] xs:px-[calc(50vw-160px)] sm:px-[calc(50vw-250px)] md:px-12 2xl:px-0"
+              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-[calc(50vw-140px)] xs:px-[calc(50vw-160px)] sm:px-[calc(50vw-250px)] md:px-12 2xl:px-0"
             >
               {sponsoredAds.map((ad, idx) => (
                 <div 
@@ -1848,7 +1848,7 @@ export default function Home() {
 
           <div 
             ref={faqScrollRef}
-            className="mx-auto flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth animate-fadeIn w-fit max-w-full px-[calc(50vw-140px)] xs:px-[calc(50vw-160px)] sm:px-[calc(50vw-225px)] md:px-12 2xl:px-0"
+            className="mx-auto flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth animate-fadeIn w-full px-[calc(50vw-140px)] xs:px-[calc(50vw-160px)] sm:px-[calc(50vw-225px)] md:px-12 2xl:px-0"
           >
           {[
             {
