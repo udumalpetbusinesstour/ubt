@@ -212,16 +212,16 @@ export default function AboutUsView() {
                 <h3 className="font-black text-lg md:text-xl text-slate-100 uppercase tracking-wide">Our Mission</h3>
               </div>
               <p className="text-slate-350 text-xs md:text-sm leading-relaxed font-semibold">
-                To empower local merchants and small business owners of Udumalpet by providing a free, verified, and premium digital portal. We aim to bridge the digital divide, eliminate middleman commission fees, and keep our regional economy thriving through direct, trust-first connections.
+                Our mission is to help every business in Udumalpet build a strong digital presence. From small shop owners to large business owners, we provide a platform where everyone can showcase their business, connect with more customers, and grow their brand online.
               </p>
               <div className="flex flex-col gap-3 mt-2 border-t border-slate-800/60 pt-4 text-xs font-semibold text-slate-400">
                 <div className="flex items-center gap-2">
                   <span className="text-emerald-400 font-bold">✓</span>
-                  <span>Digitizing micro-merchants and neighborhood shops</span>
+                  <span>Showcase your business online</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-emerald-400 font-bold">✓</span>
-                  <span>100% direct client contacts via phone and WhatsApp</span>
+                  <span>Direct customer connections</span>
                 </div>
               </div>
             </div>
@@ -235,16 +235,16 @@ export default function AboutUsView() {
                 <h3 className="font-black text-lg md:text-xl text-slate-100 uppercase tracking-wide">Our Vision</h3>
               </div>
               <p className="text-slate-350 text-xs md:text-sm leading-relaxed font-semibold">
-                To become the primary digital reference and commerce index for Udumalpet, seamlessly linking residents, tourists, and businesses. We envision a community-powered commercial grid where even the smallest local vendor gains equal digital exposure, fostering regional pride and town-wide growth.
+                Our vision is to ensure that no business in Udumalpet is left behind in the digital world. We aim to empower every entrepreneur with the opportunity to grow online, strengthen the business community, and make Udumalpet a digitally connected business hub.
               </p>
               <div className="flex flex-col gap-3 mt-2 border-t border-slate-800/60 pt-4 text-xs font-semibold text-slate-400">
                 <div className="flex items-center gap-2">
                   <span className="text-teal-400 font-bold">✓</span>
-                  <span>Fostering economic growth inside the local community</span>
+                  <span>Zero entrepreneurs left behind</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-teal-400 font-bold">✓</span>
-                  <span>Providing verified, clean, and spam-free directory details</span>
+                  <span>Digitally connected business hub</span>
                 </div>
               </div>
             </div>
@@ -268,25 +268,29 @@ export default function AboutUsView() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
-          {/* Card: For Local Merchants */}
+          {/* Card: For Businesses */}
           <div className="bg-white border border-slate-200 rounded-3xl p-6.5 shadow-xs flex flex-col justify-between">
             <div className="flex flex-col gap-4.5">
               <div className="px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider self-start">
-                For Local Merchants
+                For Businesses
               </div>
-              <h3 className="text-base font-extrabold text-[#001c41] leading-tight">Grow Your Local Customer Base</h3>
+              <h3 className="text-base font-extrabold text-[#001c41] leading-tight">Grow Your Business Online</h3>
               <ul className="flex flex-col gap-3 text-xs text-slate-500 font-semibold leading-normal">
                 <li className="flex items-start gap-2">
                   <span className="text-[#027244] shrink-0 font-bold">✓</span>
-                  <span><strong>Verified Badge:</strong> Higher brand trust.</span>
+                  <span>Create a strong digital presence for your business.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#027244] shrink-0 font-bold">✓</span>
-                  <span><strong>Zero Fees:</strong> Leads directly through phone calls and WhatsApp.</span>
+                  <span>Reach more customers across Udumalpet.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#027244] shrink-0 font-bold">✓</span>
-                  <span><strong>Promotional Events:</strong> Promote store launches or seasonal discounts.</span>
+                  <span>Display your products, services, and contact details.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#027244] shrink-0 font-bold">✓</span>
+                  <span>Get direct enquiries without middlemen.</span>
                 </li>
               </ul>
             </div>
@@ -295,25 +299,29 @@ export default function AboutUsView() {
             </Link>
           </div>
 
-          {/* Card: For Visitors & Tourists */}
+          {/* Card: For Customers */}
           <div className="bg-white border border-slate-200 rounded-3xl p-6.5 shadow-xs flex flex-col justify-between">
             <div className="flex flex-col gap-4.5">
               <div className="px-3.5 py-1.5 rounded-full bg-teal-50 text-teal-700 text-[10px] font-black uppercase tracking-wider self-start">
-                For Visitors & Tourists
+                For Customers
               </div>
-              <h3 className="text-base font-extrabold text-[#001c41] leading-tight">Authentic Local Insights</h3>
+              <h3 className="text-base font-extrabold text-[#001c41] leading-tight">Find Trusted Businesses Easily</h3>
               <ul className="flex flex-col gap-3 text-xs text-slate-500 font-semibold leading-normal">
                 <li className="flex items-start gap-2">
                   <span className="text-[#027244] shrink-0 font-bold">✓</span>
-                  <span><strong>Trusted Data:</strong> Real locations verified by local admins.</span>
+                  <span>Search for businesses by category and location.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#027244] shrink-0 font-bold">✓</span>
-                  <span><strong>Direct Connect:</strong> Skip commissions; book resorts and taxis directly.</span>
+                  <span>Compare services and contact businesses directly.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#027244] shrink-0 font-bold">✓</span>
-                  <span><strong>Explore Attractions:</strong> Combine tour plans with localized directory lists.</span>
+                  <span>Save time by finding everything in one place.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#027244] shrink-0 font-bold">✓</span>
+                  <span>Discover trusted businesses near you.</span>
                 </li>
               </ul>
             </div>
@@ -328,19 +336,23 @@ export default function AboutUsView() {
               <div className="px-3.5 py-1.5 rounded-full bg-slate-50 text-slate-700 text-[10px] font-black uppercase tracking-wider self-start">
                 For the Community
               </div>
-              <h3 className="text-base font-extrabold text-[#001c41] leading-tight">Fostering Local Circulation</h3>
+              <h3 className="text-base font-extrabold text-[#001c41] leading-tight">Supporting the Growth of Udumalpet</h3>
               <ul className="flex flex-col gap-3 text-xs text-slate-500 font-semibold leading-normal">
                 <li className="flex items-start gap-2">
                   <span className="text-slate-600 shrink-0 font-bold">✓</span>
-                  <span><strong>Keep Money Local:</strong> Direct trade preserves economic value within our community.</span>
+                  <span>Help every business become digitally visible.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-slate-600 shrink-0 font-bold">✓</span>
-                  <span><strong>Community Calendar:</strong> Events directory keeping residents linked to festivals.</span>
+                  <span>Encourage people to support businesses in Udumalpet.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-slate-600 shrink-0 font-bold">✓</span>
-                  <span><strong>Shared Knowledge:</strong> General blogs highlighting lifestyle and regional narratives.</span>
+                  <span>Build stronger connections between businesses and customers.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-slate-600 shrink-0 font-bold">✓</span>
+                  <span>Contribute to the growth of the town's business community.</span>
                 </li>
               </ul>
             </div>
