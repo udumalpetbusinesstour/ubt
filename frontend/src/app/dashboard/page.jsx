@@ -1566,85 +1566,10 @@ function DashboardContent() {
         throw new Error('Fallback required');
       }
     } catch (err) {
-      console.warn('Backend server offline, falling back to offline simulation.');
-      
-      // Gorgeous mock fallback: match Sri Murugan Stores from reference design exactly!
-      const mockBiz = {
-        _id: 'UBT-10024',
-        name: 'Sri Murugan Stores',
-        category: 'Restaurants',
-        type: 'Vegetarian Restaurant',
-        description: 'Sri Murugan Stores is a premium departmental store in Gandhi Nagar, Udumalpet offering fresh organic grocery items, dry fruits, fresh pulses and household commodities.',
-        phone: '+91 94430 12345',
-        whatsapp: '+91 94430 12345',
-        locality: 'Gandhi Nagar',
-        pincode: '642126',
-        googleRating: 4.7,
-        googleReviewsCount: 68,
-        status: 'Approved',
-        subscriptionStatus: 'active', 
-        subscriptionExpiry: new Date(new Date().getTime() + 23 * 24 * 60 * 60 * 1000), // 23 days remaining
-        isPremium: true,
-        logoUrl: '',
-        offers: [
-          { id: '1', title: 'Festival Special Ghee Roast', description: 'Buy 2 Get 1 Free on all special ghee roast items. Valid on dining.', rate: 'Buy 2 Get 1', expiry: '2026-06-30', active: true, banner: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80' },
-          { id: '2', title: 'Monsoon Discount Campaign', description: 'Flat 10% Off on all electrical installation services. Safe & verified engineers.', rate: '10% OFF', expiry: '2026-07-15', active: true, banner: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80' },
-        ]
-      };
-      setBusiness(mockBiz);
-      setPrimaryBusiness(mockBiz);
-      setOffersList(mockBiz.offers);
-      setPromotionsList([]);
-      fetchBranches(authToken, mockBiz._id);
-      fetchLeads(authToken, mockBiz._id);
-      fetchReviews(authToken, mockBiz._id);
-      if (isFoodRelated('Restaurants', 'Vegetarian Restaurant')) {
-        fetchMenu(authToken, mockBiz._id);
-      }
-      setEditFields({
-        name: mockBiz.name || '',
-        category: mockBiz.category || 'Services',
-        type: mockBiz.type || '',
-        requestedParentCategory: mockBiz.requestedParentCategory || '',
-        customCategoryName: mockBiz.customCategoryName || '',
-        categoryStatus: mockBiz.categoryStatus || 'Normal',
-        categories: mockBiz.categories || [],
-        description: mockBiz.description || '',
-        highlights: Array.isArray(mockBiz.highlights) ? mockBiz.highlights.join(', ') : '',
-        phone: mockBiz.phone || '',
-        whatsapp: mockBiz.whatsapp || '',
-        email: mockBiz.email || '',
-        website: mockBiz.website || '',
-        facebook: mockBiz.facebook || '',
-        instagram: mockBiz.instagram || '',
-        address: mockBiz.address || '',
-        locality: mockBiz.locality || '',
-        pincode: mockBiz.pincode || '',
-        yearEstablished: mockBiz.yearEstablished || '',
-        employeeCount: mockBiz.employeeCount || '',
-        gstNumber: mockBiz.gstNumber || '',
-        serviceArea: mockBiz.serviceArea || '',
-        languagesKnown: mockBiz.languagesKnown || '',
-        services: Array.isArray(mockBiz.services) ? mockBiz.services.join(', ') : '',
-        brands: Array.isArray(mockBiz.brands) ? mockBiz.brands.join(', ') : '',
-        logoUrl: mockBiz.logoUrl || '',
-        coverImageUrl: mockBiz.coverImageUrl || '',
-        galleryUrls: Array.isArray(mockBiz.galleryUrls) ? mockBiz.galleryUrls.join(', ') : '',
-        timingsMon: mockBiz.timings?.Monday || '9:00 AM - 8:00 PM',
-        timingsTue: mockBiz.timings?.Tuesday || '9:00 AM - 8:00 PM',
-        timingsWed: mockBiz.timings?.Wednesday || '9:00 AM - 8:00 PM',
-        timingsThu: mockBiz.timings?.Thursday || '9:00 AM - 8:00 PM',
-        timingsFri: mockBiz.timings?.Friday || '9:00 AM - 8:00 PM',
-        timingsSat: mockBiz.timings?.Saturday || '9:00 AM - 8:00 PM',
-        timingsSun: mockBiz.timings?.Sunday || '9:00 AM - 1:00 PM',
-      });
-      // Initialize photo gallery from mock business data
-      const mockGalleryArr = Array.isArray(mockBiz.galleryUrls) 
-        ? mockBiz.galleryUrls 
-        : (typeof mockBiz.galleryUrls === 'string' ? mockBiz.galleryUrls.split(',').map(s => s.trim()).filter(Boolean) : []);
-      setPhotoGallery(mockGalleryArr);
-      setUploadedPhotosCount(mockGalleryArr.length);
-      setProfileCompletion(90);
+      console.warn('Backend server offline, could not fetch business profile.');
+      setError('Connection to backend server failed. Please ensure the backend server is running.');
+      setBusiness(null);
+      setPrimaryBusiness(null);
     } finally {
       setLoading(false);
     }
@@ -1782,41 +1707,8 @@ function DashboardContent() {
         throw new Error(data.message || 'Failed to fetch branches');
       }
     } catch (err) {
-      console.warn('Using fallback mock branches due to error or mock business id:', err.message);
-      // Gorgeous mock fallback branches
-      const mockBranches = [
-        {
-          _id: 'mock-branch-1',
-          businessId: 'UBT-10024',
-          name: 'Sri Murugan Stores - Eripalayam Branch',
-          address: 'Eripalayam Main Road, Udumalpet Main Town, Tamil Nadu - 642126',
-          phone: '+91 94430 12345',
-          googleMapsLocation: 'https://maps.google.com/?q=10.5912,77.2515',
-          googleBusinessLink: 'https://business.google.com',
-          workingHours: '9:00 AM - 9:00 PM',
-          branchManagerName: 'Murugan Jr.',
-          latitude: 10.5912,
-          longitude: 77.2515,
-          status: 'Approved',
-          isPrimary: false
-        },
-        {
-          _id: 'mock-branch-2',
-          businessId: 'UBT-10024',
-          name: 'Sri Murugan Stores - Dharapuram Road Branch',
-          address: 'Dharapuram Road, Udumalpet Main Town, Tamil Nadu - 642126',
-          phone: '+91 94430 54321',
-          googleMapsLocation: 'https://maps.google.com/?q=10.584,77.252',
-          googleBusinessLink: '',
-          workingHours: '9:00 AM - 8:30 PM',
-          branchManagerName: 'Suresh Babu',
-          latitude: 10.584,
-          longitude: 77.252,
-          status: 'Pending Verification',
-          isPrimary: false
-        }
-      ];
-      setBranches(mockBranches);
+      console.warn('Could not fetch branches:', err.message);
+      setBranches([]);
     } finally {
       setBranchesLoading(false);
     }
@@ -2774,24 +2666,8 @@ function DashboardContent() {
         throw new Error('Backend failed');
       }
     } catch (err) {
-      console.warn('Backend server offline, loading mock events for dashboard.');
-      const mockList = [
-        {
-          _id: 'evt_1',
-          title: 'Sri Murugan Stores Mega Expo 2026',
-          category: 'Business',
-          description: 'A grand exhibition showcase highlighting fresh organic products, dry fruits, and household goods at Sri Murugan Stores.',
-          date: new Date(new Date().getTime() + 15 * 24 * 60 * 60 * 1000),
-          time: 'Saturday, 10:00 AM',
-          venue: 'Gandhi Nagar, Udumalpet',
-          organizer: 'Sri Murugan Stores',
-          phone: '+91 94430 12345',
-          price: 0,
-          coverImageUrl: '/default_event_cover.jpg',
-          duration: '1 Day'
-        }
-      ];
-      setUserEvents(mockList);
+      console.warn('Could not fetch events:', err.message);
+      setUserEvents([]);
     } finally {
       setEventsLoading(false);
     }
@@ -4450,6 +4326,16 @@ function DashboardContent() {
                   <option key={br._id} value={br._id}>{br.name} (Branch)</option>
                 ))}
               </select>
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-3xl p-5 shadow-sm flex items-start gap-4 animate-fadeIn">
+              <AlertCircle className="h-5.5 w-5.5 text-rose-500 shrink-0 mt-0.5" />
+              <div className="flex-1 flex flex-col gap-1 text-left">
+                <span className="font-extrabold text-xs text-slate-800">Connection Error</span>
+                <p className="text-xs text-slate-600 leading-relaxed font-semibold">{error}</p>
+              </div>
             </div>
           )}
 

@@ -6734,7 +6734,7 @@ export default function AdminDashboard() {
                   <div className="flex flex-col gap-0.5">
                     <span className="font-extrabold text-amber-800">Registration Incomplete</span>
                     <p className="text-[11px] text-amber-700 font-medium leading-relaxed mt-0.5">
-                      This business listing is still in draft mode. The merchant {(selectedBiz.isPaid || selectedBiz.subscriptionStatus === 'active' || selectedBiz.isPremium || subscriptions.some(s => s.businessId === selectedBiz._id && (s.paymentStatus === 'Paid' || s.status === 'active'))) ? 'has confirmed payment' : 'has NOT confirmed payment'} but has not yet completed all steps of registration.
+                      This business listing is still in draft mode. The merchant {(selectedBiz.isPaid || selectedBiz.subscriptionStatus === 'active' || selectedBiz.isPremium || subscriptions.some(s => s.businessId === selectedBiz._id && (s.paymentStatus === 'Paid' || s.status === 'active'))) ? 'has confirmed payment but has not yet completed all steps of registration.' : 'has NOT confirmed payment and has not yet completed all steps of registration.'}
                     </p>
                   </div>
                 </div>
