@@ -376,11 +376,21 @@ export default function Home() {
           usedCoords[coordKey] = 1;
         }
 
+        const isPremiumBiz = !!(pin.isPremium || pin.subscriptionStatus === 'active' || pin.featured);
+
+        const haloClass = isPremiumBiz 
+          ? 'bg-orange-500/25 border border-orange-500/40' 
+          : 'bg-[#027244]/25 border border-[#027244]/40';
+          
+        const dotClass = isPremiumBiz 
+          ? 'bg-orange-600 border-2 border-white' 
+          : 'bg-[#027244] border-2 border-white';
+
         const customRedIcon = L.divIcon({
           html: `
             <div class="relative flex items-center justify-center h-6 w-6 group">
-              <span class="absolute inline-flex h-5 w-5 rounded-full bg-red-500/25 border border-red-500/40"></span>
-              <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-600 border-2 border-white shadow-md transition-transform duration-200 group-hover:scale-125"></span>
+              <span class="absolute inline-flex h-5 w-5 rounded-full ${haloClass}"></span>
+              <span class="relative inline-flex rounded-full h-3.5 w-3.5 ${dotClass} shadow-md transition-transform duration-200 group-hover:scale-125"></span>
             </div>
           `,
           className: 'custom-map-marker',
