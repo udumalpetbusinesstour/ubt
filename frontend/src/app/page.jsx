@@ -349,21 +349,44 @@ export default function Home() {
   const stepsRegisterScrollRef = useRef(null);
   const sponsoredAdsScrollRef = useRef(null);
 
+  const getCurrentIndex = (container) => {
+    const cards = container.children;
+    if (!cards || cards.length === 0) return 0;
+    const viewportCenter = container.scrollLeft + container.clientWidth / 2;
+    let closestIndex = 0;
+    let minDiff = Infinity;
+    for (let i = 0; i < cards.length; i++) {
+      const cardCenter = cards[i].offsetLeft + cards[i].offsetWidth / 2;
+      const diff = Math.abs(cardCenter - viewportCenter);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIndex = i;
+      }
+    }
+    return closestIndex;
+  };
+
+  const centerCard = (container, index) => {
+    const cards = container.children;
+    if (cards && cards.length > 0) {
+      const targetIdx = Math.max(0, Math.min(index, cards.length - 1));
+      const card = cards[targetIdx];
+      if (card) {
+        const targetLeft = card.offsetLeft + card.offsetWidth / 2 - container.clientWidth / 2;
+        container.scrollTo({ left: targetLeft, behavior: 'smooth' });
+      }
+    }
+  };
+
   useEffect(() => {
     const timer = setInterval(() => {
       if (featuredScrollRef.current) {
-        const { scrollLeft, scrollWidth, clientWidth } = featuredScrollRef.current;
-        if (scrollLeft + clientWidth >= scrollWidth - 20) {
-          featuredScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          const firstCard = featuredScrollRef.current.children[0];
-          if (firstCard) {
-            const step = firstCard.offsetWidth + 20; // card width + gap-5 (20px)
-            const nextIndex = Math.round(scrollLeft / step) + 1;
-            featuredScrollRef.current.scrollTo({ left: nextIndex * step, behavior: 'smooth' });
-          } else {
-            featuredScrollRef.current.scrollBy({ left: 330, behavior: 'smooth' });
-          }
+        const container = featuredScrollRef.current;
+        const cards = container.children;
+        if (cards && cards.length > 0) {
+          const curIndex = getCurrentIndex(container);
+          const nextIndex = (curIndex + 1) % cards.length;
+          centerCard(container, nextIndex);
         }
       }
     }, 3500);
@@ -374,18 +397,12 @@ export default function Home() {
     if (sponsoredAds.length <= 1) return;
     const timer = setInterval(() => {
       if (sponsoredAdsScrollRef.current) {
-        const { scrollLeft, scrollWidth, clientWidth } = sponsoredAdsScrollRef.current;
-        if (scrollLeft + clientWidth >= scrollWidth - 20) {
-          sponsoredAdsScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          const firstCard = sponsoredAdsScrollRef.current.children[0];
-          if (firstCard) {
-            const step = firstCard.offsetWidth + 20; // card width + gap-5 (20px)
-            const nextIndex = Math.round(scrollLeft / step) + 1;
-            sponsoredAdsScrollRef.current.scrollTo({ left: nextIndex * step, behavior: 'smooth' });
-          } else {
-            sponsoredAdsScrollRef.current.scrollBy({ left: 330, behavior: 'smooth' });
-          }
+        const container = sponsoredAdsScrollRef.current;
+        const cards = container.children;
+        if (cards && cards.length > 0) {
+          const curIndex = getCurrentIndex(container);
+          const nextIndex = (curIndex + 1) % cards.length;
+          centerCard(container, nextIndex);
         }
       }
     }, 10000);
@@ -396,18 +413,12 @@ export default function Home() {
     if (!topViewedBusinesses || topViewedBusinesses.length <= 1) return;
     const timer = setInterval(() => {
       if (topViewedScrollRef.current) {
-        const { scrollLeft, scrollWidth, clientWidth } = topViewedScrollRef.current;
-        if (scrollLeft + clientWidth >= scrollWidth - 20) {
-          topViewedScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          const firstCard = topViewedScrollRef.current.children[0];
-          if (firstCard) {
-            const step = firstCard.offsetWidth + 24; // card width + gap-6 (24px)
-            const nextIndex = Math.round(scrollLeft / step) + 1;
-            topViewedScrollRef.current.scrollTo({ left: nextIndex * step, behavior: 'smooth' });
-          } else {
-            topViewedScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-          }
+        const container = topViewedScrollRef.current;
+        const cards = container.children;
+        if (cards && cards.length > 0) {
+          const curIndex = getCurrentIndex(container);
+          const nextIndex = (curIndex + 1) % cards.length;
+          centerCard(container, nextIndex);
         }
       }
     }, 4000);
@@ -829,8 +840,13 @@ export default function Home() {
 
   const handleScrollFaqs = (direction) => {
     if (!faqScrollRef.current) return;
-    const scrollAmount = direction === 'left' ? -350 : 350;
-    faqScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    const container = faqScrollRef.current;
+    const cards = container.children;
+    if (cards && cards.length > 0) {
+      const curIndex = getCurrentIndex(container);
+      const targetIndex = direction === 'left' ? curIndex - 1 : curIndex + 1;
+      centerCard(container, targetIndex);
+    }
   };
 
   const handleScrollCategories = (direction) => {
@@ -841,21 +857,35 @@ export default function Home() {
 
   const handleScrollFeatured = (direction) => {
     if (!featuredScrollRef.current) return;
-    const scrollAmount = direction === 'left' ? -350 : 350;
-    featuredScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    const container = featuredScrollRef.current;
+    const cards = container.children;
+    if (cards && cards.length > 0) {
+      const curIndex = getCurrentIndex(container);
+      const targetIndex = direction === 'left' ? curIndex - 1 : curIndex + 1;
+      centerCard(container, targetIndex);
+    }
   };
 
   const handleScrollSponsored = (direction) => {
     if (!sponsoredAdsScrollRef.current) return;
-    const clientWidth = sponsoredAdsScrollRef.current.clientWidth;
-    const scrollAmount = direction === 'left' ? -(clientWidth + 20) : (clientWidth + 20);
-    sponsoredAdsScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    const container = sponsoredAdsScrollRef.current;
+    const cards = container.children;
+    if (cards && cards.length > 0) {
+      const curIndex = getCurrentIndex(container);
+      const targetIndex = direction === 'left' ? curIndex - 1 : curIndex + 1;
+      centerCard(container, targetIndex);
+    }
   };
 
   const handleScrollTopViewed = (direction) => {
     if (!topViewedScrollRef.current) return;
-    const scrollAmount = direction === 'left' ? -350 : 350;
-    topViewedScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    const container = topViewedScrollRef.current;
+    const cards = container.children;
+    if (cards && cards.length > 0) {
+      const curIndex = getCurrentIndex(container);
+      const targetIndex = direction === 'left' ? curIndex - 1 : curIndex + 1;
+      centerCard(container, targetIndex);
+    }
   };
 
   const handleScrollTestimonials = (direction) => {
@@ -1291,7 +1321,7 @@ export default function Home() {
                 return (
                   <div 
                     key={biz._id} 
-                    className="card-premium group rounded-2xl overflow-hidden flex flex-col cursor-pointer relative w-[280px] sm:w-[320px] shrink-0 snap-center sm:snap-start"
+                    className="card-premium group rounded-2xl overflow-hidden flex flex-col cursor-pointer relative w-[280px] sm:w-[320px] shrink-0 snap-center"
                     onClick={() => navigate(`/${biz.slug || biz._id}`)}
                   >
                      <div 
@@ -1494,7 +1524,7 @@ export default function Home() {
                 <div 
                   key={idx}
                   onClick={() => navigate(`/${ad.businessSlug || ad.businessId}`)}
-                  className="w-[280px] xs:w-[320px] sm:w-[500px] md:w-[600px] lg:w-[750px] shrink-0 snap-center md:snap-start rounded-[20px] md:rounded-[28px] overflow-hidden aspect-[1920/900] bg-slate-900 shadow-md border border-slate-200 cursor-pointer hover:shadow-none md:shadow-lg transition-shadow relative"
+                  className="w-[280px] xs:w-[320px] sm:w-[500px] md:w-[600px] lg:w-[750px] shrink-0 snap-center rounded-[20px] md:rounded-[28px] overflow-hidden aspect-[1920/900] bg-slate-900 shadow-md border border-slate-200 cursor-pointer hover:shadow-none md:shadow-lg transition-shadow relative"
                 >
                   {/* Poster Background */}
                   <img
@@ -1575,7 +1605,7 @@ export default function Home() {
                             <div 
                               key={biz._id}
                               onClick={() => navigate(`/${biz.slug || biz._id}`)}
-                              className="w-[260px] sm:w-[285px] shrink-0 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 text-left snap-center sm:snap-start relative overflow-hidden"
+                              className="w-[260px] sm:w-[285px] shrink-0 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 text-left snap-center relative overflow-hidden"
                           >
                             {/* Logo/Image */}
                              {biz.logoUrl ? (
@@ -1895,7 +1925,7 @@ export default function Home() {
           ].map((faq, idx) => (
             <div 
               key={idx} 
-              className="w-[280px] xs:w-[320px] sm:w-[450px] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] shrink-0 snap-center md:snap-start bg-white border border-slate-200/80 rounded-3xl p-7 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-start select-none gap-4"
+              className="w-[280px] xs:w-[320px] sm:w-[450px] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] shrink-0 snap-center bg-white border border-slate-200/80 rounded-3xl p-7 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-start select-none gap-4"
             >
               <div className="flex items-start gap-3 w-full">
                 <span className="h-6 w-6 rounded-full bg-emerald-50 text-[#027244] font-black text-xs flex items-center justify-center shrink-0 mt-0.5 border border-emerald-100">
