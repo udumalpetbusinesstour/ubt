@@ -502,6 +502,10 @@ export default function Home() {
   const stepsRegisterScrollRef = useRef(null);
   const sponsoredAdsScrollRef = useRef(null);
 
+  const isHoveringFeatured = useRef(false);
+  const isHoveringSponsored = useRef(false);
+  const isHoveringTopViewed = useRef(false);
+
   const handleInfiniteScroll = (container, originalLength) => {
     if (!container || originalLength <= 1) return;
     const cards = container.children;
@@ -628,6 +632,7 @@ export default function Home() {
 
   useEffect(() => {
     const timer = setInterval(() => {
+      if (isHoveringFeatured.current) return;
       if (featuredScrollRef.current) {
         const container = featuredScrollRef.current;
         const cards = container.children;
@@ -637,13 +642,14 @@ export default function Home() {
           centerCard(container, nextIndex);
         }
       }
-    }, 3500);
+    }, 6500); // Slowed down autoscroll interval (6.5s)
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
     if (sponsoredAds.length <= 1) return;
     const timer = setInterval(() => {
+      if (isHoveringSponsored.current) return;
       if (sponsoredAdsScrollRef.current) {
         const container = sponsoredAdsScrollRef.current;
         const cards = container.children;
@@ -653,13 +659,14 @@ export default function Home() {
           centerCard(container, nextIndex);
         }
       }
-    }, 10000);
+    }, 12000); // Slowed down autoscroll interval (12s)
     return () => clearInterval(timer);
   }, [sponsoredAds]);
 
   useEffect(() => {
     if (!topViewedBusinesses || topViewedBusinesses.length <= 1) return;
     const timer = setInterval(() => {
+      if (isHoveringTopViewed.current) return;
       if (topViewedScrollRef.current) {
         const container = topViewedScrollRef.current;
         const cards = container.children;
@@ -669,7 +676,7 @@ export default function Home() {
           centerCard(container, nextIndex);
         }
       }
-    }, 4000);
+    }, 8000); // Slowed down autoscroll interval (8s)
     return () => clearInterval(timer);
   }, [topViewedBusinesses]);
 
@@ -1584,6 +1591,8 @@ export default function Home() {
           {featuredBusinesses && featuredBusinesses.length > 0 ? (
             <div 
               ref={featuredScrollRef}
+              onMouseEnter={() => { isHoveringFeatured.current = true; }}
+              onMouseLeave={() => { isHoveringFeatured.current = false; }}
               className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-[calc(50vw-140px)] sm:px-[calc(50vw-160px)] md:px-12 2xl:px-0"
             >
               {(featuredBusinesses && featuredBusinesses.length > 1
@@ -1791,6 +1800,8 @@ export default function Home() {
 
             <div 
               ref={sponsoredAdsScrollRef}
+              onMouseEnter={() => { isHoveringSponsored.current = true; }}
+              onMouseLeave={() => { isHoveringSponsored.current = false; }}
               className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-[calc(50vw-140px)] xs:px-[calc(50vw-160px)] sm:px-[calc(50vw-250px)] md:px-12 2xl:px-0"
             >
               {(sponsoredAds && sponsoredAds.length > 1
@@ -1873,6 +1884,8 @@ export default function Home() {
                     {/* The scrolling wrapper */}
                     <div 
                       ref={topViewedScrollRef}
+                      onMouseEnter={() => { isHoveringTopViewed.current = true; }}
+                      onMouseLeave={() => { isHoveringTopViewed.current = false; }}
                       className="mx-auto flex overflow-x-auto gap-6 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-8 md:px-12 2xl:px-0"
                     >
                         {topViewedBusinesses.map((biz) => {
