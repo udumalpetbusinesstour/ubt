@@ -2691,8 +2691,12 @@ export default function AdminDashboard() {
                             {filteredBusinesses.map(b => (
                               <tr key={b._id} className="hover:bg-slate-50/50 transition-colors">
                                 <td className="p-4.5 flex items-center gap-3.5">
-                                  <div className="h-11 w-11 bg-slate-100 rounded-xl overflow-hidden shrink-0 border border-slate-200 relative shadow-2xs">
-                                    <img src={b.coverImageUrl} className="h-full w-full object-cover" alt={b.name} />
+                                  <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0 border border-slate-200 relative shadow-2xs flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-extrabold text-xs uppercase select-none">
+                                    {b.coverImageUrl ? (
+                                      <img src={window.getImageUrl(b.coverImageUrl)} className="h-full w-full object-cover" alt={b.name} />
+                                    ) : (
+                                      (b.name || 'B').charAt(0)
+                                    )}
                                   </div>
                                   <div className="flex flex-col text-left min-w-0">
                                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -3052,8 +3056,12 @@ export default function AdminDashboard() {
                           {filteredBusinesses.map(b => (
                             <tr key={b._id} className="hover:bg-slate-50/50 transition-colors">
                               <td className="p-4.5 flex items-center gap-3">
-                                <div className="h-9 w-9 bg-slate-100 rounded-xl overflow-hidden shrink-0 border border-slate-200">
-                                  <img src={b.coverImageUrl} className="h-full w-full object-cover" alt={b.name} />
+                                <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 border border-slate-200 flex items-center justify-center bg-gradient-to-br from-[#001c41] to-slate-800 text-white font-extrabold text-xs uppercase select-none">
+                                  {b.coverImageUrl ? (
+                                    <img src={window.getImageUrl(b.coverImageUrl)} className="h-full w-full object-cover" alt={b.name} />
+                                  ) : (
+                                    (b.name || 'B').charAt(0)
+                                  )}
                                 </div>
                                 <div className="flex flex-col text-left">
                                   <div className="flex items-center gap-1.5 flex-wrap">
@@ -3232,8 +3240,12 @@ export default function AdminDashboard() {
                       {businesses.filter(b => b.status === 'Pending Verification' || b.status === 'Under Review').map(b => (
                         <div key={b._id} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col justify-between gap-5 hover:shadow-md transition-shadow">
                           <div className="flex gap-4">
-                            <div className="h-16 w-16 bg-slate-100 rounded-2xl overflow-hidden shrink-0 border border-slate-200">
-                              <img src={b.coverImageUrl} className="h-full w-full object-cover" alt={b.name} />
+                            <div className="h-16 w-16 bg-gradient-to-br from-[#001c41] to-slate-900 rounded-2xl overflow-hidden shrink-0 border border-slate-200/55 flex items-center justify-center p-1 text-center select-none text-white/50 font-black text-[9px] uppercase tracking-wider leading-tight">
+                              {b.coverImageUrl ? (
+                                <img src={window.getImageUrl(b.coverImageUrl)} className="h-full w-full object-cover" alt={b.name} />
+                              ) : (
+                                (b.name || 'B').slice(0, 3)
+                              )}
                             </div>
                             <div className="flex flex-col gap-1 text-left min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
@@ -4058,8 +4070,12 @@ export default function AdminDashboard() {
                                 return (
                                   <tr key={b._id} className="hover:bg-slate-50/50">
                                     <td className="p-4 flex items-center gap-3">
-                                      <div className="h-9 w-9 bg-slate-100 rounded-xl overflow-hidden shrink-0 border border-slate-200">
-                                        <img src={b.coverImageUrl} className="h-full w-full object-cover" alt={b.name} />
+                                      <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 border border-slate-200 flex items-center justify-center bg-gradient-to-br from-[#001c41] to-slate-800 text-white font-extrabold text-xs uppercase select-none">
+                                        {b.coverImageUrl ? (
+                                          <img src={window.getImageUrl(b.coverImageUrl)} className="h-full w-full object-cover" alt={b.name} />
+                                        ) : (
+                                          (b.name || 'B').charAt(0)
+                                        )}
                                       </div>
                                       <div className="flex flex-col text-left">
                                         <span className="font-extrabold text-slate-800 text-xs leading-none">{b.name}</span>

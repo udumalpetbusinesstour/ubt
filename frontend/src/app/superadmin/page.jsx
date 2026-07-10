@@ -3961,9 +3961,14 @@ const handlePartnerAction = async (partnerId, action) => {
                           }`}
                         >
                           <div 
-                            className="h-36 bg-slate-100 bg-cover bg-center shrink-0 relative"
-                            style={{ backgroundImage: `url('${b.coverImageUrl}')` }}
+                            className="h-36 bg-gradient-to-br from-[#001c41] to-slate-900 bg-cover bg-center shrink-0 relative flex items-center justify-center p-4 text-center select-none overflow-hidden"
+                            style={b.coverImageUrl ? { backgroundImage: `url('${window.getImageUrl(b.coverImageUrl)}')` } : undefined}
                           >
+                            {!b.coverImageUrl && (
+                              <span className="text-white/30 font-black text-sm uppercase tracking-wider leading-tight max-w-full truncate font-sans">
+                                {b.name}
+                              </span>
+                            )}
                             <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
                               <div className="flex gap-1">
 
@@ -4126,8 +4131,12 @@ const handlePartnerAction = async (partnerId, action) => {
                         }`}
                       >
                         <div className="flex gap-4">
-                          <div className="h-16 w-16 bg-slate-100 rounded-2xl overflow-hidden shrink-0 border border-slate-200/55">
-                            <img src={b.coverImageUrl} className="h-full w-full object-cover" alt={b.name} />
+                          <div className="h-16 w-16 bg-gradient-to-br from-[#001c41] to-slate-900 rounded-2xl overflow-hidden shrink-0 border border-slate-200/55 flex items-center justify-center p-1 text-center select-none text-white/50 font-black text-[9px] uppercase tracking-wider leading-tight">
+                            {b.coverImageUrl ? (
+                              <img src={window.getImageUrl(b.coverImageUrl)} className="h-full w-full object-cover" alt={b.name} />
+                            ) : (
+                              (b.name || 'B').slice(0, 3)
+                            )}
                           </div>
                           <div className="flex flex-col gap-1 text-left min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 flex-wrap">

@@ -10324,12 +10324,16 @@ function DashboardContent() {
                   <div className="flex flex-col gap-2 border-b border-slate-100 pb-4">
                     <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Business Logo</label>
                     <div className="flex items-center gap-4.5">
-                      <div className="h-16 w-16 rounded-2xl border-2 border-slate-200 overflow-hidden shrink-0 bg-slate-55 flex items-center justify-center relative group">
-                        <img 
-                          src={window.getImageUrl(editFields.logoUrl) || "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150&q=80"} 
-                          alt="Logo Preview" 
-                          className="h-full w-full object-cover"
-                        />
+                      <div className="h-16 w-16 rounded-2xl border-2 border-slate-200 overflow-hidden shrink-0 bg-gradient-to-tr from-emerald-500 to-teal-650 flex items-center justify-center relative group text-white font-black text-base uppercase select-none">
+                        {editFields.logoUrl ? (
+                          <img 
+                            src={window.getImageUrl(editFields.logoUrl)} 
+                            alt="Logo Preview" 
+                            className="h-full w-full object-cover absolute inset-0"
+                          />
+                        ) : (
+                          (editFields.name || 'B').charAt(0)
+                        )}
                         {logoUploading && (
                           <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center">
                             <RefreshCw className="h-5 w-5 text-white animate-spin" />
@@ -10357,12 +10361,18 @@ function DashboardContent() {
                   <div className="flex flex-col gap-2 border-b border-slate-100 pb-4">
                     <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Profile Cover Image</label>
                     <div className="flex flex-col gap-3">
-                      <div className="h-32 w-full rounded-2xl border border-slate-200 overflow-hidden bg-slate-55 relative flex items-center justify-center">
-                        <img 
-                          src={window.getImageUrl(editFields.coverImageUrl) || "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80"} 
-                          alt="Cover Preview" 
-                          className="w-full h-full object-cover"
-                        />
+                      <div className="h-32 w-full rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 relative flex items-center justify-center p-3 text-center text-slate-400 select-none bg-gradient-to-br from-[#001c41] to-slate-900">
+                        {editFields.coverImageUrl ? (
+                          <img 
+                            src={window.getImageUrl(editFields.coverImageUrl)} 
+                            alt="Cover Preview" 
+                            className="w-full h-full object-cover absolute inset-0"
+                          />
+                        ) : (
+                          <span className="font-extrabold text-[11px] uppercase tracking-wider leading-snug text-white/40">
+                            {editFields.name || 'Your Business Cover Preview'}
+                          </span>
+                        )}
                         {coverUploading && (
                           <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center">
                             <RefreshCw className="h-6 w-6 text-white animate-spin" />
