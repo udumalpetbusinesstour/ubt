@@ -2533,7 +2533,7 @@ export default function AdminDashboard() {
                            blogs.filter(b => b.status === 'Pending Approval' || b.status === 'Needs Revision').length +
                            events.filter(e => e.status === 'Pending Review' || e.status === 'Pending Verification').length +
                            appTestimonials.filter(t => t.status === 'Pending').length +
-                           pendingCategories.length +
+                           pendingCategories.filter(pc => pc.status !== 'Pending Verification' && pc.status !== 'Under Review').length +
                            partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length}
                         </span>
                       </div>

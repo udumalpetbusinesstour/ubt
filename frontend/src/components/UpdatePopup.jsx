@@ -10,7 +10,13 @@ export default function UpdatePopup() {
     path === '/register' || 
     path === '/signup' || 
     path === '/add-business' || 
-    path === '/choose-plan';
+    path === '/choose-plan' ||
+    path === '/reset-password' ||
+    path === '/verify-email' ||
+    path === '/partner-register' ||
+    path.startsWith('/dashboard') || 
+    path.startsWith('/admin') || 
+    path.startsWith('/superadmin');
 
   const [isOpen, setIsOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -36,7 +42,7 @@ export default function UpdatePopup() {
       return;
     }
 
-    // Do not show the popup on authentication and registration pages (login, register/signup, add-business, choose-plan)
+    // Do not show the popup on authentication and registration pages (login, register/signup, add-business, choose-plan, or dashboards)
     if (isAuthPage) {
       setIsOpen(false);
       return;
@@ -50,10 +56,10 @@ export default function UpdatePopup() {
     }
     const startTime = parseInt(sessionStart, 10);
 
-    // Retrieve or establish the next show timestamp (1st minute and 10th minute only)
+    // Retrieve or establish the next show timestamp (3rd minute initially)
     let nextShow = localStorage.getItem('ubt_popup_next_show');
     if (!nextShow) {
-      const firstShowTime = startTime + 60 * 1000; // 1st minute delay (60 seconds)
+      const firstShowTime = startTime + 3 * 60 * 1000; // 3rd minute delay (3 minutes / 180 seconds)
       localStorage.setItem('ubt_popup_next_show', firstShowTime.toString());
       nextShow = firstShowTime.toString();
     }
@@ -76,7 +82,7 @@ export default function UpdatePopup() {
         return;
       }
 
-      // If the scheduled time has arrived and the popup is closed, open it (unless on auth/registration page)
+      // If the scheduled time has arrived and the popup is closed, open it (unless on auth/registration page or dashboard)
       if (!isOpen && currentNextShow && Date.now() >= currentNextShow) {
         if (!isAuthPage) {
           setIsOpen(true);
@@ -101,17 +107,9 @@ export default function UpdatePopup() {
       return;
     }
 
-    const sessionStart = localStorage.getItem('ubt_session_start');
-    const startTime = sessionStart ? parseInt(sessionStart, 10) : Date.now();
-    const secondShowTime = startTime + 10 * 60 * 1000; // 10th minute (10 minutes)
-    
-    if (Date.now() < secondShowTime) {
-      // If we haven't reached the 10th minute yet, schedule the 2nd show for the 10th minute
-      localStorage.setItem('ubt_popup_next_show', secondShowTime.toString());
-    } else {
-      // Otherwise (both shows completed or missed), stop showing the popup
-      localStorage.setItem('ubt_popup_next_show', 'never');
-    }
+    // Schedule 2nd show to appear exactly 10 minutes after the first popup is dismissed
+    const secondShowTime = Date.now() + 10 * 60 * 1000; // 10 minutes delay from now
+    localStorage.setItem('ubt_popup_next_show', secondShowTime.toString());
   };
 
   useEffect(() => {
