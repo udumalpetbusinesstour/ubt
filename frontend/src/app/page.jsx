@@ -630,54 +630,64 @@ export default function Home() {
     }
   };
 
+  // Continuous smooth marquee scroll for Featured Businesses
   useEffect(() => {
-    const timer = setInterval(() => {
-      if (isHoveringFeatured.current) return;
+    if (!featuredBusinesses || featuredBusinesses.length <= 1) return;
+    let frameId;
+    
+    const step = () => {
       if (featuredScrollRef.current) {
         const container = featuredScrollRef.current;
-        const cards = container.children;
-        if (cards && cards.length > 0) {
-          const curIndex = getCurrentIndex(container);
-          const nextIndex = (curIndex + 1) % cards.length;
-          centerCard(container, nextIndex);
+        if (!isHoveringFeatured.current) {
+          container.scrollLeft += 0.7; // Constant slow marquee speed
         }
+        handleInfiniteScroll(container, featuredBusinesses.length);
       }
-    }, 6500); // Slowed down autoscroll interval (6.5s)
-    return () => clearInterval(timer);
-  }, []);
+      frameId = requestAnimationFrame(step);
+    };
+    
+    frameId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frameId);
+  }, [featuredBusinesses]);
 
+  // Continuous smooth marquee scroll for Sponsored Ads
   useEffect(() => {
-    if (sponsoredAds.length <= 1) return;
-    const timer = setInterval(() => {
-      if (isHoveringSponsored.current) return;
+    if (!sponsoredAds || sponsoredAds.length <= 1) return;
+    let frameId;
+    
+    const step = () => {
       if (sponsoredAdsScrollRef.current) {
         const container = sponsoredAdsScrollRef.current;
-        const cards = container.children;
-        if (cards && cards.length > 0) {
-          const curIndex = getCurrentIndex(container);
-          const nextIndex = (curIndex + 1) % cards.length;
-          centerCard(container, nextIndex);
+        if (!isHoveringSponsored.current) {
+          container.scrollLeft += 0.55; // Constant slow marquee speed
         }
+        handleInfiniteScroll(container, sponsoredAds.length);
       }
-    }, 12000); // Slowed down autoscroll interval (12s)
-    return () => clearInterval(timer);
+      frameId = requestAnimationFrame(step);
+    };
+    
+    frameId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frameId);
   }, [sponsoredAds]);
 
+  // Continuous smooth marquee scroll for Top Viewed Businesses
   useEffect(() => {
     if (!topViewedBusinesses || topViewedBusinesses.length <= 1) return;
-    const timer = setInterval(() => {
-      if (isHoveringTopViewed.current) return;
+    let frameId;
+    
+    const step = () => {
       if (topViewedScrollRef.current) {
         const container = topViewedScrollRef.current;
-        const cards = container.children;
-        if (cards && cards.length > 0) {
-          const curIndex = getCurrentIndex(container);
-          const nextIndex = (curIndex + 1) % cards.length;
-          centerCard(container, nextIndex);
+        if (!isHoveringTopViewed.current) {
+          container.scrollLeft += 0.65; // Constant slow marquee speed
         }
+        // Top Viewed is not tripled/cloned, but we still handle hover-pause correctly
       }
-    }, 8000); // Slowed down autoscroll interval (8s)
-    return () => clearInterval(timer);
+      frameId = requestAnimationFrame(step);
+    };
+    
+    frameId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frameId);
   }, [topViewedBusinesses]);
 
   // Testimonials state
@@ -1593,7 +1603,7 @@ export default function Home() {
               ref={featuredScrollRef}
               onMouseEnter={() => { isHoveringFeatured.current = true; }}
               onMouseLeave={() => { isHoveringFeatured.current = false; }}
-              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-[calc(50vw-140px)] sm:px-[calc(50vw-160px)] md:px-12 2xl:px-0"
+              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none w-full px-[calc(50vw-140px)] sm:px-[calc(50vw-160px)] md:px-12 2xl:px-0"
             >
               {(featuredBusinesses && featuredBusinesses.length > 1
                 ? [...featuredBusinesses, ...featuredBusinesses, ...featuredBusinesses]
@@ -1802,7 +1812,7 @@ export default function Home() {
               ref={sponsoredAdsScrollRef}
               onMouseEnter={() => { isHoveringSponsored.current = true; }}
               onMouseLeave={() => { isHoveringSponsored.current = false; }}
-              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-[calc(50vw-140px)] xs:px-[calc(50vw-160px)] sm:px-[calc(50vw-250px)] md:px-12 2xl:px-0"
+              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none w-full px-[calc(50vw-140px)] xs:px-[calc(50vw-160px)] sm:px-[calc(50vw-250px)] md:px-12 2xl:px-0"
             >
               {(sponsoredAds && sponsoredAds.length > 1
                 ? [...sponsoredAds, ...sponsoredAds, ...sponsoredAds]
@@ -1886,7 +1896,7 @@ export default function Home() {
                       ref={topViewedScrollRef}
                       onMouseEnter={() => { isHoveringTopViewed.current = true; }}
                       onMouseLeave={() => { isHoveringTopViewed.current = false; }}
-                      className="mx-auto flex overflow-x-auto gap-6 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-8 md:px-12 2xl:px-0"
+                      className="mx-auto flex overflow-x-auto gap-6 pb-4 scrollbar-none w-full px-8 md:px-12 2xl:px-0"
                     >
                         {topViewedBusinesses.map((biz) => {
                           const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
