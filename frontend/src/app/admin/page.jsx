@@ -2505,7 +2505,17 @@ export default function AdminDashboard() {
                         UBT Platform Administrator
                       </h2>
                     </div>
-                    <div className="self-start sm:self-center">
+                    <div className="self-start sm:self-center flex items-center gap-2.5">
+                      <button
+                        onClick={() => {
+                          setActiveTab('Businesses');
+                          setShowAddDirectoryModal(true);
+                        }}
+                        className="px-4 py-2.5 bg-[#027244] hover:bg-[#005934] text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-emerald-850/15"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>Add Directory Listing</span>
+                      </button>
                       <span className="border border-red-250 bg-red-50/50 text-red-650 font-black text-[10px] uppercase tracking-wider px-3.5 py-1.5 rounded-full select-none shadow-2xs">
                         Admin Mode Active
                       </span>
