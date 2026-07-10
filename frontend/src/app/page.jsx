@@ -354,8 +354,8 @@ export default function Home() {
       iconSize: [140, 32],
       iconAnchor: [70, 16]
     });
-    // Shift slightly right to 77.2510 to cover the OSM background text center perfectly
-    L.marker([10.5841, 77.2510], { icon: cityLabelIcon, zIndexOffset: -50 }).addTo(map);
+    // Shift slightly left to 77.2497 to cover the OSM background text center perfectly
+    L.marker([10.5841, 77.2497], { icon: cityLabelIcon, zIndexOffset: -50 }).addTo(map);
 
     const usedCoords = {};
     const pinsToUse = mapBiz.length > 0 ? mapBiz : defaultPins;
