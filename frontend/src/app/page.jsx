@@ -1273,7 +1273,10 @@ export default function Home() {
                     className="card-premium group rounded-2xl overflow-hidden flex flex-col cursor-pointer relative w-[280px] sm:w-[320px] shrink-0 snap-center sm:snap-start"
                     onClick={() => navigate(`/${biz.slug || biz._id}`)}
                   >
-                     <div className="w-full aspect-square overflow-hidden relative rounded-t-[15px] bg-slate-50 border-b border-slate-100">
+                     <div 
+                       onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
+                       className="w-full aspect-square overflow-hidden relative rounded-t-[15px] bg-slate-50 border-b border-slate-100 cursor-pointer"
+                     >
                        <img 
                          src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"} 
                          alt={biz.name}
@@ -1554,27 +1557,31 @@ export default function Home() {
                               className="w-[260px] sm:w-[285px] shrink-0 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 text-left snap-center sm:snap-start relative overflow-hidden"
                           >
                             {/* Logo/Image */}
-                            {biz.logoUrl ? (
-                              <div className="h-14 w-14 rounded-xl border border-slate-100 overflow-hidden bg-white shrink-0 flex items-center justify-center p-0.5">
-                                <img 
-                                  src={window.getImageUrl(biz.logoUrl)} 
-                                  alt={biz.name} 
-                                  className="h-full w-full object-contain" 
-                                  style={{
-                                    filter: !isSubscribed ? 'blur(3px) grayscale(30%)' : 'none'
-                                  }}
-                                />
-                              </div>
-                            ) : (
-                              <div 
-                                className="h-14 w-14 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-650 text-white font-extrabold text-lg flex items-center justify-center shrink-0 uppercase select-none"
-                                style={{
-                                  filter: !isSubscribed ? 'blur(3px) grayscale(30%)' : 'none'
-                                }}
-                              >
-                                {biz.name ? biz.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'B'}
-                              </div>
-                            )}
+                             {biz.logoUrl ? (
+                               <div 
+                                 onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
+                                 className="h-14 w-14 rounded-xl border border-slate-100 overflow-hidden bg-white shrink-0 flex items-center justify-center p-0.5 cursor-pointer"
+                               >
+                                 <img 
+                                   src={window.getImageUrl(biz.logoUrl)} 
+                                   alt={biz.name} 
+                                   className="h-full w-full object-contain" 
+                                   style={{
+                                     filter: !isSubscribed ? 'blur(3px) grayscale(30%)' : 'none'
+                                   }}
+                                 />
+                               </div>
+                             ) : (
+                               <div 
+                                 onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
+                                 className="h-14 w-14 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-650 text-white font-extrabold text-lg flex items-center justify-center shrink-0 uppercase select-none cursor-pointer"
+                                 style={{
+                                   filter: !isSubscribed ? 'blur(3px) grayscale(30%)' : 'none'
+                                 }}
+                               >
+                                 {biz.name ? biz.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'B'}
+                               </div>
+                             )}
                             
                             {/* Content details */}
                             <div className="flex flex-col justify-between overflow-hidden flex-grow">

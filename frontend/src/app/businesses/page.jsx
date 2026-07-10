@@ -2266,7 +2266,10 @@ function BusinessesList() {
                               onClick={() => navigate(`/businesses/${biz.slug || biz._id}`)}
                             >
                               {/* Cover image (Blurred if subscription is expired!) */}
-                              <div className="shrink-0 overflow-hidden relative w-full aspect-square md:w-48 md:h-48 rounded-t-[23px] md:rounded-l-[23px] md:rounded-tr-none border-b md:border-b-0 md:border-r border-slate-100 bg-slate-50">
+                              <div 
+                                onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz.slug || biz._id}`); }}
+                                className="shrink-0 overflow-hidden relative w-full aspect-square md:w-48 md:h-48 rounded-t-[23px] md:rounded-l-[23px] md:rounded-tr-none border-b md:border-b-0 md:border-r border-slate-100 bg-slate-50 cursor-pointer"
+                              >
                                 <img 
                                   src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"} 
                                   alt={biz.name}

@@ -341,7 +341,10 @@ export default function UserProfile() {
                   onClick={() => navigate(`/businesses/${biz.slug || biz._id}`)}
                   className="bg-white border border-slate-200/80 hover:border-slate-400 hover:shadow-md rounded-[24px] overflow-hidden flex flex-col cursor-pointer group"
                 >
-                   <div className="w-full aspect-square overflow-hidden relative rounded-t-[23px] bg-slate-50 border-b border-slate-100 shrink-0">
+                   <div 
+                     onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz.slug || biz._id}`); }}
+                     className="w-full aspect-square overflow-hidden relative rounded-t-[23px] bg-slate-50 border-b border-slate-100 shrink-0 cursor-pointer"
+                   >
                      <img 
                        src={(typeof window !== 'undefined' && window.getImageUrl ? window.getImageUrl(biz.logoUrl) : biz.logoUrl) || (typeof window !== 'undefined' && window.getImageUrl ? window.getImageUrl(biz.coverImageUrl) : biz.coverImageUrl) || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'} 
                        alt={biz.name || biz.businessName}
