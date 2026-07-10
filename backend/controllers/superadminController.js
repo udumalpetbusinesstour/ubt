@@ -16,6 +16,7 @@ const Lead = require('../models/Lead');
 const Category = require('../models/Category');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
 const { sendEmail } = require('../utils/emailHelper');
+const { submitToGoogleIndexing } = require('../services/indexingService');
 
 const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 
@@ -522,6 +523,19 @@ UBT Moderation Team`
     business.status = status;
     business.verificationStatus = verification;
     await business.save({ validateBeforeSave: false });
+
+    // Google Indexing API submission if the listing becomes Approved or Deindexed
+    if (business.status === 'Approved') {
+      const targetUrl = `https://udumalpet.business/businesses/${business.slug || business._id}`;
+      submitToGoogleIndexing(targetUrl, 'URL_UPDATED').catch(err => {
+        console.error('[Google Indexing API Async Error] Approval submission failed:', err);
+      });
+    } else if (['Suspended', 'Rejected', 'Hidden'].includes(business.status)) {
+      const targetUrl = `https://udumalpet.business/businesses/${business.slug || business._id}`;
+      submitToGoogleIndexing(targetUrl, 'URL_DELETED').catch(err => {
+        console.error('[Google Indexing API Async Error] Deletion submission failed:', err);
+      });
+    }
 
     if (status === 'Approved') {
       const { checkAndCompleteReferralByBusiness } = require('../utils/referralHelper');
