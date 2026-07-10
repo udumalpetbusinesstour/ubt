@@ -335,7 +335,7 @@ export default function Home() {
     }
 
     const map = L.map(mapRef.current, {
-      center: [10.582, 77.238],
+      center: [10.582, 77.228],
       zoom: 13,
       zoomControl: true,       // Zoom buttons visible everywhere
       dragging: true,          // Map can be dragged/moved on all screens (including mobile)
@@ -2124,14 +2124,143 @@ export default function Home() {
           </div>
 
           {/* Ask business owners, event managers, blog writers, or visitors to share their thoughts */}
-          <div className="flex flex-col items-center gap-3.5 mt-4">
-            <span className="text-sm text-slate-500 font-medium">Are you a Business Owner, Event Manager, Blog Writer, or Visitor using UBT?</span>
-            <button
-              onClick={handleShareThoughtsClick}
-              className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-8 rounded-xl transition-all shadow-md hover:shadow-none md:shadow-lg flex items-center gap-1.5 cursor-pointer"
-            >
-              Share Your Thoughts About UBT
-            </button>
+          <div id="testimonials-form-container" className="w-full max-w-xl mx-auto mt-6 transition-all duration-300">
+            {!isTestimonialModalOpen ? (
+              <div className="flex flex-col items-center gap-3.5 mt-4">
+                <span className="text-sm text-slate-500 font-medium text-center">Are you a Business Owner, Event Manager, Blog Writer, or Visitor using UBT?</span>
+                <button
+                  onClick={handleShareThoughtsClick}
+                  className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-8 rounded-xl transition-all shadow-md hover:shadow-none md:shadow-lg flex items-center gap-1.5 cursor-pointer"
+                >
+                  Share Your Thoughts About UBT
+                </button>
+              </div>
+            ) : (
+              <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-md flex flex-col gap-5 text-left animate-fadeIn">
+                <div className="flex justify-between items-start">
+                  <div className="flex flex-col gap-1 text-left">
+                    <span className="text-[10px] font-black uppercase text-[#027244] tracking-wider">Community Voice</span>
+                    <h3 className="text-xl font-extrabold text-slate-800 tracking-tight">Share Your Experience</h3>
+                    <p className="text-xs text-slate-400 font-semibold font-sans">Tell the community how Udumalpet Business Tour (UBT) has helped you!</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsTestimonialModalOpen(false);
+                      setSubmitSuccess('');
+                      setSubmitError('');
+                    }}
+                    className="text-slate-400 hover:text-slate-600 h-8 w-8 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center cursor-pointer transition-colors"
+                  >
+                    <X className="h-4.5 w-4.5" />
+                  </button>
+                </div>
+
+                {submitSuccess && (
+                  <div className="bg-emerald-50 border border-emerald-250 text-emerald-800 text-xs font-semibold p-4 rounded-2xl flex items-center gap-2 shadow-xs">
+                    <Check className="h-5 w-5 text-emerald-600 shrink-0" />
+                    <span>{submitSuccess}</span>
+                  </div>
+                )}
+
+                {submitError && (
+                  <div className="bg-red-50 border border-red-200 text-red-650 text-xs font-semibold p-4 rounded-2xl flex items-center gap-2 shadow-xs">
+                    <span className="h-2 w-2 rounded-full bg-red-650 shrink-0" />
+                    <span>{submitError}</span>
+                  </div>
+                )}
+
+                {!submitSuccess && (
+                  <form onSubmit={handleTestimonialSubmit} className="flex flex-col gap-4 text-left">
+                    {/* Name */}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-extrabold text-slate-700">Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Enter your name"
+                        value={newTestimonial.authorName}
+                        onChange={(e) => setNewTestimonial(prev => ({ ...prev, authorName: e.target.value }))}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4.5 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:bg-white transition-all shadow-xs"
+                      />
+                    </div>
+
+                    {/* Role dropdown */}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-extrabold text-slate-700">Your Role</label>
+                      <select
+                        value={newTestimonial.role}
+                        onChange={(e) => setNewTestimonial(prev => ({ ...prev, role: e.target.value }))}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#027244] focus:bg-white transition-all shadow-xs cursor-pointer"
+                      >
+                        <option value="Business Owner">Business Owner</option>
+                        <option value="Event Manager">Event Manager</option>
+                        <option value="Blog Writer">Blog Writer</option>
+                        <option value="Visitor / User">Visitor / User</option>
+                        <option value="Other">Other Community Member</option>
+                      </select>
+                    </div>
+
+                    {/* Rating selection (Stars) */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-extrabold text-slate-700">Rating</label>
+                      <div className="flex items-center gap-1.5 select-none">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setNewTestimonial(prev => ({ ...prev, rating: star }))}
+                            className="focus:outline-none"
+                          >
+                            <Star 
+                              className={`h-6.5 w-6.5 transition-colors cursor-pointer ${
+                                star <= newTestimonial.rating
+                                  ? 'text-amber-400 fill-current hover:scale-106'
+                                  : 'text-slate-200 hover:text-amber-300'
+                              }`} 
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Thoughts Textarea */}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-extrabold text-slate-700">Your Thoughts / Feedback</label>
+                      <textarea
+                        required
+                        rows={4}
+                        placeholder="Share how this platform has helped your business or improved your experience..."
+                        value={newTestimonial.text}
+                        onChange={(e) => setNewTestimonial(prev => ({ ...prev, text: e.target.value }))}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4.5 py-3 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:bg-white transition-all shadow-xs resize-none leading-relaxed"
+                      />
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-3 mt-2">
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-8 rounded-xl transition-all shadow-md shadow-emerald-900/10 cursor-pointer disabled:opacity-50"
+                      >
+                        {submitting ? 'Submitting...' : 'Submit Review'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsTestimonialModalOpen(false);
+                          setSubmitSuccess('');
+                          setSubmitError('');
+                        }}
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs py-3 px-6 rounded-xl transition-all cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -2247,133 +2376,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials Submission Modal */}
-      {isTestimonialModalOpen && (
-        <div 
-          onClick={() => {
-            setIsTestimonialModalOpen(false);
-            setSubmitSuccess('');
-            setSubmitError('');
-          }}
-          className="fixed inset-0 bg-[#001c41]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-opacity animate-fadeIn text-left"
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl relative border border-slate-100 flex flex-col gap-5 animate-scaleUp"
-          >
-            
-            {/* Close Button */}
-            <button
-              onClick={() => {
-                setIsTestimonialModalOpen(false);
-                setSubmitSuccess('');
-                setSubmitError('');
-              }}
-              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 h-8 w-8 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center cursor-pointer transition-colors"
-            >
-              <X className="h-4.5 w-4.5" />
-            </button>
-
-            <div className="flex flex-col gap-1 text-left">
-              <span className="text-[10px] font-black uppercase text-[#027244] tracking-wider">Community Voice</span>
-              <h3 className="text-xl font-extrabold text-slate-800 tracking-tight">Share Your Experience</h3>
-              <p className="text-xs text-slate-400 font-semibold font-sans">Tell the community how Udumalpet Business Tour (UBT) has helped you!</p>
-            </div>
-
-            {submitSuccess && (
-              <div className="bg-emerald-50 border border-emerald-250 text-emerald-800 text-xs font-semibold p-4 rounded-2xl flex items-center gap-2 shadow-xs">
-                <Check className="h-5 w-5 text-emerald-600 shrink-0" />
-                <span>{submitSuccess}</span>
-              </div>
-            )}
-
-            {submitError && (
-              <div className="bg-red-50 border border-red-200 text-red-650 text-xs font-semibold p-4 rounded-2xl flex items-center gap-2 shadow-xs">
-                <span className="h-2 w-2 rounded-full bg-red-650 shrink-0" />
-                <span>{submitError}</span>
-              </div>
-            )}
-
-            {!submitSuccess && (
-              <form onSubmit={handleTestimonialSubmit} className="flex flex-col gap-4 text-left">
-                {/* Name */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-extrabold text-slate-700">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Enter your name"
-                    value={newTestimonial.authorName}
-                    onChange={(e) => setNewTestimonial(prev => ({ ...prev, authorName: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4.5 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:bg-white transition-all shadow-xs"
-                  />
-                </div>
-
-                {/* Role dropdown */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-extrabold text-slate-700">Your Role</label>
-                  <select
-                    value={newTestimonial.role}
-                    onChange={(e) => setNewTestimonial(prev => ({ ...prev, role: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#027244] focus:bg-white transition-all shadow-xs cursor-pointer"
-                  >
-                    <option value="Business Owner">Business Owner</option>
-                    <option value="Event Manager">Event Manager</option>
-                    <option value="Blog Writer">Blog Writer</option>
-                    <option value="Visitor / User">Visitor / User</option>
-                    <option value="Other">Other Community Member</option>
-                  </select>
-                </div>
-
-                {/* Rating selection (Stars) */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-extrabold text-slate-700">Rating</label>
-                  <div className="flex items-center gap-1.5 select-none">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setNewTestimonial(prev => ({ ...prev, rating: star }))}
-                        className="focus:outline-none"
-                      >
-                        <Star 
-                          className={`h-6.5 w-6.5 transition-colors cursor-pointer ${
-                            star <= newTestimonial.rating
-                              ? 'text-amber-400 fill-current hover:scale-106'
-                              : 'text-slate-200 hover:text-amber-300'
-                          }`} 
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Thoughts Textarea */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-extrabold text-slate-700">Your Thoughts / Feedback</label>
-                  <textarea
-                    required
-                    rows={4}
-                    placeholder="Share how this platform has helped your business or improved your experience..."
-                    value={newTestimonial.text}
-                    onChange={(e) => setNewTestimonial(prev => ({ ...prev, text: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4.5 py-3 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] focus:bg-white transition-all shadow-xs resize-none leading-relaxed"
-                  />
-                </div>
-
-                {/* Submit button */}
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-8 rounded-xl transition-all shadow-md shadow-emerald-900/10 cursor-pointer disabled:opacity-50 mt-2"
-                >
-                  {submitting ? 'Submitting Review...' : 'Submit Review'}
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Testimonials Submission Modal inline refactored */}
 
       {/* Google Review iframe Modal */}
       {isGoogleReviewModalOpen && (
