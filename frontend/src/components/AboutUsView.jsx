@@ -333,30 +333,30 @@ export default function AboutUsView() {
           {/* Card: For the Community */}
           <div className="bg-white border border-slate-200 rounded-3xl p-6.5 shadow-xs flex flex-col justify-between">
             <div className="flex flex-col gap-4.5">
-              <div className="px-3.5 py-1.5 rounded-full bg-slate-50 text-slate-700 text-[10px] font-black uppercase tracking-wider self-start">
+              <div className="px-3.5 py-1.5 rounded-full bg-emerald-50 text-[#027244] text-[10px] font-black uppercase tracking-wider self-start">
                 For the Community
               </div>
               <h3 className="text-base font-extrabold text-[#001c41] leading-tight">Supporting the Growth of Udumalpet</h3>
               <ul className="flex flex-col gap-3 text-xs text-slate-500 font-semibold leading-normal">
                 <li className="flex items-start gap-2">
-                  <span className="text-slate-600 shrink-0 font-bold">✓</span>
+                  <span className="text-[#027244] shrink-0 font-bold">✓</span>
                   <span>Help every business become digitally visible.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-slate-600 shrink-0 font-bold">✓</span>
+                  <span className="text-[#027244] shrink-0 font-bold">✓</span>
                   <span>Encourage people to support businesses in Udumalpet.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-slate-600 shrink-0 font-bold">✓</span>
+                  <span className="text-[#027244] shrink-0 font-bold">✓</span>
                   <span>Build stronger connections between businesses and customers.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-slate-600 shrink-0 font-bold">✓</span>
+                  <span className="text-[#027244] shrink-0 font-bold">✓</span>
                   <span>Contribute to the growth of the town's business community.</span>
                 </li>
               </ul>
             </div>
-            <Link to="/events" className="flex items-center justify-between text-xs font-black text-slate-700 hover:text-slate-900 transition-colors mt-6 pt-4 border-t border-slate-100">
+            <Link to="/events" className="flex items-center justify-between text-xs font-black text-[#027244] hover:text-[#005934] transition-colors mt-6 pt-4 border-t border-slate-100">
               Explore Events <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
