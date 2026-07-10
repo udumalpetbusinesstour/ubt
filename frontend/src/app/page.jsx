@@ -502,6 +502,101 @@ export default function Home() {
   const stepsRegisterScrollRef = useRef(null);
   const sponsoredAdsScrollRef = useRef(null);
 
+  const handleInfiniteScroll = (container, originalLength) => {
+    if (!container || originalLength <= 1) return;
+    const cards = container.children;
+    if (!cards || cards.length !== originalLength * 3) return;
+
+    const singleSetWidth = cards[originalLength].offsetLeft - cards[0].offsetLeft;
+    if (singleSetWidth <= 0) return;
+
+    const scrollLeft = container.scrollLeft;
+
+    if (scrollLeft < singleSetWidth - 10) {
+      container.scrollLeft = scrollLeft + singleSetWidth;
+    } else if (scrollLeft >= singleSetWidth * 2 - 10) {
+      container.scrollLeft = scrollLeft - singleSetWidth;
+    }
+  };
+
+  // Center Featured Businesses middle copy on mount/load
+  useEffect(() => {
+    if (featuredScrollRef.current && featuredBusinesses && featuredBusinesses.length > 1) {
+      const container = featuredScrollRef.current;
+      const cards = container.children;
+      if (cards && cards.length === featuredBusinesses.length * 3) {
+        const singleSetWidth = cards[featuredBusinesses.length].offsetLeft - cards[0].offsetLeft;
+        container.scrollLeft = singleSetWidth;
+      }
+    }
+  }, [featuredBusinesses]);
+
+  // Center Sponsored Ads middle copy on mount/load
+  useEffect(() => {
+    if (sponsoredAdsScrollRef.current && sponsoredAds && sponsoredAds.length > 1) {
+      const container = sponsoredAdsScrollRef.current;
+      const cards = container.children;
+      if (cards && cards.length === sponsoredAds.length * 3) {
+        const singleSetWidth = cards[sponsoredAds.length].offsetLeft - cards[0].offsetLeft;
+        container.scrollLeft = singleSetWidth;
+      }
+    }
+  }, [sponsoredAds]);
+
+  // Infinite scroll listeners for Featured Businesses
+  useEffect(() => {
+    const handleScrollEndFeatured = () => {
+      if (featuredScrollRef.current && featuredBusinesses && featuredBusinesses.length > 1) {
+        handleInfiniteScroll(featuredScrollRef.current, featuredBusinesses.length);
+      }
+    };
+    
+    const container = featuredScrollRef.current;
+    if (container) {
+      container.addEventListener('scrollend', handleScrollEndFeatured);
+      
+      let scrollTimeout;
+      const handleScrollFallback = () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(handleScrollEndFeatured, 150);
+      };
+      container.addEventListener('scroll', handleScrollFallback);
+      
+      return () => {
+        container.removeEventListener('scrollend', handleScrollEndFeatured);
+        container.removeEventListener('scroll', handleScrollFallback);
+        clearTimeout(scrollTimeout);
+      };
+    }
+  }, [featuredBusinesses]);
+
+  // Infinite scroll listeners for Sponsored Ads
+  useEffect(() => {
+    const handleScrollEndSponsored = () => {
+      if (sponsoredAdsScrollRef.current && sponsoredAds && sponsoredAds.length > 1) {
+        handleInfiniteScroll(sponsoredAdsScrollRef.current, sponsoredAds.length);
+      }
+    };
+    
+    const container = sponsoredAdsScrollRef.current;
+    if (container) {
+      container.addEventListener('scrollend', handleScrollEndSponsored);
+      
+      let scrollTimeout;
+      const handleScrollFallback = () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(handleScrollEndSponsored, 150);
+      };
+      container.addEventListener('scroll', handleScrollFallback);
+      
+      return () => {
+        container.removeEventListener('scrollend', handleScrollEndSponsored);
+        container.removeEventListener('scroll', handleScrollFallback);
+        clearTimeout(scrollTimeout);
+      };
+    }
+  }, [sponsoredAds]);
+
   const getCurrentIndex = (container) => {
     const cards = container.children;
     if (!cards || cards.length === 0) return 0;
@@ -595,6 +690,18 @@ export default function Home() {
   const [submitSuccess, setSubmitSuccess] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Scroll lock for open modals
+  useEffect(() => {
+    if (isTestimonialModalOpen || isGoogleReviewModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isTestimonialModalOpen, isGoogleReviewModalOpen]);
 
   const [categoriesList, setCategoriesList] = useState([
     { 
@@ -963,7 +1070,15 @@ export default function Home() {
           rating: 5,
         });
         setIsTestimonialModalOpen(true);
-        navigate('/', { replace: true });
+        
+        // Scroll to the testimonials section instantly so the user sees it at that level
+        setTimeout(() => {
+          const testimonialsSection = document.getElementById('testimonials-section');
+          if (testimonialsSection) {
+            testimonialsSection.scrollIntoView({ behavior: 'auto', block: 'center' });
+          }
+        }, 100);
+        window.history.replaceState({}, '', '/');
       }
     }
   }, [navigate]);
@@ -1471,11 +1586,14 @@ export default function Home() {
               ref={featuredScrollRef}
               className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-[calc(50vw-140px)] sm:px-[calc(50vw-160px)] md:px-12 2xl:px-0"
             >
-              {featuredBusinesses.map((biz) => {
+              {(featuredBusinesses && featuredBusinesses.length > 1
+                ? [...featuredBusinesses, ...featuredBusinesses, ...featuredBusinesses]
+                : featuredBusinesses || []
+              ).map((biz, index) => {
                 const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
                 return (
                   <div 
-                    key={biz._id} 
+                    key={`${biz._id}-${index}`} 
                     className="card-premium group rounded-2xl overflow-hidden flex flex-col cursor-pointer relative w-[280px] sm:w-[320px] shrink-0 snap-center"
                     onClick={() => navigate(`/${biz.slug || biz._id}`)}
                   >
@@ -1675,7 +1793,10 @@ export default function Home() {
               ref={sponsoredAdsScrollRef}
               className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-[calc(50vw-140px)] xs:px-[calc(50vw-160px)] sm:px-[calc(50vw-250px)] md:px-12 2xl:px-0"
             >
-              {sponsoredAds.map((ad, idx) => (
+              {(sponsoredAds && sponsoredAds.length > 1
+                ? [...sponsoredAds, ...sponsoredAds, ...sponsoredAds]
+                : sponsoredAds || []
+              ).map((ad, idx) => (
                 <div 
                   key={idx}
                   onClick={() => navigate(`/${ad.businessSlug || ad.businessId}`)}
@@ -1889,7 +2010,7 @@ export default function Home() {
 
 
       {/* 8. What People Say Section */}
-      <section className="w-full bg-slate-50/50 py-8 md:py-16 border-t border-slate-200/50 relative">
+      <section id="testimonials-section" className="w-full bg-slate-50/50 py-8 md:py-16 border-t border-slate-200/50 relative">
         <div className="max-w-[1600px] mx-auto px-4 md:px-8 flex flex-col gap-6 md:gap-10 relative w-full">
           
           <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
