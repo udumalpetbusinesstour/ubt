@@ -5895,16 +5895,18 @@ function DashboardContent() {
                 )}
 
                 {/* Premium Header Banner (Cover Image) */}
-                <section className="w-full relative bg-slate-900 text-white py-12 px-6 rounded-3xl overflow-hidden border border-slate-800/20">
+                <section className="w-full relative bg-[#001c41] text-white py-12 px-6 rounded-3xl overflow-hidden border border-slate-800/20">
                   {/* Background Image vertical offset positioning */}
-                  <div 
-                    className="absolute inset-0 bg-cover" 
-                    style={{ 
-                      backgroundImage: `url('${mainImage}')`,
-                      backgroundPosition: `center ${business.coverImageOffset ?? 50}%`,
-                      opacity: 0.85
-                    }} 
-                  />
+                  {business.coverImageUrl && (
+                    <div 
+                      className="absolute inset-0 bg-cover" 
+                      style={{ 
+                        backgroundImage: `url('${window.getImageUrl(business.coverImageUrl)}')`,
+                        backgroundPosition: `center ${business.coverImageOffset ?? 50}%`,
+                        opacity: 0.85
+                      }} 
+                    />
+                  )}
                   {/* Sleek dark gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/45 to-slate-950/15" />
                   

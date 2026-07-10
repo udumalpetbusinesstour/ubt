@@ -6670,8 +6670,12 @@ export default function AdminDashboard() {
             <div className="p-4 sm:p-6 flex-grow overflow-y-auto flex flex-col gap-6">
               
               {/* Cover Image */}
-              <div className="h-44 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-2xs relative bg-slate-50 shrink-0">
-                <img src={selectedBiz.coverImageUrl} className="w-full h-full object-cover" alt={selectedBiz.name} />
+              <div className="h-44 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-2xs relative bg-slate-50 shrink-0 flex items-center justify-center">
+                {selectedBiz.coverImageUrl ? (
+                  <img src={window.getImageUrl(selectedBiz.coverImageUrl)} className="w-full h-full object-cover" alt={selectedBiz.name} />
+                ) : (
+                  <span className="text-slate-400 font-extrabold text-[10px] uppercase tracking-wider select-none">No Cover Photo</span>
+                )}
               </div>
 
               {/* View Full Profile Direct Link */}
@@ -6690,7 +6694,7 @@ export default function AdminDashboard() {
                   <div className="flex flex-col gap-0.5">
                     <span className="font-extrabold text-amber-800">Registration Incomplete</span>
                     <p className="text-[11px] text-amber-700 font-medium leading-relaxed mt-0.5">
-                      This business listing is still in draft mode. The merchant has confirmed payment but has not yet completed all steps of registration.
+                      This business listing is still in draft mode. The merchant {(selectedBiz.isPaid || selectedBiz.subscriptionStatus === 'active' || selectedBiz.isPremium || subscriptions.some(s => s.businessId === selectedBiz._id && (s.paymentStatus === 'Paid' || s.status === 'active'))) ? 'has confirmed payment' : 'has NOT confirmed payment'} but has not yet completed all steps of registration.
                     </p>
                   </div>
                 </div>

@@ -8051,21 +8051,27 @@ const handlePartnerAction = async (partnerId, action) => {
               
               {/* Cover Image & Gallery Grid */}
               <div className="flex flex-col gap-2">
-                <div className="h-44 bg-slate-100 rounded-3xl overflow-hidden shrink-0 border border-slate-200/50 relative">
-                  <img src={selectedBiz.coverImageUrl} className="h-full w-full object-cover" alt={selectedBiz.name} />
+                <div className="h-44 bg-slate-100 rounded-3xl overflow-hidden shrink-0 border border-slate-200/50 relative flex items-center justify-center">
+                  {selectedBiz.coverImageUrl ? (
+                    <img src={window.getImageUrl(selectedBiz.coverImageUrl)} className="h-full w-full object-cover" alt={selectedBiz.name} />
+                  ) : (
+                    <span className="text-slate-400 font-extrabold text-[10px] uppercase tracking-wider select-none">No Cover Photo</span>
+                  )}
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=150&q=80",
-                    "https://images.unsplash.com/photo-1542838132-92c53300491e?w=150&q=80",
-                    "https://images.unsplash.com/photo-1607344645866-009c320c5ab8?w=150&q=80"
-                  ].map((url, i) => (
-                    <div key={i} className="h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/20">
-                      <img src={url} className="h-full w-full object-cover hover:scale-105 transition-transform cursor-pointer" alt="Preview" />
+                {selectedBiz.galleryUrls && selectedBiz.galleryUrls.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-3 gap-2">
+                      {selectedBiz.galleryUrls.slice(0, 3).map((url, i) => (
+                        <div key={i} className="h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/20">
+                          <img src={window.getImageUrl(url)} className="h-full w-full object-cover hover:scale-105 transition-transform cursor-pointer" alt="Preview" />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider text-right">Uploaded Shop Photos (3)</span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider text-right">Uploaded Shop Photos ({selectedBiz.galleryUrls.length})</span>
+                  </>
+                ) : (
+                  <span className="text-[9px] text-slate-455 font-bold uppercase tracking-wider text-right select-none">No Shop Photos Uploaded</span>
+                )}
               </div>
 
               {isBizDraft(selectedBiz) && (
@@ -8076,7 +8082,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   <div className="flex flex-col gap-0.5">
                     <span className="font-extrabold text-xs">Registration Incomplete (Draft Listing)</span>
                     <p className="text-[10px] text-slate-400 font-bold leading-relaxed mt-0.5">
-                      This business has confirmed payment but has not finalized the remaining setup steps. Do not approve until details are complete.
+                      This business {(selectedBiz.isPaid || selectedBiz.subscriptionStatus === 'active' || selectedBiz.isPremium || subscriptions.some(s => s.businessId === selectedBiz._id && (s.paymentStatus === 'Paid' || s.status === 'active'))) ? 'has confirmed payment' : 'has NOT confirmed payment'} but has not finalized the remaining setup steps. Do not approve until details are complete.
                     </p>
                   </div>
                 </div>

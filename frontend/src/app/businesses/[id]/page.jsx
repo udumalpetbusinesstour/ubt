@@ -1578,18 +1578,20 @@ Please confirm availability and delivery time.`;
       )}
 
       {/* Premium Header Banner (Matching Image 5) */}
-      <section className="w-full relative bg-slate-900 text-white py-14 px-4 border-b border-slate-800/60 overflow-hidden">
+      <section className="w-full relative bg-[#001c41] text-white py-14 px-4 border-b border-slate-800/60 overflow-hidden">
         {/* Background Image opacity filter */}
-        <div 
-          className="absolute inset-0 bg-cover cursor-pointer transition-opacity duration-300 hover:opacity-95" 
-          onClick={(e) => openLightbox('cover', e)}
-          title="Click to view full cover photo"
-          style={{ 
-            backgroundImage: `url('${mainImage}')`,
-            backgroundPosition: `center ${business.coverImageOffset ?? 50}%`,
-            opacity: 0.85
-          }} 
-        />
+        {business.coverImageUrl && (
+          <div 
+            className="absolute inset-0 bg-cover cursor-pointer transition-opacity duration-300 hover:opacity-95" 
+            onClick={(e) => openLightbox('cover', e)}
+            title="Click to view full cover photo"
+            style={{ 
+              backgroundImage: `url('${window.getImageUrl(business.coverImageUrl)}')`,
+              backgroundPosition: `center ${business.coverImageOffset ?? 50}%`,
+              opacity: 0.85
+            }} 
+          />
+        )}
         {/* Sleek dark shadow gradient bottom-up - Adjusted opacity to allow cover to show */}
         <div className="absolute inset-0 bg-black/15 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
         
