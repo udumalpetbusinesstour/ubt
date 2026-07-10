@@ -335,7 +335,7 @@ export default function Home() {
     }
 
     const map = L.map(mapRef.current, {
-      center: [10.582, 77.228],
+      center: [10.582, 77.218],
       zoom: 13,
       zoomControl: true,       // Zoom buttons visible everywhere
       dragging: true,          // Map can be dragged/moved on all screens (including mobile)
