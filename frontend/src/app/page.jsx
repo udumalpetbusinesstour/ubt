@@ -329,11 +329,11 @@ export default function Home() {
     const map = L.map(mapRef.current, {
       center: [10.5875, 77.248],
       zoom: 14,
-      zoomControl: !isMobile,  // Show controls on desktop, hide on mobile
-      dragging: !isMobile,     // Dragging allowed on desktop, disabled on mobile to prevent scroll lock
-      scrollWheelZoom: false,  // Disable scroll zoom to prevent scroll hijack
+      zoomControl: true,       // Zoom buttons visible everywhere
+      dragging: true,          // Map can be dragged/moved on all screens (including mobile)
+      scrollWheelZoom: false,  // Disable scroll wheel zoom to avoid desktop scroll lock
       doubleClickZoom: true,
-      touchZoom: false
+      touchZoom: true          // Touch zoom pinch gestures enabled on mobile
     });
 
     // CartoDB Voyager light styled tiles blend perfectly with home page light colors
@@ -1189,8 +1189,11 @@ export default function Home() {
         {/* Ambient top right glow */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(2,114,68,0.06),transparent_50%)] z-10 pointer-events-none" />
         
-        {/* Left-side blur and light theme overlay for wordings readability (desktop: left 60% blurred, mobile: full screen) */}
-        <div className="absolute inset-0 md:right-[40%] bg-gradient-to-r from-[#F8FAFC] via-[#F8FAFC]/95 to-transparent backdrop-blur-xs z-10 pointer-events-none" />
+        {/* Progressive/Gradual blur overlay towards the left */}
+        <div className="absolute inset-0 z-10 pointer-events-none gradual-blur-overlay" />
+        
+        {/* Left-side light theme overlay for wordings readability (desktop: left 60% with smooth gradient transition, mobile: full screen) */}
+        <div className="absolute inset-0 md:right-[40%] bg-gradient-to-r from-[#F8FAFC]/95 via-[#F8FAFC]/75 to-transparent z-10 pointer-events-none" />
 
         {/* Hero main body */}
         <div className="relative max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center z-20">
