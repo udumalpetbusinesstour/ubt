@@ -710,7 +710,7 @@ export default function Home() {
 
   // Scroll lock for open modals
   useEffect(() => {
-    if (isTestimonialModalOpen || isGoogleReviewModalOpen) {
+    if (isGoogleReviewModalOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -718,7 +718,7 @@ export default function Home() {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isTestimonialModalOpen, isGoogleReviewModalOpen]);
+  }, [isGoogleReviewModalOpen]);
 
   const [categoriesList, setCategoriesList] = useState([
     { 
