@@ -356,7 +356,7 @@ export default function Home() {
     });
     L.marker([10.5842, 77.2485], { icon: cityLabelIcon, zIndexOffset: -50 }).addTo(map);
 
-    const pinsToUse = mapBiz.length >= 4 ? mapBiz : defaultPins;
+    const pinsToUse = mapBiz.length > 0 ? mapBiz : defaultPins;
     pinsToUse.forEach(pin => {
       const lat = parseFloat(pin.latitude || pin.lat);
       const lng = parseFloat(pin.longitude || pin.lng);
@@ -1212,20 +1212,20 @@ export default function Home() {
         <div className="relative max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center z-20 pointer-events-none">
           
           {/* Left panel: text & search */}
-          <div className="lg:col-span-8 flex flex-col items-start text-left pointer-events-auto">
+          <div className="lg:col-span-8 flex flex-col items-start text-left pointer-events-none">
             
-            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#001c41] tracking-tight leading-tight max-w-2xl font-sans">
+            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#001c41] tracking-tight leading-tight max-w-2xl font-sans pointer-events-auto">
               Discover Trusted <br className="hidden sm:inline" />
               Businesses in <br className="hidden sm:inline" />
               <span className="text-[#027244]">Udumalpet</span>
             </h1>
             
-            <p className="mt-3 text-sm sm:text-[15px] md:text-[17px] text-slate-500 font-medium max-w-xl leading-relaxed">
+            <p className="mt-3 text-sm sm:text-[15px] md:text-[17px] text-slate-500 font-medium max-w-xl leading-relaxed pointer-events-auto">
               A trusted local platform to discover, connect and grow with verified businesses in and around Udumalpet.
             </p>
 
             {/* Rich horizontal search bar */}
-            <form onSubmit={handleSearchSubmit} className="mt-4 w-full bg-white border border-slate-200/80 rounded-2xl shadow-xl p-2 flex flex-col md:flex-row gap-2 max-w-3xl">
+            <form onSubmit={handleSearchSubmit} className="mt-4 w-full bg-white border border-slate-200/80 rounded-2xl shadow-xl p-2 flex flex-col md:flex-row gap-2 max-w-3xl pointer-events-auto">
               <div className="flex-1 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
                 <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
                 <input
@@ -1269,7 +1269,7 @@ export default function Home() {
             </form>
 
             {/* Popular searches chips */}
-            <div className="mt-4 flex flex-wrap items-center gap-3.5 text-xs font-bold">
+            <div className="mt-4 flex flex-wrap items-center gap-3.5 text-xs font-bold pointer-events-auto">
               <span className="text-[#001c41]">Popular Searches:</span>
               {['Hotels', 'Shops', 'Services', 'Hospitals', 'Schools'].map((chip) => (
                 <Link 
@@ -1283,7 +1283,7 @@ export default function Home() {
             </div>
 
             {/* Onboarding CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 mt-8 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row gap-4 mt-8 w-full sm:w-auto pointer-events-auto">
               <Link 
                 to="/register?flow=early_access"
                 id="join-early-access-btn"
@@ -1306,7 +1306,7 @@ export default function Home() {
             <button 
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent('open-referral-modal'))}
-              className="mt-6 bg-amber-400 hover:bg-amber-500 text-slate-900 text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-full shadow-md animate-shake border border-amber-500/20 flex items-center gap-2 cursor-pointer transition-all"
+              className="mt-6 bg-amber-400 hover:bg-amber-500 text-slate-900 text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-full shadow-md animate-shake border border-amber-500/20 flex items-center gap-2 cursor-pointer transition-all pointer-events-auto"
             >
               <Gift className="h-4 w-4 text-[#027244] shrink-0 animate-bounce" />
               Join as Partner to Earn Rewards!
