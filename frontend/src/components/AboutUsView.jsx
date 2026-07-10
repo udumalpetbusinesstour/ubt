@@ -360,22 +360,21 @@ export default function AboutUsView() {
               Explore Events <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
-
         </div>
       </section>
 
-      {/* 5. THE BUSINESS TOUR CONCEPT SECTION */}
+      {/* 5. WHY UDUMALPET BUSINESS TOUR SECTION */}
       <section className="w-full bg-slate-50 py-20 border-y border-slate-200/80 text-left">
         <div className="max-w-[1440px] mx-auto px-4 md:px-8">
           <div className="flex flex-col items-start gap-4 mb-16">
             <div className="inline-flex items-center gap-2 text-xs font-extrabold text-[#027244] uppercase tracking-widest bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full">
-              <Sparkles className="h-3.5 w-3.5" /> Guided Ecosystem
+              <Sparkles className="h-3.5 w-3.5" /> WHY UDUMALPET BUSINESS TOUR
             </div>
             <h2 className="text-2xl md:text-3xl font-black text-[#001c41] tracking-tight leading-tight">
-              Understanding the "Business Tour" Concept
+              Everything You Need in One Place
             </h2>
             <p className="text-slate-550 text-xs md:text-sm font-semibold max-w-2xl">
-              "Business Tour" isn\'t just a name—it is a digital journey mapping the real-world commercial layers of Udumalpet.
+              Bringing simple, verified, and direct discovery options to every resident and merchant.
             </p>
           </div>
 
@@ -384,36 +383,36 @@ export default function AboutUsView() {
             {/* Step 1 */}
             <div className="bg-white border border-slate-200/80 p-8 rounded-3xl flex flex-col gap-4 relative shadow-2xs">
               <span className="absolute right-8 top-6 font-black text-5xl text-slate-100 select-none">01</span>
-              <div className="h-10 w-10 rounded-xl bg-emerald-50 text-[#027244] flex items-center justify-center border border-emerald-100/50">
+              <div className="h-10 w-10 rounded-xl bg-emerald-50 text-[#027244] flex items-center justify-center border border-emerald-100/55">
                 <Store className="h-4.5 w-4.5" />
               </div>
-              <h4 className="font-extrabold text-[#001c41] text-sm md:text-base mt-2">Agro-Industrial Grid</h4>
+              <h4 className="font-extrabold text-[#001c41] text-sm md:text-base mt-2">Discover Businesses</h4>
               <p className="text-slate-500 text-xs leading-relaxed font-semibold">
-                Explore the backbone of Udumalpet. Discover coir mills, coconut farms, wind farms, engineering workshops, and textile manufacturing centers mapping our industrial strength.
+                Find verified shops, restaurants, service providers, and professionals across Udumalpet. Connect directly with businesses that match your needs.
               </p>
             </div>
 
             {/* Step 2 */}
             <div className="bg-white border border-slate-200/80 p-8 rounded-3xl flex flex-col gap-4 relative shadow-2xs">
               <span className="absolute right-8 top-6 font-black text-5xl text-slate-100 select-none">02</span>
-              <div className="h-10 w-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center border border-teal-100/50">
-                <Calendar className="h-4.5 w-4.5" />
+              <div className="h-10 w-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center border border-teal-100/55">
+                <Compass className="h-4.5 w-4.5" />
               </div>
-              <h4 className="font-extrabold text-[#001c41] text-sm md:text-base mt-2">Retail & Dining Tour</h4>
+              <h4 className="font-extrabold text-[#001c41] text-sm md:text-base mt-2">Explore Services</h4>
               <p className="text-slate-500 text-xs leading-relaxed font-semibold">
-                Navigate the consumer side. Find apparel outlets, grocery markets, jewelers, hotels, pure-veg restaurants, electrical dealers, and medical services mapping our bustling town streets.
+                Browse businesses by category to quickly find the products and services you are looking for. Save time with simple and organized search options.
               </p>
             </div>
 
             {/* Step 3 */}
             <div className="bg-white border border-slate-200/80 p-8 rounded-3xl flex flex-col gap-4 relative shadow-2xs">
               <span className="absolute right-8 top-6 font-black text-5xl text-slate-100 select-none">03</span>
-              <div className="h-10 w-10 rounded-xl bg-lime-50 text-lime-650 flex items-center justify-center border border-lime-100/50">
+              <div className="h-10 w-10 rounded-xl bg-lime-50 text-lime-650 flex items-center justify-center border border-lime-100/55">
                 <Activity className="h-4.5 w-4.5" />
               </div>
-              <h4 className="font-extrabold text-[#001c41] text-sm md:text-base mt-2">Eco-Tourism & Events</h4>
+              <h4 className="font-extrabold text-[#001c41] text-sm md:text-base mt-2">Support Business Growth</h4>
               <p className="text-slate-500 text-xs leading-relaxed font-semibold">
-                Enjoy local leisure. Find resort bookings, tour guides, taxi bookings, and live listings for events like coding meetups, sports tournaments, and temple festivals around Thirumoorthy and Amaravathi.
+                Help businesses reach more customers through a strong digital presence. Together, we can build a more connected and digitally growing Udumalpet business community.
               </p>
             </div>
 
