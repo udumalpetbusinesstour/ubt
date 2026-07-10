@@ -356,7 +356,14 @@ export default function Home() {
         if (scrollLeft + clientWidth >= scrollWidth - 20) {
           featuredScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
         } else {
-          featuredScrollRef.current.scrollBy({ left: 330, behavior: 'smooth' });
+          const firstCard = featuredScrollRef.current.children[0];
+          if (firstCard) {
+            const step = firstCard.offsetWidth + 20; // card width + gap-5 (20px)
+            const nextIndex = Math.round(scrollLeft / step) + 1;
+            featuredScrollRef.current.scrollTo({ left: nextIndex * step, behavior: 'smooth' });
+          } else {
+            featuredScrollRef.current.scrollBy({ left: 330, behavior: 'smooth' });
+          }
         }
       }
     }, 3500);
@@ -371,7 +378,14 @@ export default function Home() {
         if (scrollLeft + clientWidth >= scrollWidth - 20) {
           sponsoredAdsScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
         } else {
-          sponsoredAdsScrollRef.current.scrollBy({ left: clientWidth + 20, behavior: 'smooth' });
+          const firstCard = sponsoredAdsScrollRef.current.children[0];
+          if (firstCard) {
+            const step = firstCard.offsetWidth + 20; // card width + gap-5 (20px)
+            const nextIndex = Math.round(scrollLeft / step) + 1;
+            sponsoredAdsScrollRef.current.scrollTo({ left: nextIndex * step, behavior: 'smooth' });
+          } else {
+            sponsoredAdsScrollRef.current.scrollBy({ left: 330, behavior: 'smooth' });
+          }
         }
       }
     }, 10000);
@@ -386,7 +400,14 @@ export default function Home() {
         if (scrollLeft + clientWidth >= scrollWidth - 20) {
           topViewedScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
         } else {
-          topViewedScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+          const firstCard = topViewedScrollRef.current.children[0];
+          if (firstCard) {
+            const step = firstCard.offsetWidth + 24; // card width + gap-6 (24px)
+            const nextIndex = Math.round(scrollLeft / step) + 1;
+            topViewedScrollRef.current.scrollTo({ left: nextIndex * step, behavior: 'smooth' });
+          } else {
+            topViewedScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+          }
         }
       }
     }, 4000);
@@ -1546,7 +1567,7 @@ export default function Home() {
                     {/* The scrolling wrapper */}
                     <div 
                       ref={topViewedScrollRef}
-                      className="mx-auto flex overflow-x-auto gap-6 pb-4 scrollbar-none snap-x snap-mandatory w-fit max-w-full scroll-smooth px-8 md:px-12 2xl:px-0"
+                      className="mx-auto flex overflow-x-auto gap-6 pb-4 scrollbar-none snap-x snap-mandatory w-full scroll-smooth px-8 md:px-12 2xl:px-0"
                     >
                         {topViewedBusinesses.map((biz) => {
                           const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
