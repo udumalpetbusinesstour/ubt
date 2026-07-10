@@ -331,7 +331,7 @@ export default function Home() {
       zoom: 14,
       zoomControl: true,       // Zoom buttons visible everywhere
       dragging: true,          // Map can be dragged/moved on all screens (including mobile)
-      scrollWheelZoom: false,  // Disable scroll wheel zoom to avoid desktop scroll lock
+      scrollWheelZoom: true,   // Enable scroll wheel zoom
       doubleClickZoom: true,
       touchZoom: true          // Touch zoom pinch gestures enabled on mobile
     });
@@ -1196,10 +1196,10 @@ export default function Home() {
         <div className="absolute inset-0 md:right-[40%] bg-gradient-to-r from-[#F8FAFC]/95 via-[#F8FAFC]/75 to-transparent z-10 pointer-events-none" />
 
         {/* Hero main body */}
-        <div className="relative max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center z-20">
+        <div className="relative max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center z-20 pointer-events-none">
           
           {/* Left panel: text & search */}
-          <div className="lg:col-span-8 flex flex-col items-start text-left">
+          <div className="lg:col-span-8 flex flex-col items-start text-left pointer-events-auto">
             
             <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#001c41] tracking-tight leading-tight max-w-2xl font-sans">
               Discover Trusted <br className="hidden sm:inline" />
