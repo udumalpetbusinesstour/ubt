@@ -346,21 +346,36 @@ export default function Home() {
     // Custom label to correct OpenStreetMap spelling from Udumalapettai to Udumalaipettai
     const cityLabelIcon = L.divIcon({
       html: `
-        <div class="bg-[#fcfbf9]/95 border border-slate-200/50 rounded-lg px-2.5 py-1 shadow-xs select-none">
-          <span class="text-xs font-black text-slate-800 tracking-wide font-sans">Udumalaipettai</span>
+        <div class="bg-[#f4f3f0] rounded-md px-3 py-1.5 select-none text-center border-none">
+          <span class="text-[13px] font-black text-[#666666] tracking-wide font-sans">Udumalaipettai</span>
         </div>
       `,
       className: 'city-center-label-marker',
-      iconSize: [110, 30],
-      iconAnchor: [55, 15]
+      iconSize: [140, 32],
+      iconAnchor: [70, 16]
     });
-    L.marker([10.5842, 77.2485], { icon: cityLabelIcon, zIndexOffset: -50 }).addTo(map);
+    // Shift slightly right to 77.2510 to cover the OSM background text center perfectly
+    L.marker([10.5841, 77.2510], { icon: cityLabelIcon, zIndexOffset: -50 }).addTo(map);
 
+    const usedCoords = {};
     const pinsToUse = mapBiz.length > 0 ? mapBiz : defaultPins;
     pinsToUse.forEach(pin => {
-      const lat = parseFloat(pin.latitude || pin.lat);
-      const lng = parseFloat(pin.longitude || pin.lng);
+      let lat = parseFloat(pin.latitude || pin.lat);
+      let lng = parseFloat(pin.longitude || pin.lng);
       if (!isNaN(lat) && !isNaN(lng)) {
+        // Jitter/offset coordinates if multiple listings are stacked at the exact same location
+        const coordKey = `${lat.toFixed(5)}_${lng.toFixed(5)}`;
+        if (usedCoords[coordKey]) {
+          const count = usedCoords[coordKey];
+          const angle = count * (Math.PI / 4); // Spread markers in a circle
+          const distance = 0.00025 * Math.ceil(count / 8); // Spread markers by ~25 meters
+          lat += Math.sin(angle) * distance;
+          lng += Math.cos(angle) * distance;
+          usedCoords[coordKey] = count + 1;
+        } else {
+          usedCoords[coordKey] = 1;
+        }
+
         const customRedIcon = L.divIcon({
           html: `
             <div class="relative flex items-center justify-center h-6 w-6 group">
