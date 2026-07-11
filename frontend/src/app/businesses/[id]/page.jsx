@@ -148,7 +148,7 @@ export default function BusinessDetail() {
 
   const displayGallery = business ? Array.from(new Set(business.galleryUrls || [])).filter(Boolean).map(url => window.getImageUrl(url)) : [];
   const galleryCount = displayGallery.length;
-  const mainImage = business ? (window.getImageUrl(business.coverImageUrl) || "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80") : "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80";
+  const mainImage = business ? (window.getImageUrl(business.coverImageUrl) || null) : null;
 
   const [mediaError, setMediaError] = useState('');
   const directionsUrl = business
@@ -1580,7 +1580,7 @@ Please confirm availability and delivery time.`;
       {/* Premium Header Banner (Matching Image 5) */}
       <section className="w-full relative bg-[#001c41] text-white py-14 px-4 border-b border-slate-800/60 overflow-hidden">
         {/* Background Image opacity filter */}
-        {business.coverImageUrl && (
+        {business.coverImageUrl ? (
           <div 
             className="absolute inset-0 bg-cover cursor-pointer transition-opacity duration-300 hover:opacity-95" 
             onClick={(e) => openLightbox('cover', e)}
@@ -1591,6 +1591,14 @@ Please confirm availability and delivery time.`;
               opacity: 0.85
             }} 
           />
+        ) : (
+          <div 
+            className="absolute inset-0 bg-black flex items-center justify-center select-none p-4"
+          >
+            <span className="text-white/20 font-black text-4xl sm:text-6xl md:text-8xl tracking-widest uppercase font-sans text-center break-all select-none">
+              {business.name}
+            </span>
+          </div>
         )}
         {/* Sleek dark shadow gradient bottom-up - Adjusted opacity to allow cover to show */}
         <div className="absolute inset-0 bg-black/15 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
@@ -1643,14 +1651,13 @@ Please confirm availability and delivery time.`;
                     className="h-full w-full object-cover" 
                     onError={(e) => { 
                       e.target.style.display = 'none'; 
-                      e.target.parentElement.innerHTML = `<span class="text-white font-extrabold text-xl uppercase">${business.name ? business.name.charAt(0) : 'B'}</span>`; 
-                      e.target.parentElement.classList.add('bg-gradient-to-tr', 'from-emerald-500', 'to-teal-650');
+                      e.target.parentElement.innerHTML = `<div class="w-full h-full bg-black flex items-center justify-center text-white font-black text-xs md:text-sm uppercase text-center p-1.5 leading-none select-none">${business.name ? (business.name.trim().split(/\s+/).length > 1 ? business.name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 4) : business.name.slice(0, 4).toUpperCase()) : 'BIZ'}</div>`;
                     }}
                   />
                 </div>
               ) : (
-                <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-gradient-to-tr from-emerald-500 to-teal-650 shadow-md shrink-0 flex items-center justify-center font-extrabold text-white text-xl uppercase">
-                  {business.name ? business.name.charAt(0) : 'B'}
+                <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-black shadow-md shrink-0 flex items-center justify-center font-black text-white text-xs md:text-sm uppercase text-center p-1.5 leading-none select-none">
+                  {business.name ? (business.name.trim().split(/\s+/).length > 1 ? business.name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 4) : business.name.slice(0, 4).toUpperCase()) : 'BIZ'}
                 </div>
               )}
               <div className="flex flex-col gap-1.5 justify-center min-w-0 flex-1 w-full">

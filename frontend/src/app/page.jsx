@@ -1620,14 +1620,22 @@ export default function Home() {
                        onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
                        className="w-full aspect-square overflow-hidden relative rounded-t-[15px] bg-slate-50 border-b border-slate-100 cursor-pointer"
                      >
-                       <img 
-                         src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"} 
-                         alt={biz.name}
-                         className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[15px]"
-                         style={{
-                           filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
-                         }}
-                       />
+                       {biz.logoUrl || biz.coverImageUrl ? (
+                         <img 
+                           src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl)} 
+                           alt={biz.name}
+                           className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[15px]"
+                           style={{
+                             filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
+                           }}
+                         />
+                       ) : (
+                         <div className="w-full h-full bg-black flex items-center justify-center p-4">
+                           <span className="text-white/20 font-black text-2xl tracking-widest uppercase font-sans text-center break-all select-none">
+                             {biz.name}
+                           </span>
+                         </div>
+                       )}
                       {isSubscribed && (
                         <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">
                           {biz.isFoundingMember && (

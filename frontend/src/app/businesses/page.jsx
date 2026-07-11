@@ -2270,14 +2270,22 @@ function BusinessesList() {
                                 onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz.slug || biz._id}`); }}
                                 className="shrink-0 overflow-hidden relative w-full aspect-square md:w-48 md:h-48 rounded-t-[23px] md:rounded-l-[23px] md:rounded-tr-none border-b md:border-b-0 md:border-r border-slate-100 bg-slate-50 cursor-pointer"
                               >
-                                <img 
-                                  src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"} 
-                                  alt={biz.name}
-                                  className="h-full w-full object-cover transition-transform duration-750 ease-out-expo group-hover:scale-105"
-                                  style={{
-                                    filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
-                                  }}
-                                />
+                                {biz.logoUrl || biz.coverImageUrl ? (
+                                  <img 
+                                    src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl)} 
+                                    alt={biz.name}
+                                    className="h-full w-full object-cover transition-transform duration-750 ease-out-expo group-hover:scale-105"
+                                    style={{
+                                      filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-black flex items-center justify-center p-4">
+                                    <span className="text-white/20 font-black text-2xl tracking-widest uppercase font-sans text-center break-all select-none">
+                                      {biz.name}
+                                    </span>
+                                  </div>
+                                )}
                                 {/* Badge (Verified / Premium / Google Linked) */}
                                 {!isExpired && (
                                   <div className="absolute top-3 left-3 flex flex-wrap gap-1 z-10">
@@ -3113,14 +3121,22 @@ function BusinessesList() {
                           : 'w-full aspect-square rounded-t-[23px] border-b'
                       }`}
                     >
-                      <img 
-                        src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl) || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"} 
-                        alt={biz.name}
-                        className="h-full w-full object-cover transition-transform duration-750 ease-out-expo group-hover:scale-105"
-                        style={{
-                          filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
-                        }}
-                      />
+                      {biz.logoUrl || biz.coverImageUrl ? (
+                        <img 
+                          src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl)} 
+                          alt={biz.name}
+                          className="h-full w-full object-cover transition-transform duration-750 ease-out-expo group-hover:scale-105"
+                          style={{
+                            filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-black flex items-center justify-center p-4">
+                          <span className="text-white/20 font-black text-2xl tracking-widest uppercase font-sans text-center break-all select-none">
+                            {biz.name}
+                          </span>
+                        </div>
+                      )}
                       {/* Badge (Verified / Premium / Google Linked) */}
                       {!isExpired && (
                         <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">
