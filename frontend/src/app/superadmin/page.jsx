@@ -14,13 +14,16 @@ import BloodDonorsTab from '../../components/BloodDonorsTab';
 
 const isBizDraft = (b) => {
   if (!b) return false;
+  // If the listing explicitly has a 'draft' tag, it is a draft.
+  if (Array.isArray(b.tags) && b.tags.includes('draft')) {
+    return true;
+  }
   // If the status indicates it has been submitted or approved, it is not a draft
   if (['Pending Verification', 'Under Review', 'Approved'].includes(b.status)) {
     return false;
   }
   const totalPhotos = (b.galleryUrls ? (Array.isArray(b.galleryUrls) ? b.galleryUrls.length : (typeof b.galleryUrls === 'string' ? b.galleryUrls.split(',').filter(Boolean).length : 0)) : 0) + (b.logoUrl ? 1 : 0) + (b.coverImageUrl ? 1 : 0);
   return (
-    (Array.isArray(b.tags) && b.tags.includes('draft')) ||
     !b.name ||
     !b.category ||
     !b.description ||
