@@ -6187,7 +6187,7 @@ function DashboardContent() {
                               </div>
                               <div className="flex flex-col font-sans">
                                 <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">GSTIN Number</span>
-                                <span className="font-extrabold text-slate-800 mt-1 tracking-wide">{business.gstNumber || 'N/A'}</span>
+                                <span className="font-extrabold text-slate-800 mt-1 tracking-wide">{business.gstNumber || 'Nil'}</span>
                               </div>
                             </div>
                           </div>

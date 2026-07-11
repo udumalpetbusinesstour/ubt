@@ -12,6 +12,10 @@ import BloodDonorsTab from '../../components/BloodDonorsTab';
 
 const isBizDraft = (b) => {
   if (!b) return false;
+  // If the status indicates it has been submitted or approved, it is not a draft
+  if (['Pending Verification', 'Under Review', 'Approved'].includes(b.status)) {
+    return false;
+  }
   const totalPhotos = (b.galleryUrls ? (Array.isArray(b.galleryUrls) ? b.galleryUrls.length : (typeof b.galleryUrls === 'string' ? b.galleryUrls.split(',').filter(Boolean).length : 0)) : 0) + (b.logoUrl ? 1 : 0) + (b.coverImageUrl ? 1 : 0);
   return (
     (Array.isArray(b.tags) && b.tags.includes('draft')) ||
@@ -7012,7 +7016,7 @@ export default function AdminDashboard() {
                         className="border border-slate-200 rounded px-2.5 py-1 text-xs w-full sm:max-w-xs text-slate-800 font-semibold focus:outline-none focus:border-[#027244] bg-white text-left sm:text-right"
                       />
                     ) : (
-                      <span className="font-extrabold text-slate-800 tracking-wider break-all">{selectedBiz.gstNumber || 'N/A (Cottage/Unregistered)'}</span>
+                      <span className="font-extrabold text-slate-800 tracking-wider break-all">{selectedBiz.gstNumber || 'Nil'}</span>
                     )}
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between border-b border-slate-50 pb-1.5 gap-0.5 sm:gap-2">
@@ -7586,7 +7590,7 @@ export default function AdminDashboard() {
                               <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] font-semibold text-slate-500 border-t border-slate-100 pt-2.5">
                                 <div>
                                   <span className="text-slate-400 text-[8px] block font-bold uppercase">GST Number</span>
-                                  <span className="text-slate-700">{biz.gstNumber || 'N/A'}</span>
+                                  <span className="text-slate-700">{biz.gstNumber || 'Nil'}</span>
                                 </div>
                                 <div>
                                   <span className="text-slate-400 text-[8px] block font-bold uppercase">Verification Status</span>

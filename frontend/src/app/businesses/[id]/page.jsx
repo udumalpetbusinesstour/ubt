@@ -2129,7 +2129,7 @@ Please confirm availability and delivery time.`;
                       <div className="flex flex-col font-sans">
                         <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">GST Number</span>
                         <span className="font-extrabold text-slate-800 text-sm mt-2 tracking-wide">
-                          {isExpired ? 'Hidden due to expiry' : business.gstNumber || '33ABCDE1234F1Z5'}
+                          {isExpired ? 'Hidden due to expiry' : business.gstNumber || 'Nil'}
                         </span>
                       </div>
                     </div>

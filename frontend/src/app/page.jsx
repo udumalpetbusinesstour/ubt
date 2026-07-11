@@ -307,7 +307,7 @@ export default function Home() {
 
   // Fetch approved listing coordinates for map pings
   useEffect(() => {
-    fetch('http://localhost:5000/api/businesses')
+    fetch('http://localhost:5000/api/businesses?includePending=true')
       .then(res => res.json())
       .then(data => {
         if (data.success) {

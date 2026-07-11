@@ -3537,7 +3537,7 @@ export default function AddBusiness() {
                           </div>
                           <div>
                             <span className="font-extrabold text-slate-400 uppercase text-[9px] tracking-wider">GST Registered</span>
-                            <p className="font-extrabold text-slate-700 text-[11px] mt-0.5">{formData.gstNumber || 'N/A'}</p>
+                            <p className="font-extrabold text-slate-700 text-[11px] mt-0.5">{formData.gstNumber || 'Nil'}</p>
                           </div>
                         </div>
                       </div>

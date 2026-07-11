@@ -703,7 +703,11 @@ router.get('/', async (req, res) => {
     let query = {};
 
     // Only return approved or active businesses unless requested by owner/admin
-    query.status = 'Approved';
+    if (req.query.includePending === 'true') {
+      query.status = { $in: ['Approved', 'Pending Verification', 'Under Review'] };
+    } else {
+      query.status = 'Approved';
+    }
 
     const conditions = [];
 

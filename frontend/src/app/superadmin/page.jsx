@@ -14,6 +14,10 @@ import BloodDonorsTab from '../../components/BloodDonorsTab';
 
 const isBizDraft = (b) => {
   if (!b) return false;
+  // If the status indicates it has been submitted or approved, it is not a draft
+  if (['Pending Verification', 'Under Review', 'Approved'].includes(b.status)) {
+    return false;
+  }
   const totalPhotos = (b.galleryUrls ? (Array.isArray(b.galleryUrls) ? b.galleryUrls.length : (typeof b.galleryUrls === 'string' ? b.galleryUrls.split(',').filter(Boolean).length : 0)) : 0) + (b.logoUrl ? 1 : 0) + (b.coverImageUrl ? 1 : 0);
   return (
     (Array.isArray(b.tags) && b.tags.includes('draft')) ||
@@ -8384,7 +8388,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-4">
                     <span className="text-[10px] sm:text-xs text-slate-450 uppercase sm:normal-case font-bold sm:font-semibold">GSTIN Details</span>
                     <span className={`font-mono font-bold tracking-wider ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>
-                      {selectedBiz.gstNumber || '33ABCDE1234F1Z5'}
+                      {selectedBiz.gstNumber || 'Nil'}
                     </span>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-4">
@@ -8733,7 +8737,7 @@ const handlePartnerAction = async (partnerId, action) => {
                               <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] font-semibold text-slate-500 border-t border-slate-100/5 pt-2.5">
                                 <div>
                                   <span className="text-slate-400 text-[8px] block font-bold uppercase">GST Number</span>
-                                  <span className={themeMode === 'dark' ? 'text-slate-300' : 'text-slate-700'}>{biz.gstNumber || 'N/A'}</span>
+                                  <span className={themeMode === 'dark' ? 'text-slate-300' : 'text-slate-700'}>{biz.gstNumber || 'Nil'}</span>
                                 </div>
                                 <div>
                                   <span className="text-slate-400 text-[8px] block font-bold uppercase">Verification Status</span>
