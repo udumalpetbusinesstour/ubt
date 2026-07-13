@@ -662,6 +662,48 @@ function DashboardContent() {
       .sort();
   };
 
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const handleDashboardAIGenerate = async () => {
+    if (!editFields.name || !editFields.name.trim()) {
+      alert('Please enter a business name first before generating details.');
+      return;
+    }
+
+    setAiLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/businesses/generate-ai-details', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: editFields.name,
+          categories: editFields.categories
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const { description, highlights, services } = data.data;
+        
+        setEditFields(prev => ({
+          ...prev,
+          description: description || prev.description,
+          highlights: Array.isArray(highlights) ? highlights.join(', ') : (highlights || prev.highlights),
+          services: Array.isArray(services) ? services.join(', ') : (services || prev.services)
+        }));
+        alert('AI successfully generated details! The description, highlights, and services fields have been updated.');
+      } else {
+        alert(data.message || 'AI generation failed.');
+      }
+    } catch (err) {
+      console.error('AI generation error:', err);
+      alert('Failed to connect to AI generator. Please check your connection.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   // Image upload states & handler
   const [logoUploading, setLogoUploading] = useState(false);
   const [coverUploading, setCoverUploading] = useState(false);
@@ -10062,7 +10104,19 @@ function DashboardContent() {
               {editTab === 'about' && (
                 <div className="flex flex-col gap-5 animate-fadeIn">
                   <div className="flex flex-col gap-1">
-                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Business Description</label>
+                    <div className="flex justify-between items-center">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Business Description</label>
+                      <button
+                        type="button"
+                        onClick={handleDashboardAIGenerate}
+                        disabled={aiLoading}
+                        className="py-0.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[9px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
+                      >
+                        {aiLoading ? (
+                          <span className="h-2.5 w-2.5 border border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
+                        ) : '✨'} Generate with AI
+                      </button>
+                    </div>
                     <textarea 
                       rows={5}
                       value={editFields.description}
@@ -10073,7 +10127,19 @@ function DashboardContent() {
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Verified Highlights (Green Ticks)</label>
+                    <div className="flex justify-between items-center">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Verified Highlights (Comma Separated)</label>
+                      <button
+                        type="button"
+                        onClick={handleDashboardAIGenerate}
+                        disabled={aiLoading}
+                        className="py-0.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[9px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
+                      >
+                        {aiLoading ? (
+                          <span className="h-2.5 w-2.5 border border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
+                        ) : '✨'} Generate with AI
+                      </button>
+                    </div>
                     <input
                       type="text"
                       value={editFields.highlights}

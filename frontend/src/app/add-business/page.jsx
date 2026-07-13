@@ -203,6 +203,60 @@ export default function AddBusiness() {
     branches: [],
   });
 
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const handleAIGenerate = async (isBranch = false) => {
+    const targetName = isBranch ? branchForm.name : formData.name;
+    const targetCats = isBranch ? [branchForm.category] : formData.categories;
+
+    if (!targetName || !targetName.trim()) {
+      alert('Please enter a business name first before generating details.');
+      return;
+    }
+
+    setAiLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/businesses/generate-ai-details', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: targetName,
+          categories: targetCats
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const { description, highlights, services } = data.data;
+        
+        if (isBranch) {
+          setBranchForm(prev => ({
+            ...prev,
+            description: description || prev.description,
+            highlights: Array.isArray(highlights) ? highlights.join(', ') : (highlights || prev.highlights),
+            services: Array.isArray(services) ? services.join(', ') : (services || prev.services)
+          }));
+        } else {
+          setFormData(prev => ({
+            ...prev,
+            description: description || prev.description,
+            highlights: Array.isArray(highlights) ? highlights.join(', ') : (highlights || prev.highlights),
+            services: Array.isArray(services) ? services.join(', ') : (services || prev.services)
+          }));
+        }
+        alert('AI successfully generated your business description, highlights, and services offered!');
+      } else {
+        alert(data.message || 'AI generation failed.');
+      }
+    } catch (err) {
+      console.error('AI generation error:', err);
+      alert('Failed to connect to AI generator. Please check your connection.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const [isCustomLocality, setIsCustomLocality] = useState(false);
   const [isCustomMain, setIsCustomMain] = useState(false);
   const [selMain, setSelMain] = useState('');
@@ -2520,7 +2574,19 @@ export default function AddBusiness() {
 
                     <div className="flex flex-col gap-1.5">
                       <div className="flex justify-between items-center">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Short Business Description <span className="text-red-500">*</span></label>
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Short Business Description <span className="text-red-500">*</span></label>
+                          <button
+                            type="button"
+                            onClick={() => handleAIGenerate(false)}
+                            disabled={aiLoading}
+                            className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50 shrink-0"
+                          >
+                            {aiLoading ? (
+                              <span className="h-3 w-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
+                            ) : '✨'} Generate with AI
+                          </button>
+                        </div>
                         <span className={`text-[10px] font-extrabold ${formData.description.length >= 20 ? 'text-emerald-600' : 'text-red-500'}`}>
                           {formData.description.length} / 250 {formData.description.length > 0 && formData.description.length < 20 ? `(min 20)` : ''}
                         </span>
@@ -2670,7 +2736,19 @@ export default function AddBusiness() {
                   </div>
 
                   <div className="flex flex-col gap-1.5 text-left">
-                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Comma Separated) <span className="text-red-500">*</span></label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Comma Separated) <span className="text-red-500">*</span></label>
+                      <button
+                        type="button"
+                        onClick={() => handleAIGenerate(false)}
+                        disabled={aiLoading}
+                        className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
+                      >
+                        {aiLoading ? (
+                          <span className="h-3 w-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
+                        ) : '✨'} Generate with AI
+                      </button>
+                    </div>
                     <input
                       type="text"
                       name="highlights"
@@ -3100,7 +3178,19 @@ export default function AddBusiness() {
                       </div>
 
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Branch Description <span className="text-red-500">*</span></label>
+                        <div className="flex justify-between items-center">
+                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Branch Description <span className="text-red-500">*</span></label>
+                          <button
+                            type="button"
+                            onClick={() => handleAIGenerate(true)}
+                            disabled={aiLoading}
+                            className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50 shrink-0"
+                          >
+                            {aiLoading ? (
+                              <span className="h-3 w-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
+                            ) : '✨'} Generate with AI
+                          </button>
+                        </div>
                         <textarea
                           name="description"
                           value={branchForm.description}

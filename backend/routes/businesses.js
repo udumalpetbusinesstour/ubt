@@ -1220,6 +1220,138 @@ async function fetchLegacyDetails(placeId, cid, apiKey, extractedName, extracted
   }
   return null;
 }
+// @desc    Generate Business Details with AI (Gemini or OpenAI)
+// @route   POST /api/businesses/generate-ai-details
+// @access  Public
+router.post('/generate-ai-details', async (req, res) => {
+  const { name, categories } = req.body;
+  if (!name) {
+    return res.status(400).json({ success: false, message: 'Business name is required' });
+  }
+
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+  const openaiApiKey = process.env.OPENAI_API_KEY;
+
+  if (!geminiApiKey && !openaiApiKey) {
+    return res.status(400).json({
+      success: false,
+      message: 'AI generation is not configured. Please set GEMINI_API_KEY or OPENAI_API_KEY in your backend server environment.'
+    });
+  }
+
+  const catList = Array.isArray(categories) ? categories.map(c => typeof c === 'object' ? (c.category || c.name || '') : c).filter(Boolean) : [];
+  const catString = catList.length > 0 ? catList.join(', ') : 'General Business';
+
+  // 1. Try Gemini first if key is present
+  if (geminiApiKey) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
+      
+      const prompt = `Generate details for a business named "${name}" in the category: "${catString}".
+Provide:
+1. A professional description (3 to 4 sentences).
+2. 4 to 6 short highlights or features (e.g. "On-time Service", "Affordable Price", "Expert Technicians"). Highlights must NOT contain any green tick or check emojis.
+3. 5 to 8 products or services offered (e.g. "Home Delivery", "AC Installation").
+
+Return the output strictly as a JSON object matching this schema:
+{
+  "description": "text string",
+  "highlights": ["highlight 1", "highlight 2", ...],
+  "services": ["service 1", "service 2", ...]
+}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: {
+                description: { type: "STRING" },
+                highlights: {
+                  type: "ARRAY",
+                  items: { type: "STRING" }
+                },
+                services: {
+                  type: "ARRAY",
+                  items: { type: "STRING" }
+                }
+              },
+              required: ["description", "highlights", "services"]
+            }
+          }
+        })
+      });
+
+      const result = await response.json();
+      if (result.error) {
+        throw new Error(result.error.message || 'Gemini API returned an error');
+      }
+
+      const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) {
+        const parsed = JSON.parse(text);
+        return res.json({ success: true, data: parsed });
+      }
+    } catch (err) {
+      console.error('Gemini generation failed:', err.message);
+      // If Gemini fails, we will fall through to OpenAI if available, else throw error
+      if (!openaiApiKey) {
+        return res.status(500).json({ success: false, message: `AI generation failed: ${err.message}` });
+      }
+    }
+  }
+
+  // 2. Fallback to OpenAI if key is present
+  if (openaiApiKey) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${openaiApiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          response_format: { type: 'json_object' },
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an AI assistant that generates business profiles in JSON format.'
+            },
+            {
+              role: 'user',
+              content: `Generate details for a business named "${name}" in the category: "${catString}".
+Return a JSON object exactly with these keys:
+- description: A professional description (3 to 4 sentences).
+- highlights: 4 to 6 short highlights or features (e.g. "On-time Service", "Affordable Price", "Expert Technicians"). Highlights must NOT contain any emojis.
+- services: 5 to 8 products or services offered (e.g. "Home Delivery", "AC Installation").`
+            }
+          ]
+        })
+      });
+
+      const result = await response.json();
+      if (result.error) {
+        throw new Error(result.error.message || 'OpenAI API returned an error');
+      }
+
+      const content = result.choices?.[0]?.message?.content;
+      if (content) {
+        const parsed = JSON.parse(content);
+        return res.json({ success: true, data: parsed });
+      }
+    } catch (err) {
+      console.error('OpenAI generation failed:', err.message);
+      return res.status(500).json({ success: false, message: `AI generation failed: ${err.message}` });
+    }
+  }
+});
 
 // @desc    Google Places Auto-fill Details
 // @route   POST /api/businesses/google-autofill
