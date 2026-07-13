@@ -4399,9 +4399,13 @@ Team Udumalpet Business
                                         </a>
                                       </div>
                                     </td>
-                                    <td className="p-4">{b.subscriptionStatus === 'active' ? 'Premium Package' : 'Basic Tier'}</td>
+                                    <td className="p-4">{b.subscriptionStatus === 'active' ? (b.subscriptionPlan || 'Premium Package') : 'Basic Tier'}</td>
                                     <td className="p-4 font-extrabold text-slate-800">
-                                      {b.subscriptionStatus === 'active' ? '₹99 / Mon' : '₹0'}
+                                      {b.subscriptionStatus === 'active' 
+                                        ? (String(b.subscriptionPlan || '').toLowerCase().includes('year') || b.subscriptionAmount >= 999
+                                            ? `₹${b.subscriptionAmount || 999} / Year`
+                                            : `₹${b.subscriptionAmount || 99} / Mon`)
+                                        : '₹0'}
                                     </td>
                                     <td className="p-4">
                                       <span className={`px-2.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide border ${
