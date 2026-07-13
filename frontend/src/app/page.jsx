@@ -1353,6 +1353,21 @@ export default function Home() {
     window.open(`https://wa.me/${cleanNum}?text=Hello%20${encodeURIComponent(name)},%20I%20saw%20your%2520listing%20on%20Udumalpet%20Business%20Tour.`);
   };
 
+  const handleMapClick = async (e, bizId) => {
+    if (e) e.stopPropagation();
+    if (bizId) {
+      try {
+        await fetch(`http://localhost:5000/api/businesses/${bizId}/click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'directions' })
+        });
+      } catch (err) {
+        console.error('Failed to track directions click:', err);
+      }
+    }
+  };
+
   // Categories list is now dynamically defined and updated inside the Home component based on business counts.
 
   return (
@@ -1665,7 +1680,7 @@ export default function Home() {
                             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(biz.address ? `${biz.name}, ${biz.address}` : `${biz.name}, ${biz.locality || ''}, Udumalpet`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => handleMapClick(e, biz._id)}
                             className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold mt-1 hover:text-emerald-500 transition-colors cursor-pointer group"
                             title="View on Google Maps"
                           >
@@ -1702,7 +1717,7 @@ export default function Home() {
                               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(biz.address ? `${biz.name}, ${biz.address}` : `${biz.name}, ${biz.locality || ''}, Udumalpet`)}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => handleMapClick(e, biz._id)}
                               className="h-6 w-6 rounded-full bg-blue-50 text-blue-600 border border-blue-100/50 flex items-center justify-center hover:bg-blue-100 transition-colors cursor-pointer group"
                               title="View on Google Maps"
                             >

@@ -1346,6 +1346,21 @@ function BusinessesList() {
     window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(textMsg)}`);
   };
 
+  const handleMapClick = async (e, bizId) => {
+    if (e) e.stopPropagation();
+    if (bizId) {
+      try {
+        await fetch(`http://localhost:5000/api/businesses/${bizId}/click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'directions' })
+        });
+      } catch (err) {
+        console.error('Failed to track directions click:', err);
+      }
+    }
+  };
+
   const handleContactSubmit = async (e) => {
     e.preventDefault();
     setContactSubmitting(true);
@@ -2338,7 +2353,7 @@ function BusinessesList() {
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="flex items-center gap-1 text-xs font-semibold text-slate-500 mt-0.5 hover:text-[#027244] transition-colors cursor-pointer group"
-                                      onClick={(e) => e.stopPropagation()}
+                                      onClick={(e) => handleMapClick(e, biz._id)}
                                       title="View on Google Maps"
                                     >
                                       <MapPin className="h-4 w-4 text-slate-400 group-hover:text-[#027244] shrink-0" />
@@ -3191,7 +3206,7 @@ function BusinessesList() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 text-[10.5px] sm:text-xs font-semibold text-slate-500 mt-0.5 hover:text-[#027244] transition-colors cursor-pointer group"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => handleMapClick(e, biz._id)}
                             title="View on Google Maps"
                           >
                             <MapPin className="h-3.5 w-3.5 text-slate-400 group-hover:text-[#027244] shrink-0" />
