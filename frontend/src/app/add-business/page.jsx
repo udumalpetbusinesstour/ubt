@@ -215,8 +215,9 @@ export default function AddBusiness() {
     }
 
     const hint = window.prompt(`Please enter a brief hint or keywords about your business to generate your ${field} (e.g., 'pure veg family restaurant, parking available'):`);
-    if (hint === null) return; // User cancelled
-    if (!hint.trim()) {
+    if (hint === null || hint === undefined) return; // User cancelled
+    const hintStr = String(hint);
+    if (!hintStr.trim()) {
       alert(`Please provide a basic hint or keywords so the AI can generate a relevant ${field} for you.`);
       return;
     }
