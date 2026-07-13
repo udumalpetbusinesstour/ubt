@@ -10165,6 +10165,7 @@ function DashboardContent() {
                       <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Business Description</label>
                       <button
                         type="button"
+                        style={{ display: 'none' }}
                         onClick={() => handleDashboardAIGenerate('description')}
                         disabled={aiLoading}
                         className="py-0.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[9px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
@@ -10188,6 +10189,7 @@ function DashboardContent() {
                       <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Verified Highlights (Comma Separated)</label>
                       <button
                         type="button"
+                        style={{ display: 'none' }}
                         onClick={() => handleDashboardAIGenerate('highlights')}
                         disabled={aiLoading}
                         className="py-0.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[9px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
@@ -10438,6 +10440,7 @@ function DashboardContent() {
                       <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Services Offered (Comma Separated)</label>
                       <button
                         type="button"
+                        style={{ display: 'none' }}
                         onClick={() => handleDashboardAIGenerate('services')}
                         disabled={aiLoading}
                         className="py-0.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[9px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
