@@ -1473,10 +1473,57 @@ function DashboardContent() {
           setPromotionsList([]);
         }
         
+        // Sync photo gallery from the target business
+        const targetGallery = Array.isArray(userBiz.galleryUrls) ? userBiz.galleryUrls
+          : (typeof userBiz.galleryUrls === 'string' ? userBiz.galleryUrls.split(',').map(s => s.trim()).filter(Boolean) : []);
+        setPhotoGallery(targetGallery);
+        setUploadedPhotosCount(targetGallery.length);
+
+        setEditFields({
+          name: userBiz.name || '',
+          category: userBiz.category || 'Services',
+          type: userBiz.type || '',
+          requestedParentCategory: userBiz.requestedParentCategory || '',
+          customCategoryName: userBiz.customCategoryName || '',
+          categoryStatus: userBiz.categoryStatus || 'Normal',
+          categories: userBiz.categories || [],
+          description: userBiz.description || '',
+          highlights: Array.isArray(userBiz.highlights) ? userBiz.highlights.join(', ') : '',
+          phone: userBiz.phone || '',
+          whatsapp: userBiz.whatsapp || '',
+          email: userBiz.email || '',
+          website: userBiz.website || '',
+          facebook: userBiz.facebook || '',
+          instagram: userBiz.instagram || '',
+          address: userBiz.address || '',
+          locality: userBiz.locality || '',
+          pincode: userBiz.pincode || '',
+          yearEstablished: userBiz.yearEstablished || '',
+          employeeCount: userBiz.employeeCount || '',
+          gstNumber: userBiz.gstNumber || '',
+          serviceArea: userBiz.serviceArea || '',
+          languagesKnown: userBiz.languagesKnown || '',
+          services: Array.isArray(userBiz.services) ? userBiz.services.join(', ') : '',
+          brands: Array.isArray(userBiz.brands) ? userBiz.brands.join(', ') : '',
+          logoUrl: userBiz.logoUrl || '',
+          coverImageUrl: userBiz.coverImageUrl || '',
+          galleryUrls: Array.isArray(userBiz.galleryUrls) ? userBiz.galleryUrls.join(', ') : '',
+          timingsMon: userBiz.timings?.Monday || '9:00 AM - 8:00 PM',
+          timingsTue: userBiz.timings?.Tuesday || '9:00 AM - 8:00 PM',
+          timingsWed: userBiz.timings?.Wednesday || '9:00 AM - 8:00 PM',
+          timingsThu: userBiz.timings?.Thursday || '9:00 AM - 8:00 PM',
+          timingsFri: userBiz.timings?.Friday || '9:00 AM - 8:00 PM',
+          timingsSat: userBiz.timings?.Saturday || '9:00 AM - 8:00 PM',
+          timingsSun: userBiz.timings?.Sunday || '9:00 AM - 1:00 PM',
+        });
+
         // Fetch auxiliary data
         fetchLeads(authToken, userBiz._id);
         fetchBranches(authToken, userBiz._id);
         fetchReviews(authToken, userBiz._id);
+        if (isFoodRelated(userBiz.category, userBiz.customCategoryName)) {
+          fetchMenu(authToken, userBiz._id);
+        }
       }
     } catch (err) {
       console.error('Error fetching admin target business:', err);
