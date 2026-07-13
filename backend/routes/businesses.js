@@ -2145,7 +2145,7 @@ router.post('/validate-address', async (req, res) => {
 // @access  Public
 router.get('/:id', async (req, res) => {
   try {
-    const skipInc = req.query.skipInc === 'true';
+    const skipInc = req.query.skipInc === 'true' || !!req.headers.authorization;
     const idOrSlug = req.id || req.params.id;
     const isObjectId = require('mongoose').Types.ObjectId.isValid(idOrSlug);
     

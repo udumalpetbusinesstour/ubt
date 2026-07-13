@@ -1544,7 +1544,7 @@ function DashboardContent() {
   const fetchAdminTargetBusiness = async (authToken, bizId) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/businesses/${bizId}`, {
+      const res = await fetch(`http://localhost:5000/api/businesses/${bizId}?skipInc=true`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       const data = await res.json();
@@ -2009,7 +2009,7 @@ function DashboardContent() {
 
       // Always fetch fresh full data for a branch from the API
       try {
-        const res = await fetch(`http://localhost:5000/api/businesses/${bizId}`, {
+        const res = await fetch(`http://localhost:5000/api/businesses/${bizId}?skipInc=true`, {
           headers: { Authorization: `Bearer ${activeToken}` },
         });
         const data = await res.json();

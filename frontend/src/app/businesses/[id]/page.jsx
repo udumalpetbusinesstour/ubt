@@ -1559,7 +1559,7 @@ Please confirm availability and delivery time.`;
     });
   };
 
-  const totalReviewsCount = (business?.googleReviewsCount || 0) + (reviews?.length || 0);
+  const totalReviewsCount = (business?.rawGoogleReviewsCount || 0) + (reviews?.length || 0);
 
   const ratingDistribution = getRatingDistribution(
     business.googleRating,
@@ -1755,7 +1755,7 @@ Please confirm availability and delivery time.`;
                   {renderStars(business.googleRating, 'h-3.5 w-3.5', 'text-slate-700')}
                 </div>
                 <span className="font-black text-white ml-1">{(business.googleRating ?? 0).toFixed(1)}</span>
-                <span className="text-[10px] text-white/75">({business.googleReviewsCount || 0} Reviews)</span>
+                <span className="text-[10px] text-white/75">({totalReviewsCount} Reviews)</span>
               </div>
               <span className="text-white/40">•</span>
               <div className="flex items-center gap-1 bg-white/10 border border-white/20 px-2.5 py-1 rounded-lg text-white/95">
@@ -2697,9 +2697,9 @@ Please confirm availability and delivery time.`;
               <div className="flex flex-col gap-4.5 mt-4">
                 <div className="flex justify-between items-center border-b border-slate-100 pb-2 flex-wrap gap-2 w-full text-slate-800">
                   <span className="font-black text-sm">Customer Feedback Stream ({allReviews.length})</span>
-                  {business.googleReviewsCount > 0 && (
+                  {business.rawGoogleReviewsCount > 0 && (
                     <span className="text-[10px] text-slate-400 font-bold bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-lg">
-                      Showing {business.googleReviews?.length || 0} synced Google reviews out of {business.googleReviewsCount}
+                      Showing {business.googleReviews?.length || 0} synced Google reviews out of {business.rawGoogleReviewsCount}
                     </span>
                   )}
                 </div>
