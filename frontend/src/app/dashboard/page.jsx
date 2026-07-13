@@ -670,39 +670,69 @@ function DashboardContent() {
       return;
     }
 
-    const hint = window.prompt(`Please enter a brief hint or keywords about your business to generate your ${field} (e.g., 'pure veg family restaurant, parking available'):`);
+    let hint = window.prompt(`Please enter a brief hint or keywords about your business to generate your ${field} (e.g., 'pure veg family restaurant, parking available'):`);
     if (hint === null || hint === undefined) return; // User cancelled
-    const hintStr = String(hint);
+    let hintStr = String(hint);
     if (!hintStr.trim()) {
       alert(`Please provide a basic hint or keywords so the AI can generate a relevant ${field} for you.`);
       return;
     }
 
     setAiLoading(true);
+    let currentContent = '';
+    let currentKeywords = hintStr;
+
     try {
-      const res = await fetch('http://localhost:5000/api/businesses/generate-ai-details', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: editFields.name,
-          categories: editFields.categories,
-          field,
-          hint
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setEditFields(prev => ({
-          ...prev,
-          [field]: field === 'description' 
-            ? (data.data.description || prev.description)
-            : (Array.isArray(data.data[field]) ? data.data[field].join(', ') : (data.data[field] || prev[field]))
-        }));
-        alert(`AI successfully generated your business ${field}!`);
-      } else {
-        alert(data.message || 'AI generation failed.');
+      while (true) {
+        const res = await fetch('http://localhost:5000/api/businesses/generate-ai-details', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: editFields.name,
+            categories: editFields.categories,
+            field,
+            hint: currentKeywords
+          })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          alert(data.message || 'AI generation failed.');
+          break;
+        }
+
+        const generated = data.data[field];
+        currentContent = Array.isArray(generated) ? generated.join(', ') : (generated || '');
+
+        const correction = window.prompt(
+          `Generated ${field}:\n\n"${currentContent}"\n\nIf you want to make corrections or changes, type them below (e.g., 'make it longer', 'add more options') and press OK.\nOtherwise, press Cancel to accept this content.`,
+          ''
+        );
+
+        if (correction === null || correction === undefined) {
+          // Accepted! Update the form and exit the loop.
+          setEditFields(prev => ({
+            ...prev,
+            [field]: currentContent
+          }));
+          alert(`Business ${field} updated successfully!`);
+          break;
+        }
+
+        const correctionStr = String(correction).trim();
+        if (!correctionStr) {
+          // Empty input on OK means accept
+          setEditFields(prev => ({
+            ...prev,
+            [field]: currentContent
+          }));
+          alert(`Business ${field} updated successfully!`);
+          break;
+        }
+
+        // Tweak and generate again
+        currentKeywords = `Previous content was: "${currentContent}". The user wants these changes: "${correctionStr}". Please generate a new version incorporating these corrections.`;
       }
     } catch (err) {
       console.error('AI generation error:', err);
@@ -10385,7 +10415,19 @@ function DashboardContent() {
               {editTab === 'services' && (
                 <div className="flex flex-col gap-4 animate-fadeIn">
                   <div className="flex flex-col gap-1">
-                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Services Offered (Comma Separated)</label>
+                    <div className="flex justify-between items-center">
+                      <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Services Offered (Comma Separated)</label>
+                      <button
+                        type="button"
+                        onClick={() => handleDashboardAIGenerate('services')}
+                        disabled={aiLoading}
+                        className="py-0.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[9px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
+                      >
+                        {aiLoading ? (
+                          <span className="h-2.5 w-2.5 border border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
+                        ) : '✨'} Generate with AI
+                      </button>
+                    </div>
                     <textarea 
                       rows={3}
                       value={editFields.services}
