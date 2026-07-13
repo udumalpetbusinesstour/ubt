@@ -1245,7 +1245,7 @@ router.post('/generate-ai-details', async (req, res) => {
   // 1. Try Gemini first if key is present
   if (geminiApiKey) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiApiKey}`;
       
       const prompt = `Generate details for a business named "${name}" in the category: "${catString}".
 Provide:
