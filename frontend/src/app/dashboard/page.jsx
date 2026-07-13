@@ -3693,6 +3693,9 @@ function DashboardContent() {
       address: editFields.address,
       locality: editFields.locality,
       pincode: editFields.pincode,
+      latitude: business.latitude || business.coordinates?.lat,
+      longitude: business.longitude || business.coordinates?.lng,
+      coordinates: business.coordinates,
       yearEstablished: editFields.yearEstablished ? Number(editFields.yearEstablished) : undefined,
       employeeCount: editFields.employeeCount,
       gstNumber: editFields.gstNumber,
@@ -6874,15 +6877,18 @@ function DashboardContent() {
                           </div>
                           {/* Leaflet OSM embed via iframe - zero API key, fully free */}
                           <div className="h-80 w-full rounded-2xl border border-slate-200 bg-slate-100 relative overflow-hidden shadow-3xs">
-                            <iframe
-                              title="Interactive Business Map"
-                              width="100%"
-                              height="100%"
-                              style={{ border: 0 }}
-                              loading="lazy"
-                              src={`https://www.openstreetmap.org/export/embed.html?bbox=${(business.longitude || business.coordinates?.lng || 77.2412) - 0.01},${(business.latitude || business.coordinates?.lat || 10.5891) - 0.01},${(business.longitude || business.coordinates?.lng || 77.2412) + 0.01},${(business.latitude || business.coordinates?.lat || 10.5891) + 0.01}&layer=mapnik&marker=${business.latitude || business.coordinates?.lat || 10.5891},${business.longitude || business.coordinates?.lng || 77.2412}`}
-                              className="absolute top-0 left-0 w-full h-[calc(100%+28px)] opacity-95 border-0"
-                            />
+                            {business.latitude && business.longitude && (
+                              <iframe
+                                key={`${business._id}-${business.latitude}-${business.longitude}`}
+                                title="Interactive Business Map"
+                                width="100%"
+                                height="100%"
+                                style={{ border: 0 }}
+                                loading="lazy"
+                                src={`https://www.openstreetmap.org/export/embed.html?bbox=${(business.longitude || business.coordinates?.lng || 77.2412) - 0.01},${(business.latitude || business.coordinates?.lat || 10.5891) - 0.01},${(business.longitude || business.coordinates?.lng || 77.2412) + 0.01},${(business.latitude || business.coordinates?.lat || 10.5891) + 0.01}&layer=mapnik&marker=${business.latitude || business.coordinates?.lat || 10.5891},${business.longitude || business.coordinates?.lng || 77.2412}`}
+                                className="absolute top-0 left-0 w-full h-[calc(100%+28px)] opacity-95 border-0"
+                              />
+                            )}
                           </div>
                           <div className="flex items-start gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-4">
                             <MapPin className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />

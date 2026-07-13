@@ -3094,15 +3094,18 @@ Please confirm availability and delivery time.`;
               </div>
               {/* OpenStreetMap embed — free, no API key required (unlike Google Maps Embed API) */}
               <div className="h-96 w-full rounded-[28px] border border-slate-200 bg-slate-100 relative overflow-hidden shadow-sm">
-                <iframe
-                  title="Interactive Business Map"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${(business.longitude || business.coordinates?.lng || 77.2412) - 0.012},${(business.latitude || business.coordinates?.lat || 10.5891) - 0.012},${(business.longitude || business.coordinates?.lng || 77.2412) + 0.012},${(business.latitude || business.coordinates?.lat || 10.5891) + 0.012}&layer=mapnik&marker=${business.latitude || business.coordinates?.lat || 10.5891},${business.longitude || business.coordinates?.lng || 77.2412}`}
-                  className="absolute top-0 left-0 w-full h-[calc(100%+28px)] opacity-95 border-0"
-                />
+                {business.latitude && business.longitude && (
+                  <iframe
+                    key={`${business._id}-${business.latitude}-${business.longitude}`}
+                    title="Interactive Business Map"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${(business.longitude || business.coordinates?.lng || 77.2412) - 0.012},${(business.latitude || business.coordinates?.lat || 10.5891) - 0.012},${(business.longitude || business.coordinates?.lng || 77.2412) + 0.012},${(business.latitude || business.coordinates?.lat || 10.5891) + 0.012}&layer=mapnik&marker=${business.latitude || business.coordinates?.lat || 10.5891},${business.longitude || business.coordinates?.lng || 77.2412}`}
+                    className="absolute top-0 left-0 w-full h-[calc(100%+28px)] opacity-95 border-0"
+                  />
+                )}
                 
                 {/* Floating Location Details Card */}
                 <div className="absolute z-10 bottom-6 left-6 bg-white/95 border border-slate-200 shadow-xl rounded-2xl p-5 max-w-sm text-left text-slate-800 flex flex-col gap-3 animate-fadeIn backdrop-blur-xs">

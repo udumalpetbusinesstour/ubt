@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, CheckCircle, MapPin, AlertCircle, RefreshCw } from 'lucide-react';
 
 const mockAddressesByPincode = {
@@ -95,6 +95,7 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
   const [suggestions, setSuggestions] = useState([]);
   const [isVerified, setIsVerified] = useState(!!googlePlaceId);
   const [error, setError] = useState('');
+  const lastPincodeRef = useRef(pincode);
 
   useEffect(() => {
     if (initialAddress) {
@@ -103,9 +104,9 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
     }
   }, [initialAddress, googlePlaceId]);
 
-  // Reset verification if pincode changes (only if pincode is actually provided)
+  // Reset verification if pincode changes (only if pincode is actually changed after initial mount)
   useEffect(() => {
-    if (pincode && addressInput && isVerified) {
+    if (pincode && lastPincodeRef.current && pincode !== lastPincodeRef.current) {
       setIsVerified(false);
       setSuggestions([]);
       setError('');
@@ -119,6 +120,7 @@ export default function MockGoogleMaps({ pincode, onAddressSelect, initialAddres
         });
       }
     }
+    lastPincodeRef.current = pincode;
   }, [pincode]);
 
   const handleInputChange = async (e) => {
