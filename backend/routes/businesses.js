@@ -287,8 +287,11 @@ async function validateAddressAndBoundary(address, pincode, userLat, userLng) {
     };
   }
 
-  let lat = parseFloat(userLat) || udtCenter.lat;
-  let lng = parseFloat(userLng) || udtCenter.lng;
+  const latVal = parseFloat(userLat);
+  const lngVal = parseFloat(userLng);
+
+  let lat = !isNaN(latVal) ? latVal : udtCenter.lat;
+  let lng = !isNaN(lngVal) ? lngVal : udtCenter.lng;
 
   if (!address || !address.trim()) {
     return {
@@ -298,7 +301,17 @@ async function validateAddressAndBoundary(address, pincode, userLat, userLng) {
     };
   }
 
-  if (apiKey) {
+  // Determine if the coordinates passed in are fallback defaults.
+  // If they are fallback defaults (or close to them, or not provided), we want to geocode to get a better location.
+  // If they are custom coordinates (e.g. from Google Place Details), we skip geocoding to preserve their precision.
+  const isFallback = (
+    isNaN(latVal) || isNaN(lngVal) ||
+    (latVal === 10.585 && lngVal === 77.251) ||
+    (latVal === 10.5891 && lngVal === 77.2412) ||
+    (latVal === 0 && lngVal === 0)
+  );
+
+  if (apiKey && isFallback) {
     try {
       const fullAddressQuery = `${address}, Tamil Nadu, India, ${pincode}`;
       const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddressQuery)}&key=${apiKey}`;

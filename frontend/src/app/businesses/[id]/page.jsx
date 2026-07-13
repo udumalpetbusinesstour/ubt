@@ -3100,7 +3100,7 @@ Please confirm availability and delivery time.`;
                   height="100%"
                   style={{ border: 0 }}
                   loading="lazy"
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${(business.coordinates?.lng || 77.2412) - 0.012},${(business.coordinates?.lat || 10.5891) - 0.012},${(business.coordinates?.lng || 77.2412) + 0.012},${(business.coordinates?.lat || 10.5891) + 0.012}&layer=mapnik&marker=${business.coordinates?.lat || 10.5891},${business.coordinates?.lng || 77.2412}`}
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${(business.longitude || business.coordinates?.lng || 77.2412) - 0.012},${(business.latitude || business.coordinates?.lat || 10.5891) - 0.012},${(business.longitude || business.coordinates?.lng || 77.2412) + 0.012},${(business.latitude || business.coordinates?.lat || 10.5891) + 0.012}&layer=mapnik&marker=${business.latitude || business.coordinates?.lat || 10.5891},${business.longitude || business.coordinates?.lng || 77.2412}`}
                   className="absolute top-0 left-0 w-full h-[calc(100%+28px)] opacity-95 border-0"
                 />
                 
