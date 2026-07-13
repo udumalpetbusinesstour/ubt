@@ -293,10 +293,10 @@ export default function AddBusiness() {
           }
           alert('Please enter a valid correction instruction, or click Cancel to go back.');
         }
-
-        // If user cancelled correction, show the confirmation box again without calling AI
+        
         if (correction === null || correction === undefined) {
-          continue;
+          alert('AI Generation cancelled.');
+          break;
         }
       }
     } catch (err) {
