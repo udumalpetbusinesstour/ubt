@@ -670,8 +670,12 @@ function DashboardContent() {
       return;
     }
 
-    const hint = window.prompt(`Enter a brief hint or keywords for generating your business ${field} (optional, e.g. 'premium veg family restaurant, parking available'):`);
+    const hint = window.prompt(`Please enter a brief hint or keywords about your business to generate your ${field} (e.g., 'pure veg family restaurant, parking available'):`);
     if (hint === null) return; // User cancelled
+    if (!hint.trim()) {
+      alert(`Please provide a basic hint or keywords so the AI can generate a relevant ${field} for you.`);
+      return;
+    }
 
     setAiLoading(true);
     try {
