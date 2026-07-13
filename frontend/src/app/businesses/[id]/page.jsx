@@ -1937,12 +1937,9 @@ Please confirm availability and delivery time.`;
                 <p className="text-sm text-slate-500 leading-relaxed text-justify font-medium">{business.description}</p>
                 
                 {/* Highlights chip tags - dynamic from business.highlights */}
-                {!isGovernmentalOrPublic(business) && (
+                {!isGovernmentalOrPublic(business) && Array.isArray(business.highlights) && business.highlights.length > 0 && (
                   <div className="flex flex-wrap gap-2.5 mt-3">
-                    {(Array.isArray(business.highlights) && business.highlights.length > 0
-                      ? business.highlights
-                      : ['On-time Service', 'Expert Technicians', 'Quality Materials', 'Affordable Pricing']
-                    ).map((tag) => (
+                    {business.highlights.map((tag) => (
                       <span key={tag} className="bg-emerald-50/50 border border-emerald-100 text-emerald-700 text-[11px] font-bold py-2 px-4 rounded-xl flex items-center gap-1.5">
                         <CheckCircle2 className="h-4 w-4 text-emerald-600" /> {tag}
                       </span>
