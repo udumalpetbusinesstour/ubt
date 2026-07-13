@@ -1271,19 +1271,16 @@ Return the output strictly as a JSON object matching this schema:
     systemInstructionText = 'You are an AI marketing specialist agent specializing in writing concise, catchy, and high-impact highlights and features for businesses.';
     prompt = `Generate a list of 4 to 6 short highlights or features for a business named "${name}" in the category: "${catString}".
 ${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
-Highlights must be short phrases (e.g. "On-time Service", "Affordable Price", "Expert Technicians"). Highlights must NOT contain any green tick or check emojis.
+Highlights must be short phrases. Return the output strictly as a JSON object containing a single string of comma-separated values (e.g. "On-time Service, Affordable Price, Expert Technicians"). Highlights must NOT contain any green tick or check emojis.
 
 Return the output strictly as a JSON object matching this schema:
 {
-  "highlights": ["highlight 1", "highlight 2", ...]
+  "highlights": "comma-separated values string"
 }`;
     responseSchema = {
       type: "OBJECT",
       properties: {
-        highlights: {
-          type: "ARRAY",
-          items: { type: "STRING" }
-        }
+        highlights: { type: "STRING" }
       },
       required: ["highlights"]
     };
@@ -1291,19 +1288,16 @@ Return the output strictly as a JSON object matching this schema:
     systemInstructionText = 'You are an AI business operations consultant agent specializing in listing precise and descriptive products and services offered by businesses.';
     prompt = `Generate a list of 5 to 8 products or services offered by a business named "${name}" in the category: "${catString}".
 ${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
-Services should be relevant and specific (e.g. "Home Delivery", "AC Installation").
+Services should be relevant and specific. Return the output strictly as a JSON object containing a single string of comma-separated values (e.g. "Home Delivery, AC Installation").
 
 Return the output strictly as a JSON object matching this schema:
 {
-  "services": ["service 1", "service 2", ...]
+  "services": "comma-separated values string"
 }`;
     responseSchema = {
       type: "OBJECT",
       properties: {
-        services: {
-          type: "ARRAY",
-          items: { type: "STRING" }
-        }
+        services: { type: "STRING" }
       },
       required: ["services"]
     };
@@ -1431,7 +1425,7 @@ Return a JSON object exactly with this key:
           content: `Generate a list of 4 to 6 short highlights or features for a business named "${name}" in the category: "${catString}".
 ${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
 Return a JSON object exactly with this key:
-- highlights: 4 to 6 short highlights or features (e.g. "On-time Service", "Affordable Price", "Expert Technicians"). Highlights must NOT contain any emojis.`
+- highlights: A single string containing 4 to 6 short highlights separated by commas (e.g. "On-time Service, Affordable Price, Expert Technicians"). The string must NOT contain any emojis.`
         });
       } else if (field === 'services') {
         messages.push({
@@ -1439,7 +1433,7 @@ Return a JSON object exactly with this key:
           content: `Generate a list of 5 to 8 products or services offered by a business named "${name}" in the category: "${catString}".
 ${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
 Return a JSON object exactly with this key:
-- services: 5 to 8 products or services offered (e.g. "Home Delivery", "AC Installation").`
+- services: A single string containing 5 to 8 products or services separated by commas (e.g. "Home Delivery, AC Installation").`
         });
       } else {
         messages.push({
