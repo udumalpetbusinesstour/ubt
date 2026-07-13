@@ -1194,7 +1194,7 @@ export default function AddBusiness() {
         return false;
       }
       if (!branchForm.highlights || !branchForm.highlights.trim()) {
-        setError('Branch Verified Highlights / Features (Green Tick Badges) is mandatory.');
+        setError('Branch Verified Highlights / Features (Comma Separated) is mandatory.');
         return false;
       }
     } else if (branchStep === 3) {
@@ -1253,7 +1253,7 @@ export default function AddBusiness() {
         return false;
       }
       if (!formData.highlights || !formData.highlights.trim()) {
-        setError('Verified Highlights / Features (Green Tick Badges) is mandatory.');
+        setError('Verified Highlights / Features (Comma Separated) is mandatory.');
         return false;
       }
       if (!formData.timings || typeof formData.timings !== 'object' || Array.isArray(formData.timings)) {
@@ -2670,7 +2670,7 @@ export default function AddBusiness() {
                   </div>
 
                   <div className="flex flex-col gap-1.5 text-left">
-                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Green Tick Badges) <span className="text-red-500">*</span></label>
+                    <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Comma Separated) <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       name="highlights"
@@ -3210,7 +3210,7 @@ export default function AddBusiness() {
                       </div>
 
                       <div className="flex flex-col gap-1.5 text-left">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Green Tick Badges) <span className="text-red-500">*</span></label>
+                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Comma Separated) <span className="text-red-500">*</span></label>
                         <input
                           type="text"
                           name="highlights"
