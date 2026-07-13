@@ -1624,7 +1624,9 @@ export default function Home() {
                          <img 
                            src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl)} 
                            alt={biz.name}
-                           className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[15px]"
+                           className={`h-full w-full transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[15px] ${
+                             biz.logoUrl ? 'object-contain p-4 bg-white' : 'object-cover'
+                           }`}
                            style={{
                              filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
                            }}

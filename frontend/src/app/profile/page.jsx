@@ -349,7 +349,9 @@ export default function UserProfile() {
                         <img 
                           src={(typeof window !== 'undefined' && window.getImageUrl ? window.getImageUrl(biz.logoUrl) : biz.logoUrl) || (typeof window !== 'undefined' && window.getImageUrl ? window.getImageUrl(biz.coverImageUrl) : biz.coverImageUrl)} 
                           alt={biz.name || biz.businessName}
-                          className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[23px]"
+                          className={`h-full w-full transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[23px] ${
+                             biz.logoUrl ? 'object-contain p-4 bg-white' : 'object-cover'
+                           }`}
                         />
                       ) : (
                         <div className="w-full h-full bg-black flex items-center justify-center p-4">
