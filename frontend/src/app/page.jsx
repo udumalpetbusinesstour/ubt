@@ -835,10 +835,10 @@ export default function Home() {
     const fetchFeaturedAndCounts = async () => {
       // 1. Fetch top 10 featured businesses based on Bayesian Average formula
       try {
-        const res = await fetch('http://localhost:5000/api/businesses?sort=reviews&limit=15');
+        const res = await fetch('http://localhost:5000/api/businesses?sort=reviews');
         const data = await res.json();
         const rawList = (data.success && data.data && Array.isArray(data.data)) ? data.data : [];
-        const listToProcess = rawList.filter(b => !isGovernmentalOrPublic(b) && b.subscriptionStatus === 'active');
+        const listToProcess = rawList.filter(b => !isGovernmentalOrPublic(b));
 
         let totalRatingSum = 0;
         let totalRatingCount = 0;
@@ -862,7 +862,7 @@ export default function Home() {
         };
 
         const sortedByBayesian = [...listToProcess].sort((a, b) => getBayesianScore(b) - getBayesianScore(a));
-        setFeaturedBusinesses(sortedByBayesian.slice(0, 10));
+        setFeaturedBusinesses(sortedByBayesian);
       } catch (err) {
         console.warn('Backend server offline, setting empty featured businesses.');
         setFeaturedBusinesses([]);

@@ -966,4 +966,92 @@ router.post('/sponsored-ads/direct-post', async (req, res, next) => {
   }
 });
 
+// @desc    Get all businesses with pending profile edits
+// @route   GET /api/admin/business-edits/pending
+// @access  Private/Admin
+router.get('/business-edits/pending', async (req, res, next) => {
+  try {
+    const businesses = await Business.find({ pendingEdits: { $ne: null } }).populate('ownerId', 'fullName name email phone mobileNumber');
+    res.json({ success: true, count: businesses.length, data: businesses });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Approve pending edits for a business profile
+// @route   POST /api/admin/business-edits/:id/approve
+// @access  Private/Admin
+router.post('/business-edits/:id/approve', async (req, res, next) => {
+  try {
+    const business = await Business.findById(req.params.id);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+    if (!business.pendingEdits || !business.pendingEdits.data) {
+      return res.status(400).json({ success: false, message: 'No pending edits for this business' });
+    }
+
+    const changes = business.pendingEdits.data;
+
+    // Apply the changes to the main fields
+    Object.assign(business, changes);
+
+    // Clear pendingEdits
+    business.pendingEdits = null;
+
+    await business.save({ validateBeforeSave: false });
+
+    // Submit to Google Indexing API if it's approved
+    if (business.status === 'Approved') {
+      const targetUrl = `https://udumalpet.business/businesses/${business.slug || business._id}`;
+      submitToGoogleIndexing(targetUrl, 'URL_UPDATED').catch(err => {
+        console.error('[Google Indexing API Async Error] Business edits approval submission failed:', err);
+      });
+    }
+
+    // Notify owner
+    await Notification.create({
+      userId: business.ownerId,
+      businessId: business._id,
+      title: 'Business Profile Updates Approved',
+      message: `Your changes for "${business.name}" have been reviewed and approved by the administrator.`,
+      type: 'approval_status',
+    });
+
+    res.json({ success: true, message: 'Business edits approved and applied successfully', data: business });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Reject/Discard pending edits for a business profile
+// @route   POST /api/admin/business-edits/:id/reject
+// @access  Private/Admin
+router.post('/business-edits/:id/reject', async (req, res, next) => {
+  try {
+    const business = await Business.findById(req.params.id);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    // Clear pendingEdits
+    business.pendingEdits = null;
+
+    await business.save({ validateBeforeSave: false });
+
+    // Notify owner
+    await Notification.create({
+      userId: business.ownerId,
+      businessId: business._id,
+      title: 'Business Profile Updates Rejected',
+      message: `Your changes for "${business.name}" have been reviewed and rejected by the administrator.`,
+      type: 'approval_status',
+    });
+
+    res.json({ success: true, message: 'Business edits rejected and discarded successfully', data: business });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

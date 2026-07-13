@@ -8,7 +8,7 @@
  * @param {number} [quality=0.8] Compression quality (0 to 1).
  * @returns {Promise<File>} A Promise that resolves to the compressed/resized File object.
  */
-export const compressImage = (file, maxWidth, maxHeight, quality = 0.8) => {
+export const compressImage = (file, maxWidth, maxHeight, quality = 0.8, forceSquare = false) => {
   return new Promise((resolve, reject) => {
     // Return early if not an image
     if (!file.type || !file.type.startsWith('image/')) {
@@ -25,28 +25,59 @@ export const compressImage = (file, maxWidth, maxHeight, quality = 0.8) => {
         let width = img.width;
         let height = img.height;
 
-        // Calculate new dimensions keeping the aspect ratio
-        if (width > height) {
-          if (width > maxWidth) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
+        if (forceSquare) {
+          let S = maxWidth || 500;
+          let scaledWidth = S;
+          let scaledHeight = S;
+
+          if (width > height) {
+            scaledHeight = Math.round((height * S) / width);
+            scaledWidth = S;
+          } else {
+            scaledWidth = Math.round((width * S) / height);
+            scaledHeight = S;
           }
+
+          canvas.width = S;
+          canvas.height = S;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            return resolve(file);
+          }
+
+          // Fill canvas with white background
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, S, S);
+
+          // Draw image centered inside the square
+          const dx = (S - scaledWidth) / 2;
+          const dy = (S - scaledHeight) / 2;
+          ctx.drawImage(img, dx, dy, scaledWidth, scaledHeight);
         } else {
-          if (height > maxHeight) {
-            width = Math.round((width * maxHeight) / height);
-            height = maxHeight;
+          // Calculate new dimensions keeping the aspect ratio
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
           }
-        }
 
-        canvas.width = width;
-        canvas.height = height;
+          canvas.width = width;
+          canvas.height = height;
 
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          return resolve(file); // Fallback to original file on failure
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            return resolve(file); // Fallback to original file on failure
+          }
+          
+          ctx.drawImage(img, 0, 0, width, height);
         }
-        
-        ctx.drawImage(img, 0, 0, width, height);
 
         canvas.toBlob(
           (blob) => {

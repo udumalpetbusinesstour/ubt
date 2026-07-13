@@ -289,6 +289,10 @@ const BusinessSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  directionsClicks: {
+    type: Number,
+    default: 0,
+  },
   views: {
     type: Number,
     default: 0,
@@ -327,7 +331,11 @@ const BusinessSchema = new mongoose.Schema({
         customCategoryName: String,
         categoryStatus: { type: String, enum: ['Normal', 'Pending Review'], default: 'Normal' }
       }
-    ]
+    ],
+    pendingEdits: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null
+    }
 }, {
   timestamps: true
 });

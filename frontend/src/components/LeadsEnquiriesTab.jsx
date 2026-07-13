@@ -1,6 +1,18 @@
 import React from 'react';
 import { Mail, MessageSquare } from 'lucide-react';
 
+const getDisplayName = (name) => {
+  if (name === 'Customer (Call)') return 'Someone clicked Call';
+  if (name === 'Customer (WhatsApp)') return 'Someone clicked WhatsApp Chat';
+  if (name === 'Customer (Website)') return 'Someone clicked Website Link';
+  if (name === 'Customer (Facebook)') return 'Someone clicked Facebook Page';
+  if (name === 'Customer (Instagram)') return 'Someone clicked Instagram Profile';
+  if (name === 'Customer (Email)') return 'Someone clicked Email Draft';
+  if (name === 'Customer (Map Directions)') return 'Someone clicked Map Directions';
+  if (name === 'Customer (Saved Contact)') return 'Someone saved Contact Card';
+  return name;
+};
+
 export default function LeadsEnquiriesTab({
   business,
   leadsList = [],
@@ -75,7 +87,7 @@ export default function LeadsEnquiriesTab({
                     <div className="flex-grow flex flex-col overflow-hidden">
                       <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
-                          <span className="font-extrabold text-slate-800 truncate leading-snug">{lead.name}</span>
+                          <span className="font-extrabold text-slate-800 truncate leading-snug">{getDisplayName(lead.name)}</span>
                           {lead.status === 'Rectified' && (
                             <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide leading-none shrink-0 flex items-center gap-0.5 select-none">
                               ✓ Rectified
@@ -128,15 +140,18 @@ export default function LeadsEnquiriesTab({
                         {activeLead.initial}
                       </div>
                       <div className="flex flex-col text-left font-sans">
-                        <h4 className="font-extrabold text-slate-800 text-sm md:text-base leading-snug">{activeLead.name}</h4>
+                        <h4 className="font-extrabold text-slate-800 text-sm md:text-base leading-snug">{getDisplayName(activeLead.name)}</h4>
                         <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Enquiry Category: {activeLead.category}</span>
                         <span className="text-[9.5px] text-slate-400 font-bold mt-0.5">
                           Received via {
                             activeLead.name === 'Customer (Call)' ? 'Profile Phone Call' :
+                            activeLead.name === 'Customer (WhatsApp)' ? 'Profile WhatsApp Chat' :
                             activeLead.name === 'Customer (Website)' ? 'Profile Website Link' :
-                            activeLead.name === 'Customer (Email)' ? 'Profile Email Draft' :
                             activeLead.name === 'Customer (Facebook)' ? 'Profile Facebook Page' :
+                            activeLead.name === 'Customer (Instagram)' ? 'Profile Instagram Page' :
+                            activeLead.name === 'Customer (Email)' ? 'Profile Email Draft' :
                             activeLead.name === 'Customer (Map Directions)' ? 'Profile Map Directions' :
+                            activeLead.name === 'Customer (Saved Contact)' ? 'Contact Card Download' :
                             'Enquiry Form'
                           } • {activeLead.time}
                         </span>

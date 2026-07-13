@@ -1030,7 +1030,7 @@ export default function AddBusiness() {
       setLogoFile(file.name);
       setUploadingLogo(true);
       try {
-        const compressedFile = await compressImage(file, 500, 500);
+        const compressedFile = await compressImage(file, 500, 500, 0.8, true);
         const url = await uploadFileToServer(compressedFile);
         const updated = { ...formData, logoUrl: url };
         setFormData(updated);
@@ -1105,7 +1105,7 @@ export default function AddBusiness() {
       setBranchLogoFile(file.name);
       setUploadingBranchLogo(true);
       try {
-        const compressedFile = await compressImage(file, 500, 500);
+        const compressedFile = await compressImage(file, 500, 500, 0.8, true);
         const url = await uploadFileToServer(compressedFile);
         setBranchForm(prev => ({ ...prev, logoUrl: url }));
       } catch (err) {

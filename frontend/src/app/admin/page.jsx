@@ -124,6 +124,7 @@ export default function AdminDashboard() {
 
   // Datasets states
   const [businesses, setBusinesses] = useState([]);
+  const [pendingBusinessEdits, setPendingBusinessEdits] = useState([]);
   const [showDirectAdModal, setShowDirectAdModal] = useState(false);
   const [directAdBusinessId, setDirectAdBusinessId] = useState('');
   const [directAdExpiryDays, setDirectAdExpiryDays] = useState(30);
@@ -1329,6 +1330,17 @@ export default function AdminDashboard() {
         setBusinesses(activeBiz);
       }
 
+      // Fetch pending business edits
+      try {
+        const editsRes = await fetch('http://localhost:5000/api/admin/business-edits/pending', { headers });
+        const editsData = await editsRes.json();
+        if (editsData.success) {
+          setPendingBusinessEdits(editsData.data);
+        }
+      } catch (editsErr) {
+        console.error('Error fetching pending business edits:', editsErr);
+      }
+
       // Fetch signups
       try {
         const usersRes = await fetch('http://localhost:5000/api/users', { headers });
@@ -1739,6 +1751,42 @@ export default function AdminDashboard() {
       if (data.success) {
         alert(`Business successfully marked as ${nextStatus}!`);
         loadPlatformRealData(true);
+        
+        if (type === 'approve') {
+          const currentBiz = businesses.find(b => b._id === bizId);
+          if (currentBiz) {
+            const ownerPhone = currentBiz.ownerId?.phone || currentBiz.ownerId?.mobileNumber || currentBiz.phone || currentBiz.whatsapp;
+            const businessSlug = currentBiz.slug || currentBiz._id;
+            
+            if (ownerPhone) {
+              let cleanPhone = ownerPhone.replace(/\D/g, '');
+              if (cleanPhone.length === 10) {
+                cleanPhone = '91' + cleanPhone;
+              }
+              
+              const message = `🎉 *Congratulations! Your business profile has been approved.*
+
+Thank you for joining the **Udumalpet Business** community! We're excited to have your business listed on our platform.
+
+🔗 View your business profile here:
+https://udumalpet.business/${businessSlug}
+
+We look forward to helping your business reach more customers and grow its online presence.
+
+If you'd like to update your business information, add more photos, or need any assistance, we're always here to help.
+
+Thank you for being a part of our growing business community. Let's grow together! 🚀
+
+*Team Udumalpet Business*
+🌐 https://udumalpet.business`;
+              
+              const encodedMsg = encodeURIComponent(message);
+              const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`;
+              window.open(whatsappUrl, '_blank');
+            }
+          }
+        }
+        
         return true;
       } else {
         alert(data.message || 'Failed to update business status.');
@@ -1747,6 +1795,62 @@ export default function AdminDashboard() {
       console.error(err);
     }
     return false;
+  };
+
+  const handlePendingVerificationClick = () => {
+    if (!selectedBiz) return;
+    if (selectedBiz.status !== 'Pending Verification') return;
+
+    const ownerPhone = selectedBiz.ownerId?.phone || selectedBiz.ownerId?.mobileNumber || selectedBiz.phone || selectedBiz.whatsapp;
+    if (!ownerPhone) {
+      alert('Owner phone number not found.');
+      return;
+    }
+
+    const missing = [];
+    if (!selectedBiz.category) missing.push('category');
+    if (!selectedBiz.description) missing.push('business description');
+    if (!selectedBiz.address) missing.push('address');
+    if (!selectedBiz.phone && !selectedBiz.email) missing.push('contact details');
+    if (!selectedBiz.logoUrl) missing.push('logo');
+
+    const photosCount = (selectedBiz.galleryUrls ? (Array.isArray(selectedBiz.galleryUrls) ? selectedBiz.galleryUrls.length : 0) : 0) + (selectedBiz.coverImageUrl ? 1 : 0);
+    if (photosCount < 3) missing.push('photos');
+
+    const hasConfirmedPayment = selectedBiz.isPaid || selectedBiz.subscriptionStatus === 'active' || selectedBiz.isPremium || subscriptions.some(s => s.businessId === selectedBiz._id && (s.paymentStatus === 'Paid' || s.status === 'active'));
+    if (!hasConfirmedPayment) missing.push('payment');
+
+    let missingText = 'complete information';
+    if (missing.length === 1) {
+      missingText = missing[0];
+    } else if (missing.length === 2) {
+      missingText = `${missing[0]} and ${missing[1]}`;
+    } else if (missing.length > 2) {
+      missingText = `${missing.slice(0, -1).join(', ')}, and ${missing[missing.length - 1]}`;
+    }
+
+    const displayMissing = missing.length > 0 ? `adding your ${missingText}` : 'ensuring all your details are up-to-date';
+
+    const message = `Hi! 👋
+
+Thanks for registering with Udumalpet Business. Your profile is under review.
+
+To get approved faster, please complete your profile by ${displayMissing}.
+
+A complete profile helps us verify and publish your business quickly. 🚀
+
+Thank you!
+Team Udumalpet Business
+🌐 https://udumalpet.business`;
+
+    let cleanPhone = ownerPhone.replace(/\D/g, '');
+    if (cleanPhone.length === 10) {
+      cleanPhone = '91' + cleanPhone;
+    }
+
+    const encodedMsg = encodeURIComponent(message);
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const handlePartnerAction = async (partnerId, action) => {
@@ -2273,6 +2377,7 @@ export default function AdminDashboard() {
               { id: 'Signups', label: 'Signups', icon: <User className="h-5 w-5" /> },
               { id: 'Category Management', label: 'Categories', icon: <Grid className="h-5 w-5" /> },
               { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" /> },
+              { id: 'Business Edits', label: 'Business Edits', icon: <Edit3 className="h-5 w-5" /> },
               { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-5 w-5" /> },
               { id: 'Blogs', label: 'Blogs Moderation', icon: <BookOpen className="h-5 w-5" /> },
               { id: 'Events', label: 'Events Moderation', icon: <Calendar className="h-5 w-5" /> },
@@ -2352,6 +2457,7 @@ export default function AdminDashboard() {
                   { id: 'Signups', label: 'Signups', icon: <User className="h-5 w-5" /> },
                   { id: 'Category Management', label: 'Categories', icon: <Grid className="h-5 w-5" /> },
                   { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" /> },
+                  { id: 'Business Edits', label: 'Business Edits', icon: <Edit3 className="h-5 w-5" /> },
                   { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-5 w-5" /> },
                   { id: 'Blogs', label: 'Blogs Moderation', icon: <BookOpen className="h-5 w-5" /> },
                   { id: 'Events', label: 'Events Moderation', icon: <Calendar className="h-5 w-5" /> },
@@ -3122,6 +3228,14 @@ export default function AdminDashboard() {
                               </td>
                               <td className="p-4.5 text-right">
                                 <div className="flex items-center justify-end gap-2">
+                                  <a 
+                                    href={`/dashboard?bizId=${b._id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10.5px] font-extrabold text-center leading-none shadow-2xs cursor-pointer inline-flex items-center"
+                                  >
+                                    View Dashboard
+                                  </a>
                                   <button 
                                     onClick={() => { setSelectedBiz(b); setShowBizModal(true); }}
                                     className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[10.5px] font-extrabold text-center leading-none shadow-2xs cursor-pointer"
@@ -3696,6 +3810,179 @@ export default function AdminDashboard() {
                       )}
                     </div>
                   )}
+                </div>
+              )}
+              {/* TAB: BUSINESS EDITS MODERATION */}
+              {activeTab === 'Business Edits' && (
+                <div className="flex flex-col gap-6 text-left">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6">
+                    <h3 className="font-extrabold text-[#001c41] text-base">Business Profile Edits Moderation</h3>
+                    <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Approve or reject updates submitted by business owners before they go live</span>
+                  </div>
+
+                  <div className="flex flex-col gap-6">
+                    {pendingBusinessEdits.map(b => {
+                      const pendingData = b.pendingEdits?.data || {};
+                      const submittedAt = b.pendingEdits?.submittedAt ? new Date(b.pendingEdits.submittedAt).toLocaleString('en-IN') : 'N/A';
+                      
+                      // Identify modified fields
+                      const modifiedFields = Object.keys(pendingData).filter(key => {
+                        if (['_id', 'ownerId', 'createdAt', 'updatedAt', '__v'].includes(key)) return false;
+                        
+                        const currentVal = JSON.stringify(b[key]);
+                        const newVal = JSON.stringify(pendingData[key]);
+                        return currentVal !== newVal;
+                      });
+
+                      return (
+                        <div key={b._id} className="bg-white border border-slate-200 shadow-sm rounded-[28px] p-6 flex flex-col gap-6 hover:shadow-md transition-shadow">
+                          {/* Header: Business Info */}
+                          <div className="flex justify-between items-start flex-wrap gap-4 border-b border-slate-150 pb-4">
+                            <div className="flex items-center gap-4">
+                              <div className="h-12 w-12 rounded-xl overflow-hidden shrink-0 border border-slate-200 flex items-center justify-center bg-white text-slate-850 font-bold text-sm uppercase">
+                                {b.logoUrl ? (
+                                  <img src={window.getImageUrl(b.logoUrl)} className="h-full w-full object-contain p-1" alt={b.name} />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-[#001c41] text-white font-bold text-sm uppercase rounded-xl">
+                                    {b.name?.charAt(0)}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex flex-col text-left">
+                                <span className="font-extrabold text-slate-800 text-sm">{b.name}</span>
+                                <span className="text-[10px] text-slate-400 font-bold">Owner: {b.ownerName || 'Merchant'} | Submitted: {submittedAt}</span>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={async () => {
+                                  if (window.confirm('Are you sure you want to REJECT these edits? The changes will be discarded.')) {
+                                    try {
+                                      const res = await fetch(`http://localhost:5000/api/admin/business-edits/${b._id}/reject`, {
+                                        method: 'POST',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          'Authorization': `Bearer ${token}`
+                                        }
+                                      });
+                                      const resData = await res.json();
+                                      if (resData.success) {
+                                        alert('Edits successfully rejected and discarded!');
+                                        loadPlatformRealData(true);
+                                      } else {
+                                        alert(resData.message || 'Failed to reject edits');
+                                      }
+                                    } catch (err) {
+                                      console.error(err);
+                                    }
+                                  }
+                                }}
+                                className="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-650 rounded-xl text-xs font-black cursor-pointer transition-colors"
+                              >
+                                Discard Edits
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (window.confirm('Are you sure you want to APPROVE these edits? The changes will be applied immediately.')) {
+                                    try {
+                                      const res = await fetch(`http://localhost:5000/api/admin/business-edits/${b._id}/approve`, {
+                                        method: 'POST',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          'Authorization': `Bearer ${token}`
+                                        }
+                                      });
+                                      const resData = await res.json();
+                                      if (resData.success) {
+                                        alert('Edits successfully approved and applied!');
+                                        loadPlatformRealData(true);
+                                      } else {
+                                        alert(resData.message || 'Failed to approve edits');
+                                      }
+                                    } catch (err) {
+                                      console.error(err);
+                                    }
+                                  }
+                                }}
+                                className="px-4 py-2 bg-[#027244] hover:bg-[#005934] text-white rounded-xl text-xs font-black cursor-pointer transition-colors"
+                              >
+                                Approve Edits
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Body: Comparison Table */}
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs border-collapse">
+                              <thead>
+                                <tr className="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase">
+                                  <th className="py-2.5 w-1/4">Field</th>
+                                  <th className="py-2.5 w-3/8 px-4">Current Value (Approved)</th>
+                                  <th className="py-2.5 w-3/8 px-4 text-emerald-700">Proposed Value (Pending)</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100 font-medium">
+                                {modifiedFields.map(field => {
+                                  const renderValue = (val, isImageField) => {
+                                    if (!val) return <span className="text-slate-400 italic">None</span>;
+                                    if (isImageField) {
+                                      return (
+                                        <a href={window.getImageUrl(val)} target="_blank" rel="noopener noreferrer">
+                                          <img src={window.getImageUrl(val)} className="h-12 w-auto max-w-[120px] rounded-lg border border-slate-200 object-contain hover:scale-105 transition-transform" alt="Preview" />
+                                        </a>
+                                      );
+                                    }
+                                    if (field === 'galleryUrls' && Array.isArray(val)) {
+                                      return (
+                                        <div className="flex gap-2 flex-wrap">
+                                          {val.map((url, idx) => (
+                                            <a key={idx} href={window.getImageUrl(url)} target="_blank" rel="noopener noreferrer">
+                                              <img src={window.getImageUrl(url)} className="h-10 w-10 rounded-lg border border-slate-250 object-cover" alt={`gallery-${idx}`} />
+                                            </a>
+                                          ))}
+                                        </div>
+                                      );
+                                    }
+                                    if (Array.isArray(val)) {
+                                      return (
+                                        <div className="flex flex-wrap gap-1">
+                                          {val.map((item, idx) => (
+                                            <span key={idx} className="bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-md text-[10px]">{item}</span>
+                                          ))}
+                                        </div>
+                                      );
+                                    }
+                                    if (typeof val === 'object') {
+                                      return <pre className="bg-slate-50 border border-slate-100 p-2 rounded-lg text-[10px] max-h-24 overflow-y-auto whitespace-pre-wrap">{JSON.stringify(val, null, 2)}</pre>;
+                                    }
+                                    return <span className="break-all">{String(val)}</span>;
+                                  };
+
+                                  const isImage = ['logoUrl', 'coverImageUrl'].includes(field);
+
+                                  return (
+                                    <tr key={field} className="hover:bg-slate-50/50">
+                                      <td className="py-3 font-extrabold text-slate-700 capitalize">{field.replace(/([A-Z])/g, ' $1')}</td>
+                                      <td className="py-3 px-4 text-slate-500">{renderValue(b[field], isImage)}</td>
+                                      <td className="py-3 px-4 text-emerald-805 bg-emerald-50/30 font-bold">{renderValue(pendingData[field], isImage)}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {pendingBusinessEdits.length === 0 && (
+                      <div className="bg-white border border-slate-200 rounded-3xl p-16 text-center text-slate-400 flex flex-col items-center gap-3">
+                        <CheckCircle2 className="h-10 w-10 text-emerald-600 animate-bounce" />
+                        <span className="text-sm font-bold text-slate-800">All caught up!</span>
+                        <p className="text-xs text-slate-450 leading-relaxed max-w-xs">There are no pending business profile edits awaiting approval.</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
               {/* TAB: BLOGS MODERATION */}
@@ -6749,9 +7036,17 @@ export default function AdminDashboard() {
 
               {/* Status details indicators */}
               <div className="grid grid-cols-2 gap-3.5">
-                <div className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-3.5 text-xs font-bold text-slate-600 flex flex-col gap-0.5">
+                <div 
+                  onClick={handlePendingVerificationClick}
+                  className={`bg-slate-50/50 border border-slate-200/80 rounded-2xl p-3.5 text-xs font-bold text-slate-600 flex flex-col gap-0.5 ${selectedBiz.status === 'Pending Verification' ? 'hover:bg-amber-50 hover:border-amber-250 cursor-pointer transition-all duration-200 select-none group' : ''}`}
+                >
                   <span className="text-[8.5px] text-slate-400 font-extrabold uppercase">Vetting Status</span>
-                  <span className="text-slate-800 mt-1 font-extrabold">{selectedBiz.status}</span>
+                  <span className={`mt-1 font-extrabold ${selectedBiz.status === 'Pending Verification' ? 'text-amber-600 group-hover:text-amber-700 animate-pulse' : 'text-slate-800'}`}>{selectedBiz.status}</span>
+                  {selectedBiz.status === 'Pending Verification' && (
+                    <span className="text-[7.5px] text-slate-450 font-bold mt-1 group-hover:text-amber-750">
+                      ⚡ Send completion reminder
+                    </span>
+                  )}
                 </div>
                 <div className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-3.5 text-xs font-bold text-slate-600 flex flex-col gap-0.5">
                   <span className="text-[8.5px] text-slate-400 font-extrabold uppercase">Sub-Status</span>

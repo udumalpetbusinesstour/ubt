@@ -1248,6 +1248,10 @@ router.post('/google-autofill', async (req, res) => {
         });
 
         const result = await response.json();
+
+        if (result.error) {
+          throw new Error(result.error.message || 'Places API New returned an error');
+        }
         
         if (!result.error) {
           const lat = result.location?.latitude || 10.585;
@@ -1265,6 +1269,18 @@ router.post('/google-autofill', async (req, res) => {
               } else if (!locality && comp.types && comp.types.includes('locality')) {
                 locality = comp.longText;
               }
+            }
+          }
+
+          let address = result.formattedAddress || '';
+          if (!address || address.split(',').length < 3) {
+            try {
+              const legacyDetail = await fetchLegacyDetails(placeId, null, apiKey);
+              if (legacyDetail && legacyDetail.address) {
+                address = legacyDetail.address;
+              }
+            } catch (e) {
+              console.warn('Failed to retrieve fallback legacy address:', e.message);
             }
           }
 
@@ -1346,7 +1362,7 @@ router.post('/google-autofill', async (req, res) => {
 
           const detail = {
             name: result.displayName?.text || '',
-            address: result.formattedAddress || '',
+            address: address,
             phone: result.nationalPhoneNumber || '',
             website: result.websiteUri || '',
             email,
@@ -1521,13 +1537,17 @@ router.post('/google-autofill-link', async (req, res) => {
           const url = `https://places.googleapis.com/v1/places/${placeId}`;
           const response = await fetch(url, {
             method: 'GET',
-            headers: {
+                  headers: {
               'Content-Type': 'application/json',
               'X-Goog-Api-Key': apiKey,
               'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,location,regularOpeningHours,rating,userRatingCount,reviews,addressComponents,types'
             }
           });
           const result = await response.json();
+          if (result.error) {
+            throw new Error(result.error.message || 'Places API New returned an error');
+          }
+
           if (!result.error) {
             const lat = result.location?.latitude || extractedLat || 10.585;
             const lng = result.location?.longitude || extractedLng || 77.251;
@@ -1544,6 +1564,18 @@ router.post('/google-autofill-link', async (req, res) => {
                 } else if (!locality && comp.types && comp.types.includes('locality')) {
                   locality = comp.longText;
                 }
+              }
+            }
+
+            let address = result.formattedAddress || '';
+            if (!address || address.split(',').length < 3) {
+              try {
+                const legacyDetail = await fetchLegacyDetails(placeId, null, apiKey, extractedName, extractedLat, extractedLng);
+                if (legacyDetail && legacyDetail.address) {
+                  address = legacyDetail.address;
+                }
+              } catch (e) {
+                console.warn('Failed to retrieve fallback legacy address:', e.message);
               }
             }
 
@@ -1624,7 +1656,7 @@ router.post('/google-autofill-link', async (req, res) => {
 
             const detail = {
               name: result.displayName?.text || extractedName || '',
-              address: result.formattedAddress || '',
+              address: address,
               phone: result.nationalPhoneNumber || '',
               website: result.websiteUri || '',
               email,
@@ -2395,6 +2427,19 @@ router.put('/:id', protect, async (req, res) => {
       req.body.googleLinked = true;
     }
 
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      const existingData = (business.pendingEdits && business.pendingEdits.data) ? business.pendingEdits.data : {};
+      const mergedData = { ...existingData, ...req.body };
+      
+      business.pendingEdits = {
+        data: mergedData,
+        submittedAt: new Date()
+      };
+      
+      await business.save({ validateBeforeSave: false });
+      return res.json({ success: true, message: 'Edits submitted for admin approval', data: business, pendingApproval: true });
+    }
+
     Object.assign(business, req.body);
     await business.save();
 
@@ -2502,7 +2547,7 @@ router.post('/:id/click', async (req, res) => {
 
   try {
     const updateField = `${type}Clicks`;
-    const schemaClicks = ['call', 'whatsapp', 'website', 'instagram', 'facebook'];
+    const schemaClicks = ['call', 'whatsapp', 'website', 'instagram', 'facebook', 'directions'];
     
     let business;
     if (schemaClicks.includes(type)) {

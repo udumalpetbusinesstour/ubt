@@ -1560,7 +1560,7 @@ Please confirm availability and delivery time.`;
     <div className="w-full flex flex-col items-center font-sans bg-[#F8FAFC]">
       {/* Pending Vetting Banner */}
       {business.status && business.status !== 'Approved' && (
-        <div className="w-full bg-amber-550 text-white font-extrabold text-xs py-3.5 px-4 text-center sticky top-[76px] z-30 shadow flex items-center justify-center gap-2">
+        <div className="w-full bg-amber-600 text-white font-extrabold text-xs py-3.5 px-4 text-center sticky top-[76px] z-30 shadow flex items-center justify-center gap-2">
           <AlertCircle className="h-4.5 w-4.5 animate-pulse" />
           <span>This business profile is currently in "{business.status}" status. It remains private to you until verified by administrators.</span>
         </div>
@@ -1648,7 +1648,7 @@ Please confirm availability and delivery time.`;
                   <img 
                     src={window.getImageUrl(business.logoUrl)} 
                     alt={`${business.name} Logo`} 
-                    className="h-full w-full object-cover" 
+                    className="h-full w-full object-contain p-1" 
                     onError={(e) => { 
                       e.target.style.display = 'none'; 
                       e.target.parentElement.innerHTML = `<div class="w-full h-full bg-black flex items-center justify-center text-white font-black text-xs md:text-sm uppercase text-center p-1.5 leading-none select-none">${business.name ? (business.name.trim().split(/\s+/).length > 1 ? business.name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 4) : business.name.slice(0, 4).toUpperCase()) : 'BIZ'}</div>`;

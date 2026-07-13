@@ -262,7 +262,8 @@ function DashboardContent() {
   })();
 
   // The effective "registered business" — null when just a draft
-  const registrationComplete = isRegistrationDraft ? false : !!business;
+  const isAdminOverride = searchParams.get('bizId') && (user?.role === 'admin' || user?.role === 'superadmin');
+  const registrationComplete = isAdminOverride ? true : (isRegistrationDraft ? false : !!business);
 
   // Safe defaults if business is null (standard user has no listing)
   const isExpired = business ? business.subscriptionStatus === 'expired' : false;
@@ -691,7 +692,7 @@ function DashboardContent() {
       else setCoverUploading(true);
 
       try {
-        const compressedFile = await compressImage(file, targetField === 'logoUrl' ? 500 : 1200, targetField === 'logoUrl' ? 500 : 800);
+        const compressedFile = await compressImage(file, targetField === 'logoUrl' ? 500 : 1200, targetField === 'logoUrl' ? 500 : 800, 0.8, targetField === 'logoUrl');
         const formData = new FormData();
         formData.append('image', compressedFile);
 
@@ -770,7 +771,7 @@ function DashboardContent() {
     try {
       setUploadError('');
       setLogoUploading(true);
-      const compressedFile = await compressImage(file, 500, 500);
+      const compressedFile = await compressImage(file, 500, 500, 0.8, true);
       const formData = new FormData();
       formData.append('image', compressedFile);
       const activeToken = token || localStorage.getItem('ubt_token');
@@ -1411,7 +1412,14 @@ function DashboardContent() {
         instagram: parsedUser.instagram || '',
         facebook: parsedUser.facebook || ''
       });
-      if (parsedUser.role === 'partner') {
+      const queryParams = new URLSearchParams(window.location.search);
+      const bizIdParam = queryParams.get('bizId');
+      const isAdminOrSuperAdmin = parsedUser.role === 'admin' || parsedUser.role === 'superadmin';
+
+      if (bizIdParam && isAdminOrSuperAdmin) {
+        fetchAdminTargetBusiness(storedToken, bizIdParam);
+        fetchPaymentPlans();
+      } else if (parsedUser.role === 'partner') {
         // Partners don't own businesses - load referral data directly
         setLoading(false);
       } else {
@@ -1439,6 +1447,43 @@ function DashboardContent() {
       setSuccessBanner('Your business profile details have been successfully updated and saved!');
     }
   }, [searchParams, urlTab]);
+
+  const fetchAdminTargetBusiness = async (authToken, bizId) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`http://localhost:5000/api/businesses/${bizId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const data = await res.json();
+      
+      if (data.success && data.data) {
+        const userBiz = data.data;
+        setBusiness(userBiz);
+        setPrimaryBusiness(userBiz);
+        setAllBusinesses([userBiz]);
+        
+        if (userBiz.offers) {
+          setOffersList(userBiz.offers);
+        } else {
+          setOffersList([]);
+        }
+        if (userBiz.promotions) {
+          setPromotionsList(userBiz.promotions);
+        } else {
+          setPromotionsList([]);
+        }
+        
+        // Fetch auxiliary data
+        fetchLeads(authToken, userBiz._id);
+        fetchBranches(authToken, userBiz._id);
+        fetchReviews(authToken, userBiz._id);
+      }
+    } catch (err) {
+      console.error('Error fetching admin target business:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchUserBusiness = async (authToken) => {
     setLoading(true);
@@ -1597,27 +1642,27 @@ function DashboardContent() {
           'bg-slate-100 text-slate-600'
         ];
         const formatted = data.data.map((lead, idx) => {
-          const createdAt = new Date(lead.createdAt);
-          const timeStr = createdAt.toLocaleDateString(undefined, {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            const createdAt = new Date(lead.createdAt);
+            const timeStr = createdAt.toLocaleDateString(undefined, {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            return {
+              _id: lead._id,
+              name: lead.name,
+              phone: lead.phone,
+              message: lead.message,
+              category: business?.category || 'General Service',
+              time: timeStr,
+              initial: (lead.name || 'L').charAt(0).toUpperCase(),
+              color: colors[idx % colors.length],
+              reply: lead.reply || '',
+              responded: lead.status === 'Responded' || lead.status === 'Rectified' || !!lead.reply,
+              status: lead.status || 'Pending'
+            };
           });
-          return {
-            _id: lead._id,
-            name: lead.name,
-            phone: lead.phone,
-            message: lead.message,
-            category: business?.category || 'General Service',
-            time: timeStr,
-            initial: (lead.name || 'L').charAt(0).toUpperCase(),
-            color: colors[idx % colors.length],
-            reply: lead.reply || '',
-            responded: lead.status === 'Responded' || lead.status === 'Rectified' || !!lead.reply,
-            status: lead.status || 'Pending'
-          };
-        });
         setLeadsList(formatted);
       }
     } catch (err) {
@@ -4311,6 +4356,38 @@ function DashboardContent() {
 
         <main className="flex-grow overflow-y-auto px-3 sm:px-6 py-4 md:py-6 w-full flex flex-col gap-4 md:gap-6">
           
+          {isAdminOverride && (
+            <div className="bg-blue-600 text-white border-none rounded-3xl p-5 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn text-left shrink-0">
+              <div className="flex items-start gap-3.5">
+                <ShieldCheck className="h-6 w-6 shrink-0 text-white mt-0.5" />
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-extrabold text-sm">Administrator Session Override Active</span>
+                  <p className="text-xs text-blue-150 font-semibold leading-relaxed">
+                    You are accessing this workspace with full Administrative privileges. Any changes you make here will apply directly to the business profile listing <strong>"{business?.name}"</strong>.
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => window.close()} 
+                className="bg-white text-blue-800 font-extrabold text-[10.5px] py-2 px-5 rounded-xl hover:bg-slate-100 transition-colors uppercase shrink-0 cursor-pointer shadow-sm border-none"
+              >
+                Close Session
+              </button>
+            </div>
+          )}
+
+          {business?.pendingEdits && (
+            <div className="bg-amber-50 border border-amber-250 text-amber-900 rounded-3xl p-5 shadow-sm flex items-start gap-4 animate-fadeIn text-left shrink-0">
+              <Clock className="h-5.5 w-5.5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="flex-1 flex flex-col gap-0.5">
+                <span className="font-extrabold text-xs text-slate-800">Profile Edits Pending Approval ⏳</span>
+                <p className="text-xs text-slate-655 font-semibold leading-relaxed">
+                  You have pending profile edits awaiting administrator approval. These changes will replace your live public profile fields immediately once approved.
+                </p>
+              </div>
+            </div>
+          )}
+          
           {/* Mobile Branch Switcher */}
           {primaryBusiness && branches && branches.length > 0 && (
             <div className="sm:hidden flex items-center justify-between gap-3 bg-emerald-50/50 border border-emerald-150 rounded-2xl px-4 py-2.5 shadow-3xs animate-fadeIn shrink-0">
@@ -5288,6 +5365,17 @@ function DashboardContent() {
                   </div>
                 </div>
 
+                {/* Map Clicks */}
+                <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[180px] sm:w-[200px] shrink-0 snap-start">
+                  <div className="h-10.5 w-10.5 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                    <MapPin className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="flex flex-col text-left overflow-hidden min-w-0">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Map Clicks</span>
+                    <span className="text-xl font-extrabold text-slate-800 leading-none mt-1">{business.directionsClicks ?? 0}</span>
+                  </div>
+                </div>
+
                 {/* Social Clicks */}
                 <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[180px] sm:w-[200px] shrink-0 snap-start">
                   <div className="h-10.5 w-10.5 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center shrink-0">
@@ -5822,7 +5910,7 @@ function DashboardContent() {
                       <div className="flex items-center gap-4 mt-2 flex-wrap text-left">
                         {business.logoUrl && !logoUploading ? (
                           <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-white shadow-md shrink-0 flex items-center justify-center relative group">
-                            <img src={window.getImageUrl(business.logoUrl)} alt={`${business.name} Logo`} className="h-full w-full object-cover" />
+                            <img src={window.getImageUrl(business.logoUrl)} alt={`${business.name} Logo`} className="h-full w-full object-contain p-1" />
                             <label className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity text-white text-[9px] font-black uppercase tracking-wider select-none text-center p-1">
                               <Upload className="h-4 w-4 mb-1 animate-bounce" />
                               <span>Change Logo</span>
@@ -7031,9 +7119,9 @@ function DashboardContent() {
                     <span className="text-[10px] text-amber-600 font-bold mt-0.5 block leading-tight">Please upload a square image (e.g. 500x500 px) for best display results. (Max 5MB)</span>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="h-20 w-20 rounded-2xl border border-slate-200 bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                    <div className="h-20 w-20 rounded-2xl border border-slate-200 bg-white overflow-hidden shrink-0 flex items-center justify-center">
                       {editFields.logoUrl ? (
-                        <img src={window.getImageUrl(editFields.logoUrl)} alt="Logo" className="w-full h-full object-cover" />
+                        <img src={window.getImageUrl(editFields.logoUrl)} alt="Logo" className="w-full h-full object-contain p-1" />
                       ) : (
                         <ImageIcon className="h-8 w-8 text-slate-300" />
                       )}
@@ -10219,7 +10307,7 @@ function DashboardContent() {
                           <img 
                             src={window.getImageUrl(editFields.logoUrl)} 
                             alt="Logo Preview" 
-                            className="h-full w-full object-cover absolute inset-0"
+                            className="h-full w-full object-contain p-1 absolute inset-0 bg-white"
                           />
                         ) : (
                           (editFields.name || 'B').charAt(0)
