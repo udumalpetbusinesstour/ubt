@@ -4281,7 +4281,9 @@ Team Udumalpet Business
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4.5">
                     <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl p-4.5 flex flex-col text-left">
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Subscriptions</span>
-                      <span className="text-xl font-black text-[#001c41] mt-1.5">{subscriptions.length} Records</span>
+                      <span className="text-xl font-black text-[#001c41] mt-1.5">
+                        {subscriptions.filter(sub => sub.status === 'active' || sub.status === 'expired' || sub.status === 'refunded').length} Records
+                      </span>
                     </div>
                     <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl p-4.5 flex flex-col text-left">
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Plans</span>
