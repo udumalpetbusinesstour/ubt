@@ -1229,25 +1229,36 @@ router.post('/generate-ai-details', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Business name is required' });
   }
 
-  const geminiApiKey = process.env.GEMINI_API_KEY;
+  const geminiKeys = [
+    process.env.GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY_2,
+    process.env.GEMINI_API_KEY_3
+  ].filter(Boolean);
   const openaiApiKey = process.env.OPENAI_API_KEY;
 
-  if (!geminiApiKey && !openaiApiKey) {
+  if (geminiKeys.length === 0 && !openaiApiKey) {
     return res.status(400).json({
       success: false,
-      message: 'AI generation is not configured. Please set GEMINI_API_KEY or OPENAI_API_KEY in your backend server environment.'
+      message: 'AI generation is not configured. Please set GEMINI_API_KEY, GEMINI_API_KEY_2, or OPENAI_API_KEY in your backend server environment.'
     });
   }
 
   const catList = Array.isArray(categories) ? categories.map(c => typeof c === 'object' ? (c.category || c.name || '') : c).filter(Boolean) : [];
   const catString = catList.length > 0 ? catList.join(', ') : 'General Business';
 
-  // 1. Try Gemini first if key is present
-  if (geminiApiKey) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiApiKey}`;
-      
-      const prompt = `Generate details for a business named "${name}" in the category: "${catString}".
+  let geminiSuccess = false;
+  let parsedData = null;
+  let lastError = null;
+
+  // 1. Try Gemini first if keys are present
+  if (geminiKeys.length > 0) {
+    for (let i = 0; i < geminiKeys.length; i++) {
+      const apiKey = geminiKeys[i];
+      try {
+        console.log(`[AI Generator] Attempting with Gemini Key Index: ${i}`);
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
+        
+        const prompt = `Generate details for a business named "${name}" in the category: "${catString}".
 Provide:
 1. A professional description (3 to 4 sentences).
 2. 4 to 6 short highlights or features (e.g. "On-time Service", "Affordable Price", "Expert Technicians"). Highlights must NOT contain any green tick or check emojis.
@@ -1260,51 +1271,71 @@ Return the output strictly as a JSON object matching this schema:
   "services": ["service 1", "service 2", ...]
 }`;
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "OBJECT",
-              properties: {
-                description: { type: "STRING" },
-                highlights: {
-                  type: "ARRAY",
-                  items: { type: "STRING" }
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: prompt }]
+            }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: "OBJECT",
+                properties: {
+                  description: { type: "STRING" },
+                  highlights: {
+                    type: "ARRAY",
+                    items: { type: "STRING" }
+                  },
+                  services: {
+                    type: "ARRAY",
+                    items: { type: "STRING" }
+                  }
                 },
-                services: {
-                  type: "ARRAY",
-                  items: { type: "STRING" }
-                }
-              },
-              required: ["description", "highlights", "services"]
+                required: ["description", "highlights", "services"]
+              }
             }
-          }
-        })
-      });
+          })
+        });
 
-      const result = await response.json();
-      if (result.error) {
-        throw new Error(result.error.message || 'Gemini API returned an error');
-      }
+        const result = await response.json();
+        
+        // Handle rate limit (429) or quota errors by trying next key
+        if (response.status === 429 || result.error?.code === 429 || result.error?.status === 'RESOURCE_EXHAUSTED') {
+          console.warn(`[AI Generator] Gemini Key Index ${i} rate limited (429). Trying next key...`);
+          lastError = new Error(result.error?.message || 'Rate limit exceeded');
+          continue; 
+        }
 
-      const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text) {
-        const parsed = JSON.parse(text);
-        return res.json({ success: true, data: parsed });
-      }
-    } catch (err) {
-      console.error('Gemini generation failed:', err.message);
-      // If Gemini fails, we will fall through to OpenAI if available, else throw error
-      if (!openaiApiKey) {
-        return res.status(500).json({ success: false, message: `AI generation failed: ${err.message}` });
+        if (result.error) {
+          throw new Error(result.error.message || 'Gemini API returned an error');
+        }
+
+        const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) {
+          parsedData = JSON.parse(text);
+          geminiSuccess = true;
+          break; // Stop loop on success
+        }
+      } catch (err) {
+        console.error(`[AI Generator] Gemini Key Index ${i} failed:`, err.message);
+        lastError = err;
+        // Continue to check next key
       }
     }
+
+    if (geminiSuccess && parsedData) {
+      return res.json({ success: true, data: parsedData });
+    }
+  }
+
+  // If Gemini failed but OpenAI is not available, return failure
+  if (!geminiSuccess && !openaiApiKey) {
+    return res.status(500).json({ 
+      success: false, 
+      message: `AI generation failed: ${lastError ? lastError.message : 'Unknown error'}` 
+    });
   }
 
   // 2. Fallback to OpenAI if key is present
