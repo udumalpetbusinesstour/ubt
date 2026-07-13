@@ -574,7 +574,7 @@ export default function ReferralModal({ isOpen, onClose }) {
             <span>Trusted by 500+ Businesses in Udumalpet</span>
           </div>
           <div className="text-slate-450 leading-relaxed text-center sm:text-right">
-            Have questions? Contact us at <a href="mailto:info@udumalpet.business" className="text-slate-600 hover:text-[#027244] font-extrabold hover:underline transition-colors">info@udumalpet.business</a> | <a href="tel:+919787241221" className="text-slate-600 hover:text-[#027244] font-extrabold hover:underline transition-colors">+91 97872 41221</a>
+            Have questions? Contact us at <a href="mailto:info@udumalpet.business" className="text-slate-600 hover:text-[#027244] font-extrabold hover:underline transition-colors">info@udumalpet.business</a> | <a href="tel:+918925728260" className="text-slate-600 hover:text-[#027244] font-extrabold hover:underline transition-colors">+91 89257 28260</a>
           </div>
         </section>
 
