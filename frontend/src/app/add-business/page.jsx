@@ -205,7 +205,7 @@ export default function AddBusiness() {
 
   const [aiLoading, setAiLoading] = useState(false);
 
-  const handleAIGenerate = async (isBranch = false) => {
+  const handleAIGenerate = async (field, isBranch = false) => {
     const targetName = isBranch ? branchForm.name : formData.name;
     const targetCats = isBranch ? [branchForm.category] : formData.categories;
 
@@ -213,6 +213,9 @@ export default function AddBusiness() {
       alert('Please enter a business name first before generating details.');
       return;
     }
+
+    const hint = window.prompt(`Enter a brief hint or keywords for generating your business ${field} (optional, e.g. 'premium veg family restaurant, parking available'):`);
+    if (hint === null) return; // User cancelled
 
     setAiLoading(true);
     try {
@@ -223,29 +226,29 @@ export default function AddBusiness() {
         },
         body: JSON.stringify({
           name: targetName,
-          categories: targetCats
+          categories: targetCats,
+          field,
+          hint
         })
       });
       const data = await res.json();
       if (data.success) {
-        const { description, highlights, services } = data.data;
-        
         if (isBranch) {
           setBranchForm(prev => ({
             ...prev,
-            description: description || prev.description,
-            highlights: Array.isArray(highlights) ? highlights.join(', ') : (highlights || prev.highlights),
-            services: Array.isArray(services) ? services.join(', ') : (services || prev.services)
+            [field]: field === 'description' 
+              ? (data.data.description || prev.description)
+              : (Array.isArray(data.data[field]) ? data.data[field].join(', ') : (data.data[field] || prev[field]))
           }));
         } else {
           setFormData(prev => ({
             ...prev,
-            description: description || prev.description,
-            highlights: Array.isArray(highlights) ? highlights.join(', ') : (highlights || prev.highlights),
-            services: Array.isArray(services) ? services.join(', ') : (services || prev.services)
+            [field]: field === 'description' 
+              ? (data.data.description || prev.description)
+              : (Array.isArray(data.data[field]) ? data.data[field].join(', ') : (data.data[field] || prev[field]))
           }));
         }
-        alert('AI successfully generated your business description, highlights, and services offered!');
+        alert(`AI successfully generated your business ${field}!`);
       } else {
         alert(data.message || 'AI generation failed.');
       }
@@ -2578,7 +2581,7 @@ export default function AddBusiness() {
                           <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Short Business Description <span className="text-red-500">*</span></label>
                           <button
                             type="button"
-                            onClick={() => handleAIGenerate(false)}
+                            onClick={() => handleAIGenerate('description', false)}
                             disabled={aiLoading}
                             className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50 shrink-0"
                           >
@@ -2740,7 +2743,7 @@ export default function AddBusiness() {
                       <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Comma Separated) <span className="text-red-500">*</span></label>
                       <button
                         type="button"
-                        onClick={() => handleAIGenerate(false)}
+                        onClick={() => handleAIGenerate('highlights', false)}
                         disabled={aiLoading}
                         className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
                       >
@@ -3182,7 +3185,7 @@ export default function AddBusiness() {
                           <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Branch Description <span className="text-red-500">*</span></label>
                           <button
                             type="button"
-                            onClick={() => handleAIGenerate(true)}
+                            onClick={() => handleAIGenerate('description', true)}
                             disabled={aiLoading}
                             className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50 shrink-0"
                           >

@@ -1224,7 +1224,7 @@ async function fetchLegacyDetails(placeId, cid, apiKey, extractedName, extracted
 // @route   POST /api/businesses/generate-ai-details
 // @access  Public
 router.post('/generate-ai-details', async (req, res) => {
-  const { name, categories } = req.body;
+  const { name, categories, field, hint } = req.body;
   if (!name) {
     return res.status(400).json({ success: false, message: 'Business name is required' });
   }
@@ -1246,19 +1246,67 @@ router.post('/generate-ai-details', async (req, res) => {
   const catList = Array.isArray(categories) ? categories.map(c => typeof c === 'object' ? (c.category || c.name || '') : c).filter(Boolean) : [];
   const catString = catList.length > 0 ? catList.join(', ') : 'General Business';
 
-  let geminiSuccess = false;
-  let parsedData = null;
-  let lastError = null;
+  let prompt = '';
+  let responseSchema = null;
 
-  // 1. Try Gemini first if keys are present
-  if (geminiKeys.length > 0) {
-    for (let i = 0; i < geminiKeys.length; i++) {
-      const apiKey = geminiKeys[i];
-      try {
-        console.log(`[AI Generator] Attempting with Gemini Key Index: ${i}`);
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
-        
-        const prompt = `Generate details for a business named "${name}" in the category: "${catString}".
+  if (field === 'description') {
+    prompt = `Generate a professional business description for a business named "${name}" in the category: "${catString}".
+${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
+The description must be 3 to 4 sentences long.
+
+Return the output strictly as a JSON object matching this schema:
+{
+  "description": "text string"
+}`;
+    responseSchema = {
+      type: "OBJECT",
+      properties: {
+        description: { type: "STRING" }
+      },
+      required: ["description"]
+    };
+  } else if (field === 'highlights') {
+    prompt = `Generate a list of 4 to 6 short highlights or features for a business named "${name}" in the category: "${catString}".
+${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
+Highlights must be short phrases (e.g. "On-time Service", "Affordable Price", "Expert Technicians"). Highlights must NOT contain any green tick or check emojis.
+
+Return the output strictly as a JSON object matching this schema:
+{
+  "highlights": ["highlight 1", "highlight 2", ...]
+}`;
+    responseSchema = {
+      type: "OBJECT",
+      properties: {
+        highlights: {
+          type: "ARRAY",
+          items: { type: "STRING" }
+        }
+      },
+      required: ["highlights"]
+    };
+  } else if (field === 'services') {
+    prompt = `Generate a list of 5 to 8 products or services offered by a business named "${name}" in the category: "${catString}".
+${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
+Services should be relevant and specific (e.g. "Home Delivery", "AC Installation").
+
+Return the output strictly as a JSON object matching this schema:
+{
+  "services": ["service 1", "service 2", ...]
+}`;
+    responseSchema = {
+      type: "OBJECT",
+      properties: {
+        services: {
+          type: "ARRAY",
+          items: { type: "STRING" }
+        }
+      },
+      required: ["services"]
+    };
+  } else {
+    // Default (generate everything)
+    prompt = `Generate details for a business named "${name}" in the category: "${catString}".
+${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
 Provide:
 1. A professional description (3 to 4 sentences).
 2. 4 to 6 short highlights or features (e.g. "On-time Service", "Affordable Price", "Expert Technicians"). Highlights must NOT contain any green tick or check emojis.
@@ -1270,6 +1318,34 @@ Return the output strictly as a JSON object matching this schema:
   "highlights": ["highlight 1", "highlight 2", ...],
   "services": ["service 1", "service 2", ...]
 }`;
+    responseSchema = {
+      type: "OBJECT",
+      properties: {
+        description: { type: "STRING" },
+        highlights: {
+          type: "ARRAY",
+          items: { type: "STRING" }
+        },
+        services: {
+          type: "ARRAY",
+          items: { type: "STRING" }
+        }
+      },
+      required: ["description", "highlights", "services"]
+    };
+  }
+
+  let geminiSuccess = false;
+  let parsedData = null;
+  let lastError = null;
+
+  // 1. Try Gemini first if keys are present
+  if (geminiKeys.length > 0) {
+    for (let i = 0; i < geminiKeys.length; i++) {
+      const apiKey = geminiKeys[i];
+      try {
+        console.log(`[AI Generator] Attempting with Gemini Key Index: ${i}`);
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
 
         const response = await fetch(url, {
           method: 'POST',
@@ -1280,21 +1356,7 @@ Return the output strictly as a JSON object matching this schema:
             }],
             generationConfig: {
               responseMimeType: "application/json",
-              responseSchema: {
-                type: "OBJECT",
-                properties: {
-                  description: { type: "STRING" },
-                  highlights: {
-                    type: "ARRAY",
-                    items: { type: "STRING" }
-                  },
-                  services: {
-                    type: "ARRAY",
-                    items: { type: "STRING" }
-                  }
-                },
-                required: ["description", "highlights", "services"]
-              }
+              responseSchema: responseSchema
             }
           })
         });
@@ -1341,6 +1403,49 @@ Return the output strictly as a JSON object matching this schema:
   // 2. Fallback to OpenAI if key is present
   if (openaiApiKey) {
     try {
+      let messages = [
+        {
+          role: 'system',
+          content: 'You are an AI assistant that generates business profiles in JSON format.'
+        }
+      ];
+
+      if (field === 'description') {
+        messages.push({
+          role: 'user',
+          content: `Generate a professional business description for a business named "${name}" in the category: "${catString}".
+${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
+Return a JSON object exactly with this key:
+- description: A professional description (3 to 4 sentences).`
+        });
+      } else if (field === 'highlights') {
+        messages.push({
+          role: 'user',
+          content: `Generate a list of 4 to 6 short highlights or features for a business named "${name}" in the category: "${catString}".
+${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
+Return a JSON object exactly with this key:
+- highlights: 4 to 6 short highlights or features (e.g. "On-time Service", "Affordable Price", "Expert Technicians"). Highlights must NOT contain any emojis.`
+        });
+      } else if (field === 'services') {
+        messages.push({
+          role: 'user',
+          content: `Generate a list of 5 to 8 products or services offered by a business named "${name}" in the category: "${catString}".
+${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
+Return a JSON object exactly with this key:
+- services: 5 to 8 products or services offered (e.g. "Home Delivery", "AC Installation").`
+        });
+      } else {
+        messages.push({
+          role: 'user',
+          content: `Generate details for a business named "${name}" in the category: "${catString}".
+${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
+Return a JSON object exactly with these keys:
+- description: A professional description (3 to 4 sentences).
+- highlights: 4 to 6 short highlights or features (e.g. "On-time Service", "Affordable Price", "Expert Technicians"). Highlights must NOT contain any emojis.
+- services: 5 to 8 products or services offered (e.g. "Home Delivery", "AC Installation").`
+        });
+      }
+
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -1350,20 +1455,7 @@ Return the output strictly as a JSON object matching this schema:
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           response_format: { type: 'json_object' },
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an AI assistant that generates business profiles in JSON format.'
-            },
-            {
-              role: 'user',
-              content: `Generate details for a business named "${name}" in the category: "${catString}".
-Return a JSON object exactly with these keys:
-- description: A professional description (3 to 4 sentences).
-- highlights: 4 to 6 short highlights or features (e.g. "On-time Service", "Affordable Price", "Expert Technicians"). Highlights must NOT contain any emojis.
-- services: 5 to 8 products or services offered (e.g. "Home Delivery", "AC Installation").`
-            }
-          ]
+          messages: messages
         })
       });
 
