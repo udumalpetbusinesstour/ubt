@@ -338,11 +338,11 @@ export default function UserProfile() {
               {businesses.map(biz => (
                 <div 
                   key={biz._id}
-                  onClick={() => navigate(`/businesses/${biz.slug || biz._id}`)}
+                  onClick={() => navigate(`/${biz.slug || biz._id}`)}
                   className="bg-white border border-slate-200/80 hover:border-slate-400 hover:shadow-md rounded-[24px] overflow-hidden flex flex-col cursor-pointer group"
                 >
                    <div 
-                     onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz.slug || biz._id}`); }}
+                     onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
                      className="w-full aspect-square overflow-hidden relative rounded-t-[23px] bg-slate-50 border-b border-slate-100 shrink-0 cursor-pointer"
                    >
                       {biz.logoUrl || biz.coverImageUrl ? (

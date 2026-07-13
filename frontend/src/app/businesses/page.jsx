@@ -2263,11 +2263,11 @@ function BusinessesList() {
                             <div
                               key={biz._id}
                               className="relative card-premium group rounded-3xl overflow-hidden flex flex-col md:flex-row cursor-pointer"
-                              onClick={() => navigate(`/businesses/${biz.slug || biz._id}`)}
+                              onClick={() => navigate(`/${biz.slug || biz._id}`)}
                             >
                               {/* Cover image (Blurred if subscription is expired!) */}
                               <div 
-                                onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz.slug || biz._id}`); }}
+                                onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
                                 className="shrink-0 overflow-hidden relative w-full aspect-square md:w-48 md:h-48 rounded-t-[23px] md:rounded-l-[23px] md:rounded-tr-none border-b md:border-b-0 md:border-r border-slate-100 bg-slate-50 cursor-pointer"
                               >
                                 {biz.logoUrl || biz.coverImageUrl ? (
@@ -2321,7 +2321,7 @@ function BusinessesList() {
                               <div className="p-6 flex-1 flex flex-col md:flex-row justify-between gap-5 text-left relative">
                                 <div className="flex flex-col gap-2 flex-1 relative z-30">
                                   <Link
-                                    to={`/businesses/${biz.slug || biz._id}`}
+                                    to={`/${biz.slug || biz._id}`}
                                     className="font-black text-[19px] text-[#001c41] hover:text-[#027244] transition-colors leading-tight"
                                     onClick={(e) => e.stopPropagation()}
                                   >
@@ -2397,7 +2397,7 @@ function BusinessesList() {
                                     </span>
                                   )}
                                   <Link
-                                    to={`/businesses/${biz.slug || biz._id}`}
+                                    to={`/${biz.slug || biz._id}`}
                                     className="py-2.5 w-full bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-555 font-extrabold text-xs rounded-xl flex items-center justify-center transition-colors text-center font-bold"
                                     onClick={(e) => e.stopPropagation()}
                                   >
@@ -2409,7 +2409,7 @@ function BusinessesList() {
                               {/* Glassmorphism Lock Overlay for Inactive Subscriptions */}
                               {!isSubscribed && (
                                 <div 
-                                  onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz.slug || biz._id}`); }}
+                                  onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
                                   className="absolute inset-0 bg-transparent hover:bg-slate-900/5 z-20 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer p-4 text-center"
                                 >
                                   <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-3 flex flex-col items-center gap-1.5 shadow-lg max-w-[180px]">
@@ -3109,14 +3109,14 @@ function BusinessesList() {
                 return (
                   <div
                     key={biz._id}
-                    onClick={() => navigate(`/businesses/${biz.slug || biz._id}`)}
+                    onClick={() => navigate(`/${biz.slug || biz._id}`)}
                     className={`relative card-premium group rounded-3xl overflow-hidden flex cursor-pointer ${
                       viewMode === 'list' ? 'flex-col md:flex-row' : 'flex-col min-h-[350px] sm:min-h-[460px]'
                     }`}
                   >
                     {/* Cover image (Blurred if subscription is expired!) */}
                     <div
-                      onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz.slug || biz._id}`); }}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
                       className={`shrink-0 overflow-hidden relative bg-slate-50 border-slate-100 cursor-pointer ${
                         viewMode === 'list' 
                           ? 'w-full aspect-square md:w-48 md:h-48 rounded-t-[23px] md:rounded-l-[23px] md:rounded-tr-none border-b md:border-b-0 md:border-r' 
@@ -3174,7 +3174,7 @@ function BusinessesList() {
                       <div className="flex flex-col gap-1.5 text-left relative z-30">
                         {/* Title */}
                         <Link
-                          to={`/businesses/${biz.slug || biz._id}`}
+                          to={`/${biz.slug || biz._id}`}
                           className="font-black text-sm sm:text-[19px] text-[#001c41] hover:text-[#027244] transition-colors leading-tight"
                         >
                           {biz.name}
@@ -3266,7 +3266,7 @@ function BusinessesList() {
                         )}
 
                         <Link
-                          to={`/businesses/${biz.slug || biz._id}`}
+                          to={`/${biz.slug || biz._id}`}
                           className="py-2 sm:py-2.5 w-full bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-555 font-extrabold text-[10.5px] sm:text-xs rounded-xl flex items-center justify-center transition-colors text-center"
                         >
                           View Details
@@ -3277,7 +3277,7 @@ function BusinessesList() {
                     {/* Glassmorphism Lock Overlay for Inactive Subscriptions */}
                     {!isSubscribed && (
                       <div 
-                        onClick={(e) => { e.stopPropagation(); navigate(`/businesses/${biz.slug || biz._id}`); }}
+                        onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
                         className="absolute inset-0 bg-transparent hover:bg-slate-900/5 z-20 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer p-4 text-center"
                       >
                         <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-3 flex flex-col items-center gap-1.5 shadow-lg max-w-[180px]">

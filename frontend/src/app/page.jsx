@@ -419,7 +419,7 @@ export default function Home() {
         // Navigate to public profile page when pin is clicked
         marker.on('click', () => {
           if (pin.slug || pin._id) {
-            navigate(`/businesses/${pin.slug || pin._id}`);
+            navigate(`/${pin.slug || pin._id}`);
           }
         });
       }

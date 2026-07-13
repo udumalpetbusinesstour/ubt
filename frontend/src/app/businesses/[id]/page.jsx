@@ -120,6 +120,16 @@ export default function BusinessDetail() {
     }
   }, []);
 
+  // Redirect from /businesses/:id to /:id to ensure domain/businessname pathing
+  useEffect(() => {
+    if (window.location.pathname.startsWith('/businesses/')) {
+      const id = params.id;
+      if (id) {
+        navigate('/' + id, { replace: true });
+      }
+    }
+  }, [params.id, navigate]);
+
   const [activeTab, setActiveTab] = useState('overview'); // overview | services | photos | reviews | offers | about | map
   const [activePhotoIndex, setActivePhotoIndex] = useState(null);
   const [touchPosition, setTouchPosition] = useState(null);
