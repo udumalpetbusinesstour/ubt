@@ -670,17 +670,24 @@ function DashboardContent() {
       return;
     }
 
-    let hint = window.prompt(`Please enter a brief hint or keywords about your business to generate your ${field} (e.g., 'pure veg family restaurant, parking available'):`);
-    if (hint === null || hint === undefined) return; // User cancelled
-    let hintStr = String(hint);
-    if (!hintStr.trim()) {
-      alert(`Please provide a basic hint or keywords so the AI can generate a relevant ${field} for you.`);
-      return;
+    const displayName = field === 'description' ? 'Business Description' : field === 'highlights' ? 'Business Highlights' : 'Services Offered';
+
+    let hint = '';
+    while (true) {
+      hint = window.prompt(`Please enter a brief hint or keywords about your business to generate your ${displayName} (e.g., 'pure veg family restaurant, parking available'):`);
+      if (hint === null || hint === undefined) return; // User cancelled
+      const hintStr = String(hint).trim();
+      const wordCount = hintStr.split(/\s+/).filter(Boolean).length;
+      if (hintStr.length >= 10 && wordCount >= 3) {
+        hint = hintStr;
+        break;
+      }
+      alert('Please enter a clearer hint (minimum 10 characters and at least 3 words) to help the AI generate high-quality content.');
     }
 
     setAiLoading(true);
     let currentContent = '';
-    let currentKeywords = hintStr;
+    let currentKeywords = hint;
 
     try {
       while (true) {
@@ -705,34 +712,41 @@ function DashboardContent() {
         const generated = data.data[field];
         currentContent = Array.isArray(generated) ? generated.join(', ') : (generated || '');
 
-        const correction = window.prompt(
-          `Generated ${field}:\n\n"${currentContent}"\n\nIf you want to make corrections or changes, type them below (e.g., 'make it longer', 'add more options') and press OK.\nOtherwise, press Cancel to accept this content.`,
-          ''
+        // Prompt user to accept or correct
+        const accept = window.confirm(
+          `Generated ${displayName}:\n\n"${currentContent}"\n\nClick "OK" to ACCEPT and save this content.\nClick "Cancel" to make corrections or changes.`
         );
 
+        if (accept) {
+          // Save and exit!
+          setEditFields(prev => ({
+            ...prev,
+            [field]: currentContent
+          }));
+          alert(`Business ${displayName} updated successfully!`);
+          break;
+        }
+
+        // User wants corrections! Prompt them for corrections
+        let correction = '';
+        while (true) {
+          correction = window.prompt(`Please enter your corrections or changes for the ${displayName} (e.g., 'make it longer', 'add more products'):`);
+          if (correction === null || correction === undefined) {
+            // User cancelled correction, go back to the confirmation box
+            break;
+          }
+          const correctionStr = String(correction).trim();
+          if (correctionStr) {
+            currentKeywords = `Previous content was: "${currentContent}". The user wants these changes: "${correctionStr}". Please generate a new version incorporating these corrections.`;
+            break;
+          }
+          alert('Please enter a valid correction instruction, or click Cancel to go back.');
+        }
+
+        // If user cancelled correction, show the confirmation box again without calling AI
         if (correction === null || correction === undefined) {
-          // Accepted! Update the form and exit the loop.
-          setEditFields(prev => ({
-            ...prev,
-            [field]: currentContent
-          }));
-          alert(`Business ${field} updated successfully!`);
-          break;
+          continue;
         }
-
-        const correctionStr = String(correction).trim();
-        if (!correctionStr) {
-          // Empty input on OK means accept
-          setEditFields(prev => ({
-            ...prev,
-            [field]: currentContent
-          }));
-          alert(`Business ${field} updated successfully!`);
-          break;
-        }
-
-        // Tweak and generate again
-        currentKeywords = `Previous content was: "${currentContent}". The user wants these changes: "${correctionStr}". Please generate a new version incorporating these corrections.`;
       }
     } catch (err) {
       console.error('AI generation error:', err);
