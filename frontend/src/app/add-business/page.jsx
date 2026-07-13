@@ -216,9 +216,18 @@ export default function AddBusiness() {
 
     const displayName = field === 'description' ? 'Business Description' : field === 'highlights' ? 'Business Highlights' : 'Services Offered';
 
-    let hint = window.prompt(`Please enter a brief hint or keywords about your business to generate your ${displayName} (Optional - click OK to generate without hints):`);
-    if (hint === null || hint === undefined) return; // User cancelled
-    hint = String(hint).trim();
+    let hint = '';
+    while (true) {
+      hint = window.prompt(`Please enter a brief hint or keywords about your business (e.g., 'pure veg family restaurant, parking available') to generate your ${displayName}:`);
+      if (hint === null || hint === undefined) return; // User cancelled
+      const hintStr = String(hint).trim();
+      const wordCount = hintStr.split(/\s+/).filter(Boolean).length;
+      if (hintStr.length >= 10 && wordCount >= 3) {
+        hint = hintStr;
+        break;
+      }
+      alert('Please enter a clear hint (minimum 10 characters and at least 3 words) so the AI can generate customized content for your business.');
+    }
 
     setAiLoading(true);
     let currentContent = '';
