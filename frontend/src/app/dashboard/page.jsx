@@ -3623,11 +3623,12 @@ function DashboardContent() {
     };
 
     try {
+      const activeToken = token || localStorage.getItem('ubt_token');
       const res = await fetch(`http://localhost:5000/api/businesses/${business._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${activeToken}`,
         },
         body: JSON.stringify(postData),
       });
@@ -3646,23 +3647,17 @@ function DashboardContent() {
         }
 
         setShowEditModal(false);
+        if (data.pendingApproval) {
+          alert('Profile edits submitted for administrative approval.');
+        } else {
+          alert('Business details updated successfully!');
+        }
       } else {
-        throw new Error('Fallback required');
+        alert(data.message || 'Failed to update business details.');
       }
     } catch (err) {
-      // Mock update locally on fallback
-      setBusiness(prev => {
-        const updatedMock = {
-          ...prev,
-          ...postData,
-          _id: prev._id
-        };
-        if (updatedMock.parentBusinessId) {
-          setBranches(prevBr => prevBr.map(b => b._id === updatedMock._id ? updatedMock : b));
-        }
-        return updatedMock;
-      });
-      setShowEditModal(false);
+      console.error('Save business details error:', err);
+      alert('An error occurred while saving details. Please check your network connection.');
     } finally {
       setLoading(false);
     }
