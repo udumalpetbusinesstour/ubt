@@ -1766,7 +1766,7 @@ export default function AdminDashboard() {
               
               const message = `🎉 *Congratulations! Your business profile has been approved.*
 
-Thank you for joining the **Udumalpet Business** community! We're excited to have your business listed on our platform.
+Thank you for joining the *Udumalpet Business* community! We're excited to have your business listed on our platform.
 
 🔗 View your business profile here:
 https://udumalpet.business/${businessSlug}
