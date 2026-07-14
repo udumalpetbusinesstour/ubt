@@ -4050,7 +4050,13 @@ Team Udumalpet Business
                                       return (
                                         <div className="flex flex-wrap gap-1">
                                           {val.map((item, idx) => (
-                                            <span key={idx} className="bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-md text-[10px]">{item}</span>
+                                            <span key={idx} className="bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-md text-[10px]">
+                                              {item && typeof item === 'object'
+                                                ? (item.authorName && item.text 
+                                                    ? `${item.authorName}: ${item.text}` 
+                                                    : (item.categoryName || item.name || JSON.stringify(item)))
+                                                : String(item)}
+                                            </span>
                                           ))}
                                         </div>
                                       );
