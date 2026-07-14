@@ -365,6 +365,7 @@ export default function Home() {
     // Shift slightly left to 77.2497 to cover the OSM background text center perfectly
     L.marker([10.5841, 77.2497], { icon: cityLabelIcon, zIndexOffset: -50 }).addTo(map);
 
+    const markers = [];
     const usedCoords = {};
     const pinsToUse = mapBiz.length > 0 ? mapBiz : defaultPins;
     pinsToUse.forEach(pin => {
@@ -407,14 +408,7 @@ export default function Home() {
         });
 
         const marker = L.marker([lat, lng], { icon: customRedIcon }).addTo(map);
-        
-        // Show tooltip on hover
-        marker.bindTooltip(pin.name, {
-          permanent: false,
-          direction: 'top',
-          className: 'custom-map-tooltip',
-          offset: [0, -10]
-        });
+        markers.push({ marker, name: pin.name });
 
         // Navigate to public profile page when pin is clicked
         marker.on('click', () => {
@@ -424,6 +418,23 @@ export default function Home() {
         });
       }
     });
+
+    // Helper to refresh tooltip permanence based on zoom level
+    const refreshTooltips = () => {
+      const currentZoom = map.getZoom();
+      markers.forEach(({ marker, name }) => {
+        marker.unbindTooltip();
+        marker.bindTooltip(name, {
+          permanent: currentZoom >= 15, // Permanent at zoom 15 and above
+          direction: 'top',
+          className: 'custom-map-tooltip',
+          offset: [0, -10]
+        });
+      });
+    };
+
+    map.on('zoomend', refreshTooltips);
+    refreshTooltips(); // Initial application
 
     return () => {
       if (mapInstanceRef.current) {
