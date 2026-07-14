@@ -19,7 +19,7 @@ const isBizDraft = (b) => {
     return true;
   }
   // If the status is Approved, it is officially not a draft anymore
-  if (b.status === 'Approved') {
+  if (b.status && b.status.toLowerCase().trim() === 'approved') {
     return false;
   }
   const totalPhotos = (b.galleryUrls ? (Array.isArray(b.galleryUrls) ? b.galleryUrls.length : (typeof b.galleryUrls === 'string' ? b.galleryUrls.split(',').filter(Boolean).length : 0)) : 0) + (b.logoUrl ? 1 : 0) + (b.coverImageUrl ? 1 : 0);

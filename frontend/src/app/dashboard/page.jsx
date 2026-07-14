@@ -232,7 +232,7 @@ function DashboardContent() {
     : 0;
 
   const isRegistrationDraft = business && 
-    business.status !== 'Approved' && (
+    business.status?.toLowerCase().trim() !== 'approved' && (
       (Array.isArray(business.tags) && business.tags.includes('draft')) ||
       !business.name ||
       !business.category ||
