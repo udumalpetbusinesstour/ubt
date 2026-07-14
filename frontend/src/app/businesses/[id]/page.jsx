@@ -1559,7 +1559,7 @@ Please confirm availability and delivery time.`;
     });
   };
 
-  const totalReviewsCount = (business?.rawGoogleReviewsCount || 0) + (reviews?.length || 0);
+  const totalReviewsCount = Math.max(business?.googleReviewsCount || 0, (business?.rawGoogleReviewsCount || 0) + (reviews?.length || 0));
 
   const ratingDistribution = getRatingDistribution(
     business.googleRating,

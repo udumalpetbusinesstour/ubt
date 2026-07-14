@@ -859,7 +859,7 @@ export default function AdminDashboard() {
           _id: 'partner1',
           fullName: 'Harish Mithra',
           email: 'harishmitharamalingam@gmail.com',
-          phone: '+91 97872 41221',
+          phone: '+91 89257 28260',
           role: 'partner',
           aadhaarNumber: '123456789012',
           address: 'Gandhi Nagar, Udumalpet',
@@ -1766,18 +1766,22 @@ export default function AdminDashboard() {
               
               const message = `🎉 *Congratulations! Your business profile has been approved.*
 
-Thank you for joining the *Udumalpet Business* community! We're excited to have your business listed on our platform.
+Welcome to the Udumalpet Business community! Your business is now live on our platform.
 
-🔗 View your business profile here:
-https://udumalpet.business/${businessSlug}
+🔗 View your profile:
+https://udumalpet.business/businesses/${businessSlug}
 
-We look forward to helping your business reach more customers and grow its online presence.
+🤝 Let's build a stronger business community together. Support fellow businesses by inviting them to join Udumalpet Business. Your unique referral link is available in your Dashboard.
 
-If you'd like to update your business information, add more photos, or need any assistance, we're always here to help.
+🎁 Earn 99 Reward Points for every successful referral. Rewards are added to your wallet and can be withdrawn at your convenience.
 
-Thank you for being a part of our growing business community. Let's grow together! 🚀
+Create value by helping businesses grow, and you'll be rewarded along the way. Together, we can build a trusted local business network that benefits everyone.
 
-*Team Udumalpet Business*
+📞 Need help? Contact our official support team at +91 89257 28260 for any assistance with your business profile.
+
+Thank you for being part of our journey. Let's grow together and make Udumalpet stronger, one business at a time! 🚀
+
+Team Udumalpet Business
 🌐 https://udumalpet.business`;
               
               const encodedMsg = encodeURIComponent(message);

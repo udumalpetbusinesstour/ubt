@@ -113,7 +113,7 @@ export default function Login() {
             <div className="flex flex-col gap-0.5">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Need Help?</span>
               <span className="text-xs text-[#001c41] font-extrabold mt-1 leading-normal">Our events support desk is here for you.</span>
-              <a href="tel:+919787241221" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 97872 41221</a>
+              <a href="tel:+918925728260" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 89257 28260</a>
             </div>
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function Login() {
             <div className="flex flex-col gap-0.5 text-left">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">NEED HELP?</span>
               <span className="text-xs text-[#001c41] font-extrabold mt-1 leading-normal">Our Partner Success Team is here to assist you.</span>
-              <a href="tel:+919787241221" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 97872 41221</a>
+              <a href="tel:+918925728260" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 89257 28260</a>
             </div>
           </div>
         </div>
@@ -381,7 +381,7 @@ export default function Login() {
           <div className="flex flex-col gap-0.5 text-left">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Need Help?</span>
             <span className="text-xs text-[#001c41] font-extrabold mt-1 leading-normal">Our support team is here to help you.</span>
-            <a href="tel:+919787241221" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 97872 41221</a>
+            <a href="tel:+918925728260" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 89257 28260</a>
           </div>
         </div>
       </div>
@@ -869,7 +869,7 @@ export default function Login() {
                 {fromParam === 'blogs' ? (
                   <a href="mailto:info@udumalpet.business" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Email: info@udumalpet.business</a>
                 ) : (
-                  <a href="tel:+919787241221" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 97872 41221</a>
+                  <a href="tel:+918925728260" className="text-xs text-[#027244] font-black mt-1 hover:underline leading-none">Call: +91 89257 28260</a>
                 )}
               </div>
             </div>

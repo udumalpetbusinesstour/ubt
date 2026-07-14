@@ -1029,7 +1029,7 @@ function DashboardContent() {
     ? Number(((localReviews || []).reduce((sum, r) => sum + (r.rating || 5), 0) / localReviewsCount).toFixed(1)) 
     : 0;
 
-  const googleReviewsCountVal = business?.rawGoogleReviewsCount || 0;
+  const googleReviewsCountVal = business?.rawGoogleReviewsCount || (business?.googleReviewsCount ? Math.max(0, business.googleReviewsCount - localReviewsCount) : 0);
   const googleAvgRatingVal = business?.rawGoogleRating || 0;
 
   const overallReviewsCount = localReviewsCount + googleReviewsCountVal;
@@ -4356,8 +4356,8 @@ function DashboardContent() {
           <p className="text-[10px] text-slate-400 font-semibold leading-normal">
             Our support team is here to help you.
           </p>
-          <a href="tel:+919787241221" className="text-xs text-emerald-400 hover:text-emerald-300 font-extrabold flex items-center gap-1 transition-colors mt-0.5">
-            +91 97872 41221
+          <a href="tel:+918925728260" className="text-xs text-emerald-400 hover:text-emerald-300 font-extrabold flex items-center gap-1 transition-colors mt-0.5">
+            +91 89257 28260
           </a>
         </div>
 
@@ -4637,7 +4637,7 @@ function DashboardContent() {
                       </p>
                     </div>
                   </div>
-                  <a href="tel:+919787241221" className="bg-red-650 hover:bg-red-700 text-white font-extrabold text-[10.5px] py-2 px-5 rounded-xl transition-all shadow-sm shrink-0 uppercase tracking-wide">
+                  <a href="tel:+918925728260" className="bg-red-650 hover:bg-red-700 text-white font-extrabold text-[10.5px] py-2 px-5 rounded-xl transition-all shadow-sm shrink-0 uppercase tracking-wide">
                     Helpline Support
                   </a>
                 </div>
@@ -5122,7 +5122,7 @@ function DashboardContent() {
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-700 font-medium mt-0.5 pt-1 border-t border-amber-100">
                           <span className="flex items-center gap-1">
                             <Phone className="h-3 w-3 text-emerald-600 shrink-0" />
-                            <b>Phone / WhatsApp:</b> +91 97872 41221
+                            <b>Phone / WhatsApp:</b> +91 89257 28260
                           </span>
                           <span className="flex items-center gap-1">
                             <Mail className="h-3 w-3 text-emerald-600 shrink-0" />
