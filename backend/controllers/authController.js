@@ -673,7 +673,7 @@ const verifyEmailOtp = async (req, res, next) => {
       return sendError(res, 400, 'Email is already verified.');
     }
 
-    if (user.emailVerificationOtp !== otp) {
+    if (String(user.emailVerificationOtp).trim() !== String(otp).trim()) {
       return sendError(res, 400, 'Invalid verification code.');
     }
 
