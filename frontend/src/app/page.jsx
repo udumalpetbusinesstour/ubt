@@ -425,7 +425,7 @@ export default function Home() {
       markers.forEach(({ marker, name }) => {
         marker.unbindTooltip();
         marker.bindTooltip(name, {
-          permanent: currentZoom >= 15, // Permanent at zoom 15 and above
+          permanent: currentZoom >= 14, // Permanent at zoom 14 and above
           direction: 'top',
           className: 'custom-map-tooltip',
           offset: [0, -10]
