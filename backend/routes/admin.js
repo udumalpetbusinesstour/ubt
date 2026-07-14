@@ -194,6 +194,10 @@ router.put('/businesses/:id/status', async (req, res, next) => {
       business.verificationStatus = 'rejected';
     } else if (status === 'Hidden') {
       business.verificationStatus = 'hidden';
+    } else if (status === 'Suspended') {
+      business.verificationStatus = 'suspended';
+      business.subscriptionStatus = 'none';
+      business.isPremium = false;
     }
 
     if (typeof isFoundingMember === 'boolean') {
@@ -202,10 +206,6 @@ router.put('/businesses/:id/status', async (req, res, next) => {
         const ownerUserId = business.ownerId._id || business.ownerId;
         await User.findByIdAndUpdate(ownerUserId, { isFoundingMember });
       }
-    } else if (status === 'Suspended') {
-      business.verificationStatus = 'suspended';
-      business.subscriptionStatus = 'none';
-      business.isPremium = false;
     }
     
     // Sync status of all branches of this business
@@ -248,13 +248,15 @@ router.put('/businesses/:id/status', async (req, res, next) => {
       await checkAndCompleteReferralByBusiness(business._id);
     }
 
-    await Notification.create({
-      userId: business.ownerId ? (business.ownerId._id || business.ownerId) : null,
-      businessId: business._id,
-      title: 'Listing Moderation Update',
-      message: `Your business "${business.name}" has been ${status.toLowerCase()} by the administrator.`,
-      type: 'approval_status',
-    });
+    if (business.ownerId) {
+      await Notification.create({
+        userId: business.ownerId._id || business.ownerId,
+        businessId: business._id,
+        title: 'Listing Moderation Update',
+        message: `Your business "${business.name}" has been ${status.toLowerCase()} by the administrator.`,
+        type: 'approval_status',
+      });
+    }
 
     if (business.ownerId && business.ownerId.email) {
       const ownerName = business.ownerId.fullName || business.ownerId.name || 'Merchant';
@@ -305,14 +307,15 @@ router.delete('/businesses/:id', async (req, res, next) => {
     
     await Business.deleteOne({ _id: bizId });
 
-    // Send notification
-    const Notification = require('../models/Notification');
-    await Notification.create({
-      userId: ownerId,
-      title: `Listing Deleted`,
-      message: `Your listing directory "${bizName}" was permanently removed by admin control desk.`,
-      type: 'approval_status'
-    });
+    if (ownerId) {
+      const Notification = require('../models/Notification');
+      await Notification.create({
+        userId: ownerId,
+        title: `Listing Deleted`,
+        message: `Your listing directory "${bizName}" was permanently removed by admin control desk.`,
+        type: 'approval_status'
+      });
+    }
 
     res.json({ success: true, message: 'Listing and all cascaded collections removed successfully' });
   } catch (error) {
