@@ -57,6 +57,14 @@ app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 const apiLogMiddleware = require('./middleware/apiLogMiddleware');
 app.use('/api', apiLogMiddleware);
 
+// Disable caching for all API responses to prevent stale status or profile state on client devices/mobile browsers
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
 // Route Mappings
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
