@@ -264,6 +264,14 @@ export default function SuperAdminDashboard() {
     brochure: { label: 'Upload PDF Catalog/Brochure', required: false, enabled: false }
   });
   const [formGuidelines, setFormGuidelines] = useState('Submit clear commercial details, locality coordinates, and contact details to get audited. Approved businesses get standard indexing, and active subscribers receive verified badges.');
+  const [aiPrompts, setAiPrompts] = useState({
+    descriptionSystemPrompt: '',
+    descriptionUserPrompt: '',
+    highlightsSystemPrompt: '',
+    highlightsUserPrompt: '',
+    servicesSystemPrompt: '',
+    servicesUserPrompt: ''
+  });
 
   // Newsletter subscribers state
   const [subscribers, setSubscribers] = useState([]);
@@ -1066,6 +1074,7 @@ const handlePartnerAction = async (partnerId, action) => {
         if (conf.formGuidelines) setFormGuidelines(conf.formGuidelines);
         if (conf.banners && conf.banners.length > 0) setBanners(conf.banners);
         if (conf.permissionsMatrix) setPermissionsMatrix(conf.permissionsMatrix);
+        if (conf.aiPrompts) setAiPrompts(conf.aiPrompts);
       }
 
     } catch (err) {
@@ -1147,11 +1156,11 @@ const handlePartnerAction = async (partnerId, action) => {
   useEffect(() => {
     if (token) {
       const timeoutId = setTimeout(() => {
-        savePlatformSettings({ pageLayout, submissionFields, formGuidelines, banners, permissionsMatrix });
+        savePlatformSettings({ pageLayout, submissionFields, formGuidelines, banners, permissionsMatrix, aiPrompts });
       }, 1000);
       return () => clearTimeout(timeoutId);
     }
-  }, [pageLayout, submissionFields, formGuidelines, banners, permissionsMatrix]);
+  }, [pageLayout, submissionFields, formGuidelines, banners, permissionsMatrix, aiPrompts]);
 
   // Levenshtein and Fuzzy Matching logic for Category Vetting
   const levenshteinDistance = (s1, s2) => {
@@ -6496,6 +6505,114 @@ const handlePartnerAction = async (partnerId, action) => {
                         Update Security Password
                       </button>
                     </form>
+                  </div>
+
+                  {/* AI Prompt Configuration */}
+                  <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-5 font-sans ${
+                    themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                  }`}>
+                    <div>
+                      <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-3">AI Prompt Templates (Gemini Customizer)</h4>
+                      <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Customize the System instructions and prompt templates used to auto-generate business profiles.</span>
+                    </div>
+
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3.5 text-[10px] text-emerald-600 dark:text-emerald-400 leading-normal font-semibold">
+                      💡 <strong>Dynamic Template Variables:</strong> You can place these placeholder tags anywhere in your User prompts. They will be dynamically replaced with the business values:
+                      <ul className="list-disc list-inside mt-1 flex flex-col gap-0.5 pl-1">
+                        <li><code>{"{name}"}</code>: The name of the business.</li>
+                        <li><code>{"{categories}"}</code>: List of selected business categories (comma-separated).</li>
+                        <li><code>{"{hint}"}</code>: The custom keyword/hint provided by the user in the prompt.</li>
+                      </ul>
+                    </div>
+
+                    <div className="flex flex-col gap-6">
+                      {/* Description Card */}
+                      <div className="border border-slate-100 dark:border-slate-800 rounded-2xl p-4.5 bg-slate-50/20 dark:bg-slate-950/10 flex flex-col gap-3">
+                        <h5 className="text-xs font-black text-slate-500 uppercase tracking-wider">1. Business Description Prompts</h5>
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest leading-none">System Instruction (Persona/Behavior)</label>
+                          <textarea
+                            value={aiPrompts?.descriptionSystemPrompt || ''}
+                            onChange={(e) => setAiPrompts(prev => ({ ...prev, descriptionSystemPrompt: e.target.value }))}
+                            rows={2}
+                            placeholder="e.g. You are an AI copywriter..."
+                            className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] ${
+                              themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-750'
+                            }`}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest leading-none">User Prompt Template (Content/Schema)</label>
+                          <textarea
+                            value={aiPrompts?.descriptionUserPrompt || ''}
+                            onChange={(e) => setAiPrompts(prev => ({ ...prev, descriptionUserPrompt: e.target.value }))}
+                            rows={5}
+                            placeholder="Generate a description..."
+                            className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] ${
+                              themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-750'
+                            }`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Highlights Card */}
+                      <div className="border border-slate-100 dark:border-slate-800 rounded-2xl p-4.5 bg-slate-50/20 dark:bg-slate-950/10 flex flex-col gap-3">
+                        <h5 className="text-xs font-black text-slate-500 uppercase tracking-wider">2. Business Highlights Prompts</h5>
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest leading-none">System Instruction (Persona/Behavior)</label>
+                          <textarea
+                            value={aiPrompts?.highlightsSystemPrompt || ''}
+                            onChange={(e) => setAiPrompts(prev => ({ ...prev, highlightsSystemPrompt: e.target.value }))}
+                            rows={2}
+                            placeholder="e.g. You are an AI marketing specialist..."
+                            className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] ${
+                              themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-750'
+                            }`}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest leading-none">User Prompt Template (Content/Schema)</label>
+                          <textarea
+                            value={aiPrompts?.highlightsUserPrompt || ''}
+                            onChange={(e) => setAiPrompts(prev => ({ ...prev, highlightsUserPrompt: e.target.value }))}
+                            rows={5}
+                            placeholder="Generate highlights..."
+                            className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] ${
+                              themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-750'
+                            }`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Services Card */}
+                      <div className="border border-slate-100 dark:border-slate-800 rounded-2xl p-4.5 bg-slate-50/20 dark:bg-slate-950/10 flex flex-col gap-3">
+                        <h5 className="text-xs font-black text-slate-500 uppercase tracking-wider">3. Business Products & Services Prompts</h5>
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest leading-none">System Instruction (Persona/Behavior)</label>
+                          <textarea
+                            value={aiPrompts?.servicesSystemPrompt || ''}
+                            onChange={(e) => setAiPrompts(prev => ({ ...prev, servicesSystemPrompt: e.target.value }))}
+                            rows={2}
+                            placeholder="e.g. You are an AI operations consultant..."
+                            className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] ${
+                              themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-750'
+                            }`}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest leading-none">User Prompt Template (Content/Schema)</label>
+                          <textarea
+                            value={aiPrompts?.servicesUserPrompt || ''}
+                            onChange={(e) => setAiPrompts(prev => ({ ...prev, servicesUserPrompt: e.target.value }))}
+                            rows={5}
+                            placeholder="Generate services..."
+                            className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] ${
+                              themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-750'
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                 </div>

@@ -61,6 +61,32 @@ const SystemSettingSchema = new mongoose.Schema({
       systemLogs: { type: Boolean, default: false },
       accessControl: { type: Boolean, default: false }
     }
+  },
+  aiPrompts: {
+    descriptionSystemPrompt: {
+      type: String,
+      default: 'You are an AI copywriting agent specializing in writing engaging, professional, and high-converting business descriptions.'
+    },
+    descriptionUserPrompt: {
+      type: String,
+      default: 'Generate a professional business description for a business named "{name}" in the category: "{categories}".\n{hint}\nThe description must be 3 to 4 sentences long.\n\nReturn the output strictly as a JSON object matching this schema:\n{\n  "description": "text string"\n}'
+    },
+    highlightsSystemPrompt: {
+      type: String,
+      default: 'You are an AI marketing specialist agent specializing in writing concise, catchy, and high-impact highlights and features for businesses.'
+    },
+    highlightsUserPrompt: {
+      type: String,
+      default: 'Generate a list of 4 to 6 short highlights or features for a business named "{name}" in the category: "{categories}".\n{hint}\nHighlights must be short phrases. Return the output strictly as a JSON object containing a single string of comma-separated values (e.g. "On-time Service, Affordable Price, Expert Technicians"). Highlights must NOT contain any green tick or check emojis.\n\nReturn the output strictly as a JSON object matching this schema:\n{\n  "highlights": "comma-separated values string"\n}'
+    },
+    servicesSystemPrompt: {
+      type: String,
+      default: 'You are an AI business operations consultant agent specializing in listing precise and descriptive products and services offered by businesses.'
+    },
+    servicesUserPrompt: {
+      type: String,
+      default: 'Generate a list of 5 to 8 products or services offered by a business named "{name}" in the category: "{categories}".\n{hint}\nServices should be relevant and specific. Return the output strictly as a JSON object containing a single string of comma-separated values (e.g. "Home Delivery, AC Installation").\n\nReturn the output strictly as a JSON object matching this schema:\n{\n  "services": "comma-separated values string"\n}'
+    }
   }
 }, {
   timestamps: true

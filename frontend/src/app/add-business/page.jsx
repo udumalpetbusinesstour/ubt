@@ -2628,7 +2628,6 @@ export default function AddBusiness() {
                           <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Short Business Description <span className="text-red-500">*</span></label>
                           <button
                             type="button"
-                            style={{ display: 'none' }}
                             onClick={() => handleAIGenerate('description', false)}
                             disabled={aiLoading}
                             className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50 shrink-0"
@@ -2740,7 +2739,6 @@ export default function AddBusiness() {
                       <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Services / Products Offered <span className="text-red-500">*</span></label>
                       <button
                         type="button"
-                        style={{ display: 'none' }}
                         onClick={() => handleAIGenerate('services', false)}
                         disabled={aiLoading}
                         className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
@@ -2804,7 +2802,6 @@ export default function AddBusiness() {
                       <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Comma Separated) <span className="text-red-500">*</span></label>
                       <button
                         type="button"
-                        style={{ display: 'none' }}
                         onClick={() => handleAIGenerate('highlights', false)}
                         disabled={aiLoading}
                         className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
@@ -3247,7 +3244,6 @@ export default function AddBusiness() {
                           <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Branch Description <span className="text-red-500">*</span></label>
                           <button
                             type="button"
-                            style={{ display: 'none' }}
                             onClick={() => handleAIGenerate('description', true)}
                             disabled={aiLoading}
                             className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50 shrink-0"
@@ -3320,7 +3316,6 @@ export default function AddBusiness() {
                           <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Services / Products Offered <span className="text-red-500">*</span></label>
                           <button
                             type="button"
-                            style={{ display: 'none' }}
                             onClick={() => handleAIGenerate('services', true)}
                             disabled={aiLoading}
                             className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50 shrink-0"

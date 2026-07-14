@@ -1246,20 +1246,26 @@ router.post('/generate-ai-details', async (req, res) => {
   const catList = Array.isArray(categories) ? categories.map(c => typeof c === 'object' ? (c.category || c.name || '') : c).filter(Boolean) : [];
   const catString = catList.length > 0 ? catList.join(', ') : 'General Business';
 
+  const SystemSetting = require('../models/SystemSetting');
+  let config = null;
+  try {
+    config = await SystemSetting.findOne({ key: 'platform_config' });
+  } catch (err) {
+    console.error('[AI Generator] Failed to fetch system config prompts:', err.message);
+  }
+
   let prompt = '';
   let responseSchema = null;
   let systemInstructionText = 'You are an AI assistant that generates business profiles in JSON format.';
+  const resolvedHint = hint ? `Incorporating keywords/hints: "${hint}".` : '';
 
   if (field === 'description') {
-    systemInstructionText = 'You are an AI copywriting agent specializing in writing engaging, professional, and high-converting business descriptions.';
-    prompt = `Generate a professional business description for a business named "${name}" in the category: "${catString}".
-${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
-The description must be 3 to 4 sentences long.
-
-Return the output strictly as a JSON object matching this schema:
-{
-  "description": "text string"
-}`;
+    systemInstructionText = config?.aiPrompts?.descriptionSystemPrompt || 'You are an AI copywriting agent specializing in writing engaging, professional, and high-converting business descriptions.';
+    const userPromptTemplate = config?.aiPrompts?.descriptionUserPrompt || 'Generate a professional business description for a business named "{name}" in the category: "{categories}".\n{hint}\nThe description must be 3 to 4 sentences long.\n\nReturn the output strictly as a JSON object matching this schema:\n{\n  "description": "text string"\n}';
+    prompt = userPromptTemplate
+      .replaceAll('{name}', name)
+      .replaceAll('{categories}', catString)
+      .replaceAll('{hint}', resolvedHint);
     responseSchema = {
       type: "OBJECT",
       properties: {
@@ -1268,15 +1274,12 @@ Return the output strictly as a JSON object matching this schema:
       required: ["description"]
     };
   } else if (field === 'highlights') {
-    systemInstructionText = 'You are an AI marketing specialist agent specializing in writing concise, catchy, and high-impact highlights and features for businesses.';
-    prompt = `Generate a list of 4 to 6 short highlights or features for a business named "${name}" in the category: "${catString}".
-${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
-Highlights must be short phrases. Return the output strictly as a JSON object containing a single string of comma-separated values (e.g. "On-time Service, Affordable Price, Expert Technicians"). Highlights must NOT contain any green tick or check emojis.
-
-Return the output strictly as a JSON object matching this schema:
-{
-  "highlights": "comma-separated values string"
-}`;
+    systemInstructionText = config?.aiPrompts?.highlightsSystemPrompt || 'You are an AI marketing specialist agent specializing in writing concise, catchy, and high-impact highlights and features for businesses.';
+    const userPromptTemplate = config?.aiPrompts?.highlightsUserPrompt || 'Generate a list of 4 to 6 short highlights or features for a business named "{name}" in the category: "{categories}".\n{hint}\nHighlights must be short phrases. Return the output strictly as a JSON object containing a single string of comma-separated values (e.g. "On-time Service, Affordable Price, Expert Technicians"). Highlights must NOT contain any green tick or check emojis.\n\nReturn the output strictly as a JSON object matching this schema:\n{\n  "highlights": "comma-separated values string"\n}';
+    prompt = userPromptTemplate
+      .replaceAll('{name}', name)
+      .replaceAll('{categories}', catString)
+      .replaceAll('{hint}', resolvedHint);
     responseSchema = {
       type: "OBJECT",
       properties: {
@@ -1285,15 +1288,12 @@ Return the output strictly as a JSON object matching this schema:
       required: ["highlights"]
     };
   } else if (field === 'services') {
-    systemInstructionText = 'You are an AI business operations consultant agent specializing in listing precise and descriptive products and services offered by businesses.';
-    prompt = `Generate a list of 5 to 8 products or services offered by a business named "${name}" in the category: "${catString}".
-${hint ? `Incorporating keywords/hints: "${hint}".` : ''}
-Services should be relevant and specific. Return the output strictly as a JSON object containing a single string of comma-separated values (e.g. "Home Delivery, AC Installation").
-
-Return the output strictly as a JSON object matching this schema:
-{
-  "services": "comma-separated values string"
-}`;
+    systemInstructionText = config?.aiPrompts?.servicesSystemPrompt || 'You are an AI business operations consultant agent specializing in listing precise and descriptive products and services offered by businesses.';
+    const userPromptTemplate = config?.aiPrompts?.servicesUserPrompt || 'Generate a list of 5 to 8 products or services offered by a business named "{name}" in the category: "{categories}".\n{hint}\nServices should be relevant and specific. Return the output strictly as a JSON object containing a single string of comma-separated values (e.g. "Home Delivery, AC Installation").\n\nReturn the output strictly as a JSON object matching this schema:\n{\n  "services": "comma-separated values string"\n}';
+    prompt = userPromptTemplate
+      .replaceAll('{name}', name)
+      .replaceAll('{categories}', catString)
+      .replaceAll('{hint}', resolvedHint);
     responseSchema = {
       type: "OBJECT",
       properties: {

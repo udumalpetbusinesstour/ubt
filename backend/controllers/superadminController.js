@@ -1486,29 +1486,41 @@ const getPlatformConfig = async (req, res, next) => {
           { id: 'b3', title: 'Support Local Bazaar Traders', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80', subtitle: 'Find direct contact numbers, locality matching, and ratings.', link: '/businesses?category=Shops', active: true }
         ]
       });
+    } else if (!config.aiPrompts || !config.aiPrompts.descriptionSystemPrompt) {
+      // Seed default aiPrompts if they don't exist yet
+      config.aiPrompts = {
+        descriptionSystemPrompt: 'You are an AI copywriting agent specializing in writing engaging, professional, and high-converting business descriptions.',
+        descriptionUserPrompt: 'Generate a professional business description for a business named "{name}" in the category: "{categories}".\n{hint}\nThe description must be 3 to 4 sentences long.\n\nReturn the output strictly as a JSON object matching this schema:\n{\n  "description": "text string"\n}',
+        highlightsSystemPrompt: 'You are an AI marketing specialist agent specializing in writing concise, catchy, and high-impact highlights and features for businesses.',
+        highlightsUserPrompt: 'Generate a list of 4 to 6 short highlights or features for a business named "{name}" in the category: "{categories}".\n{hint}\nHighlights must be short phrases. Return the output strictly as a JSON object containing a single string of comma-separated values (e.g. "On-time Service, Affordable Price, Expert Technicians"). Highlights must NOT contain any green tick or check emojis.\n\nReturn the output strictly as a JSON object matching this schema:\n{\n  "highlights": "comma-separated values string"\n}',
+        servicesSystemPrompt: 'You are an AI business operations consultant agent specializing in listing precise and descriptive products and services offered by businesses.',
+        servicesUserPrompt: 'Generate a list of 5 to 8 products or services offered by a business named "{name}" in the category: "{categories}".\n{hint}\nServices should be relevant and specific. Return the output strictly as a JSON object containing a single string of comma-separated values (e.g. "Home Delivery, AC Installation").\n\nReturn the output strictly as a JSON object matching this schema:\n{\n  "services": "comma-separated values string"\n}'
+      };
+      await config.save();
     }
-
+ 
     return sendSuccess(res, 200, 'Platform customizer configuration loaded', config);
   } catch (err) {
     next(err);
   }
 };
-
+ 
 const updatePlatformConfig = async (req, res, next) => {
   try {
-    const { pageLayout, submissionFields, formGuidelines, banners, permissionsMatrix } = req.body;
-
+    const { pageLayout, submissionFields, formGuidelines, banners, permissionsMatrix, aiPrompts } = req.body;
+ 
     let config = await SystemSetting.findOne({ key: 'platform_config' });
     if (!config) {
       config = new SystemSetting({ key: 'platform_config' });
     }
-
+ 
     if (pageLayout) config.pageLayout = pageLayout;
     if (submissionFields) config.submissionFields = submissionFields;
     if (formGuidelines !== undefined) config.formGuidelines = formGuidelines;
     if (banners) config.banners = banners;
     if (permissionsMatrix) config.permissionsMatrix = permissionsMatrix;
-
+    if (aiPrompts) config.aiPrompts = aiPrompts;
+ 
     await config.save();
 
     // Log admin action
