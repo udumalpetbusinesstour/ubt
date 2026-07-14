@@ -16,8 +16,8 @@ const isBizDraft = (b) => {
   if (Array.isArray(b.tags) && b.tags.includes('draft')) {
     return true;
   }
-  // If the status indicates it has been submitted or approved, it is not a draft
-  if (['Pending Verification', 'Under Review', 'Approved'].includes(b.status)) {
+  // If the status is Approved, it is officially not a draft anymore
+  if (b.status === 'Approved') {
     return false;
   }
   const totalPhotos = (b.galleryUrls ? (Array.isArray(b.galleryUrls) ? b.galleryUrls.length : (typeof b.galleryUrls === 'string' ? b.galleryUrls.split(',').filter(Boolean).length : 0)) : 0) + (b.logoUrl ? 1 : 0) + (b.coverImageUrl ? 1 : 0);

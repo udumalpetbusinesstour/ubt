@@ -232,7 +232,7 @@ function DashboardContent() {
     : 0;
 
   const isRegistrationDraft = business && 
-    !['Pending Verification', 'Under Review', 'Approved'].includes(business.status) && (
+    business.status !== 'Approved' && (
       (Array.isArray(business.tags) && business.tags.includes('draft')) ||
       !business.name ||
       !business.category ||
