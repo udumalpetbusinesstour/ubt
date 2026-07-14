@@ -706,6 +706,19 @@ router.get(['/sponsored-ads', '/homepage/sponsored-ads'], async (req, res) => {
   }
 });
 
+// @desc    Get overall platform stats (like total views)
+// @route   GET /api/businesses/platform-stats/views
+// @access  Public
+router.get('/platform-stats/views', async (req, res, next) => {
+  try {
+    const allBiz = await Business.find({ status: 'Approved' }).select('views');
+    const totalViews = allBiz.reduce((sum, b) => sum + (b.views || 0), 0);
+    res.json({ success: true, overallViews: totalViews });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // @desc    Get all businesses with filters, search, and premium sorting
 // @route   GET /api/businesses
 // @access  Public

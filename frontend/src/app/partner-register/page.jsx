@@ -66,11 +66,7 @@ export default function PartnerRegister() {
       setError('Mobile number is required');
       return;
     }
-    if (!aadhaarNumber.trim()) {
-      setError('Aadhaar Number is required');
-      return;
-    }
-    if (aadhaarNumber.trim().replace(/\s/g, '').length !== 12) {
+    if (aadhaarNumber.trim() && aadhaarNumber.trim().replace(/\s/g, '').length !== 12) {
       setError('Please provide a valid 12-digit Aadhaar Number');
       return;
     }
@@ -278,7 +274,7 @@ export default function PartnerRegister() {
               {/* Aadhaar Number */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-black text-slate-455 uppercase tracking-widest">
-                  Aadhaar Card Number
+                  Aadhaar Card Number (Optional)
                 </label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
@@ -290,7 +286,6 @@ export default function PartnerRegister() {
                     placeholder="12-digit Aadhaar Card Number"
                     value={aadhaarNumber}
                     onChange={(e) => setAadhaarNumber(e.target.value.replace(/\D/g, ''))}
-                    required
                     className="w-full pl-10 pr-4 py-3.5 border border-slate-250 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 bg-white"
                   />
                 </div>

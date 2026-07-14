@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { MapPin, Menu, X, User, LogOut, Bell, Home, Building2, LayoutGrid, Calendar, BookOpen, Users, Phone, Plus, Facebook, Instagram, Mail, Sparkles } from 'lucide-react';
+import { MapPin, Menu, X, User, LogOut, Bell, Home, Building2, LayoutGrid, Calendar, BookOpen, Users, Phone, Plus, Facebook, Instagram, Mail, Sparkles, Eye } from 'lucide-react';
 
 export default function Navbar() {
   const { pathname } = useLocation();
@@ -51,6 +51,7 @@ export default function Navbar() {
   const [user, setUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [overallViews, setOverallViews] = useState(0);
 
   useEffect(() => {
     // Check local storage for auth
@@ -74,6 +75,16 @@ export default function Navbar() {
         setIsSticky(false);
       }
     };
+
+    // Fetch overall platform views
+    fetch('http://localhost:5000/api/businesses/platform-stats/views')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setOverallViews(data.overallViews);
+        }
+      })
+      .catch(err => console.warn('Failed to fetch platform views', err));
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -171,11 +182,18 @@ export default function Navbar() {
   return (
     <header className="w-full flex flex-col z-50 sticky top-0 bg-white shadow-xs">
       {/* Top Banner Bar */}
-      <div className="hidden lg:flex w-full bg-slate-50 border-b border-slate-200 py-2 px-4 md:px-8 text-xs text-slate-600 items-center">
-        <div className="max-w-[1600px] w-full mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-1.5 font-medium">
-            <MapPin className="h-3.5 w-3.5 text-emerald-600" />
-            <span>Udumalpet, Tamil Nadu</span>
+      <div className="w-full bg-slate-50 border-b border-slate-200 py-1.5 px-4 md:px-8 text-[10px] sm:text-xs text-slate-600 flex items-center">
+        <div className="max-w-[1600px] w-full mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+          <div className="flex items-center gap-3 font-medium flex-wrap justify-center">
+            <div className="flex items-center gap-1">
+              <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+              <span>Udumalpet, Tamil Nadu</span>
+            </div>
+            <span className="text-slate-300 hidden sm:inline">|</span>
+            <div className="flex items-center gap-1.5 text-slate-500 font-extrabold bg-slate-200/50 px-2 py-0.5 rounded border border-slate-300/40">
+              <Eye className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+              <span>Overall Views: <strong className="text-emerald-700 font-black">{overallViews.toLocaleString()}</strong></span>
+            </div>
           </div>
           <div className="flex items-center gap-6 font-medium">
             <Link to="/add-business" className="hover:text-emerald-600 transition-colors">
