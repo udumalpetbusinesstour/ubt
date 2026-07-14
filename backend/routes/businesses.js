@@ -1345,9 +1345,13 @@ Return the output strictly as a JSON object matching this schema:
         console.log(`[AI Generator] Attempting with Gemini Key Index: ${i}`);
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+
         const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
           body: JSON.stringify({
             contents: [{
               parts: [{ text: prompt }]
@@ -1362,6 +1366,7 @@ Return the output strictly as a JSON object matching this schema:
           })
         });
 
+        clearTimeout(timeoutId);
         const result = await response.json();
         
         // Handle rate limit (429) or quota errors by trying next key
