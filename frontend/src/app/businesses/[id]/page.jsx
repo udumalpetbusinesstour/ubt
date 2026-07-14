@@ -758,6 +758,7 @@ export default function BusinessDetail() {
         if (isFoodRelated(data.data.category, data.data.customCategoryName)) {
           fetchMenu(data.data._id);
         }
+        window.dispatchEvent(new Event('platform-views-updated'));
       } else {
         throw new Error('Business details not found.');
       }

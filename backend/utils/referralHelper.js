@@ -64,16 +64,7 @@ const checkAndCompleteReferralByBusiness = async (businessId) => {
       await referral.save();
     }
 
-    const isBusinessApproved = business.status === 'Approved' || business.verificationStatus === 'approved';
-    const isSubscriptionActive = business.subscriptionStatus === 'active';
-
-    const Payment = require('../models/Payment');
-    const hasPaid = await Payment.exists({
-      businessId: business._id,
-      status: { $in: ['Paid', 'captured'] }
-    });
-
-    if (isBusinessApproved && isSubscriptionActive && hasPaid) {
+    if ((business.status === 'Approved' || business.verificationStatus === 'approved') && business.subscriptionStatus === 'active') {
       // Credit points to the referrer only if the referrer is subscribed
       const referrer = await User.findById(referral.referrerId);
       if (!referrer) {

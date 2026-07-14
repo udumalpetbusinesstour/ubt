@@ -477,6 +477,13 @@ const googleLogin = async (req, res, next) => {
     }
 
     if (!user) {
+      // Look up referrer if referral code provided
+      let referrer = null;
+      const refCode = req.body.referralCode;
+      if (refCode) {
+        referrer = await User.findOne({ referralCode: refCode.trim().toUpperCase() });
+      }
+
       // Register user dynamically
       user = await User.create({
         name: name,
@@ -484,6 +491,7 @@ const googleLogin = async (req, res, next) => {
         email: email.toLowerCase(),
         password: `oauth_pwd_${Math.random().toString(36).substring(2, 12)}`, // Secure dummy password
         role: isPartnerTest ? 'partner' : (req.body.role || 'owner'), // Default role for registering business owners
+        referredBy: referrer ? referrer._id : undefined,
         isVerified: true,
         status: 'Active',
         profileImage: picture || '',
@@ -491,6 +499,23 @@ const googleLogin = async (req, res, next) => {
         isPartnerApproved: isPartnerTest ? true : false,
         partnerStatus: isPartnerTest ? 'approved' : 'pending'
       });
+
+      // Create pending Referral record
+      if (referrer) {
+        const Referral = require('../models/Referral');
+        await Referral.create({
+          referrerId: referrer._id,
+          referredUserId: user._id,
+          status: 'pending',
+          points: referrer.role === 'partner' ? 49 : 99,
+          antiFraudChecks: {
+            selfReferral: false,
+            duplicateMobile: false,
+            duplicateGST: false,
+            duplicateBusiness: false
+          }
+        });
+      }
     }
 
     // Check suspension status

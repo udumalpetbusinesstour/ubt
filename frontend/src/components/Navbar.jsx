@@ -76,18 +76,25 @@ export default function Navbar() {
       }
     };
 
-    // Fetch overall platform views
-    fetch('http://localhost:5000/api/businesses/platform-stats/views')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setOverallViews(data.overallViews);
-        }
-      })
-      .catch(err => console.warn('Failed to fetch platform views', err));
+    const fetchViews = () => {
+      fetch('http://localhost:5000/api/businesses/platform-stats/views')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setOverallViews(data.overallViews);
+          }
+        })
+        .catch(err => console.warn('Failed to fetch platform views', err));
+    };
+
+    fetchViews();
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('platform-views-updated', fetchViews);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('platform-views-updated', fetchViews);
+    };
   }, [pathname]);
 
   const fetchNotifications = async (token) => {

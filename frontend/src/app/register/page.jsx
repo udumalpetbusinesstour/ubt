@@ -273,18 +273,20 @@ export default function Register() {
     setInfoMessage(googleCredential ? 'Registering with Google...' : 'Signing up with Google Account...');
     
     try {
-      const isMock = !googleCredential;
+      const refCode = searchParams.get('ref') || '';
       const payload = isMock ? {
         isMock: true,
         email: `newgooglemember_${Date.now()}@udumalpet.in`,
         name: 'New Google Member',
         action: 'signup',
-        role: fromParam === 'partner' ? 'partner' : 'owner'
+        role: fromParam === 'partner' ? 'partner' : 'owner',
+        referralCode: refCode
       } : {
         isMock: false,
         credential: googleCredential,
         action: 'signup',
-        role: fromParam === 'partner' ? 'partner' : 'owner'
+        role: fromParam === 'partner' ? 'partner' : 'owner',
+        referralCode: refCode
       };
 
       const res = await fetch('http://localhost:5000/api/auth/google-login', {
