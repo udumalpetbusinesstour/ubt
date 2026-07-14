@@ -190,6 +190,9 @@ router.put('/businesses/:id/status', async (req, res, next) => {
       business.isAddressVerified = true;
       business.verificationStatus = 'approved';
       business.subscriptionStatus = 'active';
+      if (Array.isArray(business.tags)) {
+        business.tags = business.tags.filter(t => t !== 'draft');
+      }
     } else if (status === 'Rejected') {
       business.verificationStatus = 'rejected';
     } else if (status === 'Hidden') {

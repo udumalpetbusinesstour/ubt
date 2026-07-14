@@ -231,16 +231,17 @@ function DashboardContent() {
           : 0)
     : 0;
 
-  const isRegistrationDraft = business && (
-    (Array.isArray(business.tags) && business.tags.includes('draft')) ||
-    !business.name ||
-    !business.category ||
-    !business.description ||
-    !business.phone ||
-    !business.pincode ||
-    !business.address ||
-    totalPhotosCount < 3
-  );
+  const isRegistrationDraft = business && 
+    !['Pending Verification', 'Under Review', 'Approved'].includes(business.status) && (
+      (Array.isArray(business.tags) && business.tags.includes('draft')) ||
+      !business.name ||
+      !business.category ||
+      !business.description ||
+      !business.phone ||
+      !business.pincode ||
+      !business.address ||
+      totalPhotosCount < 3
+    );
 
   // Determine which registration step to resume at (so the CTA links to the right step)
   const resumeStep = (() => {
