@@ -17,6 +17,21 @@ router.get('/my-stats', protect, async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
+    // Generate referral code on the fly if user doesn't have one (for older/legacy accounts)
+    if (!user.referralCode) {
+      let code;
+      let codeExists = true;
+      while (codeExists) {
+        code = Math.random().toString(36).substring(2, 10).toUpperCase();
+        const tempUser = await User.findOne({ referralCode: code });
+        if (!tempUser) {
+          codeExists = false;
+        }
+      }
+      user.referralCode = code;
+      await user.save();
+    }
+
     // Check if the user is subscribed (has an active business listing or is admin or is a partner)
     const activeBusiness = await Business.findOne({ ownerId: user._id, subscriptionStatus: 'active' });
     const isSubscribed = !!activeBusiness || user.role === 'admin' || user.role === 'superadmin' || user.role === 'partner';
