@@ -663,96 +663,100 @@ function DashboardContent() {
   };
 
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiModal, setAiModal] = useState({
+    isOpen: false,
+    field: '',
+    step: 'prompt', // 'prompt' | 'confirm'
+    hint: '',
+    content: '',
+    correction: '',
+    error: ''
+  });
 
-  const handleDashboardAIGenerate = async (field) => {
+  const handleDashboardAIGenerate = (field) => {
     if (!editFields.name || !editFields.name.trim()) {
       alert('Please enter a business name first before generating details.');
       return;
     }
 
-    const displayName = field === 'description' ? 'Business Description' : field === 'highlights' ? 'Business Highlights' : 'Services Offered';
+    setAiModal({
+      isOpen: true,
+      field,
+      step: 'prompt',
+      hint: '',
+      content: '',
+      correction: '',
+      error: ''
+    });
+  };
 
-    let hint = '';
-    while (true) {
-      hint = window.prompt(`Please enter a brief hint or keywords about your business (e.g., 'pure veg family restaurant, parking available') to generate your ${displayName}:`);
-      if (hint === null || hint === undefined) return; // User cancelled
+  const submitDashboardAIGenerate = async () => {
+    const { field, hint, step, content, correction } = aiModal;
+
+    let currentKeywords = hint;
+    if (step === 'confirm') {
+      if (!correction.trim()) {
+        setAiModal(prev => ({ ...prev, error: 'Please enter a correction instruction or click Accept.' }));
+        return;
+      }
+      currentKeywords = `Previous content was: "${content}". The user wants these changes: "${correction.trim()}". Please generate a new version incorporating these corrections.`;
+    } else {
       const hintStr = String(hint).trim();
       const wordCount = hintStr.split(/\s+/).filter(Boolean).length;
-      if (hintStr.length >= 10 && wordCount >= 3) {
-        hint = hintStr;
-        break;
+      if (hintStr.length < 10 || wordCount < 3) {
+        setAiModal(prev => ({ ...prev, error: 'Please enter a clear hint (minimum 10 characters and at least 3 words).' }));
+        return;
       }
-      alert('Please enter a clear hint (minimum 10 characters and at least 3 words) so the AI can generate customized content for your business.');
     }
 
     setAiLoading(true);
-    let currentContent = '';
-    let currentKeywords = hint;
+    setAiModal(prev => ({ ...prev, error: '' }));
 
     try {
-      while (true) {
-        const res = await fetch('http://localhost:5000/api/businesses/generate-ai-details', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            name: editFields.name,
-            categories: editFields.categories,
-            field,
-            hint: currentKeywords
-          })
-        });
-        const data = await res.json();
-        if (!data.success) {
-          alert(data.message || 'AI generation failed.');
-          break;
-        }
-
-        const generated = data.data[field];
-        currentContent = Array.isArray(generated) ? generated.join(', ') : (generated || '');
-
-        // Prompt user to accept or correct
-        const accept = window.confirm(
-          `Generated ${displayName}:\n\n"${currentContent}"\n\nClick "OK" to ACCEPT and save this content.\nClick "Cancel" to make corrections or changes.`
-        );
-
-        if (accept) {
-          // Save and exit!
-          setEditFields(prev => ({
-            ...prev,
-            [field]: currentContent
-          }));
-          alert(`Business ${displayName} updated successfully!`);
-          break;
-        }
-
-        // User wants corrections! Prompt them for corrections
-        let correction = '';
-        while (true) {
-          correction = window.prompt(`Please enter your corrections or changes for the ${displayName} (e.g., 'make it longer', 'add more products'):`);
-          if (correction === null || correction === undefined) {
-            // User cancelled correction, go back to the confirmation box
-            break;
-          }
-          const correctionStr = String(correction).trim();
-          if (correctionStr) {
-            currentKeywords = `Previous content was: "${currentContent}". The user wants these changes: "${correctionStr}". Please generate a new version incorporating these corrections.`;
-            break;
-          }
-          alert('Please enter a valid correction instruction, or click Cancel to go back.');
-        }
-
-        if (correction === null || correction === undefined) {
-          break;
-        }
+      const res = await fetch('http://localhost:5000/api/businesses/generate-ai-details', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: editFields.name,
+          categories: editFields.categories,
+          field,
+          hint: currentKeywords
+        })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setAiModal(prev => ({ ...prev, error: data.message || 'AI generation failed.' }));
+        return;
       }
+
+      const generated = data.data[field];
+      const currentContent = Array.isArray(generated) ? generated.join(', ') : (generated || '');
+
+      setAiModal(prev => ({
+        ...prev,
+        step: 'confirm',
+        content: currentContent,
+        correction: '',
+        error: ''
+      }));
     } catch (err) {
       console.error('AI generation error:', err);
-      alert('Failed to connect to AI generator. Please check your connection.');
+      setAiModal(prev => ({ ...prev, error: 'Failed to connect to AI generator. Please check your connection.' }));
     } finally {
       setAiLoading(false);
     }
+  };
+
+  const acceptDashboardAIContent = () => {
+    const { field, content } = aiModal;
+    setEditFields(prev => ({
+      ...prev,
+      [field]: content
+    }));
+    setAiModal(prev => ({ ...prev, isOpen: false }));
+    alert(`${field === 'description' ? 'Description' : field === 'highlights' ? 'Highlights' : 'Services'} updated successfully!`);
   };
 
   // Image upload states & handler
@@ -11821,6 +11825,119 @@ function DashboardContent() {
               </div>
 
             </form>
+          </div>
+        </div>
+      )}
+
+      {aiModal.isOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-[28px] max-w-lg w-full p-6 flex flex-col gap-4.5 shadow-2xl font-sans text-left">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="font-extrabold text-sm text-[#001c41] uppercase tracking-wider flex items-center gap-2">
+                ✨ Generate {aiModal.field === 'description' ? 'Business Description' : aiModal.field === 'highlights' ? 'Business Highlights' : 'Products & Services'}
+              </h3>
+              <button 
+                type="button" 
+                onClick={() => setAiModal(prev => ({ ...prev, isOpen: false }))}
+                className="text-slate-400 hover:text-slate-600 font-extrabold text-lg cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {aiModal.step === 'prompt' ? (
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black text-slate-450 uppercase tracking-widest">
+                    Enter keywords or a brief hint about your business
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={aiModal.hint}
+                    onChange={(e) => setAiModal(prev => ({ ...prev, hint: e.target.value, error: '' }))}
+                    placeholder="e.g. pure veg family restaurant, fine dining, parking available, multi-cuisine (min 10 characters and 3 words)"
+                    className="w-full border border-slate-200 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 leading-relaxed resize-none"
+                  />
+                </div>
+                {aiModal.error && (
+                  <span className="text-[10px] text-red-500 font-extrabold">{aiModal.error}</span>
+                )}
+                <div className="flex justify-end gap-3 border-t border-slate-100 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setAiModal(prev => ({ ...prev, isOpen: false }))}
+                    className="px-4 py-2 border border-slate-200 text-slate-500 font-extrabold text-xs rounded-xl uppercase tracking-wider cursor-pointer hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={submitDashboardAIGenerate}
+                    disabled={aiLoading}
+                    className="px-5 py-2 bg-[#027244] text-white font-extrabold text-xs rounded-xl uppercase tracking-wider cursor-pointer hover:bg-[#005934] disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                  >
+                    {aiLoading ? (
+                      <span className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    ) : '✨'} Generate
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black text-slate-450 uppercase tracking-widest">
+                    Generated Content Preview
+                  </label>
+                  <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl text-xs leading-relaxed text-slate-700 max-h-48 overflow-y-auto font-semibold">
+                    {aiModal.content}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-3">
+                  <label className="text-[10px] font-black text-slate-450 uppercase tracking-widest">
+                    Want to refine or correct something? (Optional)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={aiModal.correction}
+                    onChange={(e) => setAiModal(prev => ({ ...prev, correction: e.target.value, error: '' }))}
+                    placeholder="e.g. make it shorter, remove pricing info, add focus on desserts..."
+                    className="w-full border border-slate-200 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 leading-relaxed resize-none"
+                  />
+                </div>
+                {aiModal.error && (
+                  <span className="text-[10px] text-red-500 font-extrabold">{aiModal.error}</span>
+                )}
+                <div className="flex justify-between items-center border-t border-slate-100 pt-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={submitDashboardAIGenerate}
+                    disabled={aiLoading}
+                    className="px-4 py-2 border border-emerald-600 text-emerald-700 font-extrabold text-xs rounded-xl uppercase tracking-wider cursor-pointer hover:bg-emerald-50 disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {aiLoading ? (
+                      <span className="h-3 w-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
+                    ) : '🔄'} Regenerate
+                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setAiModal(prev => ({ ...prev, step: 'prompt', error: '' }))}
+                      className="px-4 py-2 border border-slate-200 text-slate-500 font-extrabold text-xs rounded-xl uppercase tracking-wider cursor-pointer hover:bg-slate-50"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={acceptDashboardAIContent}
+                      className="px-5 py-2 bg-[#027244] text-white font-extrabold text-xs rounded-xl uppercase tracking-wider cursor-pointer hover:bg-[#005934] shadow-sm font-sans"
+                    >
+                      Accept & Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

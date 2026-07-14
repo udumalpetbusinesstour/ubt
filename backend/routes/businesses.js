@@ -1343,7 +1343,7 @@ Return the output strictly as a JSON object matching this schema:
       const apiKey = geminiKeys[i];
       try {
         console.log(`[AI Generator] Attempting with Gemini Key Index: ${i}`);
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 6000);
