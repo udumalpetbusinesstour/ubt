@@ -1065,4 +1065,109 @@ router.post('/business-edits/:id/reject', async (req, res, next) => {
   }
 });
 
+// API Logs & Performance Endpoints
+const ApiLog = require('../models/ApiLog');
+
+// @desc    Get API performance logs & stats
+// @route   GET /api/admin/api-logs
+// @access  Private/Admin
+router.get('/api-logs', async (req, res, next) => {
+  try {
+    const { method, path: searchPath, statusCode, minResponseTime, page = 1, limit = 50 } = req.query;
+    
+    const filter = {};
+    if (method) filter.method = method;
+    if (searchPath) filter.path = new RegExp(searchPath, 'i');
+    if (statusCode) filter.statusCode = parseInt(statusCode);
+    if (minResponseTime) filter.responseTime = { $gte: parseInt(minResponseTime) };
+
+    const totalLogs = await ApiLog.countDocuments(filter);
+    const logs = await ApiLog.find(filter)
+      .sort({ timestamp: -1 })
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit));
+
+    res.json({
+      success: true,
+      data: logs,
+      pagination: {
+        total: totalLogs,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(totalLogs / parseInt(limit))
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// @desc    Get aggregated API performance metrics
+// @route   GET /api/admin/api-logs/stats
+// @access  Private/Admin
+router.get('/api-logs/stats', async (req, res, next) => {
+  try {
+    const overallStats = await ApiLog.aggregate([
+      {
+        $group: {
+          _id: null,
+          avgResponseTime: { $avg: '$responseTime' },
+          maxResponseTime: { $max: '$responseTime' },
+          totalRequests: { $sum: 1 },
+          errorRequests: {
+            $sum: {
+              $cond: [{ $gte: ['$statusCode', 400] }, 1, 0]
+            }
+          }
+        }
+      }
+    ]);
+
+    const routeMetrics = await ApiLog.aggregate([
+      {
+        $group: {
+          _id: { method: '$method', path: '$path' },
+          avgResponseTime: { $avg: '$responseTime' },
+          maxResponseTime: { $max: '$responseTime' },
+          totalRequests: { $sum: 1 },
+          errors: {
+            $sum: {
+              $cond: [{ $gte: ['$statusCode', 400] }, 1, 0]
+            }
+          }
+        }
+      },
+      { $sort: { avgResponseTime: -1 } },
+      { $limit: 15 }
+    ]);
+
+    res.json({
+      success: true,
+      overall: overallStats[0] || { avgResponseTime: 0, maxResponseTime: 0, totalRequests: 0, errorRequests: 0 },
+      routes: routeMetrics.map(r => ({
+        method: r._id.method,
+        path: r._id.path,
+        avgResponseTime: Math.round(r.avgResponseTime),
+        maxResponseTime: r.maxResponseTime,
+        totalRequests: r.totalRequests,
+        errors: r.errors
+      }))
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// @desc    Clear API logs
+// @route   DELETE /api/admin/api-logs
+// @access  Private/Admin
+router.delete('/api-logs', async (req, res, next) => {
+  try {
+    await ApiLog.deleteMany({});
+    res.json({ success: true, message: 'API performance logs cleared successfully.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

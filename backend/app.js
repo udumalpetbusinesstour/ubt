@@ -53,6 +53,10 @@ const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// API Performance Logging Middleware
+const apiLogMiddleware = require('./middleware/apiLogMiddleware');
+app.use('/api', apiLogMiddleware);
+
 // Route Mappings
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
