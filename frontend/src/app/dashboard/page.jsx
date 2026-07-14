@@ -3044,7 +3044,9 @@ function DashboardContent() {
       const activeToken = token || localStorage.getItem('ubt_token');
       const res = await fetch('http://localhost:5000/api/referrals/my-stats', {
         headers: {
-          Authorization: `Bearer ${activeToken}`
+          Authorization: `Bearer ${activeToken}`,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         }
       });
       const data = await res.json();

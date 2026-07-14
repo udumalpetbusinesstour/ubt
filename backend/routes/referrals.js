@@ -48,6 +48,11 @@ router.get('/my-stats', protect, async (req, res, next) => {
       .populate('referredBusinessId', 'name businessName status subscriptionStatus verificationStatus')
       .sort({ createdAt: -1 });
 
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+
     res.json({
       success: true,
       data: {
