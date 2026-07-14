@@ -10196,16 +10196,18 @@ function DashboardContent() {
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between items-center">
                       <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Business Description</label>
-                      <button
-                        type="button"
-                        onClick={() => handleDashboardAIGenerate('description')}
-                        disabled={aiLoading}
-                        className="py-0.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[9px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
-                      >
-                        {aiLoading ? (
-                          <span className="h-2.5 w-2.5 border border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
-                        ) : '✨'} Generate with AI
-                      </button>
+                      {false && (
+                        <button
+                          type="button"
+                          onClick={() => handleDashboardAIGenerate('description')}
+                          disabled={aiLoading}
+                          className="py-0.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[9px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
+                        >
+                          {aiLoading ? (
+                            <span className="h-2.5 w-2.5 border border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
+                          ) : '✨'} Generate with AI
+                        </button>
+                      )}
                     </div>
                     <textarea 
                       rows={5}
@@ -10219,16 +10221,18 @@ function DashboardContent() {
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between items-center">
                       <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Verified Highlights (Comma Separated)</label>
-                      <button
-                        type="button"
-                        onClick={() => handleDashboardAIGenerate('highlights')}
-                        disabled={aiLoading}
-                        className="py-0.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[9px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
-                      >
-                        {aiLoading ? (
-                          <span className="h-2.5 w-2.5 border border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
-                        ) : '✨'} Generate with AI
-                      </button>
+                      {false && (
+                        <button
+                          type="button"
+                          onClick={() => handleDashboardAIGenerate('highlights')}
+                          disabled={aiLoading}
+                          className="py-0.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[9px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
+                        >
+                          {aiLoading ? (
+                            <span className="h-2.5 w-2.5 border border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
+                          ) : '✨'} Generate with AI
+                        </button>
+                      )}
                     </div>
                     <input
                       type="text"

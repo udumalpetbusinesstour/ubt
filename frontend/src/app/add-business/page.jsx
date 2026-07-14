@@ -2664,16 +2664,18 @@ export default function AddBusiness() {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
                           <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Short Business Description <span className="text-red-500">*</span></label>
-                          <button
-                            type="button"
-                            onClick={() => handleAIGenerate('description', false)}
-                            disabled={aiLoading}
-                            className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50 shrink-0"
-                          >
-                            {aiLoading ? (
-                              <span className="h-3 w-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
-                            ) : '✨'} Generate with AI
-                          </button>
+                          {false && (
+                            <button
+                              type="button"
+                              onClick={() => handleAIGenerate('description', false)}
+                              disabled={aiLoading}
+                              className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50 shrink-0"
+                            >
+                              {aiLoading ? (
+                                <span className="h-3 w-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
+                              ) : '✨'} Generate with AI
+                            </button>
+                          )}
                         </div>
                         <span className={`text-[10px] font-extrabold ${formData.description.length >= 20 ? 'text-emerald-600' : 'text-red-500'}`}>
                           {formData.description.length} / 250 {formData.description.length > 0 && formData.description.length < 20 ? `(min 20)` : ''}
@@ -2826,16 +2828,18 @@ export default function AddBusiness() {
                   <div className="flex flex-col gap-1.5 text-left">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Comma Separated) <span className="text-red-500">*</span></label>
-                      <button
-                        type="button"
-                        onClick={() => handleAIGenerate('highlights', false)}
-                        disabled={aiLoading}
-                        className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
-                      >
-                        {aiLoading ? (
-                          <span className="h-3 w-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
-                        ) : '✨'} Generate with AI
-                      </button>
+                      {false && (
+                        <button
+                          type="button"
+                          onClick={() => handleAIGenerate('highlights', false)}
+                          disabled={aiLoading}
+                          className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50"
+                        >
+                          {aiLoading ? (
+                            <span className="h-3 w-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
+                          ) : '✨'} Generate with AI
+                        </button>
+                      )}
                     </div>
                     <input
                       type="text"
@@ -3268,16 +3272,18 @@ export default function AddBusiness() {
                       <div className="flex flex-col gap-1.5">
                         <div className="flex justify-between items-center">
                           <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Branch Description <span className="text-red-500">*</span></label>
-                          <button
-                            type="button"
-                            onClick={() => handleAIGenerate('description', true)}
-                            disabled={aiLoading}
-                            className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50 shrink-0"
-                          >
-                            {aiLoading ? (
-                              <span className="h-3 w-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
-                            ) : '✨'} Generate with AI
-                          </button>
+                          {false && (
+                            <button
+                              type="button"
+                              onClick={() => handleAIGenerate('description', true)}
+                              disabled={aiLoading}
+                              className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50 shrink-0"
+                            >
+                              {aiLoading ? (
+                                <span className="h-3 w-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
+                              ) : '✨'} Generate with AI
+                            </button>
+                          )}
                         </div>
                         <textarea
                           name="description"

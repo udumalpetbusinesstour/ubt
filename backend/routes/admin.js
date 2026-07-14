@@ -982,7 +982,7 @@ router.post('/sponsored-ads/direct-post', async (req, res, next) => {
 // @access  Private/Admin
 router.get('/business-edits/pending', async (req, res, next) => {
   try {
-    const businesses = await Business.find({ pendingEdits: { $ne: null } }).populate('ownerId', 'fullName name email phone mobileNumber');
+    const businesses = await Business.find({ "pendingEdits.data": { $exists: true, $ne: null } }).populate('ownerId', 'fullName name email phone mobileNumber');
     res.json({ success: true, count: businesses.length, data: businesses });
   } catch (error) {
     next(error);
