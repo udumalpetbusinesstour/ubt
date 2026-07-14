@@ -3667,6 +3667,7 @@ export default function AddBusiness() {
                     onNext={(updatedBiz) => {
                       setFormData(prev => ({
                         ...prev,
+                        _id: updatedBiz?._id || prev._id,
                         subscriptionStatus: updatedBiz?.subscriptionStatus || 'active',
                         isPremium: updatedBiz?.isPremium !== undefined ? updatedBiz.isPremium : true
                       }));
