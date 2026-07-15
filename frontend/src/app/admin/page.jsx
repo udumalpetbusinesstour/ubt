@@ -1863,20 +1863,16 @@ export default function AdminDashboard() {
               
               const message = `🎉 *Congratulations! Your business profile has been approved.*
 
-Welcome to the Udumalpet Business community! Your business is now live on our platform.
+*Welcome to the Udumalpet Business community! Your business is now live on our platform.*
 
 🔗 View your profile:
-https://udumalpet.business/businesses/${businessSlug}
+https://udumalpet.business/${businessSlug}
 
-🤝 Let's build a stronger business community together. Support fellow businesses by inviting them to join Udumalpet Business. Your unique referral link is available in your Dashboard.
+*🤝 Let's build a stronger business community together. Support fellow businesses by inviting them to join Udumalpet Business. Your unique referral link is available in your Dashboard.*
 
-🎁 Earn 99 Reward Points for every successful referral. Rewards are added to your wallet and can be withdrawn at your convenience.
+*📞 Need help? Contact our official WhatsApp support team at +91 89257 28260 for any assistance with your business profile.*
 
-Create value by helping businesses grow, and you'll be rewarded along the way. Together, we can build a trusted local business network that benefits everyone.
-
-📞 Need help? Contact our official support team at +91 89257 28260 for any assistance with your business profile.
-
-Thank you for being part of our journey. Let's grow together and make Udumalpet stronger, one business at a time! 🚀
+*Thank you for being part of our journey. Let's grow together and make Udumalpet stronger, one business at a time! 🚀*
 
 Team Udumalpet Business
 🌐 https://udumalpet.business`;
