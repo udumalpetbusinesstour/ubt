@@ -87,7 +87,20 @@ export default function Navbar() {
         .catch(err => console.warn('Failed to fetch platform views', err));
     };
 
-    fetchViews();
+    const incrementAndFetchViews = () => {
+      fetch('http://localhost:5000/api/businesses/platform-stats/views/increment', {
+        method: 'POST'
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setOverallViews(data.overallViews);
+          }
+        })
+        .catch(err => console.warn('Failed to increment platform views', err));
+    };
+
+    incrementAndFetchViews();
 
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('platform-views-updated', fetchViews);

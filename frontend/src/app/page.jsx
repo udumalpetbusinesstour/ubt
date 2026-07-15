@@ -305,19 +305,7 @@ export default function Home() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Increment overall platform views on homepage visit
-  useEffect(() => {
-    fetch('http://localhost:5000/api/businesses/platform-stats/views/increment', {
-      method: 'POST'
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          window.dispatchEvent(new Event('platform-views-updated'));
-        }
-      })
-      .catch(err => console.warn('Could not increment platform views', err));
-  }, []);
+
 
   // Fetch approved listing coordinates for map pings
   useEffect(() => {
@@ -458,18 +446,20 @@ export default function Home() {
         marker.unbindTooltip();
 
         if (showLogo) {
-          // Zoomed in: show logo, no business name tooltip
+          // Zoomed in: show logo
           marker.setIcon(customLogoIcon);
         } else {
-          // Zoomed out: show dot icon, bind business name tooltip (hover only)
+          // Zoomed out: show dot icon
           marker.setIcon(customRedIcon);
-          marker.bindTooltip(name, {
-            permanent: false,
-            direction: 'top',
-            className: 'custom-map-tooltip',
-            offset: [0, -10]
-          });
         }
+
+        // Bind business name tooltip (hover only, never permanent)
+        marker.bindTooltip(name, {
+          permanent: false,
+          direction: 'top',
+          className: 'custom-map-tooltip',
+          offset: [0, -10]
+        });
       });
     };
 
