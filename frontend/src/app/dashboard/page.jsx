@@ -7055,9 +7055,9 @@ function DashboardContent() {
                       <div className="flex flex-col gap-2.5 text-xs font-bold text-slate-605 text-left">
                         {business.timings && typeof business.timings === 'object' && !Array.isArray(business.timings) ? (
                           Object.entries(business.timings).map(([day, time]) => (
-                            <div key={day} className="flex justify-between border-b border-slate-50 pb-2 last:border-b-0">
+                            <div key={day} className="grid grid-cols-[90px_1fr] border-b border-slate-50 pb-2 last:border-b-0 gap-2 items-start text-left">
                               <span className="text-slate-400 font-semibold">{day}</span>
-                              <span className={`font-black ${String(time || '').toLowerCase().includes('closed') ? 'text-rose-550' : 'text-slate-800'}`}>{String(time || 'Closed')}</span>
+                              <span className={`font-black text-right break-words ${String(time || '').toLowerCase().includes('closed') ? 'text-rose-550' : 'text-slate-800'}`}>{String(time || 'Closed')}</span>
                             </div>
                           ))
                         ) : (

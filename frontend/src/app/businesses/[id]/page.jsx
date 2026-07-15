@@ -3240,10 +3240,11 @@ Please confirm availability and delivery time.`;
                 ) : (
                   business.timings && typeof business.timings === 'object' && business.timings !== null && !Array.isArray(business.timings) ? (
                     Object.entries(business.timings).map(([day, time]) => (
-                      <div key={day} className="flex justify-between border-b border-slate-50 pb-2 last:border-b-0">
+                      <div key={day} className="grid grid-cols-[90px_1fr] border-b border-slate-50 pb-2 last:border-b-0 gap-2 items-start text-left">
                         <span className="text-slate-400 font-semibold">{day}</span>
-                        <span className={`flex items-center gap-1 ${String(time || '').toLowerCase().includes('closed') ? 'text-red-500' : 'text-slate-700'}`}>
-                          {String(time || 'Closed')} <ChevronRight className="h-3 w-3 text-slate-300" />
+                        <span className={`flex items-start justify-end gap-1 text-right ${String(time || '').toLowerCase().includes('closed') ? 'text-red-500' : 'text-slate-700'}`}>
+                          <span className="break-words">{String(time || 'Closed')}</span>
+                          <ChevronRight className="h-3 w-3 text-slate-300 shrink-0 mt-0.5" />
                         </span>
                       </div>
                     ))
