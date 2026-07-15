@@ -1422,7 +1422,7 @@ function BusinessesList() {
     : filteredLocalities.slice(0, 5);
 
   // Pagination helpers
-  const itemsPerPage = 6;
+  const itemsPerPage = 10;
   const totalPages = Math.ceil(businesses.length / itemsPerPage);
   const displayedBusinesses = businesses.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -1843,7 +1843,7 @@ function BusinessesList() {
       });
     })();
 
-    const exploreItemsPerPage = 6;
+    const exploreItemsPerPage = 10;
     const totalExplorePages = Math.ceil(filteredExploreBusinesses.length / exploreItemsPerPage);
     const displayedExploreBusinesses = filteredExploreBusinesses.slice((explorePage - 1) * exploreItemsPerPage, explorePage * exploreItemsPerPage);
 
@@ -2285,24 +2285,16 @@ function BusinessesList() {
                                 onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
                                 className="shrink-0 overflow-hidden relative w-full aspect-square md:w-48 md:h-48 rounded-t-[23px] md:rounded-l-[23px] md:rounded-tr-none border-b md:border-b-0 md:border-r border-slate-100 bg-slate-50 cursor-pointer"
                               >
-                                {biz.logoUrl || biz.coverImageUrl ? (
-                                  <img 
-                                    src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl)} 
-                                    alt={biz.name}
-                                    className={`h-full w-full transition-transform duration-750 ease-out-expo group-hover:scale-105 ${
-                                      biz.logoUrl ? 'object-contain p-4 bg-white' : 'object-cover'
-                                    }`}
-                                    style={{
-                                      filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
-                                    }}
-                                  />
-                                ) : (
-                                  <div className="w-full h-full bg-black flex items-center justify-center p-4">
-                                    <span className="text-white/20 font-black text-2xl tracking-widest uppercase font-sans text-center break-all select-none">
-                                      {biz.name}
-                                    </span>
-                                  </div>
-                                )}
+                                <img 
+                                  src={biz.logoUrl ? window.getImageUrl(biz.logoUrl) : '/default_business_cover.png'} 
+                                  alt={biz.name}
+                                  className={`h-full w-full transition-transform duration-750 ease-out-expo group-hover:scale-105 ${
+                                    biz.logoUrl ? 'object-contain p-4 bg-white' : 'object-cover'
+                                  }`}
+                                  style={{
+                                    filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
+                                  }}
+                                />
                                 {/* Badge (Verified / Premium / Google Linked) */}
                                 {!isExpired && (
                                   <div className="absolute top-3 left-3 flex flex-wrap gap-1 z-10">
@@ -3138,24 +3130,16 @@ function BusinessesList() {
                           : 'w-full aspect-square rounded-t-[23px] border-b'
                       }`}
                     >
-                      {biz.logoUrl || biz.coverImageUrl ? (
-                        <img 
-                          src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl)} 
-                          alt={biz.name}
-                          className={`h-full w-full transition-transform duration-750 ease-out-expo group-hover:scale-105 ${
-                            biz.logoUrl ? 'object-contain p-4 bg-white' : 'object-cover'
-                          }`}
-                          style={{
-                            filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-black flex items-center justify-center p-4">
-                          <span className="text-white/20 font-black text-2xl tracking-widest uppercase font-sans text-center break-all select-none">
-                            {biz.name}
-                          </span>
-                        </div>
-                      )}
+                      <img 
+                        src={biz.logoUrl ? window.getImageUrl(biz.logoUrl) : '/default_business_cover.png'} 
+                        alt={biz.name}
+                        className={`h-full w-full transition-transform duration-750 ease-out-expo group-hover:scale-105 ${
+                          biz.logoUrl ? 'object-contain p-4 bg-white' : 'object-cover'
+                        }`}
+                        style={{
+                          filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
+                        }}
+                      />
                       {/* Badge (Verified / Premium / Google Linked) */}
                       {!isExpired && (
                         <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">

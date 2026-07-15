@@ -345,21 +345,13 @@ export default function UserProfile() {
                      onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
                      className="w-full aspect-square overflow-hidden relative rounded-t-[23px] bg-slate-50 border-b border-slate-100 shrink-0 cursor-pointer"
                    >
-                      {biz.logoUrl || biz.coverImageUrl ? (
                         <img 
-                          src={(typeof window !== 'undefined' && window.getImageUrl ? window.getImageUrl(biz.logoUrl) : biz.logoUrl) || (typeof window !== 'undefined' && window.getImageUrl ? window.getImageUrl(biz.coverImageUrl) : biz.coverImageUrl)} 
+                          src={biz.logoUrl ? (typeof window !== 'undefined' && window.getImageUrl ? window.getImageUrl(biz.logoUrl) : biz.logoUrl) : '/default_business_cover.png'} 
                           alt={biz.name || biz.businessName}
                           className={`h-full w-full transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[23px] ${
                              biz.logoUrl ? 'object-contain p-4 bg-white' : 'object-cover'
                            }`}
                         />
-                      ) : (
-                        <div className="w-full h-full bg-black flex items-center justify-center p-4">
-                          <span className="text-white/20 font-black text-2xl tracking-widest uppercase font-sans text-center break-all select-none">
-                            {biz.name || biz.businessName}
-                          </span>
-                        </div>
-                      )}
                    </div>
                   <div className="p-5 flex-grow flex flex-col justify-between gap-4">
                     <div className="flex flex-col gap-1.5">

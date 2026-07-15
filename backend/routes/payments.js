@@ -529,6 +529,20 @@ router.post('/verify-payment', protect, async (req, res) => {
     const { checkAndCompleteReferralByBusiness } = require('../utils/referralHelper');
     await checkAndCompleteReferralByBusiness(business._id);
 
+    // Append to Google Sheets Income Tracker
+    try {
+      const { appendToIncomeTracker } = require('../services/sheetsService');
+      await appendToIncomeTracker({
+        businessName: business.name,
+        monthlyPaid: (planType.toLowerCase() === 'monthly' && !isPublicSector && !isAdminUser) ? 99 : 0,
+        yearlyPaid: (planType.toLowerCase() === 'yearly' && !isPublicSector && !isAdminUser) ? 999 : 0,
+        eventPaid: 0,
+        addPaid: 0
+      });
+    } catch (sheetErr) {
+      console.error('[Google Sheets API] Error triggering sheets update:', sheetErr.message);
+    }
+
     res.json({
       success: true,
       message: 'Subscription successfully activated!',
@@ -702,6 +716,27 @@ router.post('/verify-event-payment', protect, async (req, res) => {
         paymentDate: new Date(),
         paidAt: new Date(),
       });
+    }
+
+    // Append to Google Sheets Income Tracker
+    try {
+      let bizName = event.organizer || 'Unknown Business';
+      if (event.businessId) {
+        const bObj = await Business.findById(event.businessId);
+        if (bObj) {
+          bizName = bObj.name;
+        }
+      }
+      const { appendToIncomeTracker } = require('../services/sheetsService');
+      await appendToIncomeTracker({
+        businessName: bizName,
+        monthlyPaid: 0,
+        yearlyPaid: 0,
+        eventPaid: event.paymentStatus === 'Free' ? 0 : 99,
+        addPaid: 0
+      });
+    } catch (sheetErr) {
+      console.error('[Google Sheets API] Error triggering sheets update for event:', sheetErr.message);
     }
 
     res.json({
@@ -1289,7 +1324,6 @@ router.post('/verify-sponsored-ad-payment', protect, async (req, res) => {
     // Save the business document
     await business.save();
 
-    // Create a Payment Record for bookkeeping
     try {
       await Payment.create({
         userId: req.user._id,
@@ -1304,6 +1338,16 @@ router.post('/verify-sponsored-ad-payment', protect, async (req, res) => {
         promotionId: promotionId,
         paymentDate: new Date(),
         paidAt: new Date()
+      });
+
+      // Append to Google Sheets Income Tracker (Ad / Add-on = 99)
+      const { appendToIncomeTracker } = require('../services/sheetsService');
+      await appendToIncomeTracker({
+        businessName: business.name,
+        monthlyPaid: 0,
+        yearlyPaid: 0,
+        eventPaid: 0,
+        addPaid: 99
       });
     } catch (payErr) {
       console.error('Error logging payment details for sponsored ad:', payErr.message);

@@ -20,7 +20,7 @@ const isBizDraft = (b) => {
   if (b.status && b.status.toLowerCase().trim() === 'approved') {
     return false;
   }
-  const totalPhotos = (b.galleryUrls ? (Array.isArray(b.galleryUrls) ? b.galleryUrls.length : (typeof b.galleryUrls === 'string' ? b.galleryUrls.split(',').filter(Boolean).length : 0)) : 0) + (b.logoUrl ? 1 : 0) + (b.coverImageUrl ? 1 : 0);
+  const totalPhotos = (b.galleryUrls ? (Array.isArray(b.galleryUrls) ? b.galleryUrls.length : (typeof b.galleryUrls === 'string' ? b.galleryUrls.split(',').filter(Boolean).length : 0)) : 0) + (b.logoUrl ? 1 : 0);
   return (
     !b.name ||
     !b.category ||
@@ -2904,11 +2904,11 @@ Team Udumalpet Business
                               <tr key={b._id} className="hover:bg-slate-50/50 transition-colors">
                                 <td className="p-4.5 flex items-center gap-3.5">
                                   <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0 border border-slate-200 relative shadow-2xs flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-extrabold text-xs uppercase select-none">
-                                    {b.coverImageUrl ? (
-                                      <img src={window.getImageUrl(b.coverImageUrl)} className="h-full w-full object-cover" alt={b.name} />
-                                    ) : (
-                                      (b.name || 'B').charAt(0)
-                                    )}
+                                    <img 
+                                      src={b.logoUrl ? window.getImageUrl(b.logoUrl) : '/default_business_cover.png'} 
+                                      className={`h-full w-full ${b.logoUrl ? 'object-contain p-1 bg-white' : 'object-cover'}`} 
+                                      alt={b.name} 
+                                    />
                                   </div>
                                   <div className="flex flex-col text-left min-w-0">
                                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -3275,11 +3275,11 @@ Team Udumalpet Business
                                   title="View Profile"
                                   className="h-9 w-9 rounded-xl overflow-hidden shrink-0 border border-slate-200 flex items-center justify-center bg-gradient-to-br from-[#001c41] to-slate-800 text-white font-extrabold text-xs uppercase select-none hover:scale-105 transition-transform cursor-pointer"
                                 >
-                                  {b.coverImageUrl ? (
-                                    <img src={window.getImageUrl(b.coverImageUrl)} className="h-full w-full object-cover" alt={b.name} />
-                                  ) : (
-                                    (b.name || 'B').charAt(0)
-                                  )}
+                                  <img 
+                                    src={b.logoUrl ? window.getImageUrl(b.logoUrl) : '/default_business_cover.png'} 
+                                    className={`h-full w-full ${b.logoUrl ? 'object-contain p-1 bg-white' : 'object-cover'}`} 
+                                    alt={b.name} 
+                                  />
                                 </a>
                                 <div className="flex flex-col text-left">
                                   <div className="flex items-center gap-1.5 flex-wrap">
@@ -3471,11 +3471,11 @@ Team Udumalpet Business
                               title="View Profile"
                               className="h-16 w-16 bg-gradient-to-br from-[#001c41] to-slate-900 rounded-2xl overflow-hidden shrink-0 border border-slate-200/55 flex items-center justify-center p-1 text-center select-none text-white/50 font-black text-[9px] uppercase tracking-wider leading-tight hover:scale-105 transition-transform cursor-pointer"
                             >
-                              {b.coverImageUrl ? (
-                                <img src={window.getImageUrl(b.coverImageUrl)} className="h-full w-full object-cover" alt={b.name} />
-                              ) : (
-                                (b.name || 'B').slice(0, 3)
-                              )}
+                               <img 
+                                 src={b.logoUrl ? window.getImageUrl(b.logoUrl) : '/default_business_cover.png'} 
+                                 className={`h-full w-full ${b.logoUrl ? 'object-contain p-1 bg-white' : 'object-cover'}`} 
+                                 alt={b.name} 
+                               />
                             </a>
                             <div className="flex flex-col gap-1 text-left min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
@@ -4488,11 +4488,11 @@ Team Udumalpet Business
                                         title="View Profile"
                                         className="h-9 w-9 rounded-xl overflow-hidden shrink-0 border border-slate-200 flex items-center justify-center bg-gradient-to-br from-[#001c41] to-slate-800 text-white font-extrabold text-xs uppercase select-none hover:scale-105 transition-transform cursor-pointer"
                                       >
-                                        {b.coverImageUrl ? (
-                                          <img src={window.getImageUrl(b.coverImageUrl)} className="h-full w-full object-cover" alt={b.name} />
-                                        ) : (
-                                          (b.name || 'B').charAt(0)
-                                        )}
+                                        <img 
+                                          src={b.logoUrl ? window.getImageUrl(b.logoUrl) : '/default_business_cover.png'} 
+                                          className={`h-full w-full ${b.logoUrl ? 'object-contain p-1 bg-white' : 'object-cover'}`} 
+                                          alt={b.name} 
+                                        />
                                       </a>
                                       <div className="flex flex-col text-left">
                                         <span className="font-extrabold text-slate-800 text-xs leading-normal whitespace-normal break-words max-w-[250px] sm:max-w-[320px] line-clamp-3">{b.name}</span>

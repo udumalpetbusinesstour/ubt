@@ -158,7 +158,7 @@ export default function BusinessDetail() {
 
   const displayGallery = business ? Array.from(new Set(business.galleryUrls || [])).filter(Boolean).map(url => window.getImageUrl(url)) : [];
   const galleryCount = displayGallery.length;
-  const mainImage = business ? (window.getImageUrl(business.coverImageUrl) || null) : null;
+  const mainImage = '/default_business_cover.png';
 
   const [mediaError, setMediaError] = useState('');
   const directionsUrl = business
@@ -1591,26 +1591,14 @@ Please confirm availability and delivery time.`;
       {/* Premium Header Banner (Matching Image 5) */}
       <section className="w-full relative bg-[#001c41] text-white py-14 px-4 border-b border-slate-800/60 overflow-hidden">
         {/* Background Image opacity filter */}
-        {business.coverImageUrl ? (
-          <div 
-            className="absolute inset-0 bg-cover cursor-pointer transition-opacity duration-300 hover:opacity-95" 
-            onClick={(e) => openLightbox('cover', e)}
-            title="Click to view full cover photo"
-            style={{ 
-              backgroundImage: `url('${window.getImageUrl(business.coverImageUrl)}')`,
-              backgroundPosition: `center ${business.coverImageOffset ?? 50}%`,
-              opacity: 0.85
-            }} 
-          />
-        ) : (
-          <div 
-            className="absolute inset-0 bg-black flex items-center justify-center select-none p-4"
-          >
-            <span className="text-white/20 font-black text-4xl sm:text-6xl md:text-8xl tracking-widest uppercase font-sans text-center break-all select-none">
-              {business.name}
-            </span>
-          </div>
-        )}
+        <div 
+          className="absolute inset-0 bg-cover" 
+          style={{ 
+            backgroundImage: `url('/default_business_cover.png')`,
+            backgroundPosition: 'center',
+            opacity: 0.85
+          }} 
+        />
         {/* Sleek dark shadow gradient bottom-up - Adjusted opacity to allow cover to show */}
         <div className="absolute inset-0 bg-black/15 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
         

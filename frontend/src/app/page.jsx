@@ -1676,24 +1676,16 @@ export default function Home() {
                        onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
                        className="w-full aspect-square overflow-hidden relative rounded-t-[15px] bg-slate-50 border-b border-slate-100 cursor-pointer"
                      >
-                       {biz.logoUrl || biz.coverImageUrl ? (
-                         <img 
-                           src={window.getImageUrl(biz.logoUrl) || window.getImageUrl(biz.coverImageUrl)} 
-                           alt={biz.name}
-                           className={`h-full w-full transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[15px] ${
-                             biz.logoUrl ? 'object-contain p-4 bg-white' : 'object-cover'
-                           }`}
-                           style={{
-                             filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
-                           }}
-                         />
-                       ) : (
-                         <div className="w-full h-full bg-black flex items-center justify-center p-4">
-                           <span className="text-white/20 font-black text-2xl tracking-widest uppercase font-sans text-center break-all select-none">
-                             {biz.name}
-                           </span>
-                         </div>
-                       )}
+                        <img 
+                          src={biz.logoUrl ? window.getImageUrl(biz.logoUrl) : '/default_business_cover.png'} 
+                          alt={biz.name}
+                          className={`h-full w-full transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[15px] ${
+                            biz.logoUrl ? 'object-contain p-4 bg-white' : 'object-cover'
+                          }`}
+                          style={{
+                            filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
+                          }}
+                        />
                       {isSubscribed && (
                         <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">
                           {biz.isFoundingMember && (

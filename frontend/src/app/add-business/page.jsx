@@ -1345,7 +1345,7 @@ export default function AddBusiness() {
         return false;
       }
     } else if (branchStep === 4) {
-      const totalPhotos = (branchLogoFile ? 1 : 0) + (branchCoverFile ? 1 : 0) + branchGalleryFiles.length;
+      const totalPhotos = (branchLogoFile ? 1 : 0) + branchGalleryFiles.length;
       if (totalPhotos < 1) {
         setError('Minimum 1 image is required for the branch profile.');
         return false;
@@ -1442,9 +1442,8 @@ export default function AddBusiness() {
         return false;
       }
     } else if (currentStep === 5) {
-      // Validate photos: logo, cover, and gallery. Minimum 3 gallery/photos required.
+      // Validate photos: logo and gallery. Minimum 3 gallery/photos required.
       const hasLogo = !!(formData.logoUrl || logoFile);
-      const hasCover = !!(formData.coverImageUrl || coverFile);
       const galleryCount = Math.max(
         galleryFiles.length,
         Array.isArray(formData.galleryUrls)
@@ -1453,9 +1452,9 @@ export default function AddBusiness() {
             ? formData.galleryUrls.split(',').map(s => s.trim()).filter(Boolean).length
             : 0
       );
-      const totalPhotos = (hasLogo ? 1 : 0) + (hasCover ? 1 : 0) + galleryCount;
+      const totalPhotos = (hasLogo ? 1 : 0) + galleryCount;
       if (totalPhotos < 3) {
-        setError('Minimum 3 images are required for profile (Logo + Cover + Gallery). Please upload more photos.');
+        setError('Minimum 3 images are required for profile (Logo + Gallery). Please upload more photos.');
         return false;
       }
     }
@@ -3131,24 +3130,6 @@ export default function AddBusiness() {
                         </div>
                       </div>
 
-                      {/* Cover */}
-                      <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-4">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Main Cover Image</span>
-                        <div className="flex items-center gap-4">
-                          <div className="h-16 w-32 bg-slate-50 border border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 font-bold text-xs select-none overflow-hidden">
-                            {uploadingCover ? (
-                              <div className="h-5 w-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                            ) : formData.coverImageUrl ? (
-                              <img src={window.getImageUrl(formData.coverImageUrl)} alt="Cover" className="h-full w-full object-cover rounded-2xl" />
-                            ) : 'Cover'}
-                          </div>
-                          <label className="py-2.5 px-4 border border-slate-300 hover:bg-slate-50 font-bold text-xs rounded-xl cursor-pointer transition-colors shadow-sm text-slate-700">
-                            {uploadingCover ? 'Uploading...' : coverFile ? 'Change File' : 'Choose File'}
-                            <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" disabled={uploadingCover} />
-                          </label>
-                          {formData.coverImageUrl && !uploadingCover && <span className="text-xs text-emerald-600 font-bold">✓ Uploaded</span>}
-                        </div>
-                      </div>
                     </div>
 
                     {/* Gallery Images Upload */}
@@ -3621,19 +3602,6 @@ export default function AddBusiness() {
                             </div>
                           </div>
 
-                          {/* Cover */}
-                          <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-4 text-left">
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Branch Cover Image</span>
-                            <div className="flex items-center gap-4">
-                              <div className="h-16 w-32 bg-slate-55 border border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 font-bold text-xs select-none">
-                                {branchCoverFile ? '✓ Cover Loaded' : 'Cover'}
-                              </div>
-                              <label className="py-2.5 px-4 border border-slate-300 hover:bg-slate-50 font-bold text-xs rounded-xl cursor-pointer transition-colors shadow-sm text-slate-700">
-                                Choose File
-                                <input type="file" onChange={handleBranchCoverUpload} className="hidden" />
-                              </label>
-                            </div>
-                          </div>
                         </div>
 
                         {/* Gallery Images Upload */}

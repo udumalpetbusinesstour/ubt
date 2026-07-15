@@ -565,6 +565,104 @@ function DashboardContent() {
   const [uploadLoading, setUploadLoading] = useState(false);
   const [photoGallery, setPhotoGallery] = useState([]);
 
+  // HTML5 Drag and drop gallery image reordering handlers
+  const [draggedIndex, setDraggedIndex] = useState(null);
+
+  const handleGalleryDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index);
+  };
+
+  const handleGalleryDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const reordered = [...photoGallery];
+    const draggedItem = reordered[draggedIndex];
+    reordered.splice(draggedIndex, 1);
+    reordered.splice(index, 0, draggedItem);
+
+    setPhotoGallery(reordered);
+    setDraggedIndex(index);
+  };
+
+  const handleGalleryDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  // Inline details section drag and drop reordering handlers
+  const [draggedInlineIndex, setDraggedInlineIndex] = useState(null);
+
+  const handleInlineDragStart = (e, index) => {
+    setDraggedInlineIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index);
+  };
+
+  const handleInlineDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedInlineIndex === null || draggedInlineIndex === index) return;
+
+    const galleryArr = Array.isArray(business.galleryUrls)
+      ? [...business.galleryUrls]
+      : (typeof business.galleryUrls === 'string'
+          ? business.galleryUrls.split(',').map(s => s.trim()).filter(Boolean)
+          : []);
+
+    if (galleryArr.length === 0) return;
+
+    const draggedItem = galleryArr[draggedInlineIndex];
+    galleryArr.splice(draggedInlineIndex, 1);
+    galleryArr.splice(index, 0, draggedItem);
+
+    setBusiness(prev => ({ ...prev, galleryUrls: galleryArr }));
+    setPhotoGallery(galleryArr);
+    setDraggedInlineIndex(index);
+  };
+
+  const handleInlineDragEnd = async () => {
+    setDraggedInlineIndex(null);
+    if (business && business.galleryUrls) {
+      try {
+        await saveInlineFields({ galleryUrls: business.galleryUrls });
+      } catch (err) {
+        console.error('Failed to auto-save inline gallery order:', err);
+      }
+    }
+  };
+
+  // Edit fields section drag and drop reordering handlers
+  const [draggedEditIndex, setDraggedEditIndex] = useState(null);
+
+  const handleEditDragStart = (e, index) => {
+    setDraggedEditIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index);
+  };
+
+  const handleEditDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedEditIndex === null || draggedEditIndex === index) return;
+
+    const currentUrls = editFields.galleryUrls
+      ? editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+
+    if (currentUrls.length === 0) return;
+
+    const draggedItem = currentUrls[draggedEditIndex];
+    currentUrls.splice(draggedEditIndex, 1);
+    currentUrls.splice(index, 0, draggedItem);
+
+    setEditFields(prev => ({ ...prev, galleryUrls: currentUrls.join(', ') }));
+    setDraggedEditIndex(index);
+  };
+
+  const handleEditDragEnd = () => {
+    setDraggedEditIndex(null);
+  };
+
   // Quick Edit states
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTab, setEditTab] = useState('general'); // general | contact | specs | services
@@ -6048,26 +6146,14 @@ function DashboardContent() {
 
                 {/* Premium Header Banner (Cover Image) */}
                 <section className="w-full relative bg-[#001c41] text-white py-12 px-6 rounded-3xl overflow-hidden border border-slate-800/20">
-                  {/* Background Image vertical offset positioning */}
-                  {business.coverImageUrl && (
-                    <div 
-                      className="absolute inset-0 bg-cover" 
-                      style={{ 
-                        backgroundImage: `url('${window.getImageUrl(business.coverImageUrl)}')`,
-                        backgroundPosition: `center ${business.coverImageOffset ?? 50}%`,
-                        opacity: 0.85
-                      }} 
-                    />
-                  )}
-                  {/* Sleek dark gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/45 to-slate-950/15" />
-                  
-                  {coverUploading && (
-                    <div className="absolute inset-0 bg-slate-955/65 backdrop-blur-xs flex flex-col items-center justify-center z-20 gap-3 animate-fadeIn">
-                      <RefreshCw className="h-8 w-8 text-emerald-450 animate-spin" />
-                      <span className="text-sm font-extrabold text-emerald-450 tracking-wide uppercase">Uploading Cover Image...</span>
-                    </div>
-                  )}
+                  <div 
+                    className="absolute inset-0 bg-cover" 
+                    style={{ 
+                      backgroundImage: `url('/default_business_cover.png')`,
+                      backgroundPosition: 'center',
+                      opacity: 0.85
+                    }} 
+                  />
                   
                   <div className={`relative flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10 transition-opacity duration-300 ${isRepositioning ? 'opacity-10 pointer-events-none' : 'opacity-100'}`}>
                     <div className="flex flex-col gap-3 text-left w-full drop-shadow-[0_4px_8px_rgba(0,0,0,0.95)]">
@@ -6194,28 +6280,6 @@ function DashboardContent() {
                       <button 
                         type="button"
                         onClick={() => {
-                          if (!isRepositioning) {
-                            setOriginalOffset(business.coverImageOffset ?? 50);
-                            setTempOffset(business.coverImageOffset ?? 50);
-                          }
-                          setIsRepositioning(!isRepositioning);
-                        }}
-                        className="h-9 px-3.5 bg-emerald-500/20 border border-emerald-500/35 hover:bg-emerald-500/35 text-emerald-450 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer font-bold text-xs"
-                      >
-                        <Move className="h-4 w-4" /> {isRepositioning ? 'Done Repositioning' : 'Reposition Cover'}
-                      </button>
-                      <label className="h-9 px-3.5 bg-blue-500/20 border border-blue-500/35 hover:bg-blue-500/35 text-blue-450 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer font-bold text-xs select-none m-0">
-                        <Upload className="h-4 w-4" /> Edit Cover
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={handleDashboardCoverUpload} 
-                          className="hidden" 
-                        />
-                      </label>
-                      <button 
-                        type="button"
-                        onClick={() => {
                           setEditTab('general');
                           setShowEditModal(true);
                         }}
@@ -6225,45 +6289,6 @@ function DashboardContent() {
                       </button>
                     </div>
                   </div>
-
-                  {/* Reposition Slider Overlay */}
-                  {isRepositioning && (
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-slate-950/95 border border-slate-700/80 rounded-2xl py-3 px-5 z-20 flex items-center gap-4 shadow-xl backdrop-blur-md w-[calc(100%-2rem)] max-w-sm">
-                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider shrink-0 flex items-center gap-1">
-                        <Move className="h-3.5 w-3.5 text-emerald-550" /> Reposition
-                      </span>
-                      <input 
-                        type="range" 
-                        min="0" 
-                        max="100" 
-                        value={tempOffset} 
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          setTempOffset(val);
-                          setBusiness(prev => ({ ...prev, coverImageOffset: val }));
-                        }}
-                        className="flex-1 accent-emerald-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-emerald-500 [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-emerald-500 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md"
-                      />
-                      <span className="text-xs font-black text-white w-8 text-right">{tempOffset}%</span>
-                      <div className="flex gap-1.5 shrink-0">
-                        <button 
-                          type="button"
-                          onClick={handleDashboardSavePosition}
-                          disabled={isSavingPosition}
-                          className="py-1 px-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-extrabold text-[9px] rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
-                        >
-                          {isSavingPosition ? 'Saving' : 'Save'}
-                        </button>
-                        <button 
-                          type="button"
-                          onClick={handleDashboardCancelPosition}
-                          className="py-1 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold text-[9px] rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </section>
 
                 {/* Subtabs navigation bar */}
@@ -6645,9 +6670,16 @@ function DashboardContent() {
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
                               {displayGallery.map((url, idx) => (
                                 <div 
-                                  key={idx} 
-                                  className="h-36 rounded-2xl bg-cover bg-center border border-slate-200 shadow-3xs relative overflow-hidden hover:shadow-xs transition-shadow" 
-                                  style={{ backgroundImage: `url('${url}')` }} 
+                                  key={url} 
+                                  draggable={true}
+                                  onDragStart={(e) => handleInlineDragStart(e, idx)}
+                                  onDragOver={(e) => handleInlineDragOver(e, idx)}
+                                  onDragEnd={handleInlineDragEnd}
+                                  className="h-36 rounded-2xl bg-cover bg-center border border-slate-200 shadow-3xs relative overflow-hidden cursor-grab active:cursor-grabbing hover:scale-102 hover:border-slate-300 hover:shadow-xs transition-all duration-150" 
+                                  style={{ 
+                                    backgroundImage: `url('${url}')`,
+                                    opacity: draggedInlineIndex === idx ? 0.45 : 1
+                                  }} 
                                 />
                               ))}
                             </div>
@@ -7330,46 +7362,6 @@ function DashboardContent() {
                   </div>
                 </div>
 
-                {/* Cover Image Upload Card */}
-                <div className="bg-white border border-slate-200 shadow-xs rounded-3xl p-6 flex flex-col gap-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h4 className="font-extrabold text-slate-800 text-sm">Cover / Banner Image</h4>
-                    <span className="text-[10px] text-slate-400 font-semibold mt-0.5 block">Landscape image shown as your profile banner. (Max 5MB)</span>
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    {editFields.coverImageUrl ? (
-                      <div className="h-32 rounded-2xl overflow-hidden border border-slate-200 relative group">
-                        <img src={window.getImageUrl(editFields.coverImageUrl)} alt="Cover" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                          <button
-                            type="button"
-                            onClick={() => setEditFields(prev => ({ ...prev, coverImageUrl: '' }))}
-                            className="bg-red-600 text-white rounded-xl py-1.5 px-3 text-[10px] font-extrabold flex items-center gap-1 shadow cursor-pointer"
-                          >
-                            <Trash2 className="h-3 w-3" /> Remove
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="h-32 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center">
-                        <ImageIcon className="h-8 w-8 text-slate-300" />
-                      </div>
-                    )}
-                    <label className="cursor-pointer">
-                      <div className={`py-2.5 px-4 border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-xl text-[11px] font-extrabold text-slate-700 flex items-center gap-2 transition-colors w-fit ${coverUploading ? 'opacity-60 pointer-events-none' : ''}`}>
-                        {coverUploading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                        {coverUploading ? 'Uploading...' : 'Upload Cover Image'}
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleDashboardImageUpload(e, 'coverImageUrl')}
-                        className="hidden"
-                        disabled={coverUploading}
-                      />
-                    </label>
-                  </div>
-                </div>
               </div>
 
               {/* Gallery Photos Full Section */}
@@ -7401,12 +7393,21 @@ function DashboardContent() {
                 {editFields.galleryUrls && editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean).length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean).map((url, idx) => (
-                      <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border border-slate-200 shadow-3xs bg-slate-100">
-                        <img src={window.getImageUrl(url)} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                      <div 
+                        key={url} 
+                        draggable={true}
+                        onDragStart={(e) => handleEditDragStart(e, idx)}
+                        onDragOver={(e) => handleEditDragOver(e, idx)}
+                        onDragEnd={handleEditDragEnd}
+                        className="relative group aspect-square rounded-2xl overflow-hidden border border-slate-200 shadow-3xs bg-slate-100 cursor-grab active:cursor-grabbing hover:scale-102 hover:border-slate-300 transition-all duration-150"
+                        style={{ opacity: draggedEditIndex === idx ? 0.45 : 1 }}
+                      >
+                        <img src={window.getImageUrl(url)} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover pointer-events-none" />
                         <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/40 transition-colors flex items-center justify-center">
                           <button
                             type="button"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               const currentUrls = editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean);
                               const updated = currentUrls.filter((_, uIdx) => uIdx !== idx);
                               setEditFields(prev => ({ ...prev, galleryUrls: updated.join(', ') }));
@@ -10540,44 +10541,7 @@ function DashboardContent() {
                     </div>
                   </div>
 
-                  {/* Cover Image Direct Upload */}
-                  <div className="flex flex-col gap-2 border-b border-slate-100 pb-4">
-                    <label className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Profile Cover Image</label>
-                    <div className="flex flex-col gap-3">
-                      <div className="h-32 w-full rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 relative flex items-center justify-center p-3 text-center text-slate-400 select-none bg-gradient-to-br from-[#001c41] to-slate-900">
-                        {editFields.coverImageUrl ? (
-                          <img 
-                            src={window.getImageUrl(editFields.coverImageUrl)} 
-                            alt="Cover Preview" 
-                            className="w-full h-full object-cover absolute inset-0"
-                          />
-                        ) : (
-                          <span className="font-extrabold text-[11px] uppercase tracking-wider leading-snug text-white/40">
-                            {editFields.name || 'Your Business Cover Preview'}
-                          </span>
-                        )}
-                        {coverUploading && (
-                          <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center">
-                            <RefreshCw className="h-6 w-6 text-white animate-spin" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="bg-white border border-slate-250 hover:bg-slate-50 text-slate-700 font-extrabold text-[10.5px] py-2.5 px-4.5 rounded-xl cursor-pointer shadow-3xs inline-flex items-center gap-1.5">
-                          <Plus className="h-3.5 w-3.5" />
-                          <span>{coverUploading ? 'Uploading...' : 'Upload Cover File'}</span>
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={(e) => handleDashboardImageUpload(e, 'coverImageUrl')} 
-                            className="hidden" 
-                            disabled={coverUploading}
-                          />
-                        </label>
-                        <span className="text-[9.5px] text-slate-400 font-semibold">Landscape landscape works best (Max 5MB)</span>
-                      </div>
-                    </div>
-                  </div>
+
 
                   {/* Gallery Images Multi-Upload Grid */}
                   <div className="flex flex-col gap-2">
@@ -10586,11 +10550,20 @@ function DashboardContent() {
                       {/* Existing Uploaded Gallery Previews */}
                       {editFields.galleryUrls 
                         ? editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean).map((url, idx) => (
-                          <div key={idx} className="h-20 rounded-xl border border-slate-200 overflow-hidden bg-slate-55 relative group">
-                            <img src={window.getImageUrl(url)} alt="Gallery item" className="w-full h-full object-cover" />
+                          <div 
+                            key={url} 
+                            draggable={true}
+                            onDragStart={(e) => handleEditDragStart(e, idx)}
+                            onDragOver={(e) => handleEditDragOver(e, idx)}
+                            onDragEnd={handleEditDragEnd}
+                            className="h-20 rounded-xl border border-slate-200 overflow-hidden bg-slate-55 relative group cursor-grab active:cursor-grabbing hover:scale-102 hover:border-slate-350 transition-all duration-150"
+                            style={{ opacity: draggedEditIndex === idx ? 0.45 : 1 }}
+                          >
+                            <img src={window.getImageUrl(url)} alt="Gallery item" className="w-full h-full object-cover pointer-events-none" />
                             <button
                               type="button"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 const currentUrls = editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean);
                                 const updated = currentUrls.filter((_, uIdx) => uIdx !== idx);
                                 setEditFields({ ...editFields, galleryUrls: updated.join(', ') });
@@ -10904,8 +10877,16 @@ function DashboardContent() {
                 
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
                   {photoGallery.map((img, i) => (
-                    <div key={i} className="h-16 rounded-xl overflow-hidden border border-slate-200 relative group select-none">
-                      <img src={window.getImageUrl(img)} alt="Store" className="w-full h-full object-cover" />
+                    <div 
+                      key={img} 
+                      draggable={true}
+                      onDragStart={(e) => handleGalleryDragStart(e, i)}
+                      onDragOver={(e) => handleGalleryDragOver(e, i)}
+                      onDragEnd={handleGalleryDragEnd}
+                      className="h-16 rounded-xl overflow-hidden border border-slate-200 relative group select-none cursor-grab active:cursor-grabbing hover:scale-102 hover:border-slate-300 hover:shadow-xs transition-all duration-150"
+                      style={{ opacity: draggedIndex === i ? 0.45 : 1 }}
+                    >
+                      <img src={window.getImageUrl(img)} alt="Store" className="w-full h-full object-cover pointer-events-none" />
                       <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
                         <button 
                           type="button"

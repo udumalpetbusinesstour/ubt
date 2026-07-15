@@ -7,6 +7,7 @@ const connectDB = require('./config/db');
 const app = require('./app');
 const { startSubscriptionCron } = require('./cron/subscriptionCron');
 const { startGoogleReviewsCron } = require('./cron/googleReviewsCron');
+const { startDailyTotalCron } = require('./cron/dailyTotalCron');
 const { seedDefaultPlans } = require('./routes/plans');
 
 // Seeder routine for UBT administrative credentials
@@ -100,6 +101,9 @@ const initializeServer = async () => {
 
     // 5. Initialize Weekly Google Reviews Sync Cron
     startGoogleReviewsCron();
+
+    // Initialize Daily Sheets Revenue Total Cron
+    startDailyTotalCron();
 
     // 6. Seed and sync default categories on boot
     console.log('[Boot] Seeding and syncing category systems...');

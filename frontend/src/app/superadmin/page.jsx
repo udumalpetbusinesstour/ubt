@@ -22,7 +22,7 @@ const isBizDraft = (b) => {
   if (b.status && b.status.toLowerCase().trim() === 'approved') {
     return false;
   }
-  const totalPhotos = (b.galleryUrls ? (Array.isArray(b.galleryUrls) ? b.galleryUrls.length : (typeof b.galleryUrls === 'string' ? b.galleryUrls.split(',').filter(Boolean).length : 0)) : 0) + (b.logoUrl ? 1 : 0) + (b.coverImageUrl ? 1 : 0);
+  const totalPhotos = (b.galleryUrls ? (Array.isArray(b.galleryUrls) ? b.galleryUrls.length : (typeof b.galleryUrls === 'string' ? b.galleryUrls.split(',').filter(Boolean).length : 0)) : 0) + (b.logoUrl ? 1 : 0);
   return (
     !b.name ||
     !b.category ||
@@ -3978,13 +3978,8 @@ const handlePartnerAction = async (partnerId, action) => {
                         >
                           <div 
                             className="h-36 bg-gradient-to-br from-[#001c41] to-slate-900 bg-cover bg-center shrink-0 relative flex items-center justify-center p-4 text-center select-none overflow-hidden"
-                            style={b.coverImageUrl ? { backgroundImage: `url('${window.getImageUrl(b.coverImageUrl)}')` } : undefined}
+                            style={{ backgroundImage: `url('/default_business_cover.png')` }}
                           >
-                            {!b.coverImageUrl && (
-                              <span className="text-white/30 font-black text-sm uppercase tracking-wider leading-tight max-w-full truncate font-sans">
-                                {b.name}
-                              </span>
-                            )}
                             <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
                               <div className="flex gap-1">
 
@@ -4148,11 +4143,11 @@ const handlePartnerAction = async (partnerId, action) => {
                       >
                         <div className="flex gap-4">
                           <div className="h-16 w-16 bg-gradient-to-br from-[#001c41] to-slate-900 rounded-2xl overflow-hidden shrink-0 border border-slate-200/55 flex items-center justify-center p-1 text-center select-none text-white/50 font-black text-[9px] uppercase tracking-wider leading-tight">
-                            {b.coverImageUrl ? (
-                              <img src={window.getImageUrl(b.coverImageUrl)} className="h-full w-full object-cover" alt={b.name} />
-                            ) : (
-                              (b.name || 'B').slice(0, 3)
-                            )}
+                            <img 
+                              src={b.logoUrl ? window.getImageUrl(b.logoUrl) : '/default_business_cover.png'} 
+                              className={`h-full w-full ${b.logoUrl ? 'object-contain p-1 bg-white' : 'object-cover'}`} 
+                              alt={b.name} 
+                            />
                           </div>
                           <div className="flex flex-col gap-1 text-left min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
@@ -8185,11 +8180,7 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* Cover Image & Gallery Grid */}
               <div className="flex flex-col gap-2">
                 <div className="h-44 bg-slate-100 rounded-3xl overflow-hidden shrink-0 border border-slate-200/50 relative flex items-center justify-center">
-                  {selectedBiz.coverImageUrl ? (
-                    <img src={window.getImageUrl(selectedBiz.coverImageUrl)} className="h-full w-full object-cover" alt={selectedBiz.name} />
-                  ) : (
-                    <span className="text-slate-400 font-extrabold text-[10px] uppercase tracking-wider select-none">No Cover Photo</span>
-                  )}
+                  <img src="/default_business_cover.png" className="h-full w-full object-cover" alt={selectedBiz.name} />
                 </div>
                 {selectedBiz.galleryUrls && selectedBiz.galleryUrls.length > 0 ? (
                   <>
