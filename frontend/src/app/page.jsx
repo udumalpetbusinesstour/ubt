@@ -305,6 +305,20 @@ export default function Home() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Increment overall platform views on homepage visit
+  useEffect(() => {
+    fetch('http://localhost:5000/api/businesses/platform-stats/views/increment', {
+      method: 'POST'
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.dispatchEvent(new Event('platform-views-updated'));
+        }
+      })
+      .catch(err => console.warn('Could not increment platform views', err));
+  }, []);
+
   // Fetch approved listing coordinates for map pings
   useEffect(() => {
     fetch('http://localhost:5000/api/businesses')
@@ -407,8 +421,22 @@ export default function Home() {
           iconAnchor: [12, 12]
         });
 
+        // Zooms in: circular business logo or default fallback
+        const logoSrc = pin.logoUrl || '/logo.png';
+        const logoBorderClass = isPremiumBiz ? 'border-orange-500' : 'border-emerald-600';
+        const customLogoIcon = L.divIcon({
+          html: `
+            <div class="relative flex items-center justify-center h-9 w-9 rounded-full border-2 ${logoBorderClass} bg-white shadow-md overflow-hidden transition-transform duration-200 hover:scale-110">
+              <img src="${logoSrc}" alt="${pin.name}" class="h-full w-full object-cover" onerror="this.src='/logo.png'; this.onerror=null;" />
+            </div>
+          `,
+          className: 'custom-logo-marker',
+          iconSize: [36, 36],
+          iconAnchor: [18, 18]
+        });
+
         const marker = L.marker([lat, lng], { icon: customRedIcon }).addTo(map);
-        markers.push({ marker, name: pin.name });
+        markers.push({ marker, name: pin.name, customRedIcon, customLogoIcon });
 
         // Navigate to public profile page when pin is clicked
         marker.on('click', () => {
@@ -419,22 +447,34 @@ export default function Home() {
       }
     });
 
-    // Helper to refresh tooltip permanence based on zoom level
-    const refreshTooltips = () => {
+    // Helper to refresh tooltip permanence and icons based on zoom level
+    const refreshMapElements = () => {
       const currentZoom = map.getZoom();
-      markers.forEach(({ marker, name }) => {
+      const showLogo = currentZoom >= 14;
+
+      markers.forEach(({ marker, name, customRedIcon, customLogoIcon }) => {
+        // Always close and unbind first to ensure no tooltips are left behind
+        marker.closeTooltip();
         marker.unbindTooltip();
-        marker.bindTooltip(name, {
-          permanent: currentZoom >= 14, // Permanent at zoom 14 and above
-          direction: 'top',
-          className: 'custom-map-tooltip',
-          offset: [0, -10]
-        });
+
+        if (showLogo) {
+          // Zoomed in: show logo, no business name tooltip
+          marker.setIcon(customLogoIcon);
+        } else {
+          // Zoomed out: show dot icon, bind business name tooltip (hover only)
+          marker.setIcon(customRedIcon);
+          marker.bindTooltip(name, {
+            permanent: false,
+            direction: 'top',
+            className: 'custom-map-tooltip',
+            offset: [0, -10]
+          });
+        }
       });
     };
 
-    map.on('zoomend', refreshTooltips);
-    refreshTooltips(); // Initial application
+    map.on('zoomend', refreshMapElements);
+    refreshMapElements(); // Initial application
 
     return () => {
       if (mapInstanceRef.current) {

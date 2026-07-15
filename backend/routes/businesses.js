@@ -4,6 +4,7 @@ const Business = require('../models/Business');
 const Review = require('../models/Review');
 const Category = require('../models/Category');
 const Lead = require('../models/Lead');
+const PlatformStats = require('../models/PlatformStats');
 const { protect } = require('../middleware/auth');
 
 const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -711,9 +712,27 @@ router.get(['/sponsored-ads', '/homepage/sponsored-ads'], async (req, res) => {
 // @access  Public
 router.get('/platform-stats/views', async (req, res, next) => {
   try {
-    const allBiz = await Business.find({ status: 'Approved' }).select('views');
-    const totalViews = allBiz.reduce((sum, b) => sum + (b.views || 0), 0);
-    res.json({ success: true, overallViews: totalViews });
+    let stats = await PlatformStats.findOne({ key: 'homepage' });
+    if (!stats) {
+      stats = await PlatformStats.create({ key: 'homepage', views: 0 });
+    }
+    res.json({ success: true, overallViews: stats.views });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Increment overall platform views
+// @route   POST /api/businesses/platform-stats/views/increment
+// @access  Public
+router.post('/platform-stats/views/increment', async (req, res, next) => {
+  try {
+    const stats = await PlatformStats.findOneAndUpdate(
+      { key: 'homepage' },
+      { $inc: { views: 1 } },
+      { new: true, upsert: true }
+    );
+    res.json({ success: true, overallViews: stats.views });
   } catch (error) {
     next(error);
   }
