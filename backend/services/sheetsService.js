@@ -4,14 +4,145 @@ const fs = require('fs');
 
 const keyPath = path.join(__dirname, '../config/google-indexing-key.json');
 
+// Helper to parse date string or month name to extract month index and year
+const parseMonthYear = (str) => {
+  if (!str) return null;
+  const parts = str.split(' ');
+  if (parts.length === 2) {
+    const monthIndex = [
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'
+    ].indexOf(parts[0].toLowerCase());
+    const year = parseInt(parts[1]);
+    if (monthIndex !== -1 && !isNaN(year)) {
+      return { month: monthIndex, year };
+    }
+  }
+
+  let d = null;
+  if (str.includes('/')) {
+    const [day, month, year] = str.split('/').map(Number);
+    if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+      d = new Date(year, month - 1, day);
+    }
+  } else if (str.includes('-')) {
+    const [year, month, day] = str.split('-').map(Number);
+    if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+      d = new Date(year, month - 1, day);
+    }
+  }
+
+  if (d && !isNaN(d.getTime())) {
+    return { month: d.getMonth(), year: d.getFullYear() };
+  }
+
+  return null;
+};
+
+// Prepend Month Name separator if the month changed since the last row
+const checkAndAppendMonthHeader = async (sheets, spreadsheetId, targetTab, localDate) => {
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${targetTab}!A2:A1000`
+    });
+
+    const rows = response.data.values || [];
+    let lastDateVal = null;
+    
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if (rows[i] && rows[i][0] && rows[i][0].trim()) {
+        lastDateVal = rows[i][0].trim();
+        break;
+      }
+    }
+
+    const currentMonth = localDate.getMonth();
+    const currentYear = localDate.getFullYear();
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const currentMonthHeader = `${monthNames[currentMonth]} ${currentYear}`;
+
+    let needsHeader = false;
+    if (!lastDateVal) {
+      needsHeader = true;
+    } else {
+      const lastMonthYear = parseMonthYear(lastDateVal);
+      if (lastMonthYear) {
+        if (lastMonthYear.month !== currentMonth || lastMonthYear.year !== currentYear) {
+          needsHeader = true;
+        }
+      } else {
+        needsHeader = true;
+      }
+    }
+
+    if (needsHeader) {
+      console.log(`[Google Sheets API] Month changed! Appending month header: ${currentMonthHeader}`);
+      const appendResponse = await sheets.spreadsheets.values.append({
+        spreadsheetId,
+        range: `${targetTab}!A2`,
+        valueInputOption: 'USER_ENTERED',
+        resource: {
+          values: [
+            [currentMonthHeader, '', '', '', '', '', '']
+          ]
+        }
+      });
+
+      const updatedRange = appendResponse.data.updates.updatedRange;
+      const match = updatedRange.match(/A(\d+):G\d+/);
+      if (match) {
+        const rowIndex = parseInt(match[1]) - 1;
+        const meta = await sheets.spreadsheets.get({ spreadsheetId });
+        const targetSheet = meta.data.sheets.find(s => s.properties.title === targetTab);
+        if (targetSheet) {
+          const sheetId = targetSheet.properties.sheetId;
+          await sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: {
+              requests: [
+                {
+                  repeatCell: {
+                    range: {
+                      sheetId,
+                      startRowIndex: rowIndex,
+                      endRowIndex: rowIndex + 1,
+                      startColumnIndex: 0,
+                      endColumnIndex: 7
+                    },
+                    cell: {
+                      userEnteredFormat: {
+                        backgroundColor: {
+                          red: 0.87,
+                          green: 0.92,
+                          blue: 0.97
+                        },
+                        textFormat: {
+                          bold: true,
+                          fontSize: 11
+                        },
+                        horizontalAlignment: 'CENTER'
+                      }
+                    },
+                    fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
+                  }
+                }
+              ]
+            }
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[Google Sheets API] Could not check or append month header:', err.message);
+  }
+};
+
 /**
  * Append transaction data to the Income Tracker Google Sheet
- * @param {Object} data Transaction details
- * @param {string} data.businessName Name of the business
- * @param {number} data.monthlyPaid Amount paid for monthly plan (0 / 99)
- * @param {number} data.yearlyPaid Amount paid for yearly plan (0 / 999)
- * @param {number} data.eventPaid Amount paid for listing an event (0 / 99)
- * @param {number} data.addPaid Amount paid for add-ons / sponsored ads (0 / 99)
  */
 const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid = 0, eventPaid = 0, addPaid = 0 }) => {
   try {
@@ -46,7 +177,6 @@ const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid
       return;
     }
 
-    // Fetch spreadsheet metadata to verify if "Income Tracker" sheet exists. If not, fallback to first sheet.
     let targetTab = 'Income Tracker';
     try {
       const meta = await sheets.spreadsheets.get({ spreadsheetId });
@@ -66,6 +196,9 @@ const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid
     const dateStr = `${year}-${month}-${day}`;
 
     const totalPaid = monthlyPaid + yearlyPaid + eventPaid + addPaid;
+
+    // Automated month header insertion check
+    await checkAndAppendMonthHeader(sheets, spreadsheetId, targetTab, localDate);
 
     console.log(`[Google Sheets API] Appending transaction for: ${businessName} (M: ${monthlyPaid}, Y: ${yearlyPaid}, E: ${eventPaid}, A: ${addPaid}, Total: ${totalPaid})`);
 
@@ -192,6 +325,9 @@ const appendDailyTotal = async () => {
       console.warn('[Google Sheets API] Could not fetch sheet names for daily total:', metaErr.message);
     }
 
+    // Automated month header insertion check
+    await checkAndAppendMonthHeader(sheets, spreadsheetId, targetTab, localDate);
+
     console.log(`[Google Sheets API] Appending Daily Total to sheet "${targetTab}": [M: ${monthlySum}, Y: ${yearlySum}, E: ${eventSum}, A: ${addSum}]`);
 
     const overallTotal = monthlySum + yearlySum + eventSum + addSum;
@@ -267,4 +403,146 @@ const appendDailyTotal = async () => {
   }
 };
 
-module.exports = { appendToIncomeTracker, appendDailyTotal };
+/**
+ * Append weekly total to Expense Tracker sheet
+ */
+const appendExpenseWeeklyTotal = async () => {
+  try {
+    let authConfig = {
+      scopes: ['https://www.googleapis.com/auth/spreadsheets']
+    };
+
+    if (process.env.GOOGLE_INDEXING_CREDENTIALS) {
+      try {
+        const credentials = JSON.parse(process.env.GOOGLE_INDEXING_CREDENTIALS);
+        authConfig.credentials = credentials;
+      } catch (jsonErr) {
+        console.error('[Google Sheets API] Failed to parse credentials:', jsonErr.message);
+      }
+    } else if (fs.existsSync(keyPath)) {
+      authConfig.keyFile = keyPath;
+    } else {
+      console.warn('[Google Sheets API] Google credentials not found. Skipping entry.');
+      return;
+    }
+
+    const auth = new google.auth.GoogleAuth(authConfig);
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: 'v4', auth: authClient });
+
+    const spreadsheetId = process.env.GOOGLE_EXPENSE_SPREADSHEET_ID;
+    if (!spreadsheetId) {
+      console.warn('[Google Sheets API] GOOGLE_EXPENSE_SPREADSHEET_ID is not set.');
+      return;
+    }
+
+    const targetTab = 'Expense Tracker';
+
+    // 1. Fetch values
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${targetTab}!A2:D1000`
+    });
+
+    const rows = response.data.values || [];
+    
+    // 2. Find the last Weekly Total row index
+    let lastWeeklyTotalIdx = -1;
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if (rows[i] && rows[i][1] === 'Weekly Total') {
+        lastWeeklyTotalIdx = i;
+        break;
+      }
+    }
+
+    // 3. Sum new manual entries after lastWeeklyTotalIdx
+    let weeklySum = 0;
+    let newEntriesCount = 0;
+    for (let i = lastWeeklyTotalIdx + 1; i < rows.length; i++) {
+      if (rows[i] && rows[i][2]) {
+        // Parse Amount value
+        const amt = parseFloat(rows[i][2].toString().replace(/,/g, '').trim());
+        if (!isNaN(amt)) {
+          weeklySum += amt;
+        }
+        newEntriesCount++;
+      }
+    }
+
+    if (newEntriesCount === 0) {
+      console.log('[Google Sheets API] No new expense entries since last weekly total. Skipping.');
+      return;
+    }
+
+    // 4. Append Weekly Total row
+    const localDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const year = localDate.getFullYear();
+    const month = String(localDate.getMonth() + 1).padStart(2, '0');
+    const day = String(localDate.getDate()).padStart(2, '0');
+    const dateStr = `${day}/${month}/${year}`;
+
+    console.log(`[Google Sheets API] Appending Weekly Total to Expense Tracker: Sum = ${weeklySum}`);
+    
+    const appendResponse = await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: `${targetTab}!A2`,
+      valueInputOption: 'USER_ENTERED',
+      resource: {
+        values: [
+          [dateStr, 'Weekly Total', '', weeklySum]
+        ]
+      }
+    });
+
+    // 5. Style the weekly total row (Grey background #E2E8F0, Bold text)
+    const updatedRange = appendResponse.data.updates.updatedRange;
+    const match = updatedRange.match(/A(\d+):D\d+/);
+    if (match) {
+      const rowIndex = parseInt(match[1]) - 1;
+      const meta = await sheets.spreadsheets.get({ spreadsheetId });
+      const targetSheet = meta.data.sheets.find(s => s.properties.title === targetTab);
+      if (targetSheet) {
+        const sheetId = targetSheet.properties.sheetId;
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId,
+          resource: {
+            requests: [
+              {
+                repeatCell: {
+                  range: {
+                    sheetId,
+                    startRowIndex: rowIndex,
+                    endRowIndex: rowIndex + 1,
+                    startColumnIndex: 0,
+                    endColumnIndex: 4
+                  },
+                  cell: {
+                    userEnteredFormat: {
+                      backgroundColor: {
+                        red: 0.88,
+                        green: 0.91,
+                        blue: 0.94
+                      },
+                      textFormat: {
+                        bold: true,
+                        fontSize: 10
+                      },
+                      horizontalAlignment: 'CENTER'
+                    }
+                  },
+                  fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
+                }
+              }
+            ]
+          }
+        });
+      }
+    }
+
+    console.log('[Google Sheets API] Expense Weekly Total appended and styled successfully.');
+  } catch (error) {
+    console.error('[Google Sheets API] Error appending weekly expense total:', error.message);
+  }
+};
+
+module.exports = { appendToIncomeTracker, appendDailyTotal, appendExpenseWeeklyTotal };
