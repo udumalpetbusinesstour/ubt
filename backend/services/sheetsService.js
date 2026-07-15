@@ -442,13 +442,23 @@ const appendExpenseWeeklyTotal = async () => {
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: 'v4', auth: authClient });
 
-    const spreadsheetId = process.env.GOOGLE_EXPENSE_SPREADSHEET_ID;
+    const spreadsheetId = process.env.GOOGLE_EXPENSE_SPREADSHEET_ID || process.env.GOOGLE_SPREADSHEET_ID;
     if (!spreadsheetId) {
       console.warn('[Google Sheets API] GOOGLE_EXPENSE_SPREADSHEET_ID is not set.');
       return;
     }
 
-    const targetTab = 'Expense Tracker';
+    let targetTab = 'Expense Tracker';
+    try {
+      const meta = await sheets.spreadsheets.get({ spreadsheetId });
+      const sheetsList = meta.data.sheets.map(s => s.properties.title);
+      const found = sheetsList.find(name => name.toLowerCase() === 'expense tracker');
+      if (found) {
+        targetTab = found;
+      }
+    } catch (metaErr) {
+      console.warn('[Google Sheets API] Could not fetch sheets list for Expense Tracker, using default:', metaErr.message);
+    }
 
     // 1. Fetch values
     const response = await sheets.spreadsheets.values.get({
