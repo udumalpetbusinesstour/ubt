@@ -532,6 +532,16 @@ const appendExpenseWeeklyTotal = async () => {
                   },
                   fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
                 }
+              },
+              {
+                autoResizeDimensions: {
+                  dimensions: {
+                    sheetId,
+                    dimension: 'COLUMNS',
+                    startIndex: 0,
+                    endIndex: 4
+                  }
+                }
               }
             ]
           }
