@@ -129,6 +129,18 @@ const checkAndAppendMonthHeader = async (sheets, spreadsheetId, targetTab, local
                     },
                     fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
                   }
+                },
+                {
+                  mergeCells: {
+                    range: {
+                      sheetId,
+                      startRowIndex: rowIndex,
+                      endRowIndex: rowIndex + 1,
+                      startColumnIndex: 0,
+                      endColumnIndex: 7
+                    },
+                    mergeType: 'MERGE_ALL'
+                  }
                 }
               ]
             }
