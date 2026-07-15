@@ -215,7 +215,7 @@ export default function Navbar() {
               <span>Overall Views: <strong className="text-emerald-700 font-black">{overallViews.toLocaleString()}</strong></span>
             </div>
           </div>
-          <div className="flex items-center gap-6 font-medium">
+          <div className="hidden sm:flex items-center gap-6 font-medium">
             <Link to="/add-business" className="hover:text-emerald-600 transition-colors">
               List Your Business
             </Link>

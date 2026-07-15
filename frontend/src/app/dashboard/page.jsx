@@ -10757,7 +10757,7 @@ function DashboardContent() {
               </div>
 
               {/* Use MockGoogleMaps component for address search & autocomplete */}
-              <div className="bg-slate-50/50 p-4.5 rounded-2xl border border-slate-100 flex flex-col gap-4">
+              <div className="bg-slate-50/50 p-4.5 rounded-2xl border border-slate-100 flex flex-col gap-4 relative z-20">
                 <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Location & Coordinates</span>
                 
                 <MockGoogleMaps 

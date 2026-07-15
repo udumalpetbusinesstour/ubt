@@ -3075,7 +3075,7 @@ export default function AddBusiness() {
                   </div>
 
                   {/* Autocomplete maps */}
-                  <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 mt-2 flex flex-col gap-4">
+                  <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 mt-2 flex flex-col gap-4 relative z-20">
                     <div className="flex items-start gap-2 text-slate-700">
                       <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
                       <div className="flex flex-col gap-0.5">
@@ -3576,7 +3576,7 @@ export default function AddBusiness() {
                       </div>
 
                       {/* Branch Autocomplete map */}
-                      <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 mt-2 flex flex-col gap-4">
+                      <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 mt-2 flex flex-col gap-4 relative z-20">
                         <div className="flex items-start gap-2 text-slate-705 text-left">
                           <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
                           <div className="flex flex-col gap-0.5">
