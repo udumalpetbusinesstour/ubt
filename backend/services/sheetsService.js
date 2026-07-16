@@ -230,7 +230,7 @@ const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid
     const year = localDate.getFullYear();
     const month = String(localDate.getMonth() + 1).padStart(2, '0');
     const day = String(localDate.getDate()).padStart(2, '0');
-    const dateStr = `${day}/${month}/${year}`;
+    const dateStr = `${year}-${month}-${day}`;
 
     const totalPaid = monthlyPaid + yearlyPaid + eventPaid + addPaid;
 
@@ -239,7 +239,7 @@ const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid
 
     console.log(`[Google Sheets API] Appending transaction for: ${businessName} (M: ${monthlyPaid}, Y: ${yearlyPaid}, E: ${eventPaid}, A: ${addPaid}, Total: ${totalPaid})`);
 
-    await sheets.spreadsheets.values.append({
+    const response = await sheets.spreadsheets.values.append({
       spreadsheetId,
       range,
       valueInputOption: 'USER_ENTERED',
@@ -257,6 +257,49 @@ const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid
         ]
       }
     });
+
+    // Format the date cell to dd/mm/yyyy display
+    try {
+      const updatedRange = response.data.updates.updatedRange;
+      const match = updatedRange.match(/A(\d+):G\d+/);
+      if (match) {
+        const rowIndex = parseInt(match[1]) - 1; // 0-indexed row
+        const meta = await sheets.spreadsheets.get({ spreadsheetId });
+        const targetSheet = meta.data.sheets.find(s => s.properties.title === targetTab);
+        if (targetSheet) {
+          const sheetId = targetSheet.properties.sheetId;
+          await sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: {
+              requests: [
+                {
+                  repeatCell: {
+                    range: {
+                      sheetId,
+                      startRowIndex: rowIndex,
+                      endRowIndex: rowIndex + 1,
+                      startColumnIndex: 0,
+                      endColumnIndex: 1
+                    },
+                    cell: {
+                      userEnteredFormat: {
+                        numberFormat: {
+                          type: 'DATE',
+                          pattern: 'dd/mm/yyyy'
+                        }
+                      }
+                    },
+                    fields: 'userEnteredFormat.numberFormat'
+                  }
+                }
+              ]
+            }
+          });
+        }
+      }
+    } catch (formatErr) {
+      console.warn('[Google Sheets API] Failed to format date cell pattern:', formatErr.message);
+    }
 
     console.log(`[Google Sheets API] Recorded transaction successfully for "${businessName}"`);
   } catch (error) {
@@ -298,12 +341,6 @@ const appendDailyTotalForTab = async (sheets, spreadsheetId, targetTab, payments
 
    const overallTotal = monthlySum + yearlySum + eventSum + addSum;
 
-  let dateStrForSheet = dateStr;
-  if (dateStr && dateStr.includes('-')) {
-    const [y, m, d] = dateStr.split('-');
-    dateStrForSheet = `${d}/${m}/${y}`;
-  }
-
   // Append row
   const response = await sheets.spreadsheets.values.append({
     spreadsheetId,
@@ -312,7 +349,7 @@ const appendDailyTotalForTab = async (sheets, spreadsheetId, targetTab, payments
     resource: {
       values: [
         [
-          dateStrForSheet,
+          dateStr,
           'Daily Total',
           overallTotal,
           monthlySum,
@@ -573,7 +610,7 @@ const appendExpenseWeeklyTotal = async () => {
     const year = localDate.getFullYear();
     const month = String(localDate.getMonth() + 1).padStart(2, '0');
     const day = String(localDate.getDate()).padStart(2, '0');
-    const dateStr = `${day}/${month}/${year}`;
+    const dateStr = `${year}-${month}-${day}`;
 
     console.log(`[Google Sheets API] Appending Weekly Total to Expense Tracker: Sum = ${weeklySum}`);
     
