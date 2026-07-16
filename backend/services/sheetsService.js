@@ -230,7 +230,7 @@ const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid
     const year = localDate.getFullYear();
     const month = String(localDate.getMonth() + 1).padStart(2, '0');
     const day = String(localDate.getDate()).padStart(2, '0');
-    const dateStr = `${year}-${month}-${day}`;
+    const dateStr = `${day}/${month}/${year}`;
 
     const totalPaid = monthlyPaid + yearlyPaid + eventPaid + addPaid;
 
@@ -296,7 +296,13 @@ const appendDailyTotalForTab = async (sheets, spreadsheetId, targetTab, payments
 
   console.log(`[Google Sheets API] Appending Daily Total to sheet "${targetTab}": [M: ${monthlySum}, Y: ${yearlySum}, E: ${eventSum}, A: ${addSum}]`);
 
-  const overallTotal = monthlySum + yearlySum + eventSum + addSum;
+   const overallTotal = monthlySum + yearlySum + eventSum + addSum;
+
+  let dateStrForSheet = dateStr;
+  if (dateStr && dateStr.includes('-')) {
+    const [y, m, d] = dateStr.split('-');
+    dateStrForSheet = `${d}/${m}/${y}`;
+  }
 
   // Append row
   const response = await sheets.spreadsheets.values.append({
@@ -306,7 +312,7 @@ const appendDailyTotalForTab = async (sheets, spreadsheetId, targetTab, payments
     resource: {
       values: [
         [
-          dateStr,
+          dateStrForSheet,
           'Daily Total',
           overallTotal,
           monthlySum,
@@ -567,7 +573,7 @@ const appendExpenseWeeklyTotal = async () => {
     const year = localDate.getFullYear();
     const month = String(localDate.getMonth() + 1).padStart(2, '0');
     const day = String(localDate.getDate()).padStart(2, '0');
-    const dateStr = `${year}-${month}-${day}`;
+    const dateStr = `${day}/${month}/${year}`;
 
     console.log(`[Google Sheets API] Appending Weekly Total to Expense Tracker: Sum = ${weeklySum}`);
     

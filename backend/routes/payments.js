@@ -534,8 +534,8 @@ router.post('/verify-payment', protect, async (req, res) => {
       const { appendToIncomeTracker } = require('../services/sheetsService');
       await appendToIncomeTracker({
         businessName: business.name,
-        monthlyPaid: (planType.toLowerCase() === 'monthly' && !isPublicSector && !isAdminUser) ? 99 : 0,
-        yearlyPaid: (planType.toLowerCase() === 'yearly' && !isPublicSector && !isAdminUser) ? 999 : 0,
+        monthlyPaid: (planType.toLowerCase().includes('monthly') && !isPublicSector && !isAdminUser) ? finalAmount : 0,
+        yearlyPaid: (planType.toLowerCase().includes('yearly') && !isPublicSector && !isAdminUser) ? finalAmount : 0,
         eventPaid: 0,
         addPaid: 0,
         sheetName: 'Income Tracker New'
