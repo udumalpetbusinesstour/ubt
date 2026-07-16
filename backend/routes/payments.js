@@ -329,7 +329,6 @@ router.post('/verify-payment', protect, async (req, res) => {
         ]
       });
       if (existingPayment) {
-        console.log(`Payment ${razorpayPaymentId} already verified and processed.`);
         const subscription = await Subscription.findOne({
           $or: [
             { razorpayOrderId: razorpayOrderId || undefined },
@@ -337,13 +336,16 @@ router.post('/verify-payment', protect, async (req, res) => {
             { _id: existingPayment.subscriptionId || undefined }
           ].filter(Boolean)
         });
-        return res.json({
-          success: true,
-          message: 'Subscription successfully activated (already processed)!',
-          business,
-          subscription,
-          payment: existingPayment
-        });
+        if (subscription && subscription.status === 'active') {
+          console.log(`Payment ${razorpayPaymentId} already verified and subscription is active.`);
+          return res.json({
+            success: true,
+            message: 'Subscription successfully activated (already processed)!',
+            business,
+            subscription,
+            payment: existingPayment
+          });
+        }
       }
     }
 
