@@ -5,7 +5,7 @@ import {
   MapPin, Phone, Mail, Clock, ShieldCheck, HeartHandshake, Star, StarHalf, Share2, Heart, Award, 
   ArrowLeft, Send, CheckCircle2, MessageSquare, AlertCircle, RefreshCw, Calendar, Globe, Sparkles,
   Briefcase, Users, ChevronRight, Check, X, Facebook, Twitter, Edit3, Plus, Upload, Trash2, Instagram, Move, ImageIcon,
-  Utensils, Eye, Folder
+  Utensils, Eye, Folder, Package
 } from 'lucide-react';
 
 
@@ -146,7 +146,12 @@ export default function BusinessDetail() {
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam) {
-      setActiveTab(tabParam);
+      const lower = tabParam.toLowerCase();
+      if (lower === 'menu' || lower === 'products' || lower === 'catalog' || lower === 'goods' || lower === 'services') {
+        setActiveTab('menu');
+      } else {
+        setActiveTab(tabParam);
+      }
     }
   }, [searchParams]);
 
@@ -171,6 +176,7 @@ export default function BusinessDetail() {
   const [menuError, setMenuError] = useState('');
   const [menuItems, setMenuItems] = useState([]);
   const [menuLoading, setMenuLoading] = useState(false);
+  const [selectedItemImage, setSelectedItemImage] = useState(null);
 
   // Verification states
   const [showVerifyModal, setShowVerifyModal] = useState(false);
@@ -556,6 +562,7 @@ export default function BusinessDetail() {
 
   // Write review form states
   const [newReviewAuthor, setNewReviewAuthor] = useState('');
+  const [newReviewEmail, setNewReviewEmail] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [newReviewText, setNewReviewText] = useState('');
   const [reviewSubmitLoading, setReviewSubmitLoading] = useState(false);
@@ -636,101 +643,106 @@ export default function BusinessDetail() {
       }
     } catch (err) {
       console.warn('Using mock menu items due to error or mock business id:', err.message);
-      // Dynamic mock menu items based on business
-      if (businessId === 'biz_7') {
-        setMenuItems([
-          {
-            _id: 'menu_mock_1',
-            businessId: businessId,
-            name: 'Chocolate Truffle Cake',
-            price: 650,
-            offerPrice: 599,
-            isVeg: true,
-            isAvailable: true,
-            description: 'Rich, moist chocolate cake layered with dark chocolate ganache and chocolate flakes.',
-            category: 'Cakes'
-          },
-          {
-            _id: 'menu_mock_2',
-            businessId: businessId,
-            name: 'Paneer Tikka Sandwich',
-            price: 120,
-            offerPrice: 99,
-            isVeg: true,
-            isAvailable: true,
-            description: 'Grilled sandwich stuffed with spiced paneer tikka, mint chutney, onions, and capsicum.',
-            category: 'Sandwiches'
-          },
-          {
-            _id: 'menu_mock_3',
-            businessId: businessId,
-            name: 'Special Veg Burger',
-            price: 110,
-            offerPrice: null,
-            isVeg: true,
-            isAvailable: true,
-            description: 'Crispy vegetable patty topped with cheese, lettuce, tomatoes, onions, and house mayonnaise.',
-            category: 'Fast Food'
-          },
-          {
-            _id: 'menu_mock_4',
-            businessId: businessId,
-            name: 'Cold Coffee with Ice Cream',
-            price: 90,
-            offerPrice: 79,
-            isVeg: true,
-            isAvailable: false,
-            description: 'Chilled blended coffee served with a scoop of vanilla ice cream and chocolate syrup drizzle.',
-            category: 'Beverages'
-          }
-        ]);
+      const isMock = businessId === 'UBT-10024' || String(businessId).startsWith('biz_') || String(businessId).startsWith('biz-');
+      if (isMock) {
+        // Dynamic mock menu items based on business
+        if (businessId === 'biz_7') {
+          setMenuItems([
+            {
+              _id: 'menu_mock_1',
+              businessId: businessId,
+              name: 'Chocolate Truffle Cake',
+              price: 650,
+              offerPrice: 599,
+              isVeg: true,
+              isAvailable: true,
+              description: 'Rich, moist chocolate cake layered with dark chocolate ganache and chocolate flakes.',
+              category: 'Cakes'
+            },
+            {
+              _id: 'menu_mock_2',
+              businessId: businessId,
+              name: 'Paneer Tikka Sandwich',
+              price: 120,
+              offerPrice: 99,
+              isVeg: true,
+              isAvailable: true,
+              description: 'Grilled sandwich stuffed with spiced paneer tikka, mint chutney, onions, and capsicum.',
+              category: 'Sandwiches'
+            },
+            {
+              _id: 'menu_mock_3',
+              businessId: businessId,
+              name: 'Special Veg Burger',
+              price: 110,
+              offerPrice: null,
+              isVeg: true,
+              isAvailable: true,
+              description: 'Crispy vegetable patty topped with cheese, lettuce, tomatoes, onions, and house mayonnaise.',
+              category: 'Fast Food'
+            },
+            {
+              _id: 'menu_mock_4',
+              businessId: businessId,
+              name: 'Cold Coffee with Ice Cream',
+              price: 90,
+              offerPrice: 79,
+              isVeg: true,
+              isAvailable: false,
+              description: 'Chilled blended coffee served with a scoop of vanilla ice cream and chocolate syrup drizzle.',
+              category: 'Beverages'
+            }
+          ]);
+        } else {
+          setMenuItems([
+            {
+              _id: 'menu_mock_1',
+              businessId: businessId,
+              name: 'Special South Indian Meals',
+              price: 150,
+              offerPrice: 120,
+              isVeg: true,
+              isAvailable: true,
+              description: 'A traditional banana leaf meal with rice, sambar, rasam, kootu, poriyal, appalam, and sweet payasam.',
+              category: 'Meals'
+            },
+            {
+              _id: 'menu_mock_2',
+              businessId: businessId,
+              name: 'Udumalpet Special Mutton Biryani',
+              price: 280,
+              offerPrice: 250,
+              isVeg: false,
+              isAvailable: true,
+              description: 'Aromatic seeraga samba biryani cooked with tender local lamb chops and spices, served with raita and brinjal curry.',
+              category: 'Biryani'
+            },
+            {
+              _id: 'menu_mock_3',
+              businessId: businessId,
+              name: 'Paneer Butter Masala',
+              price: 180,
+              offerPrice: null,
+              isVeg: true,
+              isAvailable: true,
+              description: 'Rich and creamy cottage cheese chunks simmered in a mildly spiced onion-tomato gravy with butter.',
+              category: 'Gravies'
+            },
+            {
+              _id: 'menu_mock_4',
+              businessId: businessId,
+              name: 'Ghee Onion Rava Dosa',
+              price: 110,
+              offerPrice: 99,
+              isVeg: true,
+              isAvailable: false,
+              description: 'Crispy semolina crepe with finely chopped onions, flavored with pure ghee, served with three chutneys and hot sambar.',
+              category: 'Tiffin'
+            }
+          ]);
+        }
       } else {
-        setMenuItems([
-          {
-            _id: 'menu_mock_1',
-            businessId: businessId,
-            name: 'Special South Indian Meals',
-            price: 150,
-            offerPrice: 120,
-            isVeg: true,
-            isAvailable: true,
-            description: 'A traditional banana leaf meal with rice, sambar, rasam, kootu, poriyal, appalam, and sweet payasam.',
-            category: 'Meals'
-          },
-          {
-            _id: 'menu_mock_2',
-            businessId: businessId,
-            name: 'Udumalpet Special Mutton Biryani',
-            price: 280,
-            offerPrice: 250,
-            isVeg: false,
-            isAvailable: true,
-            description: 'Aromatic seeraga samba biryani cooked with tender local lamb chops and spices, served with raita and brinjal curry.',
-            category: 'Biryani'
-          },
-          {
-            _id: 'menu_mock_3',
-            businessId: businessId,
-            name: 'Paneer Butter Masala',
-            price: 180,
-            offerPrice: null,
-            isVeg: true,
-            isAvailable: true,
-            description: 'Rich and creamy cottage cheese chunks simmered in a mildly spiced onion-tomato gravy with butter.',
-            category: 'Gravies'
-          },
-          {
-            _id: 'menu_mock_4',
-            businessId: businessId,
-            name: 'Ghee Onion Rava Dosa',
-            price: 110,
-            offerPrice: 99,
-            isVeg: true,
-            isAvailable: false,
-            description: 'Crispy semolina crepe with finely chopped onions, flavored with pure ghee, served with three chutneys and hot sambar.',
-            category: 'Tiffin'
-          }
-        ]);
+        setMenuItems([]);
       }
     } finally {
       setMenuLoading(false);
@@ -755,9 +767,7 @@ export default function BusinessDetail() {
         setBusiness(data.data);
         setReviews(data.data.reviews || []);
         fetchBranches(data.data._id);
-        if (isFoodRelated(data.data.category, data.data.customCategoryName)) {
-          fetchMenu(data.data._id);
-        }
+        fetchMenu(data.data._id);
         window.dispatchEvent(new Event('platform-views-updated'));
       } else {
         throw new Error('Business details not found.');
@@ -1205,9 +1215,7 @@ export default function BusinessDetail() {
         mockDetails.views = next;
         setBusiness(mockDetails);
         setReviews(mockDetails.googleReviews || []);
-        if (isFoodRelated(mockDetails.category, mockDetails.customCategoryName)) {
-          fetchMenu(mockDetails._id);
-        }
+        fetchMenu(mockDetails._id);
       } else {
         setError('Business details not found.');
       }
@@ -1250,7 +1258,14 @@ export default function BusinessDetail() {
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
-    if (!newReviewAuthor || !newReviewText) return;
+    if (!newReviewAuthor || !newReviewEmail || !newReviewText) return;
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newReviewEmail)) {
+      alert('Please provide a valid email address.');
+      return;
+    }
+
     setReviewSubmitLoading(true);
 
     try {
@@ -1259,6 +1274,7 @@ export default function BusinessDetail() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           authorName: newReviewAuthor,
+          authorEmail: newReviewEmail,
           rating: newReviewRating,
           text: newReviewText,
         }),
@@ -1267,21 +1283,26 @@ export default function BusinessDetail() {
       if (data.success) {
         setReviews([data.data, ...reviews]);
         setNewReviewAuthor('');
+        setNewReviewEmail('');
         setNewReviewText('');
         setReviewSuccess(true);
         fetchBusinessDetails();
         setTimeout(() => setReviewSuccess(false), 3000);
+      } else {
+        alert(data.message || 'Failed to submit review.');
       }
     } catch (err) {
       // Mock local push on offline fallback
       const mockRev = {
         authorName: newReviewAuthor,
+        authorEmail: newReviewEmail,
         rating: newReviewRating,
         text: newReviewText,
         createdAt: new Date(),
       };
       setReviews([mockRev, ...reviews]);
       setNewReviewAuthor('');
+      setNewReviewEmail('');
       setNewReviewText('');
       setReviewSuccess(true);
       setTimeout(() => setReviewSuccess(false), 3000);
@@ -1650,13 +1671,13 @@ Please confirm availability and delivery time.`;
                     className="h-full w-full object-contain p-1" 
                     onError={(e) => { 
                       e.target.style.display = 'none'; 
-                      e.target.parentElement.innerHTML = `<div class="w-full h-full bg-black flex items-center justify-center text-white font-black text-xs md:text-sm uppercase text-center p-1.5 leading-none select-none">${business.name ? (business.name.trim().split(/\s+/).length > 1 ? business.name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 4) : business.name.slice(0, 4).toUpperCase()) : 'BIZ'}</div>`;
+                      e.target.parentElement.innerHTML = `<div class="w-full h-full bg-white flex items-center justify-center text-black font-extrabold text-[9px] md:text-[11px] uppercase text-center p-2 leading-tight select-none break-words">${business.name || 'BIZ'}</div>`;
                     }}
                   />
                 </div>
               ) : (
-                <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-white/20 overflow-hidden bg-black shadow-md shrink-0 flex items-center justify-center font-black text-white text-xs md:text-sm uppercase text-center p-1.5 leading-none select-none">
-                  {business.name ? (business.name.trim().split(/\s+/).length > 1 ? business.name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 4) : business.name.slice(0, 4).toUpperCase()) : 'BIZ'}
+                <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-md shrink-0 flex items-center justify-center font-extrabold text-black text-[9px] md:text-[11px] uppercase text-center p-2 leading-tight select-none break-words">
+                  {business.name || 'BIZ'}
                 </div>
               )}
               <div className="flex flex-col gap-1.5 justify-center min-w-0 flex-1 w-full">
@@ -1872,8 +1893,8 @@ Please confirm availability and delivery time.`;
           <div className="max-w-[1600px] mx-auto px-4 md:px-8 flex overflow-x-auto gap-8">
             {[
               { id: 'overview', label: 'Overview' },
-              ...(isFoodRelated(business?.category, business?.customCategoryName) ? [
-                { id: 'menu', label: `Menu${menuItems.length > 0 ? ` (${menuItems.length})` : ''}` }
+              ...(menuItems.length > 0 ? [
+                { id: 'menu', label: `${business?.menuLabel || 'Menu'} (${menuItems.length})` }
               ] : []),
               { id: 'services', label: 'Services' },
               { id: 'photos', label: `Photos (${galleryCount})` },
@@ -2381,18 +2402,21 @@ Please confirm availability and delivery time.`;
 
             </div>
           )}
-
-          {/* TAB: MENU */}
+          {/* TAB: MENU / PRODUCTS */}
           {activeTab === 'menu' && (
             <div className="flex flex-col gap-6 animate-fadeIn text-left">
               <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-3.5 gap-3">
                 <div>
                   <h3 className="text-xl font-extrabold text-slate-800 font-sans flex items-center gap-2">
-                    <Utensils className="h-5.5 w-5.5 text-emerald-600" />
-                    <span>Food Menu</span>
+                    {(business?.menuLabel?.toLowerCase()?.includes('product') || business?.menuLabel?.toLowerCase()?.includes('catalog') || business?.menuLabel?.toLowerCase()?.includes('good')) ? (
+                      <Package className="h-5.5 w-5.5 text-emerald-600" />
+                    ) : (
+                      <Utensils className="h-5.5 w-5.5 text-emerald-600" />
+                    )}
+                    <span>{business?.menuLabel || 'Menu'}</span>
                   </h3>
                   <p className="text-xs text-slate-400 font-semibold mt-1">
-                    Explore delicious offerings from {business.name} and order directly.
+                    Explore offerings from {business.name} and check details.
                   </p>
                 </div>
               </div>
@@ -2400,98 +2424,248 @@ Please confirm availability and delivery time.`;
               {menuLoading ? (
                 <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
                   <RefreshCw className="h-7 w-7 text-emerald-600 animate-spin" />
-                  <span className="text-xs font-bold font-sans">Loading menu...</span>
+                  <span className="text-xs font-bold font-sans">Loading offerings...</span>
                 </div>
               ) : menuItems.length === 0 ? (
                 <div className="py-20 text-center border-2 border-dashed border-slate-200 rounded-3xl p-8 flex flex-col items-center gap-3 bg-slate-50/50">
-                  <Utensils className="h-10 w-10 text-slate-300" />
-                  <h4 className="font-extrabold text-slate-700 text-sm">No Menu Items Listed</h4>
+                  <Package className="h-10 w-10 text-slate-300" />
+                  <h4 className="font-extrabold text-slate-700 text-sm">No Offerings Listed</h4>
                   <p className="text-xs text-slate-450 max-w-sm">
-                    This food business hasn't listed any menu items yet. Check back soon or contact them directly.
+                    This business hasn't listed any items yet. Check back soon or contact them directly.
                   </p>
                 </div>
               ) : (
-                <div className="flex flex-col gap-8">
-                  {/* Group items by category */}
-                  {Object.entries(
-                    menuItems.reduce((groups, item) => {
-                      const cat = item.category || 'General';
-                      if (!groups[cat]) groups[cat] = [];
-                      groups[cat].push(item);
-                      return groups;
-                    }, {})
-                  ).map(([categoryName, items]) => (
-                    <div key={categoryName} className="flex flex-col gap-4">
-                      <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
-                        <h4 className="font-black text-sm text-[#001c41] uppercase tracking-wider">
-                          {categoryName}
-                        </h4>
-                        <span className="bg-slate-100 text-slate-600 text-[10px] font-bold py-0.5 px-2 rounded-full">
-                          {items.length} {items.length === 1 ? 'item' : 'items'}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {items.map((item) => {
-                          const discountPercent = item.offerPrice 
-                            ? Math.round(((item.price - item.offerPrice) / item.price) * 100)
-                            : 0;
-                          return (
-                            <div 
-                              key={item._id} 
-                              className={`bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between gap-4 shadow-2xs relative transition-all duration-300 ${
-                                !item.isAvailable ? 'opacity-65 grayscale-[30%]' : 'hover:border-slate-300 hover:shadow-xs'
-                              }`}
-                            >
-                              <div className="flex flex-col gap-2.5 text-left">
-                                <div className="flex justify-between items-start gap-2">
-                                  <div className="flex items-center gap-2">
-                                    <div className={`h-4.5 w-4.5 border-2 flex items-center justify-center p-0.5 rounded shrink-0 select-none ${item.isVeg ? 'border-emerald-600' : 'border-red-600'}`}>
-                                      <div className={`h-2 w-2 rounded-full ${item.isVeg ? 'bg-emerald-600' : 'bg-red-600'}`} />
-                                    </div>
-                                    <span className={`text-[10px] font-black uppercase tracking-wider ${item.isVeg ? 'text-emerald-700' : 'text-red-700'}`}>
-                                      {item.isVeg ? 'Veg' : 'Non-Veg'}
-                                    </span>
-                                  </div>
-                                  
-                                  <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider select-none ${
-                                    item.isAvailable 
-                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-250/20' 
-                                      : 'bg-rose-50 text-rose-700 border border-rose-250/20'
-                                  }`}>
-                                    {item.isAvailable ? 'Available' : 'Out of Stock'}
-                                  </span>
-                                </div>
-
-                                <div className="flex flex-col">
-                                  <h5 className="font-extrabold text-sm text-[#001c41] leading-snug">{item.name}</h5>
-                                  {/* item.description removed */}
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-between border-t border-slate-100 pt-3.5 mt-1">
-                                <div className="flex flex-col text-left">
-                                  {item.offerPrice ? (
-                                    <div className="flex flex-col">
-                                      <div className="flex items-center gap-1.5">
-                                        <span className="text-base font-extrabold text-slate-800">₹{item.offerPrice}</span>
-                                        <span className="text-[9px] bg-rose-50 border border-rose-100 text-rose-600 font-extrabold px-1.5 py-0.5 rounded select-none">
-                                          {discountPercent}% OFF
-                                        </span>
-                                      </div>
-                                      <span className="text-[10px] text-slate-400 font-bold line-through">M.R.P: ₹{item.price}</span>
-                                    </div>
-                                  ) : (
-                                    <span className="text-base font-extrabold text-slate-800">₹{item.price}</span>
-                                  )}
-                                </div>
-                              </div>
+                <div className="flex flex-col gap-10">
+                  
+                  {/* SECTION 1: FOOD MENU ITEMS */}
+                  {(() => {
+                    const foodItems = menuItems.filter(item => item.itemType !== 'product');
+                    if (foodItems.length === 0) return null;
+                    return (
+                      <div className="flex flex-col gap-6">
+                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                          <Utensils className="h-4.5 w-4.5 text-[#027244]" />
+                          <h4 className="font-black text-sm text-[#001c41] uppercase tracking-wider">Food Menu ({foodItems.length})</h4>
+                        </div>
+                        
+                        {Object.entries(
+                          foodItems.reduce((groups, item) => {
+                            const cat = item.category || 'General';
+                            if (!groups[cat]) groups[cat] = [];
+                            groups[cat].push(item);
+                            return groups;
+                          }, {})
+                        ).map(([categoryName, items]) => (
+                          <div key={categoryName} className="flex flex-col gap-4">
+                            <div className="flex items-center gap-3 pl-1">
+                              <h5 className="font-extrabold text-slate-700 text-xs md:text-sm border-l-4 border-[#027244] pl-3 capitalize">{categoryName}</h5>
+                              <span className="bg-slate-100 text-slate-655 text-[9px] font-black uppercase tracking-wider py-0.5 px-2 rounded-full">
+                                {items.length} {items.length === 1 ? 'item' : 'items'}
+                              </span>
                             </div>
-                          );
-                        })}
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pl-1">
+                              {items.map((item) => {
+                                const discountPercent = item.offerPrice 
+                                  ? Math.round(((item.price - item.offerPrice) / item.price) * 100)
+                                  : 0;
+                                return (
+                                  <div 
+                                    key={item._id} 
+                                    className={`bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between gap-4 shadow-2xs relative transition-all duration-300 ${
+                                      !item.isAvailable ? 'opacity-65 grayscale-[30%]' : 'hover:border-slate-350 hover:shadow-xs'
+                                    }`}
+                                  >
+                                    <div className="flex justify-between items-start gap-3 w-full">
+                                      <div className="flex-1 flex flex-col gap-2.5 text-left min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <div className={`h-4.5 w-4.5 border-2 flex items-center justify-center p-0.5 rounded shrink-0 select-none ${item.isVeg ? 'border-emerald-600' : 'border-red-600'}`}>
+                                            <div className={`h-2 w-2 rounded-full ${item.isVeg ? 'bg-emerald-600' : 'bg-red-600'}`} />
+                                          </div>
+                                          <span className={`text-[10px] font-black uppercase tracking-wider ${item.isVeg ? 'text-emerald-700' : 'text-red-700'}`}>
+                                            {item.isVeg ? 'Veg' : 'Non-Veg'}
+                                          </span>
+                                        </div>
+
+                                        <div className="flex flex-col">
+                                          <h5 className="font-extrabold text-sm text-[#001c41] leading-snug">{item.name}</h5>
+                                          {item.description && (
+                                            <p className="text-[10.5px] font-semibold text-slate-455 mt-1.5 leading-relaxed">{item.description}</p>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {item.imageUrl && (
+                                        <div 
+                                          onClick={() => setSelectedItemImage(window.getImageUrl(item.imageUrl))}
+                                          className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden shrink-0 cursor-pointer shadow-3xs hover:scale-105 transition-transform flex items-center justify-center p-0.5"
+                                        >
+                                          <img src={window.getImageUrl(item.imageUrl)} alt={item.name} className="h-full w-full object-cover rounded-xl" />
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-t border-slate-100 pt-3.5 mt-1">
+                                      <div className="flex flex-col text-left">
+                                        {item.offerPrice ? (
+                                          <div className="flex flex-col">
+                                            <div className="flex items-center gap-1.5">
+                                              <span className="text-base font-extrabold text-slate-800">₹{item.offerPrice}</span>
+                                              <span className="text-[9px] bg-rose-50 border border-rose-100 text-rose-600 font-extrabold px-1.5 py-0.5 rounded select-none">
+                                                {discountPercent}% OFF
+                                              </span>
+                                            </div>
+                                            <span className="text-[10px] text-slate-400 font-bold line-through">M.R.P: ₹{item.price}</span>
+                                          </div>
+                                        ) : (
+                                          <span className="text-base font-extrabold text-slate-800">₹{item.price}</span>
+                                        )}
+                                      </div>
+
+                                      <div className="flex items-center gap-2">
+                                        <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider select-none shrink-0 ${
+                                          item.isAvailable 
+                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-250/20' 
+                                            : 'bg-rose-50 text-rose-700 border border-rose-250/20'
+                                        }`}>
+                                          {item.isAvailable ? 'Available' : 'Out of Stock'}
+                                        </span>
+                                        {item.isAvailable && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); handleWhatsAppOrder(item); }}
+                                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1 px-2.5 rounded-lg flex items-center gap-1.5 transition-all shadow-3xs cursor-pointer active:scale-95 shrink-0"
+                                          >
+                                            <MessageSquare className="h-3 w-3" />
+                                            <span>Order Now</span>
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })()}
+
+                  {/* SECTION 2: PRODUCTS */}
+                  {(() => {
+                    const productItems = menuItems.filter(item => item.itemType === 'product');
+                    if (productItems.length === 0) return null;
+                    return (
+                      <div className="flex flex-col gap-6">
+                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                          <Package className="h-4.5 w-4.5 text-[#001c41]" />
+                          <h4 className="font-black text-sm text-[#001c41] uppercase tracking-wider">Products & Goods ({productItems.length})</h4>
+                        </div>
+                        
+                        {Object.entries(
+                          productItems.reduce((groups, item) => {
+                            const cat = item.category || 'General';
+                            if (!groups[cat]) groups[cat] = [];
+                            groups[cat].push(item);
+                            return groups;
+                          }, {})
+                        ).map(([categoryName, items]) => (
+                          <div key={categoryName} className="flex flex-col gap-4">
+                            <div className="flex items-center gap-3 pl-1">
+                              <h5 className="font-extrabold text-slate-700 text-xs md:text-sm border-l-4 border-[#001c41] pl-3 capitalize">{categoryName}</h5>
+                              <span className="bg-slate-100 text-slate-655 text-[9px] font-black uppercase tracking-wider py-0.5 px-2 rounded-full">
+                                {items.length} {items.length === 1 ? 'item' : 'items'}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pl-1">
+                              {items.map((item) => {
+                                const discountPercent = item.offerPrice 
+                                  ? Math.round(((item.price - item.offerPrice) / item.price) * 100)
+                                  : 0;
+                                return (
+                                  <div 
+                                    key={item._id} 
+                                    className={`bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between gap-4 shadow-2xs relative transition-all duration-300 ${
+                                      !item.isAvailable ? 'opacity-65 grayscale-[30%]' : 'hover:border-slate-350 hover:shadow-xs'
+                                    }`}
+                                  >
+                                    <div className="flex justify-between items-start gap-3 w-full">
+                                      <div className="flex-1 flex flex-col gap-2.5 text-left min-w-0">
+                                        <div className="flex items-center gap-1.5 bg-blue-50 text-[#001c41] border border-blue-150 px-2 py-0.5 rounded-full text-[9px] font-bold w-fit">
+                                          <Package className="h-3 w-3 text-blue-600" />
+                                          <span>Product</span>
+                                        </div>
+
+                                        <div className="flex flex-col">
+                                          {item.brand && (
+                                            <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider mb-1 leading-none">{item.brand}</span>
+                                          )}
+                                          <h5 className="font-extrabold text-sm text-[#001c41] leading-snug">{item.name}</h5>
+                                          {item.description && (
+                                            <p className="text-[10.5px] font-semibold text-slate-455 mt-1.5 leading-relaxed">{item.description}</p>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {item.imageUrl && (
+                                        <div 
+                                          onClick={() => setSelectedItemImage(window.getImageUrl(item.imageUrl))}
+                                          className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden shrink-0 cursor-pointer shadow-3xs hover:scale-105 transition-transform flex items-center justify-center p-0.5"
+                                        >
+                                          <img src={window.getImageUrl(item.imageUrl)} alt={item.name} className="h-full w-full object-cover rounded-xl" />
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-t border-slate-100 pt-3.5 mt-1">
+                                      <div className="flex flex-col text-left">
+                                        {item.offerPrice ? (
+                                          <div className="flex flex-col">
+                                            <div className="flex items-center gap-1.5">
+                                              <span className="text-base font-extrabold text-slate-800">₹{item.offerPrice}</span>
+                                              <span className="text-[9px] bg-rose-50 border border-rose-100 text-rose-600 font-extrabold px-1.5 py-0.5 rounded select-none">
+                                                {discountPercent}% OFF
+                                              </span>
+                                            </div>
+                                            <span className="text-[10px] text-slate-400 font-bold line-through">M.R.P: ₹{item.price}</span>
+                                          </div>
+                                        ) : (
+                                          <span className="text-base font-extrabold text-slate-800">₹{item.price}</span>
+                                        )}
+                                      </div>
+
+                                      <div className="flex items-center gap-2">
+                                        <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider select-none shrink-0 ${
+                                          item.isAvailable 
+                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-250/20' 
+                                            : 'bg-rose-50 text-rose-700 border border-rose-250/20'
+                                        }`}>
+                                          {item.isAvailable ? 'In Stock' : 'Out of Stock'}
+                                        </span>
+                                        {item.isAvailable && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); handleWhatsAppOrder(item); }}
+                                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1 px-2.5 rounded-lg flex items-center gap-1.5 transition-all shadow-3xs cursor-pointer active:scale-95 shrink-0"
+                                          >
+                                            <MessageSquare className="h-3 w-3" />
+                                            <span>Order Now</span>
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+
                 </div>
               )}
             </div>
@@ -2635,19 +2809,31 @@ Please confirm availability and delivery time.`;
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex flex-col gap-1.5 text-left">
-                    <span className="text-[10px] font-extrabold text-slate-450 uppercase tracking-widest">Your Full Name</span>
+                    <span className="text-[10px] font-extrabold text-slate-450 uppercase tracking-widest">Your Full Name *</span>
                     <input
                       type="text"
                       placeholder="e.g. Anand Kumar"
                       value={newReviewAuthor}
                       onChange={(e) => setNewReviewAuthor(e.target.value)}
+                      required
                       className="py-2.5 px-3 border border-slate-200 rounded-xl shadow-2xs text-xs font-bold text-slate-700 bg-slate-50/20 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5 text-left">
-                    <span className="text-[10px] font-extrabold text-slate-450 uppercase tracking-widest">Rating Score</span>
+                    <span className="text-[10px] font-extrabold text-slate-450 uppercase tracking-widest">Your Email * (Private to Merchant)</span>
+                    <input
+                      type="email"
+                      placeholder="e.g. anand@gmail.com"
+                      value={newReviewEmail}
+                      onChange={(e) => setNewReviewEmail(e.target.value)}
+                      required
+                      className="py-2.5 px-3 border border-slate-200 rounded-xl shadow-2xs text-xs font-bold text-slate-700 bg-slate-50/20 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-100"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <span className="text-[10px] font-extrabold text-slate-450 uppercase tracking-widest">Rating Score *</span>
                     <select
                       value={newReviewRating}
                       onChange={(e) => setNewReviewRating(Number(e.target.value))}
@@ -2675,7 +2861,7 @@ Please confirm availability and delivery time.`;
 
                 <button
                   type="submit"
-                  disabled={reviewSubmitLoading || !newReviewAuthor || !newReviewText}
+                  disabled={reviewSubmitLoading || !newReviewAuthor || !newReviewEmail || !newReviewText}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 px-6 rounded-xl text-xs transition-colors self-end cursor-pointer disabled:opacity-50 shadow-md shadow-emerald-700/10"
                 >
                   {reviewSubmitLoading ? 'Saving...' : 'Post Review'}
@@ -3425,6 +3611,24 @@ Please confirm availability and delivery time.`;
         </div>,
         document.body
       )}
+
+      {/* Product/Menu item Image Zoom lightbox */}
+      {selectedItemImage && createPortal(
+        <div 
+          onClick={() => setSelectedItemImage(null)}
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-55 flex items-center justify-center p-4 cursor-zoom-out animate-fadeIn"
+        >
+          <div className="max-w-3xl max-h-[85vh] relative animate-scaleUp">
+            <img 
+              src={selectedItemImage} 
+              alt="Offering Large View" 
+              className="max-w-full max-h-[80vh] object-contain rounded-2xl border border-white/10 shadow-2xl" 
+            />
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* Lightbox / Full-screen Image Viewer Modal */}
       {activePhotoIndex !== null && createPortal(
         <div 

@@ -15,6 +15,12 @@ const ReviewSchema = new mongoose.Schema({
     required: [true, 'Author name is required'],
     trim: true,
   },
+  authorEmail: {
+    type: String,
+    required: [true, 'Author email is required'],
+    trim: true,
+    lowercase: true,
+  },
   rating: {
     type: Number,
     required: [true, 'Rating is required'],

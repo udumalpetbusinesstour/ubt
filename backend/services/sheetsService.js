@@ -84,7 +84,7 @@ const checkAndAppendMonthHeader = async (sheets, spreadsheetId, targetTab, local
       const appendResponse = await sheets.spreadsheets.values.append({
         spreadsheetId,
         range: `${targetTab}!A2`,
-        valueInputOption: 'USER_ENTERED',
+        valueInputOption: 'RAW',
         resource: {
           values: [
             [currentMonthHeader, '', '', '', '', '', '']
@@ -124,10 +124,13 @@ const checkAndAppendMonthHeader = async (sheets, spreadsheetId, targetTab, local
                           bold: true,
                           fontSize: 11
                         },
-                        horizontalAlignment: 'CENTER'
+                        horizontalAlignment: 'CENTER',
+                        numberFormat: {
+                          type: 'TEXT'
+                        }
                       }
                     },
-                    fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
+                    fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,numberFormat)'
                   }
                 },
                 {
@@ -156,7 +159,7 @@ const checkAndAppendMonthHeader = async (sheets, spreadsheetId, targetTab, local
 /**
  * Append transaction data to the Income Tracker Google Sheet
  */
-const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid = 0, eventPaid = 0, addPaid = 0 }) => {
+const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid = 0, eventPaid = 0, addPaid = 0, sheetName = '' }) => {
   try {
     let authConfig = {
       scopes: [
@@ -189,12 +192,34 @@ const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid
       return;
     }
 
-    let targetTab = 'Income Tracker';
+    let targetTab = sheetName || 'Income Tracker New';
     try {
       const meta = await sheets.spreadsheets.get({ spreadsheetId });
       const sheetsList = meta.data.sheets.map(s => s.properties.title);
-      if (!sheetsList.includes(targetTab) && sheetsList.length > 0) {
-        targetTab = sheetsList[0];
+      
+      const findTabIgnoreCase = (list, name) => {
+        const normalizedName = name.toLowerCase().replace(/[\s\(\)\-_]/g, '');
+        return list.find(s => s.toLowerCase().replace(/[\s\(\)\-_]/g, '') === normalizedName) || null;
+      };
+      
+      let matchedTab = findTabIgnoreCase(sheetsList, targetTab);
+      if (!matchedTab && targetTab === 'Autopay') {
+        matchedTab = findTabIgnoreCase(sheetsList, 'Income Tracker Autopay');
+      }
+      
+      if (matchedTab) {
+        targetTab = matchedTab;
+      } else {
+        if (targetTab === 'Income Tracker New') {
+          const matchedFallback = findTabIgnoreCase(sheetsList, 'Income Tracker');
+          if (matchedFallback) {
+            targetTab = matchedFallback;
+          } else if (sheetsList.length > 0) {
+            targetTab = sheetsList[0];
+          }
+        } else if (sheetsList.length > 0) {
+          targetTab = sheetsList[0];
+        }
       }
     } catch (metaErr) {
       console.warn('[Google Sheets API] Could not fetch sheets list metadata, using fallback range:', metaErr.message);
@@ -239,6 +264,126 @@ const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid
   }
 };
 
+const appendDailyTotalForTab = async (sheets, spreadsheetId, targetTab, paymentsList, localDate, dateStr) => {
+  let monthlySum = 0;
+  let yearlySum = 0;
+  let eventSum = 0;
+  let addSum = 0;
+
+  for (const payment of paymentsList) {
+    const amt = payment.amount || 0;
+    if (payment.isSponsoredAd || payment.promotionId) {
+      addSum += amt;
+    } else if (payment.eventId) {
+      eventSum += amt;
+    } else if (payment.subscriptionId) {
+      const sub = payment.subscriptionId;
+      const planStr = (sub.plan || sub.planName || '').toLowerCase();
+      if (planStr.includes('monthly') || planStr.includes('plan_tb0vazlqupuhx8') || amt === 99) {
+        monthlySum += amt;
+      } else {
+        yearlySum += amt;
+      }
+    } else {
+      if (amt === 99) monthlySum += 99;
+      else if (amt === 999) yearlySum += 999;
+      else monthlySum += amt;
+    }
+  }
+
+  // Automated month header insertion check
+  await checkAndAppendMonthHeader(sheets, spreadsheetId, targetTab, localDate);
+
+  console.log(`[Google Sheets API] Appending Daily Total to sheet "${targetTab}": [M: ${monthlySum}, Y: ${yearlySum}, E: ${eventSum}, A: ${addSum}]`);
+
+  const overallTotal = monthlySum + yearlySum + eventSum + addSum;
+
+  // Append row
+  const response = await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range: `${targetTab}!A2`,
+    valueInputOption: 'USER_ENTERED',
+    resource: {
+      values: [
+        [
+          dateStr,
+          'Daily Total',
+          overallTotal,
+          monthlySum,
+          yearlySum,
+          eventSum,
+          addSum
+        ]
+      ]
+    }
+  });
+
+  // Format the daily total row (Grey background, bold text)
+  const updatedRange = response.data.updates.updatedRange;
+  const match = updatedRange.match(/A(\d+):G\d+/);
+  if (match) {
+    const rowIndex = parseInt(match[1]) - 1; // 0-indexed row
+    const meta = await sheets.spreadsheets.get({ spreadsheetId });
+    const targetSheet = meta.data.sheets.find(s => s.properties.title === targetTab);
+    if (targetSheet) {
+      const sheetId = targetSheet.properties.sheetId;
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        resource: {
+          requests: [
+            {
+              repeatCell: {
+                range: {
+                  sheetId,
+                  startRowIndex: rowIndex,
+                  endRowIndex: rowIndex + 1,
+                  startColumnIndex: 0,
+                  endColumnIndex: 7
+                },
+                cell: {
+                  userEnteredFormat: {
+                    backgroundColor: {
+                      red: 0.94,
+                      green: 0.94,
+                      blue: 0.94
+                    },
+                    textFormat: {
+                      bold: true,
+                      fontSize: 10
+                    },
+                    horizontalAlignment: 'CENTER'
+                  }
+                },
+                fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
+              }
+            },
+            {
+              repeatCell: {
+                range: {
+                  sheetId,
+                  startRowIndex: rowIndex,
+                  endRowIndex: rowIndex + 1,
+                  startColumnIndex: 0,
+                  endColumnIndex: 1
+                },
+                cell: {
+                  userEnteredFormat: {
+                    numberFormat: {
+                      type: 'DATE',
+                      pattern: 'dd/mm/yyyy'
+                    }
+                  }
+                },
+                fields: 'userEnteredFormat.numberFormat'
+              }
+            }
+          ]
+        }
+      });
+    }
+  }
+};
+
 const appendDailyTotal = async () => {
   try {
     const Payment = require('../models/Payment');
@@ -257,7 +402,7 @@ const appendDailyTotal = async () => {
     const startOfDay = new Date(`${dateStr}T00:00:00+05:30`);
     const endOfDay = new Date(`${dateStr}T23:59:59+05:30`);
 
-    console.log(`[Google Sheets API] Auditing daily total for date ${dateStr} (Kolkata) from ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
+    console.log(`[Google Sheets API] Auditing daily totals for date ${dateStr} (Kolkata) from ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
 
     const payments = await Payment.find({
       $or: [
@@ -266,32 +411,6 @@ const appendDailyTotal = async () => {
       ],
       paidAt: { $gte: startOfDay, $lte: endOfDay }
     }).populate('subscriptionId');
-
-    let monthlySum = 0;
-    let yearlySum = 0;
-    let eventSum = 0;
-    let addSum = 0;
-
-    for (const payment of payments) {
-      const amt = payment.amount || 0;
-      if (payment.isSponsoredAd || payment.promotionId) {
-        addSum += amt;
-      } else if (payment.eventId) {
-        eventSum += amt;
-      } else if (payment.subscriptionId) {
-        const sub = payment.subscriptionId;
-        const planStr = (sub.plan || sub.planName || '').toLowerCase();
-        if (planStr.includes('monthly') || planStr.includes('plan_tb0vazlqupuhx8') || amt === 99) {
-          monthlySum += amt;
-        } else {
-          yearlySum += amt;
-        }
-      } else {
-        if (amt === 99) monthlySum += 99;
-        else if (amt === 999) yearlySum += 999;
-        else monthlySum += amt;
-      }
-    }
 
     // 2. Authenticate
     let authConfig = {
@@ -325,93 +444,40 @@ const appendDailyTotal = async () => {
       return;
     }
 
-    // 3. Resolve sheet name
-    let targetTab = 'Income Tracker';
-    try {
-      const meta = await sheets.spreadsheets.get({ spreadsheetId });
-      const sheetsList = meta.data.sheets.map(s => s.properties.title);
-      if (!sheetsList.includes(targetTab) && sheetsList.length > 0) {
-        targetTab = sheetsList[0];
-      }
-    } catch (metaErr) {
-      console.warn('[Google Sheets API] Could not fetch sheet names for daily total:', metaErr.message);
-    }
+    const meta = await sheets.spreadsheets.get({ spreadsheetId });
+    const sheetsList = meta.data.sheets.map(s => s.properties.title);
 
-    // Automated month header insertion check
-    await checkAndAppendMonthHeader(sheets, spreadsheetId, targetTab, localDate);
+    const findTabIgnoreCase = (list, name) => {
+      const normalizedName = name.toLowerCase().replace(/[\s\(\)\-_]/g, '');
+      return list.find(s => s.toLowerCase().replace(/[\s\(\)\-_]/g, '') === normalizedName) || null;
+    };
 
-    console.log(`[Google Sheets API] Appending Daily Total to sheet "${targetTab}": [M: ${monthlySum}, Y: ${yearlySum}, E: ${eventSum}, A: ${addSum}]`);
+    // Split payments: autopay payments have razorpaySubscriptionId but NO razorpayOrderId
+    const newPayments = payments.filter(p => !p.razorpaySubscriptionId || p.razorpayOrderId);
+    const autopayPayments = payments.filter(p => p.razorpaySubscriptionId && !p.razorpayOrderId);
 
-    const overallTotal = monthlySum + yearlySum + eventSum + addSum;
-
-    // 4. Append row
-    const response = await sheets.spreadsheets.values.append({
-      spreadsheetId,
-      range: `${targetTab}!A2`,
-      valueInputOption: 'USER_ENTERED',
-      resource: {
-        values: [
-          [
-            dateStr,
-            'Daily Total',
-            overallTotal,
-            monthlySum,
-            yearlySum,
-            eventSum,
-            addSum
-          ]
-        ]
-      }
-    });
-
-    // 5. Format the daily total row (Grey background, bold text)
-    const updatedRange = response.data.updates.updatedRange;
-    const match = updatedRange.match(/A(\d+):G\d+/);
-    if (match) {
-      const rowIndex = parseInt(match[1]) - 1; // 0-indexed row
-      const meta = await sheets.spreadsheets.get({ spreadsheetId });
-      const targetSheet = meta.data.sheets.find(s => s.properties.title === targetTab);
-      if (targetSheet) {
-        const sheetId = targetSheet.properties.sheetId;
-        await sheets.spreadsheets.batchUpdate({
-          spreadsheetId,
-          resource: {
-            requests: [
-              {
-                repeatCell: {
-                  range: {
-                    sheetId,
-                    startRowIndex: rowIndex,
-                    endRowIndex: rowIndex + 1,
-                    startColumnIndex: 0,
-                    endColumnIndex: 7
-                  },
-                  cell: {
-                    userEnteredFormat: {
-                      backgroundColor: {
-                        red: 0.94,
-                        green: 0.94,
-                        blue: 0.94
-                      },
-                      textFormat: {
-                        bold: true,
-                        fontSize: 10
-                      },
-                      horizontalAlignment: 'CENTER'
-                    }
-                  },
-                  fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
-                }
-              }
-            ]
-          }
-        });
+    // 3. Process first sheet: 'Income Tracker New'
+    const matchedNewTab = findTabIgnoreCase(sheetsList, 'Income Tracker New');
+    if (matchedNewTab) {
+      await appendDailyTotalForTab(sheets, spreadsheetId, matchedNewTab, newPayments, localDate, dateStr);
+    } else {
+      const matchedFallback = findTabIgnoreCase(sheetsList, 'Income Tracker');
+      if (matchedFallback) {
+        await appendDailyTotalForTab(sheets, spreadsheetId, matchedFallback, newPayments, localDate, dateStr);
+      } else if (sheetsList.length > 0) {
+        await appendDailyTotalForTab(sheets, spreadsheetId, sheetsList[0], newPayments, localDate, dateStr);
       }
     }
 
-    console.log(`[Google Sheets API] Daily Total successfully appended and styled for ${dateStr}`);
+    // 4. Process second sheet: 'Autopay'
+    const matchedAutopayTab = findTabIgnoreCase(sheetsList, 'Income Tracker Autopay') || findTabIgnoreCase(sheetsList, 'Autopay');
+    if (matchedAutopayTab) {
+      await appendDailyTotalForTab(sheets, spreadsheetId, matchedAutopayTab, autopayPayments, localDate, dateStr);
+    }
+
+    console.log(`[Google Sheets API] Daily Totals successfully processed for date ${dateStr}`);
   } catch (error) {
-    console.error('[Google Sheets API] Error processing daily total append:', error.message);
+    console.error('[Google Sheets API] Error processing daily totals:', error.message);
   }
 };
 
@@ -501,7 +567,7 @@ const appendExpenseWeeklyTotal = async () => {
     const year = localDate.getFullYear();
     const month = String(localDate.getMonth() + 1).padStart(2, '0');
     const day = String(localDate.getDate()).padStart(2, '0');
-    const dateStr = `${day}/${month}/${year}`;
+    const dateStr = `${year}-${month}-${day}`;
 
     console.log(`[Google Sheets API] Appending Weekly Total to Expense Tracker: Sum = ${weeklySum}`);
     
@@ -553,6 +619,26 @@ const appendExpenseWeeklyTotal = async () => {
                     }
                   },
                   fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
+                }
+              },
+              {
+                repeatCell: {
+                  range: {
+                    sheetId,
+                    startRowIndex: rowIndex,
+                    endRowIndex: rowIndex + 1,
+                    startColumnIndex: 0,
+                    endColumnIndex: 1
+                  },
+                  cell: {
+                    userEnteredFormat: {
+                      numberFormat: {
+                        type: 'DATE',
+                        pattern: 'dd/mm/yyyy'
+                      }
+                    }
+                  },
+                  fields: 'userEnteredFormat.numberFormat'
                 }
               },
               {

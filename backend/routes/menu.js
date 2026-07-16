@@ -21,7 +21,7 @@ router.get('/:businessId', async (req, res) => {
 // @access  Private
 router.post('/:businessId', protect, async (req, res) => {
   try {
-    const { name, price, offerPrice, isVeg, isAvailable, description, imageUrl, category } = req.body;
+    const { name, price, offerPrice, isVeg, isAvailable, description, imageUrl, category, itemType, brand } = req.body;
     const businessId = req.params.businessId;
 
     if (!name || price === undefined) {
@@ -47,7 +47,9 @@ router.post('/:businessId', protect, async (req, res) => {
       isAvailable: isAvailable !== undefined ? Boolean(isAvailable) : true,
       description: description || '',
       imageUrl: imageUrl || '',
-      category: category || 'General'
+      category: category || 'General',
+      itemType: itemType || 'menu',
+      brand: brand || ''
     });
 
     res.status(201).json({ success: true, data: menuItem });
@@ -61,7 +63,7 @@ router.post('/:businessId', protect, async (req, res) => {
 // @access  Private
 router.put('/:itemId', protect, async (req, res) => {
   try {
-    const { name, price, offerPrice, isVeg, isAvailable, description, imageUrl, category } = req.body;
+    const { name, price, offerPrice, isVeg, isAvailable, description, imageUrl, category, itemType, brand } = req.body;
     
     const menuItem = await Menu.findById(req.params.itemId);
     if (!menuItem) {
@@ -88,6 +90,8 @@ router.put('/:itemId', protect, async (req, res) => {
     if (description !== undefined) menuItem.description = description;
     if (imageUrl !== undefined) menuItem.imageUrl = imageUrl;
     if (category !== undefined) menuItem.category = category;
+    if (itemType !== undefined) menuItem.itemType = itemType;
+    if (brand !== undefined) menuItem.brand = brand;
 
     await menuItem.save();
 

@@ -537,7 +537,8 @@ router.post('/verify-payment', protect, async (req, res) => {
         monthlyPaid: (planType.toLowerCase() === 'monthly' && !isPublicSector && !isAdminUser) ? 99 : 0,
         yearlyPaid: (planType.toLowerCase() === 'yearly' && !isPublicSector && !isAdminUser) ? 999 : 0,
         eventPaid: 0,
-        addPaid: 0
+        addPaid: 0,
+        sheetName: 'Income Tracker New'
       });
     } catch (sheetErr) {
       console.error('[Google Sheets API] Error triggering sheets update:', sheetErr.message);
@@ -733,7 +734,8 @@ router.post('/verify-event-payment', protect, async (req, res) => {
         monthlyPaid: 0,
         yearlyPaid: 0,
         eventPaid: event.paymentStatus === 'Free' ? 0 : 99,
-        addPaid: 0
+        addPaid: 0,
+        sheetName: 'Income Tracker New'
       });
     } catch (sheetErr) {
       console.error('[Google Sheets API] Error triggering sheets update for event:', sheetErr.message);
@@ -917,6 +919,22 @@ router.post('/webhook', async (req, res) => {
             paymentDate: new Date(),
             paidAt: new Date(),
           });
+
+          // Append to Google Sheets Income Tracker
+          try {
+            const { appendToIncomeTracker } = require('../services/sheetsService');
+            const planNameStr = (localSub.planName || localSub.plan || '').toLowerCase();
+            await appendToIncomeTracker({
+              businessName: business ? business.name : 'Unknown Business',
+              monthlyPaid: (planNameStr.includes('monthly') || amount === 99) ? amount : 0,
+              yearlyPaid: (planNameStr.includes('yearly') || amount === 999) ? amount : 0,
+              eventPaid: 0,
+              addPaid: 0,
+              sheetName: 'Autopay'
+            });
+          } catch (sheetErr) {
+            console.error('[Webhook Sheets Update] Error appending subscription.charged to sheets:', sheetErr.message);
+          }
         } else {
           console.log(`Payment ${paymentId} already recorded in subscription.charged.`);
         }
@@ -1002,7 +1020,9 @@ router.post('/webhook', async (req, res) => {
         adBusiness = await Business.findById(notes.businessId);
       }
 
+      let needsSheetAppend = false;
       if (!payment) {
+        needsSheetAppend = true;
         const userId = subscription 
           ? (subscription.userId || subscription.ownerId) 
           : (eventRecord 
@@ -1030,6 +1050,9 @@ router.post('/webhook', async (req, res) => {
           });
         }
       } else {
+        if (payment.status !== 'Paid' && payment.paymentStatus !== 'Paid') {
+          needsSheetAppend = true;
+        }
         payment.status = 'Paid';
         payment.paymentStatus = 'Paid';
         payment.paymentId = paymentId;
@@ -1044,6 +1067,54 @@ router.post('/webhook', async (req, res) => {
         payment.paidAt = new Date();
         payment.paymentDate = new Date();
         await payment.save();
+      }
+
+      if (needsSheetAppend) {
+        // Append to Google Sheets Income Tracker
+        try {
+          const { appendToIncomeTracker } = require('../services/sheetsService');
+          if (subscription) {
+            const business = await Business.findById(subscription.businessId);
+            if (business) {
+              const planNameStr = (subscription.planName || subscription.plan || '').toLowerCase();
+              await appendToIncomeTracker({
+                businessName: business.name,
+                monthlyPaid: (planNameStr.includes('monthly') || amount === 99) ? amount : 0,
+                yearlyPaid: (planNameStr.includes('yearly') || amount === 999) ? amount : 0,
+                eventPaid: 0,
+                addPaid: 0,
+                sheetName: 'Income Tracker New'
+              });
+            }
+          } else if (eventRecord) {
+            let bizName = eventRecord.organizer || 'Unknown Business';
+            if (eventRecord.businessId) {
+              const bObj = await Business.findById(eventRecord.businessId);
+              if (bObj) {
+                bizName = bObj.name;
+              }
+            }
+            await appendToIncomeTracker({
+              businessName: bizName,
+              monthlyPaid: 0,
+              yearlyPaid: 0,
+              eventPaid: amount,
+              addPaid: 0,
+              sheetName: 'Income Tracker New'
+            });
+          } else if (isSponsoredAdPayment && adBusiness) {
+            await appendToIncomeTracker({
+              businessName: adBusiness.name,
+              monthlyPaid: 0,
+              yearlyPaid: 0,
+              eventPaid: 0,
+              addPaid: amount,
+              sheetName: 'Income Tracker New'
+            });
+          }
+        } catch (sheetErr) {
+          console.error('[Webhook Sheets Update] Error appending payment.captured to sheets:', sheetErr.message);
+        }
       }
 
       if (subscription && subscription.status !== 'active') {
@@ -1347,7 +1418,8 @@ router.post('/verify-sponsored-ad-payment', protect, async (req, res) => {
         monthlyPaid: 0,
         yearlyPaid: 0,
         eventPaid: 0,
-        addPaid: 99
+        addPaid: 99,
+        sheetName: 'Income Tracker New'
       });
     } catch (payErr) {
       console.error('Error logging payment details for sponsored ad:', payErr.message);

@@ -1980,15 +1980,15 @@ export default function Home() {
                                  />
                                </div>
                              ) : (
-                               <div 
-                                 onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
-                                 className="h-14 w-14 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-650 text-white font-extrabold text-lg flex items-center justify-center shrink-0 uppercase select-none cursor-pointer"
-                                 style={{
-                                   filter: !isSubscribed ? 'blur(3px) grayscale(30%)' : 'none'
-                                 }}
-                               >
-                                 {biz.name ? biz.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'B'}
-                               </div>
+                                <div 
+                                  onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
+                                  className="h-14 w-14 rounded-xl border border-slate-200 bg-white text-black font-extrabold text-[8px] flex items-center justify-center shrink-0 uppercase select-none cursor-pointer text-center p-1.5 leading-tight break-words"
+                                  style={{
+                                    filter: !isSubscribed ? 'blur(3px) grayscale(30%)' : 'none'
+                                  }}
+                                >
+                                  {biz.name || 'BIZ'}
+                                </div>
                              )}
                             
                             {/* Content details */}

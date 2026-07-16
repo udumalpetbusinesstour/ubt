@@ -2231,8 +2231,34 @@ router.get('/:id', async (req, res) => {
     }
 
     // Get reviews for this business
-    const reviews = await Review.find({ businessId: business._id });
-    bObj.reviews = reviews;
+    const reviews = await Review.find({ businessId: business._id }).sort({ createdAt: -1 });
+    
+    let isOwnerOrAdmin = false;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      try {
+        const jwt = require('jsonwebtoken');
+        const User = require('../models/User');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+        if (user) {
+          if (business.ownerId.toString() === user._id.toString() || user.role === 'admin' || user.role === 'superadmin') {
+            isOwnerOrAdmin = true;
+          }
+        }
+      } catch (err) {
+        // Ignore token errors
+      }
+    }
+
+    bObj.reviews = reviews.map(r => {
+      const doc = r.toObject();
+      if (!isOwnerOrAdmin) {
+        delete doc.authorEmail;
+      }
+      return doc;
+    });
 
     // Get approved branches/siblings for this business
     const branches = await Business.find({ parentBusinessId: parentId, status: 'Approved' });
@@ -2718,6 +2744,22 @@ router.put('/:id', protect, async (req, res) => {
     if (business.ownerId.toString() !== req.user._id.toString() && req.user.role !== 'admin' && req.user.role !== 'superadmin') {
       return res.status(403).json({ success: false, message: 'Not authorized to update this listing' });
     }
+
+    // Immediately save menuLabel and menuLabelSelected configurations (bypassing administrative review)
+    let menuSettingsUpdated = false;
+    if (req.body.menuLabel !== undefined) {
+      business.menuLabel = req.body.menuLabel;
+      menuSettingsUpdated = true;
+    }
+    if (req.body.menuLabelSelected !== undefined) {
+      business.menuLabelSelected = Boolean(req.body.menuLabelSelected);
+      menuSettingsUpdated = true;
+    }
+    if (menuSettingsUpdated) {
+      await business.save({ validateBeforeSave: false });
+    }
+    delete req.body.menuLabel;
+    delete req.body.menuLabelSelected;
 
     // Geocoding and allowed area boundary validation on update
     if (req.body.address || req.body.pincode || req.body.coordinates || req.body.latitude || req.body.longitude) {

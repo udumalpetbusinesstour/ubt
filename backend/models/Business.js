@@ -335,6 +335,15 @@ const BusinessSchema = new mongoose.Schema({
     pendingEdits: {
       type: mongoose.Schema.Types.Mixed,
       default: null
+    },
+    menuLabel: {
+      type: String,
+      trim: true,
+      default: 'Menu'
+    },
+    menuLabelSelected: {
+      type: Boolean,
+      default: false
     }
 }, {
   timestamps: true

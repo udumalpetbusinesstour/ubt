@@ -334,7 +334,12 @@ export default function ReviewsReputationTab({
                     
                     <div className="flex flex-col gap-1.5 w-full">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-extrabold text-slate-800 text-sm leading-tight">{rev.authorName}</span>
+                        <div className="flex flex-col text-left">
+                          <span className="font-extrabold text-slate-800 text-sm leading-tight">{rev.authorName}</span>
+                          {rev.authorEmail && (
+                            <span className="text-[10px] font-bold text-slate-500 mt-0.5 select-all">{rev.authorEmail}</span>
+                          )}
+                        </div>
                         <span className="text-[10px] font-semibold text-slate-400">
                           {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : rev.time}
                         </span>

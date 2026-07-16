@@ -2,14 +2,43 @@ const express = require('express');
 const router = express.Router();
 const Review = require('../models/Review');
 const Business = require('../models/Business');
+const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 
 // @desc    Get reviews for a specific business
 // @route   GET /api/reviews/:businessId
-// @access  Public
+// @access  Public (Optional Authentication to reveal emails for merchant/admin)
 router.get('/:businessId', async (req, res) => {
   try {
+    let isOwnerOrAdmin = false;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+        if (user) {
+          const business = await Business.findById(req.params.businessId);
+          if (business && (business.ownerId.toString() === user._id.toString() || user.role === 'admin' || user.role === 'superadmin')) {
+            isOwnerOrAdmin = true;
+          }
+        }
+      } catch (err) {
+        // Token verification failed or user not found - treat as guest
+      }
+    }
+
     const reviews = await Review.find({ businessId: req.params.businessId }).sort({ createdAt: -1 });
-    res.json({ success: true, count: reviews.length, data: reviews });
+
+    const sanitizedReviews = reviews.map(r => {
+      const doc = r.toObject();
+      if (!isOwnerOrAdmin) {
+        delete doc.authorEmail;
+      }
+      return doc;
+    });
+
+    res.json({ success: true, count: sanitizedReviews.length, data: sanitizedReviews });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -20,11 +49,16 @@ router.get('/:businessId', async (req, res) => {
 // @access  Public
 router.post('/:businessId', async (req, res) => {
   try {
-    const { authorName, rating, text } = req.body;
+    const { authorName, authorEmail, rating, text } = req.body;
     const businessId = req.params.businessId;
 
-    if (!authorName || !rating || !text) {
-      return res.status(400).json({ success: false, message: 'Author name, rating, and review text are required' });
+    if (!authorName || !authorEmail || !rating || !text) {
+      return res.status(400).json({ success: false, message: 'Author name, email, rating, and review text are required' });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(authorEmail)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
     }
 
     const numericRating = Number(rating);
@@ -41,6 +75,7 @@ router.post('/:businessId', async (req, res) => {
     const review = await Review.create({
       businessId,
       authorName,
+      authorEmail,
       rating: numericRating,
       text,
       source: 'local',

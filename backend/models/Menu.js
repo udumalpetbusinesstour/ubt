@@ -42,6 +42,16 @@ const MenuSchema = new mongoose.Schema({
     type: String,
     trim: true,
     default: 'General'
+  },
+  itemType: {
+    type: String,
+    enum: ['menu', 'product'],
+    default: 'menu'
+  },
+  brand: {
+    type: String,
+    trim: true,
+    default: ''
   }
 }, {
   timestamps: true
