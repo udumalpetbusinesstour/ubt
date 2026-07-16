@@ -107,6 +107,11 @@ export default function AddBusiness() {
   const [isBranchMode, setIsBranchMode] = useState(false);
   const [branchStep, setBranchStep] = useState(1);
   const [editingBranchIndex, setEditingBranchIndex] = useState(null);
+
+  // Scroll to top when steps or mode changes to keep user focused at the top of the next step
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentStep, branchStep, isBranchMode]);
   const [branchLogoFile, setBranchLogoFile] = useState(null);
   const [branchCoverFile, setBranchCoverFile] = useState(null);
   const [branchGalleryFiles, setBranchGalleryFiles] = useState([]);
