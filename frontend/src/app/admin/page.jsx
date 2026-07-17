@@ -1972,6 +1972,41 @@ Team Udumalpet Business
     window.open(whatsappUrl, '_blank');
   };
 
+  const handleApprovedClick = () => {
+    if (!selectedBiz) return;
+    if (selectedBiz.status !== 'Approved') return;
+
+    const ownerPhone = selectedBiz.ownerId?.phone || selectedBiz.ownerId?.mobileNumber || selectedBiz.phone || selectedBiz.whatsapp;
+    if (!ownerPhone) {
+      alert('Owner phone number not found.');
+      return;
+    }
+
+    const businessLink = `https://udumalpet.business/businesses/${selectedBiz.slug || selectedBiz._id}`;
+
+    const message = `Hi! 👋
+
+Great news! Your listing *${selectedBiz.name}* has been verified and approved on Udumalpet Business! 🎉
+
+You can view your live profile here:
+🌐 ${businessLink}
+
+Start sharing your business listing to connect with more customers in Udumalpet! 🚀
+
+Thank you!
+Team Udumalpet Business
+🌐 https://udumalpet.business`;
+
+    let cleanPhone = ownerPhone.replace(/\D/g, '');
+    if (cleanPhone.length === 10) {
+      cleanPhone = '91' + cleanPhone;
+    }
+
+    const encodedMsg = encodeURIComponent(message);
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   const handlePartnerAction = async (partnerId, action) => {
     let rejectionReason = '';
     if (action === 'reject') {
@@ -7522,14 +7557,25 @@ Team Udumalpet Business
               {/* Status details indicators */}
               <div className="grid grid-cols-2 gap-3.5">
                 <div 
-                  onClick={handlePendingVerificationClick}
-                  className={`bg-slate-50/50 border border-slate-200/80 rounded-2xl p-3.5 text-xs font-bold text-slate-600 flex flex-col gap-0.5 ${selectedBiz.status === 'Pending Verification' ? 'hover:bg-amber-50 hover:border-amber-250 cursor-pointer transition-all duration-200 select-none group' : ''}`}
+                  onClick={selectedBiz.status === 'Pending Verification' ? handlePendingVerificationClick : (selectedBiz.status === 'Approved' ? handleApprovedClick : undefined)}
+                  className={`bg-slate-50/50 border border-slate-200/80 rounded-2xl p-3.5 text-xs font-bold text-slate-600 flex flex-col gap-0.5 ${
+                    selectedBiz.status === 'Pending Verification' 
+                      ? 'hover:bg-amber-50 hover:border-amber-250 cursor-pointer transition-all duration-200 select-none group' 
+                      : (selectedBiz.status === 'Approved'
+                          ? 'hover:bg-emerald-50 hover:border-emerald-250 cursor-pointer transition-all duration-200 select-none group'
+                          : '')
+                  }`}
                 >
                   <span className="text-[8.5px] text-slate-400 font-extrabold uppercase">Vetting Status</span>
-                  <span className={`mt-1 font-extrabold ${selectedBiz.status === 'Pending Verification' ? 'text-amber-600 group-hover:text-amber-700 animate-pulse' : 'text-slate-800'}`}>{selectedBiz.status}</span>
+                  <span className={`mt-1 font-extrabold ${selectedBiz.status === 'Pending Verification' ? 'text-amber-600 group-hover:text-amber-700 animate-pulse' : (selectedBiz.status === 'Approved' ? 'text-emerald-600' : 'text-slate-800')}`}>{selectedBiz.status}</span>
                   {selectedBiz.status === 'Pending Verification' && (
                     <span className="text-[7.5px] text-slate-450 font-bold mt-1 group-hover:text-amber-750">
                       ⚡ Send completion reminder
+                    </span>
+                  )}
+                  {selectedBiz.status === 'Approved' && (
+                    <span className="text-[7.5px] text-slate-450 font-bold mt-1 group-hover:text-emerald-750">
+                      ⚡ Send approval message
                     </span>
                   )}
                 </div>
