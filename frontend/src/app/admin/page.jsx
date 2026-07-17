@@ -112,57 +112,21 @@ export default function AdminDashboard() {
     });
   };
 
-  // Tab navigation mapping & slug helpers
   const adminTabToSlug = (tabId) => {
     if (!tabId) return '';
-    const mapping = {
-      'Dashboard': 'dashboard',
-      'Businesses': 'businesses',
-      'Signups': 'signups',
-      'Category Management': 'categories',
-      'Pending Approvals': 'pending-approvals',
-      'Business Edits': 'business-edits',
-      'Partners': 'partners',
-      'Blogs': 'blogs',
-      'Events': 'events',
-      'Reviews': 'reviews',
-      'Testimonials': 'testimonials',
-      'Sponsored Ads': 'ads',
-      'Subscriptions': 'subscriptions',
-      'Notifications': 'notifications',
-      'Queries': 'queries',
-      'Referral Moderation': 'referrals',
-      'Blood Donors': 'blood-donors',
-      'Newsletter Subscribers': 'newsletter',
-      'ApiLogs': 'api-logs'
-    };
-    return mapping[tabId] || tabId.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    return tabId.toLowerCase().trim().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
   };
 
   const adminSlugToTab = (slug) => {
     if (!slug) return 'Dashboard';
-    const mapping = {
-      'dashboard': 'Dashboard',
-      'businesses': 'Businesses',
-      'signups': 'Signups',
-      'categories': 'Category Management',
-      'pending-approvals': 'Pending Approvals',
-      'business-edits': 'Business Edits',
-      'partners': 'Partners',
-      'blogs': 'Blogs',
-      'events': 'Events',
-      'reviews': 'Reviews',
-      'testimonials': 'Testimonials',
-      'ads': 'Sponsored Ads',
-      'subscriptions': 'Subscriptions',
-      'notifications': 'Notifications',
-      'queries': 'Queries',
-      'referrals': 'Referral Moderation',
-      'blood-donors': 'Blood Donors',
-      'newsletter': 'Newsletter Subscribers',
-      'api-logs': 'ApiLogs'
-    };
-    return mapping[slug.toLowerCase()] || 'Dashboard';
+    const displayTabs = [
+      'Dashboard', 'Businesses', 'Signups', 'Category Management', 'Pending Approvals',
+      'Business Edits', 'Partners', 'Blogs', 'Events', 'Reviews',
+      'Testimonials', 'Sponsored Ads', 'Subscriptions', 'Notifications',
+      'Queries', 'Referral Moderation', 'Blood Donors', 'Newsletter Subscribers', 'ApiLogs'
+    ];
+    const matchedDisplay = displayTabs.find(tab => adminTabToSlug(tab) === slug.toLowerCase());
+    return matchedDisplay || 'Dashboard';
   };
 
   const [searchParams] = useSearchParams();

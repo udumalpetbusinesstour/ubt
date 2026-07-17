@@ -70,56 +70,18 @@ const renderStars = (rating, sizeClass = "h-3.5 w-3.5", emptyColor = "text-slate
 
 const tabToSlug = (tabName) => {
   if (!tabName) return '';
-  const mapping = {
-    'Dashboard': 'dashboard',
-    'Business Details': 'details',
-    'Branches': 'branches',
-    'Menu': 'menu',
-    'Photos & Media': 'photos',
-    'Reviews & Reputation': 'reviews',
-    'Leads & Enquiries': 'leads',
-    'Subscription & Billing': 'billing',
-    'Offers & Promotions': 'offers',
-    'Referral & Rewards': 'referrals',
-    'Events': 'events',
-    'My Blogs': 'blogs',
-    'Settings': 'settings',
-    'Help & Support': 'support'
-  };
-  return mapping[tabName] || tabName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  return tabName.toLowerCase().trim().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
 };
 
 const slugToTab = (slug) => {
   if (!slug) return 'Dashboard';
-  const mapping = {
-    'dashboard': 'Dashboard',
-    'details': 'Business Details',
-    'branches': 'Branches',
-    'menu': 'Menu',
-    'photos': 'Photos & Media',
-    'reviews': 'Reviews & Reputation',
-    'leads': 'Leads & Enquiries',
-    'billing': 'Subscription & Billing',
-    'offers': 'Offers & Promotions',
-    'referrals': 'Referral & Rewards',
-    'events': 'Events',
-    'blogs': 'My Blogs',
-    'settings': 'Settings',
-    'support': 'Help & Support'
-  };
-  const found = Object.keys(mapping).find(key => key.toLowerCase() === slug.toLowerCase());
-  if (found) return mapping[found];
-
   const displayTabs = [
     'Dashboard', 'Business Details', 'Branches', 'Menu', 'Photos & Media',
     'Reviews & Reputation', 'Leads & Enquiries', 'Subscription & Billing',
     'Offers & Promotions', 'Referral & Rewards', 'Events', 'My Blogs',
-    'Settings', 'Help & Support'
+    'Settings', 'Help & Support', 'Queries'
   ];
-  const matchedDisplay = displayTabs.find(tab =>
-    tab.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') === slug.toLowerCase() ||
-    tab.toLowerCase() === slug.toLowerCase()
-  );
+  const matchedDisplay = displayTabs.find(tab => tabToSlug(tab) === slug.toLowerCase());
   return matchedDisplay || 'Dashboard';
 };
 
@@ -6053,7 +6015,7 @@ function DashboardContent() {
 
                     {/* Wide View All Leads CTA Button */}
                     <button
-                      onClick={() => changeTab('leads')}
+                      onClick={() => changeTab('Leads & Enquiries')}
                       className="w-full mt-4 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-extrabold text-xs rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1"
                     >
                       View All Active Leads <ChevronRight className="h-3.5 w-3.5" />

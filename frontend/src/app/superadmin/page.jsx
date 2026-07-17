@@ -59,62 +59,21 @@ export default function SuperAdminDashboard() {
   // Tab navigation state
   const superadminTabToSlug = (tabId) => {
     if (!tabId) return '';
-    const mapping = {
-      'Dashboard': 'dashboard',
-      'Businesses': 'businesses',
-      'Pending Verifications': 'verifications',
-      'Category Management': 'categories',
-      'Events Moderation': 'events',
-      'Blogs Moderation': 'blogs',
-      'Notifications': 'notifications',
-      'Reviews Moderation': 'reviews',
-      'Sponsored Ads': 'ads',
-      'Referrals': 'referrals',
-      'Support Tickets': 'tickets',
-      'Blood Donors': 'blood-donors',
-      'Newsletter Subscribers': 'newsletter',
-      'Signups': 'signups',
-      'Partners': 'partners',
-      'Admin Management': 'admins',
-      'Subscriptions': 'subscriptions',
-      'Revenue': 'revenue',
-      'Platform Settings': 'settings',
-      'System Logs': 'system-logs',
-      'Access Control': 'access-control',
-      'Profile Settings': 'profile',
-      'Analytics': 'analytics'
-    };
-    return mapping[tabId] || tabId.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    return tabId.toLowerCase().trim().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
   };
 
   const superadminSlugToTab = (slug) => {
     if (!slug) return 'Dashboard';
-    const mapping = {
-      'dashboard': 'Dashboard',
-      'businesses': 'Businesses',
-      'verifications': 'Pending Verifications',
-      'categories': 'Category Management',
-      'events': 'Events Moderation',
-      'blogs': 'Blogs Moderation',
-      'notifications': 'Notifications',
-      'reviews': 'Reviews Moderation',
-      'ads': 'Sponsored Ads',
-      'referrals': 'Referrals',
-      'tickets': 'Support Tickets',
-      'blood-donors': 'Blood Donors',
-      'newsletter': 'Newsletter Subscribers',
-      'signups': 'Signups',
-      'partners': 'Partners',
-      'admins': 'Admin Management',
-      'subscriptions': 'Subscriptions',
-      'revenue': 'Revenue',
-      'settings': 'Platform Settings',
-      'system-logs': 'System Logs',
-      'access-control': 'Access Control',
-      'profile': 'Profile Settings',
-      'analytics': 'Analytics'
-    };
-    return mapping[slug.toLowerCase()] || 'Dashboard';
+    const displayTabs = [
+      'Dashboard', 'Businesses', 'Pending Verifications', 'Category Management',
+      'Events Moderation', 'Blogs Moderation', 'Notifications', 'Reviews Moderation',
+      'Sponsored Ads', 'Referrals', 'Support Tickets', 'Blood Donors',
+      'Newsletter Subscribers', 'Signups', 'Partners', 'Admin Management',
+      'Subscriptions', 'Revenue', 'Platform Settings', 'System Logs',
+      'Access Control', 'Profile Settings', 'Analytics'
+    ];
+    const matchedDisplay = displayTabs.find(tab => superadminTabToSlug(tab) === slug.toLowerCase());
+    return matchedDisplay || 'Dashboard';
   };
 
   const [searchParams, setSearchParams] = useSearchParams();
