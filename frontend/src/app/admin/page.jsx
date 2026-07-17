@@ -1876,7 +1876,9 @@ export default function AdminDashboard() {
           if (currentBiz) {
             const ownerPhone = currentBiz.ownerId?.phone || currentBiz.ownerId?.mobileNumber || currentBiz.phone || currentBiz.whatsapp;
             const businessSlug = currentBiz.slug || currentBiz._id;
-            
+            const referralCode = currentBiz.ownerId?.referralCode;
+            const referralLink = referralCode ? `https://udumalpet.business/register?ref=${referralCode}` : 'https://udumalpet.business/register';
+
             if (ownerPhone) {
               let cleanPhone = ownerPhone.replace(/\D/g, '');
               if (cleanPhone.length === 10) {
@@ -1890,7 +1892,8 @@ export default function AdminDashboard() {
 🔗 View your profile:
 https://udumalpet.business/${businessSlug}
 
-*🤝 Let's build a stronger business community together. Support fellow businesses by inviting them to join Udumalpet Business. Your unique referral link is available in your Dashboard.*
+🤝 *Let's build a stronger business community together. Support fellow businesses by inviting them to join Udumalpet Business. Your unique referral link is available here:*
+${referralLink}
 
 *📞 Need help? Contact our official WhatsApp support team at +91 89257 28260 for any assistance with your business profile.*
 
@@ -1983,6 +1986,8 @@ Team Udumalpet Business
     }
 
     const businessSlug = selectedBiz.slug || selectedBiz._id;
+    const referralCode = selectedBiz.ownerId?.referralCode;
+    const referralLink = referralCode ? `https://udumalpet.business/register?ref=${referralCode}` : 'https://udumalpet.business/register';
 
     const message = `🎉 *Congratulations! Your business profile has been approved.*
 
@@ -1991,7 +1996,8 @@ Team Udumalpet Business
 🔗 View your profile:
 https://udumalpet.business/${businessSlug}
 
-*🤝 Let's build a stronger business community together. Support fellow businesses by inviting them to join Udumalpet Business. Your unique referral link is available in your Dashboard.*
+🤝 *Let's build a stronger business community together. Support fellow businesses by inviting them to join Udumalpet Business. Your unique referral link is available here:*
+${referralLink}
 
 *📞 Need help? Contact our official WhatsApp support team at +91 89257 28260 for any assistance with your business profile.*
 
