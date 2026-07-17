@@ -2852,6 +2852,14 @@ router.put('/:id', protect, async (req, res) => {
       }
     }
 
+    // Sync Google Sheets business name in background
+    if (business.name || business.businessName) {
+      const { syncSheetBusinessName } = require('../services/sheetsService');
+      syncSheetBusinessName(business._id, business.name || business.businessName).catch(err => {
+        console.error('[Google Sheets API] Background sync failed:', err.message);
+      });
+    }
+
     res.json({ success: true, data: business });
   } catch (error) {
     console.error(error);
@@ -2921,6 +2929,14 @@ router.post('/draft', protect, async (req, res) => {
       }
     }
     
+    // Sync Google Sheets business name in background
+    if (business.name || business.businessName) {
+      const { syncSheetBusinessName } = require('../services/sheetsService');
+      syncSheetBusinessName(business._id, business.name || business.businessName).catch(err => {
+        console.error('[Google Sheets API] Background sync failed:', err.message);
+      });
+    }
+
     res.json({ success: true, data: business });
   } catch (error) {
     console.error('Error saving draft:', error);
