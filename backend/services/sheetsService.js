@@ -125,12 +125,13 @@ const checkAndAppendMonthHeader = async (sheets, spreadsheetId, targetTab, local
                           fontSize: 11
                         },
                         horizontalAlignment: 'CENTER',
+                        verticalAlignment: 'MIDDLE',
                         numberFormat: {
                           type: 'TEXT'
                         }
                       }
                     },
-                    fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,numberFormat)'
+                    fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment,numberFormat)'
                   }
                 },
                 {
@@ -159,8 +160,26 @@ const checkAndAppendMonthHeader = async (sheets, spreadsheetId, targetTab, local
 /**
  * Append transaction data to the Income Tracker Google Sheet
  */
-const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid = 0, eventPaid = 0, addPaid = 0, sheetName = '' }) => {
+const appendToIncomeTracker = async ({ businessId, businessName, monthlyPaid = 0, yearlyPaid = 0, eventPaid = 0, addPaid = 0, sheetName = '' }) => {
   try {
+    let finalBusinessName = businessName;
+    if (!finalBusinessName || finalBusinessName === 'Unknown Business') {
+      if (businessId) {
+        try {
+          const Business = require('../models/Business');
+          const biz = await Business.findById(businessId);
+          if (biz) {
+            finalBusinessName = biz.name || biz.businessName;
+          }
+        } catch (bizErr) {
+          console.error('[Google Sheets API] Fallback business name fetch failed:', bizErr.message);
+        }
+      }
+    }
+    if (!finalBusinessName) {
+      finalBusinessName = 'Unknown Business';
+    }
+
     let authConfig = {
       scopes: [
         'https://www.googleapis.com/auth/indexing',
@@ -237,7 +256,7 @@ const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid
     // Automated month header insertion check
     await checkAndAppendMonthHeader(sheets, spreadsheetId, targetTab, localDate);
 
-    console.log(`[Google Sheets API] Appending transaction for: ${businessName} (M: ${monthlyPaid}, Y: ${yearlyPaid}, E: ${eventPaid}, A: ${addPaid}, Total: ${totalPaid})`);
+    console.log(`[Google Sheets API] Appending transaction for: ${finalBusinessName} (M: ${monthlyPaid}, Y: ${yearlyPaid}, E: ${eventPaid}, A: ${addPaid}, Total: ${totalPaid})`);
 
     const response = await sheets.spreadsheets.values.append({
       spreadsheetId,
@@ -247,7 +266,7 @@ const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid
         values: [
           [
             dateStr,
-            businessName,
+            finalBusinessName,
             totalPaid,
             monthlyPaid,
             yearlyPaid,
@@ -258,7 +277,7 @@ const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid
       }
     });
 
-    // Format the date cell to dd/mm/yyyy display
+    // Format the date cell to dd/mm/yyyy display and align everything to center/middle
     try {
       const updatedRange = response.data.updates.updatedRange;
       const match = updatedRange.match(/A(\d+):G\d+/);
@@ -272,6 +291,24 @@ const appendToIncomeTracker = async ({ businessName, monthlyPaid = 0, yearlyPaid
             spreadsheetId,
             resource: {
               requests: [
+                {
+                  repeatCell: {
+                    range: {
+                      sheetId,
+                      startRowIndex: rowIndex,
+                      endRowIndex: rowIndex + 1,
+                      startColumnIndex: 0,
+                      endColumnIndex: 7
+                    },
+                    cell: {
+                      userEnteredFormat: {
+                        horizontalAlignment: 'CENTER',
+                        verticalAlignment: 'MIDDLE'
+                      }
+                    },
+                    fields: 'userEnteredFormat(horizontalAlignment,verticalAlignment)'
+                  }
+                },
                 {
                   repeatCell: {
                     range: {
@@ -394,10 +431,11 @@ const appendDailyTotalForTab = async (sheets, spreadsheetId, targetTab, payments
                       bold: true,
                       fontSize: 10
                     },
-                    horizontalAlignment: 'CENTER'
+                    horizontalAlignment: 'CENTER',
+                    verticalAlignment: 'MIDDLE'
                   }
                 },
-                fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
+                fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'
               }
             },
             {
@@ -676,10 +714,11 @@ const appendExpenseWeeklyTotal = async () => {
                         bold: true,
                         fontSize: 10
                       },
-                      horizontalAlignment: 'CENTER'
+                      horizontalAlignment: 'CENTER',
+                      verticalAlignment: 'MIDDLE'
                     }
                   },
-                  fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
+                  fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'
                 }
               },
               {
