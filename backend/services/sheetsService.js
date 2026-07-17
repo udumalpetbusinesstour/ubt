@@ -647,9 +647,9 @@ const appendExpenseWeeklyTotal = async () => {
     let weeklySum = 0;
     let newEntriesCount = 0;
     for (let i = lastWeeklyTotalIdx + 1; i < rows.length; i++) {
-      if (rows[i] && rows[i][3]) {
-        // Parse Total value from column D (index 3)
-        const amt = parseFloat(rows[i][3].toString().replace(/,/g, '').trim());
+      if (rows[i] && rows[i][2]) {
+        // Parse Amount value
+        const amt = parseFloat(rows[i][2].toString().replace(/,/g, '').trim());
         if (!isNaN(amt)) {
           weeklySum += amt;
         }

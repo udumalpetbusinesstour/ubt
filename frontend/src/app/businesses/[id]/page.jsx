@@ -1914,7 +1914,7 @@ Please confirm availability and delivery time.`;
             {[
               { id: 'overview', label: 'Overview' },
               ...(menuItems.length > 0 ? [
-                { id: 'menu', label: `${business?.menuLabel || 'Menu'} (${menuItems.length})` }
+                { id: 'menu', label: `${business?.menuLabel || (isFoodRelated(business?.category, business?.customCategoryName) ? 'Menu' : 'Products')} (${menuItems.length})` }
               ] : []),
               { id: 'services', label: 'Services' },
               { id: 'photos', label: `Photos (${galleryCount})` },
@@ -2428,15 +2428,15 @@ Please confirm availability and delivery time.`;
               <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-3.5 gap-3">
                 <div>
                   <h3 className="text-xl font-extrabold text-slate-800 font-sans flex items-center gap-2">
-                    {(business?.menuLabel?.toLowerCase()?.includes('product') || business?.menuLabel?.toLowerCase()?.includes('catalog') || business?.menuLabel?.toLowerCase()?.includes('good')) ? (
+                    {(business?.menuLabel?.toLowerCase()?.includes('product') || business?.menuLabel?.toLowerCase()?.includes('catalog') || business?.menuLabel?.toLowerCase()?.includes('good') || !isFoodRelated(business?.category, business?.customCategoryName)) ? (
                       <Package className="h-5.5 w-5.5 text-emerald-600" />
                     ) : (
                       <Utensils className="h-5.5 w-5.5 text-emerald-600" />
                     )}
-                    <span>{business?.menuLabel || 'Menu'}</span>
+                    <span>{business?.menuLabel || (isFoodRelated(business?.category, business?.customCategoryName) ? 'Menu' : 'Products')}</span>
                   </h3>
                   <p className="text-xs text-slate-400 font-semibold mt-1">
-                    Explore offerings from {business.name} and check details.
+                    Explore {isFoodRelated(business?.category, business?.customCategoryName) ? 'offerings' : 'products'} from {business.name} and check details.
                   </p>
                 </div>
               </div>
