@@ -3291,7 +3291,7 @@ Please confirm availability and delivery time.`;
                 )}
                 
                 {/* Floating Location Details Card (Centered layout) */}
-                <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none p-4">
+                <div className="absolute inset-0 z-10 flex items-center justify-center md:justify-start pointer-events-none p-4 md:p-8">
                   <div className="bg-white/95 border border-slate-200 shadow-xl rounded-2xl p-5 max-w-sm w-full text-center text-slate-800 flex flex-col items-center justify-center gap-3.5 animate-fadeIn backdrop-blur-xs pointer-events-auto">
                     <div className="flex flex-col items-center gap-2">
                       <div className="bg-red-50 p-2 rounded-full shrink-0">
