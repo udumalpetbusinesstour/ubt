@@ -2503,22 +2503,12 @@ function DashboardContent() {
 
     let finalCategory = menuItemCategory;
     if (isCustomCategory) {
-      if (!customCategoryName.trim()) {
-        setMenuItemError('Please specify the custom category name.');
-        setMenuItemSubmitLoading(false);
-        return;
-      }
       finalCategory = customCategoryName.trim();
     }
 
     let finalBrand = menuItemBrand;
     if (currentFormType === 'product') {
       if (isCustomBrand) {
-        if (!customBrandName.trim()) {
-          setMenuItemError('Please specify the custom brand name.');
-          setMenuItemSubmitLoading(false);
-          return;
-        }
         finalBrand = customBrandName.trim();
       }
     }
@@ -12226,7 +12216,7 @@ function DashboardContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] font-bold text-slate-500 tracking-wider uppercase">
-                    {currentFormType === 'product' ? 'Product Category *' : 'Menu Category *'}
+                    {currentFormType === 'product' ? 'Product Category (Optional)' : 'Menu Category (Optional)'}
                   </label>
                   <select
                     value={isCustomCategory ? 'Others' : menuItemCategory}
