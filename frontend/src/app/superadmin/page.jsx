@@ -69,7 +69,7 @@ export default function SuperAdminDashboard() {
       'Events Moderation', 'Blogs Moderation', 'Notifications', 'Reviews Moderation',
       'Sponsored Ads', 'Referrals', 'Support Tickets', 'Blood Donors',
       'Newsletter Subscribers', 'Signups', 'Partners', 'Admin Management',
-      'Subscriptions', 'Revenue', 'Expenses', 'Platform Settings', 'System Logs',
+      'Subscriptions', 'Revenue', 'Platform Settings', 'System Logs',
       'Access Control', 'Profile Settings', 'Analytics'
     ];
     const matchedDisplay = displayTabs.find(tab => superadminTabToSlug(tab) === slug.toLowerCase());
@@ -323,8 +323,6 @@ export default function SuperAdminDashboard() {
   const [revenueLoading, setRevenueLoading] = useState(false);
   const [eventUploading, setEventUploading] = useState(false);
   const [revenueGraphType, setRevenueGraphType] = useState('total'); // total | subscription | event | ad
-  const [expenses, setExpenses] = useState([]);
-  const [expensesLoading, setExpensesLoading] = useState(false);
 
   // System activities logs
   const [systemLogs, setSystemLogs] = useState([]);
@@ -857,22 +855,6 @@ const handlePartnerAction = async (partnerId, action) => {
     }
   };
 
-  const fetchExpenses = async () => {
-    setExpensesLoading(true);
-    try {
-      const headers = { 'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` };
-      const res = await fetch('http://localhost:5000/api/superadmin/expenses', { headers });
-      const data = await res.json();
-      if (data.success) {
-        setExpenses(data.data || []);
-      }
-    } catch (err) {
-      console.error('Error fetching expenses:', err);
-    } finally {
-      setExpensesLoading(false);
-    }
-  };
-
   const fetchDashboardStatsOnly = async (start, end) => {
     try {
       const headers = { 'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` };
@@ -1126,9 +1108,6 @@ const handlePartnerAction = async (partnerId, action) => {
     }
     if (activeTab === 'Newsletter Subscribers') {
       fetchNewsletterSubscribers();
-    }
-    if (activeTab === 'Expenses') {
-      fetchExpenses();
     }
   }, [activeTab]);
 
@@ -2366,64 +2345,6 @@ const handlePartnerAction = async (partnerId, action) => {
     return { segments, total: businesses.length };
   };
 
-  const parseSheetDate = (str) => {
-    if (!str) return null;
-    const parts = str.split('/');
-    if (parts.length === 3) {
-      const day = parseInt(parts[0]);
-      const month = parseInt(parts[1]) - 1;
-      const year = parseInt(parts[2]);
-      return new Date(year, month, day);
-    }
-    return null;
-  };
-
-  const filteredExpenses = useMemo(() => {
-    return expenses.filter(exp => {
-      if (!exp.date) return false;
-      const expDate = parseSheetDate(exp.date);
-      if (!expDate) return false;
-      
-      if (fromDate) {
-        const from = new Date(fromDate);
-        from.setHours(0,0,0,0);
-        if (expDate < from) return false;
-      }
-      if (toDate) {
-        const to = new Date(toDate);
-        to.setHours(23,59,59,999);
-        if (expDate > to) return false;
-      }
-      return true;
-    });
-  }, [expenses, fromDate, toDate]);
-
-  const expenseSummary = useMemo(() => {
-    const groups = {};
-    let totalSum = 0;
-    
-    filteredExpenses.forEach(exp => {
-      const type = exp.type || 'Other';
-      const amt = parseFloat(exp.total) || 0;
-      groups[type] = (groups[type] || 0) + amt;
-      totalSum += amt;
-    });
-    
-    const colors = [
-      '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', 
-      '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#6366f1'
-    ];
-    
-    return Object.entries(groups)
-      .map(([type, total], index) => ({
-        name: type,
-        value: total,
-        percentage: totalSum > 0 ? Math.round((total / totalSum) * 100) : 0,
-        color: colors[index % colors.length]
-      }))
-      .sort((a, b) => b.value - a.value);
-  }, [filteredExpenses]);
-
   const { segments: donutSegments, total: donutTotal } = getCategoryBreakdown();
 
   const getLocalityBreakdown = () => {
@@ -2549,8 +2470,7 @@ const handlePartnerAction = async (partnerId, action) => {
       group: 'PAYMENTS & BILLING',
       items: [
         { id: 'Subscriptions', label: 'Subscriptions', icon: <CreditCard className="h-4.5 w-4.5" /> },
-        { id: 'Revenue', label: 'Transactions', icon: <RefreshCw className="h-4.5 w-4.5" /> },
-        { id: 'Expenses', label: 'Expense Tracker', icon: <Coins className="h-4.5 w-4.5" /> }
+        { id: 'Revenue', label: 'Transactions', icon: <RefreshCw className="h-4.5 w-4.5" /> }
       ]
     },
     {
@@ -5907,298 +5827,6 @@ const handlePartnerAction = async (partnerId, action) => {
                     </div>
                   </div>
 
-                </div>
-              )}
-
-              {/* TAB: EXPENSES */}
-              {activeTab === 'Expenses' && (
-                <div className="flex flex-col gap-8 text-left animate-fadeIn font-sans">
-                  
-                  {/* Top Stats Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
-                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                    }`}>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-sans">Total Expenses</span>
-                      <h3 className="text-2xl font-black mt-2 text-red-550">
-                        ₹{expenseSummary.reduce((sum, item) => sum + item.value, 0).toLocaleString('en-IN') || 0}
-                      </h3>
-                      <span className="text-[10.5px] text-slate-550 font-semibold mt-1">In selected date range</span>
-                    </div>
-
-                    <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
-                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                    }`}>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-sans">Top Expense Category</span>
-                      <h3 className="text-2xl font-black mt-2 text-orange-500">
-                        {expenseSummary[0] ? expenseSummary[0].name : 'N/A'}
-                      </h3>
-                      <span className="text-[10.5px] text-slate-550 font-semibold mt-1">
-                        ₹{expenseSummary[0] ? expenseSummary[0].value.toLocaleString('en-IN') : 0} ({expenseSummary[0] ? expenseSummary[0].percentage : 0}%)
-                      </span>
-                    </div>
-
-                    <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
-                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                    }`}>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-sans">Total Transactions</span>
-                      <h3 className="text-2xl font-black mt-2 text-blue-500">
-                        {filteredExpenses.length}
-                      </h3>
-                      <span className="text-[10.5px] text-slate-550 font-semibold mt-1">Manual spreadsheet rows</span>
-                    </div>
-                  </div>
-
-                  {/* Filters & Custom Pie/Donut Chart */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    
-                    {/* Date Filters Card */}
-                    <div className={`lg:col-span-1 border rounded-[28px] p-6 shadow-sm flex flex-col gap-6 ${
-                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                    }`}>
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400">Date Range Filters</h4>
-                        {(fromDate || toDate) && (
-                          <button
-                            onClick={() => {
-                              setFromDate('');
-                              setToDate('');
-                            }}
-                            className="text-[9px] font-black text-red-550 hover:text-red-650 border-none bg-transparent cursor-pointer uppercase tracking-wider"
-                          >
-                            Clear
-                          </button>
-                        )}
-                      </div>
-                      
-                      <div className="flex flex-col gap-4">
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">From Date</label>
-                          <input
-                            type="date"
-                            value={fromDate}
-                            onChange={(e) => setFromDate(e.target.value)}
-                            className={`px-4 py-2.5 rounded-xl border text-xs font-semibold w-full focus:outline-none ${
-                              themeMode === 'dark' 
-                                ? 'bg-slate-950 border-slate-800 text-white focus:border-slate-700' 
-                                : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-slate-350'
-                            }`}
-                          />
-                        </div>
-
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">To Date</label>
-                          <input
-                            type="date"
-                            value={toDate}
-                            onChange={(e) => setToDate(e.target.value)}
-                            className={`px-4 py-2.5 rounded-xl border text-xs font-semibold w-full focus:outline-none ${
-                              themeMode === 'dark' 
-                                ? 'bg-slate-950 border-slate-800 text-white focus:border-slate-700' 
-                                : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-slate-350'
-                            }`}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Presets */}
-                      <div className="flex flex-col gap-2">
-                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">Presets</span>
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            onClick={() => {
-                              const today = new Date();
-                              const last7 = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-                              setFromDate(last7.toISOString().split('T')[0]);
-                              setToDate(today.toISOString().split('T')[0]);
-                            }}
-                            className={`py-1.5 px-3 rounded-lg text-[9px] font-black uppercase border tracking-wider transition-all cursor-pointer ${
-                              themeMode === 'dark'
-                                ? 'bg-slate-850 hover:bg-slate-800 border-slate-800 text-slate-300'
-                                : 'bg-slate-100 hover:bg-slate-150 border-slate-200 text-slate-600'
-                            }`}
-                          >
-                            Last 7 Days
-                          </button>
-                          <button
-                            onClick={() => {
-                              const today = new Date();
-                              const last30 = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-                              setFromDate(last30.toISOString().split('T')[0]);
-                              setToDate(today.toISOString().split('T')[0]);
-                            }}
-                            className={`py-1.5 px-3 rounded-lg text-[9px] font-black uppercase border tracking-wider transition-all cursor-pointer ${
-                              themeMode === 'dark'
-                                ? 'bg-slate-850 hover:bg-slate-800 border-slate-800 text-slate-300'
-                                : 'bg-slate-100 hover:bg-slate-150 border-slate-200 text-slate-600'
-                            }`}
-                          >
-                            Last 30 Days
-                          </button>
-                          <button
-                            onClick={() => {
-                              const today = new Date();
-                              const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-                              setFromDate(firstDay.toISOString().split('T')[0]);
-                              setToDate(today.toISOString().split('T')[0]);
-                            }}
-                            className={`py-1.5 px-3 rounded-lg text-[9px] font-black uppercase border tracking-wider transition-all cursor-pointer ${
-                              themeMode === 'dark'
-                                ? 'bg-slate-850 hover:bg-slate-800 border-slate-800 text-slate-300'
-                                : 'bg-slate-100 hover:bg-slate-150 border-slate-200 text-slate-600'
-                            }`}
-                          >
-                            This Month
-                          </button>
-                          <button
-                            onClick={() => {
-                              setFromDate('');
-                              setToDate('');
-                            }}
-                            className={`py-1.5 px-3 rounded-lg text-[9px] font-black uppercase border tracking-wider transition-all cursor-pointer ${
-                              themeMode === 'dark'
-                                ? 'bg-slate-850 hover:bg-slate-800 border-slate-800 text-slate-300'
-                                : 'bg-slate-100 hover:bg-slate-150 border-slate-200 text-slate-600'
-                            }`}
-                          >
-                            All Time
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Expense Breakdown Ratio Pie Chart */}
-                    <div className={`lg:col-span-2 border rounded-[28px] p-6 shadow-sm flex flex-col gap-4 ${
-                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                    }`}>
-                      <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-400">Expense Distribution by Type</h4>
-                      
-                      <div className="flex flex-col md:flex-row items-center justify-around gap-6 mt-2">
-                        {/* Donut Chart SVG */}
-                        {expenseSummary.length > 0 ? (
-                          <div className="relative w-44 h-44 shrink-0">
-                            <svg viewBox="0 0 160 160" className="w-full h-full">
-                              {/* Background Circle */}
-                              <circle cx="80" cy="80" r="70" fill="transparent" stroke={themeMode === 'dark' ? '#1e293b' : '#f1f5f9'} strokeWidth="16" />
-                              
-                              {/* Colored Segments */}
-                              {(() => {
-                                let accumulatedPercent = 0;
-                                return expenseSummary.map((seg, sIdx) => {
-                                  const strokeDash = `${(seg.percentage * 4.3982)} 439.82`;
-                                  const strokeOffset = 439.82 - (accumulatedPercent * 4.3982);
-                                  accumulatedPercent += seg.percentage;
-                                  return (
-                                    <circle
-                                      key={sIdx}
-                                      cx="80"
-                                      cy="80"
-                                      r="70"
-                                      fill="transparent"
-                                      stroke={seg.color}
-                                      strokeWidth="16"
-                                      strokeDasharray={strokeDash}
-                                      strokeDashoffset={strokeOffset}
-                                      transform="rotate(-90 80 80)"
-                                      className="transition-all duration-500 ease-out"
-                                    />
-                                  );
-                                });
-                              })()}
-                            </svg>
-                            {/* Centered label */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                              <span className="text-[10px] text-slate-400 uppercase tracking-widest font-black">Total</span>
-                              <span className="text-base font-black">
-                                ₹{expenseSummary.reduce((sum, item) => sum + item.value, 0).toLocaleString('en-IN')}
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center h-44 w-44 rounded-full border-4 border-dashed border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-400">
-                            No Data
-                          </div>
-                        )}
-
-                        {/* Interactive Legend */}
-                        <div className="flex flex-col gap-3 w-full max-w-xs text-[11px] font-bold">
-                          {expenseSummary.map((seg, idx) => (
-                            <div key={idx} className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-2">
-                                <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: seg.color }} />
-                                <span>{seg.name}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <span className={themeMode === 'dark' ? 'text-slate-350' : 'text-slate-700'}>₹{seg.value.toLocaleString('en-IN')}</span>
-                                <span className="text-slate-400 font-semibold">({seg.percentage}%)</span>
-                              </div>
-                            </div>
-                          ))}
-                          {expenseSummary.length === 0 && (
-                            <span className="text-slate-400 text-center font-bold">No manual expenses found in this range.</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Transaction Logs Table */}
-                  <div className={`border shadow-xs rounded-[28px] overflow-hidden ${
-                    themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                  }`}>
-                    <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                      <div className="flex flex-col gap-0.5">
-                        <h3 className="font-extrabold text-base font-sans">Expense Logs</h3>
-                        <span className="text-[10px] text-slate-400 font-semibold">Parsed logs from the Expense sheet.</span>
-                      </div>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className={`border-b font-sans ${
-                          themeMode === 'dark' ? 'bg-slate-900/60 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'
-                        }`}>
-                          <tr className="text-left font-black text-[10px] uppercase tracking-wider">
-                            <th className="p-4 pl-6">Date</th>
-                            <th className="p-4">Type</th>
-                            <th className="p-4">Description</th>
-                            <th className="p-4 pr-6 text-right">Amount</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans text-xs">
-                          {filteredExpenses.map((exp, idx) => (
-                            <tr key={idx} className={`hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors`}>
-                              <td className="p-4 pl-6 font-semibold text-slate-500">{exp.date}</td>
-                              <td className="p-4 font-black">
-                                <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase ${
-                                  exp.type?.toLowerCase().includes('marketing') 
-                                    ? 'bg-red-500/10 text-red-500'
-                                    : exp.type?.toLowerCase().includes('personal')
-                                      ? 'bg-blue-500/10 text-blue-500'
-                                      : 'bg-slate-500/10 text-slate-500'
-                                }`}>
-                                  {exp.type}
-                                </span>
-                              </td>
-                              <td className={`p-4 font-semibold ${themeMode === 'dark' ? 'text-slate-350' : 'text-slate-600'}`}>
-                                {exp.description || '—'}
-                              </td>
-                              <td className="p-4 pr-6 text-right font-bold text-red-500 font-mono">
-                                ₹{exp.total.toLocaleString('en-IN')}
-                              </td>
-                            </tr>
-                          ))}
-                          {filteredExpenses.length === 0 && (
-                            <tr>
-                              <td colSpan="4" className="p-8 text-center text-slate-400 text-xs font-bold leading-normal">
-                                {expensesLoading ? 'Fetching spreadsheet expense data...' : 'No matching platform expense logs found.'}
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
                 </div>
               )}
 

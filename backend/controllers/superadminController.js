@@ -1865,16 +1865,6 @@ const mapKeywordToImage = (categoryName) => {
 };
 
 
-const getExpensesAnalytics = async (req, res, next) => {
-  try {
-    const { getExpenseTrackerRows } = require('../services/sheetsService');
-    const expenses = await getExpenseTrackerRows();
-    return sendSuccess(res, 200, 'Expenses retrieved successfully', expenses);
-  } catch (err) {
-    next(err);
-  }
-};
-
 module.exports = {
   createAdmin,
   removeAdmin,
@@ -1910,6 +1900,5 @@ module.exports = {
   updatePlatformConfig,
   getPendingCategoryReviews,
   resolveCategoryReview,
-  mergeCategories,
-  getExpensesAnalytics
+  mergeCategories
 };
