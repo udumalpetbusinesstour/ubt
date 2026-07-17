@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useParams, useSearchParams } from 'react-router-dom';
 import { 
   ShieldCheck, ToggleLeft, RefreshCw, Star, HelpCircle, Check, X, AlertCircle, AlertTriangle, 
   ArrowRight, Eye, Grid, Shield, CreditCard, LayoutDashboard, Store, BookOpen, Calendar, 
@@ -112,8 +112,66 @@ export default function AdminDashboard() {
     });
   };
 
-  // Tab navigation state
-  const [activeTab, setActiveTab] = useState('Dashboard');
+  // Tab navigation mapping & slug helpers
+  const adminTabToSlug = (tabId) => {
+    if (!tabId) return '';
+    const mapping = {
+      'Dashboard': 'dashboard',
+      'Businesses': 'businesses',
+      'Signups': 'signups',
+      'Category Management': 'categories',
+      'Pending Approvals': 'pending-approvals',
+      'Business Edits': 'business-edits',
+      'Partners': 'partners',
+      'Blogs': 'blogs',
+      'Events': 'events',
+      'Reviews': 'reviews',
+      'Testimonials': 'testimonials',
+      'Sponsored Ads': 'ads',
+      'Subscriptions': 'subscriptions',
+      'Notifications': 'notifications',
+      'Queries': 'queries',
+      'Referral Moderation': 'referrals',
+      'Blood Donors': 'blood-donors',
+      'Newsletter Subscribers': 'newsletter',
+      'ApiLogs': 'api-logs'
+    };
+    return mapping[tabId] || tabId.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  };
+
+  const adminSlugToTab = (slug) => {
+    if (!slug) return 'Dashboard';
+    const mapping = {
+      'dashboard': 'Dashboard',
+      'businesses': 'Businesses',
+      'signups': 'Signups',
+      'categories': 'Category Management',
+      'pending-approvals': 'Pending Approvals',
+      'business-edits': 'Business Edits',
+      'partners': 'Partners',
+      'blogs': 'Blogs',
+      'events': 'Events',
+      'reviews': 'Reviews',
+      'testimonials': 'Testimonials',
+      'ads': 'Sponsored Ads',
+      'subscriptions': 'Subscriptions',
+      'notifications': 'Notifications',
+      'queries': 'Queries',
+      'referrals': 'Referral Moderation',
+      'blood-donors': 'Blood Donors',
+      'newsletter': 'Newsletter Subscribers',
+      'api-logs': 'ApiLogs'
+    };
+    return mapping[slug.toLowerCase()] || 'Dashboard';
+  };
+
+  const [searchParams] = useSearchParams();
+  const { tab: urlTab } = useParams();
+  const activeTab = adminSlugToTab(urlTab || searchParams.get('tab'));
+  const setActiveTab = (tab) => {
+    const slug = adminTabToSlug(tab);
+    navigate(`/admin/${slug}${window.location.search}`);
+  };
   const [auditSubTab, setAuditSubTab] = useState('Businesses'); // Businesses | Blogs | Testimonials
   const [pendingSubTab, setPendingSubTab] = useState('Businesses'); // Businesses | Blogs | Events
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);

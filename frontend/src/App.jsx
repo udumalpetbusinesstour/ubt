@@ -101,7 +101,7 @@ function AppContent() {
           <Route path="/businesses" element={<BusinessesingsPage />} />
           <Route path="/businesses/:id" element={<BusinessDetail />} />
           <Route path="/add-business" element={<AddBusiness />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/:tab?" element={<AdminDashboard />} />
           <Route path="/superadmin/:tab?" element={<SuperAdminDashboard />} />
           <Route path="/dashboard/:tab?" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />

@@ -1052,6 +1052,7 @@ const getReviews = async (req, res, next) => {
       businessId: r.businessId ? r.businessId._id : null,
       businessName: r.businessId ? r.businessId.name : 'Unknown Business',
       authorName: r.authorName,
+      authorEmail: r.authorEmail,
       rating: r.rating,
       text: r.text || r.reviewText || '',
       status: r.status || 'approved',

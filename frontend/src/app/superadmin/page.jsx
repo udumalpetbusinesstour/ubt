@@ -3372,7 +3372,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                     
                     {/* Recent Registrations Card */}
-                    <div className={`lg:col-span-5 rounded-3xl border p-5 flex flex-col h-auto lg:h-[26rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
+                    <div className={`lg:col-span-6 rounded-3xl border p-5 flex flex-col h-auto lg:h-[26rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
 
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
 
@@ -3599,7 +3599,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     </div>
 
                     {/* Recent Transactions Card */}
-                    <div className={`lg:col-span-4 rounded-3xl border p-5 flex flex-col h-auto lg:h-[26rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
+                    <div className={`lg:col-span-6 rounded-3xl border p-5 flex flex-col h-auto lg:h-[26rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
 
                       <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
                         <span className="text-xs font-black uppercase tracking-widest text-slate-400">Recent Transactions</span>
@@ -3668,7 +3668,7 @@ const handlePartnerAction = async (partnerId, action) => {
 
                                 <td className="py-2.5">
                                   <span className={`text-[8.5px] font-black uppercase px-2 py-0.5 rounded-lg border ${
-                                    txn.status === 'Success' ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400' : 'bg-rose-500/10 border-rose-500/25 text-rose-500'
+                                    txn.status === 'Success' ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-450' : 'bg-rose-500/10 border-rose-500/25 text-rose-550'
                                   }`}>
                                     {txn.status}
                                   </span>
@@ -3680,71 +3680,9 @@ const handlePartnerAction = async (partnerId, action) => {
                         </table>
                       </div>
                     </div>
-
-                    {/* System Summary Widget */}
-                    <div className={`lg:col-span-3 rounded-3xl border p-5 flex flex-col justify-between h-auto lg:h-[26rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
-
-                      <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
-
-                        <span className="text-xs font-black uppercase tracking-widest text-slate-400">System Summary</span>
-                      </div>
-                      
-                      <div className="flex-1 flex flex-col gap-5 py-6">
-                        
-                        {/* Storage Usage */}
-                        <div className="flex flex-col gap-1.5 text-left">
-                          <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                            <span>Storage Usage</span>
-                            <span className={`font-extrabold ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>45.6 GB / 200 GB</span>
-                          </div>
-                          <div className={`h-2 w-full rounded-full overflow-hidden border ${themeMode === 'dark' ? 'bg-slate-850 border-slate-800/50' : 'bg-slate-100 border-slate-200'}`}>
-
-                            <div className="h-full bg-[#027244] rounded-full" style={{ width: '22.8%' }} />
-                          </div>
-                          <span className="text-[8.5px] text-slate-500 font-bold self-end">22.8% Capacity Used</span>
-                        </div>
-
-                        {/* Server Uptime */}
-                        <div className="flex flex-col gap-1.5 text-left">
-                          <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                            <span>Server Uptime</span>
-                            <span className="text-emerald-400 font-extrabold">99.9%</span>
-                          </div>
-                          <div className={`h-2 w-full rounded-full overflow-hidden border ${themeMode === 'dark' ? 'bg-slate-850 border-slate-800/50' : 'bg-slate-100 border-slate-200'}`}>
-                            <div className="h-full bg-emerald-500 rounded-full animate-pulse" style={{ width: '99.9%' }} />
-                          </div>
-                          <span className="text-[8.5px] text-slate-500 font-bold self-end">Nodes fully operational</span>
-                        </div>
-
-                        {/* Active Admins */}
-                        <div className="flex items-center justify-between text-xs font-bold text-slate-400 border-t border-slate-850 pt-4">
-                          <span>Active Admins</span>
-                          <div className={`flex items-center gap-1.5 ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>
-                            <span className="font-extrabold">{admins.filter(a => a.status === 'Active' || a.status === 'active').length}</span>
-                            <span 
-                              onClick={() => setActiveTab('Admin Management')}
-                              className="text-[8.5px] text-[#027244] hover:underline cursor-pointer font-black"
-                            >
-                              View Online
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Database Status */}
-                        <div className="flex items-center justify-between text-xs font-bold text-slate-400 border-t border-slate-850 pt-4">
-                          <span>Database Status</span>
-                          <span className="text-emerald-400 flex items-center gap-1.5 font-extrabold">
-                            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping" />
-                            Healthy
-                          </span>
-                        </div>
-
-                      </div>
-                    </div>
-
                   </div>
 
-                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                     
                     {/* Top Performing Businesses Card */}
                     <div className={`lg:col-span-6 rounded-3xl border p-5 flex flex-col h-[24rem] ${themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800/80 text-white' : 'bg-white border-slate-200 text-[#001c41] shadow-xs'}`}>
@@ -5611,6 +5549,9 @@ const handlePartnerAction = async (partnerId, action) => {
                                   </span>
                                 )}
                               </div>
+                              {r.authorEmail && (
+                                <span className="text-[10px] font-bold text-slate-500 mt-1 select-all">{r.authorEmail}</span>
+                              )}
                               <div className="flex items-center gap-1.5 mt-1.5">
                                 <div className="flex text-amber-400 gap-0.5 shrink-0">
                                   {[...Array(5)].map((_, i) => (
@@ -10249,6 +10190,9 @@ const handlePartnerAction = async (partnerId, action) => {
                     <span className={`font-extrabold text-sm leading-tight ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
                       {selectedReview.authorName}
                     </span>
+                    {selectedReview.authorEmail && (
+                      <span className="text-[11px] font-bold text-slate-500 mt-0.5 select-all">{selectedReview.authorEmail}</span>
+                    )}
                     <span className="text-[10px] text-slate-450 font-bold mt-1">Written on {selectedReview.businessName}</span>
                   </div>
                 </div>
