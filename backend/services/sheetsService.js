@@ -897,4 +897,77 @@ const syncSheetBusinessName = async (businessId, businessName) => {
   }
 };
 
-module.exports = { appendToIncomeTracker, appendDailyTotal, appendExpenseWeeklyTotal, syncSheetBusinessName };
+const getExpenseTrackerRows = async () => {
+  try {
+    let authConfig = {
+      scopes: [
+        'https://www.googleapis.com/auth/indexing',
+        'https://www.googleapis.com/auth/spreadsheets'
+      ]
+    };
+
+    if (process.env.GOOGLE_INDEXING_CREDENTIALS) {
+      try {
+        const credentials = JSON.parse(process.env.GOOGLE_INDEXING_CREDENTIALS);
+        authConfig.credentials = credentials;
+      } catch (jsonErr) {
+        console.error('[Google Sheets API] Failed to parse GOOGLE_INDEXING_CREDENTIALS env var:', jsonErr.message);
+      }
+    } else if (fs.existsSync(keyPath)) {
+      authConfig.keyFile = keyPath;
+    } else {
+      return [];
+    }
+
+    const auth = new google.auth.GoogleAuth(authConfig);
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: 'v4', auth: authClient });
+
+    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
+    if (!spreadsheetId) return [];
+
+    const meta = await sheets.spreadsheets.get({ spreadsheetId });
+    const sheetsList = meta.data.sheets;
+    const targetTab = sheetsList.find(s => s.properties.title.toLowerCase().trim() === 'expense tracker')?.properties.title || 'expense tracker';
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `'${targetTab}'!A1:D1000`
+    });
+
+    const rows = response.data.values || [];
+    if (rows.length === 0) return [];
+
+    const dataRows = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || row.length === 0) continue;
+      
+      const dateStr = row[0] ? row[0].trim() : '';
+      const typeStr = row[1] ? row[1].trim() : '';
+      const description = row[2] ? row[2].trim() : '';
+      const totalStr = row[3] ? row[3].trim().replace(/,/g, '') : '0';
+      
+      if (!dateStr && !typeStr && !totalStr) continue; // skip empty rows
+      if (dateStr.toLowerCase().includes('total') || typeStr.toLowerCase().includes('total') || dateStr.toLowerCase().includes('weekly')) {
+        continue; // skip Daily/Weekly Total summary rows
+      }
+
+      const totalVal = parseFloat(totalStr) || 0;
+      
+      dataRows.push({
+        date: dateStr,
+        type: typeStr || 'Other',
+        description: description,
+        total: totalVal
+      });
+    }
+
+    return dataRows;
+  } catch (error) {
+    console.error('[Google Sheets API] Error fetching expense rows:', error.message);
+    return [];
+  }
+};
+
+module.exports = { appendToIncomeTracker, appendDailyTotal, appendExpenseWeeklyTotal, syncSheetBusinessName, getExpenseTrackerRows };

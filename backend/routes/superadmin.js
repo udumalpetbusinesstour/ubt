@@ -36,7 +36,8 @@ const {
   updatePlatformConfig,
   getPendingCategoryReviews,
   resolveCategoryReview,
-  mergeCategories
+  mergeCategories,
+  getExpensesAnalytics
 } = require('../controllers/superadminController');
 
 // All superadmin routes require user authorization and superadmin role privileges
@@ -103,5 +104,8 @@ router.put('/config', updatePlatformConfig);
 router.get('/category-review/pending', getPendingCategoryReviews);
 router.post('/category-review/resolve', resolveCategoryReview);
 router.post('/categories/merge', mergeCategories);
+
+// Expense analytics
+router.get('/expenses', getExpensesAnalytics);
 
 module.exports = router;
