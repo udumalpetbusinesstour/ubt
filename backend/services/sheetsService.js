@@ -495,9 +495,27 @@ const appendDailyTotal = async () => {
       return list.find(s => s.toLowerCase().replace(/[\s\(\)\-_]/g, '') === normalizedName) || null;
     };
 
-    // Split payments: autopay payments have razorpaySubscriptionId but NO razorpayOrderId
-    const newPayments = payments.filter(p => !p.razorpaySubscriptionId || p.razorpayOrderId);
-    const autopayPayments = payments.filter(p => p.razorpaySubscriptionId && !p.razorpayOrderId);
+    // Split payments: autopay payments are renewals (have razorpaySubscriptionId and are NOT the first payment for that subscription)
+    const newPayments = [];
+    const autopayPayments = [];
+
+    for (const p of payments) {
+      if (p.razorpaySubscriptionId) {
+        // Check if there is an older paid payment in the database for this subscription
+        const olderPayment = await Payment.findOne({
+          razorpaySubscriptionId: p.razorpaySubscriptionId,
+          status: 'Paid',
+          createdAt: { $lt: p.createdAt }
+        });
+        if (olderPayment) {
+          autopayPayments.push(p);
+        } else {
+          newPayments.push(p);
+        }
+      } else {
+        newPayments.push(p);
+      }
+    }
 
     // 3. Process first sheet: 'Income Tracker New'
     const matchedNewTab = findTabIgnoreCase(sheetsList, 'Income Tracker New');

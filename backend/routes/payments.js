@@ -904,6 +904,13 @@ router.post('/webhook', async (req, res) => {
           ]
         });
         if (!existingPayment) {
+          // Check if this is a renewal or the initial payment
+          const previousPaymentsCount = await Payment.countDocuments({
+            razorpaySubscriptionId: subId,
+            status: 'Paid'
+          });
+          const targetSheetName = previousPaymentsCount > 0 ? 'Autopay' : 'Income Tracker New';
+
           // Add to Payment history
           await Payment.create({
             userId: localSub.userId || localSub.ownerId,
@@ -932,7 +939,7 @@ router.post('/webhook', async (req, res) => {
               yearlyPaid: (planNameStr.includes('yearly') || amount === 999) ? amount : 0,
               eventPaid: 0,
               addPaid: 0,
-              sheetName: 'Autopay'
+              sheetName: targetSheetName
             });
           } catch (sheetErr) {
             console.error('[Webhook Sheets Update] Error appending subscription.charged to sheets:', sheetErr.message);

@@ -257,6 +257,32 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const getDisplayPhone = () => {
+    let rawPhone = '';
+    if (business?.phone && business.phone.trim() && business.phone.toLowerCase() !== 'n/a') {
+      rawPhone = business.phone.trim();
+    } else if (user && typeof user === 'object') {
+      const uPhone = user.phone || user.mobileNumber;
+      if (uPhone && uPhone.trim() && uPhone.toLowerCase() !== 'n/a') {
+        rawPhone = uPhone.trim();
+      }
+    }
+    if (rawPhone && rawPhone.startsWith('0')) {
+      return rawPhone.substring(1).trim();
+    }
+    return rawPhone;
+  };
+
+  const getDisplayEmail = () => {
+    if (business?.email && business.email.trim() && business.email.toLowerCase() !== 'n/a') {
+      return business.email.trim();
+    }
+    if (user && typeof user === 'object' && user.email) {
+      return user.email.trim();
+    }
+    return '';
+  };
+
   // ─── REGISTRATION DRAFT DETECTION ───────────────────────────────────────────
   // A business fetched from /my-business may be an incomplete auto-saved draft
   // (created when the user navigates away mid-registration). We detect this by
@@ -6531,7 +6557,7 @@ function DashboardContent() {
                       { id: 'offers', label: `Offers (${offersList.length})` },
                       { id: 'about', label: 'About' },
                       ...((branches.length > 0) ? [{ id: 'branches', label: `Branches (${branches.length + 1})` }] : []),
-                      { id: 'map', label: 'Map & Location' }
+                      { id: 'map', label: 'Location & Contact' }
                     ].map((tab) => (
                       <button
                         key={tab.id}
@@ -7151,27 +7177,12 @@ function DashboardContent() {
                       </div>
                     )}
 
-                    {/* TAB: MAP & LOCATION */}
+                    {/* TAB: LOCATION & CONTACT */}
                     {previewTab === 'map' && (
                       <div className="flex flex-col gap-5 animate-fadeIn text-left">
                         <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col gap-4">
-                          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                            <h3 className="text-base font-extrabold text-slate-800 font-sans">Map & Directions</h3>
-                            <a
-                              href={
-                                business
-                                  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.address ? `${business.name}, ${business.address}` : `${business.name}, Udumalpet`)}`
-                                  : '#'
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="shrink-0 py-2 px-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl flex items-center gap-1.5 transition-all shadow"
-                            >
-                              <MapPin className="h-3.5 w-3.5" /> Get Directions
-                            </a>
-                          </div>
                           {/* Leaflet OSM embed via iframe - zero API key, fully free */}
-                          <div className="h-80 w-full rounded-2xl border border-slate-200 bg-slate-100 relative overflow-hidden shadow-3xs">
+                          <div className="h-[380px] w-full rounded-2xl border border-slate-200 bg-slate-100 relative overflow-hidden shadow-3xs">
                             {business?.latitude && business?.longitude && (
                               <iframe
                                 key={`${business?._id}-${business?.latitude}-${business?.longitude}`}
@@ -7184,12 +7195,51 @@ function DashboardContent() {
                                 className="absolute top-0 left-0 w-full h-[calc(100%+28px)] opacity-95 border-0"
                               />
                             )}
-                          </div>
-                          <div className="flex items-start gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                            <MapPin className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest">Business Location</span>
-                              <span className="text-xs font-bold text-slate-700 mt-1">{business.address || `${business.locality || 'Gandhi Nagar'}, Udumalpet, Tamil Nadu - ${business.pincode || '642126'}`}</span>
+
+                            {/* Floating Centered Card */}
+                            {/* Floating Centered Card Wrapper */}
+                            <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none p-4">
+                              <div className="bg-white/95 border border-slate-200 shadow-xl rounded-2xl p-5 max-w-sm w-full text-center text-slate-800 flex flex-col items-center justify-center gap-3.5 animate-fadeIn backdrop-blur-xs pointer-events-auto">
+                                <div className="flex flex-col items-center gap-1.5">
+                                  <div className="bg-red-50 p-2 rounded-full shrink-0">
+                                    <MapPin className="h-4.5 w-4.5 text-red-500" />
+                                  </div>
+                                  <span className="font-black text-sm text-[#001c41] leading-snug">{business.name}</span>
+                                  <span className="text-xs text-slate-500 font-semibold leading-relaxed">{business.address || `${business.locality || 'Gandhi Nagar'}, Udumalpet, Tamil Nadu - ${business.pincode || '642126'}`}</span>
+                                </div>
+
+                                <div className="flex flex-col gap-2 w-full border-t border-slate-200/60 pt-3 text-xs text-slate-600 font-semibold">
+                                  {getDisplayPhone() && (
+                                    <div className="flex items-center justify-center gap-1.5">
+                                      <Phone className="h-3.5 w-3.5 text-emerald-600" />
+                                      <a href={`tel:${getDisplayPhone()}`} className="hover:text-emerald-700 hover:underline text-slate-800 font-extrabold">
+                                        {getDisplayPhone()}
+                                      </a>
+                                    </div>
+                                  )}
+                                  {getDisplayEmail() && (
+                                    <div className="flex items-center justify-center gap-1.5">
+                                      <Mail className="h-3.5 w-3.5 text-emerald-600" />
+                                      <a href={`mailto:${getDisplayEmail()}`} className="hover:text-emerald-700 hover:underline text-slate-800 font-extrabold break-all">
+                                        {getDisplayEmail()}
+                                      </a>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <a
+                                  href={
+                                    business
+                                      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.address ? `${business.name}, ${business.address}` : `${business.name}, Udumalpet`)}`
+                                      : '#'
+                                  }
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="mt-1 py-2 px-4 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl text-center uppercase tracking-wider transition-colors shadow-sm self-center"
+                                >
+                                  Get Directions
+                                </a>
+                              </div>
                             </div>
                           </div>
                         </div>

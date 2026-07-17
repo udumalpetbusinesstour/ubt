@@ -1367,6 +1367,26 @@ export default function BusinessDetail() {
     return '';
   };
 
+  const getDisplayPhone = () => {
+    const bPhone = selectedBranch === null 
+      ? (business?.parentBusiness ? business.parentBusiness.phone : business?.phone) 
+      : selectedBranch.phone;
+    
+    let rawPhone = '';
+    if (bPhone && bPhone.trim() && bPhone.toLowerCase() !== 'n/a') {
+      rawPhone = bPhone.trim();
+    } else if (business?.ownerId && typeof business.ownerId === 'object') {
+      const parentNum = business.ownerId.phone || business.ownerId.mobileNumber;
+      if (parentNum && parentNum.trim() && parentNum.toLowerCase() !== 'n/a') {
+        rawPhone = parentNum.trim();
+      }
+    }
+    if (rawPhone && rawPhone.startsWith('0')) {
+      return rawPhone.substring(1).trim();
+    }
+    return rawPhone;
+  };
+
   const getDisplayWhatsapp = () => {
     if (business?.whatsapp && business.whatsapp.trim() && business.whatsapp.toLowerCase() !== 'n/a') {
       return business.whatsapp.trim();
@@ -1902,7 +1922,7 @@ Please confirm availability and delivery time.`;
               { id: 'offers', label: `Offers (${((business?.offers ? business.offers.filter(o => o.active !== false && o.active !== 'false').length : 0) + (business?.promotions ? business.promotions.filter(p => p.active !== false && p.active !== 'false').length : 0))})` },
               { id: 'about', label: 'About' },
               ...((branches.length > 0 || isOwner) ? [{ id: 'branches', label: branches.length > 0 ? `Branches (${branches.length + 1})` : 'Branches' }] : []),
-              { id: 'map', label: 'Map & Location' }
+              { id: 'map', label: 'Location & Contact' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -3252,21 +3272,9 @@ Please confirm availability and delivery time.`;
             </div>
           )}
 
-          {/* TAB 7: MAP & LOCATION */}
+          {/* TAB 7: LOCATION & CONTACT */}
           {activeTab === 'map' && (
             <div className="flex flex-col gap-4 animate-fadeIn text-left">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-xl font-extrabold text-slate-800 font-sans">Map & Directions</h3>
-                <a
-                  href={directionsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => trackClick('directions')}
-                  className="py-2.5 px-5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-md shadow-emerald-800/10 uppercase tracking-wider"
-                >
-                  <MapPin className="h-4 w-4" /> Get Directions
-                </a>
-              </div>
               {/* OpenStreetMap embed — free, no API key required (unlike Google Maps Embed API) */}
               <div className="h-96 w-full rounded-[28px] border border-slate-200 bg-slate-100 relative overflow-hidden shadow-sm">
                 {business?.latitude && business?.longitude && (
@@ -3282,25 +3290,48 @@ Please confirm availability and delivery time.`;
                   />
                 )}
                 
-                {/* Floating Location Details Card */}
-                <div className="absolute z-10 bottom-6 left-6 bg-white/95 border border-slate-200 shadow-xl rounded-2xl p-5 max-w-sm text-left text-slate-800 flex flex-col gap-3 animate-fadeIn backdrop-blur-xs">
-                  <div className="flex items-start gap-3.5">
-                    <MapPin className="h-5.5 w-5.5 text-red-500 shrink-0 mt-0.5" />
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-black text-sm text-[#001c41]">{business.name}</span>
-                      <span className="text-xs text-slate-500 font-semibold leading-relaxed mt-1.5">{business.address}</span>
+                {/* Floating Location Details Card (Centered layout) */}
+                <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none p-4">
+                  <div className="bg-white/95 border border-slate-200 shadow-xl rounded-2xl p-5 max-w-sm w-full text-center text-slate-800 flex flex-col items-center justify-center gap-3.5 animate-fadeIn backdrop-blur-xs pointer-events-auto">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="bg-red-50 p-2 rounded-full shrink-0">
+                        <MapPin className="h-5.5 w-5.5 text-red-500" />
+                      </div>
+                      <span className="font-black text-sm text-[#001c41] leading-snug">{business.name}</span>
+                      <span className="text-xs text-slate-500 font-semibold leading-relaxed">{business.address}</span>
                     </div>
+
+                    {/* Phone & Email below Address */}
+                    <div className="flex flex-col gap-2 w-full border-t border-slate-100 pt-3 text-xs text-slate-600 font-semibold">
+                      {getDisplayPhone() && (
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Phone className="h-3.5 w-3.5 text-emerald-600" />
+                          <a href={`tel:${getDisplayPhone()}`} className="hover:text-emerald-700 hover:underline text-slate-800 font-extrabold">
+                            {getDisplayPhone()}
+                          </a>
+                        </div>
+                      )}
+                      {getDisplayEmail() && (
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Mail className="h-3.5 w-3.5 text-emerald-600" />
+                          <a href={`mailto:${getDisplayEmail()}`} className="hover:text-emerald-700 hover:underline text-slate-800 font-extrabold break-all">
+                            {getDisplayEmail()}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Google Maps directions URL — completely free, no API key needed */}
+                    <a 
+                      href={directionsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => trackClick('directions')}
+                      className="mt-1 py-2 px-5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl text-center uppercase tracking-wider transition-colors shadow-sm self-center"
+                    >
+                      Get Directions
+                    </a>
                   </div>
-                  {/* Google Maps directions URL — completely free, no API key needed */}
-                  <a 
-                    href={directionsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => trackClick('directions')}
-                    className="mt-1 py-2 px-4 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl text-center uppercase tracking-wider transition-colors shadow-sm self-start"
-                  >
-                    Get Directions
-                  </a>
                 </div>
               </div>
             </div>
