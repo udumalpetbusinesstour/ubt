@@ -7526,12 +7526,15 @@ Team Udumalpet Business
             {/* Modal Scrollable Body */}
             <div className="p-4 sm:p-6 flex-grow overflow-y-auto flex flex-col gap-6">
               
-              {/* Cover Image */}
-              <div className="h-44 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-2xs relative bg-slate-50 shrink-0 flex items-center justify-center">
-                {selectedBiz.coverImageUrl ? (
-                  <img src={window.getImageUrl(selectedBiz.coverImageUrl)} className="w-full h-full object-cover" alt={selectedBiz.name} />
+              {/* Business Logo (instead of cover) */}
+              <div className="h-44 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-2xs relative bg-slate-50/80 shrink-0 flex items-center justify-center p-4">
+                {selectedBiz.logoUrl ? (
+                  <img src={window.getImageUrl(selectedBiz.logoUrl)} className="h-full max-w-full object-contain rounded-xl" alt={selectedBiz.name} />
                 ) : (
-                  <span className="text-slate-400 font-extrabold text-[10px] uppercase tracking-wider select-none">No Cover Photo</span>
+                  <div className="flex flex-col items-center gap-2 text-slate-400 select-none">
+                    <Store className="h-10 w-10 text-slate-350" />
+                    <span className="font-extrabold text-[10px] uppercase tracking-wider">No Logo Provided</span>
+                  </div>
                 )}
               </div>
 
