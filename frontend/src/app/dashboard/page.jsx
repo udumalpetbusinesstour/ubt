@@ -2195,6 +2195,13 @@ function DashboardContent() {
 
   const handleSwitchBusiness = async (bizId) => {
     if (!bizId || (business && business._id === bizId)) return;
+
+    if (isAdminOverride) {
+      const nextParams = new URLSearchParams(window.location.search);
+      nextParams.set('bizId', bizId);
+      setSearchParams(nextParams);
+    }
+
     setLoading(true);
     try {
       const activeToken = token || localStorage.getItem('ubt_token');
@@ -4489,9 +4496,6 @@ function DashboardContent() {
     ] : [
       { label: 'Dashboard', icon: <Briefcase className="h-4 w-4" /> }
     ]),
-    ...((user?.role === 'admin' || user?.role === 'superadmin') ? [
-      { label: 'Add New Listing', icon: <Plus className="h-4 w-4" />, onClick: () => navigate('/add-business?new=true') }
-    ] : []),
     { label: 'Events', icon: <Calendar className="h-4 w-4" /> },
     { label: 'My Blogs', icon: <FileEdit className="h-4 w-4" /> },
     { label: 'Settings', icon: <Settings className="h-4 w-4" /> },
@@ -4568,7 +4572,7 @@ function DashboardContent() {
                     value={business._id}
                     onChange={(e) => {
                       const selected = allBusinesses.find(b => b._id === e.target.value);
-                      if (selected) handleSwitchBusiness(selected);
+                      if (selected) handleSwitchBusiness(selected._id);
                     }}
                     className="w-full bg-slate-800/80 border border-slate-700/80 text-white rounded-xl py-1.5 px-2.5 text-[11px] font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
                   >
