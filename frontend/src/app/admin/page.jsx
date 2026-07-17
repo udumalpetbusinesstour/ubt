@@ -1982,18 +1982,21 @@ Team Udumalpet Business
       return;
     }
 
-    const businessLink = `https://udumalpet.business/businesses/${selectedBiz.slug || selectedBiz._id}`;
+    const businessSlug = selectedBiz.slug || selectedBiz._id;
 
-    const message = `Hi! 👋
+    const message = `🎉 *Congratulations! Your business profile has been approved.*
 
-Great news! Your listing *${selectedBiz.name}* has been verified and approved on Udumalpet Business! 🎉
+*Welcome to the Udumalpet Business community! Your business is now live on our platform.*
 
-You can view your live profile here:
-🌐 ${businessLink}
+🔗 View your profile:
+https://udumalpet.business/${businessSlug}
 
-Start sharing your business listing to connect with more customers in Udumalpet! 🚀
+*🤝 Let's build a stronger business community together. Support fellow businesses by inviting them to join Udumalpet Business. Your unique referral link is available in your Dashboard.*
 
-Thank you!
+*📞 Need help? Contact our official WhatsApp support team at +91 89257 28260 for any assistance with your business profile.*
+
+*Thank you for being part of our journey. Let's grow together and make Udumalpet stronger, one business at a time! 🚀*
+
 Team Udumalpet Business
 🌐 https://udumalpet.business`;
 
