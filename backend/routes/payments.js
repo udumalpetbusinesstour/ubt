@@ -77,12 +77,15 @@ router.post('/create-order', protect, async (req, res) => {
 
     // Resolve Razorpay Plan ID
     let planId;
+    let totalCount = 130; // Default 10 years for 28-day monthly plan (130 cycles * 28 days = ~10 years)
     if (planType && (planType.toLowerCase() === 'monthly' || planType.toLowerCase().includes('monthly'))) {
-      const rawPlanId = process.env.RAZORPAY_MONTHLY_PLAN_ID || 'plan_T2gPOtzN9SzA22';
+      const rawPlanId = process.env.RAZORPAY_MONTHLY_PLAN_ID || 'plan_TB0VaZLqUpuHx8';
       planId = rawPlanId.trim().replace(/['"]/g, '');
+      totalCount = 130; // 130 cycles of 28 days = ~10 Years
     } else if (planType && (planType.toLowerCase() === 'yearly' || planType.toLowerCase().includes('yearly'))) {
-      const rawPlanId = process.env.RAZORPAY_YEARLY_PLAN_ID || 'plan_T2gQxHxwqMigsk';
+      const rawPlanId = process.env.RAZORPAY_YEARLY_PLAN_ID || 'plan_TB0YPowZqKZjjv';
       planId = rawPlanId.trim().replace(/['"]/g, '');
+      totalCount = 10; // 10 cycles of 365 days = 10 Years
     }
 
     let isMock = false;
@@ -92,27 +95,29 @@ router.post('/create-order', protect, async (req, res) => {
 
     const finalAmount = Math.round((planPrice - discountAmountRupees) * 100);
 
-    let orderObj;
+    let subObj;
     if (!isMock) {
       try {
-        orderObj = await razorpay.orders.create({
-          amount: finalAmount,
-          currency: 'INR',
-          receipt: `rcpt_sub_${businessId.toString().slice(-6)}_${Date.now()}`,
+        subObj = await razorpay.subscriptions.create({
+          plan_id: planId,
+          total_count: totalCount,
+          quantity: 1,
+          customer_notify: 1,
           notes: {
             businessId: businessId.toString(),
+            userId: req.user._id.toString(),
             planType: planType
           }
         });
       } catch (err) {
-        console.error('Razorpay SDK Order creation failed. Error details:', err.message);
+        console.error('Razorpay SDK Subscription creation failed. Error details:', err.message);
         isMock = true;
       }
     }
 
-    if (isMock) {
-      orderObj = {
-        id: 'order_mock_' + Math.random().toString(36).substr(2, 9),
+    if (isMock || !subObj) {
+      subObj = {
+        id: 'sub_mock_' + Math.random().toString(36).substr(2, 9),
         status: 'created'
       };
     }
@@ -132,17 +137,19 @@ router.post('/create-order', protect, async (req, res) => {
       amountPaid: planPrice - discountAmountRupees,
       referralDiscount: discountAmountRupees,
       status: 'pending',
-      razorpayOrderId: orderObj.id,
+      razorpaySubscriptionId: subObj.id,
+      razorpayOrderId: subObj.id,
       startDate,
       endDate,
       expiryDate: endDate,
-      autoRenew: false
+      autoRenew: true
     });
 
     res.json({
       success: true,
-      isSubscription: false,
-      orderId: orderObj.id,
+      isSubscription: true,
+      subscriptionId: subObj.id,
+      orderId: subObj.id,
       amount: finalAmount,
       currency: 'INR',
       keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_mockKeyId12345',
