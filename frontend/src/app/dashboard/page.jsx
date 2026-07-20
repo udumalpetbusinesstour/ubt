@@ -6386,7 +6386,7 @@ function DashboardContent() {
                 )}
 
                 {/* Premium Header Banner (Cover Image) */}
-                <section className="w-full relative bg-[#001c41] text-white py-12 px-6 rounded-3xl overflow-hidden border border-slate-800/20">
+                <section className="w-full relative bg-gradient-to-r from-[#027244] via-emerald-600 to-amber-400 text-white py-12 px-6 rounded-3xl overflow-hidden border border-emerald-800/20">
                   <div
                     className="absolute inset-0 bg-cover"
                     style={{

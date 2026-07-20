@@ -1630,7 +1630,7 @@ Please confirm availability and delivery time.`;
       )}
 
       {/* Premium Header Banner (Matching Image 5) */}
-      <section className="w-full relative bg-[#001c41] text-white py-14 px-4 border-b border-slate-800/60 overflow-hidden">
+      <section className="w-full relative bg-gradient-to-r from-[#027244] via-emerald-600 to-amber-400 text-white py-14 px-4 border-b border-emerald-800/60 overflow-hidden">
         {/* Background Image opacity filter */}
         <div 
           className="absolute inset-0 bg-cover" 
@@ -1640,7 +1640,7 @@ Please confirm availability and delivery time.`;
             opacity: 0.85
           }} 
         />
-        {/* Sleek dark shadow gradient bottom-up - Adjusted opacity to allow cover to show */}
+        {/* Sleek dark shadow gradient bottom-up */}
         <div className="absolute inset-0 bg-black/15 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
         
         {mediaError && (
