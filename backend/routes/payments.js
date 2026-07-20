@@ -91,41 +91,27 @@ router.post('/create-order', protect, async (req, res) => {
 
     const finalAmount = Math.round((planPrice - discountAmountRupees) * 100);
 
-    let subscriptionObj;
+    let orderObj;
     if (!isMock) {
       try {
-        // Dynamically compute the maximum possible cycles to prevent exceeding Razorpay's Dec 31, 2120 limit in future years
-        const maxYear = 2120;
-        const currentYear = new Date().getFullYear();
-        const remainingYears = Math.max(1, maxYear - currentYear);
-        
-        let totalCount;
-        if (planType.toLowerCase() === 'monthly' || planType.toLowerCase().includes('monthly')) {
-          const remainingMonths = remainingYears * 12 + (11 - new Date().getMonth());
-          totalCount = Math.min(1100, Math.max(12, remainingMonths - 5));
-        } else {
-          totalCount = Math.min(90, Math.max(2, remainingYears - 2));
-        }
-
-        subscriptionObj = await razorpay.subscriptions.create({
-          plan_id: planId,
-          total_count: totalCount,
-          quantity: 1,
-          customer_notify: 1,
+        orderObj = await razorpay.orders.create({
+          amount: finalAmount,
+          currency: 'INR',
+          receipt: `rcpt_sub_${businessId.toString().slice(-6)}_${Date.now()}`,
           notes: {
             businessId: businessId.toString(),
             planType: planType
           }
         });
       } catch (err) {
-        console.error('Razorpay Subscription SDK creation failed. Error details:', err.message);
+        console.error('Razorpay SDK Order creation failed. Error details:', err.message);
         isMock = true;
       }
     }
 
     if (isMock) {
-      subscriptionObj = {
-        id: 'sub_mock_' + Math.random().toString(36).substr(2, 9),
+      orderObj = {
+        id: 'order_mock_' + Math.random().toString(36).substr(2, 9),
         status: 'created'
       };
     }
@@ -145,17 +131,17 @@ router.post('/create-order', protect, async (req, res) => {
       amountPaid: planPrice - discountAmountRupees,
       referralDiscount: discountAmountRupees,
       status: 'pending',
-      razorpaySubscriptionId: subscriptionObj.id,
+      razorpayOrderId: orderObj.id,
       startDate,
       endDate,
       expiryDate: endDate,
-      autoRenew: true
+      autoRenew: false
     });
 
     res.json({
       success: true,
-      isSubscription: true,
-      subscriptionId: subscriptionObj.id,
+      isSubscription: false,
+      orderId: orderObj.id,
       amount: finalAmount,
       currency: 'INR',
       keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_mockKeyId12345',
