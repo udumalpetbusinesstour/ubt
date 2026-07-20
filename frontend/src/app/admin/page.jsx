@@ -4110,16 +4110,57 @@ Team Udumalpet Business
                                     }
                                     if (Array.isArray(val)) {
                                       return (
-                                        <div className="flex flex-wrap gap-1">
-                                          {val.map((item, idx) => (
-                                            <span key={idx} className="bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-md text-[10px]">
-                                              {item && typeof item === 'object'
-                                                ? (item.authorName && item.text 
-                                                    ? `${item.authorName}: ${item.text}` 
-                                                    : (item.categoryName || item.name || JSON.stringify(item)))
-                                                : String(item)}
-                                            </span>
-                                          ))}
+                                        <div className="flex flex-col gap-2 w-full text-left">
+                                          {val.map((item, idx) => {
+                                            if (!item) return null;
+                                            if (typeof item !== 'object') {
+                                              return (
+                                                <span key={idx} className="bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-md text-[10px] w-fit font-bold">
+                                                  {String(item)}
+                                                </span>
+                                              );
+                                            }
+
+                                            // Search if it contains an image field
+                                            const imageKey = Object.keys(item).find(k => ['image', 'imageUrl', 'banner', 'logoUrl'].includes(k));
+                                            const imageUrl = imageKey ? item[imageKey] : null;
+
+                                            return (
+                                              <div key={idx} className="bg-slate-50 border border-slate-200/60 rounded-2xl p-3 flex items-start gap-3.5 text-[10.5px] leading-relaxed text-slate-600 w-full max-w-md shadow-3xs">
+                                                {imageUrl && (
+                                                  <a href={window.getImageUrl(imageUrl)} target="_blank" rel="noopener noreferrer" className="shrink-0 mt-0.5">
+                                                    <img 
+                                                      src={window.getImageUrl(imageUrl)} 
+                                                      className="h-10 w-10 object-cover rounded-xl border border-slate-200 shadow-2xs" 
+                                                      alt="preview" 
+                                                      onError={(e) => { e.target.onerror = null; e.target.src = '/default_cover.jpg'; }} 
+                                                    />
+                                                  </a>
+                                                )}
+                                                <div className="flex-1 flex flex-col gap-0.5">
+                                                  {Object.entries(item).map(([k, v]) => {
+                                                    if (['_id', 'id', imageKey].includes(k) || v === null || v === undefined || v === '') return null;
+                                                    
+                                                    let valStr = String(v);
+                                                    if (typeof v === 'boolean') {
+                                                      valStr = v ? 'Yes' : 'No';
+                                                    } else if (k.toLowerCase().includes('date') || k.toLowerCase().includes('expiry')) {
+                                                      try {
+                                                        valStr = new Date(v).toLocaleDateString();
+                                                      } catch (e) {}
+                                                    }
+
+                                                    return (
+                                                      <div key={k} className="flex gap-1.5 flex-wrap">
+                                                        <span className="font-extrabold text-slate-700 capitalize shrink-0">{k.replace(/([A-Z])/g, ' $1')}:</span>
+                                                        <span className="text-slate-500 break-all">{valStr}</span>
+                                                      </div>
+                                                    );
+                                                  })}
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
                                         </div>
                                       );
                                     }
