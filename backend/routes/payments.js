@@ -94,7 +94,7 @@ router.post('/create-order', protect, async (req, res) => {
     let subscriptionObj;
     if (!isMock) {
       try {
-        const totalCount = (planType.toLowerCase() === 'monthly' || planType.toLowerCase().includes('monthly')) ? 120 : 10;
+        const totalCount = (planType.toLowerCase() === 'monthly' || planType.toLowerCase().includes('monthly')) ? 1100 : 90;
         subscriptionObj = await razorpay.subscriptions.create({
           plan_id: planId,
           total_count: totalCount,
