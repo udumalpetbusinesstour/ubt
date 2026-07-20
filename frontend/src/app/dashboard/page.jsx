@@ -10179,7 +10179,7 @@ function DashboardContent() {
               </div>
 
               {/* Cards Grid */}
-              <div key={selectedPlan} className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 w-full animate-fadeIn">
+              <div key={selectedPlan} className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-5 mt-6 w-full animate-fadeIn">
                 {paymentPlans.map((p) => {
                   const isSelected = selectedPlan === p.name || (selectedPlan === 'Monthly' && p.type === 'Monthly') || (selectedPlan === 'Yearly' && p.type === 'Yearly');
                   const defaultFeatures = [
@@ -10194,7 +10194,7 @@ function DashboardContent() {
                     <div
                       key={p._id || p.id}
                       onClick={() => handlePlanSelect(p.name)}
-                      className={`bg-white border-2 rounded-[20px] p-4.5 pt-7 flex flex-col justify-between items-center text-center shadow-md relative transition-all duration-300 cursor-pointer ${isSelected
+                      className={`bg-white border-2 rounded-[20px] p-5 pt-8 flex flex-col justify-between items-center text-center shadow-md relative transition-all duration-300 cursor-pointer ${isSelected
                         ? 'border-[#027244] ring-2 ring-emerald-100 bg-emerald-50/5'
                         : 'border-slate-250 hover:border-[#027244]/50'
                         }`}

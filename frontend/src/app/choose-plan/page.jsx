@@ -685,7 +685,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
         )}
 
         {/* Cards Grid */}
-        <div className={`grid grid-cols-1 ${plans.length === 1 ? 'max-w-md mx-auto w-full' : plans.length === 2 ? 'md:grid-cols-2 max-w-3xl mx-auto w-full' : 'md:grid-cols-3 max-w-5xl w-full'} gap-6 mt-4`}>
+        <div className={`grid grid-cols-1 ${plans.length === 1 ? 'max-w-md mx-auto w-full' : plans.length === 2 ? 'md:grid-cols-2 max-w-3xl mx-auto w-full' : 'md:grid-cols-3 max-w-5xl w-full'} gap-8 md:gap-6 mt-6`}>
           {plans
             .filter(p => flowParam !== 'early_access' || p.type === 'Yearly')
             .map((p) => {
@@ -703,7 +703,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                 <div 
                   key={p._id || p.id}
                   onClick={() => handlePlanSelect(p.name)}
-                  className={`bg-white border-2 rounded-[24px] p-6 flex flex-col justify-between items-center text-center shadow-md relative transition-all duration-300 cursor-pointer ${
+                  className={`bg-white border-2 rounded-[24px] p-6 pt-8 flex flex-col justify-between items-center text-center shadow-md relative transition-all duration-300 cursor-pointer ${
                     isSelected
                       ? 'border-[#027244] ring-2 ring-emerald-100 bg-emerald-50/5'
                       : 'border-slate-200 hover:border-[#027244]/50'
