@@ -1630,18 +1630,17 @@ Please confirm availability and delivery time.`;
       )}
 
       {/* Premium Header Banner (Matching Image 5) */}
-      <section className="w-full relative bg-gradient-to-r from-[#002211] via-[#013b1f] to-[#664d00] text-white py-14 px-4 border-b border-emerald-950/80 overflow-hidden">
+      <section className="w-full relative bg-[#0f2e46] text-white py-14 px-4 border-b border-slate-800/60 overflow-hidden">
         {/* Background Image opacity filter */}
         <div 
-          className="absolute inset-0 bg-cover" 
+          className="absolute inset-0 bg-cover bg-center" 
           style={{ 
             backgroundImage: `url('/default_business_cover.png')`,
-            backgroundPosition: 'center',
-            opacity: 0.8
+            opacity: 0.95
           }} 
         />
-        {/* Sleek dark shadow gradient bottom-up */}
-        <div className="absolute inset-0 bg-black/25 bg-gradient-to-t from-black/65 via-black/25 to-transparent" />
+        {/* Soft gradient overlay so text remains 100% readable */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/40 to-slate-900/10" />
         
         {mediaError && (
           <div className="absolute top-4 left-4 right-4 bg-red-600 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl text-center z-30 shadow flex items-center justify-center gap-2 animate-fadeIn">

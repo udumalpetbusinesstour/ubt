@@ -6386,15 +6386,15 @@ function DashboardContent() {
                 )}
 
                 {/* Premium Header Banner (Cover Image) */}
-                <section className="w-full relative bg-gradient-to-r from-[#002211] via-[#013b1f] to-[#664d00] text-white py-12 px-6 rounded-3xl overflow-hidden border border-emerald-950/40">
+                <section className="w-full relative bg-[#0f2e46] text-white py-12 px-6 rounded-3xl overflow-hidden border border-slate-800/40">
                   <div
-                    className="absolute inset-0 bg-cover"
+                    className="absolute inset-0 bg-cover bg-center"
                     style={{
                       backgroundImage: `url('/default_business_cover.png')`,
-                      backgroundPosition: 'center',
-                      opacity: 0.85
+                      opacity: 0.95
                     }}
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/40 to-slate-900/10" />
 
                   <div className={`relative flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10 transition-opacity duration-300 ${isRepositioning ? 'opacity-10 pointer-events-none' : 'opacity-100'}`}>
                     <div className="flex flex-col gap-3 text-left w-full drop-shadow-[0_4px_8px_rgba(0,0,0,0.95)]">
