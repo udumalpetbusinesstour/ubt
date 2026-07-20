@@ -57,9 +57,9 @@ router.post('/create-order', protect, async (req, res) => {
     } else {
       // Fallback
       if (planType === 'Monthly') {
-        planPrice = 99;
+        planPrice = 116.82;
       } else if (planType === 'Yearly') {
-        planPrice = 999;
+        planPrice = 1178.82;
       } else {
         return res.status(400).json({ success: false, message: 'Invalid plan type' });
       }
@@ -94,7 +94,7 @@ router.post('/create-order', protect, async (req, res) => {
     let subscriptionObj;
     if (!isMock) {
       try {
-        const totalCount = (planType.toLowerCase() === 'monthly' || planType.toLowerCase().includes('monthly')) ? 60 : 5;
+        const totalCount = (planType.toLowerCase() === 'monthly' || planType.toLowerCase().includes('monthly')) ? 1300 : 100;
         subscriptionObj = await razorpay.subscriptions.create({
           plan_id: planId,
           total_count: totalCount,
@@ -453,7 +453,7 @@ router.post('/verify-payment', protect, async (req, res) => {
     }
     const endDate = new Date(startDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
 
-    let baseAmount = isAdminUser ? 0 : (dbPlan ? dbPlan.price : (planType === 'Monthly' ? 99 : 999));
+    let baseAmount = isAdminUser ? 0 : (dbPlan ? dbPlan.price : (planType === 'Monthly' ? 116.82 : 1178.82));
     if (isPublicSector) {
       baseAmount = 0;
     }
@@ -584,8 +584,8 @@ router.post('/create-event-order', protect, async (req, res) => {
     
     const isAdminUser = req.user && (req.user.role === 'admin' || req.user.role === 'superadmin');
     
-    // Waived to 0 if business subscriber exists or user is admin, standard fee is ₹99 otherwise
-    const amount = (activeBusiness || isAdminUser) ? 0 : 99 * 100; // in paise
+    // Waived to 0 if business subscriber exists or user is admin, standard fee is ₹116.82 otherwise
+    const amount = (activeBusiness || isAdminUser) ? 0 : 11682; // in paise (₹116.82)
 
     if (amount === 0) {
       return res.json({
@@ -713,7 +713,7 @@ router.post('/verify-event-payment', protect, async (req, res) => {
         paymentId: razorpayPaymentId || 'pay_mock_' + Math.random().toString(36).substr(2, 9),
         razorpayOrderId: razorpayOrderId,
         razorpayPaymentId: razorpayPaymentId || 'pay_mock_' + Math.random().toString(36).substr(2, 9),
-        amount: 99,
+        amount: 116.82,
         paymentMethod: 'UPI',
         status: 'Paid',
         paymentStatus: 'Paid',
@@ -737,7 +737,7 @@ router.post('/verify-event-payment', protect, async (req, res) => {
         businessName: bizName,
         monthlyPaid: 0,
         yearlyPaid: 0,
-        eventPaid: event.paymentStatus === 'Free' ? 0 : 99,
+        eventPaid: event.paymentStatus === 'Free' ? 0 : 116.82,
         addPaid: 0,
         sheetName: 'Income Tracker New'
       });
@@ -938,8 +938,8 @@ router.post('/webhook', async (req, res) => {
             await appendToIncomeTracker({
               businessId: localSub.businessId,
               businessName: business ? business.name : 'Unknown Business',
-              monthlyPaid: (planNameStr.includes('monthly') || amount === 99) ? amount : 0,
-              yearlyPaid: (planNameStr.includes('yearly') || amount === 999) ? amount : 0,
+              monthlyPaid: (planNameStr.includes('monthly') || amount === 99 || amount === 116.82) ? amount : 0,
+              yearlyPaid: (planNameStr.includes('yearly') || amount === 999 || amount === 1178.82) ? amount : 0,
               eventPaid: 0,
               addPaid: 0,
               sheetName: targetSheetName
@@ -1092,8 +1092,8 @@ router.post('/webhook', async (req, res) => {
               await appendToIncomeTracker({
                 businessId: subscription.businessId,
                 businessName: business.name,
-                monthlyPaid: (planNameStr.includes('monthly') || amount === 99) ? amount : 0,
-                yearlyPaid: (planNameStr.includes('yearly') || amount === 999) ? amount : 0,
+                monthlyPaid: (planNameStr.includes('monthly') || amount === 99 || amount === 116.82) ? amount : 0,
+                yearlyPaid: (planNameStr.includes('yearly') || amount === 999 || amount === 1178.82) ? amount : 0,
                 eventPaid: 0,
                 addPaid: 0,
                 sheetName: 'Income Tracker New'
@@ -1315,7 +1315,7 @@ router.post('/create-sponsored-ad-order', protect, async (req, res) => {
       isMock = true;
     }
 
-    const finalAmount = 99 * 100; // ₹99 in paise
+    const finalAmount = 11682; // ₹116.82 in paise (11682 paise)
 
     let order;
     if (!isMock) {
@@ -1416,7 +1416,7 @@ router.post('/verify-sponsored-ad-payment', protect, async (req, res) => {
         businessId: business._id,
         paymentId: razorpayPaymentId || `pay_mock_ad_${Math.random().toString(36).substr(2, 9)}`,
         orderId: razorpayOrderId,
-        amount: 99,
+        amount: 116.82,
         status: 'Paid',
         paymentStatus: 'Paid',
         planType: 'Sponsored Ad Promotion',
@@ -1426,7 +1426,7 @@ router.post('/verify-sponsored-ad-payment', protect, async (req, res) => {
         paidAt: new Date()
       });
 
-      // Append to Google Sheets Income Tracker (Ad / Add-on = 99)
+      // Append to Google Sheets Income Tracker (Ad / Add-on = 116.82)
       const { appendToIncomeTracker } = require('../services/sheetsService');
       await appendToIncomeTracker({
         businessId: business._id,
@@ -1434,7 +1434,7 @@ router.post('/verify-sponsored-ad-payment', protect, async (req, res) => {
         monthlyPaid: 0,
         yearlyPaid: 0,
         eventPaid: 0,
-        addPaid: 99,
+        addPaid: 116.82,
         sheetName: 'Income Tracker New'
       });
     } catch (payErr) {

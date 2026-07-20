@@ -28,13 +28,13 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
 
   // Plan Selection states
   const [plans, setPlans] = useState([
-    { _id: 'monthly', name: 'Monthly Premium Plan', type: 'Monthly', price: 99, durationDays: 28, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing', 'Access to Udumalpet Business WhatsApp Group'], isActive: true },
-    { _id: 'yearly', name: 'Yearly Premium Plan', type: 'Yearly', price: 999, durationDays: 365, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing', 'Access to Udumalpet Business WhatsApp Group'], isActive: true, isOffer: true, offerText: 'Save 2 Months' }
+    { _id: 'monthly', name: 'Monthly Premium Plan', type: 'Monthly', price: 116.82, durationDays: 28, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing', 'Access to Udumalpet Business WhatsApp Group'], isActive: true },
+    { _id: 'yearly', name: 'Yearly Premium Plan', type: 'Yearly', price: 1178.82, durationDays: 365, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing', 'Access to Udumalpet Business WhatsApp Group'], isActive: true, isOffer: true, offerText: 'Save 2 Months' }
   ]);
   const [selectedPlan, setSelectedPlan] = useState('Yearly Premium Plan'); // default to Yearly
   const [activeFaq, setActiveFaq] = useState(null);
-  const [monthlyPrice, setMonthlyPrice] = useState(99);
-  const [yearlyPrice, setYearlyPrice] = useState(999);
+  const [monthlyPrice, setMonthlyPrice] = useState(116.82);
+  const [yearlyPrice, setYearlyPrice] = useState(1178.82);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('ubt_token');
@@ -164,7 +164,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
           }
         }
       } catch (err) {
-        console.warn('Could not fetch active plan prices, using default values (₹99 / ₹999).', err);
+        console.warn('Could not fetch active plan prices, using default values (₹116.82 / ₹1178.82).', err);
       }
     } catch (err) {
       console.error('Failed initialization:', err);
@@ -176,7 +176,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
 
   const getSelectedPlanPrice = () => {
     const activePlan = plans.find(p => p.name === selectedPlan || p.type === selectedPlan);
-    return activePlan ? activePlan.price : 99;
+    return activePlan ? activePlan.price : 116.82;
   };
 
   const handlePlanSelect = (planName) => {
@@ -733,16 +733,35 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                     
                     <div className="flex flex-col gap-1">
                       <h3 className="font-extrabold text-slate-800 text-base">{p.name ? p.name.replace(/\b\w/g, c => c.toUpperCase()) : ''}</h3>
-                      <div className="flex items-baseline justify-center gap-1.5 mt-1">
-                        <span className="text-3xl font-extrabold text-[#001c41]">
-                          ₹{user && (user.role === 'admin' || user.role === 'superadmin') ? p.price : getDiscountedPrice(p.price)}
-                        </span>
-                        <span className="text-xs text-slate-400 font-semibold">/ {p.durationDays} Days</span>
-                      </div>
+                      {(() => {
+                        const rawPrice = user && (user.role === 'admin' || user.role === 'superadmin') ? p.price : getDiscountedPrice(p.price);
+                        const numPrice = parseFloat(rawPrice);
+                        const basePriceVal = numPrice / 1.18;
+                        const gstVal = numPrice - basePriceVal;
+                        
+                        const baseStr = basePriceVal % 1 === 0 ? basePriceVal.toFixed(0) : basePriceVal.toFixed(2);
+                        const gstStr = gstVal.toFixed(2);
+
+                        return (
+                          <div className="flex flex-col items-center justify-center mt-1">
+                            <div className="flex items-baseline justify-center gap-1">
+                              <span className="text-3xl font-extrabold text-[#001c41]">
+                                ₹{baseStr}
+                              </span>
+                              <span className="text-xs text-slate-400 font-semibold ml-1">
+                                / {p.durationDays} Days
+                              </span>
+                            </div>
+                            <span className="text-[10.5px] text-slate-500 font-black mt-0.5 select-none">
+                              + ₹{gstStr} GST (18% included)
+                            </span>
+                          </div>
+                        );
+                      })()}
                       {p.type === 'Yearly' && (
                         <div className="flex items-center justify-center gap-2 text-[10px] font-black mt-0.5">
-                          <span className="text-slate-400 line-through">₹{monthlyPrice * 12}</span>
-                          <span className="text-[#027244] bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5 font-sans">Save ₹{(monthlyPrice * 12) - p.price}</span>
+                          <span className="text-slate-400 line-through">₹{(monthlyPrice * 12).toFixed(2)}</span>
+                          <span className="text-[#027244] bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5 font-sans">Save ₹{((monthlyPrice * 12) - p.price).toFixed(2)}</span>
                         </div>
                       )}
                       {p.description && (
@@ -989,7 +1008,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
               },
               {
                 q: 'Can I post multiple events?',
-                a: 'Yes, active Premium subscribers can post unlimited local events, sales, and announcements on UBT for free. Non-subscribers pay a standard fee of ₹99 per event listing.'
+                a: <span>Yes, active Premium subscribers can post unlimited local events, sales, and announcements on UBT for free. Non-subscribers pay a standard fee of ₹99 <span className="text-[10px] font-normal opacity-85">+ ₹17.82 GST</span> per event listing.</span>
               },
               {
                 q: 'Will my profile be removed if I don\'t renew?',

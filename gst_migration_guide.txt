@@ -1,0 +1,58 @@
+================================================================================
+           GUIDE: UPDATING SUBSCRIPTION PLAN PRICING & GST (18%) IN UBT
+================================================================================
+
+This guide outlines how the Monthly (₹116.82), Yearly (₹1178.82), Event (₹116.82), 
+and Sponsored Ad (₹116.82) plan amounts include 18% GST, and how the system supports 
+long-term automatic renewal without affecting existing subscribers.
+
+--------------------------------------------------------------------------------
+1. COMPATIBILITY FOR EXISTING REGISTRATIONS (NO IMPACT)
+--------------------------------------------------------------------------------
+- Razorpay Plan IDs are IMMUTABLE once created. 
+- Existing customers are subscribed to the OLD Plan IDs:
+  * Monthly: plan_TB0VaZLqUpuHx8 (₹99.00)
+  * Yearly: plan_TB0YPowZqKZjjv (₹999.00)
+- Razorpay will automatically continue renewing these active subscriptions at the 
+  old rates (₹99 and ₹999). They are NOT affected.
+- New signups will subscribe to the NEW Plan IDs at the new GST-inclusive rates.
+
+--------------------------------------------------------------------------------
+2. PLAN CONFIGURATIONS IN PRODUCTION
+--------------------------------------------------------------------------------
+
+NEW RAZORPAY PLAN IDS (IN `.env`):
+----------------------------------
+```env
+RAZORPAY_MONTHLY_PLAN_ID=plan_TFclqVHostjxNr
+RAZORPAY_YEARLY_PLAN_ID=plan_TFcmU2OaUiZPKr
+```
+
+GST-INCLUSIVE PRICING STRUCTURE:
+--------------------------------
+*   **Monthly Subscription**: ₹116.82 (Base: ₹99.00 + 18% GST: ₹17.82)
+*   **Yearly Subscription**: ₹1178.82 (Base: ₹999.00 + 18% GST: ₹179.82)
+*   **Event Promotion**: ₹116.82 (Base: ₹99.00 + 18% GST: ₹17.82)
+*   **Sponsored Ad**: ₹116.82 (Base: ₹99.00 + 18% GST: ₹17.82)
+
+--------------------------------------------------------------------------------
+3. ENSURING PERPETUAL AUTOPAY (UP TO 100 YEARS LIMIT)
+--------------------------------------------------------------------------------
+- Razorpay subscriptions require a defined `total_count` (billing cycles) at creation.
+- The maximum subscription active duration supported by Razorpay is 100 years.
+- To ensure renewals run until the user cancels, the code sets `total_count` to:
+  *   **Monthly Plan (4-Week Cycle)**: 1300 cycles (~100 years)
+  *   **Yearly Plan (1-Year Cycle)**: 100 cycles (100 years)
+
+--------------------------------------------------------------------------------
+4. REVENUE & STATS TRACKING COMPATIBILITY
+--------------------------------------------------------------------------------
+- **Database Sums**: The database dashboard calculates revenue by summing actual payments:
+  `const totalRevenue = paidPayments.reduce((sum, p) => sum + p.amount, 0);`
+  It sums whatever is paid (whether ₹99/₹999 for old users or ₹116.82/₹1178.82 for new users).
+- **Fallback Handlers**: The webhook listeners in `routes/payments.js` and cron summing logic 
+  in `sheetsService.js` support both values to ensure sheet logs are 100% accurate:
+  - Monthly: matches amount `99` OR `116.82`
+  - Yearly: matches amount `999` OR `1178.82`
+
+================================================================================

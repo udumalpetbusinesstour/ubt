@@ -13,7 +13,7 @@ const seedDefaultPlans = async () => {
         {
           name: 'Monthly Premium Plan',
           type: 'Monthly',
-          price: 99,
+          price: 116.82,
           durationDays: 28,
           description: 'Perfect for standard listing updates and regular local traffic.',
           isOffer: false,
@@ -24,7 +24,7 @@ const seedDefaultPlans = async () => {
         {
           name: 'Yearly Premium Plan',
           type: 'Yearly',
-          price: 999,
+          price: 1178.82,
           durationDays: 365,
           description: 'Maximize search priority, customer reviews visibility, and reach.',
           isOffer: true,
@@ -36,17 +36,17 @@ const seedDefaultPlans = async () => {
       console.log('Successfully seeded Monthly (28 days) & Yearly subscription plans in database.');
     } else {
       // Migrate old defaults to new default values if present
-      const monthly = await Plan.findOne({ type: 'Monthly' });
-      if (monthly && monthly.price === 69) {
-        monthly.price = 99;
+      const monthly = await Plan.findOne({ type: 'Monthly', isActive: true });
+      if (monthly && monthly.price !== 116.82) {
+        monthly.price = 116.82;
         await monthly.save();
-        console.log('Migrated existing Monthly Premium Plan price to ₹99.');
+        console.log('Migrated existing Monthly Premium Plan price to ₹116.82.');
       }
-      const yearly = await Plan.findOne({ type: 'Yearly' });
-      if (yearly && yearly.price === 690) {
-        yearly.price = 999;
+      const yearly = await Plan.findOne({ type: 'Yearly', isActive: true });
+      if (yearly && yearly.price !== 1178.82) {
+        yearly.price = 1178.82;
         await yearly.save();
-        console.log('Migrated existing Yearly Premium Plan price to ₹999.');
+        console.log('Migrated existing Yearly Premium Plan price to ₹1178.82.');
       }
     }
   } catch (error) {

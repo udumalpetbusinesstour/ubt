@@ -271,8 +271,7 @@ const appendToIncomeTracker = async ({ businessId, businessName, monthlyPaid = 0
             monthlyPaid,
             yearlyPaid,
             eventPaid,
-            addPaid,
-            businessId ? businessId.toString() : ''
+            addPaid
           ]
         ]
       }
@@ -299,7 +298,7 @@ const appendToIncomeTracker = async ({ businessId, businessName, monthlyPaid = 0
                       startRowIndex: rowIndex,
                       endRowIndex: rowIndex + 1,
                       startColumnIndex: 0,
-                      endColumnIndex: 8
+                      endColumnIndex: 7
                     },
                     cell: {
                       userEnteredFormat: {
@@ -360,14 +359,14 @@ const appendDailyTotalForTab = async (sheets, spreadsheetId, targetTab, payments
     } else if (payment.subscriptionId) {
       const sub = payment.subscriptionId;
       const planStr = (sub.plan || sub.planName || '').toLowerCase();
-      if (planStr.includes('monthly') || planStr.includes('plan_tb0vazlqupuhx8') || amt === 99) {
+      if (planStr.includes('monthly') || planStr.includes('plan_tb0vazlqupuhx8') || planStr.includes('plan_tfclqvhostjxnr') || amt === 99 || amt === 116.82) {
         monthlySum += amt;
       } else {
         yearlySum += amt;
       }
     } else {
-      if (amt === 99) monthlySum += 99;
-      else if (amt === 999) yearlySum += 999;
+      if (amt === 99 || amt === 116.82) monthlySum += amt;
+      else if (amt === 999 || amt === 1178.82) yearlySum += amt;
       else monthlySum += amt;
     }
   }
@@ -765,136 +764,9 @@ const appendExpenseWeeklyTotal = async () => {
 };
 
 const syncSheetBusinessName = async (businessId, businessName) => {
-  if (!businessId || !businessName || businessName === 'Unknown Business') return;
-  try {
-    let authConfig = {
-      scopes: [
-        'https://www.googleapis.com/auth/indexing',
-        'https://www.googleapis.com/auth/spreadsheets'
-      ]
-    };
-
-    if (process.env.GOOGLE_INDEXING_CREDENTIALS) {
-      try {
-        const credentials = JSON.parse(process.env.GOOGLE_INDEXING_CREDENTIALS);
-        authConfig.credentials = credentials;
-      } catch (jsonErr) {
-        console.error('[Google Sheets API] Failed to parse GOOGLE_INDEXING_CREDENTIALS env var:', jsonErr.message);
-      }
-    } else if (fs.existsSync(keyPath)) {
-      authConfig.keyFile = keyPath;
-    } else {
-      return;
-    }
-
-    const auth = new google.auth.GoogleAuth(authConfig);
-    const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: 'v4', auth: authClient });
-
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    if (!spreadsheetId) return;
-
-    const meta = await sheets.spreadsheets.get({ spreadsheetId });
-    const sheetsList = meta.data.sheets;
-
-    const targetTabs = ['Income Tracker(new)', 'Income tracker(autopay)'];
-    
-    // Fetch payments for this business to use in fallback matching
-    const Payment = require('../models/Payment');
-    const payments = await Payment.find({
-      businessId,
-      status: 'Paid'
-    });
-
-    const parsedPayments = payments.map(p => {
-      const pDate = new Date(new Date(p.paidAt || p.createdAt).toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-      return {
-        dateStr: `${pDate.getFullYear()}-${String(pDate.getMonth() + 1).padStart(2, '0')}-${String(pDate.getDate()).padStart(2, '0')}`,
-        amount: p.amount
-      };
-    });
-
-    for (const tab of sheetsList) {
-      const title = tab.properties.title;
-      const sheetId = tab.properties.sheetId;
-      
-      const normalizedTitle = title.toLowerCase().replace(/[\s\(\)\-_]/g, '');
-      const isTarget = targetTabs.some(t => t.toLowerCase().replace(/[\s\(\)\-_]/g, '') === normalizedTitle);
-      
-      if (isTarget) {
-        // Read columns A to H (A1:H1000)
-        const response = await sheets.spreadsheets.values.get({
-          spreadsheetId,
-          range: `'${title}'!A1:H1000`
-        });
-        
-        const rows = response.data.values || [];
-        const updates = [];
-        
-        rows.forEach((row, idx) => {
-          if (idx === 0) return; // skip header
-          
-          let isMatch = false;
-          // Match by businessId in Column H
-          if (row[7] && row[7].toString().trim() === businessId.toString().trim()) {
-            isMatch = true;
-          } else {
-            // Fallback match by Date and Amount if Column B is empty
-            const nameVal = row[1] ? row[1].trim() : '';
-            if (nameVal === '' || nameVal === 'Unknown Business') {
-              const rowDateVal = row[0] ? row[0].trim() : '';
-              let rowDateParsed = null;
-              if (rowDateVal.includes('/')) {
-                const [d, m, y] = rowDateVal.split('/').map(Number);
-                rowDateParsed = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-              } else if (rowDateVal.includes('-')) {
-                const [y, m, d] = rowDateVal.split('-').map(Number);
-                rowDateParsed = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-              }
-              
-              if (rowDateParsed) {
-                const rowAmount = parseFloat(row[2] || '0');
-                const matchedPay = parsedPayments.find(p => p.dateStr === rowDateParsed && Math.abs(p.amount - rowAmount) < 0.01);
-                if (matchedPay) {
-                  isMatch = true;
-                }
-              }
-            }
-          }
-          
-          if (isMatch) {
-            const currentName = row[1] ? row[1].trim() : '';
-            const currentBizId = row[7] ? row[7].trim() : '';
-            
-            if (currentName !== businessName || currentBizId !== businessId.toString()) {
-              console.log(`[Google Sheets API] Syncing name/id at row ${idx + 1} of sheet "${title}" to: "${businessName}" / "${businessId}"`);
-              updates.push({
-                range: `'${title}'!B${idx + 1}`,
-                values: [[businessName]]
-              });
-              updates.push({
-                range: `'${title}'!H${idx + 1}`,
-                values: [[businessId.toString()]]
-              });
-            }
-          }
-        });
-        
-        if (updates.length > 0) {
-          await sheets.spreadsheets.values.batchUpdate({
-            spreadsheetId,
-            resource: {
-              valueInputOption: 'USER_ENTERED',
-              data: updates
-            }
-          });
-          console.log(`[Google Sheets API] Successfully synchronized name and ID in sheet "${title}"`);
-        }
-      }
-    }
-  } catch (error) {
-    console.error('[Google Sheets API] Error updating business name in sheets:', error.message);
-  }
+  // Sync logic is disabled since business IDs are no longer stored in the spreadsheet.
+  console.log(`[Google Sheets API] syncSheetBusinessName called for "${businessName}" (disabled)`);
+  return;
 };
 
 module.exports = { appendToIncomeTracker, appendDailyTotal, appendExpenseWeeklyTotal, syncSheetBusinessName };

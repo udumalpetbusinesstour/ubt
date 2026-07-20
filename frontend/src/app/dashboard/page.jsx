@@ -314,8 +314,8 @@ function DashboardContent() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState(null);
-  const [monthlyPrice, setMonthlyPrice] = useState(99);
-  const [yearlyPrice, setYearlyPrice] = useState(999);
+  const [monthlyPrice, setMonthlyPrice] = useState(116.82);
+  const [yearlyPrice, setYearlyPrice] = useState(1178.82);
 
   // Support Queries states
   const [supportQueries, setSupportQueries] = useState([]);
@@ -490,8 +490,8 @@ function DashboardContent() {
   };
 
   const [paymentPlans, setPaymentPlans] = useState([
-    { _id: 'monthly', name: 'Monthly Premium Plan', type: 'Monthly', price: 99, durationDays: 28, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing'], isActive: true },
-    { _id: 'yearly', name: 'Yearly Premium Plan', type: 'Yearly', price: 999, durationDays: 365, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing'], isActive: true, isOffer: true, offerText: 'Save 2 Months' }
+    { _id: 'monthly', name: 'Monthly Premium Plan', type: 'Monthly', price: 116.82, durationDays: 28, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing'], isActive: true },
+    { _id: 'yearly', name: 'Yearly Premium Plan', type: 'Yearly', price: 1178.82, durationDays: 365, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing'], isActive: true, isOffer: true, offerText: 'Save 2 Months' }
   ]);
 
   const fetchPaymentPlans = async () => {
@@ -8232,7 +8232,11 @@ function DashboardContent() {
                                       ) : (
                                         <Sparkles className="h-3.5 w-3.5 fill-current text-white" />
                                       )}
-                                      {isAdExpired ? 'Repromote Flyer (₹99)' : 'Promote to Homepage (₹99)'}
+                                      {isAdExpired ? (
+                                        <span>Repromote Flyer (₹99 <span className="text-[8.5px] font-normal lowercase opacity-85">+ ₹17.82 gst</span>)</span>
+                                      ) : (
+                                        <span>Promote to Homepage (₹99 <span className="text-[8.5px] font-normal lowercase opacity-85">+ ₹17.82 gst</span>)</span>
+                                      )}
                                     </button>
                                   )}
 
@@ -10208,16 +10212,35 @@ function DashboardContent() {
                       <div className="flex flex-col items-center gap-2.5 w-full">
                         <div className="flex flex-col gap-0.5">
                           <h3 className="font-extrabold text-slate-800 text-sm">{p.name ? p.name.replace(/\b\w/g, c => c.toUpperCase()) : ''}</h3>
-                          <div className="flex items-baseline justify-center gap-1 mt-0.5">
-                            <span className="text-2xl font-extrabold text-[#001c41]">
-                              ₹{getDiscountedPrice(p.price)}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-semibold">/ {p.durationDays} Days</span>
-                          </div>
+                          {(() => {
+                            const rawPrice = getDiscountedPrice(p.price);
+                            const numPrice = parseFloat(rawPrice);
+                            const basePriceVal = numPrice / 1.18;
+                            const gstVal = numPrice - basePriceVal;
+                            
+                            const baseStr = basePriceVal % 1 === 0 ? basePriceVal.toFixed(0) : basePriceVal.toFixed(2);
+                            const gstStr = gstVal.toFixed(2);
+
+                            return (
+                              <div className="flex flex-col items-center justify-center mt-0.5">
+                                <div className="flex items-baseline justify-center gap-1">
+                                  <span className="text-2xl font-extrabold text-[#001c41]">
+                                    ₹{baseStr}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 font-semibold ml-1">
+                                    / {p.durationDays} Days
+                                  </span>
+                                </div>
+                                <span className="text-[9.5px] text-slate-500 font-black mt-0.5 select-none">
+                                  + ₹{gstStr} GST (18% included)
+                                </span>
+                              </div>
+                            );
+                          })()}
                           {p.type === 'Yearly' && (
                             <div className="flex items-center justify-center gap-1.5 text-[9px] font-black mt-0.5">
-                              <span className="text-slate-400 line-through">₹{monthlyPrice * 12}</span>
-                              <span className="text-[#027244] bg-emerald-50 border border-emerald-100 rounded px-1 py-0.2">Save ₹{(monthlyPrice * 12) - p.price}</span>
+                              <span className="text-slate-400 line-through">₹{(monthlyPrice * 12).toFixed(2)}</span>
+                              <span className="text-[#027244] bg-emerald-50 border border-emerald-100 rounded px-1 py-0.2">Save ₹{((monthlyPrice * 12) - p.price).toFixed(2)}</span>
                             </div>
                           )}
                           {p.description && (
@@ -11640,12 +11663,12 @@ function DashboardContent() {
             {business && business.subscriptionStatus === 'active' ? (
               <div className="bg-emerald-50 border border-emerald-250 rounded-2xl p-4 text-[10.5px] text-[#027244] font-semibold flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-                <span>Active Premium Subscription detected! You can list this event for 100% Free (no standard ₹99 charge).</span>
+                <span>Active Premium Subscription detected! You can list this event for 100% Free (no standard ₹99 <span className="text-[9.5px] font-normal opacity-85">+ ₹17.82 GST</span> charge).</span>
               </div>
             ) : (
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-[10.5px] text-amber-800 font-semibold flex items-center gap-2 animate-pulse">
                 <Info className="h-4 w-4 text-amber-600 shrink-0" />
-                <span>No active premium subscription detected. A standard ₹99 publishing fee applies to launch this event.</span>
+                <span>No active premium subscription detected. A standard ₹99 <span className="text-[9.5px] font-normal opacity-85">+ ₹17.82 GST</span> publishing fee applies to launch this event.</span>
               </div>
             )}
 

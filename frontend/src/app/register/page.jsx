@@ -366,7 +366,7 @@ export default function Register() {
                 },
                 { 
                   title: 'Affordable Pricing', 
-                  desc: 'List your event for just ₹99 per listing.',
+                  desc: <span>List your event for just ₹99 <span className="text-[9.5px] font-normal opacity-85">+ ₹17.82 GST</span> per listing.</span>,
                   icon: <Sparkles className="h-4.5 w-4.5 text-[#001c41]" />,
                   bg: 'bg-blue-50 border-blue-100/50'
                 },
