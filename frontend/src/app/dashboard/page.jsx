@@ -7,7 +7,7 @@ import { compressImage } from '@/utils/imageCompression';
 import {
   ShieldCheck, Sparkles, AlertTriangle, AlertCircle, Edit3, Image as ImageIcon,
   RefreshCw, Star, StarHalf, CreditCard, ChevronRight, ChevronLeft, ArrowLeft, Activity, PhoneCall,
-  MessageSquare, Plus, CheckCircle, Info, Bell, ExternalLink, Globe,
+  MessageSquare, MessageCircle, Plus, CheckCircle, Info, Bell, ExternalLink, Globe,
   Copy, Check, Share2, Gift, Upload, HelpCircle, Briefcase, Mail, Settings, Menu, X, Trash2, Search, Lock,
   FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin, LogOut, Facebook, Instagram, Phone, Users, Move, Utensils, Folder, Package
 } from 'lucide-react';
