@@ -8,7 +8,7 @@ import {
 export default function ReferralModal({ isOpen, onClose }) {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [yearlyPrice, setYearlyPrice] = useState(1178.82);
+  const [yearlyPrice, setYearlyPrice] = useState(999);
   const [topReferrers, setTopReferrers] = useState([
     { name: 'Lakshmi Textiles', referralsCount: 32 },
     { name: 'Sri Electricals', referralsCount: 27 },

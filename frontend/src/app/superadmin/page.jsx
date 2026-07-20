@@ -191,7 +191,7 @@ export default function SuperAdminDashboard() {
   const [newNotice, setNewNotice] = useState({ title: '', message: '', type: 'announcement' });
   const [noticeSuccess, setNoticeSuccess] = useState(false);
   const [newAdmin, setNewAdmin] = useState({ fullName: '', email: '', permissions: 'Full' });
-  const [newPlanPrice, setNewPlanPrice] = useState({ monthly: 116.82, yearly: 1178.82 });
+  const [newPlanPrice, setNewPlanPrice] = useState({ monthly: 99, yearly: 999 });
   const [editedPrices, setEditedPrices] = useState({});
   const [editingPlan, setEditingPlan] = useState(null);
 
@@ -307,8 +307,8 @@ export default function SuperAdminDashboard() {
 
   // Platform pricing & settings
   const [plans, setPlans] = useState([
-    { id: 'monthly', name: 'Monthly Premium Plan', price: 116.82, duration: '28 Days' },
-    { id: 'yearly', name: 'Yearly Premium Plan', price: 1178.82, duration: '365 Days' }
+    { id: 'monthly', name: 'Monthly Premium Plan', price: 99, duration: '28 Days' },
+    { id: 'yearly', name: 'Yearly Premium Plan', price: 999, duration: '365 Days' }
   ]);
 
   // System status metrics
@@ -9584,7 +9584,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   <div className="flex flex-col gap-0.5 border p-2.5 rounded-2xl dark:border-slate-805">
                     <span>Pricing Ticket Tier</span>
                     <span className={`text-sm font-black ${themeMode === 'dark' ? 'text-emerald-450' : 'text-[#027244]'}`}>
-                      {editingEvent.price === 0 ? 'Free Entry' : `₹${editingEvent.price || 116.82}`}
+                      {editingEvent.price === 0 ? 'Free Entry' : `₹${editingEvent.price || 99}`}
                       <span className="text-[10px] text-slate-450 font-bold ml-1.5">({editingEvent.paymentStatus || 'Paid'})</span>
                     </span>
                   </div>
@@ -9762,7 +9762,7 @@ const handlePartnerAction = async (partnerId, action) => {
                     <input 
                       type="number" 
                       required
-                      value={editingEvent.price === undefined ? 116.82 : editingEvent.price}
+                      value={editingEvent.price === undefined ? 99 : editingEvent.price}
                       onChange={(e) => setEditingEvent({ ...editingEvent, price: Number(e.target.value) })}
                       className={`w-full border p-2.5 rounded-xl text-xs font-semibold focus:outline-none ${
                         themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white focus:border-[#027244]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:border-[#027244]'

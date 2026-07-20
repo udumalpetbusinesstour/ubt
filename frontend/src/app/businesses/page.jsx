@@ -1541,8 +1541,8 @@ function BusinessesList() {
                 <h4 className="font-extrabold text-slate-800 text-sm mt-2">6. Subscription Plans</h4>
                 <p>Current subscription plans are:</p>
                 <ul className="list-disc pl-4 flex flex-col gap-1">
-                  <li>Monthly Plan – ₹116.82</li>
-                  <li>Yearly Plan – ₹1178.82</li>
+                  <li>Monthly Plan – ₹99</li>
+                  <li>Yearly Plan – ₹999</li>
                 </ul>
                 <p>Benefits may include: Dedicated Business Page, Digital Visiting Card, Business Dashboard, Blog Publishing, Event Listings, Offers Management, Priority Listing, and Customer Engagement Features. UBT reserves the right to modify subscription pricing. Existing subscriptions remain valid until their expiry date.</p>
                 

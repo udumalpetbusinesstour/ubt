@@ -314,8 +314,8 @@ function DashboardContent() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState(null);
-  const [monthlyPrice, setMonthlyPrice] = useState(116.82);
-  const [yearlyPrice, setYearlyPrice] = useState(1178.82);
+  const [monthlyPrice, setMonthlyPrice] = useState(99);
+  const [yearlyPrice, setYearlyPrice] = useState(999);
 
   // Support Queries states
   const [supportQueries, setSupportQueries] = useState([]);
@@ -490,8 +490,8 @@ function DashboardContent() {
   };
 
   const [paymentPlans, setPaymentPlans] = useState([
-    { _id: 'monthly', name: 'Monthly Premium Plan', type: 'Monthly', price: 116.82, durationDays: 28, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing'], isActive: true },
-    { _id: 'yearly', name: 'Yearly Premium Plan', type: 'Yearly', price: 1178.82, durationDays: 365, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing'], isActive: true, isOffer: true, offerText: 'Save 2 Months' }
+    { _id: 'monthly', name: 'Monthly Premium Plan', type: 'Monthly', price: 99, durationDays: 28, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing'], isActive: true },
+    { _id: 'yearly', name: 'Yearly Premium Plan', type: 'Yearly', price: 999, durationDays: 365, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing'], isActive: true, isOffer: true, offerText: 'Save 2 Months' }
   ]);
 
   const fetchPaymentPlans = async () => {

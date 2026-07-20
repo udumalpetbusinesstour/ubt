@@ -78,7 +78,7 @@ export default function EventsPage() {
 
   // Dynamic Pricing states
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
-  const [paymentPrice, setPaymentPrice] = useState(116.82); // Dynamic: 0 for active business subscribers, 116.82 for others
+  const [paymentPrice, setPaymentPrice] = useState(99); // Dynamic: 0 for active business subscribers, 99 for others
 
   // Dynamic Event Search Filters
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -170,12 +170,12 @@ export default function EventsPage() {
         setPaymentPrice(0);
       } else {
         setHasActiveSubscription(false);
-        setPaymentPrice(116.82);
+        setPaymentPrice(99);
       }
     } catch (err) {
       console.warn('Subscription check error, defaulting to paid standard charge.');
       setHasActiveSubscription(false);
-      setPaymentPrice(116.82);
+      setPaymentPrice(99);
     }
   };
 
@@ -1299,13 +1299,13 @@ export default function EventsPage() {
                   <Sparkles className="h-5 w-5 text-amber-500 fill-current shrink-0" />
                   <div>
                     <h5 className="font-extrabold text-emerald-950 leading-none">Free Business Subscription Active!</h5>
-                    <p className="text-[10px] text-emerald-700 font-semibold mt-1">Listing standard fee (₹99 + 18% GST) is fully waived. You can promote events for free.</p>
+                    <p className="text-[10px] text-emerald-700 font-semibold mt-1">Listing standard fee (₹99) is fully waived. You can promote events for free.</p>
                   </div>
                 </div>
               ) : (
                 <div className="bg-slate-50 border border-slate-200 text-slate-600 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
                   <Tag className="h-4.5 w-4.5 text-[#027244] shrink-0" />
-                  <span>Standard listing charges: ₹99 + 18% GST (₹116.82 total) per event.</span>
+                  <span>Standard listing charges: ₹99 per event.</span>
                 </div>
               )}
 
@@ -1327,14 +1327,10 @@ export default function EventsPage() {
                   <span className="text-slate-400">Listing Standard Fee</span>
                   <span>₹99.00</span>
                 </div>
-                <div className="flex justify-between border-b border-slate-100 pb-2.5">
-                  <span className="text-slate-400">GST (18%)</span>
-                  <span>{paymentPrice === 0 ? '₹0.00' : '₹17.82'}</span>
-                </div>
                 {paymentPrice === 0 && (
                   <div className="flex justify-between border-b border-slate-100 pb-2.5">
                     <span className="text-slate-400">Waived Discount</span>
-                    <span>-₹116.82</span>
+                    <span>-₹99.00</span>
                   </div>
                 )}
                 <div className="flex justify-between text-slate-800 font-black text-sm pt-1">

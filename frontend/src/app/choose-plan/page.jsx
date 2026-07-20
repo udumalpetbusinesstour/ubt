@@ -28,13 +28,13 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
 
   // Plan Selection states
   const [plans, setPlans] = useState([
-    { _id: 'monthly', name: 'Monthly Premium Plan', type: 'Monthly', price: 116.82, durationDays: 28, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing', 'Access to Udumalpet Business WhatsApp Group'], isActive: true },
-    { _id: 'yearly', name: 'Yearly Premium Plan', type: 'Yearly', price: 1178.82, durationDays: 365, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing', 'Access to Udumalpet Business WhatsApp Group'], isActive: true, isOffer: true, offerText: 'Save 2 Months' }
+    { _id: 'monthly', name: 'Monthly Premium Plan', type: 'Monthly', price: 99, durationDays: 28, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing', 'Access to Udumalpet Business WhatsApp Group'], isActive: true },
+    { _id: 'yearly', name: 'Yearly Premium Plan', type: 'Yearly', price: 999, durationDays: 365, features: ['Digital Visiting Card', 'Dedicated Landing Page', 'Event Posting', 'Business Blog Publishing', 'Access to Udumalpet Business WhatsApp Group'], isActive: true, isOffer: true, offerText: 'Save 2 Months' }
   ]);
   const [selectedPlan, setSelectedPlan] = useState('Yearly Premium Plan'); // default to Yearly
   const [activeFaq, setActiveFaq] = useState(null);
-  const [monthlyPrice, setMonthlyPrice] = useState(116.82);
-  const [yearlyPrice, setYearlyPrice] = useState(1178.82);
+  const [monthlyPrice, setMonthlyPrice] = useState(99);
+  const [yearlyPrice, setYearlyPrice] = useState(999);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('ubt_token');
@@ -164,7 +164,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
           }
         }
       } catch (err) {
-        console.warn('Could not fetch active plan prices, using default values (₹116.82 / ₹1178.82).', err);
+        console.warn('Could not fetch active plan prices, using default values (₹99 / ₹999).', err);
       }
     } catch (err) {
       console.error('Failed initialization:', err);
@@ -176,7 +176,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
 
   const getSelectedPlanPrice = () => {
     const activePlan = plans.find(p => p.name === selectedPlan || p.type === selectedPlan);
-    return activePlan ? activePlan.price : 116.82;
+    return activePlan ? activePlan.price : 99;
   };
 
   const handlePlanSelect = (planName) => {
