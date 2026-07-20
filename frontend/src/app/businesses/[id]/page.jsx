@@ -1968,10 +1968,11 @@ Please confirm availability and delivery time.`;
                 
                 {/* Highlights chip tags - dynamic from business.highlights */}
                 {!isGovernmentalOrPublic(business) && Array.isArray(business.highlights) && business.highlights.length > 0 && (
-                  <div className="flex flex-wrap gap-2.5 mt-3">
+                  <div className="flex flex-wrap gap-2 sm:gap-2.5 mt-3 items-center">
                     {business.highlights.map((tag) => (
-                      <span key={tag} className="bg-emerald-50/50 border border-emerald-100 text-emerald-700 text-[11px] font-bold py-2 px-4 rounded-xl flex items-center gap-1.5">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" /> {tag}
+                      <span key={tag} className="bg-emerald-50/60 border border-emerald-200/80 text-emerald-900 text-xs sm:text-[11.5px] font-semibold py-1.5 px-3.5 rounded-full inline-flex items-center gap-2 shadow-3xs transition-all hover:bg-emerald-100/50">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#027244] shrink-0" />
+                        <span className="leading-tight">{tag}</span>
                       </span>
                     ))}
                   </div>

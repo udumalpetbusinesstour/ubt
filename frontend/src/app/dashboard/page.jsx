@@ -6608,13 +6608,14 @@ function DashboardContent() {
                           <p className="text-xs text-slate-500 leading-relaxed text-justify font-medium">{business.description || "No description provided yet."}</p>
 
                           {/* Highlights tags - dynamic from business.highlights */}
-                          <div className="flex flex-wrap gap-2.5 mt-2">
+                          <div className="flex flex-wrap gap-2 sm:gap-2.5 mt-2 items-center">
                             {(Array.isArray(business.highlights) && business.highlights.length > 0
                               ? business.highlights
                               : ['On-time Service', 'Expert Technicians', 'Quality Materials', 'Affordable Pricing']
                             ).map((tag) => (
-                              <span key={tag} className="bg-emerald-50/50 border border-emerald-100 text-emerald-700 text-[10px] font-bold py-1.5 px-3 rounded-xl flex items-center gap-1.5">
-                                <CheckCircle className="h-3.5 w-3.5 text-emerald-600" /> {tag}
+                              <span key={tag} className="bg-emerald-50/60 border border-emerald-200/80 text-emerald-900 text-xs sm:text-[11.5px] font-semibold py-1.5 px-3.5 rounded-full inline-flex items-center gap-2 shadow-3xs transition-all hover:bg-emerald-100/50">
+                                <CheckCircle className="h-3.5 w-3.5 text-[#027244] shrink-0" />
+                                <span className="leading-tight">{tag}</span>
                               </span>
                             ))}
                           </div>
@@ -10742,10 +10743,11 @@ function DashboardContent() {
                     {editFields.highlights && (
                       <div className="flex flex-col gap-1.5">
                         <span className="text-[9.5px] font-black text-slate-450 uppercase tracking-widest">Preview</span>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 sm:gap-2.5 items-center">
                           {editFields.highlights.split(',').map(h => h.trim()).filter(Boolean).map((tag, i) => (
-                            <span key={i} className="bg-emerald-50/50 border border-emerald-100 text-emerald-700 text-[10px] font-bold py-1.5 px-3 rounded-xl flex items-center gap-1.5">
-                              <CheckCircle className="h-3.5 w-3.5 text-emerald-600" /> {tag}
+                            <span key={i} className="bg-emerald-50/60 border border-emerald-200/80 text-emerald-900 text-xs sm:text-[11.5px] font-semibold py-1.5 px-3.5 rounded-full inline-flex items-center gap-2 shadow-3xs">
+                              <CheckCircle className="h-3.5 w-3.5 text-[#027244] shrink-0" />
+                              <span className="leading-tight">{tag}</span>
                             </span>
                           ))}
                         </div>
