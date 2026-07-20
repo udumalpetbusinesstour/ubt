@@ -2204,8 +2204,9 @@ function DashboardContent() {
     if (!bizId || (business && business._id === bizId)) return;
 
     if (isAdminOverride) {
+      const targetBiz = allBusinesses.find(b => b._id === bizId);
       const nextParams = new URLSearchParams(window.location.search);
-      nextParams.set('bizId', bizId);
+      nextParams.set('bizId', targetBiz?.slug || bizId);
       setSearchParams(nextParams);
     }
 
@@ -4881,7 +4882,7 @@ function DashboardContent() {
                 <div className="flex flex-col gap-0.5">
                   <span className="font-extrabold text-sm">Administrator Session Override Active</span>
                   <p className="text-xs text-blue-150 font-semibold leading-relaxed">
-                    You are accessing this workspace with full Administrative privileges. Any changes you make here will apply directly to the business profile listing <strong>"{business?.name}"</strong>.
+                    You are accessing this workspace with full Administrative privileges. Any changes you make here will apply directly to the business profile listing <strong>"{business?.businessName || business?.name || 'Target Listing'}"</strong>.
                   </p>
                 </div>
               </div>

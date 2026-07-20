@@ -3394,7 +3394,7 @@ Team Udumalpet Business
                               <td className="p-4.5 text-right">
                                 <div className="flex items-center justify-end gap-2">
                                   <a 
-                                    href={`/dashboard?bizId=${b._id}`}
+                                    href={`/dashboard?bizId=${b.slug || b._id}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10.5px] font-extrabold text-center leading-none shadow-2xs cursor-pointer inline-flex items-center"

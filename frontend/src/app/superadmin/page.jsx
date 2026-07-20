@@ -8473,7 +8473,7 @@ const handlePartnerAction = async (partnerId, action) => {
                 <span>View Public Landing Page</span>
               </button>
               <button 
-                onClick={() => window.open(`/dashboard?bizId=${selectedBiz._id}`, '_blank')}
+                onClick={() => window.open(`/dashboard?bizId=${selectedBiz.slug || selectedBiz._id}`, '_blank')}
                 className="w-full py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-650 font-extrabold text-[11px] rounded-xl cursor-pointer text-center transition-colors border border-emerald-500/25 flex items-center justify-center gap-1.5"
               >
                 <LayoutDashboard className="h-4 w-4" />
