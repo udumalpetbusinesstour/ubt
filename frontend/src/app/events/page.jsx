@@ -94,6 +94,14 @@ export default function EventsPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [copiedEventId, setCopiedEventId] = useState(null);
+  const [expandedEvents, setExpandedEvents] = useState({});
+
+  const toggleExpandEvent = (eventId) => {
+    setExpandedEvents(prev => ({
+      ...prev,
+      [eventId]: !prev[eventId]
+    }));
+  };
 
   useEffect(() => {
     setCurrentPage(1);
@@ -1689,9 +1697,22 @@ export default function EventsPage() {
                             <span className="group-hover:underline">{evt.venue}</span>
                           </a>
 
-                          <p className="text-xs text-slate-450 leading-relaxed font-medium mt-1 pr-4">
+                          <p className={`text-xs text-slate-450 leading-relaxed font-medium mt-1 pr-4 whitespace-pre-line ${
+                            expandedEvents[evt._id] ? '' : 'line-clamp-2'
+                          }`}>
                             {evt.description}
                           </p>
+                          {evt.description && (evt.description.length > 120 || evt.description.includes('\n')) && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleExpandEvent(evt._id);
+                              }}
+                              className="text-[#027244] hover:underline text-[10.5px] font-bold mt-1 bg-transparent border-none cursor-pointer self-start p-0 leading-none"
+                            >
+                              {expandedEvents[evt._id] ? 'Show Less' : 'Show More'}
+                            </button>
+                          )}
                         </div>
 
                         {/* Interactive Likes, Comments, Views, Share Bar (Blogs style) */}
@@ -1728,7 +1749,7 @@ export default function EventsPage() {
                             onClick={() => openEventCommentsModal(evt)}
                             className="py-1 px-3 border border-[#027244] hover:bg-emerald-50 text-[#027244] text-[10px] font-black rounded-lg cursor-pointer transition-colors ml-1"
                           >
-                            Read More
+                            Details & Comments
                           </button>
                           
                           {evt.businessId && (
