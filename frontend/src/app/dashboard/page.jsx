@@ -6154,7 +6154,9 @@ function DashboardContent() {
                     {/* Card B.2: Google Reviews Connected / Not Linked */}
                     {(() => {
                       const isGoogleLinked = !!(business?.googlePlaceId || business?.googleBusinessLink || (business?.googleRating && business?.googleRating > 0));
-                      const waUrl = `https://api.whatsapp.com/send?phone=918925728260&text=${encodeURIComponent(`Hi UBT Team, I want to request Google My Business profile creation & linking for my business: ${business?.name || ''}`)}`;
+                      const profileUrl = typeof window !== 'undefined' ? `${window.location.origin}/${business?.slug || business?._id || ''}` : '';
+                      const waMsg = `Hi UBT Team, I want to request Google My Business profile creation & linking for my business: ${business?.name || ''}\nProfile Link: ${profileUrl}`;
+                      const waUrl = `https://api.whatsapp.com/send?phone=918925728260&text=${encodeURIComponent(waMsg)}`;
 
                       if (isGoogleLinked) {
                         return (
