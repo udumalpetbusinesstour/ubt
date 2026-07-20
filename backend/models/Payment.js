@@ -68,6 +68,23 @@ const PaymentSchema = new mongoose.Schema({
   },
   promotionId: {
     type: String,
+  },
+  zohoContactId: {
+    type: String,
+  },
+  zohoInvoiceId: {
+    type: String,
+  },
+  zohoInvoiceNumber: {
+    type: String,
+  },
+  zohoSyncStatus: {
+    type: String,
+    enum: ['pending', 'synced', 'failed'],
+    default: 'pending',
+  },
+  zohoSyncError: {
+    type: String,
   }
 }, {
   timestamps: true

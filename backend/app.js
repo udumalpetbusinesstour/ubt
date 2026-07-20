@@ -74,6 +74,7 @@ app.use('/api/categories', require('./routes/categories'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/subscriptions', require('./routes/subscriptions'));
 app.use('/api/payments', require('./routes/payments'));
+app.use('/api/zoho', require('./routes/zoho'));
 app.use('/api/blogs', require('./routes/blogs'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/events', require('./routes/events'));

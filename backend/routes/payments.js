@@ -9,6 +9,7 @@ const Plan = require('../models/Plan');
 const User = require('../models/User');
 const Event = require('../models/Event');
 const Payment = require('../models/Payment');
+const zohoBooksService = require('../services/zohoBooksService');
 
 // Initialize Razorpay client with fallback key
 let razorpay;
@@ -545,6 +546,13 @@ router.post('/verify-payment', protect, async (req, res) => {
       console.error('[Google Sheets API] Error triggering sheets update:', sheetErr.message);
     }
 
+    // Trigger Zoho Books background invoice & payment sync
+    if (payment && payment._id) {
+      zohoBooksService.syncPaymentToZoho(payment._id).catch(err => {
+        console.error('[ZOHO BOOKS] Background sync error:', err.message);
+      });
+    }
+
     res.json({
       success: true,
       message: 'Subscription successfully activated!',
@@ -741,6 +749,13 @@ router.post('/verify-event-payment', protect, async (req, res) => {
       });
     } catch (sheetErr) {
       console.error('[Google Sheets API] Error triggering sheets update for event:', sheetErr.message);
+    }
+
+    // Trigger Zoho Books background invoice & payment sync for event payment
+    if (payment && payment._id) {
+      zohoBooksService.syncPaymentToZoho(payment._id).catch(err => {
+        console.error('[ZOHO BOOKS] Background sync error for event:', err.message);
+      });
     }
 
     res.json({
@@ -1409,7 +1424,7 @@ router.post('/verify-sponsored-ad-payment', protect, async (req, res) => {
     await business.save();
 
     try {
-      await Payment.create({
+      const adPayRecord = await Payment.create({
         userId: req.user._id,
         businessId: business._id,
         paymentId: razorpayPaymentId || `pay_mock_ad_${Math.random().toString(36).substr(2, 9)}`,
@@ -1423,6 +1438,12 @@ router.post('/verify-sponsored-ad-payment', protect, async (req, res) => {
         paymentDate: new Date(),
         paidAt: new Date()
       });
+
+      if (adPayRecord && adPayRecord._id) {
+        zohoBooksService.syncPaymentToZoho(adPayRecord._id).catch(err => {
+          console.error('[ZOHO BOOKS] Background sync error for ad promotion:', err.message);
+        });
+      }
 
       // Append to Google Sheets Income Tracker (Ad / Add-on = 116.82)
       const { appendToIncomeTracker } = require('../services/sheetsService');
