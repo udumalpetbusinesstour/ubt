@@ -6151,58 +6151,90 @@ function DashboardContent() {
                       </button>
                     </div>
 
-                    {/* Card B.2: Google Reviews Connected */}
-                    <div className="bg-white border border-slate-200/80 shadow-xs rounded-3xl p-6 flex flex-col text-left justify-between gap-4">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-2">
-                          <h3 className="font-extrabold text-sm text-[#001c41]">Google Reviews</h3>
-                          <span className="bg-emerald-50 text-[#027244] border border-emerald-100 px-2 py-0.5 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1 shrink-0 select-none">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Connected
-                          </span>
-                        </div>
-                        <p className="text-slate-650 text-xs font-semibold leading-relaxed">
-                          Your Google Business Profile is connected. We are showing your latest Google reviews.
-                        </p>
-                        <span className="text-xs text-slate-500 font-bold block mt-1.5">
-                          Last synced: 29 May 2025, 10:30 AM
-                        </span>
-                      </div>
+                    {/* Card B.2: Google Reviews Connected / Not Linked */}
+                    {(() => {
+                      const isGoogleLinked = !!(business?.googlePlaceId || business?.googleBusinessLink || (business?.googleRating && business?.googleRating > 0));
+                      const waUrl = `https://api.whatsapp.com/send?phone=918925728260&text=${encodeURIComponent(`Hi UBT Team, I want to request Google My Business profile creation & linking for my business: ${business?.name || ''}`)}`;
 
-                      {/* Actions Links with logo labels */}
-                      <div className="flex flex-col gap-2.5">
-                        <a
-                          href={business?.googleBusinessLink || (business?.googlePlaceId ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.name)}&query_place_id=${business.googlePlaceId}` : `https://www.google.com/search?q=${encodeURIComponent((business?.name || '') + ' Udumalpet')}`)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 hover:border-emerald-500 rounded-xl text-slate-700 hover:text-[#001c41] text-[10.5px] font-extrabold flex items-center justify-between transition-all"
-                        >
-                          <span className="flex items-center gap-2">
-                            <span className="h-5 w-5 bg-white shadow-xs border border-slate-200 rounded flex items-center justify-center font-bold text-blue-500 text-[11px]">G</span>
-                            View on Google
-                          </span>
-                          <ExternalLink className="h-3 w-3 text-slate-450" />
-                        </a>
-                      </div>
+                      if (isGoogleLinked) {
+                        return (
+                          <div className="bg-white border border-slate-200/80 shadow-xs rounded-3xl p-6 flex flex-col text-left justify-between gap-4">
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-2">
+                                <h3 className="font-extrabold text-sm text-[#001c41]">Google Reviews</h3>
+                                <span className="bg-emerald-50 text-[#027244] border border-emerald-100 px-2 py-0.5 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1 shrink-0 select-none">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Connected
+                                </span>
+                              </div>
+                              <p className="text-slate-650 text-xs font-semibold leading-relaxed">
+                                Your Google Business Profile is connected. We are showing your latest Google reviews.
+                              </p>
+                            </div>
 
-                      {/* Review Link Sync input and copy clip */}
-                      <div className="flex flex-col gap-1 pt-1">
-                        <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Review Link</span>
-                        <div className="flex items-center gap-2 border border-slate-200/70 rounded-xl p-1 bg-slate-50 mt-1">
-                          <input
-                            type="text"
-                            readOnly
-                            value={business ? `${window.location.origin}/${business.slug || business._id}?tab=reviews` : ''}
-                            className="w-full bg-transparent text-[11px] font-semibold text-slate-600 px-2 focus:outline-none"
-                          />
-                          <button
-                            onClick={copyReviewLink}
-                            className="h-7 w-7 rounded-lg bg-[#027244] hover:bg-[#005934] text-white flex items-center justify-center shrink-0 cursor-pointer shadow-xs transition-colors"
+                            {/* Actions Links with logo labels */}
+                            <div className="flex flex-col gap-2.5">
+                              <a
+                                href={business?.googleBusinessLink || (business?.googlePlaceId ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.name)}&query_place_id=${business.googlePlaceId}` : `https://www.google.com/search?q=${encodeURIComponent((business?.name || '') + ' Udumalpet')}`)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 hover:border-emerald-500 rounded-xl text-slate-700 hover:text-[#001c41] text-[10.5px] font-extrabold flex items-center justify-between transition-all"
+                              >
+                                <span className="flex items-center gap-2">
+                                  <span className="h-5 w-5 bg-white shadow-xs border border-slate-200 rounded flex items-center justify-center font-bold text-blue-500 text-[11px]">G</span>
+                                  View on Google
+                                </span>
+                                <ExternalLink className="h-3 w-3 text-slate-450" />
+                              </a>
+                            </div>
+
+                            {/* Review Link Sync input and copy clip */}
+                            <div className="flex flex-col gap-1 pt-1">
+                              <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Review Link</span>
+                              <div className="flex items-center gap-2 border border-slate-200/70 rounded-xl p-1 bg-slate-50 mt-1">
+                                <input
+                                  type="text"
+                                  readOnly
+                                  value={business ? `${window.location.origin}/${business.slug || business._id}?tab=reviews` : ''}
+                                  className="w-full bg-transparent text-[11px] font-semibold text-slate-600 px-2 focus:outline-none"
+                                />
+                                <button
+                                  onClick={copyReviewLink}
+                                  className="h-7 w-7 rounded-lg bg-[#027244] hover:bg-[#005934] text-white flex items-center justify-center shrink-0 cursor-pointer shadow-xs transition-colors"
+                                >
+                                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="bg-white border border-amber-200/90 bg-amber-50/20 shadow-xs rounded-3xl p-6 flex flex-col text-left justify-between gap-4">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center justify-between border-b border-amber-100 pb-3 mb-2">
+                              <h3 className="font-extrabold text-sm text-[#001c41]">Google Business Profile</h3>
+                              <span className="bg-amber-100/80 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full text-[10.5px] font-extrabold inline-flex items-center gap-1 shrink-0 select-none">
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Not Linked
+                              </span>
+                            </div>
+                            <p className="text-slate-650 text-xs font-semibold leading-relaxed">
+                              Google Business Profile is not linked.
+                            </p>
+                          </div>
+
+                          <a
+                            href={waUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="w-full py-3 px-4 bg-[#027244] hover:bg-[#005934] text-white text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm shadow-emerald-700/20 cursor-pointer"
                           >
-                            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                          </button>
+                            <MessageCircle className="h-4 w-4 fill-current text-white" />
+                            <span>Click here to create one</span>
+                          </a>
                         </div>
-                      </div>
-                    </div>
+                      );
+                    })()}
 
                   </div>
 
@@ -6309,23 +6341,7 @@ function DashboardContent() {
 
               </div>
 
-              {/* 5. GROW YOUR BUSINESS FOOTER BANNER */}
-              <div className="w-full bg-[#EBF5FF] border border-blue-100 rounded-3xl p-5 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4 text-left">
-                <div className="flex items-center gap-3.5">
-                  <div className="h-10 w-10 bg-blue-500 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/10">
-                    <Sparkles className="h-5 w-5 fill-current text-blue-100" />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-extrabold text-xs text-[#001c41]">Grow Your Business</span>
-                    <p className="text-[11px] text-slate-550 font-bold leading-relaxed">
-                      Keep your profile updated, respond to leads quickly and collect more reviews to rank higher in search results.
-                    </p>
-                  </div>
-                </div>
-                <button className="bg-white hover:bg-slate-55 border border-slate-200 text-slate-700 font-extrabold text-[10.5px] py-2.5 px-5 rounded-xl transition-all shadow-2xs shrink-0 cursor-pointer">
-                  View Tips & Guide
-                </button>
-              </div>
+
             </>
           )}
 
