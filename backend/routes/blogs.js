@@ -66,14 +66,28 @@ router.get('/admin/all', protect, admin, async (req, res) => {
 // @access  Public (if Approved, or if author/admin is requesting)
 router.get('/:id', async (req, res) => {
   try {
+    const mongoose = require('mongoose');
     const skipInc = req.query.skipInc === 'true';
-    const blog = skipInc
-      ? await Blog.findById(req.params.id)
-      : await Blog.findByIdAndUpdate(
-          req.params.id,
-          { $inc: { views: 1 } },
-          { new: true }
-        );
+    
+    let blog;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      blog = skipInc
+        ? await Blog.findById(req.params.id)
+        : await Blog.findByIdAndUpdate(
+            req.params.id,
+            { $inc: { views: 1 } },
+            { new: true }
+          );
+    } else {
+      blog = skipInc
+        ? await Blog.findOne({ slug: req.params.id.toLowerCase() })
+        : await Blog.findOneAndUpdate(
+            { slug: req.params.id.toLowerCase() },
+            { $inc: { views: 1 } },
+            { new: true }
+          );
+    }
+
     if (!blog) {
       return res.status(404).json({ success: false, message: 'Blog post not found' });
     }

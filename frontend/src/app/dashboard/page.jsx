@@ -4459,12 +4459,12 @@ function DashboardContent() {
       { label: 'Branches', icon: <MapPin className="h-4 w-4" /> },
       {
         label: 'Menu',
-        displayLabel: business?.menuLabelSelected 
-          ? (business?.menuLabel || 'Menu') 
+        displayLabel: business?.menuLabelSelected
+          ? (business?.menuLabel || 'Menu')
           : (isFoodRelated(business?.category, business?.customCategoryName) ? 'Menu / Products' : 'Products'),
         icon: (() => {
-          const currentLabel = business?.menuLabelSelected 
-            ? (business?.menuLabel || '') 
+          const currentLabel = business?.menuLabelSelected
+            ? (business?.menuLabel || '')
             : (isFoodRelated(business?.category, business?.customCategoryName) ? 'menu' : 'product');
           const lower = currentLabel.toLowerCase();
           if (lower.includes('product') || lower.includes('catalog') || lower.includes('good') || lower.includes('item') || lower.includes('service')) {
@@ -4590,8 +4590,8 @@ function DashboardContent() {
                   setSidebarOpen(false);
                 }}
                 className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-bold transition-all hover:bg-slate-800/40 hover:text-white cursor-pointer ${activeTab === link.label && !link.onClick
-                    ? 'bg-[#027244] text-white shadow-md shadow-emerald-900/20'
-                    : 'text-slate-400 hover:bg-slate-800/30'
+                  ? 'bg-[#027244] text-white shadow-md shadow-emerald-900/20'
+                  : 'text-slate-400 hover:bg-slate-800/30'
                   }`}
               >
                 <div className="flex items-center gap-3 w-full min-w-0">
@@ -5100,17 +5100,17 @@ function DashboardContent() {
                           <div
                             key={s.id}
                             className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border text-xs font-extrabold transition-all ${isCompleted
-                                ? 'bg-emerald-50/30 border-emerald-100 text-emerald-700'
-                                : isCurrent
-                                  ? 'bg-amber-50/40 border-amber-200 text-amber-700 shadow-sm shadow-amber-100/50'
-                                  : 'bg-white border-slate-100 text-slate-400'
+                              ? 'bg-emerald-50/30 border-emerald-100 text-emerald-700'
+                              : isCurrent
+                                ? 'bg-amber-50/40 border-amber-200 text-amber-700 shadow-sm shadow-amber-100/50'
+                                : 'bg-white border-slate-100 text-slate-400'
                               }`}
                           >
                             <span className={`h-4.5 w-4.5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${isCompleted
-                                ? 'bg-emerald-100 text-emerald-700'
-                                : isCurrent
-                                  ? 'bg-amber-100 text-amber-700 animate-pulse'
-                                  : 'bg-slate-100 text-slate-400'
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : isCurrent
+                                ? 'bg-amber-100 text-amber-700 animate-pulse'
+                                : 'bg-slate-100 text-slate-400'
                               }`}>
                               {isCompleted ? '✓' : s.id}
                             </span>
@@ -5436,10 +5436,10 @@ function DashboardContent() {
                                       : `Refer ${item.target} businesses to avail this bonus!`
                                 }
                                 className={`py-2 px-2.5 rounded-xl text-[10.5px] font-black transition-all flex flex-col items-center justify-center gap-1 border shadow-2xs ${isClaimed
-                                    ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed shadow-none'
-                                    : isReached
-                                      ? 'bg-[#027244] hover:bg-[#005934] text-white border-transparent cursor-pointer'
-                                      : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50/50 cursor-not-allowed opacity-60'
+                                  ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed shadow-none'
+                                  : isReached
+                                    ? 'bg-[#027244] hover:bg-[#005934] text-white border-transparent cursor-pointer'
+                                    : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50/50 cursor-not-allowed opacity-60'
                                   }`}
                               >
                                 <span>{item.target} Referrals</span>
@@ -5894,10 +5894,10 @@ function DashboardContent() {
                 {/* Listing Status */}
                 <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[180px] sm:w-[200px] shrink-0 snap-start">
                   <div className={`h-10.5 w-10.5 rounded-xl flex items-center justify-center shrink-0 ${isGmbVerified ? 'bg-emerald-50 text-emerald-600' :
-                      business.status === 'Approved' ? 'bg-blue-50 text-blue-600' :
-                        business.status === 'Under Review' ? 'bg-blue-50 text-blue-600 animate-pulse' :
-                          business.status === 'Suspended' ? 'bg-red-50 text-red-650' :
-                            business.status === 'Rejected' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-500'
+                    business.status === 'Approved' ? 'bg-blue-50 text-blue-600' :
+                      business.status === 'Under Review' ? 'bg-blue-50 text-blue-600 animate-pulse' :
+                        business.status === 'Suspended' ? 'bg-red-50 text-red-650' :
+                          business.status === 'Rejected' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-500'
                     }`}>
                     {isGmbVerified ? (
                       <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -5913,10 +5913,10 @@ function DashboardContent() {
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Status</span>
                     <span className={`text-[12.5px] font-extrabold leading-none mt-1.5 truncate ${isGmbVerified ? 'text-[#027244]' :
-                        business.status === 'Approved' ? 'text-blue-650' :
-                          business.status === 'Under Review' ? 'text-blue-650' :
-                            business.status === 'Suspended' ? 'text-red-650' :
-                              business.status === 'Rejected' ? 'text-rose-600' : 'text-amber-550'
+                      business.status === 'Approved' ? 'text-blue-650' :
+                        business.status === 'Under Review' ? 'text-blue-650' :
+                          business.status === 'Suspended' ? 'text-red-650' :
+                            business.status === 'Rejected' ? 'text-rose-600' : 'text-amber-550'
                       }`}>
                       {isGmbVerified ? 'Verified' :
                         business.status === 'Approved' ? 'Approved' : business.status === 'Under Review' ? 'In Review' :
@@ -6231,8 +6231,8 @@ function DashboardContent() {
                       <div className="flex justify-between items-center bg-[#F8FAFC] border border-slate-200/60 p-3 rounded-xl">
                         <span className="text-[10.5px] font-bold text-slate-500">Current Plan</span>
                         <span className={`px-2 py-0.5 rounded text-[9.5px] font-extrabold select-none uppercase tracking-wide border ${business.subscriptionStatus === 'active'
-                            ? 'bg-emerald-50 text-[#027244] border-emerald-100'
-                            : 'bg-amber-50 text-amber-700 border-amber-200/60'
+                          ? 'bg-emerald-50 text-[#027244] border-emerald-100'
+                          : 'bg-amber-50 text-amber-700 border-amber-200/60'
                           }`}>
                           {business.subscriptionStatus === 'active' ? 'Pro Plan' : 'Inactive Plan'}
                         </span>
@@ -6520,8 +6520,8 @@ function DashboardContent() {
                         type="button"
                         onClick={() => setPreviewTab(tab.id)}
                         className={`py-4 text-xs font-black border-b-2 uppercase tracking-wider shrink-0 transition-all cursor-pointer ${previewTab === tab.id
-                            ? 'border-emerald-600 text-emerald-600'
-                            : 'border-transparent text-slate-455 hover:text-slate-605'
+                          ? 'border-emerald-600 text-emerald-600'
+                          : 'border-transparent text-slate-455 hover:text-slate-605'
                           }`}
                       >
                         {tab.label}
@@ -8301,8 +8301,8 @@ function DashboardContent() {
                 <div className="flex flex-col">
                   <h3 className="font-extrabold text-[#001c41] text-base md:text-lg tracking-tight flex items-center gap-2">
                     {(() => {
-                      const currentLabel = business?.menuLabelSelected 
-                        ? (business?.menuLabel || '') 
+                      const currentLabel = business?.menuLabelSelected
+                        ? (business?.menuLabel || '')
                         : (isFoodRelated(business?.category, business?.customCategoryName) ? 'menu' : 'product');
                       const lower = currentLabel.toLowerCase();
                       if (lower.includes('product') || lower.includes('catalog') || lower.includes('good') || lower.includes('item') || lower.includes('service')) {
@@ -8311,8 +8311,8 @@ function DashboardContent() {
                       return <Utensils className="h-5.5 w-5.5 text-emerald-600" />;
                     })()}
                     <span>
-                      {(business?.menuLabelSelected 
-                        ? business?.menuLabel 
+                      {(business?.menuLabelSelected
+                        ? business?.menuLabel
                         : (isFoodRelated(business?.category, business?.customCategoryName) ? 'Menu / Product' : 'Product')) + ' Management'}
                     </span>
 
@@ -8436,7 +8436,7 @@ function DashboardContent() {
                                         </div>
 
                                         {item.imageUrl && (
-                                          <div 
+                                          <div
                                             onClick={() => setSelectedModalImage(window.getImageUrl(item.imageUrl))}
                                             className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden shrink-0 cursor-pointer shadow-3xs hover:scale-105 transition-transform flex items-center justify-center p-0.5"
                                           >
@@ -8464,8 +8464,8 @@ function DashboardContent() {
 
                                         <div className="flex items-center gap-2">
                                           <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider select-none shrink-0 ${item.isAvailable
-                                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-250/30'
-                                              : 'bg-rose-50 text-rose-700 border border-rose-250/30'
+                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-250/30'
+                                            : 'bg-rose-50 text-rose-700 border border-rose-250/30'
                                             }`}>
                                             {item.isAvailable ? 'Available' : 'Out of Stock'}
                                           </span>
@@ -8474,8 +8474,8 @@ function DashboardContent() {
                                             type="button"
                                             onClick={() => handleToggleAvailability(item)}
                                             className={`py-1.5 px-2.5 rounded-lg text-[9.5px] font-black uppercase transition-all cursor-pointer shrink-0 ${item.isAvailable
-                                                ? 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200'
-                                                : 'bg-emerald-50 hover:bg-emerald-100 text-[#027244] border border-emerald-200'
+                                              ? 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200'
+                                              : 'bg-emerald-50 hover:bg-emerald-100 text-[#027244] border border-emerald-200'
                                               }`}
                                           >
                                             {item.isAvailable ? 'Mark Out' : 'Mark In'}
@@ -8555,7 +8555,7 @@ function DashboardContent() {
                                         </div>
 
                                         {item.imageUrl && (
-                                          <div 
+                                          <div
                                             onClick={() => setSelectedModalImage(window.getImageUrl(item.imageUrl))}
                                             className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden shrink-0 cursor-pointer shadow-3xs hover:scale-105 transition-transform flex items-center justify-center p-0.5"
                                           >
@@ -8583,8 +8583,8 @@ function DashboardContent() {
 
                                         <div className="flex items-center gap-2">
                                           <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider select-none shrink-0 ${item.isAvailable
-                                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-250/30'
-                                              : 'bg-rose-50 text-rose-700 border border-rose-250/30'
+                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-250/30'
+                                            : 'bg-rose-50 text-rose-700 border border-rose-250/30'
                                             }`}>
                                             {item.isAvailable ? 'In Stock' : 'Out of Stock'}
                                           </span>
@@ -8593,8 +8593,8 @@ function DashboardContent() {
                                             type="button"
                                             onClick={() => handleToggleAvailability(item)}
                                             className={`py-1.5 px-2.5 rounded-lg text-[9.5px] font-black uppercase transition-all cursor-pointer shrink-0 ${item.isAvailable
-                                                ? 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200'
-                                                : 'bg-emerald-50 hover:bg-emerald-100 text-[#027244] border border-emerald-200'
+                                              ? 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200'
+                                              : 'bg-emerald-50 hover:bg-emerald-100 text-[#027244] border border-emerald-200'
                                               }`}
                                           >
                                             {item.isAvailable ? 'Mark Out' : 'Mark In'}
@@ -8687,10 +8687,10 @@ function DashboardContent() {
                         <div className="flex justify-between items-start gap-2">
                           <h4 className="font-extrabold text-slate-800 text-sm">{branch.name}</h4>
                           <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase shrink-0 ${branch.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                              branch.status === 'Pending Verification' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                                branch.status === 'Under Review' ? 'bg-blue-50 text-blue-755 border border-blue-200' :
-                                  branch.status === 'Rejected' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
-                                    'bg-red-50 text-red-700 border border-red-200'
+                            branch.status === 'Pending Verification' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                              branch.status === 'Under Review' ? 'bg-blue-50 text-blue-755 border border-blue-200' :
+                                branch.status === 'Rejected' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                                  'bg-red-50 text-red-700 border border-red-200'
                             }`}>
                             {branch.status}
                           </span>
@@ -8832,12 +8832,12 @@ function DashboardContent() {
                               {/* Status Badge */}
                               <div className="flex items-center gap-2">
                                 <span className={`px-2 py-0.5 rounded text-[8.5px] font-extrabold uppercase tracking-wide border ${blog.status === 'Approved'
-                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                                    : blog.status === 'Rejected'
-                                      ? 'bg-red-50 border-red-200 text-red-655'
-                                      : blog.status === 'Needs Revision'
-                                        ? 'bg-amber-50 border-amber-300 text-amber-800 font-black animate-pulse'
-                                        : 'bg-slate-50 border-slate-200 text-slate-500 animate-pulse'
+                                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                  : blog.status === 'Rejected'
+                                    ? 'bg-red-50 border-red-200 text-red-655'
+                                    : blog.status === 'Needs Revision'
+                                      ? 'bg-amber-50 border-amber-300 text-amber-800 font-black animate-pulse'
+                                      : 'bg-slate-50 border-slate-200 text-slate-500 animate-pulse'
                                   }`}>
                                   {blog.status}
                                 </span>
@@ -8855,8 +8855,8 @@ function DashboardContent() {
 
                           {((blog.status === 'Needs Revision') || (blog.status === 'Pending Approval' && blog.revisionHistory && blog.revisionHistory.length > 0)) && (
                             <div className={`mt-2 border rounded-2xl p-4 text-[11px] font-semibold leading-relaxed text-left flex flex-col gap-3 animate-fadeIn w-full ${blog.status === 'Needs Revision'
-                                ? 'bg-amber-50/70 border-amber-200/60 text-amber-900'
-                                : 'bg-emerald-50/20 border-emerald-200/30 text-emerald-900'
+                              ? 'bg-amber-50/70 border-amber-200/60 text-amber-900'
+                              : 'bg-emerald-50/20 border-emerald-200/30 text-emerald-900'
                               }`}>
                               <div className="flex items-start gap-1.5 border-b border-slate-205/30 pb-2">
                                 <AlertTriangle className={`h-4 w-4 shrink-0 mt-0.5 ${blog.status === 'Needs Revision' ? 'text-amber-600' : 'text-[#027244]'}`} />
@@ -8874,8 +8874,8 @@ function DashboardContent() {
                                       <div
                                         key={idx}
                                         className={`flex flex-col max-w-[85%] rounded-2xl p-2.5 border text-[10.5px] ${isAdmin
-                                            ? 'bg-amber-100/50 border-amber-200/40 self-start text-left text-amber-950'
-                                            : 'bg-emerald-50/50 border-emerald-250/20 self-end text-right text-[#001c41]'
+                                          ? 'bg-amber-100/50 border-amber-200/40 self-start text-left text-amber-950'
+                                          : 'bg-emerald-50/50 border-emerald-250/20 self-end text-right text-[#001c41]'
                                           }`}
                                       >
                                         <span className="text-[7.5px] font-black uppercase text-slate-400 tracking-wider mb-0.5">
@@ -9527,8 +9527,8 @@ function DashboardContent() {
                             {new Date(q.createdAt).toLocaleDateString()}
                           </span>
                           <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase border ${q.status === 'Replied'
-                              ? 'bg-emerald-50 text-[#027244] border-emerald-100'
-                              : 'bg-amber-50 text-amber-700 border-amber-250/60 animate-pulse'
+                            ? 'bg-emerald-50 text-[#027244] border-emerald-100'
+                            : 'bg-amber-50 text-amber-700 border-amber-250/60 animate-pulse'
                             }`}>
                             {q.status}
                           </span>
@@ -9809,10 +9809,10 @@ function DashboardContent() {
                                 </td>
                                 <td className="p-4">
                                   <span className={`px-2.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${isCompleted
-                                      ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
-                                      : isRejected
-                                        ? 'bg-red-50 border-red-200 text-red-650'
-                                        : 'bg-amber-50 border-amber-250 text-amber-600'
+                                    ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
+                                    : isRejected
+                                      ? 'bg-red-50 border-red-200 text-red-650'
+                                      : 'bg-amber-50 border-amber-250 text-amber-600'
                                     }`}>
                                     {isCompleted ? `+${r.points} Points` : isRejected ? '0 (Rejected)' : '0 (Pending)'}
                                   </span>
@@ -9863,10 +9863,10 @@ function DashboardContent() {
                               <td className="p-4 font-extrabold text-slate-800">{req.points} Points</td>
                               <td className="p-4">
                                 <span className={`px-2.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${isRefunded
-                                    ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
-                                    : isRejected
-                                      ? 'bg-red-50 border-red-200 text-red-650'
-                                      : 'bg-amber-50 border-amber-250 text-amber-600'
+                                  ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
+                                  : isRejected
+                                    ? 'bg-red-50 border-red-200 text-red-650'
+                                    : 'bg-amber-50 border-amber-250 text-amber-600'
                                   }`}>
                                   {req.status}
                                 </span>
@@ -10063,8 +10063,8 @@ function DashboardContent() {
                               </td>
                               <td className="p-4">
                                 <span className={`px-2.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${isSuccess
-                                    ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
-                                    : 'bg-red-50 border-red-200 text-red-650'
+                                  ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
+                                  : 'bg-red-50 border-red-200 text-red-650'
                                   }`}>
                                   {isSuccess ? 'Paid Success' : 'Failed'}
                                 </span>
@@ -10156,8 +10156,8 @@ function DashboardContent() {
                       key={p._id || p.id}
                       onClick={() => handlePlanSelect(p.name)}
                       className={`bg-white border-2 rounded-[20px] p-4.5 pt-7 flex flex-col justify-between items-center text-center shadow-md relative transition-all duration-300 cursor-pointer ${isSelected
-                          ? 'border-[#027244] ring-2 ring-emerald-100 bg-emerald-50/5'
-                          : 'border-slate-250 hover:border-[#027244]/50'
+                        ? 'border-[#027244] ring-2 ring-emerald-100 bg-emerald-50/5'
+                        : 'border-slate-250 hover:border-[#027244]/50'
                         }`}
                     >
                       {/* Current Plan Badge */}
@@ -10217,7 +10217,7 @@ function DashboardContent() {
                             const numPrice = parseFloat(rawPrice);
                             const basePriceVal = numPrice / 1.18;
                             const gstVal = numPrice - basePriceVal;
-                            
+
                             const baseStr = basePriceVal % 1 === 0 ? basePriceVal.toFixed(0) : basePriceVal.toFixed(2);
                             const gstStr = gstVal.toFixed(2);
 
@@ -12098,15 +12098,15 @@ function DashboardContent() {
 
       {/* Offering image Lightbox modal */}
       {selectedModalImage && (
-        <div 
+        <div
           onClick={() => setSelectedModalImage(null)}
           className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-50 flex items-center justify-center p-4 cursor-zoom-out animate-fadeIn"
         >
           <div className="max-w-3xl max-h-[85vh] relative animate-scaleUp">
-            <img 
-              src={selectedModalImage} 
-              alt="Offering View" 
-              className="max-w-full max-h-[80vh] object-contain rounded-2xl border border-white/10 shadow-2xl" 
+            <img
+              src={selectedModalImage}
+              alt="Offering View"
+              className="max-w-full max-h-[80vh] object-contain rounded-2xl border border-white/10 shadow-2xl"
             />
           </div>
         </div>

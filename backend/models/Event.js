@@ -129,6 +129,11 @@ const EventSchema = new mongoose.Schema({
   razorpayPaymentId: {
     type: String,
   },
+  slug: {
+    type: String,
+    lowercase: true,
+    trim: true,
+  },
 }, {
   timestamps: true
 });
@@ -150,6 +155,13 @@ EventSchema.pre('validate', async function() {
   
   if (this.venue && !this.location) this.location = this.venue;
   if (this.location && !this.venue) this.venue = this.location;
+
+  if (this.title && (this.isModified('title') || !this.slug)) {
+    this.slug = this.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+  }
 });
 
 module.exports = mongoose.model('Event', EventSchema);

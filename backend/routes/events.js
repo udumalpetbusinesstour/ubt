@@ -112,17 +112,27 @@ router.get('/admin/all', protect, admin, async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const mongoose = require('mongoose');
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(404).json({ success: false, message: 'Event not found (Invalid ID format)' });
-    }
     const skipInc = req.query.skipInc === 'true';
-    const event = skipInc
-      ? await Event.findById(req.params.id).populate('businessId')
-      : await Event.findByIdAndUpdate(
-          req.params.id,
-          { $inc: { views: 1 } },
-          { new: true }
-        ).populate('businessId');
+    
+    let event;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      event = skipInc
+        ? await Event.findById(req.params.id).populate('businessId')
+        : await Event.findByIdAndUpdate(
+            req.params.id,
+            { $inc: { views: 1 } },
+            { new: true }
+          ).populate('businessId');
+    } else {
+      event = skipInc
+        ? await Event.findOne({ slug: req.params.id.toLowerCase() }).populate('businessId')
+        : await Event.findOneAndUpdate(
+            { slug: req.params.id.toLowerCase() },
+            { $inc: { views: 1 } },
+            { new: true }
+          ).populate('businessId');
+    }
+
     if (!event) {
       return res.status(404).json({ success: false, message: 'Event not found' });
     }

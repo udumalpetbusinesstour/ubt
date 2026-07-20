@@ -85,6 +85,42 @@ const seedAdministrativeCredentials = async () => {
   }
 };
 
+// Database Migration routine: generate missing URL slugs for events & blogs
+const migrateSlugs = async () => {
+  try {
+    const Blog = require('./models/Blog');
+    const Event = require('./models/Event');
+
+    // 1. Migrate Blogs
+    const blogsToMigrate = await Blog.find({ $or: [{ slug: { $exists: false } }, { slug: '' }] });
+    for (const blog of blogsToMigrate) {
+      if (blog.title) {
+        blog.slug = blog.title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)+/g, '');
+        await blog.save();
+        console.log(`[Slug Migration] Migrated blog: "${blog.title}" -> "${blog.slug}"`);
+      }
+    }
+
+    // 2. Migrate Events
+    const eventsToMigrate = await Event.find({ $or: [{ slug: { $exists: false } }, { slug: '' }] });
+    for (const event of eventsToMigrate) {
+      if (event.title) {
+        event.slug = event.title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)+/g, '');
+        await event.save();
+        console.log(`[Slug Migration] Migrated event: "${event.title}" -> "${event.slug}"`);
+      }
+    }
+  } catch (err) {
+    console.error('[Slug Migration] Error:', err.message);
+  }
+};
+
 // Connect to Database and initiate routines sequentially
 const initializeServer = async () => {
   try {
@@ -96,6 +132,9 @@ const initializeServer = async () => {
 
     // 3. Seed Subscription Plans (₹69/₹690)
     await seedDefaultPlans();
+
+    // 3.5. Run Slug migration
+    await migrateSlugs();
 
     // 4. Initialize Background Expiry Sweep Cron Tasks
     startSubscriptionCron();

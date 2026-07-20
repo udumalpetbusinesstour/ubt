@@ -4,7 +4,7 @@ import {
   Search, Calendar, MapPin, User, Phone, ShieldCheck, Bookmark, Sparkles, 
   Clock, Grid, ChevronRight, AlertCircle, ArrowLeft, CheckCircle2, MessageSquare, 
   Plus, Lock, PlusCircle, Check, DollarSign, ExternalLink, Tag, Heart, Trash2, Send, X,
-  RefreshCw, Eye, Share2
+  RefreshCw, Eye, Share2, Upload
 } from 'lucide-react';
 
 const availableCategories = [
@@ -78,7 +78,7 @@ export default function EventsPage() {
 
   // Dynamic Pricing states
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
-  const [paymentPrice, setPaymentPrice] = useState(99); // Dynamic: 0 for active business subscribers, 99 for others
+  const [paymentPrice, setPaymentPrice] = useState(116.82); // Dynamic: 0 for active business subscribers, 116.82 for others
 
   // Dynamic Event Search Filters
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -170,12 +170,12 @@ export default function EventsPage() {
         setPaymentPrice(0);
       } else {
         setHasActiveSubscription(false);
-        setPaymentPrice(99);
+        setPaymentPrice(116.82);
       }
     } catch (err) {
       console.warn('Subscription check error, defaulting to paid standard charge.');
       setHasActiveSubscription(false);
-      setPaymentPrice(99);
+      setPaymentPrice(116.82);
     }
   };
 
@@ -266,10 +266,11 @@ export default function EventsPage() {
     }
   };
 
-  const handleShareClick = async (e, eventId) => {
+  const handleShareClick = async (e, evt) => {
     e.preventDefault();
     e.stopPropagation();
-    const shareUrl = `${window.location.origin}/events/${eventId}`;
+    const identifier = evt.slug || evt._id;
+    const shareUrl = `${window.location.origin}/events/${identifier}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -281,7 +282,7 @@ export default function EventsPage() {
       }
     } else {
       navigator.clipboard.writeText(shareUrl);
-      setCopiedEventId(eventId);
+      setCopiedEventId(evt._id);
       setTimeout(() => setCopiedEventId(null), 2000);
     }
   };
@@ -305,7 +306,7 @@ export default function EventsPage() {
   };
 
   const openEventCommentsModal = (evt) => {
-    navigate(`/events/${evt._id}`);
+    navigate(`/events/${evt.slug || evt._id}`);
   };
 
   const handleAddComment = async (e, eventId) => {
@@ -573,7 +574,7 @@ export default function EventsPage() {
         });
         const verifyData = await verifyRes.json();
         if (verifyData.success) {
-          setWizardStep('pending_approval_success');
+          setWizardStep('info_stage_2');
         } else {
           throw new Error(verifyData.message || 'Sandbox payment verification failed.');
         }
@@ -615,7 +616,7 @@ export default function EventsPage() {
               });
               const verifyData = await verifyRes.json();
               if (verifyData.success) {
-                setWizardStep('pending_approval_success');
+                setWizardStep('info_stage_2');
               } else {
                 setErrorMsg('Payment verification failed.');
               }
@@ -655,6 +656,48 @@ export default function EventsPage() {
 
 
 
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageError, setImageError] = useState('');
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError('Image file size must be less than 5MB.');
+      return;
+    }
+
+    setImageUploading(true);
+    setImageError('');
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      const res = await fetch('http://localhost:5000/api/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setEvtCoverUrl(data.url);
+      } else {
+        setImageError(data.message || 'Failed to upload image.');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      setImageError('Network error uploading image.');
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
   // Successful payment transitions
   const handlePaymentProceed = () => {
     setWizardStep('info_stage_2');
@@ -671,37 +714,35 @@ export default function EventsPage() {
     setSubmitLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const token = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/events/${registeredEvent?._id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
-          title: evtTitle,
-          category: evtCategory,
           description: evtDescription,
-          date: evtDate,
-          endDate: evtEndDate,
-          duration: evtDuration || undefined,
-          time: evtTime,
           venue: evtVenue,
-          organizer: evtOrganizer,
           phone: evtPhone,
           coverImageUrl: evtCoverUrl,
           paymentLink: evtPaymentLink,
-          price: evtPrice
+          price: evtPrice,
+          time: evtTime,
+          isCompleted: true
         })
       });
       const data = await res.json();
       if (data.success) {
-        setWizardStep('success');
+        setWizardStep('pending_approval_success');
         fetchEvents();
       } else {
-        throw new Error(data.message);
+        throw new Error(data.message || 'Failed to submit event details');
       }
     } catch (err) {
-      // Mock push on offline fallback
       console.warn('API error during submit, performing local synchronization fallback');
       const mockPush = {
-        _id: 'evt_' + Math.random().toString(36).substr(2, 9),
+        _id: registeredEvent?._id || 'evt_' + Math.random().toString(36).substr(2, 9),
         title: evtTitle,
         category: evtCategory,
         description: evtDescription,
@@ -718,7 +759,7 @@ export default function EventsPage() {
       };
       setEvents([mockPush, ...events]);
       calculateCounts([mockPush, ...events]);
-      setWizardStep('success');
+      setWizardStep('pending_approval_success');
     } finally {
       setSubmitLoading(false);
     }
@@ -1216,7 +1257,7 @@ export default function EventsPage() {
                   Your event <strong>"{evtTitle}"</strong> has been successfully submitted to the admin queue.
                 </p>
                 <p className="text-slate-400 text-[11px] leading-relaxed text-left mt-1.5 font-sans">
-                  Your payment has been received and verified successfully! Your event is now submitted to the admin queue for review. Once the administrator approves it, you will see it in your dashboard under the **Events** tab. From there, you can complete the final details like location address, contact phone, cover picture, and description to publish it live!
+                  Your event registration details and payment have been received and verified successfully! Your event is now submitted to the admin queue for review. Once the administrator approves it, it will automatically go live on the Events directory. You can manage or edit your events anytime from your dashboard under the **Events** tab.
                 </p>
               </div>
 
@@ -1258,13 +1299,13 @@ export default function EventsPage() {
                   <Sparkles className="h-5 w-5 text-amber-500 fill-current shrink-0" />
                   <div>
                     <h5 className="font-extrabold text-emerald-950 leading-none">Free Business Subscription Active!</h5>
-                    <p className="text-[10px] text-emerald-700 font-semibold mt-1">Listing standard fee (₹99) is fully waived. You can promote events for free.</p>
+                    <p className="text-[10px] text-emerald-700 font-semibold mt-1">Listing standard fee (₹99 + 18% GST) is fully waived. You can promote events for free.</p>
                   </div>
                 </div>
               ) : (
                 <div className="bg-slate-50 border border-slate-200 text-slate-600 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
                   <Tag className="h-4.5 w-4.5 text-[#027244] shrink-0" />
-                  <span>Standard listing charges: ₹99 per event listing.</span>
+                  <span>Standard listing charges: ₹99 + 18% GST (₹116.82 total) per event.</span>
                 </div>
               )}
 
@@ -1273,7 +1314,7 @@ export default function EventsPage() {
                   <span className="text-slate-800 font-extrabold text-sm">{evtTitle}</span>
                   <span className="text-slate-450 uppercase text-[9.5px] mt-0.5 tracking-wider">{evtCategory} Event</span>
                 </div>
-                <span className="text-[#027244] font-black text-lg">₹{paymentPrice}</span>
+                <span className="text-[#027244] font-black text-lg">₹{paymentPrice.toFixed(2)}</span>
               </div>
 
               {/* Secure Transaction Specs */}
@@ -1287,12 +1328,18 @@ export default function EventsPage() {
                   <span>₹99.00</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100 pb-2.5">
-                  <span className="text-slate-400">Waived Discount</span>
-                  <span>-₹{99 - paymentPrice}.00</span>
+                  <span className="text-slate-400">GST (18%)</span>
+                  <span>{paymentPrice === 0 ? '₹0.00' : '₹17.82'}</span>
                 </div>
+                {paymentPrice === 0 && (
+                  <div className="flex justify-between border-b border-slate-100 pb-2.5">
+                    <span className="text-slate-400">Waived Discount</span>
+                    <span>-₹116.82</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-slate-800 font-black text-sm pt-1">
                   <span>Grand Total</span>
-                  <span>₹{paymentPrice}.00</span>
+                  <span>₹{paymentPrice.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -1309,7 +1356,7 @@ export default function EventsPage() {
                   disabled={submitLoading}
                   className="h-11 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer flex-grow disabled:opacity-50"
                 >
-                  <span>{paymentPrice === 0 ? 'Proceed for Free' : 'Pay ₹99 & Continue'}</span>
+                  <span>{paymentPrice === 0 ? 'Proceed for Free' : `Pay ₹${paymentPrice.toFixed(2)} & Continue`}</span>
                   <ChevronRight className="h-4.5 w-4.5" />
                 </button>
               </div>
@@ -1399,15 +1446,71 @@ export default function EventsPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Cover Image URL (Optional)</span>
-                  <input
-                    type="url"
-                    placeholder="Provide a valid unsplash photo URL or leave empty for default banner"
-                    value={evtCoverUrl}
-                    onChange={(e) => setEvtCoverUrl(e.target.value)}
-                    className="h-10 px-3 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
-                  />
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Cover Image (Optional)</span>
+                  
+                  {/* File Upload Dropzone/Picker */}
+                  <div className="flex flex-col gap-2 border border-dashed border-slate-200 rounded-3xl p-5 items-center justify-center bg-slate-50/50">
+                    {evtCoverUrl ? (
+                      <div className="relative w-full h-40 rounded-2xl overflow-hidden border">
+                        <img src={evtCoverUrl} alt="Cover Preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setEvtCoverUrl('')}
+                          className="absolute top-2 right-2 bg-slate-950/65 text-white p-1.5 rounded-full hover:bg-slate-950/80 transition-all cursor-pointer border-none flex items-center justify-center"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : imageUploading ? (
+                      <div className="flex flex-col items-center justify-center gap-2 py-4">
+                        <RefreshCw className="h-6 w-6 animate-spin text-[#027244]" />
+                        <span className="text-xs font-semibold text-slate-500">Uploading cover image...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="h-9 w-9 bg-slate-100 text-slate-500 border border-slate-200 rounded-xl flex items-center justify-center shadow-3xs">
+                          <Upload className="h-4.5 w-4.5" />
+                        </div>
+                        <div className="text-center flex flex-col items-center select-none">
+                          <span className="text-xs font-extrabold text-slate-700">Upload cover image</span>
+                          <span className="text-[9.5px] text-slate-455 font-semibold mt-0.5">PNG, JPG, JPEG, WEBP (Max 5MB)</span>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          id="event-image-upload-file"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor="event-image-upload-file"
+                          className="py-1.5 px-4 border border-slate-200 hover:border-slate-300 rounded-xl text-[10.5px] font-extrabold text-slate-655 hover:bg-white transition-all cursor-pointer shadow-3xs hover:shadow-2xs select-none"
+                        >
+                          Select File
+                        </label>
+                      </>
+                    )}
+                  </div>
+
+                  {imageError && (
+                    <span className="text-[10px] text-red-500 font-semibold mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                      {imageError}
+                    </span>
+                  )}
+
+                  {/* Or Manual URL Input */}
+                  <div className="mt-1">
+                    <span className="text-[9.5px] text-slate-450 font-semibold uppercase tracking-wider">Or provide Image URL manually</span>
+                    <input
+                      type="url"
+                      placeholder="e.g. https://images.unsplash.com/photo-..."
+                      value={evtCoverUrl}
+                      onChange={(e) => setEvtCoverUrl(e.target.value)}
+                      className="h-10 px-3 w-full border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] mt-1"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-1">
@@ -1631,7 +1734,7 @@ export default function EventsPage() {
                     <div 
                       key={evt._id}
                       className="bg-white border border-slate-100 shadow-sm rounded-3xl overflow-hidden flex flex-col md:flex-row p-4 gap-6 transition-all duration-300 hover:shadow-md hover:border-slate-200/80 cursor-pointer group"
-                      onClick={() => navigate(`/events/${evt._id}`)}
+                      onClick={() => navigate(`/events/${evt.slug || evt._id}`)}
                     >
                       {/* Cover Image Container */}
                       <div className="shrink-0 overflow-hidden relative h-40 w-full md:w-52 rounded-2xl bg-slate-50 border border-slate-100">
@@ -1697,7 +1800,7 @@ export default function EventsPage() {
                             <span className="group-hover:underline">{evt.venue}</span>
                           </a>
 
-                          <p className={`text-xs text-slate-450 leading-relaxed font-medium mt-1 pr-4 whitespace-pre-line ${
+                          <p className={`text-xs text-slate-455 leading-relaxed font-medium mt-1 pr-4 whitespace-pre-line ${
                             expandedEvents[evt._id] ? '' : 'line-clamp-2'
                           }`}>
                             {evt.description}
@@ -1728,12 +1831,12 @@ export default function EventsPage() {
                             <span>{evt.likes ? evt.likes.length : 0}</span>
                           </button>
                           <span className="flex items-center gap-1 font-black text-slate-500 select-none animate-fadeIn" title="Views">
-                            <Eye className="h-3.5 w-3.5 text-slate-450" />
+                            <Eye className="h-3.5 w-3.5 text-slate-455" />
                             <span>{evt.views || 0}</span>
                           </span>
                           
                           <button 
-                            onClick={(e) => handleShareClick(e, evt._id)}
+                            onClick={(e) => handleShareClick(e, evt)}
                             className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-blue-650 cursor-pointer relative flex items-center justify-center transition-colors border-none"
                             title="Share Event"
                           >
@@ -1887,10 +1990,22 @@ export default function EventsPage() {
               </div>
             </div>
 
-            <div className="flex items-baseline gap-1 mt-1">
-              <span className="text-[#027244] font-black text-3xl">₹99</span>
-              <span className="text-[10px] text-slate-400 font-semibold">/ listing</span>
-            </div>
+            {hasActiveSubscription ? (
+              <div className="bg-emerald-50 border border-emerald-150 rounded-xl p-3 flex flex-col gap-0.5 mt-1 text-[#027244]">
+                <span className="text-xs font-black">Free Listing Active</span>
+                <span className="text-[9.5px] text-emerald-700 font-semibold">Standard charge is waived with your premium plan.</span>
+              </div>
+            ) : (
+              <div className="flex flex-col text-left mt-1 gap-0.5 select-none">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-[#027244] font-black text-3xl">₹99</span>
+                  <span className="text-[10px] text-slate-400 font-semibold">/ listing</span>
+                </div>
+                <span className="text-[10px] text-slate-450 font-bold leading-none mt-1">
+                  + 18% GST (₹17.82 in next stage)
+                </span>
+              </div>
+            )}
 
             <button 
               onClick={() => {

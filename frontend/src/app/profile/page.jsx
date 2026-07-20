@@ -291,7 +291,7 @@ export default function UserProfile() {
                 return (
                   <div 
                     key={b._id} 
-                    onClick={() => navigate(`/blogs/${b._id}`)}
+                    onClick={() => navigate(`/blogs/${b.slug || b._id}`)}
                     className="bg-white border border-slate-200/80 hover:border-slate-400 hover:shadow-md rounded-[24px] p-5 shadow-2xs transition-all flex flex-col justify-between gap-4 cursor-pointer group"
                   >
                     <div className="flex gap-4">
