@@ -92,6 +92,46 @@ app.use('/api/menu', require('./routes/menu'));
 app.use('/api/blood-donors', require('./routes/bloodDonors'));
 app.use('/api/blood-requests', require('./routes/bloodRequests'));
 
+// Dynamic slug/ID lookup endpoint to resolve event/blog/business routing at the root URL
+app.get('/api/slug-lookup/:slug', async (req, res) => {
+  try {
+    const slug = req.params.slug.toLowerCase();
+    const mongoose = require('mongoose');
+    const isValidId = mongoose.isValidObjectId(req.params.slug);
+
+    // Check Event collection
+    const Event = require('./models/Event');
+    const eventMatch = isValidId 
+      ? await Event.findById(req.params.slug)
+      : await Event.findOne({ slug });
+    if (eventMatch) {
+      return res.json({ success: true, type: 'event', id: eventMatch._id });
+    }
+
+    // Check Blog collection
+    const Blog = require('./models/Blog');
+    const blogMatch = isValidId 
+      ? await Blog.findById(req.params.slug)
+      : await Blog.findOne({ slug });
+    if (blogMatch) {
+      return res.json({ success: true, type: 'blog', id: blogMatch._id });
+    }
+
+    // Check Business collection
+    const Business = require('./models/Business');
+    const businessMatch = isValidId
+      ? await Business.findById(req.params.slug)
+      : await Business.findOne({ slug });
+    if (businessMatch) {
+      return res.json({ success: true, type: 'business', id: businessMatch._id });
+    }
+
+    res.json({ success: false, type: 'unknown' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Root & Health Status Check
 app.get('/', (req, res) => {
   res.json({

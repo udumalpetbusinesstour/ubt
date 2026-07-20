@@ -270,7 +270,7 @@ export default function EventsPage() {
     e.preventDefault();
     e.stopPropagation();
     const identifier = evt.slug || evt._id;
-    const shareUrl = `${window.location.origin}/events/${identifier}`;
+    const shareUrl = `${window.location.origin}/${identifier}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -306,7 +306,7 @@ export default function EventsPage() {
   };
 
   const openEventCommentsModal = (evt) => {
-    navigate(`/events/${evt.slug || evt._id}`);
+    navigate(`/${evt.slug || evt._id}`);
   };
 
   const handleAddComment = async (e, eventId) => {
@@ -1734,7 +1734,7 @@ export default function EventsPage() {
                     <div 
                       key={evt._id}
                       className="bg-white border border-slate-100 shadow-sm rounded-3xl overflow-hidden flex flex-col md:flex-row p-4 gap-6 transition-all duration-300 hover:shadow-md hover:border-slate-200/80 cursor-pointer group"
-                      onClick={() => navigate(`/events/${evt.slug || evt._id}`)}
+                      onClick={() => navigate(`/${evt.slug || evt._id}`)}
                     >
                       {/* Cover Image Container */}
                       <div className="shrink-0 overflow-hidden relative h-40 w-full md:w-52 rounded-2xl bg-slate-50 border border-slate-100">

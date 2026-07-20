@@ -572,6 +572,13 @@ function DashboardContent() {
   const [completeEventPaymentStatus, setCompleteEventPaymentStatus] = useState('Pending');
   const [completeEventPrice, setCompleteEventPrice] = useState(0);
   const [completeEventTime, setCompleteEventTime] = useState('');
+  const [completeEventTitle, setCompleteEventTitle] = useState('');
+  const [completeEventCategory, setCompleteEventCategory] = useState('');
+  const [completeEventDate, setCompleteEventDate] = useState('');
+  const [completeEventEndDate, setCompleteEventEndDate] = useState('');
+  const [completeEventOrganizer, setCompleteEventOrganizer] = useState('');
+  const [completeEventDuration, setCompleteEventDuration] = useState('');
+  const [customCompleteEventCategory, setCustomCompleteEventCategory] = useState('');
   const [completeEventLoading, setCompleteEventLoading] = useState(false);
   const [completeEventError, setCompleteEventError] = useState('');
   const [completeEventSuccess, setCompleteEventSuccess] = useState('');
@@ -3612,6 +3619,15 @@ function DashboardContent() {
 
   const handleOpenCompleteEvent = async (evt) => {
     setCompleteEvent(evt);
+    setCompleteEventTitle(evt.title || '');
+    const standardCats = ['Sports', 'Festival', 'Business', 'Music', 'Education', 'Health'];
+    const isStandardCat = standardCats.includes(evt.category);
+    setCompleteEventCategory(isStandardCat ? evt.category : (evt.category ? 'Others' : 'Sports'));
+    setCustomCompleteEventCategory(isStandardCat ? '' : (evt.category || ''));
+    setCompleteEventDate(evt.date ? evt.date.split('T')[0] : '');
+    setCompleteEventEndDate(evt.endDate ? evt.endDate.split('T')[0] : '');
+    setCompleteEventOrganizer(evt.organizer || '');
+    setCompleteEventDuration(evt.duration || '');
     setCompleteEventPhone(evt.phone || '');
     setCompleteEventVenue(evt.venue || '');
     setCompleteEventDescription(evt.description || '');
@@ -3849,8 +3865,9 @@ function DashboardContent() {
 
   const handlePublishEventDetails = async (e) => {
     e.preventDefault();
-    if (!completeEventVenue || !completeEventPhone || !completeEventDescription) {
-      setCompleteEventError('Location address, helpline phone and description are required.');
+    const finalCategory = completeEventCategory === 'Others' ? (customCompleteEventCategory.trim() || 'Others') : completeEventCategory;
+    if (!completeEventTitle || !finalCategory || !completeEventDate || !completeEventEndDate || !completeEventOrganizer || !completeEventVenue || !completeEventPhone || !completeEventDescription) {
+      setCompleteEventError('Title, Category, Dates, Organizer, Venue, Phone, and Description are required.');
       return;
     }
 
@@ -3867,6 +3884,12 @@ function DashboardContent() {
           Authorization: `Bearer ${activeToken}`
         },
         body: JSON.stringify({
+          title: completeEventTitle,
+          category: finalCategory,
+          date: completeEventDate,
+          endDate: completeEventEndDate,
+          organizer: completeEventOrganizer,
+          duration: completeEventDuration,
           venue: completeEventVenue,
           phone: completeEventPhone,
           description: completeEventDescription,
@@ -3881,22 +3904,28 @@ function DashboardContent() {
 
       const data = await res.json();
       if (data.success) {
-        setCompleteEventSuccess('Event listed successfully! It is now live in the directory.');
+        setCompleteEventSuccess('Event saved successfully!');
         fetchUserEvents();
         setTimeout(() => {
           setShowCompleteEventModal(false);
           setCompleteEvent(null);
-        }, 3000);
+        }, 2000);
       } else {
         setCompleteEventError(data.message || 'Failed to update event details.');
       }
     } catch (err) {
       setUserEvents(prev => prev.map(evt => evt._id === completeEvent._id ? {
         ...evt,
+        title: completeEventTitle,
+        category: finalCategory,
+        date: new Date(completeEventDate),
+        endDate: new Date(completeEventEndDate),
+        organizer: completeEventOrganizer,
+        duration: completeEventDuration,
         venue: completeEventVenue,
         phone: completeEventPhone,
         description: completeEventDescription,
-        coverImageUrl: completeEventCoverUrl || getEventDefaultImage(completeEvent?.category),
+        coverImageUrl: completeEventCoverUrl || getEventDefaultImage(finalCategory),
         paymentLink: completeEventPaymentLink,
         isCompleted: true,
         paymentStatus: completeEventPaymentStatus,
@@ -3904,11 +3933,11 @@ function DashboardContent() {
         time: completeEventTime
       } : evt));
 
-      setCompleteEventSuccess('Mock Mode: Event listed successfully!');
+      setCompleteEventSuccess('Mock Mode: Event saved successfully!');
       setTimeout(() => {
         setShowCompleteEventModal(false);
         setCompleteEvent(null);
-      }, 3000);
+      }, 2000);
     } finally {
       setCompleteEventLoading(false);
     }
@@ -7517,6 +7546,15 @@ function DashboardContent() {
                               <Edit3 className="h-4 w-4" /> Complete Event Details
                             </button>
                           )}
+
+                          {evt.paymentStatus !== 'Pending' && evt.isCompleted && (
+                            <button
+                              onClick={() => handleOpenCompleteEvent(evt)}
+                              className="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-1"
+                            >
+                              <Edit3 className="h-4 w-4" /> Edit Event Details
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -8955,7 +8993,7 @@ function DashboardContent() {
                           {/* Action footer */}
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-t border-slate-100 pt-3 gap-3">
                             <Link
-                              to={`/blogs/${blog._id}`}
+                              to={`/${blog.slug || blog._id}`}
                               className="text-[10px] font-extrabold text-[#027244] hover:text-[#005934] flex items-center gap-1 leading-none group cursor-pointer"
                             >
                               <Eye className="h-3.5 w-3.5 text-slate-400 shrink-0" /> View <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform shrink-0" />
@@ -11814,12 +11852,14 @@ function DashboardContent() {
             <div className="flex justify-between items-start border-b border-slate-100 pb-3.5">
               <div>
                 <h3 className="font-extrabold text-slate-800 text-base md:text-lg">
-                  List Your Event - {completeEventStep === 1 ? 'Secure Checkout' : 'Additional Details'}
+                  {completeEvent.isCompleted ? 'Edit Event Details' : (completeEventStep === 1 ? 'List Your Event - Secure Checkout' : 'List Your Event - Additional Details')}
                 </h3>
                 <p className="text-slate-450 text-[10.5px] font-semibold mt-1">
-                  {completeEventStep === 1
-                    ? 'Step 1 of 2: Complete the listing charge to verify and unlock detail submission.'
-                    : 'Step 2 of 2: Provide location, contact info, optional registration link, and cover image.'}
+                  {completeEvent.isCompleted 
+                    ? 'Modify your event\'s title, category, timing, description, venue, and cover image.'
+                    : (completeEventStep === 1
+                      ? 'Step 1 of 2: Complete the listing charge to verify and unlock detail submission.'
+                      : 'Step 2 of 2: Provide location, contact info, optional registration link, and cover image.')}
                 </p>
               </div>
               <button
@@ -11914,14 +11954,106 @@ function DashboardContent() {
               <form onSubmit={handlePublishEventDetails} className="flex flex-col gap-4">
 
                 {/* PAYMENT VERIFIED BADGE */}
-                <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-[10.5px] text-[#027244] font-semibold">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4.5 w-4.5 text-amber-500 fill-current shrink-0" />
-                    <span>Payment verified successfully! Please fill in further details to publish your event.</span>
+                {!completeEvent.isCompleted && (
+                  <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-[10.5px] text-[#027244] font-semibold">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4.5 w-4.5 text-amber-500 fill-current shrink-0" />
+                      <span>Payment verified successfully! Please fill in further details to publish your event.</span>
+                    </div>
+                    <span className="bg-[#027244] text-white font-black text-[9px] uppercase tracking-wider px-2.5 py-1 rounded shadow-2xs">
+                      {completeEventPaymentStatus} verified
+                    </span>
                   </div>
-                  <span className="bg-[#027244] text-white font-black text-[9px] uppercase tracking-wider px-2.5 py-1 rounded shadow-2xs">
-                    {completeEventPaymentStatus} verified
-                  </span>
+                )}
+
+                {/* Event Basic Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Event Title *</label>
+                    <input
+                      type="text"
+                      value={completeEventTitle}
+                      onChange={(e) => setCompleteEventTitle(e.target.value)}
+                      placeholder="e.g. Udumalpet Marathon 2026"
+                      required
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Category *</label>
+                    <select
+                      value={completeEventCategory}
+                      onChange={(e) => setCompleteEventCategory(e.target.value)}
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 cursor-pointer"
+                    >
+                      {['Sports', 'Festival', 'Business', 'Music', 'Education', 'Health', 'Others'].map(c => (
+                        <option key={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {completeEventCategory === 'Others' && (
+                  <div className="flex flex-col gap-1 animate-fadeIn">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Custom Category Name *</label>
+                    <input
+                      type="text"
+                      value={customCompleteEventCategory}
+                      onChange={(e) => setCustomCompleteEventCategory(e.target.value)}
+                      placeholder="e.g. Workshop, Seminar, Conference"
+                      required
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Start Date *</label>
+                    <input
+                      type="date"
+                      value={completeEventDate}
+                      onChange={(e) => setCompleteEventDate(e.target.value)}
+                      required
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">End Date *</label>
+                    <input
+                      type="date"
+                      value={completeEventEndDate}
+                      onChange={(e) => setCompleteEventEndDate(e.target.value)}
+                      required
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Duration *</label>
+                    <input
+                      type="text"
+                      value={completeEventDuration}
+                      onChange={(e) => setCompleteEventDuration(e.target.value)}
+                      placeholder="e.g. 1 Day, 3 Hours"
+                      required
+                      className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Organizer Name *</label>
+                  <input
+                    type="text"
+                    value={completeEventOrganizer}
+                    onChange={(e) => setCompleteEventOrganizer(e.target.value)}
+                    placeholder="e.g. Sports Club"
+                    required
+                    className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                  />
                 </div>
 
                 <div className="flex flex-col gap-1">

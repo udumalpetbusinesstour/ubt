@@ -3081,7 +3081,7 @@ Team Udumalpet Business
                                   Author: {b.authorName} • Date: {new Date(b.createdAt).toLocaleDateString()} • Category: <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider">{b.category || 'Business Tips'}</span>
                                 </span>
                                 <a
-                                  href={`/blogs/${b.slug || b._id}`}
+                                  href={`/${b.slug || b._id}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-[#027244] hover:text-[#005934] hover:underline font-black text-[10.5px] mt-1.5 flex items-center gap-1 w-fit cursor-pointer leading-none"

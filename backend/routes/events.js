@@ -229,7 +229,11 @@ router.put('/:id', protect, async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized to update this event' });
     }
 
-    const { description, venue, phone, coverImageUrl, paymentLink, isCompleted, paymentStatus, price, time } = req.body;
+    const { 
+      description, venue, phone, coverImageUrl, paymentLink, 
+      isCompleted, paymentStatus, price, time, 
+      title, category, date, endDate, organizer, duration 
+    } = req.body;
 
     if (description !== undefined) event.description = description;
     if (venue !== undefined) event.venue = venue;
@@ -240,6 +244,13 @@ router.put('/:id', protect, async (req, res) => {
     if (paymentStatus !== undefined) event.paymentStatus = paymentStatus;
     if (price !== undefined) event.price = Number(price);
     if (time !== undefined) event.time = time;
+    
+    if (title !== undefined) event.title = title;
+    if (category !== undefined) event.category = category;
+    if (date !== undefined) event.date = new Date(date);
+    if (endDate !== undefined) event.endDate = new Date(endDate);
+    if (organizer !== undefined) event.organizer = organizer;
+    if (duration !== undefined) event.duration = duration;
 
     await event.save();
 

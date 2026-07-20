@@ -29,12 +29,63 @@ import GlobalModalProvider from './components/GlobalModalProvider';
 function SlugRouteWrapper() {
   const { id } = useParams();
   const lowerId = (id || '').toLowerCase();
-  
-  if (lowerId.endsWith('-in-udumalpet')) {
-    return <BusinessesingsPage />;
-  } else {
-    return <BusinessDetail />;
+  const [routeType, setRouteType] = useState('loading'); // 'loading', 'category', 'event', 'blog', 'business'
+
+  useEffect(() => {
+    // 1. Static/immediate check for categories ending in -in-udumalpet
+    if (lowerId.endsWith('-in-udumalpet')) {
+      setRouteType('category');
+      return;
+    }
+
+    // 2. Fetch the lookup endpoint
+    let active = true;
+    const fetchType = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/slug-lookup/${encodeURIComponent(id)}`);
+        const data = await res.json();
+        if (active) {
+          if (data.success) {
+            setRouteType(data.type);
+          } else {
+            setRouteType('business'); // Fallback
+          }
+        }
+      } catch (err) {
+        if (active) {
+          setRouteType('business'); // Fallback
+        }
+      }
+    };
+
+    fetchType();
+    return () => {
+      active = false;
+    };
+  }, [id, lowerId]);
+
+  if (routeType === 'loading') {
+    return (
+      <div className="py-24 text-center text-slate-400 flex flex-col items-center justify-center gap-3">
+        <span className="h-8 w-8 animate-spin border-4 border-emerald-600 border-t-transparent rounded-full" />
+        <span className="text-xs font-bold">Loading...</span>
+      </div>
+    );
   }
+
+  if (routeType === 'category') {
+    return <BusinessesingsPage />;
+  }
+
+  if (routeType === 'event') {
+    return <EventDetail />;
+  }
+
+  if (routeType === 'blog') {
+    return <BlogDetail />;
+  }
+
+  return <BusinessDetail />;
 }
 
 function AppContent() {
