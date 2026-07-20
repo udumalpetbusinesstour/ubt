@@ -1630,18 +1630,18 @@ Please confirm availability and delivery time.`;
       )}
 
       {/* Premium Header Banner (Matching Image 5) */}
-      <section className="w-full relative bg-gradient-to-r from-[#027244] via-emerald-600 to-amber-400 text-white py-14 px-4 border-b border-emerald-800/60 overflow-hidden">
+      <section className="w-full relative bg-gradient-to-r from-[#002211] via-[#013b1f] to-[#664d00] text-white py-14 px-4 border-b border-emerald-950/80 overflow-hidden">
         {/* Background Image opacity filter */}
         <div 
           className="absolute inset-0 bg-cover" 
           style={{ 
             backgroundImage: `url('/default_business_cover.png')`,
             backgroundPosition: 'center',
-            opacity: 0.85
+            opacity: 0.8
           }} 
         />
         {/* Sleek dark shadow gradient bottom-up */}
-        <div className="absolute inset-0 bg-black/15 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
+        <div className="absolute inset-0 bg-black/25 bg-gradient-to-t from-black/65 via-black/25 to-transparent" />
         
         {mediaError && (
           <div className="absolute top-4 left-4 right-4 bg-red-600 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl text-center z-30 shadow flex items-center justify-center gap-2 animate-fadeIn">
@@ -1781,10 +1781,10 @@ Please confirm availability and delivery time.`;
             {/* Premium Rating and Specs Pills */}
             <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-white/90 mt-2">
               <div className="flex items-center gap-1 bg-white/10 border border-white/20 px-2.5 py-1 rounded-lg">
-                <div className="flex text-amber-400 shrink-0 gap-0.5">
+                <div className="hidden sm:flex text-amber-400 shrink-0 gap-0.5">
                   {renderStars(business.googleRating, 'h-3.5 w-3.5', 'text-slate-700')}
                 </div>
-                <span className="font-black text-white ml-1">{(business.googleRating ?? 0).toFixed(1)}</span>
+                <span className="font-black text-white ml-0.5 sm:ml-1">{(business.googleRating ?? 0).toFixed(1)}</span>
                 <span className="text-[10px] text-white/75">({totalReviewsCount} Reviews)</span>
               </div>
               <span className="text-white/40">•</span>

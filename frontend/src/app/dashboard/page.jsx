@@ -6386,7 +6386,7 @@ function DashboardContent() {
                 )}
 
                 {/* Premium Header Banner (Cover Image) */}
-                <section className="w-full relative bg-gradient-to-r from-[#027244] via-emerald-600 to-amber-400 text-white py-12 px-6 rounded-3xl overflow-hidden border border-emerald-800/20">
+                <section className="w-full relative bg-gradient-to-r from-[#002211] via-[#013b1f] to-[#664d00] text-white py-12 px-6 rounded-3xl overflow-hidden border border-emerald-950/40">
                   <div
                     className="absolute inset-0 bg-cover"
                     style={{
@@ -6497,10 +6497,10 @@ function DashboardContent() {
                       {/* Premium Rating and Specs Pills */}
                       <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-300 mt-2">
                         <div className="flex items-center gap-1 bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg">
-                          <div className="flex text-amber-400 shrink-0 gap-0.5">
+                          <div className="hidden sm:flex text-amber-400 shrink-0 gap-0.5">
                             {renderStars(business.googleRating ?? 4.5, 'h-3.5 w-3.5', 'text-slate-700')}
                           </div>
-                          <span className="font-black text-white ml-1">{(business.googleRating ?? 4.5).toFixed(1)}</span>
+                          <span className="font-black text-white ml-0.5 sm:ml-1">{(business.googleRating ?? 4.5).toFixed(1)}</span>
                           <span className="text-[10px] text-slate-405">({overallReviewsCount} Reviews)</span>
                         </div>
                         <span className="text-slate-600">•</span>
