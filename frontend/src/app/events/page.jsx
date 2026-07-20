@@ -1997,9 +1997,6 @@ export default function EventsPage() {
                   <span className="text-[#027244] font-black text-3xl">₹99</span>
                   <span className="text-[10px] text-slate-400 font-semibold">/ listing</span>
                 </div>
-                <span className="text-[10px] text-slate-450 font-bold leading-none mt-1">
-                  + 18% GST (₹17.82 in next stage)
-                </span>
               </div>
             )}
 

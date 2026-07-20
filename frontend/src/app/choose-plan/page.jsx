@@ -735,25 +735,14 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
                       <h3 className="font-extrabold text-slate-800 text-base">{p.name ? p.name.replace(/\b\w/g, c => c.toUpperCase()) : ''}</h3>
                       {(() => {
                         const rawPrice = user && (user.role === 'admin' || user.role === 'superadmin') ? p.price : getDiscountedPrice(p.price);
-                        const numPrice = parseFloat(rawPrice);
-                        const basePriceVal = numPrice / 1.18;
-                        const gstVal = numPrice - basePriceVal;
-                        
-                        const baseStr = basePriceVal % 1 === 0 ? basePriceVal.toFixed(0) : basePriceVal.toFixed(2);
-                        const gstStr = gstVal.toFixed(2);
 
                         return (
-                          <div className="flex flex-col items-center justify-center mt-1">
-                            <div className="flex items-baseline justify-center gap-1">
-                              <span className="text-3xl font-extrabold text-[#001c41]">
-                                ₹{baseStr}
-                              </span>
-                              <span className="text-xs text-slate-400 font-semibold ml-1">
-                                / {p.durationDays} Days
-                              </span>
-                            </div>
-                            <span className="text-[10.5px] text-slate-500 font-black mt-0.5 select-none">
-                              + ₹{gstStr} GST (18% included)
+                          <div className="flex items-baseline justify-center gap-1 mt-1">
+                            <span className="text-3xl font-extrabold text-[#001c41]">
+                              ₹{rawPrice}
+                            </span>
+                            <span className="text-xs text-slate-400 font-semibold ml-1">
+                              / {p.durationDays} Days
                             </span>
                           </div>
                         );
@@ -1008,7 +997,7 @@ export default function ChoosePlan({ isStep = false, onNext = null, initialBusin
               },
               {
                 q: 'Can I post multiple events?',
-                a: <span>Yes, active Premium subscribers can post unlimited local events, sales, and announcements on UBT for free. Non-subscribers pay a standard fee of ₹99 <span className="text-[10px] font-normal opacity-85">+ ₹17.82 GST</span> per event listing.</span>
+                a: <span>Yes, active Premium subscribers can post unlimited local events, sales, and announcements on UBT for free. Non-subscribers pay a standard fee of ₹99 per event listing.</span>
               },
               {
                 q: 'Will my profile be removed if I don\'t renew?',

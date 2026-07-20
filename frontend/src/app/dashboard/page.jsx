@@ -8272,9 +8272,9 @@ function DashboardContent() {
                                         <Sparkles className="h-3.5 w-3.5 fill-current text-white" />
                                       )}
                                       {isAdExpired ? (
-                                        <span>Repromote Flyer (₹99 <span className="text-[8.5px] font-normal lowercase opacity-85">+ ₹17.82 gst</span>)</span>
+                                        <span>Repromote Flyer (₹99)</span>
                                       ) : (
-                                        <span>Promote to Homepage (₹99 <span className="text-[8.5px] font-normal lowercase opacity-85">+ ₹17.82 gst</span>)</span>
+                                        <span>Promote to Homepage (₹99)</span>
                                       )}
                                     </button>
                                   )}
@@ -10253,25 +10253,14 @@ function DashboardContent() {
                           <h3 className="font-extrabold text-slate-800 text-sm">{p.name ? p.name.replace(/\b\w/g, c => c.toUpperCase()) : ''}</h3>
                           {(() => {
                             const rawPrice = getDiscountedPrice(p.price);
-                            const numPrice = parseFloat(rawPrice);
-                            const basePriceVal = numPrice / 1.18;
-                            const gstVal = numPrice - basePriceVal;
-
-                            const baseStr = basePriceVal % 1 === 0 ? basePriceVal.toFixed(0) : basePriceVal.toFixed(2);
-                            const gstStr = gstVal.toFixed(2);
 
                             return (
-                              <div className="flex flex-col items-center justify-center mt-0.5">
-                                <div className="flex items-baseline justify-center gap-1">
-                                  <span className="text-2xl font-extrabold text-[#001c41]">
-                                    ₹{baseStr}
-                                  </span>
-                                  <span className="text-[10px] text-slate-400 font-semibold ml-1">
-                                    / {p.durationDays} Days
-                                  </span>
-                                </div>
-                                <span className="text-[9.5px] text-slate-500 font-black mt-0.5 select-none">
-                                  + ₹{gstStr} GST (18% included)
+                              <div className="flex items-baseline justify-center gap-1 mt-0.5">
+                                <span className="text-2xl font-extrabold text-[#001c41]">
+                                  ₹{rawPrice}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-semibold ml-1">
+                                  / {p.durationDays} Days
                                 </span>
                               </div>
                             );
@@ -11702,12 +11691,12 @@ function DashboardContent() {
             {business && business.subscriptionStatus === 'active' ? (
               <div className="bg-emerald-50 border border-emerald-250 rounded-2xl p-4 text-[10.5px] text-[#027244] font-semibold flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-                <span>Active Premium Subscription detected! You can list this event for 100% Free (no standard ₹99 <span className="text-[9.5px] font-normal opacity-85">+ ₹17.82 GST</span> charge).</span>
+                <span>Active Premium Subscription detected! You can list this event for 100% Free (no standard ₹99 charge).</span>
               </div>
             ) : (
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-[10.5px] text-amber-800 font-semibold flex items-center gap-2 animate-pulse">
                 <Info className="h-4 w-4 text-amber-600 shrink-0" />
-                <span>No active premium subscription detected. A standard ₹99 <span className="text-[9.5px] font-normal opacity-85">+ ₹17.82 GST</span> publishing fee applies to launch this event.</span>
+                <span>No active premium subscription detected. A standard ₹99 publishing fee applies to launch this event.</span>
               </div>
             )}
 

@@ -5336,7 +5336,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                 <div className="flex flex-col gap-1.5">
                                   <div className="flex items-center gap-2 flex-wrap">
                                     <span className="bg-rose-600 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-xs">
-                                      ₹99 <span className="text-[7.5px] font-normal lowercase opacity-90">+ ₹17.82 gst</span> Paid Promotion
+                                      ₹99 Paid Promotion
                                     </span>
                                     <span className="text-[11px] font-extrabold text-slate-455">Business: <strong className={themeMode === 'dark' ? 'text-slate-200' : 'text-slate-700'}>{ad.businessName}</strong></span>
                                   </div>
@@ -5681,14 +5681,14 @@ const handlePartnerAction = async (partnerId, action) => {
                     }`}>
                       <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-sans">Event Postings Revenue</span>
                       <h3 className="text-2xl font-black text-blue-500 mt-2">₹{revenueAnalytics?.eventRevenue?.toLocaleString('en-IN') || 0}</h3>
-                      <span className="text-[10.5px] text-slate-550 font-semibold mt-1">₹99 <span className="text-[9px] font-normal opacity-85">+ ₹17.82 GST</span> per event postings fee</span>
+                      <span className="text-[10.5px] text-slate-550 font-semibold mt-1">₹99 per event posting fee</span>
                     </div>
                     <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                     }`}>
                       <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-sans">Ads Postings Revenue</span>
                       <h3 className="text-2xl font-black text-purple-600 mt-2">₹{revenueAnalytics?.adRevenue?.toLocaleString('en-IN') || 0}</h3>
-                      <span className="text-[10.5px] text-slate-550 font-semibold mt-1">₹99 <span className="text-[9px] font-normal opacity-85">+ ₹17.82 GST</span> per sponsored ad promotion</span>
+                      <span className="text-[10.5px] text-slate-550 font-semibold mt-1">₹99 per sponsored ad promotion</span>
                     </div>
                     <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
