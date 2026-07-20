@@ -1630,17 +1630,19 @@ Please confirm availability and delivery time.`;
       )}
 
       {/* Premium Header Banner (Matching Image 5) */}
-      <section className="w-full relative bg-[#0f2e46] text-white py-14 px-4 border-b border-slate-800/60 overflow-hidden">
-        {/* Background Image opacity filter */}
+      <section className="w-full relative bg-[#061e36] text-white py-14 px-4 border-b border-slate-800/60 overflow-hidden">
+        {/* Background Image opacity & right-alignment filter */}
         <div 
-          className="absolute inset-0 bg-cover bg-center" 
+          className="absolute inset-0 bg-cover" 
           style={{ 
             backgroundImage: `url('/default_business_cover.png')`,
+            backgroundPosition: 'right center',
             opacity: 0.95
           }} 
         />
-        {/* Soft gradient overlay so text remains 100% readable */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/40 to-slate-900/10" />
+        {/* Left side clean mask so business title & details remain 100% clean and readable */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#061e36] via-[#061e36]/80 to-transparent w-full md:w-3/5 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
         
         {mediaError && (
           <div className="absolute top-4 left-4 right-4 bg-red-600 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl text-center z-30 shadow flex items-center justify-center gap-2 animate-fadeIn">
