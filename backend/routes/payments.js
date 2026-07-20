@@ -94,7 +94,19 @@ router.post('/create-order', protect, async (req, res) => {
     let subscriptionObj;
     if (!isMock) {
       try {
-        const totalCount = (planType.toLowerCase() === 'monthly' || planType.toLowerCase().includes('monthly')) ? 1100 : 90;
+        // Dynamically compute the maximum possible cycles to prevent exceeding Razorpay's Dec 31, 2120 limit in future years
+        const maxYear = 2120;
+        const currentYear = new Date().getFullYear();
+        const remainingYears = Math.max(1, maxYear - currentYear);
+        
+        let totalCount;
+        if (planType.toLowerCase() === 'monthly' || planType.toLowerCase().includes('monthly')) {
+          const remainingMonths = remainingYears * 12 + (11 - new Date().getMonth());
+          totalCount = Math.min(1100, Math.max(12, remainingMonths - 5));
+        } else {
+          totalCount = Math.min(90, Math.max(2, remainingYears - 2));
+        }
+
         subscriptionObj = await razorpay.subscriptions.create({
           plan_id: planId,
           total_count: totalCount,
