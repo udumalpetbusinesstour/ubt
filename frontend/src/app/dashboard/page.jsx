@@ -6404,15 +6404,15 @@ function DashboardContent() {
                 )}
 
                 {/* Premium Header Banner (Cover Image) */}
-                <section className="w-full relative bg-[#041627] text-white py-12 px-6 rounded-3xl overflow-hidden border border-slate-800/40">
+                <section className="w-full relative bg-[#041627] text-white py-10 sm:py-12 px-4 sm:px-6 rounded-3xl overflow-hidden border border-slate-800/40">
                   <div
-                    className="absolute inset-0 bg-cover bg-right"
+                    className="absolute inset-0 bg-cover bg-center sm:bg-right transition-all duration-300"
                     style={{
-                      backgroundImage: `url('/default_business_cover.png')`,
+                      backgroundImage: business.coverImageUrl ? `url('${window.getImageUrl ? window.getImageUrl(business.coverImageUrl) : business.coverImageUrl}')` : `url('/default_business_cover.png')`,
                       opacity: 0.95
                     }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#041627] via-[#041627]/90 md:via-[#041627]/70 to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#041627]/95 via-[#041627]/65 sm:via-[#041627]/75 to-[#041627]/20 sm:to-transparent pointer-events-none" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#041627]/90 via-transparent to-transparent pointer-events-none" />
 
                   <div className={`relative flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10 transition-opacity duration-300 ${isRepositioning ? 'opacity-10 pointer-events-none' : 'opacity-100'}`}>
