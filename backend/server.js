@@ -9,6 +9,7 @@ const { startSubscriptionCron } = require('./cron/subscriptionCron');
 const { startGoogleReviewsCron } = require('./cron/googleReviewsCron');
 const { startDailyTotalCron } = require('./cron/dailyTotalCron');
 const { startWeeklyExpenseCron } = require('./cron/weeklyExpenseCron');
+const { startIncompleteRegistrationsCleanupCron } = require('./cron/incompleteRegistrationsCleanupCron');
 const { seedDefaultPlans } = require('./routes/plans');
 
 // Seeder routine for UBT administrative credentials
@@ -147,6 +148,9 @@ const initializeServer = async () => {
 
     // Initialize Weekly Sheets Expense Total Cron
     startWeeklyExpenseCron();
+
+    // Initialize Incomplete Registrations 10-day Cleanup Cron
+    startIncompleteRegistrationsCleanupCron();
 
     // 6. Seed and sync default categories on boot
     console.log('[Boot] Seeding and syncing category systems...');
