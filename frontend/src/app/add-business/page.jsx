@@ -3678,7 +3678,7 @@ export default function AddBusiness() {
                         <span className="text-xs text-slate-400 font-semibold">{formData.locality}, Udumalpet</span>
                       </div>
                       <span className="bg-amber-550 text-white text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow">
-                        Pending Vetting
+                        Pending Verification
                       </span>
                     </div>
                     

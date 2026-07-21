@@ -4578,7 +4578,7 @@ function DashboardContent() {
                       </span>
                     ) : (
                       <span className="bg-amber-950/80 text-amber-400 border border-amber-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
-                        <AlertCircle className="h-2.5 w-2.5" /> Pending Vetting
+                        <AlertCircle className="h-2.5 w-2.5" /> Pending Verification
                       </span>
                     )}
                   </div>
@@ -5610,7 +5610,7 @@ function DashboardContent() {
                                     </span>
                                     <span className="text-[10px] text-slate-400 font-semibold mt-0.5">
                                       {(() => {
-                                        const bizStatus = ref.referredBusinessId?.status || 'Pending Vetting';
+                                        const bizStatus = ref.referredBusinessId?.status || 'Pending Verification';
                                         const subStatus = ref.referredBusinessId?.subscriptionStatus || 'none';
                                         if (subStatus !== 'active') return 'Subscription Pending';
                                         if (bizStatus !== 'Approved') return 'Approval Pending';
@@ -9840,7 +9840,7 @@ function DashboardContent() {
                             const isCompleted = r.status === 'completed';
                             const isRejected = r.status === 'rejected';
                             const bizName = r.referredBusinessId?.name || 'Incomplete Draft';
-                            const bizStatus = r.referredBusinessId?.status || 'Pending Vetting';
+                            const bizStatus = r.referredBusinessId?.status || 'Pending Verification';
                             const subStatus = r.referredBusinessId?.subscriptionStatus || 'none';
 
                             return (

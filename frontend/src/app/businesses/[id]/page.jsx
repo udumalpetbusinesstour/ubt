@@ -1610,7 +1610,7 @@ Please confirm availability and delivery time.`;
 
   return (
     <div className="w-full flex flex-col items-center font-sans bg-[#F8FAFC]">
-      {/* Pending Vetting Banner */}
+      {/* Pending Verification Banner */}
       {business.status && business.status !== 'Approved' && (
         <div className="w-full bg-amber-600 text-white font-extrabold text-xs py-3.5 px-4 text-center sticky top-[76px] z-30 shadow flex items-center justify-center gap-2">
           <AlertCircle className="h-4.5 w-4.5 animate-pulse" />
