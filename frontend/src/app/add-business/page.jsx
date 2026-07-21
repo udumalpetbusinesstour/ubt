@@ -525,6 +525,31 @@ export default function AddBusiness() {
       brands: Array.isArray(draft.brands) ? draft.brands.join(', ') : (draft.brands || ''),
       highlights: Array.isArray(draft.highlights) ? draft.highlights.join(', ') : (draft.highlights || ''),
     }));
+
+    // Auto-prefill branchForm basic info from parent business
+    setBranchForm((prev) => ({
+      ...prev,
+      name: prev.name || draft.name || draft.businessName || '',
+      category: draft.category || prev.category || '',
+      customCategoryName: draft.customCategoryName || prev.customCategoryName || '',
+      type: draft.type || prev.type || 'Individual / Sole Proprietor',
+      description: prev.description || draft.description || '',
+      yearEstablished: prev.yearEstablished || draft.yearEstablished || draft.establishedYear || '',
+      employeeCount: prev.employeeCount || draft.employeeCount || '1 - 5',
+      gstNumber: prev.gstNumber || draft.gstNumber || '',
+      services: prev.services || (Array.isArray(draft.services) ? draft.services.join(', ') : (draft.services || '')),
+      brands: prev.brands || (Array.isArray(draft.brands) ? draft.brands.join(', ') : (draft.brands || '')),
+      languagesKnown: prev.languagesKnown || draft.languagesKnown || 'Tamil, English',
+      serviceArea: prev.serviceArea || draft.serviceArea || 'Udumalpet Town',
+      highlights: prev.highlights || (Array.isArray(draft.highlights) ? draft.highlights.join(', ') : (draft.highlights || '')),
+      logoUrl: prev.logoUrl || draft.logoUrl || '',
+      coverImageUrl: prev.coverImageUrl || draft.coverImageUrl || '',
+      phone: prev.phone || draft.phone || '',
+      whatsapp: prev.whatsapp || draft.whatsapp || draft.phone || '',
+      email: prev.email || draft.email || '',
+      website: prev.website || draft.website || '',
+    }));
+
     if (draft.category) {
       if (draft.category === 'Others') {
         setCategorySearchQuery(draft.customCategoryName || '');
@@ -657,6 +682,34 @@ export default function AddBusiness() {
       }
     }
   }, [searchParams]);
+
+  // Auto-sync parent business details into branchForm when in branch mode
+  useEffect(() => {
+    if (isBranchMode && formData && formData.name) {
+      setBranchForm((prev) => ({
+        ...prev,
+        name: prev.name || formData.name || '',
+        category: prev.category || formData.category || '',
+        customCategoryName: prev.customCategoryName || formData.customCategoryName || '',
+        type: prev.type || formData.type || 'Individual / Sole Proprietor',
+        description: prev.description || formData.description || '',
+        yearEstablished: prev.yearEstablished || formData.yearEstablished || formData.establishedYear || '',
+        employeeCount: prev.employeeCount || formData.employeeCount || '1 - 5',
+        gstNumber: prev.gstNumber || formData.gstNumber || '',
+        services: prev.services || (Array.isArray(formData.services) ? formData.services.join(', ') : (formData.services || '')),
+        brands: prev.brands || (Array.isArray(formData.brands) ? formData.brands.join(', ') : (formData.brands || '')),
+        languagesKnown: prev.languagesKnown || formData.languagesKnown || 'Tamil, English',
+        serviceArea: prev.serviceArea || formData.serviceArea || 'Udumalpet Town',
+        highlights: prev.highlights || (Array.isArray(formData.highlights) ? formData.highlights.join(', ') : (formData.highlights || '')),
+        logoUrl: prev.logoUrl || formData.logoUrl || '',
+        coverImageUrl: prev.coverImageUrl || formData.coverImageUrl || '',
+        phone: prev.phone || formData.phone || '',
+        whatsapp: prev.whatsapp || formData.whatsapp || formData.phone || '',
+        email: prev.email || formData.email || '',
+        website: prev.website || formData.website || '',
+      }));
+    }
+  }, [isBranchMode, formData]);
 
   useEffect(() => {
     if (currentStep === 1 && formData.subscriptionStatus === 'active' && !isBranchMode) {
@@ -3203,9 +3256,43 @@ export default function AddBusiness() {
                   {/* Branch Step 1: Basic Info */}
                   {branchStep === 1 && (
                     <div className="flex flex-col gap-6">
-                      <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
-                        <h3 className="text-base font-extrabold text-slate-800">Branch Basic Information</h3>
-                        <p className="text-slate-450 text-xs font-semibold">Enter basic info for this branch location.</p>
+                      <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div className="flex flex-col gap-0.5">
+                          <h3 className="text-base font-extrabold text-slate-800">Branch Basic Information</h3>
+                          <p className="text-slate-450 text-xs font-semibold">Enter basic info for this branch location.</p>
+                        </div>
+                        {formData && formData.name && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setBranchForm(prev => ({
+                                ...prev,
+                                name: formData.name || prev.name,
+                                category: formData.category || prev.category,
+                                customCategoryName: formData.customCategoryName || prev.customCategoryName,
+                                type: formData.type || prev.type,
+                                description: formData.description || prev.description,
+                                yearEstablished: formData.yearEstablished || formData.establishedYear || prev.yearEstablished,
+                                employeeCount: formData.employeeCount || prev.employeeCount,
+                                gstNumber: formData.gstNumber || prev.gstNumber,
+                                services: Array.isArray(formData.services) ? formData.services.join(', ') : (formData.services || prev.services),
+                                brands: Array.isArray(formData.brands) ? formData.brands.join(', ') : (formData.brands || prev.brands),
+                                languagesKnown: formData.languagesKnown || prev.languagesKnown,
+                                serviceArea: formData.serviceArea || prev.serviceArea,
+                                highlights: Array.isArray(formData.highlights) ? formData.highlights.join(', ') : (formData.highlights || prev.highlights),
+                                phone: formData.phone || prev.phone,
+                                whatsapp: formData.whatsapp || formData.phone || prev.whatsapp,
+                                email: formData.email || prev.email,
+                                website: formData.website || prev.website,
+                              }));
+                              setToastMessage("Auto-filled basic details from main business.");
+                              setTimeout(() => setToastMessage(''), 3000);
+                            }}
+                            className="py-1.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-extrabold text-xs rounded-xl border border-emerald-200 transition-colors cursor-pointer shrink-0"
+                          >
+                            📋 Copy Main Business Info
+                          </button>
+                        )}
                       </div>
                       
                       <div className="flex flex-col gap-1.5">
