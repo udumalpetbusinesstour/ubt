@@ -339,7 +339,7 @@ export default function Home() {
     const mapCenterLng = isMobile ? 77.2497 : 77.2150;
     const map = L.map(mapRef.current, {
       center: [10.5841, mapCenterLng],
-      zoom: isMobile ? 13 : 13.5,
+      zoom: isMobile ? 12.2 : 12.5,
       zoomControl: true,       // Zoom buttons visible everywhere
       dragging: true,          // Map can be dragged/moved on all screens (including mobile)
       scrollWheelZoom: true,   // Enable scroll wheel zoom
@@ -439,7 +439,7 @@ export default function Home() {
     // Helper to refresh tooltip permanence and icons based on zoom level
     const refreshMapElements = () => {
       const currentZoom = map.getZoom();
-      const showLogo = currentZoom >= 14;
+      const showLogo = currentZoom >= 15;
 
       markers.forEach(({ marker, name, customRedIcon, customLogoIcon }) => {
         // Always close and unbind first to ensure no tooltips are left behind
