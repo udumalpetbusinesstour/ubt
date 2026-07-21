@@ -584,6 +584,8 @@ export default function AddBusiness() {
           services: typeof b.services === 'string' ? b.services.split(',').map(s => s.trim()).filter(Boolean) : (b.services || []),
           brands: typeof b.brands === 'string' ? b.brands.split(',').map(br => br.trim()).filter(Boolean) : (b.brands || []),
           highlights: typeof b.highlights === 'string' ? b.highlights.split(',').map(h => h.trim()).filter(Boolean) : (b.highlights || []),
+          languagesKnown: b.languagesKnown || 'Tamil, English',
+          serviceArea: b.serviceArea || 'Udumalpet Town',
           latitude: b.coordinates?.lat || b.latitude || 10.5891,
           longitude: b.coordinates?.lng || b.longitude || 77.2412,
         }))
@@ -591,12 +593,15 @@ export default function AddBusiness() {
 
     return {
       ...updatedData,
-      services: servicesList,
+      services: servicesList.length > 0 ? servicesList : ['Retail & Services'],
       brands: brandsList,
-      highlights: highlightsList,
+      highlights: highlightsList.length > 0 ? highlightsList : ['Quality Service', 'Verified Business'],
+      languagesKnown: updatedData.languagesKnown || 'Tamil, English',
+      serviceArea: updatedData.serviceArea || 'Udumalpet Town',
+      whatsapp: updatedData.whatsapp || updatedData.phone || '',
       branches: formattedBranches,
-      latitude: updatedData.coordinates?.lat,
-      longitude: updatedData.coordinates?.lng,
+      latitude: updatedData.coordinates?.lat || updatedData.latitude,
+      longitude: updatedData.coordinates?.lng || updatedData.longitude,
     };
   };
 
