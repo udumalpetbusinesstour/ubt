@@ -101,4 +101,9 @@ SubscriptionSchema.pre('save', async function() {
   syncSubscriptionCompatFields(this);
 });
 
+// High performance database indexing for scalable subscription lookups
+SubscriptionSchema.index({ businessId: 1, status: 1 });
+SubscriptionSchema.index({ razorpaySubscriptionId: 1 });
+SubscriptionSchema.index({ razorpayOrderId: 1 });
+
 module.exports = mongoose.model('Subscription', SubscriptionSchema);

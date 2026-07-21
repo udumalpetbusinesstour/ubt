@@ -542,7 +542,7 @@ router.post('/verify-payment', protect, async (req, res) => {
       const { appendToIncomeTracker } = require('../services/sheetsService');
       await appendToIncomeTracker({
         businessId: business._id,
-        businessName: business.name,
+        businessName: business.name || business.businessName || 'Unknown Business',
         monthlyPaid: (planType.toLowerCase().includes('monthly') && !isPublicSector && !isAdminUser) ? finalAmount : 0,
         yearlyPaid: (planType.toLowerCase().includes('yearly') && !isPublicSector && !isAdminUser) ? finalAmount : 0,
         eventPaid: 0,
@@ -957,7 +957,7 @@ router.post('/webhook', async (req, res) => {
             const planNameStr = (localSub.planName || localSub.plan || '').toLowerCase();
             await appendToIncomeTracker({
               businessId: localSub.businessId,
-              businessName: business ? business.name : 'Unknown Business',
+              businessName: business ? (business.name || business.businessName) : 'Unknown Business',
               monthlyPaid: (planNameStr.includes('monthly') || amount === 99 || amount === 116.82) ? amount : 0,
               yearlyPaid: (planNameStr.includes('yearly') || amount === 999 || amount === 1178.82) ? amount : 0,
               eventPaid: 0,
@@ -969,6 +969,47 @@ router.post('/webhook', async (req, res) => {
           }
         } else {
           console.log(`Payment ${paymentId} already recorded in subscription.charged.`);
+        }
+      }
+    } else if (eventType === 'payment.failed') {
+      const paymentEntity = payload.payment?.entity;
+      if (paymentEntity && paymentEntity.subscription_id) {
+        const subId = paymentEntity.subscription_id;
+        const localSub = await Subscription.findOne({
+          $or: [
+            { razorpaySubscriptionId: subId },
+            { razorpayOrderId: subId }
+          ]
+        });
+
+        if (localSub) {
+          const business = await Business.findById(localSub.businessId).populate('ownerId');
+          if (business && business.ownerId) {
+            const owner = business.ownerId;
+            const Notification = require('../models/Notification');
+            const { sendEmail } = require('../utils/emailHelper');
+
+            await Notification.create({
+              userId: owner._id,
+              businessId: business._id,
+              title: 'Autopay Debit Failed (Insufficient Balance)',
+              message: `Automatic renewal debit for "${business.name}" failed due to insufficient account balance. Please add funds or make a manual renewal today.`,
+              type: 'expiry_warning'
+            });
+
+            if (owner.email) {
+              const ownerName = owner.fullName || owner.name || 'Merchant';
+              try {
+                await sendEmail({
+                  to: owner.email,
+                  subject: `Action Required: Autopay Debit Failed for "${business.name}"`,
+                  text: `Hello ${ownerName},\n\nWe were unable to process your automatic subscription renewal for "${business.name}" due to insufficient account balance or bank decline.\n\nPlease add sufficient funds to your bank account / UPI app or log into your UBT owner dashboard to complete a manual renewal and maintain uninterrupted premium benefits.\n\nBest regards,\nUBT Billing Desk`
+                });
+              } catch (err) {
+                console.error('[Webhook Failed Payment Email] Error sending email:', err.message);
+              }
+            }
+          }
         }
       }
     } else if (eventType === 'subscription.cancelled' || eventType === 'subscription.halted') {
@@ -1111,7 +1152,7 @@ router.post('/webhook', async (req, res) => {
               const planNameStr = (subscription.planName || subscription.plan || '').toLowerCase();
               await appendToIncomeTracker({
                 businessId: subscription.businessId,
-                businessName: business.name,
+                businessName: business.name || business.businessName,
                 monthlyPaid: (planNameStr.includes('monthly') || amount === 99 || amount === 116.82) ? amount : 0,
                 yearlyPaid: (planNameStr.includes('yearly') || amount === 999 || amount === 1178.82) ? amount : 0,
                 eventPaid: 0,
@@ -1124,7 +1165,7 @@ router.post('/webhook', async (req, res) => {
             if (eventRecord.businessId) {
               const bObj = await Business.findById(eventRecord.businessId);
               if (bObj) {
-                bizName = bObj.name;
+                bizName = bObj.name || bObj.businessName || eventRecord.organizer;
               }
             }
             await appendToIncomeTracker({
@@ -1139,7 +1180,7 @@ router.post('/webhook', async (req, res) => {
           } else if (isSponsoredAdPayment && adBusiness) {
             await appendToIncomeTracker({
               businessId: adBusiness._id,
-              businessName: adBusiness.name,
+              businessName: adBusiness.name || adBusiness.businessName,
               monthlyPaid: 0,
               yearlyPaid: 0,
               eventPaid: 0,
@@ -1456,7 +1497,7 @@ router.post('/verify-sponsored-ad-payment', protect, async (req, res) => {
       const { appendToIncomeTracker } = require('../services/sheetsService');
       await appendToIncomeTracker({
         businessId: business._id,
-        businessName: business.name,
+        businessName: business.name || business.businessName || 'Unknown Business',
         monthlyPaid: 0,
         yearlyPaid: 0,
         eventPaid: 0,

@@ -162,14 +162,20 @@ const checkAndAppendMonthHeader = async (sheets, spreadsheetId, targetTab, local
  */
 const appendToIncomeTracker = async ({ businessId, businessName, monthlyPaid = 0, yearlyPaid = 0, eventPaid = 0, addPaid = 0, sheetName = '' }) => {
   try {
-    let finalBusinessName = businessName;
-    if (!finalBusinessName || finalBusinessName === 'Unknown Business') {
+    let finalBusinessName = (businessName && businessName !== 'Unknown Business') ? businessName : '';
+    if (!finalBusinessName) {
       if (businessId) {
         try {
           const Business = require('../models/Business');
           const biz = await Business.findById(businessId);
           if (biz) {
-            finalBusinessName = biz.name || biz.businessName;
+            finalBusinessName = biz.name || biz.businessName || biz.title;
+          }
+          if (!finalBusinessName) {
+            const bizByOwner = await Business.findOne({ ownerId: businessId });
+            if (bizByOwner) {
+              finalBusinessName = bizByOwner.name || bizByOwner.businessName;
+            }
           }
         } catch (bizErr) {
           console.error('[Google Sheets API] Fallback business name fetch failed:', bizErr.message);

@@ -395,4 +395,13 @@ BusinessSchema.pre('save', async function() {
   }
 });
 
+// High-performance database indexing for scalability (Handles 100,000+ listings)
+BusinessSchema.index({ slug: 1 });
+BusinessSchema.index({ status: 1, subscriptionStatus: 1 });
+BusinessSchema.index({ category: 1, status: 1 });
+BusinessSchema.index({ ownerId: 1 });
+BusinessSchema.index({ parentBusinessId: 1 });
+BusinessSchema.index({ pincode: 1, locality: 1 });
+BusinessSchema.index({ name: 'text', description: 'text', services: 'text', locality: 'text' }, { name: 'business_search_text_idx' });
+
 module.exports = mongoose.model('Business', BusinessSchema);

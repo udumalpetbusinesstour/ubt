@@ -2861,8 +2861,8 @@ Team Udumalpet Business
                   </div>
 
                   {/* Listings Audit & Approval Desk Card */}
-                  <div className="bg-white border border-slate-200/80 shadow-sm rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col gap-6 text-left w-full max-w-full overflow-hidden">
-                    <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b border-slate-100 pb-5">
+                  <div className="bg-white border border-slate-200/80 shadow-sm rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col gap-6 text-left w-full max-w-full min-w-0 overflow-hidden">
+                    <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b border-slate-100 pb-5 w-full min-w-0 max-w-full">
                       <div className="flex flex-col">
                         <h3 className="font-extrabold text-[#001c41] text-base leading-tight font-sans">
                           Listings Audit & Approval Desk
@@ -2872,12 +2872,12 @@ Team Udumalpet Business
                         </span>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3 self-start md:self-center shrink-0">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 self-start md:self-center w-full md:w-auto min-w-0 max-w-full">
                         {/* Status Filter Dropdown */}
                         <select
                           value={statusFilter}
                           onChange={(e) => setStatusFilter(e.target.value)}
-                          className="bg-slate-50 border border-slate-250 px-3.5 py-2 rounded-xl text-xs font-black text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-105 cursor-pointer shadow-2xs hover:bg-slate-100 transition-colors"
+                          className="bg-slate-50 border border-slate-250 px-3.5 py-2 rounded-xl text-xs font-black text-slate-700 focus:outline-none focus:border-[#027244] focus:ring-1 focus:ring-emerald-105 cursor-pointer shadow-2xs hover:bg-slate-100 transition-colors shrink-0"
                         >
                           <option value="All">All Statuses</option>
                           <option value="Pending">Pending</option>
@@ -2886,7 +2886,7 @@ Team Udumalpet Business
                         </select>
 
                         {/* Pill tabs container */}
-                        <div className="bg-slate-100/60 p-1 rounded-xl flex items-center overflow-x-auto border border-slate-200/30 w-full md:w-auto max-w-full min-w-0 scrollbar-none">
+                        <div className="bg-slate-100/60 p-1 rounded-xl flex items-center gap-1.5 touch-scroll-x border border-slate-200/30 w-full min-w-0 max-w-full scrollbar-none py-1 px-1">
                         <button
                           onClick={() => setAuditSubTab('Businesses')}
                           className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
@@ -2953,32 +2953,23 @@ Team Udumalpet Business
 
                     {/* Sub-tab content */}
                     {auditSubTab === 'Businesses' && (
-                      <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-                        <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
-                          <thead className="bg-slate-50 border-b border-slate-200 uppercase text-[9px] font-black text-slate-450 tracking-wider">
-                            <tr>
-                              <th className="p-4.5">Business Profile</th>
-                              <th className="p-4.5">Category / Locality</th>
-                              <th className="p-4.5">Branches</th>
-                              <th className="p-4.5">Status</th>
-                              <th className="p-4.5">Sub Expiry</th>
-                              <th className="p-4.5 text-right">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 font-medium">
-                            {filteredBusinesses.map(b => (
-                              <tr key={b._id} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-4.5 flex items-center gap-3.5">
-                                  <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0 border border-slate-200 relative shadow-2xs flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-extrabold text-xs uppercase select-none">
+                      <div className="flex flex-col gap-4">
+                        {/* Mobile Cards View (< md) */}
+                        <div className="flex flex-col gap-3.5 md:hidden">
+                          {filteredBusinesses.map(b => (
+                            <div key={b._id} className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 flex flex-col gap-3 text-left transition-all hover:bg-slate-50">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0 border border-slate-200 shadow-2xs flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-extrabold text-xs uppercase select-none">
                                     <img 
                                       src={b.logoUrl ? window.getImageUrl(b.logoUrl) : '/default_business_cover.png'} 
                                       className={`h-full w-full ${b.logoUrl ? 'object-contain p-1 bg-white' : 'object-cover'}`} 
                                       alt={b.name} 
                                     />
                                   </div>
-                                  <div className="flex flex-col text-left min-w-0">
+                                  <div className="flex flex-col min-w-0">
                                     <div className="flex items-center gap-1.5 flex-wrap">
-                                      <span className="font-extrabold text-slate-800 text-xs sm:text-[13px] leading-normal whitespace-normal break-words max-w-[250px] sm:max-w-[320px] line-clamp-3">
+                                      <span className="font-extrabold text-slate-800 text-sm leading-tight break-words">
                                         {b.name}
                                       </span>
                                       {isBizDraft(b) && (
@@ -2987,86 +2978,201 @@ Team Udumalpet Business
                                         </span>
                                       )}
                                     </div>
-                                    <span className="text-[10px] text-slate-405 font-semibold mt-1 font-sans">
-                                      Owner: {b.ownerName}
+                                    <span className="text-[11px] text-slate-500 font-medium mt-0.5">
+                                      Owner: {b.ownerName || 'N/A'}
                                     </span>
-                                    {/* Prominent external View Profile link */}
-                                    <a
-                                      href={`/businesses/${b.slug || b._id}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-[#027244] hover:text-[#005934] hover:underline font-black text-[10.5px] mt-1.5 flex items-center gap-1 w-fit cursor-pointer leading-none"
-                                    >
-                                      View Profile →
-                                    </a>
                                   </div>
-                                </td>
-                                <td className="p-4.5">
-                                  <div className="flex flex-col text-left">
-                                    <span className="font-bold text-slate-705 text-xs">{b.type}</span>
-                                    <span className="text-[10px] text-slate-400 mt-1 font-semibold">{b.locality}</span>
-                                  </div>
-                                </td>
-                                <td className="p-4.5 font-bold text-slate-700 text-xs">
-                                  {b.branchCount || 0} Branches
-                                </td>
-                                <td className="p-4.5">
-                                  <span className={`px-2.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
-                                    b.status === 'Approved'
-                                      ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
-                                      : b.status === 'Rejected'
-                                        ? 'bg-red-50 border-red-200 text-red-650'
-                                        : 'bg-amber-50 border-amber-250 text-amber-600 animate-pulse'
-                                  }`}>
-                                    {b.status}
-                                  </span>
-                                </td>
-                                <td className="p-4.5 font-bold text-slate-500">
-                                  {b.subscriptionExpiry ? new Date(b.subscriptionExpiry).toLocaleDateString() : 'N/A'}
-                                </td>
-                                <td className="p-4.5 text-right">
-                                  <div className="flex items-center justify-end gap-2">
-                                    <button
-                                      onClick={() => { setSelectedBiz(b); setShowBizModal(true); }}
-                                      className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
-                                    >
-                                      Vet details
-                                    </button>
-                                    {b.status !== 'Approved' && b.status !== 'Rejected' && (
-                                      <>
-                                        <button
-                                          onClick={async () => { if (await handleAction(b._id, 'reject')) showToast('Listing rejected.', 'error'); }}
-                                          className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
-                                        >
-                                          Reject
-                                        </button>
-                                        <button
-                                          onClick={async () => { if (await handleAction(b._id, 'approve')) showToast('Listing approved!', 'success'); }}
-                                          className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
-                                        >
-                                          Approve
-                                        </button>
-                                      </>
-                                     )}
-                                    <button
-                                      onClick={() => handleDeleteBusiness(b._id)}
-                                      className="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer transition-colors shadow-2xs"
-                                    >
-                                      Delete
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                            {filteredBusinesses.length === 0 && (
+                                </div>
+                                <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border shrink-0 ${
+                                  b.status === 'Approved'
+                                    ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
+                                    : b.status === 'Rejected'
+                                      ? 'bg-red-50 border-red-200 text-red-650'
+                                      : 'bg-amber-50 border-amber-250 text-amber-600 animate-pulse'
+                                }`}>
+                                  {b.status}
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2 text-xs py-2 px-3 bg-white rounded-xl border border-slate-200/60 font-medium text-slate-600">
+                                <div>
+                                  <span className="text-[9.5px] text-slate-400 block font-extrabold uppercase tracking-wider">Category / Locality</span>
+                                  <span className="font-bold text-slate-800">{b.type || 'N/A'}</span>
+                                  <span className="text-[10.5px] text-slate-500 block">{b.locality || 'N/A'}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[9.5px] text-slate-400 block font-extrabold uppercase tracking-wider">Branches & Expiry</span>
+                                  <span className="font-bold text-slate-800">{b.branchCount || 0} Branches</span>
+                                  <span className="text-[10.5px] text-slate-500 block">{b.subscriptionExpiry ? new Date(b.subscriptionExpiry).toLocaleDateString() : 'No expiry'}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between gap-2 border-t border-slate-200/60 pt-2.5 flex-wrap">
+                                <a
+                                  href={`/businesses/${b.slug || b._id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[#027244] hover:text-[#005934] hover:underline font-black text-xs flex items-center gap-1 cursor-pointer"
+                                >
+                                  View Profile →
+                                </a>
+
+                                <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                                  <button
+                                    onClick={() => { setSelectedBiz(b); setShowBizModal(true); }}
+                                    className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-extrabold cursor-pointer shadow-2xs"
+                                  >
+                                    Vet details
+                                  </button>
+                                  {b.status !== 'Approved' && b.status !== 'Rejected' && (
+                                    <>
+                                      <button
+                                        onClick={async () => { if (await handleAction(b._id, 'reject')) showToast('Listing rejected.', 'error'); }}
+                                        className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-xs font-extrabold cursor-pointer shadow-2xs"
+                                      >
+                                        Reject
+                                      </button>
+                                      <button
+                                        onClick={async () => { if (await handleAction(b._id, 'approve')) showToast('Listing approved!', 'success'); }}
+                                        className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-xs font-extrabold cursor-pointer shadow-2xs"
+                                      >
+                                        Approve
+                                      </button>
+                                    </>
+                                  )}
+                                  <button
+                                    onClick={() => handleDeleteBusiness(b._id)}
+                                    className="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-extrabold cursor-pointer transition-colors shadow-2xs"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {filteredBusinesses.length === 0 && (
+                            <div className="p-8 text-center text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl">
+                              No business listings match your query.
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Desktop Table View (>= md) */}
+                        <div className="hidden md:block touch-scroll-x border border-slate-200 rounded-2xl">
+                          <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                            <thead className="bg-slate-50 border-b border-slate-200 uppercase text-[9px] font-black text-slate-450 tracking-wider">
                               <tr>
-                                <td colSpan="6" className="p-8 text-center text-slate-400 text-xs font-bold leading-normal">
-                                  No business listings match your query.
-                                </td>
+                                <th className="p-4.5">Business Profile</th>
+                                <th className="p-4.5">Category / Locality</th>
+                                <th className="p-4.5">Branches</th>
+                                <th className="p-4.5">Status</th>
+                                <th className="p-4.5">Sub Expiry</th>
+                                <th className="p-4.5 text-right">Actions</th>
                               </tr>
-                            )}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 font-medium">
+                              {filteredBusinesses.map(b => (
+                                <tr key={b._id} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="p-4.5 flex items-center gap-3.5">
+                                    <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0 border border-slate-200 relative shadow-2xs flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-extrabold text-xs uppercase select-none">
+                                      <img 
+                                        src={b.logoUrl ? window.getImageUrl(b.logoUrl) : '/default_business_cover.png'} 
+                                        className={`h-full w-full ${b.logoUrl ? 'object-contain p-1 bg-white' : 'object-cover'}`} 
+                                        alt={b.name} 
+                                      />
+                                    </div>
+                                    <div className="flex flex-col text-left min-w-0">
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="font-extrabold text-slate-800 text-xs sm:text-[13px] leading-normal whitespace-normal break-words max-w-[250px] sm:max-w-[320px] line-clamp-3">
+                                          {b.name}
+                                        </span>
+                                        {isBizDraft(b) && (
+                                          <span className="bg-amber-100 border border-amber-250 text-amber-850 text-[7.5px] font-black px-1.5 py-0.5 rounded-md uppercase shrink-0 leading-none">
+                                            Incomplete Reg
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className="text-[10px] text-slate-405 font-semibold mt-1 font-sans">
+                                        Owner: {b.ownerName}
+                                      </span>
+                                      {/* Prominent external View Profile link */}
+                                      <a
+                                        href={`/businesses/${b.slug || b._id}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[#027244] hover:text-[#005934] hover:underline font-black text-[10.5px] mt-1.5 flex items-center gap-1 w-fit cursor-pointer leading-none"
+                                      >
+                                        View Profile →
+                                      </a>
+                                    </div>
+                                  </td>
+                                  <td className="p-4.5">
+                                    <div className="flex flex-col text-left">
+                                      <span className="font-bold text-slate-705 text-xs">{b.type}</span>
+                                      <span className="text-[10px] text-slate-400 mt-1 font-semibold">{b.locality}</span>
+                                    </div>
+                                  </td>
+                                  <td className="p-4.5 font-bold text-slate-700 text-xs">
+                                    {b.branchCount || 0} Branches
+                                  </td>
+                                  <td className="p-4.5">
+                                    <span className={`px-2.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
+                                      b.status === 'Approved'
+                                        ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
+                                        : b.status === 'Rejected'
+                                          ? 'bg-red-50 border-red-200 text-red-650'
+                                          : 'bg-amber-50 border-amber-250 text-amber-600 animate-pulse'
+                                    }`}>
+                                      {b.status}
+                                    </span>
+                                  </td>
+                                  <td className="p-4.5 font-bold text-slate-500">
+                                    {b.subscriptionExpiry ? new Date(b.subscriptionExpiry).toLocaleDateString() : 'N/A'}
+                                  </td>
+                                  <td className="p-4.5 text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                      <button
+                                        onClick={() => { setSelectedBiz(b); setShowBizModal(true); }}
+                                        className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
+                                      >
+                                        Vet details
+                                      </button>
+                                      {b.status !== 'Approved' && b.status !== 'Rejected' && (
+                                        <>
+                                          <button
+                                            onClick={async () => { if (await handleAction(b._id, 'reject')) showToast('Listing rejected.', 'error'); }}
+                                            className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
+                                          >
+                                            Reject
+                                          </button>
+                                          <button
+                                            onClick={async () => { if (await handleAction(b._id, 'approve')) showToast('Listing approved!', 'success'); }}
+                                            className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
+                                          >
+                                            Approve
+                                          </button>
+                                        </>
+                                       )}
+                                      <button
+                                        onClick={() => handleDeleteBusiness(b._id)}
+                                        className="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer transition-colors shadow-2xs"
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                              {filteredBusinesses.length === 0 && (
+                                <tr>
+                                  <td colSpan="6" className="p-8 text-center text-slate-400 text-xs font-bold leading-normal">
+                                    No business listings match your query.
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     )}
 
@@ -3317,7 +3423,7 @@ Team Udumalpet Business
                   </div>
 
                   <div className="bg-white border border-slate-200/80 shadow-xs rounded-[28px] overflow-hidden">
-                    <div className="overflow-x-auto">
+                    <div className="touch-scroll-x">
                       <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                         <thead className="bg-slate-50 border-b border-slate-200 uppercase text-[9px] font-black text-slate-450 tracking-wider">
                           <tr>
@@ -3453,14 +3559,14 @@ Team Udumalpet Business
               {/* TAB: PENDING APPROVALS LIST */}
               {activeTab === 'Pending Approvals' && (
                 <div className="flex flex-col gap-6 text-left">
-                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 sm:p-6 flex flex-col md:flex-row justify-between md:items-center gap-4 w-full max-w-full overflow-hidden">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 sm:p-6 flex flex-col md:flex-row justify-between md:items-center gap-4 w-full max-w-full min-w-0 overflow-hidden">
                     <div className="flex flex-col">
                       <h3 className="font-extrabold text-[#001c41] text-base">Pending Approvals Desk</h3>
                       <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Showcasing listings, community blogs, and events waiting for administrative approval</span>
                     </div>
 
                     {/* Pill tabs container */}
-                    <div className="bg-slate-100/60 p-1 rounded-xl flex items-center self-start md:self-center overflow-x-auto shrink-0 border border-slate-200/30 w-full md:w-auto max-w-full min-w-0 scrollbar-none">
+                    <div className="bg-slate-100/60 p-1 rounded-xl flex items-center gap-1.5 self-start md:self-center touch-scroll-x border border-slate-200/30 w-full md:w-auto min-w-0 max-w-full scrollbar-none py-1 px-1">
                       <button
                         onClick={() => setPendingSubTab('Businesses')}
                         className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
@@ -4526,7 +4632,7 @@ Team Udumalpet Business
                     </div>
 
                     {/* Navigation bar for sub-tabs */}
-                    <div className="flex gap-4 border-b border-slate-200 pb-3 mt-5 overflow-x-auto whitespace-nowrap scrollbar-thin">
+                    <div className="flex gap-4 border-b border-slate-200 pb-3 mt-5 touch-scroll-x scrollbar-none min-w-0">
                       <button 
                         onClick={() => setSubscriptionTab('override')}
                         className={`pb-2 text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer border-b-2 px-1 border-solid whitespace-nowrap shrink-0 ${
@@ -4562,7 +4668,7 @@ Team Udumalpet Business
                     <div className="mt-5">
                       {/* SUBTAB 1: OVERRIDE */}
                       {subscriptionTab === 'override' && (
-                        <div className="overflow-x-auto border border-slate-200 rounded-2xl">
+                        <div className="touch-scroll-x border border-slate-200 rounded-2xl">
                           <table className="min-w-[900px] w-full text-left text-xs font-semibold text-slate-650">
                             <thead className="bg-slate-50 border-b border-slate-200 text-[9px] font-black text-slate-450 uppercase tracking-widest">
                               <tr>
@@ -4673,8 +4779,8 @@ Team Udumalpet Business
 
                       {/* SUBTAB 2: SUBSCRIPTIONS LIST */}
                       {subscriptionTab === 'subscriptions' && (
-                        <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-                          <table className="min-w-[900px] w-full text-left text-xs font-semibold text-slate-650">
+                        <div className="touch-scroll-x border border-slate-200 rounded-2xl">
+                          <table className="min-w-[900px] w-full text-left text-xs font-semibold text-slate-655">
                             <thead className="bg-slate-50 border-b border-slate-200 text-[9px] font-black text-slate-450 uppercase tracking-widest">
                               <tr>
                                 <th className="p-4">Owner / Merchant</th>
@@ -4743,7 +4849,7 @@ Team Udumalpet Business
 
                       {/* SUBTAB 3: PAYMENTS LIST */}
                       {subscriptionTab === 'payments' && (
-                        <div className="overflow-x-auto border border-slate-200 rounded-2xl">
+                        <div className="touch-scroll-x border border-slate-200 rounded-2xl">
                           <table className="min-w-[900px] w-full text-left text-xs font-semibold text-slate-650">
                             <thead className="bg-slate-50 border-b border-slate-200 text-[9px] font-black text-slate-450 uppercase tracking-widest">
                               <tr>
@@ -5070,7 +5176,7 @@ Team Udumalpet Business
                       />
                     </div>
                     
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 touch-scroll-x scrollbar-none w-full min-w-0 py-1">
                       {[
                         { id: 'partners_list', label: 'Partners Directory' },
                         { id: 'approvals_list', label: 'Pending Approvals' },
@@ -5080,7 +5186,7 @@ Team Udumalpet Business
                         <button
                           key={subTab.id}
                           onClick={() => setReferralSubTab(subTab.id)}
-                          className={`px-4.5 py-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center ${
+                          className={`px-4.5 py-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center whitespace-nowrap shrink-0 ${
                             referralSubTab === subTab.id
                               ? 'bg-[#027244] text-white shadow-xs'
                               : 'text-slate-500 hover:bg-slate-100'
@@ -5124,7 +5230,7 @@ Team Udumalpet Business
                           ))}
                         </div>
                       </div>
-                      <div className="overflow-x-auto">
+                      <div className="touch-scroll-x">
                         <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                           <thead>
                             <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[9px]">
@@ -5311,7 +5417,7 @@ Team Udumalpet Business
                   {/* Pending Approvals Sub-tab */}
                   {referralSubTab === 'approvals_list' && (
                     <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden">
-                      <div className="overflow-x-auto">
+                      <div className="touch-scroll-x">
                         <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                           <thead>
                             <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[9px]">
@@ -5403,7 +5509,7 @@ Team Udumalpet Business
                   {/* Rejected Partners Sub-tab */}
                   {referralSubTab === 'rejected_list' && (
                     <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden">
-                      <div className="overflow-x-auto">
+                      <div className="touch-scroll-x">
                         <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                           <thead>
                             <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[9px]">
@@ -5501,7 +5607,7 @@ Team Udumalpet Business
                         ))}
                       </div>
 
-                      <div className="overflow-x-auto">
+                      <div className="touch-scroll-x">
                         <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                           <thead>
                             <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[9px]">
@@ -5623,7 +5729,7 @@ Team Udumalpet Business
                     </div>
 
                     {/* Sub-tab navigation */}
-                    <div className="w-full sm:w-auto bg-slate-100/60 p-1 rounded-xl flex items-center shrink-0 border border-slate-200/30 overflow-x-auto whitespace-nowrap scrollbar-thin">
+                    <div className="w-full sm:w-auto bg-slate-100/60 p-1 rounded-xl flex items-center border border-slate-200/30 touch-scroll-x scrollbar-none min-w-0">
                       {[
                         { id: 'queue', label: 'Referrals Queue' },
                         { id: 'refunds', label: 'Cashback Refunds' },
@@ -5651,7 +5757,7 @@ Team Udumalpet Business
                         <div className="flex flex-col text-left">
                           <span className="text-xs font-extrabold text-slate-700">Filter Referrals</span>
                         </div>
-                        <div className="w-full sm:w-auto bg-slate-100/60 p-1 rounded-xl flex items-center shrink-0 border border-slate-200/30 overflow-x-auto whitespace-nowrap scrollbar-thin">
+                        <div className="w-full sm:w-auto bg-slate-100/60 p-1 rounded-xl flex items-center border border-slate-200/30 touch-scroll-x scrollbar-none min-w-0">
                           {['All', 'Pending', 'Completed', 'Rejected'].map(status => (
                             <button
                               key={status}
@@ -5901,7 +6007,7 @@ Team Udumalpet Business
 
                       {/* Redemptions Table */}
                       <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden font-sans">
-                        <div className="overflow-x-auto">
+                        <div className="touch-scroll-x">
                           <table className="min-w-[900px] w-full border-collapse">
                             <thead>
                               <tr className="bg-slate-50 border-b border-slate-150 text-[10px] font-black text-slate-455 uppercase tracking-wider text-left">
@@ -7018,7 +7124,7 @@ Team Udumalpet Business
                     </div>
                   ) : (
                     <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] overflow-hidden">
-                      <div className="overflow-x-auto">
+                      <div className="touch-scroll-x">
                         <table className="min-w-[900px] w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 text-[10px] font-black uppercase tracking-wider">
@@ -7124,23 +7230,23 @@ Team Udumalpet Business
                         </div>
                       </div>
 
-                      <div className="overflow-x-auto font-sans">
-                        <table className="w-full text-left border-collapse">
+                      <div className="touch-scroll-x font-sans rounded-2xl border border-slate-100 overflow-hidden">
+                        <table className="min-w-[650px] w-full text-left border-collapse">
                           <thead>
-                            <tr className="border-b border-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-wider">
-                              <th className="py-2.5">Method</th>
-                              <th className="py-2.5">Endpoint Route Path</th>
-                              <th className="py-2.5 text-right">Avg Response</th>
-                              <th className="py-2.5 text-right">Max Response</th>
-                              <th className="py-2.5 text-right">Hits</th>
-                              <th className="py-2.5 text-right">Errors</th>
+                            <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 text-[10px] font-black uppercase tracking-wider whitespace-nowrap">
+                              <th className="py-3 px-4">Method</th>
+                              <th className="py-3 px-4">Endpoint Route Path</th>
+                              <th className="py-3 px-4 text-right">Avg Response</th>
+                              <th className="py-3 px-4 text-right">Max Response</th>
+                              <th className="py-3 px-4 text-right">Hits</th>
+                              <th className="py-3 px-4 text-right">Errors</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-50 text-xs font-bold text-slate-650">
                             {apiStats.routes && apiStats.routes.length > 0 ? (
                               apiStats.routes.map((route, index) => (
                                 <tr key={index} className="hover:bg-slate-50/50">
-                                  <td className="py-3.5">
+                                  <td className="py-3 px-4 whitespace-nowrap">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
                                       route.method === 'GET' ? 'bg-sky-50 text-sky-600' :
                                       route.method === 'POST' ? 'bg-emerald-50 text-emerald-600' :
@@ -7150,13 +7256,13 @@ Team Udumalpet Business
                                       {route.method}
                                     </span>
                                   </td>
-                                  <td className="py-3.5 text-[#001c41] font-extrabold max-w-[200px] truncate font-mono text-[11px]" title={route.path}>
+                                  <td className="py-3 px-4 text-[#001c41] font-extrabold max-w-[220px] truncate font-mono text-[11px]" title={route.path}>
                                     {route.path}
                                   </td>
-                                  <td className="py-3.5 text-right font-mono text-amber-600">{route.avgResponseTime} ms</td>
-                                  <td className="py-3.5 text-right font-mono text-slate-500">{route.maxResponseTime} ms</td>
-                                  <td className="py-3.5 text-right font-mono text-slate-550">{route.totalRequests}</td>
-                                  <td className="py-3.5 text-right font-mono text-rose-500">{route.errors || 0}</td>
+                                  <td className="py-3 px-4 text-right font-mono text-amber-600 whitespace-nowrap">{route.avgResponseTime} ms</td>
+                                  <td className="py-3 px-4 text-right font-mono text-slate-500 whitespace-nowrap">{route.maxResponseTime} ms</td>
+                                  <td className="py-3 px-4 text-right font-mono text-slate-550 whitespace-nowrap">{route.totalRequests}</td>
+                                  <td className="py-3 px-4 text-right font-mono text-rose-500 whitespace-nowrap">{route.errors || 0}</td>
                                 </tr>
                               ))
                             ) : (
@@ -7293,7 +7399,7 @@ Team Udumalpet Business
                   ) : (
                     <div className="flex flex-col gap-4">
                       <div className="bg-white border border-slate-200 shadow-sm rounded-[24px] overflow-hidden">
-                        <div className="overflow-x-auto">
+                        <div className="touch-scroll-x">
                           <table className="min-w-[1000px] w-full text-left border-collapse">
                             <thead>
                               <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 text-[10px] font-black uppercase tracking-wider">
@@ -7429,37 +7535,13 @@ Team Udumalpet Business
                     )}
                   </div>
 
-                  <div className="overflow-x-auto border border-slate-200 rounded-[28px] bg-white">
-                    <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
-                      <thead className="uppercase text-[9px] font-black tracking-wider border-b bg-slate-50 border-slate-200 text-slate-455">
-                        <tr>
-                          <th className="p-4.5 w-12 text-center">
-                            <input
-                              type="checkbox"
-                              checked={filteredUsers.length > 0 && selectedSignups.length === filteredUsers.length}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedSignups(filteredUsers.map(u => u._id));
-                                } else {
-                                  setSelectedSignups([]);
-                                }
-                              }}
-                              className="h-4 w-4 rounded text-[#027244] border-slate-350 focus:ring-[#027244] cursor-pointer"
-                            />
-                          </th>
-                          <th className="p-4.5">User Name</th>
-                          <th className="p-4.5">Email Address</th>
-                          <th className="p-4.5">Mobile / Phone</th>
-                          <th className="p-4.5">Access Role</th>
-                          <th className="p-4.5">Joined Date</th>
-                          <th className="p-4.5 text-center">Status</th>
-                          <th className="p-4.5 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 font-medium">
-                        {filteredUsers.map(u => (
-                          <tr key={u._id} className="transition-colors hover:bg-slate-50/50">
-                            <td className="p-4.5 text-center w-12">
+                  <div className="flex flex-col gap-4">
+                    {/* Mobile Cards View (< md) */}
+                    <div className="flex flex-col gap-3.5 md:hidden">
+                      {filteredUsers.map(u => (
+                        <div key={u._id} className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-3 text-left shadow-2xs">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
                               <input
                                 type="checkbox"
                                 checked={selectedSignups.includes(u._id)}
@@ -7470,61 +7552,154 @@ Team Udumalpet Business
                                     setSelectedSignups(prev => prev.filter(id => id !== u._id));
                                   }
                                 }}
-                                className="h-4 w-4 rounded text-[#027244] border-slate-350 focus:ring-[#027244] cursor-pointer"
+                                className="h-4 w-4 rounded text-[#027244] border-slate-350 focus:ring-[#027244] cursor-pointer shrink-0"
                               />
-                            </td>
-                            <td className="p-4.5 flex items-center gap-3">
-                              <div className="h-9 w-9 rounded-full bg-emerald-50 text-[#027244] border border-emerald-100 flex items-center justify-center font-black text-xs shrink-0 select-none">
+                              <div className="h-10 w-10 rounded-full bg-emerald-50 text-[#027244] border border-emerald-100 flex items-center justify-center font-black text-xs shrink-0 select-none">
                                 {u.fullName ? u.fullName.charAt(0).toUpperCase() : (u.name ? u.name.charAt(0).toUpperCase() : 'U')}
                               </div>
-                              <div className="flex flex-col text-left">
-                                <span className="font-extrabold text-xs sm:text-[13px] text-slate-800">
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-extrabold text-slate-800 text-sm leading-tight break-words">
                                   {u.fullName || u.name || 'Anonymous User'}
                                 </span>
+                                <span className="text-[11px] text-slate-500 font-mono mt-0.5 break-all">
+                                  {u.email}
+                                </span>
                               </div>
-                            </td>
-                            <td className="p-4.5 text-slate-600 font-mono text-[11px]">{u.email}</td>
-                            <td className="p-4.5 text-slate-500 font-semibold">{u.mobileNumber || u.phone || 'N/A'}</td>
-                            <td className="p-4.5 text-slate-600 uppercase text-[10px] font-bold">
-                              <span className={`px-2 py-0.5 rounded-md text-[9px] font-extrabold select-none ${
-                                u.role === 'admin' || u.role === 'superadmin'
-                                  ? 'bg-purple-100 text-purple-700'
-                                  : u.role === 'merchant' || u.role === 'owner'
-                                    ? 'bg-amber-100 text-amber-700'
-                                    : 'bg-slate-100 text-slate-700'
-                              }`}>
-                                {u.role}
-                              </span>
-                            </td>
-                            <td className="p-4.5 text-slate-405 text-[10.5px]">
-                              {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
-                            </td>
-                            <td className="p-4.5 text-center">
-                              <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border select-none ${
-                                u.status === 'Active' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 'bg-red-500/10 border-red-500/20 text-red-500'
-                              }`}>
-                                {u.status || 'Active'}
-                              </span>
-                            </td>
-                            <td className="p-4.5 text-right">
-                              <button 
-                                onClick={() => handleDeleteSignup(u._id)}
-                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors shadow-2xs border-none"
-                              >
-                                Delete
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                        {filteredUsers.length === 0 && (
+                            </div>
+                            <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase border shrink-0 ${
+                              u.status === 'Active' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 'bg-red-500/10 border-red-500/20 text-red-500'
+                            }`}>
+                              {u.status || 'Active'}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-xs py-2 px-3 bg-slate-50 rounded-xl border border-slate-100 font-medium text-slate-600">
+                            <div>
+                              <span className="text-[9.5px] text-slate-400 block font-extrabold uppercase tracking-wider">Mobile / Phone</span>
+                              <span className="font-bold text-slate-800">{u.mobileNumber || u.phone || 'N/A'}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9.5px] text-slate-400 block font-extrabold uppercase tracking-wider">Role & Joined</span>
+                              <span className="font-bold text-slate-800 uppercase text-[10px] block">{u.role || 'user'}</span>
+                              <span className="text-[10px] text-slate-400 block">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-end border-t border-slate-100 pt-2.5">
+                            <button 
+                              onClick={() => handleDeleteSignup(u._id)}
+                              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-xs rounded-xl cursor-pointer transition-colors shadow-2xs border-none"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      {filteredUsers.length === 0 && (
+                        <div className="p-8 text-center text-slate-400 text-xs font-bold bg-white rounded-2xl border border-slate-200">
+                          No matching user registrations found.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Desktop Table View (>= md) */}
+                    <div className="hidden md:block touch-scroll-x border border-slate-200 rounded-[28px] bg-white">
+                      <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                        <thead className="uppercase text-[9px] font-black tracking-wider border-b bg-slate-50 border-slate-200 text-slate-455">
                           <tr>
-                            <td colSpan="7" className="p-16 text-center text-slate-400 font-semibold">
-                              No matching user registrations found.
-                            </td>
+                            <th className="p-4.5 w-12 text-center">
+                              <input
+                                type="checkbox"
+                                checked={filteredUsers.length > 0 && selectedSignups.length === filteredUsers.length}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedSignups(filteredUsers.map(u => u._id));
+                                  } else {
+                                    setSelectedSignups([]);
+                                  }
+                                }}
+                                className="h-4 w-4 rounded text-[#027244] border-slate-350 focus:ring-[#027244] cursor-pointer"
+                              />
+                            </th>
+                            <th className="p-4.5">User Name</th>
+                            <th className="p-4.5">Email Address</th>
+                            <th className="p-4.5">Mobile / Phone</th>
+                            <th className="p-4.5">Access Role</th>
+                            <th className="p-4.5">Joined Date</th>
+                            <th className="p-4.5 text-center">Status</th>
+                            <th className="p-4.5 text-right">Actions</th>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-medium">
+                          {filteredUsers.map(u => (
+                            <tr key={u._id} className="transition-colors hover:bg-slate-50/50">
+                              <td className="p-4.5 text-center w-12">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedSignups.includes(u._id)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setSelectedSignups(prev => [...prev, u._id]);
+                                    } else {
+                                      setSelectedSignups(prev => prev.filter(id => id !== u._id));
+                                    }
+                                  }}
+                                  className="h-4 w-4 rounded text-[#027244] border-slate-350 focus:ring-[#027244] cursor-pointer"
+                                />
+                              </td>
+                              <td className="p-4.5 flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-full bg-emerald-50 text-[#027244] border border-emerald-100 flex items-center justify-center font-black text-xs shrink-0 select-none">
+                                  {u.fullName ? u.fullName.charAt(0).toUpperCase() : (u.name ? u.name.charAt(0).toUpperCase() : 'U')}
+                                </div>
+                                <div className="flex flex-col text-left">
+                                  <span className="font-extrabold text-xs sm:text-[13px] text-slate-800">
+                                    {u.fullName || u.name || 'Anonymous User'}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="p-4.5 text-slate-600 font-mono text-[11px]">{u.email}</td>
+                              <td className="p-4.5 text-slate-500 font-semibold">{u.mobileNumber || u.phone || 'N/A'}</td>
+                              <td className="p-4.5 text-slate-600 uppercase text-[10px] font-bold">
+                                <span className={`px-2 py-0.5 rounded-md text-[9px] font-extrabold select-none ${
+                                  u.role === 'admin' || u.role === 'superadmin'
+                                    ? 'bg-purple-100 text-purple-700'
+                                    : u.role === 'merchant' || u.role === 'owner'
+                                      ? 'bg-amber-100 text-amber-700'
+                                      : 'bg-slate-100 text-slate-700'
+                                }`}>
+                                  {u.role}
+                                </span>
+                              </td>
+                              <td className="p-4.5 text-slate-405 text-[10.5px]">
+                                {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
+                              </td>
+                              <td className="p-4.5 text-center">
+                                <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border select-none ${
+                                  u.status === 'Active' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 'bg-red-500/10 border-red-500/20 text-red-500'
+                                }`}>
+                                  {u.status || 'Active'}
+                                </span>
+                              </td>
+                              <td className="p-4.5 text-right">
+                                <button 
+                                  onClick={() => handleDeleteSignup(u._id)}
+                                  className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 font-extrabold text-[10.5px] rounded-xl cursor-pointer transition-colors shadow-2xs border-none"
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                          {filteredUsers.length === 0 && (
+                            <tr>
+                              <td colSpan="8" className="p-16 text-center text-slate-400 font-semibold">
+                                No matching user registrations found.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               )}

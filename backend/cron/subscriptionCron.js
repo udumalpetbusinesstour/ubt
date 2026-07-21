@@ -105,28 +105,46 @@ const runExpiryAudit = async () => {
           warningCount++;
           const daysRemaining = Math.ceil(diffDays);
 
-          await Notification.create({
-            userId: biz.ownerId ? (biz.ownerId._id || biz.ownerId) : null,
+          // Find active subscription for this business to check autoRenew / autopay status
+          const activeSub = await Subscription.findOne({
             businessId: biz._id,
-            title: 'UBT Subscription Expiring Soon',
-            message: `Your premium UBT subscription for "${biz.name}" will expire in ${daysRemaining} days. Renew today to maintain visibility!`,
-            type: 'expiry_warning'
-          });
+            status: 'active'
+          }).sort({ endDate: -1 });
 
-          if (biz.ownerId && biz.ownerId.email) {
-            const ownerName = biz.ownerId.fullName || biz.ownerId.name || 'Merchant';
-            try {
-              await sendEmail({
-                to: biz.ownerId.email,
-                subject: `Renew Today: Your UBT Subscription for "${biz.name}" expires in ${daysRemaining} days`,
-                text: `Hello ${ownerName},\n\nYour premium UBT subscription for "${biz.name}" will expire in ${daysRemaining} days.\n\nRenew today to maintain your premium search placement, contact options, and page analytics.\n\nBest regards,\nUBT Billing Desk`
-              });
-            } catch (err) {
-              console.error('[SMTP] Failed to send subscription warning email:', err.message);
+          const isAutopayOn = activeSub && activeSub.autoRenew === true;
+
+          // DO NOT disturb members who have Autopay turned ON
+          if (!isAutopayOn) {
+            warningCount++;
+
+            // Autopay is OFF: Send Urgent Manual Renewal Email & Notification
+            await Notification.create({
+              userId: biz.ownerId ? (biz.ownerId._id || biz.ownerId) : null,
+              businessId: biz._id,
+              title: 'UBT Subscription Expiring Soon',
+              message: `Your premium UBT subscription for "${biz.name}" will expire in ${daysRemaining} days. Renew today to maintain visibility!`,
+              type: 'expiry_warning'
+            });
+
+            if (biz.ownerId && biz.ownerId.email) {
+              const ownerName = biz.ownerId.fullName || biz.ownerId.name || 'Merchant';
+              try {
+                await sendEmail({
+                  to: biz.ownerId.email,
+                  subject: `Renew Today: Your UBT Subscription for "${biz.name}" expires in ${daysRemaining} days`,
+                  text: `Hello ${ownerName},\n\nYour premium UBT subscription for "${biz.name}" will expire in ${daysRemaining} days.\n\nSince Autopay is turned off, please log in and renew today to maintain your premium search placement, contact options, and page analytics.\n\nBest regards,\nUBT Billing Desk`
+                });
+              } catch (err) {
+                console.error('[SMTP] Failed to send subscription warning email:', err.message);
+              }
             }
+
+            console.log(`[Cron Warning] Dispatched 5-day warning email to "${biz.name}" (Autopay: OFF). ${daysRemaining} days left.`);
+          } else {
+            console.log(`[Cron Skip] Skipped warning email for "${biz.name}" because Autopay is turned ON.`);
           }
 
-          console.log(`[Cron Warning] dispatched warning notification to "${biz.name}". ${daysRemaining} days left.`);
+          console.log(`[Cron Warning] dispatched warning notification to "${biz.name}". Autopay: ${isAutopayOn ? 'ON' : 'OFF'}. ${daysRemaining} days left.`);
         }
       }
     }
