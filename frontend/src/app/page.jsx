@@ -336,9 +336,10 @@ export default function Home() {
       mapInstanceRef.current.remove();
     }
 
+    const mapCenterLng = isMobile ? 77.2497 : 77.2150;
     const map = L.map(mapRef.current, {
-      center: [10.5841, 77.2497],
-      zoom: 13,
+      center: [10.5841, mapCenterLng],
+      zoom: isMobile ? 13 : 13.5,
       zoomControl: true,       // Zoom buttons visible everywhere
       dragging: true,          // Map can be dragged/moved on all screens (including mobile)
       scrollWheelZoom: true,   // Enable scroll wheel zoom
