@@ -1635,7 +1635,7 @@ Please confirm availability and delivery time.`;
         <div 
           className="absolute inset-0 bg-cover bg-center sm:bg-right transition-all duration-300" 
           style={{ 
-            backgroundImage: business?.coverImageUrl ? `url('${window.getImageUrl ? window.getImageUrl(business.coverImageUrl) : business.coverImageUrl}')` : `url('/default_business_cover.png')`,
+            backgroundImage: `url('/default_business_cover.png')`,
             opacity: 0.95
           }} 
         />
