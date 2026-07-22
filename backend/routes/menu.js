@@ -9,7 +9,7 @@ const { protect } = require('../middleware/auth');
 // @access  Public
 router.get('/:businessId', async (req, res) => {
   try {
-    const menuItems = await Menu.find({ businessId: req.params.businessId }).sort({ createdAt: -1 });
+    const menuItems = await Menu.find({ businessId: req.params.businessId }).sort({ order: 1, createdAt: -1 });
     res.json({ success: true, count: menuItems.length, data: menuItems });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -124,6 +124,41 @@ router.delete('/:itemId', protect, async (req, res) => {
     await Menu.deleteOne({ _id: req.params.itemId });
 
     res.json({ success: true, message: 'Menu item deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @desc    Reorder menu items
+// @route   PUT /api/menu/:businessId/reorder
+// @access  Private
+router.put('/:businessId/reorder', protect, async (req, res) => {
+  try {
+    const { orders } = req.body;
+    if (!orders || !Array.isArray(orders)) {
+      return res.status(400).json({ success: false, message: 'Invalid reorder parameters' });
+    }
+
+    const business = await Business.findById(req.params.businessId);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    // Verify ownership or admin role
+    if (business.ownerId.toString() !== req.user._id.toString() && req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Not authorized to manage this business menu' });
+    }
+
+    const bulkOps = orders.map(item => ({
+      updateOne: {
+        filter: { _id: item.itemId, businessId: req.params.businessId },
+        update: { $set: { order: item.order } }
+      }
+    }));
+
+    await Menu.bulkWrite(bulkOps);
+
+    res.json({ success: true, message: 'Menu items reordered successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

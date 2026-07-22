@@ -9,7 +9,7 @@ import {
   RefreshCw, Star, StarHalf, CreditCard, ChevronRight, ChevronLeft, ArrowLeft, Activity, PhoneCall,
   MessageSquare, MessageCircle, Plus, CheckCircle, Info, Bell, ExternalLink, Globe,
   Copy, Check, Share2, Gift, Upload, HelpCircle, Briefcase, Mail, Settings, Menu, X, Trash2, Search, Lock,
-  FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin, LogOut, Facebook, Instagram, Phone, Users, Move, Utensils, Folder, Package
+  FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin, LogOut, Facebook, Instagram, Phone, Users, Move, Utensils, Folder, Package, GripVertical
 } from 'lucide-react';
 
 
@@ -112,6 +112,9 @@ function DashboardContent() {
   const [menuItems, setMenuItems] = useState([]);
   const [menuLoading, setMenuLoading] = useState(false);
   const [menuError, setMenuError] = useState('');
+  const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+  const [draggedCategory, setDraggedCategory] = useState(null);
+  const [draggedItemType, setDraggedItemType] = useState(null);
 
   // Menu Item Modal States
   const [showMenuItemModal, setShowMenuItemModal] = useState(false);
@@ -2685,6 +2688,69 @@ function DashboardContent() {
     } catch (err) {
       console.error('Error deleting menu item:', err);
       setMenuItems(prev => prev.filter(item => item._id !== itemId));
+    }
+  };
+
+  const handleDragStart = (e, index, category, itemType) => {
+    setDraggedItemIndex(index);
+    setDraggedCategory(category);
+    setDraggedItemType(itemType);
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.style.opacity = '0.5';
+  };
+
+  const handleDragEnd = (e) => {
+    e.currentTarget.style.opacity = '1';
+    setDraggedItemIndex(null);
+    setDraggedCategory(null);
+    setDraggedItemType(null);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e, targetIndex, category, itemType) => {
+    e.preventDefault();
+    if (draggedItemIndex === null || draggedCategory !== category || draggedItemType !== itemType) return;
+    if (draggedItemIndex === targetIndex) return;
+
+    const listItems = menuItems.filter(item => item.itemType === itemType && (item.category || 'General') === category);
+    const otherItems = menuItems.filter(item => item.itemType !== itemType || (item.category || 'General') !== category);
+
+    const reorderedList = [...listItems];
+    const [draggedItem] = reorderedList.splice(draggedItemIndex, 1);
+    reorderedList.splice(targetIndex, 0, draggedItem);
+
+    const updatedList = reorderedList.map((item, idx) => ({
+      ...item,
+      order: idx
+    }));
+
+    setMenuItems([...otherItems, ...updatedList]);
+
+    try {
+      const activeToken = token || localStorage.getItem('ubt_token');
+      const orders = reorderedList.map((item, idx) => ({
+        itemId: item._id,
+        order: idx
+      }));
+
+      const res = await fetch(`http://localhost:5000/api/menu/${business._id}/reorder`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ orders })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        console.error('Failed to save menu items order on server:', data.message);
+      }
+    } catch (err) {
+      console.error('Error reordering menu items:', err);
     }
   };
 
@@ -8491,15 +8557,26 @@ function DashboardContent() {
                             <div key={cat} className="flex flex-col gap-4">
                               <h5 className="font-extrabold text-slate-700 text-xs md:text-sm border-l-4 border-[#027244] pl-3 capitalize">{cat}</h5>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {itemsInCat.map(item => {
+                                {itemsInCat.map((item, index) => {
                                   const discountPercent = item.offerPrice
                                     ? Math.round(((item.price - item.offerPrice) / item.price) * 100)
                                     : 0;
                                   return (
-                                    <div key={item._id} className={`card-premium rounded-3xl p-5 flex flex-col justify-between gap-4 bg-white border border-slate-200 transition-all duration-300 relative ${!item.isAvailable ? 'opacity-75 grayscale-[20%]' : ''}`}>
+                                    <div
+                                      key={item._id}
+                                      draggable="true"
+                                      onDragStart={(e) => handleDragStart(e, index, item.category || 'General', 'menu')}
+                                      onDragEnd={handleDragEnd}
+                                      onDragOver={handleDragOver}
+                                      onDrop={(e) => handleDrop(e, index, item.category || 'General', 'menu')}
+                                      className={`card-premium rounded-3xl p-5 flex flex-col justify-between gap-4 bg-white border border-slate-200 transition-all duration-300 relative cursor-grab active:cursor-grabbing ${!item.isAvailable ? 'opacity-75 grayscale-[20%]' : ''}`}
+                                    >
                                       <div className="flex justify-between items-start gap-3 w-full">
                                         <div className="flex-1 flex flex-col gap-2.5 text-left min-w-0">
                                           <div className="flex items-center gap-2">
+                                            <div className="text-slate-350 hover:text-slate-500 cursor-grab shrink-0 select-none mr-0.5" title="Drag to reorder">
+                                              <GripVertical className="h-4 w-4" />
+                                            </div>
                                             <div className={`h-4.5 w-4.5 border-2 flex items-center justify-center p-0.5 rounded shrink-0 select-none ${item.isVeg ? 'border-emerald-600' : 'border-red-600'}`}>
                                               <div className={`h-2 w-2 rounded-full ${item.isVeg ? 'bg-emerald-600' : 'bg-red-600'}`} />
                                             </div>
@@ -8611,17 +8688,30 @@ function DashboardContent() {
                             <div key={cat} className="flex flex-col gap-4">
                               <h5 className="font-extrabold text-slate-700 text-xs md:text-sm border-l-4 border-[#001c41] pl-3 capitalize">{cat}</h5>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {itemsInCat.map(item => {
+                                {itemsInCat.map((item, index) => {
                                   const discountPercent = item.offerPrice
                                     ? Math.round(((item.price - item.offerPrice) / item.price) * 100)
                                     : 0;
                                   return (
-                                    <div key={item._id} className={`card-premium rounded-3xl p-5 flex flex-col justify-between gap-4 bg-white border border-slate-200 transition-all duration-300 relative ${!item.isAvailable ? 'opacity-75 grayscale-[20%]' : ''}`}>
+                                    <div
+                                      key={item._id}
+                                      draggable="true"
+                                      onDragStart={(e) => handleDragStart(e, index, item.category || 'General', 'product')}
+                                      onDragEnd={handleDragEnd}
+                                      onDragOver={handleDragOver}
+                                      onDrop={(e) => handleDrop(e, index, item.category || 'General', 'product')}
+                                      className={`card-premium rounded-3xl p-5 flex flex-col justify-between gap-4 bg-white border border-slate-200 transition-all duration-300 relative cursor-grab active:cursor-grabbing ${!item.isAvailable ? 'opacity-75 grayscale-[20%]' : ''}`}
+                                    >
                                       <div className="flex justify-between items-start gap-3 w-full">
                                         <div className="flex-1 flex flex-col gap-2.5 text-left min-w-0">
-                                          <div className="flex items-center gap-1.5 bg-blue-50 text-[#001c41] border border-blue-150 px-2 py-0.5 rounded-full text-[9px] font-bold w-fit">
-                                            <Package className="h-3 w-3 text-blue-600" />
-                                            <span>Product</span>
+                                          <div className="flex items-center gap-2">
+                                            <div className="text-slate-350 hover:text-slate-500 cursor-grab shrink-0 select-none mr-0.5" title="Drag to reorder">
+                                              <GripVertical className="h-4 w-4" />
+                                            </div>
+                                            <div className="flex items-center gap-1.5 bg-blue-50 text-[#001c41] border border-blue-150 px-2 py-0.5 rounded-full text-[9px] font-bold w-fit">
+                                              <Package className="h-3 w-3 text-blue-600" />
+                                              <span>Product</span>
+                                            </div>
                                           </div>
 
                                           <div className="flex flex-col">
