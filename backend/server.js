@@ -159,6 +159,29 @@ const initializeServer = async () => {
     const { syncAllApprovedCategories } = require('./utils/categoryHelper');
     await syncAllApprovedCategories();
 
+    // 6.5. System self-repair: Align branch ownerIds with parent ownerIds
+    try {
+      console.log('[Boot] Auditing and fixing branch owner associations...');
+      const Business = require('./models/Business');
+      const branchesToFix = await Business.find({ parentBusinessId: { $ne: null } });
+      let fixedCount = 0;
+      for (let branch of branchesToFix) {
+        const parent = await Business.findById(branch.parentBusinessId);
+        if (parent && String(branch.ownerId) !== String(parent.ownerId)) {
+          branch.ownerId = parent.ownerId;
+          await branch.save();
+          fixedCount++;
+        }
+      }
+      if (fixedCount > 0) {
+        console.log(`[REPAIR SYSTEM] Fixed ownerId on ${fixedCount} branches to match their parents.`);
+      } else {
+        console.log('[REPAIR SYSTEM] All branch owner associations are correct.');
+      }
+    } catch (repairErr) {
+      console.error('[REPAIR SYSTEM] Error during branch owner audit:', repairErr.message);
+    }
+
     console.log('UBT Backend Subsystems initialized and synced successfully.');
   } catch (error) {
     console.error('API bootloader initialization sequence failed:', error.message);
