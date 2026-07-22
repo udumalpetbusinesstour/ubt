@@ -2737,7 +2737,7 @@ function DashboardContent() {
       }
     };
 
-    const listItems = menuItems.filter(isMatch);
+    const listItems = menuItems.filter(isMatch).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     const otherItems = menuItems.filter(item => !isMatch(item));
 
     const reorderedList = [...listItems];
@@ -2810,8 +2810,8 @@ function DashboardContent() {
     if (draggedCategoryIndex === targetIndex) return;
 
     const itemsOfType = itemType === 'product'
-      ? menuItems.filter(item => item.itemType === 'product')
-      : menuItems.filter(item => item.itemType !== 'product');
+      ? menuItems.filter(item => item.itemType === 'product').sort((a, b) => ((a.categoryOrder ?? 0) - (b.categoryOrder ?? 0)) || ((a.order ?? 0) - (b.order ?? 0)))
+      : menuItems.filter(item => item.itemType !== 'product').sort((a, b) => ((a.categoryOrder ?? 0) - (b.categoryOrder ?? 0)) || ((a.order ?? 0) - (b.order ?? 0)));
 
     const otherItems = itemType === 'product'
       ? menuItems.filter(item => item.itemType !== 'product')
