@@ -779,7 +779,12 @@ function BusinessesList({ forceFocus }) {
 
   const dynamicAvailableCategories = Array.from(
     new Set(dbCategories.map(cat => cat.parentCategory).filter(p => p && p.trim() !== '' && p !== 'Others'))
-  ).sort((a, b) => (parentCategoryViews[b] || 0) - (parentCategoryViews[a] || 0));
+  )
+    .filter(p => {
+      if (allBusinesses.length === 0) return true;
+      return (categoryCounts[p] || 0) > 0;
+    })
+    .sort((a, b) => (parentCategoryViews[b] || 0) - (parentCategoryViews[a] || 0));
 
   const dynamicCategoryDetails = [];
   dynamicAvailableCategories.forEach(parentName => {
@@ -1798,27 +1803,47 @@ function BusinessesList({ forceFocus }) {
   }
 
   if (isCategoriesView) {
+    const subcatHasApprovedListing = (subcatName) => {
+      return allBusinesses.some(biz => {
+        if (biz.status !== 'Approved') return false;
+        if (biz.category?.toLowerCase() === subcatName.toLowerCase()) return true;
+        if (biz.categories && biz.categories.some(c => (c.type === 'Others' ? c.customCategoryName : c.type)?.toLowerCase() === subcatName.toLowerCase())) return true;
+        return false;
+      });
+    };
+
     const hotCategories = [...dbCategories]
+      .filter(cat => {
+        if (allBusinesses.length === 0) return true;
+        return subcatHasApprovedListing(cat.categoryName);
+      })
       .sort((a, b) => (b.views || 0) - (a.views || 0))
       .slice(0, 10);
 
     const isSearching = categoriesSearchQuery.trim() !== '';
     const searchResults = isSearching 
-      ? dbCategories.filter(cat => 
-          cat.categoryName.toLowerCase().includes(categoriesSearchQuery.toLowerCase()) ||
-          (cat.description && cat.description.toLowerCase().includes(categoriesSearchQuery.toLowerCase()))
-        )
+      ? dbCategories.filter(cat => {
+          if (allBusinesses.length > 0 && !subcatHasApprovedListing(cat.categoryName)) return false;
+          return cat.categoryName.toLowerCase().includes(categoriesSearchQuery.toLowerCase()) ||
+                 (cat.description && cat.description.toLowerCase().includes(categoriesSearchQuery.toLowerCase()));
+        })
       : [];
 
     const relatedSubcategories = selectedCategoryInExplore
-      ? dbCategories.filter(cat => 
-          cat.parentCategory?.toLowerCase() === selectedCategoryInExplore.toLowerCase()
-        )
+      ? dbCategories.filter(cat => {
+          if (cat.parentCategory?.toLowerCase() !== selectedCategoryInExplore.toLowerCase()) return false;
+          if (allBusinesses.length === 0) return true;
+          return subcatHasApprovedListing(cat.categoryName);
+        })
       : [];
 
     const exploreSubcatNames = selectedCategoryInExplore
       ? dbCategories
-          .filter(cat => cat.parentCategory?.toLowerCase() === selectedCategoryInExplore.toLowerCase())
+          .filter(cat => {
+            if (cat.parentCategory?.toLowerCase() !== selectedCategoryInExplore.toLowerCase()) return false;
+            if (allBusinesses.length === 0) return true;
+            return subcatHasApprovedListing(cat.categoryName);
+          })
           .map(cat => cat.categoryName.toLowerCase())
       : [];
 
