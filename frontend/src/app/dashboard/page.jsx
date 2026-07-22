@@ -10788,7 +10788,7 @@ function DashboardContent() {
                               <div className="absolute top-[100%] left-0 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg mt-1 max-h-60 overflow-y-auto z-50 text-xs font-bold divide-y divide-slate-100/60 dark:divide-slate-800/80 font-sans">
                                 {(() => {
                                   const query = categorySearchQuery.toLowerCase().trim();
-                                  let filtered = presetCategories.filter(cat =>
+                                  let filtered = dbCategories.filter(cat =>
                                     cat.categoryName &&
                                     cat.categoryName.toLowerCase().includes(query) &&
                                     cat.categoryName !== 'Others'
