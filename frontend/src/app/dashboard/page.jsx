@@ -2711,6 +2711,17 @@ function DashboardContent() {
   const handleDragOver = (e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+
+    const scrollSensitivity = 120;
+    const scrollSpeed = 15;
+    const clientY = e.clientY;
+    const viewportHeight = window.innerHeight;
+
+    if (clientY < scrollSensitivity) {
+      window.scrollBy(0, -scrollSpeed);
+    } else if (clientY > viewportHeight - scrollSensitivity) {
+      window.scrollBy(0, scrollSpeed);
+    }
   };
 
   const handleDrop = async (e, targetIndex, category, itemType) => {
@@ -2772,6 +2783,17 @@ function DashboardContent() {
   const handleCategoryDragOver = (e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+
+    const scrollSensitivity = 120;
+    const scrollSpeed = 15;
+    const clientY = e.clientY;
+    const viewportHeight = window.innerHeight;
+
+    if (clientY < scrollSensitivity) {
+      window.scrollBy(0, -scrollSpeed);
+    } else if (clientY > viewportHeight - scrollSensitivity) {
+      window.scrollBy(0, scrollSpeed);
+    }
   };
 
   const handleCategoryDrop = async (e, targetIndex, itemType) => {
@@ -8633,7 +8655,6 @@ function DashboardContent() {
                                 className="flex items-center gap-2 cursor-grab active:cursor-grabbing hover:bg-slate-50 px-2.5 py-1.5 rounded-xl w-fit transition-colors select-none border border-slate-100 shadow-3xs bg-white"
                                 title="Drag to reorder category"
                               >
-                                <GripVertical className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                                 <h5 className="font-extrabold text-[#001c41] text-xs md:text-sm capitalize">{cat}</h5>
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -8654,9 +8675,6 @@ function DashboardContent() {
                                       <div className="flex justify-between items-start gap-3 w-full">
                                         <div className="flex-1 flex flex-col gap-2.5 text-left min-w-0">
                                           <div className="flex items-center gap-2">
-                                            <div className="text-slate-350 hover:text-slate-500 cursor-grab shrink-0 select-none mr-0.5" title="Drag to reorder">
-                                              <GripVertical className="h-4 w-4" />
-                                            </div>
                                             <div className={`h-4.5 w-4.5 border-2 flex items-center justify-center p-0.5 rounded shrink-0 select-none ${item.isVeg ? 'border-emerald-600' : 'border-red-600'}`}>
                                               <div className={`h-2 w-2 rounded-full ${item.isVeg ? 'bg-emerald-600' : 'bg-red-600'}`} />
                                             </div>
@@ -8775,7 +8793,6 @@ function DashboardContent() {
                                 className="flex items-center gap-2 cursor-grab active:cursor-grabbing hover:bg-slate-50 px-2.5 py-1.5 rounded-xl w-fit transition-colors select-none border border-slate-100 shadow-3xs bg-white"
                                 title="Drag to reorder category"
                               >
-                                <GripVertical className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                                 <h5 className="font-extrabold text-[#001c41] text-xs md:text-sm capitalize">{cat}</h5>
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -8796,9 +8813,6 @@ function DashboardContent() {
                                       <div className="flex justify-between items-start gap-3 w-full">
                                         <div className="flex-1 flex flex-col gap-2.5 text-left min-w-0">
                                           <div className="flex items-center gap-2">
-                                            <div className="text-slate-350 hover:text-slate-500 cursor-grab shrink-0 select-none mr-0.5" title="Drag to reorder">
-                                              <GripVertical className="h-4 w-4" />
-                                            </div>
                                             <div className="flex items-center gap-1.5 bg-blue-50 text-[#001c41] border border-blue-150 px-2 py-0.5 rounded-full text-[9px] font-bold w-fit">
                                               <Package className="h-3 w-3 text-blue-600" />
                                               <span>Product</span>
