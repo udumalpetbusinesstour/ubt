@@ -8644,7 +8644,14 @@ function DashboardContent() {
 
                   {/* SECTION 1: FOOD ITEMS */}
                   {(() => {
-                    const foodItems = menuItems.filter(item => item.itemType !== 'product');
+                    const foodItems = menuItems
+                      .filter(item => item.itemType !== 'product')
+                      .sort((a, b) => {
+                        if ((a.categoryOrder ?? 0) !== (b.categoryOrder ?? 0)) {
+                          return (a.categoryOrder ?? 0) - (b.categoryOrder ?? 0);
+                        }
+                        return (a.order ?? 0) - (b.order ?? 0);
+                      });
                     if (foodItems.length === 0) return null;
                     const categories = [...new Set(foodItems.map(item => item.category || 'General'))];
 
@@ -8782,7 +8789,14 @@ function DashboardContent() {
 
                   {/* SECTION 2: PRODUCTS */}
                   {(() => {
-                    const productItems = menuItems.filter(item => item.itemType === 'product');
+                    const productItems = menuItems
+                      .filter(item => item.itemType === 'product')
+                      .sort((a, b) => {
+                        if ((a.categoryOrder ?? 0) !== (b.categoryOrder ?? 0)) {
+                          return (a.categoryOrder ?? 0) - (b.categoryOrder ?? 0);
+                        }
+                        return (a.order ?? 0) - (b.order ?? 0);
+                      });
                     if (productItems.length === 0) return null;
                     const categories = [...new Set(productItems.map(item => item.category || 'General'))];
 
