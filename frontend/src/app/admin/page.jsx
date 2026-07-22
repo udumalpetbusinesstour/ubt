@@ -1885,7 +1885,24 @@ export default function AdminDashboard() {
                 cleanPhone = '91' + cleanPhone;
               }
               
-              const message = `🎉 *வாழ்த்துக்கள்! உங்கள் Business Profile வெற்றிகரமாக Approved ஆகியுள்ளது.*
+              const isBranch = !!currentBiz.parentBusinessId;
+              const message = isBranch
+                ? `🎉 *வாழ்த்துக்கள்! உங்கள் Business Profile- ன் Branch வெற்றிகரமாக Approve ஆகியுள்ளது.*
+
+🔗 *உங்கள் Business branch Profile:*
+https://udumalpet.business/${businessSlug}
+
+📞 *ஏதாவது உதவி வேண்டுமா?*
+Profile Update செய்வது, Photos சேர்ப்பது அல்லது வேறு ஏதேனும் உதவி தேவைப்பட்டால், எங்களின் Official WhatsApp Support-ஐ தொடர்பு கொள்ளுங்கள்.
+
+📱 +91 89257 28260
+
+❤️ *உங்கள் ஆதரவுக்கு மனமார்ந்த நன்றி!*
+ஒன்றாக இணைந்து, உடுமலைப்பேட்டையின் மிகப்பெரிய மற்றும் நம்பகமான வணிக சமூகத்தை உருவாக்குவோம்! 🚀
+
+– Team Udumalpet Business
+🌐 https://udumalpet.business`
+                : `🎉 *வாழ்த்துக்கள்! உங்கள் Business Profile வெற்றிகரமாக Approved ஆகியுள்ளது.*
 
 Udumalpet Business குடும்பத்திற்கு உங்களை அன்புடன் வரவேற்கிறோம்! 💙
 இனி உங்கள் வணிகம் எங்கள் தளத்தில் அனைவரும் பார்க்கும் வகையில் Live-ல் உள்ளது.
@@ -1998,7 +2015,24 @@ Team Udumalpet Business
     const referralCode = selectedBiz.ownerId?.referralCode;
     const referralLink = referralCode ? `https://udumalpet.business/register?ref=${referralCode}` : 'https://udumalpet.business/register';
 
-    const message = `🎉 *வாழ்த்துக்கள்! உங்கள் Business Profile வெற்றிகரமாக Approved ஆகியுள்ளது.*
+    const isBranch = !!selectedBiz.parentBusinessId;
+    const message = isBranch
+      ? `🎉 *வாழ்த்துக்கள்! உங்கள் Business Profile- ன் Branch வெற்றிகரமாக Approve ஆகியுள்ளது.*
+
+🔗 *உங்கள் Business branch Profile:*
+https://udumalpet.business/${businessSlug}
+
+📞 *ஏதாவது உதவி வேண்டுமா?*
+Profile Update செய்வது, Photos சேர்ப்பது அல்லது வேறு ஏதேனும் உதவி தேவைப்பட்டால், எங்களின் Official WhatsApp Support-ஐ தொடர்பு கொள்ளுங்கள்.
+
+📱 +91 89257 28260
+
+❤️ *உங்கள் ஆதரவுக்கு மனமார்ந்த நன்றி!*
+ஒன்றாக இணைந்து, உடுமலைப்பேட்டையின் மிகப்பெரிய மற்றும் நம்பகமான வணிக சமூகத்தை உருவாக்குவோம்! 🚀
+
+– Team Udumalpet Business
+🌐 https://udumalpet.business`
+      : `🎉 *வாழ்த்துக்கள்! உங்கள் Business Profile வெற்றிகரமாக Approved ஆகியுள்ளது.*
 
 Udumalpet Business குடும்பத்திற்கு உங்களை அன்புடன் வரவேற்கிறோம்! 💙
 இனி உங்கள் வணிகம் எங்கள் தளத்தில் அனைவரும் பார்க்கும் வகையில் Live-ல் உள்ளது.
