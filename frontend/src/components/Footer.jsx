@@ -55,7 +55,7 @@ export default function Footer() {
               </button>
             </li>
             <li><Link to="/#how-it-works" className="hover:text-emerald-500 transition-colors">How It Works</Link></li>
-            <li><Link to="/businesses?focus=guidelines" className="hover:text-emerald-500 transition-colors">Business Guidelines</Link></li>
+             <li><Link to="/business-guidelines" className="hover:text-emerald-500 transition-colors">Business Guidelines</Link></li>
           </ul>
         </div>
 
@@ -65,9 +65,9 @@ export default function Footer() {
           <ul className="flex flex-col gap-2.5 text-xs font-semibold text-slate-400">
             <li><Link to="/businesses?focus=contact" className="hover:text-emerald-500 transition-colors">Help Center</Link></li>
             <li><Link to="/#faq" className="hover:text-emerald-500 transition-colors">FAQs</Link></li>
-            <li><Link to="/businesses?focus=terms" className="hover:text-emerald-500 transition-colors">Terms & Conditions</Link></li>
-            <li><Link to="/businesses?focus=privacy" className="hover:text-emerald-500 transition-colors">Privacy Policy</Link></li>
-            <li><Link to="/businesses?focus=refund" className="hover:text-emerald-500 transition-colors">Refund Policy</Link></li>
+            <li><Link to="/terms-of-service" className="hover:text-emerald-500 transition-colors">Terms & Conditions</Link></li>
+            <li><Link to="/privacy-policy" className="hover:text-emerald-500 transition-colors">Privacy Policy</Link></li>
+            <li><Link to="/refund-policy" className="hover:text-emerald-500 transition-colors">Refund Policy</Link></li>
           </ul>
         </div>
 

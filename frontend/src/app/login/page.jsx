@@ -850,9 +850,9 @@ export default function Login() {
               <Lock className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
               <span>
                 By continuing, you agree to our{' '}
-                <Link to="/businesses?focus=terms" className="text-[#027244] hover:underline font-extrabold">Terms of Service</Link>{' '}
+                <Link to="/terms-of-service" className="text-[#027244] hover:underline font-extrabold">Terms of Service</Link>{' '}
                 and{' '}
-                <Link to="/businesses?focus=privacy" className="text-[#027244] hover:underline font-extrabold">Privacy Policy</Link>.
+                <Link to="/privacy-policy" className="text-[#027244] hover:underline font-extrabold">Privacy Policy</Link>.
               </span>
             </div>
 

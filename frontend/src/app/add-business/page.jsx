@@ -3298,12 +3298,10 @@ export default function AddBusiness() {
                           {(formData.logoUrl ? 1 : 0) + (formData.coverImageUrl ? 1 : 0) + (formData.galleryUrls ? formData.galleryUrls.length : 0)}
                         </span>
                       </div>
-                    </div>
                   </div>
-
-         )}
                 </div>
-              )}
+              </div>
+            )}
               {/* STEP 1: Choose Plan Inline */}
               {currentStep === 1 && !isBranchMode && (
                 <div className="flex flex-col gap-6 animate-fadeIn">

@@ -1002,7 +1002,7 @@ export default function Register() {
                     className="h-4 w-4 mt-0.5 border-slate-300 rounded text-[#027244] focus:ring-[#027244] cursor-pointer"
                   />
                   <label htmlFor="agree" className="text-[11px] font-bold text-slate-505 ml-2 cursor-pointer leading-normal select-none">
-                    I agree to the <Link to="/businesses?focus=terms" className="text-[#027244] hover:underline font-extrabold">Terms of Service</Link> and <Link to="/businesses?focus=privacy" className="text-[#027244] hover:underline font-extrabold">Privacy Policy</Link>
+                    I agree to the <Link to="/terms-of-service" className="text-[#027244] hover:underline font-extrabold">Terms of Service</Link> and <Link to="/privacy-policy" className="text-[#027244] hover:underline font-extrabold">Privacy Policy</Link>
                   </label>
                 </div>
 

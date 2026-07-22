@@ -22,6 +22,7 @@ import AboutPage from './app/about/page';
 import UserProfile from './app/profile/page';
 import ReferralModal from './components/ReferralModal';
 import UpdatePopup from './components/UpdatePopup';
+import CookieConsent from './components/CookieConsent';
 import BloodDonorsPage from './app/blood-donors/page';
 import PartnerRegister from './app/partner-register/page';
 import GlobalModalProvider from './components/GlobalModalProvider';
@@ -168,12 +169,19 @@ function AppContent() {
           <Route path="/profile/:id" element={<UserProfile />} />
           <Route path="/blood-donors" element={<BloodDonorsPage />} />
           <Route path="/partner-register" element={<PartnerRegister />} />
+          <Route path="/privacy-policy" element={<BusinessesingsPage forceFocus="privacy" />} />
+          <Route path="/privacy" element={<BusinessesingsPage forceFocus="privacy" />} />
+          <Route path="/terms-of-service" element={<BusinessesingsPage forceFocus="terms" />} />
+          <Route path="/terms" element={<BusinessesingsPage forceFocus="terms" />} />
+          <Route path="/refund-policy" element={<BusinessesingsPage forceFocus="refund" />} />
+          <Route path="/business-guidelines" element={<BusinessesingsPage forceFocus="guidelines" />} />
           <Route path="/:id" element={<SlugRouteWrapper />} />
         </Routes>
       </main>
       {!hideNavAndFooter && <Footer />}
       <ReferralModal isOpen={isReferralModalOpen} onClose={() => setIsReferralModalOpen(false)} />
       {!hideNavAndFooter && <UpdatePopup />}
+      <CookieConsent />
     </div>
   );
 }

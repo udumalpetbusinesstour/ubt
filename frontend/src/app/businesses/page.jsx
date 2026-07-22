@@ -176,7 +176,7 @@ const staticData = [
   },
 ];
 
-function BusinessesList() {
+function BusinessesList({ forceFocus }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
@@ -291,7 +291,7 @@ function BusinessesList() {
     return null;
   }, [urlSlug, dbCategories]);
 
-  const focusParam = searchParams.get('focus');
+  const focusParam = forceFocus || searchParams.get('focus');
   const isCategoriesView = focusParam === 'categories' || !!resolvedFromSlug;
 
   const initialAnonForm = {
@@ -3446,7 +3446,7 @@ function BusinessesList() {
   );
 }
 
-export default function BusinessesingsPage() {
+export default function BusinessesingsPage({ forceFocus }) {
   return (
     <Suspense fallback={
       <div className="py-32 flex flex-col items-center justify-center gap-2 text-slate-400">
@@ -3454,7 +3454,7 @@ export default function BusinessesingsPage() {
         <span className="text-xs font-semibold">Loading platform...</span>
       </div>
     }>
-      <BusinessesList />
+      <BusinessesList forceFocus={forceFocus} />
     </Suspense>
   );
 }
