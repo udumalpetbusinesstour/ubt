@@ -779,12 +779,7 @@ function BusinessesList({ forceFocus }) {
 
   const dynamicAvailableCategories = Array.from(
     new Set(dbCategories.map(cat => cat.parentCategory).filter(p => p && p.trim() !== '' && p !== 'Others'))
-  )
-    .filter(p => {
-      if (allBusinesses.length === 0) return true;
-      return (categoryCounts[p] || 0) > 0;
-    })
-    .sort((a, b) => (parentCategoryViews[b] || 0) - (parentCategoryViews[a] || 0));
+  ).sort((a, b) => (parentCategoryViews[b] || 0) - (parentCategoryViews[a] || 0));
 
   const dynamicCategoryDetails = [];
   dynamicAvailableCategories.forEach(parentName => {
