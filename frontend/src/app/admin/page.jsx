@@ -2876,18 +2876,18 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                     <div className="bg-emerald-50/30 border border-emerald-250/70 p-5 rounded-[22px] shadow-2xs flex justify-between items-center transition-all hover:-translate-y-0.5 hover:shadow">
                       <div className="flex flex-col gap-1 text-left">
                         <span className="text-[10px] text-emerald-700 font-black uppercase tracking-wider">Active Premium</span>
-                        <div className="flex items-baseline gap-1.5 mt-2">
+                        <div className="flex flex-col gap-1 mt-2">
                           <span className="text-3xl font-black text-emerald-800 leading-none">
                             {businesses.filter(b => !b.parentBusinessId && b.status === 'Approved' && b.subscriptionStatus === 'active').length}
                           </span>
                           {businesses.filter(b => b.parentBusinessId && b.status === 'Approved').length > 0 && (
-                            <span className="text-[10px] text-emerald-655 font-bold whitespace-nowrap bg-emerald-100/80 border border-emerald-200/50 px-1.5 py-0.5 rounded-md">
+                            <span className="text-[9.5px] text-emerald-655 font-bold w-fit bg-emerald-100/80 border border-emerald-200/50 px-1.5 py-0.5 rounded-md mt-1">
                               +{businesses.filter(b => b.parentBusinessId && b.status === 'Approved').length} branches
                             </span>
                           )}
                         </div>
                       </div>
-                      <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 border border-emerald-100/50">
+                      <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 border border-emerald-100/50 shrink-0">
                         <CreditCard className="h-5 w-5" />
                       </div>
                     </div>
