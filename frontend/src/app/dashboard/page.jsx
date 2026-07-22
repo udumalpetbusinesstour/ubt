@@ -115,6 +115,8 @@ function DashboardContent() {
   const [draggedItemIndex, setDraggedItemIndex] = useState(null);
   const [draggedCategory, setDraggedCategory] = useState(null);
   const [draggedItemType, setDraggedItemType] = useState(null);
+  const [draggedCategoryIndex, setDraggedCategoryIndex] = useState(null);
+  const [draggedCategoryType, setDraggedCategoryType] = useState(null);
 
   // Menu Item Modal States
   const [showMenuItemModal, setShowMenuItemModal] = useState(false);
@@ -2751,6 +2753,73 @@ function DashboardContent() {
       }
     } catch (err) {
       console.error('Error reordering menu items:', err);
+    }
+  };
+
+  const handleCategoryDragStart = (e, index, itemType) => {
+    setDraggedCategoryIndex(index);
+    setDraggedCategoryType(itemType);
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.style.opacity = '0.5';
+  };
+
+  const handleCategoryDragEnd = (e) => {
+    e.currentTarget.style.opacity = '1';
+    setDraggedCategoryIndex(null);
+    setDraggedCategoryType(null);
+  };
+
+  const handleCategoryDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleCategoryDrop = async (e, targetIndex, itemType) => {
+    e.preventDefault();
+    if (draggedCategoryIndex === null || draggedCategoryType !== itemType) return;
+    if (draggedCategoryIndex === targetIndex) return;
+
+    const itemsOfType = menuItems.filter(item => item.itemType === itemType);
+    const otherItems = menuItems.filter(item => item.itemType !== itemType);
+
+    const categories = [...new Set(itemsOfType.map(item => item.category || 'General'))];
+    
+    const reorderedCategories = [...categories];
+    const [draggedCat] = reorderedCategories.splice(draggedCategoryIndex, 1);
+    reorderedCategories.splice(targetIndex, 0, draggedCat);
+
+    const updatedItemsOfType = itemsOfType.map(item => {
+      const catName = item.category || 'General';
+      const catIdx = reorderedCategories.indexOf(catName);
+      return {
+        ...item,
+        categoryOrder: catIdx
+      };
+    });
+
+    setMenuItems([...otherItems, ...updatedItemsOfType]);
+
+    try {
+      const activeToken = token || localStorage.getItem('ubt_token');
+      const orders = updatedItemsOfType.map(item => ({
+        itemId: item._id,
+        update: { categoryOrder: item.categoryOrder, order: item.order || 0 }
+      }));
+
+      const res = await fetch(`http://localhost:5000/api/menu/${business._id}/reorder`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ orders })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        console.error('Failed to save category order on server:', data.message);
+      }
+    } catch (err) {
+      console.error('Error reordering categories:', err);
     }
   };
 
@@ -8551,11 +8620,22 @@ function DashboardContent() {
                           <h4 className="font-black text-sm text-[#001c41] uppercase tracking-wider">Food Menu ({foodItems.length})</h4>
                         </div>
 
-                        {categories.map(cat => {
+                        {categories.map((cat, idx) => {
                           const itemsInCat = foodItems.filter(item => (item.category || 'General') === cat);
                           return (
-                            <div key={cat} className="flex flex-col gap-4">
-                              <h5 className="font-extrabold text-slate-700 text-xs md:text-sm border-l-4 border-[#027244] pl-3 capitalize">{cat}</h5>
+                            <div key={cat} className="flex flex-col gap-4 border border-slate-100/30 p-3 bg-slate-50/10 rounded-3xl">
+                              <div
+                                draggable="true"
+                                onDragStart={(e) => handleCategoryDragStart(e, idx, 'menu')}
+                                onDragEnd={handleCategoryDragEnd}
+                                onDragOver={handleCategoryDragOver}
+                                onDrop={(e) => handleCategoryDrop(e, idx, 'menu')}
+                                className="flex items-center gap-2 cursor-grab active:cursor-grabbing hover:bg-slate-50 px-2.5 py-1.5 rounded-xl w-fit transition-colors select-none border border-slate-100 shadow-3xs bg-white"
+                                title="Drag to reorder category"
+                              >
+                                <GripVertical className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                <h5 className="font-extrabold text-[#001c41] text-xs md:text-sm capitalize">{cat}</h5>
+                              </div>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {itemsInCat.map((item, index) => {
                                   const discountPercent = item.offerPrice
@@ -8682,11 +8762,22 @@ function DashboardContent() {
                           <h4 className="font-black text-sm text-[#001c41] uppercase tracking-wider">Products & Goods ({productItems.length})</h4>
                         </div>
 
-                        {categories.map(cat => {
+                        {categories.map((cat, idx) => {
                           const itemsInCat = productItems.filter(item => (item.category || 'General') === cat);
                           return (
-                            <div key={cat} className="flex flex-col gap-4">
-                              <h5 className="font-extrabold text-slate-700 text-xs md:text-sm border-l-4 border-[#001c41] pl-3 capitalize">{cat}</h5>
+                            <div key={cat} className="flex flex-col gap-4 border border-slate-100/30 p-3 bg-slate-50/10 rounded-3xl">
+                              <div
+                                draggable="true"
+                                onDragStart={(e) => handleCategoryDragStart(e, idx, 'product')}
+                                onDragEnd={handleCategoryDragEnd}
+                                onDragOver={handleCategoryDragOver}
+                                onDrop={(e) => handleCategoryDrop(e, idx, 'product')}
+                                className="flex items-center gap-2 cursor-grab active:cursor-grabbing hover:bg-slate-50 px-2.5 py-1.5 rounded-xl w-fit transition-colors select-none border border-slate-100 shadow-3xs bg-white"
+                                title="Drag to reorder category"
+                              >
+                                <GripVertical className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                <h5 className="font-extrabold text-[#001c41] text-xs md:text-sm capitalize">{cat}</h5>
+                              </div>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {itemsInCat.map((item, index) => {
                                   const discountPercent = item.offerPrice

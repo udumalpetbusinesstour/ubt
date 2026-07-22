@@ -9,7 +9,7 @@ const { protect } = require('../middleware/auth');
 // @access  Public
 router.get('/:businessId', async (req, res) => {
   try {
-    const menuItems = await Menu.find({ businessId: req.params.businessId }).sort({ order: 1, createdAt: -1 });
+    const menuItems = await Menu.find({ businessId: req.params.businessId }).sort({ categoryOrder: 1, order: 1, createdAt: -1 });
     res.json({ success: true, count: menuItems.length, data: menuItems });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -152,7 +152,7 @@ router.put('/:businessId/reorder', protect, async (req, res) => {
     const bulkOps = orders.map(item => ({
       updateOne: {
         filter: { _id: item.itemId, businessId: req.params.businessId },
-        update: { $set: { order: item.order } }
+        update: { $set: item.update || { order: item.order } }
       }
     }));
 

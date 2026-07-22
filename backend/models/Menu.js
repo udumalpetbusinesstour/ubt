@@ -56,6 +56,10 @@ const MenuSchema = new mongoose.Schema({
   order: {
     type: Number,
     default: 0
+  },
+  categoryOrder: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true
