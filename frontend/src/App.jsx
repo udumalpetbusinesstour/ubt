@@ -151,7 +151,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/businesses" element={<BusinessesingsPage />} />
-          <Route path="/businesses/:id" element={<BusinessDetail />} />
+          <Route path="/businesses/:id/:subtab?" element={<BusinessDetail />} />
           <Route path="/add-business" element={<AddBusiness />} />
           <Route path="/admin/:tab?" element={<AdminDashboard />} />
           <Route path="/superadmin/:tab?" element={<SuperAdminDashboard />} />
@@ -175,7 +175,7 @@ function AppContent() {
           <Route path="/terms" element={<BusinessesingsPage forceFocus="terms" />} />
           <Route path="/refund-policy" element={<BusinessesingsPage forceFocus="refund" />} />
           <Route path="/business-guidelines" element={<BusinessesingsPage forceFocus="guidelines" />} />
-          <Route path="/:id" element={<SlugRouteWrapper />} />
+          <Route path="/:id/:subtab?" element={<SlugRouteWrapper />} />
         </Routes>
       </main>
       {!hideNavAndFooter && <Footer />}

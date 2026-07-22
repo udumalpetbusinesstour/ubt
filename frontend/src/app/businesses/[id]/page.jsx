@@ -124,13 +124,32 @@ export default function BusinessDetail() {
   useEffect(() => {
     if (window.location.pathname.startsWith('/businesses/')) {
       const id = params.id;
+      const subtab = params.subtab;
       if (id) {
-        navigate('/' + id, { replace: true });
+        const dest = subtab ? `/${id}/${subtab}` : `/${id}`;
+        navigate(dest, { replace: true });
       }
     }
-  }, [params.id, navigate]);
+  }, [params.id, params.subtab, navigate]);
 
   const [activeTab, setActiveTab] = useState('overview'); // overview | services | photos | reviews | offers | about | map
+
+  // Synchronize activeTab state with URL subtab parameter
+  useEffect(() => {
+    if (params.subtab) {
+      const normalizedSubtab = params.subtab.toLowerCase();
+      const validTabs = ['overview', 'menu', 'services', 'photos', 'reviews', 'offers', 'about', 'branches', 'map'];
+      if (validTabs.includes(normalizedSubtab)) {
+        setActiveTab(normalizedSubtab);
+      } else if (normalizedSubtab === 'menu-and-products' || normalizedSubtab === 'products') {
+        setActiveTab('menu');
+      } else if (normalizedSubtab === 'location') {
+        setActiveTab('map');
+      }
+    } else {
+      setActiveTab('overview');
+    }
+  }, [params.subtab]);
   const [activePhotoIndex, setActivePhotoIndex] = useState(null);
   const [touchPosition, setTouchPosition] = useState(null);
 
@@ -1926,7 +1945,10 @@ Please confirm availability and delivery time.`;
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  const businessId = params.id;
+                  navigate(`/${businessId}/${tab.id}`);
+                }}
                 className={`py-4.5 text-xs font-black border-b-2 uppercase tracking-wider shrink-0 transition-all cursor-pointer ${
                   activeTab === tab.id 
                     ? 'border-emerald-600 text-emerald-600' 
