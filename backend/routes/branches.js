@@ -45,12 +45,32 @@ router.get('/business/:businessId', async (req, res) => {
       }
 
       const branches = await Business.find({ parentBusinessId: businessId }).sort({ createdAt: -1 });
-      return res.json({ success: true, count: branches.length, data: branches });
+      const parent = await Business.findById(businessId);
+      const populated = branches.map(b => {
+        const bObj = b.toObject();
+        if (parent) {
+          bObj.subscriptionStatus = parent.subscriptionStatus;
+          bObj.subscriptionExpiry = parent.subscriptionExpiry;
+          bObj.isPremium = parent.isPremium;
+        }
+        return bObj;
+      });
+      return res.json({ success: true, count: populated.length, data: populated });
     }
 
     // Public request: Return only approved branches
     const branches = await Business.find({ parentBusinessId: businessId, status: 'Approved' }).sort({ createdAt: -1 });
-    res.json({ success: true, count: branches.length, data: branches });
+    const parent = await Business.findById(businessId);
+    const populated = branches.map(b => {
+      const bObj = b.toObject();
+      if (parent) {
+        bObj.subscriptionStatus = parent.subscriptionStatus;
+        bObj.subscriptionExpiry = parent.subscriptionExpiry;
+        bObj.isPremium = parent.isPremium;
+      }
+      return bObj;
+    });
+    res.json({ success: true, count: populated.length, data: populated });
   } catch (error) {
     console.error('Error fetching branches:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -76,7 +96,25 @@ router.post('/', protect, async (req, res) => {
       isPrimary,
       logoUrl,
       coverImageUrl,
-      galleryUrls
+      galleryUrls,
+      pincode,
+      locality,
+      whatsapp,
+      email,
+      website,
+      instagram,
+      facebook,
+      timings,
+      services,
+      brands,
+      highlights,
+      languagesKnown,
+      serviceArea,
+      category,
+      categoryId,
+      type,
+      categories,
+      customCategoryName
     } = req.body;
 
     if (!businessId || !name || !address || !phone) {
@@ -102,9 +140,11 @@ router.post('/', protect, async (req, res) => {
       parentBusinessId: businessId,
       businessId: businessId, // compatibility
       ownerId: business.ownerId,
-      category: business.category,
-      categoryId: business.categoryId,
-      type: business.type || business.category,
+      category: category || business.category,
+      categoryId: categoryId || business.categoryId,
+      type: type || business.type || business.category,
+      categories: categories || business.categories || [],
+      customCategoryName: customCategoryName !== undefined ? customCategoryName : (business.customCategoryName || ''),
       city: business.city || 'Udumalpet',
       state: business.state || 'Tamil Nadu',
       subscriptionStatus: business.subscriptionStatus,
@@ -127,6 +167,19 @@ router.post('/', protect, async (req, res) => {
         lat: latitude || 10.5891,
         lng: longitude || 77.2412
       },
+      pincode: pincode || business.pincode,
+      locality: locality || business.locality,
+      whatsapp: whatsapp || business.whatsapp || phone,
+      email: email || business.email,
+      website: website || business.website,
+      instagram: instagram || business.instagram,
+      facebook: facebook || business.facebook,
+      timings: timings || business.timings,
+      services: services || business.services || [],
+      brands: brands || business.brands || [],
+      highlights: highlights || business.highlights || [],
+      languagesKnown: languagesKnown || business.languagesKnown || '',
+      serviceArea: serviceArea || business.serviceArea || '',
       status: defaultStatus,
       verificationStatus: defaultStatus === 'Approved' ? 'approved' : 'pending'
     });

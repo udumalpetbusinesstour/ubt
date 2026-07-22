@@ -296,9 +296,25 @@ function DashboardContent() {
   const registrationComplete = isAdminOverride ? true : (isRegistrationDraft ? false : !!business);
 
   // Safe defaults if business is null (standard user has no listing)
-  const isExpired = business ? business.subscriptionStatus === 'expired' : false;
-  const daysLeft = business ? getDaysRemaining(business.subscriptionExpiry) : 0;
-  const isMandatorySubscription = business && business.status === 'Approved' && business.subscriptionStatus !== 'active' && !(
+  const isExpired = business 
+    ? (business.parentBusinessId && primaryBusiness 
+        ? primaryBusiness.subscriptionStatus === 'expired' 
+        : business.subscriptionStatus === 'expired') 
+    : false;
+
+  const daysLeft = business 
+    ? (business.parentBusinessId && primaryBusiness 
+        ? getDaysRemaining(primaryBusiness.subscriptionExpiry) 
+        : getDaysRemaining(business.subscriptionExpiry)) 
+    : 0;
+
+  const effectiveSubscriptionStatus = business 
+    ? (business.parentBusinessId 
+        ? (primaryBusiness ? primaryBusiness.subscriptionStatus : 'active') 
+        : business.subscriptionStatus)
+    : 'none';
+
+  const isMandatorySubscription = business && business.status === 'Approved' && effectiveSubscriptionStatus !== 'active' && !(
     ['governmental organisations', 'government organisations', 'governmental organisation', 'government organisation'].includes((business.requestedParentCategory || '').toLowerCase()) ||
     ['taluk office', 'municipality', 'police stations', 'police station', 'hospitals', 'hospital', 'banks', 'bank', 'schools', 'school'].includes((business.category || '').toLowerCase())
   );
@@ -5154,7 +5170,13 @@ function DashboardContent() {
                   {/* Actions */}
                   <div className="flex flex-col sm:flex-row gap-3 mt-2 w-full">
                     <button
-                      onClick={() => navigate(`/add-business?step=${resumeStep}`)}
+                      onClick={() => {
+                        if (business && business.parentBusinessId) {
+                          navigate(`/add-business?mode=branch&businessId=${business.parentBusinessId}&branchId=${business._id}&step=${resumeStep}`);
+                        } else {
+                          navigate(`/add-business?step=${resumeStep}`);
+                        }
+                      }}
                       className="flex-grow py-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md shadow-emerald-900/10 transition-all flex items-center justify-center gap-2 cursor-pointer border-none"
                     >
                       <span>Resume Registration</span>
@@ -8707,7 +8729,10 @@ function DashboardContent() {
                   <span className="text-[10px] text-slate-450 font-semibold mt-0.5">Add or manage multiple branches under your business profile. Single branches default to your main profile details.</span>
                 </div>
                 <button
-                  onClick={() => navigate('/add-business?mode=branch')}
+                  onClick={() => {
+                    const parentId = primaryBusiness?._id || business?._id;
+                    navigate('/add-business?mode=branch' + (parentId ? `&businessId=${parentId}` : ''));
+                  }}
                   className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-6 rounded-xl transition-all shadow-md shrink-0 flex items-center gap-2 cursor-pointer border border-emerald-700/10"
                 >
                   <Plus className="h-4.5 w-4.5" /> Add New Branch
@@ -8732,7 +8757,10 @@ function DashboardContent() {
                     </p>
                   </div>
                   <button
-                    onClick={() => navigate('/add-business?mode=branch')}
+                    onClick={() => {
+                      const parentId = primaryBusiness?._id || business?._id;
+                      navigate('/add-business?mode=branch' + (parentId ? `&businessId=${parentId}` : ''));
+                    }}
                     className="w-full py-3.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all shadow-emerald-700/10 cursor-pointer"
                   >
                     Add Branch Now
@@ -8782,36 +8810,19 @@ function DashboardContent() {
                       </div>
 
                       <div className="flex flex-col gap-2 mt-2 border-t border-slate-100 pt-4">
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                           <Link
                             to={`/businesses/${branch._id}`}
                             target="_blank"
-                            className="flex-1 py-2 border border-[#027244] text-[#027244] hover:bg-emerald-50/30 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                            className="flex-1 py-2.5 border border-[#027244] text-[#027244] hover:bg-emerald-50/30 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
                           >
                             <ExternalLink className="h-3.5 w-3.5" /> View Profile
                           </Link>
                           <button
-                            onClick={() => {
-                              handleSwitchBusiness(branch._id);
-                              setActiveTab('Business Details');
-                            }}
-                            className="flex-1 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm border-none"
-                          >
-                            <Settings className="h-3.5 w-3.5" /> Manage Branch
-                          </button>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleOpenBranchModal(branch)}
-                            className="flex-1 py-2 border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50 font-extrabold text-[11px] rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1"
-                          >
-                            <Edit3 className="h-3 w-3" /> Edit
-                          </button>
-                          <button
                             onClick={() => handleBranchDelete(branch._id)}
-                            className="flex-1 py-2 border border-rose-200 hover:border-rose-350 text-rose-600 hover:bg-rose-50/30 font-extrabold text-[11px] rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1"
+                            className="flex-1 py-2.5 border border-rose-200 hover:border-rose-300 text-rose-650 hover:bg-rose-50/60 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-white"
                           >
-                            <Trash2 className="h-3 w-3" /> Delete
+                            <Trash2 className="h-3.5 w-3.5" /> Delete Branch
                           </button>
                         </div>
                       </div>

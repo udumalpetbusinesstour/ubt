@@ -11,7 +11,10 @@ router.use(protect);
 // GET /api/subscriptions/active - Fetch merchant's active listing subscription
 router.get('/active', async (req, res, next) => {
   try {
-    const business = await Business.findOne({ ownerId: req.user._id });
+    const business = await Business.findOne({
+      ownerId: req.user._id,
+      $or: [{ parentBusinessId: null }, { parentBusinessId: { $exists: false } }]
+    });
     if (!business) {
       return sendError(res, 404, 'No business listing found for this user account');
     }

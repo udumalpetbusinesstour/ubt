@@ -136,9 +136,16 @@ async function syncBranches(parentBusiness, branchesData, userRole) {
         lat: b.latitude || b.coordinates?.lat || 10.5891,
         lng: b.longitude || b.coordinates?.lng || 77.2412
       },
-      category: parentBusiness.category,
-      categoryId: parentBusiness.categoryId,
-      type: parentBusiness.type,
+      category: b.category || parentBusiness.category,
+      categoryId: b.categoryId || parentBusiness.categoryId,
+      type: b.type || parentBusiness.type,
+      categories: (b.categories && b.categories.length > 0) ? b.categories : (parentBusiness.categories || []),
+      customCategoryName: b.customCategoryName !== undefined ? b.customCategoryName : (parentBusiness.customCategoryName || ''),
+      pincode: b.pincode || parentBusiness.pincode,
+      locality: b.locality || parentBusiness.locality,
+      subscriptionStatus: parentBusiness.subscriptionStatus,
+      subscriptionExpiry: parentBusiness.subscriptionExpiry,
+      isPremium: parentBusiness.isPremium,
       ownerId: parentBusiness.ownerId,
       parentBusinessId: parentBusiness._id,
       businessId: parentBusiness._id,
@@ -953,7 +960,10 @@ router.get('/draft', protect, async (req, res) => {
       return res.status(403).json({ success: false, message: 'Access denied: Authorized role required' });
     }
 
-    const listings = await Business.find({ ownerId: req.user._id }).sort({ createdAt: -1 });
+    const listings = await Business.find({
+      ownerId: req.user._id,
+      $or: [{ parentBusinessId: null }, { parentBusinessId: { $exists: false } }]
+    }).sort({ createdAt: -1 });
     let business = null;
 
     const isAdminUser = req.user && (req.user.role === 'admin' || req.user.role === 'superadmin');
@@ -2448,86 +2458,9 @@ router.post('/', protect, async (req, res) => {
       isFoodBusiness,
       languagesKnown,
       serviceArea,
-      categories
+      categories,
+      parentBusinessId
     } = req.body;
-
-    // 0. Final validation & intelligent fallback of required fields
-    const resolvedName = name || req.body.businessName || business.name || business.businessName;
-    const resolvedDescription = description || business.description || 'Verified business listing in Udumalpet.';
-    const resolvedPhone = phone || business.phone || '9999999999';
-    const resolvedWhatsapp = whatsapp || phone || business.whatsapp || business.phone || resolvedPhone || '9999999999';
-    const resolvedPincode = pincode || business.pincode || '642126';
-    const resolvedLanguages = (languagesKnown && languagesKnown.trim()) ? languagesKnown : (business.languagesKnown || 'Tamil, English');
-    const resolvedServiceArea = (serviceArea && serviceArea.trim()) ? serviceArea : (business.serviceArea || 'Udumalpet Town');
-    
-    let resolvedServices = services || business.services;
-    if (!resolvedServices || (Array.isArray(resolvedServices) && resolvedServices.length === 0)) {
-      resolvedServices = ['Retail & Services'];
-    }
-    
-    let resolvedHighlights = highlights || business.highlights;
-    if (!resolvedHighlights || (Array.isArray(resolvedHighlights) && resolvedHighlights.length === 0)) {
-      resolvedHighlights = ['Quality Service', 'Verified Business'];
-    }
-
-    if (!resolvedName || !resolvedPincode) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed: Business Name and Pincode are required.',
-      });
-    }
-
-    // Validate categories array or single fields fallback
-    let resolvedCategories = categories || business.categories;
-    if (!resolvedCategories || !Array.isArray(resolvedCategories) || resolvedCategories.length === 0) {
-      const activeCat = category || business.category;
-      if (!activeCat || !activeCat.trim()) {
-        resolvedCategories = [{
-          category: 'Others',
-          type: 'Retail & Services',
-          customCategoryName: '',
-          categoryStatus: 'Normal'
-        }];
-      } else {
-        resolvedCategories = [{
-          category: requestedParentCategory || business.requestedParentCategory || 'Others',
-          type: activeCat,
-          customCategoryName: customCategoryName || business.customCategoryName || '',
-          categoryStatus: categoryStatus || business.categoryStatus || 'Normal'
-        }];
-      }
-    }
-
-    if (resolvedCategories.length > 5) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed: You can select at most 5 categories.',
-      });
-    }
-
-    // 1. Address Geocoding & Boundary validation (must be within 35km of Udumalpet center)
-    const geoValidation = await validateAddressAndBoundary(
-      `${address || ''} ${locality || ''}`,
-      pincode,
-      coordinates ? coordinates.lat : req.body.latitude,
-      coordinates ? coordinates.lng : req.body.longitude
-    );
-    if (!geoValidation.isValid) {
-      return res.status(400).json({
-        success: false,
-        message: geoValidation.message,
-      });
-    }
-
-    // 2. Address verification audit
-    let finalAddressVerified = isAddressVerified;
-    if (address && isAddressVerified) {
-      const validAddresses = validAddressesMap[pincode] || [];
-      if (!validAddresses.includes(address)) {
-        finalAddressVerified = false;
-        console.log(`[ADDRESS AUDIT] Free-form or custom address entered: "${address}". Placed in manual audit queue.`);
-      }
-    }
 
     // Restrict access: Allow business owners, admins, visitors/writers, and partners to register a business
     if (req.user.role !== 'owner' && req.user.role !== 'merchant' && req.user.role !== 'admin' && req.user.role !== 'visitor' && req.user.role !== 'partner') {
@@ -2563,8 +2496,11 @@ router.post('/', protect, async (req, res) => {
     let business = null;
     if (req.body._id) {
       business = await Business.findOne({ _id: req.body._id, ownerId: req.user._id });
-    } else if (!isTestUser) {
-      const listings = await Business.find({ ownerId: req.user._id }).sort({ createdAt: -1 });
+    } else if (!isTestUser && !parentBusinessId) {
+      const listings = await Business.find({
+        ownerId: req.user._id,
+        $or: [{ parentBusinessId: null }, { parentBusinessId: { $exists: false } }]
+      }).sort({ createdAt: -1 });
       if (listings.length > 0) {
         business = listings[0];
         if (listings.length > 1) {
@@ -2577,16 +2513,101 @@ router.post('/', protect, async (req, res) => {
       console.log(`[TEST USER BYPASS] Allowed duplicate registration for test/admin account: ${req.user?.email || email}`);
     }
 
+    // 0. Final validation & intelligent fallback of required fields
+    const resolvedName = name || req.body.businessName || business?.name || business?.businessName;
+    const resolvedDescription = description || business?.description || 'Verified business listing in Udumalpet.';
+    const resolvedPhone = phone || business?.phone || '9999999999';
+    const resolvedWhatsapp = whatsapp || phone || business?.whatsapp || business?.phone || resolvedPhone || '9999999999';
+    const resolvedPincode = pincode || business?.pincode || '642126';
+    const resolvedLanguages = (languagesKnown && languagesKnown.trim()) ? languagesKnown : (business?.languagesKnown || 'Tamil, English');
+    const resolvedServiceArea = (serviceArea && serviceArea.trim()) ? serviceArea : (business?.serviceArea || 'Udumalpet Town');
+    
+    let resolvedServices = services || business?.services;
+    if (!resolvedServices || (Array.isArray(resolvedServices) && resolvedServices.length === 0)) {
+      resolvedServices = ['Retail & Services'];
+    }
+    
+    let resolvedHighlights = highlights || business?.highlights;
+    if (!resolvedHighlights || (Array.isArray(resolvedHighlights) && resolvedHighlights.length === 0)) {
+      resolvedHighlights = ['Quality Service', 'Verified Business'];
+    }
+
+    if (!resolvedName || !resolvedPincode) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed: Business Name and Pincode are required.',
+      });
+    }
+
+    // Validate categories array or single fields fallback
+    let resolvedCategories = categories || business?.categories;
+    if (!resolvedCategories || !Array.isArray(resolvedCategories) || resolvedCategories.length === 0) {
+      const activeCat = category || business?.category;
+      if (!activeCat || !activeCat.trim()) {
+        resolvedCategories = [{
+          category: 'Others',
+          type: 'Retail & Services',
+          customCategoryName: '',
+          categoryStatus: 'Normal'
+        }];
+      } else {
+        resolvedCategories = [{
+          category: requestedParentCategory || business?.requestedParentCategory || 'Others',
+          type: activeCat,
+          customCategoryName: customCategoryName || business?.customCategoryName || '',
+          categoryStatus: categoryStatus || business?.categoryStatus || 'Normal'
+        }];
+      }
+    }
+
+    if (resolvedCategories.length > 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed: You can select at most 5 categories.',
+      });
+    }
+
+    // 1. Address Geocoding & Boundary validation (must be within 35km of Udumalpet center)
+    const geoValidation = await validateAddressAndBoundary(
+      `${address || ''} ${locality || ''}`,
+      pincode,
+      coordinates ? coordinates.lat : req.body.latitude,
+      coordinates ? coordinates.lng : req.body.longitude
+    );
+    if (!geoValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: geoValidation.message,
+      });
+    }
+
+    // 2. Address verification audit
+    let finalAddressVerified = isAddressVerified;
+    if (address && isAddressVerified) {
+      const validAddresses = validAddressesMap[pincode] || [];
+      if (!validAddresses.includes(address)) {
+        finalAddressVerified = false;
+        console.log(`[ADDRESS AUDIT] Free-form or custom address entered: "${address}". Placed in manual audit queue.`);
+      }
+    }
+
+    let parentBusiness = null;
+    const resolvedParentId = parentBusinessId || business?.parentBusinessId;
+    if (resolvedParentId) {
+      parentBusiness = await Business.findById(resolvedParentId);
+    }
+
     const updateData = {
       name: resolvedName,
+      parentBusinessId: resolvedParentId || undefined,
       category: resolvedCategories[0]?.type || category,
-      type: type || business.type || 'Individual / Sole Proprietor',
+      type: type || business?.type || 'Individual / Sole Proprietor',
       description: resolvedDescription,
-      yearEstablished: yearEstablished || business.yearEstablished,
-      employeeCount: employeeCount || business.employeeCount,
-      gstNumber: gstNumber || business.gstNumber,
+      yearEstablished: yearEstablished || business?.yearEstablished,
+      employeeCount: employeeCount || business?.employeeCount,
+      gstNumber: gstNumber || business?.gstNumber,
       services: resolvedServices,
-      brands: brands || business.brands || [],
+      brands: brands || business?.brands || [],
       highlights: resolvedHighlights,
       languagesKnown: resolvedLanguages,
       serviceArea: resolvedServiceArea,
@@ -2594,16 +2615,16 @@ router.post('/', protect, async (req, res) => {
       tags: (req.body.tags || []).filter(t => t !== 'draft'),
       phone: resolvedPhone,
       whatsapp: resolvedWhatsapp,
-      email: email || business.email,
-      website: website || business.website || '',
-      instagram: instagram || business.instagram || '',
-      facebook: facebook || business.facebook || '',
-      address: address || business.address,
-      locality: locality || business.locality,
+      email: email || business?.email,
+      website: website || business?.website || '',
+      instagram: instagram || business?.instagram || '',
+      facebook: facebook || business?.facebook || '',
+      address: address || business?.address,
+      locality: locality || business?.locality,
       pincode: resolvedPincode,
       isAddressVerified: finalAddressVerified, // set to match verified status
-      logoUrl: logoUrl || business.logoUrl || '',
-      coverImageUrl: coverImageUrl || business.coverImageUrl || '',
+      logoUrl: logoUrl || business?.logoUrl || '',
+      coverImageUrl: coverImageUrl || business?.coverImageUrl || '',
       galleryUrls: galleryUrls || [],
       menuUrls: menuUrls || [],
       isFoodBusiness: isFoodBusiness !== undefined ? isFoodBusiness : false,
@@ -2626,8 +2647,9 @@ router.post('/', protect, async (req, res) => {
         Sunday: '9:00 AM - 1:00 PM',
       },
       status: 'Pending Verification',
-      subscriptionStatus: business ? (business.subscriptionStatus || 'none') : 'none',
-      isPremium: business ? (business.isPremium || false) : false,
+      subscriptionStatus: parentBusiness ? parentBusiness.subscriptionStatus : (business ? (business.subscriptionStatus || 'none') : 'none'),
+      subscriptionExpiry: parentBusiness ? parentBusiness.subscriptionExpiry : (business ? business.subscriptionExpiry : undefined),
+      isPremium: parentBusiness ? parentBusiness.isPremium : (business ? (business.isPremium || false) : false),
       customCategoryName: customCategoryName || undefined,
       requestedParentCategory: requestedParentCategory || undefined,
       categoryStatus: categoryStatus || undefined,
@@ -2696,8 +2718,12 @@ router.post('/', protect, async (req, res) => {
       }
       await business.save();
     } else {
+      let parentBusiness = null;
+      if (updateData.parentBusinessId) {
+        parentBusiness = await Business.findById(updateData.parentBusinessId);
+      }
       business = await Business.create({
-        ownerId: req.user._id,
+        ownerId: parentBusiness ? parentBusiness.ownerId : req.user._id,
         ...updateData,
       });
 
@@ -2903,7 +2929,7 @@ router.post('/draft', protect, async (req, res) => {
 
     if (fields._id) {
       business = await Business.findOne({ _id: fields._id, ownerId: req.user._id });
-    } else if (!isAdminUser) {
+    } else if (!isAdminUser && !fields.parentBusinessId) {
       // Find existing business for this user (primary listing only)
       business = await Business.findOne({
         ownerId: req.user._id,
@@ -2929,13 +2955,18 @@ router.post('/draft', protect, async (req, res) => {
       await business.save();
     } else {
       // Create new draft
+      let parentBusiness = null;
+      if (fields.parentBusinessId) {
+        parentBusiness = await Business.findById(fields.parentBusinessId);
+      }
       business = new Business({
-        ownerId: req.user._id,
+        ownerId: parentBusiness ? parentBusiness.ownerId : req.user._id,
         ...fields,
         tags: ['draft'],
         status: fields.status || 'Pending Verification',
-        subscriptionStatus: fields.subscriptionStatus || 'none',
-        isPremium: fields.isPremium !== undefined ? fields.isPremium : false,
+        subscriptionStatus: parentBusiness ? parentBusiness.subscriptionStatus : (fields.subscriptionStatus || 'none'),
+        subscriptionExpiry: parentBusiness ? parentBusiness.subscriptionExpiry : (fields.subscriptionExpiry || undefined),
+        isPremium: parentBusiness ? parentBusiness.isPremium : (fields.isPremium !== undefined ? fields.isPremium : false),
       });
       await business.save();
     }

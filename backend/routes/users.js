@@ -97,7 +97,10 @@ router.get('/:id', admin, async (req, res, next) => {
     if (!user) {
       return sendError(res, 404, 'User account not found');
     }
-    const business = await Business.findOne({ ownerId: user._id });
+    const business = await Business.findOne({
+      ownerId: user._id,
+      $or: [{ parentBusinessId: null }, { parentBusinessId: { $exists: false } }]
+    });
     return sendSuccess(res, 200, 'User details retrieved', { user, business });
   } catch (err) {
     next(err);

@@ -73,14 +73,24 @@ router.get('/businesses', async (req, res, next) => {
       const bObj = b.toObject();
       bObj.branchCount = await Business.countDocuments({ parentBusinessId: b._id });
       
-      // Fetch the active subscription details for this business
-      const activeSub = await Subscription.findOne({ businessId: b._id, status: 'active' }).sort({ createdAt: -1 });
+      let targetId = b._id;
+      let checkStatus = b.subscriptionStatus;
+      if (bObj.parentBusinessId) {
+        const parent = await Business.findById(bObj.parentBusinessId);
+        if (parent) {
+          targetId = parent._id;
+          checkStatus = parent.subscriptionStatus;
+        }
+      }
+
+      // Fetch the active subscription details for this business (or parent)
+      const activeSub = await Subscription.findOne({ businessId: targetId, status: 'active' }).sort({ createdAt: -1 });
       if (activeSub) {
         bObj.subscriptionPlan = activeSub.planName || activeSub.plan;
         bObj.subscriptionAmount = activeSub.amountPaid || activeSub.amount;
       } else {
-        bObj.subscriptionPlan = b.subscriptionStatus === 'active' ? 'Premium Package' : 'Basic Tier';
-        bObj.subscriptionAmount = b.subscriptionStatus === 'active' ? 99 : 0;
+        bObj.subscriptionPlan = checkStatus === 'active' ? 'Premium Package' : 'Basic Tier';
+        bObj.subscriptionAmount = checkStatus === 'active' ? 99 : 0;
       }
       
       return bObj;

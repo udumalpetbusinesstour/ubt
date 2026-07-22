@@ -15,10 +15,11 @@ const steps = [
 ];
 
 const branchSteps = [
-  { id: 1, name: 'Basic Info', shortName: 'Basic' },
-  { id: 2, name: 'Branch Details', shortName: 'Details' },
-  { id: 3, name: 'Contact & Location', shortName: 'Contact' },
-  { id: 4, name: 'Photos & Media', shortName: 'Photos' },
+  { id: 2, name: 'Basic Info', shortName: 'Basic' },
+  { id: 3, name: 'Business Details', shortName: 'Details' },
+  { id: 4, name: 'Contact & Location', shortName: 'Contact' },
+  { id: 5, name: 'Photos & Media', shortName: 'Photos' },
+  { id: 6, name: 'Review & Submit', shortName: 'Review' },
 ];
 
 
@@ -105,6 +106,8 @@ export default function AddBusiness() {
 
   // Branches wizard states
   const [isBranchMode, setIsBranchMode] = useState(false);
+  const [parentBusinessDetails, setParentBusinessDetails] = useState(null);
+  const [isParentInfoCopied, setIsParentInfoCopied] = useState(false);
   const [branchStep, setBranchStep] = useState(1);
   const [editingBranchIndex, setEditingBranchIndex] = useState(null);
 
@@ -119,6 +122,9 @@ export default function AddBusiness() {
     name: '',
     category: '',
     customCategoryName: '',
+    requestedParentCategory: '',
+    categoryStatus: 'Normal',
+    categories: [],
     type: 'Individual / Sole Proprietor',
     description: '',
     yearEstablished: '',
@@ -399,6 +405,7 @@ export default function AddBusiness() {
   const [branchAutofillLoading, setBranchAutofillLoading] = useState(false);
   const [branchAutofillSuccess, setBranchAutofillSuccess] = useState(false);
   const [branchImportedReviews, setBranchImportedReviews] = useState([]);
+  const [preBranchModeBranches, setPreBranchModeBranches] = useState(null);
 
 
 
@@ -471,7 +478,46 @@ export default function AddBusiness() {
 
   const fetchUserBusinessFromServer = async (authToken) => {
     try {
-      const res = await fetch('http://localhost:5000/api/businesses/my-business', {
+      const modeParam = searchParams.get('mode');
+      const isBranch = modeParam === 'branch';
+      const parentIdParam = searchParams.get('businessId');
+      const branchIdParam = searchParams.get('branchId') || searchParams.get('id');
+
+      if (isBranch) {
+        // Fetch parent details to allow copying
+        if (parentIdParam) {
+          const parentUrl = `http://localhost:5000/api/businesses/${parentIdParam}`;
+          const parentRes = await fetch(parentUrl, {
+            headers: { Authorization: `Bearer ${authToken}` },
+          });
+          const parentData = await parentRes.json();
+          if (parentData.success && parentData.data) {
+            setParentBusinessDetails(parentData.data);
+          }
+        }
+
+        // If editing an existing branch
+        if (branchIdParam) {
+          const branchUrl = `http://localhost:5000/api/businesses/${branchIdParam}`;
+          const branchRes = await fetch(branchUrl, {
+            headers: { Authorization: `Bearer ${authToken}` },
+          });
+          const branchData = await branchRes.json();
+          if (branchData.success && branchData.data) {
+            populateDraft(branchData.data);
+            setIsEditing(true);
+            setIsPincodeVerified(true);
+          }
+        }
+        return;
+      }
+
+      const bizIdParam = searchParams.get('businessId');
+      const url = bizIdParam 
+        ? `http://localhost:5000/api/businesses/${bizIdParam}` 
+        : 'http://localhost:5000/api/businesses/my-business';
+
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       const data = await res.json();
@@ -657,8 +703,15 @@ export default function AddBusiness() {
 
         // Detect branch mode
         const modeParam = searchParams.get('mode');
-        if (modeParam === 'branch') {
+        const isBranch = modeParam === 'branch';
+        if (isBranch) {
           setIsBranchMode(true);
+          const parentId = searchParams.get('businessId');
+          setFormData(prev => ({
+            ...prev,
+            parentBusinessId: parentId || ''
+          }));
+          setCurrentStep(2);
         }
 
         const isAdmin = parsedUser && (parsedUser.role === 'admin' || parsedUser.role === 'superadmin');
@@ -668,7 +721,7 @@ export default function AddBusiness() {
         if (isNew && isAdmin) {
           // Bypass draft fetch and start with a blank form!
           console.log('[ADMIN BYPASS] Initializing blank business registration flow');
-        } else if (storedDraft) {
+        } else if (storedDraft && !isBranch) {
           try {
             const draft = JSON.parse(storedDraft);
             populateDraft(draft);
@@ -688,33 +741,7 @@ export default function AddBusiness() {
     }
   }, [searchParams]);
 
-  // Auto-sync parent business details into branchForm when in branch mode
-  useEffect(() => {
-    if (isBranchMode && formData && formData.name) {
-      setBranchForm((prev) => ({
-        ...prev,
-        name: prev.name || formData.name || '',
-        category: prev.category || formData.category || '',
-        customCategoryName: prev.customCategoryName || formData.customCategoryName || '',
-        type: prev.type || formData.type || 'Individual / Sole Proprietor',
-        description: prev.description || formData.description || '',
-        yearEstablished: prev.yearEstablished || formData.yearEstablished || formData.establishedYear || '',
-        employeeCount: prev.employeeCount || formData.employeeCount || '1 - 5',
-        gstNumber: prev.gstNumber || formData.gstNumber || '',
-        services: prev.services || (Array.isArray(formData.services) ? formData.services.join(', ') : (formData.services || '')),
-        brands: prev.brands || (Array.isArray(formData.brands) ? formData.brands.join(', ') : (formData.brands || '')),
-        languagesKnown: prev.languagesKnown || formData.languagesKnown || 'Tamil, English',
-        serviceArea: prev.serviceArea || formData.serviceArea || 'Udumalpet Town',
-        highlights: prev.highlights || (Array.isArray(formData.highlights) ? formData.highlights.join(', ') : (formData.highlights || '')),
-        logoUrl: prev.logoUrl || formData.logoUrl || '',
-        coverImageUrl: prev.coverImageUrl || formData.coverImageUrl || '',
-        phone: prev.phone || formData.phone || '',
-        whatsapp: prev.whatsapp || formData.whatsapp || formData.phone || '',
-        email: prev.email || formData.email || '',
-        website: prev.website || formData.website || '',
-      }));
-    }
-  }, [isBranchMode, formData]);
+
 
   useEffect(() => {
     if (currentStep === 1 && formData.subscriptionStatus === 'active' && !isBranchMode) {
@@ -1295,9 +1322,22 @@ export default function AddBusiness() {
     }
   };
 
+  const updateBranchStateAndDraft = (newBranchForm) => {
+    setBranchForm(newBranchForm);
+    const idx = editingBranchIndex;
+    if (idx !== null && formData.branches) {
+      const updatedBranches = [...formData.branches];
+      updatedBranches[idx] = newBranchForm;
+      const updated = { ...formData, branches: updatedBranches };
+      setFormData(updated);
+      saveDraft(updated);
+    }
+  };
+
   const handleBranchInputChange = (e) => {
     const { name, value } = e.target;
-    setBranchForm((prev) => ({ ...prev, [name]: value }));
+    const updated = { ...branchForm, [name]: value };
+    updateBranchStateAndDraft(updated);
   };
 
   const handleBranchLogoUpload = async (e) => {
@@ -1312,7 +1352,8 @@ export default function AddBusiness() {
       try {
         const compressedFile = await compressImage(file, 500, 500, 0.8, true);
         const url = await uploadFileToServer(compressedFile);
-        setBranchForm(prev => ({ ...prev, logoUrl: url }));
+        const updated = { ...branchForm, logoUrl: url };
+        updateBranchStateAndDraft(updated);
       } catch (err) {
         setError('Branch logo upload failed: ' + err.message);
       } finally {
@@ -1333,7 +1374,8 @@ export default function AddBusiness() {
       try {
         const compressedFile = await compressImage(file, 1200, 800);
         const url = await uploadFileToServer(compressedFile);
-        setBranchForm(prev => ({ ...prev, coverImageUrl: url }));
+        const updated = { ...branchForm, coverImageUrl: url };
+        updateBranchStateAndDraft(updated);
       } catch (err) {
         setError('Branch cover upload failed: ' + err.message);
       } finally {
@@ -1355,7 +1397,8 @@ export default function AddBusiness() {
       try {
         const compressedFiles = await Promise.all(files.map(f => compressImage(f, 1200, 800)));
         const urls = await Promise.all(compressedFiles.map(f => uploadFileToServer(f)));
-        setBranchForm(prev => ({ ...prev, galleryUrls: [...(prev.galleryUrls || []), ...urls] }));
+        const updated = { ...branchForm, galleryUrls: [...(branchForm.galleryUrls || []), ...urls] };
+        updateBranchStateAndDraft(updated);
       } catch (err) {
         setError('Branch gallery upload failed: ' + err.message);
       } finally {
@@ -1365,57 +1408,17 @@ export default function AddBusiness() {
   };
 
   const handleBranchAddressSelect = (addrDetails) => {
-    setBranchForm(prev => ({
-      ...prev,
+    const updated = {
+      ...branchForm,
       address: addrDetails.address,
       locality: addrDetails.locality,
       coordinates: addrDetails.coordinates,
       isAddressVerified: addrDetails.isVerified,
-    }));
+    };
+    updateBranchStateAndDraft(updated);
   };
 
-  const validateBranchStep = () => {
-    setError('');
-    if (branchStep === 1) {
-      if (!branchForm.name || !branchForm.description) {
-        setError('Branch name and description are mandatory.');
-        return false;
-      }
-      if (!branchForm.pincode) {
-        setError('Please select a branch pincode.');
-        return false;
-      }
-    } else if (branchStep === 2) {
-      if (!branchForm.services || !branchForm.services.trim()) {
-        setError('Branch Services / Products Offered is mandatory.');
-        return false;
-      }
-      if (!branchForm.serviceArea || !branchForm.serviceArea.trim()) {
-        setError('Branch Service Area Limits is mandatory.');
-        return false;
-      }
-      if (!branchForm.languagesKnown || !branchForm.languagesKnown.trim()) {
-        setError('Branch Languages Known is mandatory.');
-        return false;
-      }
-      if (!branchForm.highlights || !branchForm.highlights.trim()) {
-        setError('Branch Verified Highlights / Features (Comma Separated) is mandatory.');
-        return false;
-      }
-    } else if (branchStep === 3) {
-      if (!branchForm.phone || !branchForm.address || !branchForm.locality) {
-        setError('Phone number, address, and locality are mandatory.');
-        return false;
-      }
-    } else if (branchStep === 4) {
-      const totalPhotos = (branchLogoFile ? 1 : 0) + branchGalleryFiles.length;
-      if (totalPhotos < 1) {
-        setError('Minimum 1 image is required for the branch profile.');
-        return false;
-      }
-    }
-    return true;
-  };
+
 
   const validateStep = () => {
     setError('');
@@ -1525,77 +1528,17 @@ export default function AddBusiness() {
   };
 
   const handleNext = () => {
-    if (isBranchMode) {
-      if (validateBranchStep()) {
-        if (branchStep < 4) {
-          setBranchStep((prev) => prev + 1);
-        } else {
-          // Finished branch step 4 -> save branch!
-          const updatedBranches = [...formData.branches];
-          if (editingBranchIndex !== null) {
-            updatedBranches[editingBranchIndex] = branchForm;
-          } else {
-            updatedBranches.push(branchForm);
-          }
-          const updatedFormData = { ...formData, branches: updatedBranches };
-          setFormData(updatedFormData);
-          
-          setError('');
-          setLoading(true);
-          
-          const saveBranchAsync = async () => {
-            try {
-              const activeToken = localStorage.getItem('ubt_token') || token;
-              const payload = getPayload(updatedFormData);
-              const url = updatedFormData._id 
-                ? `http://localhost:5000/api/businesses/${updatedFormData._id}` 
-                : 'http://localhost:5000/api/businesses';
-              const method = updatedFormData._id ? 'PUT' : 'POST';
-              
-              const res = await fetch(url, {
-                method,
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${activeToken}`,
-                },
-                body: JSON.stringify(payload),
-              });
-              const data = await res.json();
-              if (data.success) {
-                localStorage.removeItem('ubt_draft_business');
-                localStorage.removeItem('ubt_edit_draft');
-                setToastMessage("Branch saved successfully!");
-                setIsBranchMode(false);
-                setEditingBranchIndex(null);
-                setTimeout(() => {
-                  setToastMessage('');
-                  navigate('/dashboard?message=branch_added');
-                }, 1500);
-              } else {
-                setError(data.message || 'Failed to save branch.');
-              }
-            } catch (err) {
-              setError('Connection failed. Server might be offline.');
-            } finally {
-              setLoading(false);
-            }
-          };
-          saveBranchAsync();
-        }
-      }
-    } else {
-      if (validateStep()) {
-        saveDraft(formData);
-        setCurrentStep((prev) => prev + 1);
-      }
+    if (validateStep()) {
+      saveDraft(formData);
+      setCurrentStep((prev) => prev + 1);
     }
   };
 
   const handleBack = () => {
     setError('');
     if (isBranchMode) {
-      if (branchStep > 1) {
-        setBranchStep((prev) => prev - 1);
+      if (currentStep > 2) {
+        setCurrentStep((prev) => prev - 1);
       } else {
         setIsBranchEligibilityVerified(false);
       }
@@ -1649,7 +1592,9 @@ export default function AddBusiness() {
           }
         }
 
-        if (isEditing) {
+        if (isBranchMode) {
+          navigate('/dashboard?message=branch_added');
+        } else if (isEditing) {
           navigate('/dashboard?message=profile_updated');
         } else {
           // Successfully submitted! Redirect to dashboard
@@ -1936,7 +1881,7 @@ export default function AddBusiness() {
                   </div>
                 )}
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-3 w-full">
+                <div className="flex flex-col md:flex-row md:flex-wrap items-stretch md:items-center gap-3 mt-3 w-full">
                   <button
                     disabled={autofillLoading}
                     onClick={async () => {
@@ -1963,7 +1908,7 @@ export default function AddBusiness() {
                           ];
                           let placePincode = d.pincode ? d.pincode.replace(/\s+/g, '').slice(0, 6) : '';
                           if (placePincode && !allowedPincodes.includes(placePincode)) {
-                            setError(`The selected business is located in pincode ${placePincode}, which is outside the eligible Udumalpet region.`);
+                            setError(`This business is located in pincode ${placePincode}, which is outside the eligible Udumalpet region.`);
                             setAutofillLoading(false);
                             return;
                           }
@@ -2010,7 +1955,7 @@ export default function AddBusiness() {
                         setAutofillLoading(false);
                       }
                     }}
-                    className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-1 order-first sm:order-none disabled:opacity-50"
+                    className="py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 w-full md:w-auto order-first md:order-none disabled:opacity-50 whitespace-nowrap md:shrink-0"
                   >
                     {autofillLoading ? 'Importing Details...' : 'Verify & Proceed'}
                   </button>
@@ -2020,14 +1965,14 @@ export default function AddBusiness() {
                       setError('');
                       setEligibilityMethod('pincode');
                     }}
-                    className="py-3.5 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white order-2 sm:order-none sm:w-auto text-center"
+                    className="py-3.5 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white order-2 md:order-none w-full md:w-auto text-center whitespace-nowrap md:shrink-0"
                   >
                     Skip & Verify using Pincode
                   </button>
                   <button
                     type="button"
                     onClick={() => navigate('/dashboard')}
-                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-white order-last sm:order-none sm:w-auto"
+                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-white order-last md:order-none w-full md:w-auto whitespace-nowrap md:shrink-0"
                   >
                     <ArrowLeft className="h-4 w-4" /> Back
                   </button>
@@ -2173,8 +2118,10 @@ export default function AddBusiness() {
                         setError("Please select a pincode to verify eligibility.");
                         return;
                       }
+                      setFormData(prev => ({ ...prev, pincode: branchForm.pincode }));
                       setError("");
                       setIsBranchEligibilityVerified(true);
+                      setIsPincodeVerified(true);
                     }}
                     className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-grow"
                   >
@@ -2236,20 +2183,28 @@ export default function AddBusiness() {
                               const data = await res.json();
                               if (data.success && data.data) {
                                 const d = data.data;
-                                setBranchForm(prev => ({
+                                setFormData(prev => ({
                                   ...prev,
                                   name: d.name || prev.name,
                                   phone: d.phone || prev.phone,
                                   whatsapp: d.phone || prev.whatsapp,
+                                  email: d.email || prev.email,
                                   website: d.website || prev.website,
                                   address: d.address || prev.address,
                                   locality: d.locality || prev.locality,
                                   pincode: d.pincode || prev.pincode,
+                                  isAddressVerified: true,
+                                  googlePlaceId: d.googlePlaceId || prev.googlePlaceId,
+                                  googleRating: d.googleRating || prev.googleRating,
+                                  googleReviewsCount: d.googleReviewsCount || prev.googleReviewsCount,
+                                  googleReviews: d.googleReviews || prev.googleReviews,
                                   coordinates: d.latitude ? { lat: d.latitude, lng: d.longitude } : prev.coordinates,
                                   googleBusinessLink: d.googlePlaceId ? `https://maps.google.com/?cid=${d.googlePlaceId}` : prev.googleBusinessLink,
                                   timings: d.timings || prev.timings,
                                 }));
                                 setBranchImportedReviews(d.googleReviews || []);
+                                setIsBranchEligibilityVerified(true);
+                                setIsPincodeVerified(true);
                                 setBranchAutofillSuccess(true);
                               }
                             } catch {}
@@ -2304,7 +2259,7 @@ export default function AddBusiness() {
                   </div>
                 )}
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-3 w-full">
+                <div className="flex flex-col md:flex-row md:flex-wrap items-stretch md:items-center gap-3 mt-3 w-full">
                   <button
                     disabled={branchAutofillLoading}
                     onClick={async () => {
@@ -2337,15 +2292,15 @@ export default function AddBusiness() {
                           }
 
                           const updated = {
-                            ...branchForm,
-                            name: d.name || branchForm.name,
-                            address: d.address || branchForm.address,
-                            phone: d.phone || branchForm.phone,
-                            whatsapp: d.phone || branchForm.whatsapp,
-                            email: d.email || branchForm.email,
-                            website: d.website || branchForm.website || '',
-                            locality: d.locality || branchForm.locality,
-                            pincode: placePincode || branchForm.pincode,
+                            ...formData,
+                            name: d.name || formData.name,
+                            address: d.address || formData.address,
+                            phone: d.phone || formData.phone,
+                            whatsapp: d.phone || formData.whatsapp,
+                            email: d.email || formData.email,
+                            website: d.website || formData.website || '',
+                            locality: d.locality || formData.locality,
+                            pincode: placePincode || formData.pincode,
                             isAddressVerified: true,
                             googlePlaceId: d.googlePlaceId || '',
                             googleRating: d.googleRating || 0,
@@ -2357,11 +2312,12 @@ export default function AddBusiness() {
                             },
                             timings: d.timings === null ? {
                               Monday: '', Tuesday: '', Wednesday: '', Thursday: '', Friday: '', Saturday: '', Sunday: ''
-                            } : (d.timings || d.openingHours || branchForm.timings),
+                            } : (d.timings || d.openingHours || formData.timings),
                           };
-                          setBranchForm(updated);
+                          setFormData(updated);
                           setBranchImportedReviews(d.googleReviews || []);
                           setIsBranchEligibilityVerified(true);
+                          setIsPincodeVerified(true);
                           setBranchAutofillSuccess(true);
                           setToastMessage("Branch information imported from link successfully.");
                           setTimeout(() => setToastMessage(''), 4000);
@@ -2374,7 +2330,7 @@ export default function AddBusiness() {
                         setBranchAutofillLoading(false);
                       }
                     }}
-                    className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 flex-1 order-first sm:order-none disabled:opacity-50"
+                    className="py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 w-full md:w-auto order-first md:order-none disabled:opacity-50 whitespace-nowrap md:shrink-0"
                   >
                     {branchAutofillLoading ? 'Importing Details...' : 'Verify & Proceed'}
                   </button>
@@ -2384,14 +2340,14 @@ export default function AddBusiness() {
                       setError('');
                       setBranchEligibilityMethod('pincode');
                     }}
-                    className="py-3.5 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white order-2 sm:order-none sm:w-auto text-center"
+                    className="py-3.5 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer bg-white order-2 md:order-none w-full md:w-auto text-center whitespace-nowrap md:shrink-0"
                   >
                     Skip & Verify using Pincode
                   </button>
                   <button
                     type="button"
                     onClick={() => navigate('/dashboard')}
-                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-white order-last sm:order-none sm:w-auto"
+                    className="py-3.5 px-5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-white order-last md:order-none w-full md:w-auto whitespace-nowrap md:shrink-0"
                   >
                     <ArrowLeft className="h-4 w-4" /> Back
                   </button>
@@ -2437,14 +2393,12 @@ export default function AddBusiness() {
                 <div className="absolute top-4 left-0 w-full h-0.5 bg-slate-100 z-0" />
                 <div 
                   className="absolute top-4 left-0 h-0.5 bg-emerald-500 z-0 transition-all duration-300"
-                  style={{ width: `${(((isBranchMode ? branchStep : currentStep) - 1) / ((isBranchMode ? branchSteps : steps).length - 1)) * 100}%` }}
+                  style={{ width: `${isBranchMode ? ((currentStep - 2) / (branchSteps.length - 1)) * 100 : ((currentStep - 1) / (steps.length - 1)) * 100}%` }}
                 />
                 
                 {(isBranchMode ? branchSteps : steps).map((step) => {
-                  const isActive = step.id === (isBranchMode ? branchStep : currentStep);
-                  // Step 1 (Choose Plan) is only "completed" if payment is confirmed
-                  const isCompleted = step.id < (isBranchMode ? branchStep : currentStep) &&
-                    (step.id !== 1 || formData.subscriptionStatus === 'active');
+                  const isActive = step.id === currentStep;
+                  const isCompleted = step.id < currentStep;
                   return (
                     <div key={step.id} className="flex flex-col items-center gap-1.5 relative z-10 w-0 flex-1">
                       <div 
@@ -2456,7 +2410,7 @@ export default function AddBusiness() {
                               : 'bg-white border-slate-200 text-slate-400'
                         }`}
                       >
-                        {isCompleted ? '✓' : step.id}
+                        {isCompleted ? '✓' : (isBranchMode ? step.id - 1 : step.id)}
                       </div>
                       <span className={`text-[9px] md:text-[11px] font-bold text-center leading-tight w-full px-0.5 ${
                         isActive ? 'text-slate-800' : 'text-slate-400'
@@ -2481,13 +2435,108 @@ export default function AddBusiness() {
             {/* Form Body Card */}
             <div className="bg-white border border-slate-200 rounded-3xl p-8 md:p-10 shadow-sm flex flex-col gap-6">
               {/* STEP 2: Basic Info */}
-              {currentStep === 2 && !isBranchMode && (
+              {currentStep === 2 && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
 
                   <div className="flex flex-col gap-5">
-                    <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
-                      <h3 className="text-lg font-extrabold text-slate-805">2. Basic Information</h3>
-                      <p className="text-slate-600 text-xs font-semibold">Tell us the basic details about your business.</p>
+                    <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                      <div className="flex flex-col gap-0.5 text-left">
+                        <h3 className="text-lg font-extrabold text-slate-805">
+                          {isBranchMode ? 'Branch Basic Information' : '2. Basic Information'}
+                        </h3>
+                        <p className="text-slate-655 text-xs font-semibold">
+                          {isBranchMode ? 'Enter basic info for this branch location.' : 'Tell us the basic details about your business.'}
+                        </p>
+                      </div>
+                      {isBranchMode && parentBusinessDetails && !formData.googlePlaceId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isParentInfoCopied) {
+                              // Reset fields
+                              setFormData(prev => ({
+                                ...prev,
+                                name: '',
+                                category: '',
+                                customCategoryName: '',
+                                type: 'Individual / Sole Proprietor',
+                                description: '',
+                                yearEstablished: '',
+                                employeeCount: '1 - 5',
+                                gstNumber: '',
+                                services: '',
+                                brands: '',
+                                languagesKnown: 'Tamil, English',
+                                serviceArea: 'Udumalpet Town',
+                                highlights: '',
+                                phone: '',
+                                whatsapp: '',
+                                email: '',
+                                website: '',
+                                facebook: '',
+                                instagram: '',
+                                logoUrl: '',
+                                coverImageUrl: '',
+                                galleryUrls: [],
+                                timings: {
+                                  Monday: '9:00 AM - 8:00 PM',
+                                  Tuesday: '9:00 AM - 8:00 PM',
+                                  Wednesday: '9:00 AM - 8:00 PM',
+                                  Thursday: '9:00 AM - 8:00 PM',
+                                  Friday: '9:00 AM - 8:00 PM',
+                                  Saturday: '9:00 AM - 8:00 PM',
+                                  Sunday: '9:00 AM - 1:00 PM',
+                                },
+                              }));
+                              setLogoFile(null);
+                              setCoverFile(null);
+                              setGalleryFiles([]);
+                              setIsParentInfoCopied(false);
+                              setToastMessage("Cleared copied details.");
+                              setTimeout(() => setToastMessage(''), 3000);
+                            } else {
+                              const d = parentBusinessDetails;
+                              setFormData(prev => ({
+                                ...prev,
+                                name: d.name || prev.name,
+                                category: d.category || prev.category,
+                                customCategoryName: d.customCategoryName || prev.customCategoryName,
+                                type: d.type || prev.type,
+                                description: d.description || prev.description,
+                                yearEstablished: d.yearEstablished || prev.yearEstablished,
+                                employeeCount: d.employeeCount || prev.employeeCount,
+                                gstNumber: d.gstNumber || prev.gstNumber,
+                                services: Array.isArray(d.services) ? d.services.join(', ') : (d.services || prev.services),
+                                brands: Array.isArray(d.brands) ? d.brands.join(', ') : (d.brands || prev.brands),
+                                languagesKnown: d.languagesKnown || prev.languagesKnown,
+                                serviceArea: d.serviceArea || prev.serviceArea,
+                                highlights: Array.isArray(d.highlights) ? d.highlights.join(', ') : (d.highlights || prev.highlights),
+                                phone: d.phone || prev.phone,
+                                whatsapp: d.whatsapp || d.phone || prev.whatsapp,
+                                email: d.email || prev.email,
+                                website: d.website || prev.website,
+                                facebook: d.facebook || prev.facebook,
+                                instagram: d.instagram || prev.instagram,
+                                logoUrl: d.logoUrl || prev.logoUrl,
+                                coverImageUrl: d.coverImageUrl || prev.coverImageUrl,
+                                galleryUrls: d.galleryUrls || prev.galleryUrls,
+                                timings: d.timings || prev.timings,
+                              }));
+                              if (d.logoUrl) setLogoFile('parent_logo.png');
+                              if (d.coverImageUrl) setCoverFile('parent_cover.png');
+                              if (d.galleryUrls && d.galleryUrls.length > 0) {
+                                setGalleryFiles(d.galleryUrls.map((url, i) => `parent_gallery_${i}.png`));
+                              }
+                              setIsParentInfoCopied(true);
+                              setToastMessage("Auto-filled details from main business.");
+                              setTimeout(() => setToastMessage(''), 3000);
+                            }
+                          }}
+                          className="py-1.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-extrabold text-xs rounded-xl border border-emerald-200 transition-colors cursor-pointer shrink-0"
+                        >
+                          {isParentInfoCopied ? '📋 Clear Copied Info' : '📋 Copy Main Business Info'}
+                        </button>
+                      )}
                     </div>
                     
                     <div className="flex flex-col gap-1.5">
@@ -2785,7 +2834,7 @@ export default function AddBusiness() {
               )}
 
               {/* STEP 3: Business Details */}
-              {currentStep === 3 && !isBranchMode && (
+              {currentStep === 3 && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
                   <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
                     <h3 className="text-lg font-extrabold text-slate-800">3. Business Details</h3>
@@ -2949,7 +2998,7 @@ export default function AddBusiness() {
               )}
 
               {/* STEP 4: Contact & Location */}
-              {currentStep === 4 && !isBranchMode && (
+              {currentStep === 4 && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
                   <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
                     <h3 className="text-lg font-extrabold text-slate-800">4. Contact & Location</h3>
@@ -3156,7 +3205,7 @@ export default function AddBusiness() {
               )}
 
               {/* STEP 5: Photos & Media */}
-              {currentStep === 5 && !isBranchMode && (
+              {currentStep === 5 && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
                   <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
                     <h3 className="text-lg font-extrabold text-slate-800">5. Photos & Brand Media</h3>
@@ -3252,481 +3301,7 @@ export default function AddBusiness() {
                     </div>
                   </div>
 
-                </div>
-              )}
-
-              {/* BRANCH MODE STEPS */}
-              {isBranchMode && (
-                <div className="flex flex-col gap-6 animate-fadeIn">
-                  {/* Branch Step 1: Basic Info */}
-                  {branchStep === 1 && (
-                    <div className="flex flex-col gap-6">
-                      <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <div className="flex flex-col gap-0.5">
-                          <h3 className="text-base font-extrabold text-slate-800">Branch Basic Information</h3>
-                          <p className="text-slate-450 text-xs font-semibold">Enter basic info for this branch location.</p>
-                        </div>
-                        {formData && formData.name && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setBranchForm(prev => ({
-                                ...prev,
-                                name: formData.name || prev.name,
-                                category: formData.category || prev.category,
-                                customCategoryName: formData.customCategoryName || prev.customCategoryName,
-                                type: formData.type || prev.type,
-                                description: formData.description || prev.description,
-                                yearEstablished: formData.yearEstablished || formData.establishedYear || prev.yearEstablished,
-                                employeeCount: formData.employeeCount || prev.employeeCount,
-                                gstNumber: formData.gstNumber || prev.gstNumber,
-                                services: Array.isArray(formData.services) ? formData.services.join(', ') : (formData.services || prev.services),
-                                brands: Array.isArray(formData.brands) ? formData.brands.join(', ') : (formData.brands || prev.brands),
-                                languagesKnown: formData.languagesKnown || prev.languagesKnown,
-                                serviceArea: formData.serviceArea || prev.serviceArea,
-                                highlights: Array.isArray(formData.highlights) ? formData.highlights.join(', ') : (formData.highlights || prev.highlights),
-                                phone: formData.phone || prev.phone,
-                                whatsapp: formData.whatsapp || formData.phone || prev.whatsapp,
-                                email: formData.email || prev.email,
-                                website: formData.website || prev.website,
-                              }));
-                              setToastMessage("Auto-filled basic details from main business.");
-                              setTimeout(() => setToastMessage(''), 3000);
-                            }}
-                            className="py-1.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-extrabold text-xs rounded-xl border border-emerald-200 transition-colors cursor-pointer shrink-0"
-                          >
-                            📋 Copy Main Business Info
-                          </button>
-                        )}
-                      </div>
-                      
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Branch Name <span className="text-red-500">*</span></label>
-                        <input
-                          type="text"
-                          name="name"
-                          value={branchForm.name}
-                          onChange={handleBranchInputChange}
-                          placeholder="e.g. ABC Traders - Branch 1"
-                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Udumalpet Pincode Badge */}
-                        <div className="flex flex-col gap-1.5 md:col-span-2 text-left">
-                          <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center bg-emerald-50/30 border border-emerald-200/60 p-4 rounded-2xl select-none">
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider">Verified Branch Pincode</span>
-                              <span className="text-xs text-slate-700 font-bold">{branchForm.pincode} - Udumalpet Area Eligible</span>
-                            </div>
-                            <button
-                              onClick={() => {
-                                setIsBranchEligibilityVerified(false);
-                                setBranchForm(prev => ({ ...prev, pincode: '' }));
-                              }}
-                              className="py-1.5 px-3.5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-[11px] rounded-xl transition-colors cursor-pointer shrink-0"
-                            >
-                              Change Pincode
-                            </button>
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Business Type</label>
-                          <select
-                            name="type"
-                            value={branchForm.type}
-                            onChange={handleBranchInputChange}
-                            className="w-full py-2.5 px-3 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
-                          >
-                            {['Individual / Sole Proprietor', 'Company / LLP', 'Partnership', 'Other'].map(opt => (
-                              <option key={opt} value={opt}>{opt}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex justify-between items-center">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Branch Description <span className="text-red-500">*</span></label>
-                          {false && (
-                            <button
-                              type="button"
-                              onClick={() => handleAIGenerate('description', true)}
-                              disabled={aiLoading}
-                              className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all border border-emerald-200/55 disabled:opacity-50 shrink-0"
-                            >
-                              {aiLoading ? (
-                                <span className="h-3 w-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
-                              ) : '✨'} Generate with AI
-                            </button>
-                          )}
-                        </div>
-                        <textarea
-                          name="description"
-                          value={branchForm.description}
-                          onChange={handleBranchInputChange}
-                          rows="3"
-                          placeholder="Short description for this branch..."
-                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 resize-none"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Branch Step 2: Branch Details */}
-                  {branchStep === 2 && (
-                    <div className="flex flex-col gap-6">
-                      <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
-                        <h3 className="text-base font-extrabold text-slate-800">Branch Details</h3>
-                        <p className="text-slate-450 text-xs font-semibold">Enter services and brand info for this branch.</p>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Established Year</label>
-                          <input
-                            type="text"
-                            name="yearEstablished"
-                            value={branchForm.yearEstablished}
-                            onChange={handleBranchInputChange}
-                            placeholder="e.g. 2020"
-                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Employee Count</label>
-                          <select
-                            name="employeeCount"
-                            value={branchForm.employeeCount}
-                            onChange={handleBranchInputChange}
-                            className="w-full py-2.5 px-3 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
-                          >
-                            {['1 - 5', '5 - 10', '10 - 20', '20 - 50', '50 - 100', '100+'].map(ec => (
-                              <option key={ec} value={ec}>{ec}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">GST Number (Optional)</label>
-                          <input
-                            type="text"
-                            name="gstNumber"
-                            value={branchForm.gstNumber}
-                            onChange={handleBranchInputChange}
-                            placeholder="GSTIN"
-                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Services / Products Offered <span className="text-red-500">*</span></label>
-                        <input
-                          type="text"
-                          name="services"
-                          value={branchForm.services}
-                          onChange={handleBranchInputChange}
-                          placeholder="e.g. Retail, Wholesale, Home Delivery (Comma Separated)"
-                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Brands Dealt With <span className="text-slate-400 font-semibold lowercase text-[10px]">(Optional)</span></label>
-                        <input
-                          type="text"
-                          name="brands"
-                          value={branchForm.brands}
-                          onChange={handleBranchInputChange}
-                          placeholder="e.g. Havells, LG, Samsung (Comma Separated)"
-                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Service Area Limits <span className="text-red-500">*</span></label>
-                          <input
-                            type="text"
-                            name="serviceArea"
-                            value={branchForm.serviceArea}
-                            onChange={handleBranchInputChange}
-                            placeholder="e.g. Udumalpet Town, Gandhi Nagar, nearby areas"
-                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                          />
-                        </div>
-
-                        <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Languages Known <span className="text-red-500">*</span></label>
-                          <input
-                            type="text"
-                            name="languagesKnown"
-                            value={branchForm.languagesKnown}
-                            onChange={handleBranchInputChange}
-                            placeholder="e.g. Tamil, English, Malayalam"
-                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-1.5 text-left">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Verified Highlights / Features (Comma Separated) <span className="text-red-500">*</span></label>
-                        <input
-                          type="text"
-                          name="highlights"
-                          value={branchForm.highlights}
-                          onChange={handleBranchInputChange}
-                          placeholder="e.g. On-time Service, Expert Technicians, Quality Materials, Affordable Pricing"
-                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                        />
-                        <span className="text-xs text-slate-600 font-bold -mt-1 block">Enter comma-separated highlights to display as green badges under your description.</span>
-                      </div>
-
-                      <div className="flex flex-col gap-3 mt-4 border-t border-slate-100 pt-5 text-left">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase flex items-center gap-1.5">
-                          <Clock className="h-4 w-4 text-[#027244]" /> Branch Operating Hours (Monday - Sunday)
-                        </label>
-                        <span className="text-xs text-slate-600 font-bold -mt-2 block">Set opening and closing hours for each day. Use "Closed" if not operating on that day.</span>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50 p-4.5 rounded-2xl border border-slate-150">
-                          {branchForm.timings && typeof branchForm.timings === 'object' && !Array.isArray(branchForm.timings) ? (
-                            Object.keys(branchForm.timings).map((day) => (
-                              <div key={day} className="flex items-center justify-between gap-2 sm:gap-4">
-                                <span className="text-xs font-bold text-slate-600 w-20 sm:w-24 shrink-0">{day}</span>
-                                <input
-                                  type="text"
-                                  value={branchForm.timings[day] || ''}
-                                  onChange={(e) => {
-                                    const newTimings = { ...branchForm.timings, [day]: e.target.value };
-                                    setBranchForm(prev => ({ ...prev, timings: newTimings }));
-                                  }}
-                                  placeholder="e.g. 9:00 AM - 8:00 PM or Closed"
-                                  className="flex-1 min-w-0 py-2 px-3 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                                />
-                              </div>
-                            ))
-                          ) : (
-                            <div className="col-span-2 text-slate-450 font-bold text-center">
-                              Standard timings configuration is unavailable.
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Branch Step 3: Contact & Location */}
-                  {branchStep === 3 && (
-                    <div className="flex flex-col gap-6">
-                      <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
-                        <h3 className="text-base font-extrabold text-slate-805">Branch Contact & Location</h3>
-                        <p className="text-slate-450 text-xs font-semibold">Enter contact number and select location on maps for this branch.</p>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Phone Number <span className="text-red-500">*</span></label>
-                          <input
-                            type="text"
-                            name="phone"
-                            value={branchForm.phone}
-                            onChange={handleBranchInputChange}
-                            placeholder="Phone number"
-                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">WhatsApp Number <span className="text-red-500">*</span></label>
-                          <input
-                            type="text"
-                            name="whatsapp"
-                            value={branchForm.whatsapp}
-                            onChange={handleBranchInputChange}
-                            placeholder="WhatsApp number"
-                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Email Address</label>
-                          <input
-                            type="email"
-                            name="email"
-                            value={branchForm.email}
-                            onChange={handleBranchInputChange}
-                            placeholder="Email address"
-                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                          />
-                        </div>
-
-                        <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Website URL (Optional)</label>
-                          <input
-                            type="text"
-                            name="website"
-                            value={branchForm.website || ''}
-                            onChange={handleBranchInputChange}
-                            placeholder="e.g. www.mybusiness.com"
-                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                          />
-                        </div>
-
-                        <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Facebook URL (Optional)</label>
-                          <input
-                            type="text"
-                            name="facebook"
-                            value={branchForm.facebook || ''}
-                            onChange={handleBranchInputChange}
-                            placeholder="e.g. facebook.com/mybusiness"
-                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                          />
-                        </div>
-
-                        <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Instagram Handle (Optional)</label>
-                          <input
-                            type="text"
-                            name="instagram"
-                            value={branchForm.instagram || ''}
-                            onChange={handleBranchInputChange}
-                            placeholder="e.g. @mybusiness"
-                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-1.5 text-left">
-                        <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Branch Address <span className="text-red-500">*</span></label>
-                        <textarea
-                          name="address"
-                          value={branchForm.address}
-                          onChange={handleBranchInputChange}
-                          rows="2"
-                          placeholder="Complete branch address"
-                          className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Area / Locality <span className="text-red-500">*</span></label>
-                          <select
-                            value={isBranchCustomLocality ? 'Others' : (branchForm.locality || '')}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (val === 'Others') {
-                                setIsBranchCustomLocality(true);
-                                setBranchForm(prev => ({ ...prev, locality: '' }));
-                              } else {
-                                setIsBranchCustomLocality(false);
-                                setBranchForm(prev => ({ ...prev, locality: val }));
-                              }
-                            }}
-                            className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 cursor-pointer"
-                          >
-                            <option value="">-- Choose Area / Locality --</option>
-                            {availableLocalities.map(loc => (
-                              <option key={loc} value={loc}>{loc}</option>
-                            ))}
-                            <option value="Others">Others (Custom Locality)</option>
-                          </select>
-                          {isBranchCustomLocality && (
-                            <input
-                              type="text"
-                              name="locality"
-                              value={branchForm.locality}
-                              onChange={handleBranchInputChange}
-                              placeholder="Enter custom locality"
-                              className="w-full py-2.5 px-3.5 bg-white border border-slate-300 rounded-xl shadow-sm text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 mt-2 animate-fadeIn"
-                            />
-                          )}
-                        </div>
-                        <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">City / Town</label>
-                          <input
-                            type="text"
-                            disabled
-                            value="Udumalpet"
-                            className="w-full py-2.5 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 font-bold cursor-not-allowed"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Branch Autocomplete map */}
-                      <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 mt-2 flex flex-col gap-4 relative z-20">
-                        <div className="flex items-start gap-2 text-slate-705 text-left">
-                          <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-xs font-bold text-slate-800">Map & Address Autocomplete Lookup</span>
-                            <span className="text-[10px] text-slate-450 font-bold">Please select matching address from autocomplete suggestions below to verify details.</span>
-                          </div>
-                        </div>
-                        <MockGoogleMaps
-                          pincode={branchForm.pincode}
-                          onAddressSelect={handleBranchAddressSelect}
-                          initialAddress={branchForm.address}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Branch Step 4: Photos & Media */}
-                  {branchStep === 4 && (
-                    <div className="flex flex-col gap-6 animate-fadeIn">
-                      <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
-                        <h3 className="text-base font-extrabold text-slate-800">Branch Photos & Media</h3>
-                        <p className="text-slate-400 text-xs font-semibold">Upload photos of your branch store front or interiors.</p>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
-                        {/* Logo & Cover Upload */}
-                        <div className="flex flex-col gap-5 border border-slate-200/80 rounded-2xl p-5">
-                          <h4 className="font-extrabold text-sm text-slate-800">Identity Images</h4>
-                          
-                          {/* Logo */}
-                          <div className="flex flex-col gap-1.5 text-left">
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Branch Logo (Optional)</span>
-                            <span className="text-[9.5px] text-amber-600 font-bold leading-tight">Please upload a square image (e.g. 500x500 px) for best display results.</span>
-                            <div className="flex items-center gap-4">
-                              <div className="h-16 w-16 bg-slate-55 border border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 font-bold text-xs select-none">
-                                {branchLogoFile ? '✓ Logo' : 'Logo'}
-                              </div>
-                              <label className="py-2.5 px-4 border border-slate-300 hover:bg-slate-50 font-bold text-xs rounded-xl cursor-pointer transition-colors shadow-sm text-slate-700">
-                                Choose File
-                                <input type="file" onChange={handleBranchLogoUpload} className="hidden" />
-                              </label>
-                            </div>
-                          </div>
-
-                        </div>
-
-                        {/* Gallery Images Upload */}
-                        <div className="flex flex-col gap-5 border border-slate-200/80 rounded-2xl p-5 justify-between">
-                          <div>
-                            <h4 className="font-extrabold text-sm text-slate-800">Gallery Photos</h4>
-                            <p className="text-slate-450 text-xs mt-1 leading-normal font-semibold">Upload photos of store front, interiors or products.</p>
-                          </div>
-
-                          <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl transition-colors cursor-pointer bg-slate-50/50">
-                            <Upload className="h-8 w-8 text-slate-400 mb-2" />
-                            <label className="font-bold text-xs text-emerald-600 hover:underline cursor-pointer select-none">
-                              Click to upload branch gallery photos
-                              <input type="file" multiple onChange={handleBranchGalleryUpload} className="hidden" />
-                            </label>
-                          </div>
-
-                          {/* Uploaded files count badge */}
-                          <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs text-slate-600 font-semibold">
-                            <span className="font-bold">Total uploaded photos:</span>
-                            <span className="bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded-full">
-                              {(branchLogoFile ? 1 : 0) + (branchCoverFile ? 1 : 0) + branchGalleryFiles.length}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+         )}
                 </div>
               )}
               {/* STEP 1: Choose Plan Inline */}
@@ -3749,7 +3324,7 @@ export default function AddBusiness() {
               )}
 
               {/* STEP 6: Review & Submit */}
-              {currentStep === 6 && !isBranchMode && (
+              {currentStep === 6 && (
                 <div className="flex flex-col gap-6 animate-fadeIn">
                   <div className="border-b border-slate-100 pb-3 flex flex-col gap-1">
                     <h3 className="text-lg font-extrabold text-slate-805">6. Review & Submit</h3>
@@ -3851,22 +3426,13 @@ export default function AddBusiness() {
                     </button>
                   )}
 
-                  {isBranchMode ? (
+                  {currentStep < 6 ? (
                     <button 
                       onClick={handleNext}
                       className="py-3.5 px-6 bg-[#027244] hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow shadow-emerald-700/20 cursor-pointer w-full sm:w-auto"
                     >
-                      {branchStep < 4 ? 'Save & Continue' : 'Save Branch'} <ArrowRight className="h-4 w-4" />
+                      Save & Continue <ArrowRight className="h-4 w-4" />
                     </button>
-                  ) : currentStep < steps.length ? (
-                    currentStep !== 1 && (
-                      <button 
-                        onClick={handleNext}
-                        className="py-3.5 px-6 bg-[#027244] hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow shadow-emerald-700/20 cursor-pointer w-full sm:w-auto"
-                      >
-                        Save & Continue <ArrowRight className="h-4 w-4" />
-                      </button>
-                    )
                   ) : (
                     <button 
                       onClick={handleFormSubmit}
@@ -3962,26 +3528,25 @@ export default function AddBusiness() {
               <h4 className="font-extrabold text-[#001c41] text-[15px]">Your Progress</h4>
               <div className="flex flex-col gap-2">
                 <div className="text-xs font-semibold text-slate-500">
-                  Step {isBranchMode ? branchStep : currentStep} of {isBranchMode ? branchSteps.length : steps.length} Completed
+                  Step {isBranchMode ? currentStep - 1 : currentStep} of {isBranchMode ? branchSteps.length : steps.length} Completed
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex-grow h-2 bg-slate-200/70 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-[#137333] transition-all duration-300 rounded-full" 
-                      style={{ width: `${((isBranchMode ? branchStep : currentStep) / (isBranchMode ? branchSteps.length : steps.length)) * 100}%` }}
+                      style={{ width: `${((isBranchMode ? currentStep - 1 : currentStep) / (isBranchMode ? branchSteps.length : steps.length)) * 100}%` }}
                     />
                   </div>
                   <span className="text-[#001c41] font-black text-xs min-w-[32px] text-right">
-                    {Math.round(((isBranchMode ? branchStep : currentStep) / (isBranchMode ? branchSteps.length : steps.length)) * 100)}%
+                    {Math.round(((isBranchMode ? currentStep - 1 : currentStep) / (isBranchMode ? branchSteps.length : steps.length)) * 100)}%
                   </span>
                 </div>
               </div>
               
               <div className="flex flex-col gap-3.5 mt-2">
                 {(isBranchMode ? branchSteps : steps).map((step) => {
-                  const isActive = step.id === (isBranchMode ? branchStep : currentStep);
-                  const isCompleted = step.id < (isBranchMode ? branchStep : currentStep) &&
-                    (step.id !== 1 || formData.subscriptionStatus === 'active');
+                  const isActive = step.id === currentStep;
+                  const isCompleted = step.id < currentStep;
                   return (
                     <div key={step.id} className="flex items-center gap-3">
                       <div 
@@ -3991,7 +3556,7 @@ export default function AddBusiness() {
                             : 'bg-white border-slate-200 text-slate-400'
                         }`}
                       >
-                        {isCompleted ? '✓' : step.id}
+                        {isCompleted ? '✓' : (isBranchMode ? step.id - 1 : step.id)}
                       </div>
                       <span className={`text-xs font-bold transition-colors ${
                         isActive 

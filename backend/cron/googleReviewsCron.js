@@ -249,10 +249,6 @@ const runUbtTestimonialsSync = async () => {
  * Also runs once immediately on server boot to prime the data.
  */
 const startGoogleReviewsCron = () => {
-  // Run once on startup to ensure fresh data
-  runGoogleReviewsSync();
-  runUbtTestimonialsSync();
-
   // Schedule weekly: every Sunday at 2:00 AM  (0 2 * * 0)
   cron.schedule('0 2 * * 0', () => {
     console.log('[GoogleReviewsCron] Weekly Sunday 2AM trigger fired.');
