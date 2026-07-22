@@ -141,6 +141,14 @@ function AppContent() {
     if (pathname.startsWith('/dashboard')) return '/dashboard';
     if (pathname.startsWith('/superadmin')) return '/superadmin';
     if (pathname.startsWith('/admin')) return '/admin';
+    
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts.length === 2 && !['businesses', 'events', 'blogs', 'profile'].includes(parts[0])) {
+      return '/' + parts[0];
+    }
+    if (parts.length === 3 && parts[0] === 'businesses') {
+      return '/businesses/' + parts[1];
+    }
     return pathname;
   };
 
