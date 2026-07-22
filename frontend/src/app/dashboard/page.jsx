@@ -2729,8 +2729,16 @@ function DashboardContent() {
     if (draggedItemIndex === null || draggedCategory !== category || draggedItemType !== itemType) return;
     if (draggedItemIndex === targetIndex) return;
 
-    const listItems = menuItems.filter(item => item.itemType === itemType && (item.category || 'General') === category);
-    const otherItems = menuItems.filter(item => item.itemType !== itemType || (item.category || 'General') !== category);
+    const isMatch = (item) => {
+      if (itemType === 'product') {
+        return item.itemType === 'product' && (item.category || 'General') === category;
+      } else {
+        return item.itemType !== 'product' && (item.category || 'General') === category;
+      }
+    };
+
+    const listItems = menuItems.filter(isMatch);
+    const otherItems = menuItems.filter(item => !isMatch(item));
 
     const reorderedList = [...listItems];
     const [draggedItem] = reorderedList.splice(draggedItemIndex, 1);
@@ -2801,8 +2809,13 @@ function DashboardContent() {
     if (draggedCategoryIndex === null || draggedCategoryType !== itemType) return;
     if (draggedCategoryIndex === targetIndex) return;
 
-    const itemsOfType = menuItems.filter(item => item.itemType === itemType);
-    const otherItems = menuItems.filter(item => item.itemType !== itemType);
+    const itemsOfType = itemType === 'product'
+      ? menuItems.filter(item => item.itemType === 'product')
+      : menuItems.filter(item => item.itemType !== 'product');
+
+    const otherItems = itemType === 'product'
+      ? menuItems.filter(item => item.itemType !== 'product')
+      : menuItems.filter(item => item.itemType === 'product');
 
     const categories = [...new Set(itemsOfType.map(item => item.category || 'General'))];
     
