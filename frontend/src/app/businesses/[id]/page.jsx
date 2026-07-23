@@ -150,6 +150,22 @@ export default function BusinessDetail() {
       setActiveTab('overview');
     }
   }, [params.subtab]);
+
+  // Auto scroll to menu section when activeTab is set to 'menu'
+  useEffect(() => {
+    if (activeTab === 'menu') {
+      const timer = setTimeout(() => {
+        const el = document.getElementById('menu-section');
+        if (el) {
+          const yOffset = -95; // Offset for the sticky header
+          const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab]);
+
   const [activePhotoIndex, setActivePhotoIndex] = useState(null);
   const [touchPosition, setTouchPosition] = useState(null);
 
@@ -2501,7 +2517,7 @@ Please confirm availability and delivery time.`;
           )}
           {/* TAB: MENU / PRODUCTS */}
           {activeTab === 'menu' && (
-            <div className="flex flex-col gap-6 animate-fadeIn text-left">
+            <div id="menu-section" className="flex flex-col gap-6 animate-fadeIn text-left">
               <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-3.5 gap-3">
                 <div>
                   <h3 className="text-xl font-extrabold text-slate-800 font-sans flex items-center gap-2">
