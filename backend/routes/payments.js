@@ -541,6 +541,7 @@ router.post('/verify-payment', protect, async (req, res) => {
     try {
       const { appendToIncomeTracker } = require('../services/sheetsService');
       await appendToIncomeTracker({
+        paymentId: payment._id,
         businessId: business._id,
         businessName: business.name || business.businessName || 'Unknown Business',
         monthlyPaid: (planType.toLowerCase().includes('monthly') && !isPublicSector && !isAdminUser) ? finalAmount : 0,
@@ -746,6 +747,7 @@ router.post('/verify-event-payment', protect, async (req, res) => {
       }
       const { appendToIncomeTracker } = require('../services/sheetsService');
       await appendToIncomeTracker({
+        paymentId: payment._id,
         businessId: event.businessId,
         businessName: bizName,
         monthlyPaid: 0,
@@ -934,7 +936,7 @@ router.post('/webhook', async (req, res) => {
           const targetSheetName = previousPaymentsCount > 0 ? 'Autopay' : 'Income Tracker New';
 
           // Add to Payment history
-          await Payment.create({
+          const payment = await Payment.create({
             userId: localSub.userId || localSub.ownerId,
             businessId: localSub.businessId,
             subscriptionId: localSub._id,
@@ -956,6 +958,7 @@ router.post('/webhook', async (req, res) => {
             const { appendToIncomeTracker } = require('../services/sheetsService');
             const planNameStr = (localSub.planName || localSub.plan || '').toLowerCase();
             await appendToIncomeTracker({
+              paymentId: payment._id,
               businessId: localSub.businessId,
               businessName: business ? (business.name || business.businessName) : 'Unknown Business',
               monthlyPaid: (planNameStr.includes('monthly') || amount === 99 || amount === 116.82) ? amount : 0,
@@ -1151,6 +1154,7 @@ router.post('/webhook', async (req, res) => {
             if (business) {
               const planNameStr = (subscription.planName || subscription.plan || '').toLowerCase();
               await appendToIncomeTracker({
+                paymentId: payment._id,
                 businessId: subscription.businessId,
                 businessName: business.name || business.businessName,
                 monthlyPaid: (planNameStr.includes('monthly') || amount === 99 || amount === 116.82) ? amount : 0,
@@ -1169,6 +1173,7 @@ router.post('/webhook', async (req, res) => {
               }
             }
             await appendToIncomeTracker({
+              paymentId: payment._id,
               businessId: eventRecord.businessId,
               businessName: bizName,
               monthlyPaid: 0,
@@ -1179,6 +1184,7 @@ router.post('/webhook', async (req, res) => {
             });
           } else if (isSponsoredAdPayment && adBusiness) {
             await appendToIncomeTracker({
+              paymentId: payment._id,
               businessId: adBusiness._id,
               businessName: adBusiness.name || adBusiness.businessName,
               monthlyPaid: 0,
@@ -1496,6 +1502,7 @@ router.post('/verify-sponsored-ad-payment', protect, async (req, res) => {
       // Append to Google Sheets Income Tracker (Ad / Add-on = 99)
       const { appendToIncomeTracker } = require('../services/sheetsService');
       await appendToIncomeTracker({
+        paymentId: adPayRecord._id,
         businessId: business._id,
         businessName: business.name || business.businessName || 'Unknown Business',
         monthlyPaid: 0,

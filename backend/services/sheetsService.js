@@ -160,8 +160,17 @@ const checkAndAppendMonthHeader = async (sheets, spreadsheetId, targetTab, local
 /**
  * Append transaction data to the Income Tracker Google Sheet
  */
-const appendToIncomeTracker = async ({ businessId, businessName, monthlyPaid = 0, yearlyPaid = 0, eventPaid = 0, addPaid = 0, sheetName = '' }) => {
+const appendToIncomeTracker = async ({ paymentId, businessId, businessName, monthlyPaid = 0, yearlyPaid = 0, eventPaid = 0, addPaid = 0, sheetName = '' }) => {
   try {
+    if (paymentId) {
+      const Payment = require('../models/Payment');
+      const paymentDoc = await Payment.findById(paymentId);
+      if (paymentDoc && paymentDoc.sheetsSynced) {
+        console.log(`[Google Sheets API] Payment ${paymentId} has already been synced to sheets. Skipping.`);
+        return;
+      }
+    }
+
     let finalBusinessName = (businessName && businessName !== 'Unknown Business') ? businessName : '';
     if (!finalBusinessName) {
       if (businessId) {
@@ -342,6 +351,11 @@ const appendToIncomeTracker = async ({ businessId, businessName, monthlyPaid = 0
       }
     } catch (formatErr) {
       console.warn('[Google Sheets API] Failed to format date cell pattern:', formatErr.message);
+    }
+
+    if (paymentId) {
+      const Payment = require('../models/Payment');
+      await Payment.findByIdAndUpdate(paymentId, { sheetsSynced: true });
     }
 
     console.log(`[Google Sheets API] Recorded transaction successfully for "${businessName}"`);

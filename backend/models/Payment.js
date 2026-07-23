@@ -85,6 +85,10 @@ const PaymentSchema = new mongoose.Schema({
   },
   zohoSyncError: {
     type: String,
+  },
+  sheetsSynced: {
+    type: Boolean,
+    default: false,
   }
 }, {
   timestamps: true
