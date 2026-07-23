@@ -765,17 +765,19 @@ router.get('/', async (req, res) => {
 
     // Search query (matches name, businessName, description, category, type, locality, services, brands)
     if (q) {
-      const escapedQ = escapeRegex(q);
+      const terms = q.trim().split(/\s+/).filter(Boolean);
+      const escapedTerms = terms.map(t => escapeRegex(t));
+      const regexPattern = escapedTerms.join('|');
       conditions.push({
         $or: [
-          { name: { $regex: escapedQ, $options: 'i' } },
-          { businessName: { $regex: escapedQ, $options: 'i' } },
-          { description: { $regex: escapedQ, $options: 'i' } },
-          { category: { $regex: escapedQ, $options: 'i' } },
-          { type: { $regex: escapedQ, $options: 'i' } },
-          { locality: { $regex: escapedQ, $options: 'i' } },
-          { services: { $elemMatch: { $regex: escapedQ, $options: 'i' } } },
-          { brands: { $elemMatch: { $regex: escapedQ, $options: 'i' } } },
+          { name: { $regex: regexPattern, $options: 'i' } },
+          { businessName: { $regex: regexPattern, $options: 'i' } },
+          { description: { $regex: regexPattern, $options: 'i' } },
+          { category: { $regex: regexPattern, $options: 'i' } },
+          { type: { $regex: regexPattern, $options: 'i' } },
+          { locality: { $regex: regexPattern, $options: 'i' } },
+          { services: { $elemMatch: { $regex: regexPattern, $options: 'i' } } },
+          { brands: { $elemMatch: { $regex: regexPattern, $options: 'i' } } },
         ]
       });
     }
@@ -853,6 +855,36 @@ router.get('/', async (req, res) => {
 
     // Execute query
     let businesses = await Business.find(query).populate('ownerId', 'email phone mobileNumber');
+
+    // Fallback: If the initial query yielded 0 results, fall back to relaxed queries to return related/popular listings
+    if (businesses.length === 0) {
+      if (q) {
+        // Fallback 1: Try searching by dropping the keyword 'q' but keeping category and other filters
+        const fallbackConditions = conditions.filter(cond => {
+          if (cond.$or && cond.$or.some(c => c.name)) {
+            return false;
+          }
+          return true;
+        });
+
+        let fallbackQuery = { ...query };
+        if (fallbackConditions.length > 0) {
+          fallbackQuery.$and = fallbackConditions;
+        } else {
+          delete fallbackQuery.$and;
+        }
+
+        businesses = await Business.find(fallbackQuery).populate('ownerId', 'email phone mobileNumber');
+      }
+
+      // Fallback 2: If we still have 0 results (e.g. category has no listings at all), show general active/approved listings
+      if (businesses.length === 0) {
+        businesses = await Business.find({ status: 'Approved' })
+          .sort({ isPremium: -1, googleRating: -1 })
+          .limit(limit ? parseInt(limit) : 10)
+          .populate('ownerId', 'email phone mobileNumber');
+      }
+    }
 
     // Update active vs expired subscriptions on the fly, inherit parent subscription for branches, and attach branchCount
     const now = new Date();
