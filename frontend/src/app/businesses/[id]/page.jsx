@@ -1518,6 +1518,25 @@ Please confirm availability and delivery time.`;
     }
   };
 
+  const handleShareMenu = async () => {
+    trackClick('share_menu');
+    const url = `${window.location.origin}${window.location.pathname.replace(/\/+$/, '')}${window.location.pathname.endsWith('/menu') ? '' : '/menu'}`;
+    const shareTitle = `${business?.name ? business.name + ' - ' : ''}${isProductLabel ? 'Products & Catalog' : 'Digital Menu'}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: `Check out the ${isProductLabel ? 'products' : 'menu'} of ${business?.name || 'this business'} on UBT!`,
+          url: url
+        });
+      } catch (err) {
+        console.warn('Web Share failed or cancelled:', err);
+      }
+    } else {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out the ${isProductLabel ? 'products' : 'menu'} of ${business?.name || 'this business'} on UBT: ` + url)}`, '_blank');
+    }
+  };
+
   const handleWhatsAppOrder = (item) => {
     trackClick('whatsapp');
     let number = business.whatsapp || business.phone || '';
@@ -3862,17 +3881,26 @@ Please confirm availability and delivery time.`;
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                 <span>{isProductLabel ? 'Active Live Catalog Link' : 'Active Live Menu Link'}</span>
               </div>
-              <button 
-                onClick={() => {
-                  const url = `${window.location.origin}${window.location.pathname.replace(/\/+$/, '')}${window.location.pathname.endsWith('/menu') ? '' : '/menu'}`;
-                  navigator.clipboard.writeText(url);
-                  setQrCopied(true);
-                  setTimeout(() => setQrCopied(false), 2000);
-                }}
-                className="w-full mt-1.5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl cursor-pointer transition-all shadow-sm flex items-center justify-center gap-2 border-none"
-              >
-                {qrCopied ? 'Copied to Clipboard!' : (isProductLabel ? 'Copy Product Link' : 'Copy Menu Link')}
-              </button>
+              <div className="flex items-center gap-2 mt-1.5 w-full">
+                <button 
+                  onClick={() => {
+                    const url = `${window.location.origin}${window.location.pathname.replace(/\/+$/, '')}${window.location.pathname.endsWith('/menu') ? '' : '/menu'}`;
+                    navigator.clipboard.writeText(url);
+                    setQrCopied(true);
+                    setTimeout(() => setQrCopied(false), 2000);
+                  }}
+                  className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl cursor-pointer transition-all shadow-sm flex items-center justify-center gap-1.5 border-none"
+                >
+                  <span>{qrCopied ? 'Copied!' : 'Copy Link'}</span>
+                </button>
+                <button 
+                  onClick={handleShareMenu}
+                  className="flex-1 py-3 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer transition-all shadow-sm flex items-center justify-center gap-1.5 border-none"
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                  <span>Share</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>,
