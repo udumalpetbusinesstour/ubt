@@ -190,9 +190,7 @@ const rebuildSheetsTracker = async () => {
       const requests = [];
 
       for (const idx of dailyTotalIndices) {
-        // Adjust for index mapping. Since we started writing from row 2 (which is A2),
-        // row index in sheets is idx + 1 (1-based sheet row index).
-        const sheetRowIdx = idx + 1; // 0-indexed row for repeatCell
+        const sheetRowIdx = idx; // 0-indexed row for repeatCell
         
         requests.push({
           repeatCell: {
