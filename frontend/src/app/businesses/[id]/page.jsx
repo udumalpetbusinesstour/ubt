@@ -192,7 +192,55 @@ export default function BusinessDetail() {
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrCopied, setQrCopied] = useState(false);
+  const [cart, setCart] = useState({});
   const [menuUploading, setMenuUploading] = useState(false);
+
+  const updateCartQuantity = (item, change) => {
+    setCart(prev => {
+      const existing = prev[item._id];
+      const newQty = (existing ? existing.quantity : 0) + change;
+      if (newQty <= 0) {
+        const next = { ...prev };
+        delete next[item._id];
+        return next;
+      }
+      return {
+        ...prev,
+        [item._id]: {
+          ...item,
+          quantity: newQty
+        }
+      };
+    });
+  };
+
+  const handleSendWhatsAppCart = () => {
+    trackClick('whatsapp');
+    let number = business.whatsapp || business.phone || '';
+    let cleanNum = number.replace(/[^0-9]/g, '');
+    cleanNum = cleanNum.replace(/^0+/, '');
+    if (cleanNum.length === 10) {
+      cleanNum = '91' + cleanNum;
+    }
+    
+    const cartItems = Object.values(cart);
+    let itemsText = '';
+    cartItems.forEach((item, idx) => {
+      itemsText += `${idx + 1}. ${item.name} x ${item.quantity} - ₹${(item.offerPrice || item.price) * item.quantity}\n`;
+    });
+    
+    const total = cartItems.reduce((sum, i) => sum + (i.offerPrice || i.price) * i.quantity, 0);
+    
+    const text = `Hello! I would like to place an order from "${business.name}" via Udumalpet Business Tour (UBT):
+    
+Items:
+${itemsText}
+Total Order Value: ₹${total}
+
+Please confirm availability and delivery time.`;
+    
+    window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(text)}`);
+  };
   const [menuUrlsState, setMenuUrlsState] = useState([]);
   const [menuError, setMenuError] = useState('');
   const [menuItems, setMenuItems] = useState([]);
@@ -1629,6 +1677,10 @@ Please confirm availability and delivery time.`;
     business.googleReviewsCount
   );
 
+  const isProductLabel = (business?.menuLabelSelected 
+    ? (business?.menuLabel?.toLowerCase()?.includes('product') || business?.menuLabel?.toLowerCase()?.includes('catalog') || business?.menuLabel?.toLowerCase()?.includes('good'))
+    : !isFoodRelated(business?.category, business?.customCategoryName));
+
   return (
     <div className="w-full flex flex-col items-center font-sans bg-[#F8FAFC]">
       {/* Pending Verification Banner */}
@@ -2474,7 +2526,9 @@ Please confirm availability and delivery time.`;
                   className="px-4 py-2 border border-emerald-600/10 hover:border-emerald-600/30 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-700 hover:text-emerald-800 rounded-xl font-bold text-xs flex items-center gap-2 cursor-pointer transition-all shadow-3xs shrink-0 self-start md:self-center"
                 >
                   <QrCode className="h-4 w-4" />
-                  <span>View Menu QR</span>
+                  <span>
+                    {isProductLabel ? 'View Product QR' : 'View Menu QR'}
+                  </span>
                 </button>
               </div>
 
@@ -2588,14 +2642,47 @@ Please confirm availability and delivery time.`;
                                           {item.isAvailable ? 'Available' : 'Out of Stock'}
                                         </span>
                                         {item.isAvailable && (
-                                          <button
-                                            type="button"
-                                            onClick={(e) => { e.stopPropagation(); handleWhatsAppOrder(item); }}
-                                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1 px-2.5 rounded-lg flex items-center gap-1.5 transition-all shadow-3xs cursor-pointer active:scale-95 shrink-0"
-                                          >
-                                            <MessageSquare className="h-3 w-3" />
-                                            <span>Order Now</span>
-                                          </button>
+                                          <div className="flex items-center gap-1.5 shrink-0">
+                                            {cart[item._id] ? (
+                                              <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-250/20 rounded-lg px-1.5 py-0.5 select-none shrink-0">
+                                                <button 
+                                                  type="button" 
+                                                  onClick={(e) => { e.stopPropagation(); updateCartQuantity(item, -1); }}
+                                                  className="text-emerald-700 font-black text-xs hover:text-emerald-800 px-1 cursor-pointer border-none bg-transparent active:scale-110 transition-transform"
+                                                >
+                                                  -
+                                                </button>
+                                                <span className="text-[10.5px] font-black text-emerald-800 w-3.5 text-center">
+                                                  {cart[item._id].quantity}
+                                                </span>
+                                                <button 
+                                                  type="button" 
+                                                  onClick={(e) => { e.stopPropagation(); updateCartQuantity(item, 1); }}
+                                                  className="text-emerald-700 font-black text-xs hover:text-emerald-800 px-1 cursor-pointer border-none bg-transparent active:scale-110 transition-transform"
+                                                >
+                                                  +
+                                                </button>
+                                              </div>
+                                            ) : (
+                                              <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); updateCartQuantity(item, 1); }}
+                                                className="border border-emerald-600/25 hover:border-emerald-600/50 bg-emerald-50/10 hover:bg-emerald-50/30 text-emerald-700 font-extrabold text-[10px] py-1 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0"
+                                              >
+                                                <Plus className="h-3 w-3" />
+                                                <span>Add</span>
+                                              </button>
+                                            )}
+
+                                            <button
+                                              type="button"
+                                              onClick={(e) => { e.stopPropagation(); handleWhatsAppOrder(item); }}
+                                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1 px-2.5 rounded-lg flex items-center gap-1.5 transition-all shadow-3xs cursor-pointer active:scale-95 shrink-0"
+                                            >
+                                              <MessageSquare className="h-3 w-3" />
+                                              <span>Order Now</span>
+                                            </button>
+                                          </div>
                                         )}
                                       </div>
                                     </div>
@@ -2702,14 +2789,47 @@ Please confirm availability and delivery time.`;
                                           {item.isAvailable ? 'In Stock' : 'Out of Stock'}
                                         </span>
                                         {item.isAvailable && (
-                                          <button
-                                            type="button"
-                                            onClick={(e) => { e.stopPropagation(); handleWhatsAppOrder(item); }}
-                                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1 px-2.5 rounded-lg flex items-center gap-1.5 transition-all shadow-3xs cursor-pointer active:scale-95 shrink-0"
-                                          >
-                                            <MessageSquare className="h-3 w-3" />
-                                            <span>Order Now</span>
-                                          </button>
+                                          <div className="flex items-center gap-1.5 shrink-0">
+                                            {cart[item._id] ? (
+                                              <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-250/20 rounded-lg px-1.5 py-0.5 select-none shrink-0">
+                                                <button 
+                                                  type="button" 
+                                                  onClick={(e) => { e.stopPropagation(); updateCartQuantity(item, -1); }}
+                                                  className="text-emerald-700 font-black text-xs hover:text-emerald-800 px-1 cursor-pointer border-none bg-transparent active:scale-110 transition-transform"
+                                                >
+                                                  -
+                                                </button>
+                                                <span className="text-[10.5px] font-black text-emerald-800 w-3.5 text-center">
+                                                  {cart[item._id].quantity}
+                                                </span>
+                                                <button 
+                                                  type="button" 
+                                                  onClick={(e) => { e.stopPropagation(); updateCartQuantity(item, 1); }}
+                                                  className="text-emerald-700 font-black text-xs hover:text-emerald-800 px-1 cursor-pointer border-none bg-transparent active:scale-110 transition-transform"
+                                                >
+                                                  +
+                                                </button>
+                                              </div>
+                                            ) : (
+                                              <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); updateCartQuantity(item, 1); }}
+                                                className="border border-emerald-600/25 hover:border-emerald-600/50 bg-emerald-50/10 hover:bg-emerald-50/30 text-emerald-700 font-extrabold text-[10px] py-1 px-2.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0"
+                                              >
+                                                <Plus className="h-3 w-3" />
+                                                <span>Add</span>
+                                              </button>
+                                            )}
+
+                                            <button
+                                              type="button"
+                                              onClick={(e) => { e.stopPropagation(); handleWhatsAppOrder(item); }}
+                                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1 px-2.5 rounded-lg flex items-center gap-1.5 transition-all shadow-3xs cursor-pointer active:scale-95 shrink-0"
+                                            >
+                                              <MessageSquare className="h-3 w-3" />
+                                              <span>Order Now</span>
+                                            </button>
+                                          </div>
                                         )}
                                       </div>
                                     </div>
@@ -3699,10 +3819,12 @@ Please confirm availability and delivery time.`;
             {/* Header */}
             <div className="mb-5 mt-2">
               <h4 className="text-base font-black text-[#001c41] tracking-tight">
-                Digital Menu & Products
+                {isProductLabel ? 'Digital Catalog & Products' : 'Digital Menu & Products'}
               </h4>
               <p className="text-[10px] text-slate-400 font-bold mt-1">
-                Scan this QR code to instantly view all menu items and products on your smartphone.
+                {isProductLabel 
+                  ? 'Scan this QR code to instantly view all products and goods on your smartphone.' 
+                  : 'Scan this QR code to instantly view all menu items and products on your smartphone.'}
               </p>
             </div>
 
@@ -3712,7 +3834,7 @@ Please confirm availability and delivery time.`;
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
                   `${window.location.origin}${window.location.pathname.replace(/\/+$/, '')}${window.location.pathname.endsWith('/menu') ? '' : '/menu'}`
                 )}`}
-                alt="Business Menu QR Code"
+                alt={isProductLabel ? "Business Product QR Code" : "Business Menu QR Code"}
                 className="w-44 h-44 rounded-xl object-contain select-none"
                 loading="lazy"
               />
@@ -3722,7 +3844,7 @@ Please confirm availability and delivery time.`;
             <div className="flex flex-col gap-2">
               <div className="bg-emerald-50/50 border border-emerald-100/50 rounded-xl py-2 px-3 text-[10px] text-emerald-800 font-extrabold flex items-center justify-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                <span>Active Live Menu Link</span>
+                <span>{isProductLabel ? 'Active Live Catalog Link' : 'Active Live Menu Link'}</span>
               </div>
               <button 
                 onClick={() => {
@@ -3733,7 +3855,40 @@ Please confirm availability and delivery time.`;
                 }}
                 className="w-full mt-1.5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl cursor-pointer transition-all shadow-sm flex items-center justify-center gap-2 border-none"
               >
-                {qrCopied ? 'Copied to Clipboard!' : 'Copy Menu Link'}
+                {qrCopied ? 'Copied to Clipboard!' : (isProductLabel ? 'Copy Product Link' : 'Copy Menu Link')}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Shopping Cart Drawer Bar */}
+      {Object.keys(cart).length > 0 && createPortal(
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 animate-slideUp">
+          <div className="bg-slate-900 text-white rounded-2xl shadow-xl p-4 flex items-center justify-between border border-slate-800/80 backdrop-blur-md">
+            <div className="flex flex-col text-left">
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest leading-none">
+                {Object.values(cart).reduce((sum, i) => sum + i.quantity, 0)} Items Selected
+              </span>
+              <span className="text-sm font-black mt-1 leading-none text-emerald-50 bg-transparent">
+                Total: ₹{Object.values(cart).reduce((sum, i) => sum + (i.offerPrice || i.price) * i.quantity, 0)}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setCart({})}
+                className="px-3 py-2 border border-slate-800 hover:bg-slate-800 text-slate-350 hover:text-white rounded-xl text-[10.5px] font-bold transition-all cursor-pointer bg-transparent"
+              >
+                Clear
+              </button>
+              <button 
+                onClick={handleSendWhatsAppCart}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] py-2 px-4 rounded-xl flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer border-none"
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span>Send WhatsApp Order</span>
               </button>
             </div>
           </div>
