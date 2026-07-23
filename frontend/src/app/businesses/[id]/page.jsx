@@ -5,7 +5,7 @@ import {
   MapPin, Phone, Mail, Clock, ShieldCheck, HeartHandshake, Star, StarHalf, Share2, Heart, Award, 
   ArrowLeft, Send, CheckCircle2, MessageSquare, AlertCircle, RefreshCw, Calendar, Globe, Sparkles,
   Briefcase, Users, ChevronRight, Check, X, Facebook, Twitter, Edit3, Plus, Upload, Trash2, Instagram, Move, ImageIcon,
-  Utensils, Eye, Folder, Package
+  Utensils, Eye, Folder, Package, QrCode
 } from 'lucide-react';
 
 
@@ -190,6 +190,8 @@ export default function BusinessDetail() {
     : '#';
 
   const [showMenuModal, setShowMenuModal] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrCopied, setQrCopied] = useState(false);
   const [menuUploading, setMenuUploading] = useState(false);
   const [menuUrlsState, setMenuUrlsState] = useState([]);
   const [menuError, setMenuError] = useState('');
@@ -2466,6 +2468,14 @@ Please confirm availability and delivery time.`;
                       : (isFoodRelated(business?.category, business?.customCategoryName) ? 'offerings' : 'products'))} from {business.name} and check details.
                   </p>
                 </div>
+
+                <button 
+                  onClick={() => setShowQrModal(true)}
+                  className="px-4 py-2 border border-emerald-600/10 hover:border-emerald-600/30 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-700 hover:text-emerald-800 rounded-xl font-bold text-xs flex items-center gap-2 cursor-pointer transition-all shadow-3xs shrink-0 self-start md:self-center"
+                >
+                  <QrCode className="h-4 w-4" />
+                  <span>View Menu QR</span>
+                </button>
               </div>
 
               {menuLoading ? (
@@ -3663,6 +3673,67 @@ Please confirm availability and delivery time.`;
                 className="py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 border-none"
               >
                 {verifyLoading ? 'Verifying...' : 'Verify & Link'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* View QR Code Modal */}
+      {showQrModal && createPortal(
+        <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-sm bg-white/95 backdrop-blur-lg rounded-[32px] shadow-2xl border border-slate-100 overflow-hidden p-6 text-center animate-scaleUp">
+            {/* Background soft glowing blur spheres */}
+            <div className="absolute -top-12 -left-12 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-12 -right-12 w-28 h-28 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+
+            {/* Close button */}
+            <button 
+              onClick={() => { setShowQrModal(false); setQrCopied(false); }}
+              className="absolute top-5 right-5 p-2 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer border-none"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Header */}
+            <div className="mb-5 mt-2">
+              <h4 className="text-base font-black text-[#001c41] tracking-tight">
+                Digital Menu & Products
+              </h4>
+              <p className="text-[10px] text-slate-400 font-bold mt-1">
+                Scan this QR code to instantly view all menu items and products on your smartphone.
+              </p>
+            </div>
+
+            {/* QR Code Wrapper */}
+            <div className="relative bg-gradient-to-tr from-emerald-500/5 to-blue-500/5 p-4 rounded-2xl border border-slate-100/80 flex items-center justify-center mb-5 mx-auto w-52 h-52 shadow-inner">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                  `${window.location.origin}${window.location.pathname.replace(/\/+$/, '')}${window.location.pathname.endsWith('/menu') ? '' : '/menu'}`
+                )}`}
+                alt="Business Menu QR Code"
+                className="w-44 h-44 rounded-xl object-contain select-none"
+                loading="lazy"
+              />
+            </div>
+
+            {/* Footer Info / Action */}
+            <div className="flex flex-col gap-2">
+              <div className="bg-emerald-50/50 border border-emerald-100/50 rounded-xl py-2 px-3 text-[10px] text-emerald-800 font-extrabold flex items-center justify-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                <span>Active Live Menu Link</span>
+              </div>
+              <button 
+                onClick={() => {
+                  const url = `${window.location.origin}${window.location.pathname.replace(/\/+$/, '')}${window.location.pathname.endsWith('/menu') ? '' : '/menu'}`;
+                  navigator.clipboard.writeText(url);
+                  setQrCopied(true);
+                  setTimeout(() => setQrCopied(false), 2000);
+                }}
+                className="w-full mt-1.5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl cursor-pointer transition-all shadow-sm flex items-center justify-center gap-2 border-none"
+              >
+                {qrCopied ? 'Copied to Clipboard!' : 'Copy Menu Link'}
               </button>
             </div>
           </div>
