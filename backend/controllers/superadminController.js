@@ -503,7 +503,7 @@ ${remarks || 'No specific reason provided.'}
 Please log in to your account, correct the details according to the reason above, and resubmit your listing for verification.
 
 Regards,
-UBT Moderation Team`
+Udumalpet Business Tour Team`
           });
           console.log(`[REJECTION EMAIL] Sent notification to ${ownerEmail}`);
         } catch (mailErr) {
@@ -566,7 +566,7 @@ UBT Moderation Team`
         await sendEmail({
           to: business.ownerId.email,
           subject: `Listing Moderation Update: "${business.name}"`,
-          text: `Hello ${ownerName},\n\nYour business directory listing "${business.name}" has been updated by the super administrator.\n\nStatus: ${status}\nRemarks: ${remarks || 'None'}\n\nPlease log in to your dashboard for details.\n\nBest regards,\nUBT Moderation Team`
+          text: `Hello ${ownerName},\n\nYour business directory listing "${business.name}" has been updated by the super administrator.\n\nStatus: ${status}\nRemarks: ${remarks || 'None'}\n\nPlease log in to your dashboard for details.\n\nBest regards,\nUdumalpet Business Tour Team`
         });
       } catch (err) {
         console.error('[SMTP] Failed to send business status email:', err.message);
@@ -885,7 +885,7 @@ const updateBlog = async (req, res, next) => {
         emailText += `Unfortunately, your article was rejected and will not be published.`;
       }
 
-      emailText += `\n\nThank you,\nUBT Moderation Team`;
+      emailText += `\n\nThank you,\nUdumalpet Business Tour Team`;
 
       try {
         await sendEmail({
@@ -993,7 +993,7 @@ const updateEvent = async (req, res, next) => {
           await sendEmail({
             to: event.ownerId.email,
             subject: `Event Moderation Update: "${event.title}"`,
-            text: `Hello ${organizerName},\n\nYour event listing "${event.title}" has been reviewed by the super administrator.\n\nStatus: ${status}\n\nPlease log in to your dashboard to view comments or details.\n\nBest regards,\nUBT Moderation Team`
+            text: `Hello ${organizerName},\n\nYour event listing "${event.title}" has been reviewed by the super administrator.\n\nStatus: ${status}\n\nPlease log in to your dashboard to view comments or details.\n\nBest regards,\nUdumalpet Business Tour Team`
           });
         } catch (err) {
           console.error('[SMTP] Failed to send event moderation email:', err.message);

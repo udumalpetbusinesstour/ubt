@@ -278,7 +278,7 @@ router.put('/businesses/:id/status', async (req, res, next) => {
         await sendEmail({
           to: business.ownerId.email,
           subject: `Listing Moderation Update: "${business.name}"`,
-          text: `Hello ${ownerName},\n\nYour business directory listing "${business.name}" has been updated by the administrator.\n\nStatus: ${status}\n\nPlease log in to your dashboard for details.\n\nBest regards,\nUBT Moderation Team`
+          text: `Hello ${ownerName},\n\nYour business directory listing "${business.name}" has been updated by the administrator.\n\nStatus: ${status}\n\nPlease log in to your dashboard for details.\n\nBest regards,\nUdumalpet Business Tour Team`
         });
       } catch (err) {
         console.error('[SMTP] Failed to send business status email:', err.message);

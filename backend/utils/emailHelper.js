@@ -31,7 +31,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
       });
 
       const info = await transporter.sendMail({
-        from: `"UBT Moderation" <${from}>`,
+        from: `"Udumalpet Business Tour" <${from}>`,
         to,
         subject,
         text,

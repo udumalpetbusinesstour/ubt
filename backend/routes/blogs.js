@@ -513,7 +513,7 @@ router.post('/:id/revision-comment', protect, async (req, res) => {
           await sendEmail({
             to: blog.author.email,
             subject: `Action Required: New revision suggestions for your blog post "${blog.title}"`,
-            text: `Hello ${authorName},\n\nThe ${req.user.role} "${senderName}" has posted a new comment/suggestion on your blog's revision chat:\n\nMessage:\n"${message}"\n\nPlease log in to the portal, review the suggestions, update your blog post, and re-submit it for review.\n\nThank you,\nUBT Moderation Team`,
+            text: `Hello ${authorName},\n\nThe ${req.user.role} "${senderName}" has posted a new comment/suggestion on your blog's revision chat:\n\nMessage:\n"${message}"\n\nPlease log in to the portal, review the suggestions, update your blog post, and re-submit it for review.\n\nThank you,\nUdumalpet Business Tour Team`,
             html: `
               <div style="font-family: sans-serif; padding: 25px; color: #333; max-width: 600px; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
                 <h2 style="color: #027244; font-size: 20px; font-weight: 800; border-bottom: 2px solid #e6f7f0; padding-bottom: 10px; margin-top: 0;">UBT Editorial Desk</h2>
@@ -547,7 +547,7 @@ router.post('/:id/revision-comment', protect, async (req, res) => {
         await sendEmail({
           to: process.env.SMTP_USER || 'info@udumalpet.business', // SuperAdmin central desk
           subject: `New Revision Response: "${blog.title}" by ${authorName}`,
-          text: `Hello Admin,\n\nThe blog author "${authorName}" has responded to the revision thread for their article "${blog.title}".\n\nComment Message:\n"${message}"\n\nPlease log in to the admin console to moderate the blog.\n\nBest regards,\nUBT Platform Automation`
+          text: `Hello Admin,\n\nThe blog author "${authorName}" has responded to the revision thread for their article "${blog.title}".\n\nComment Message:\n"${message}"\n\nPlease log in to the admin console to moderate the blog.\n\nBest regards,\nUdumalpet Business Tour Automation`
         });
         console.log(`[SMTP] Blog author reply notification email sent to SuperAdmin.`);
       } catch (mailErr) {
