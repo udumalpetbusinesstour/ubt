@@ -1230,6 +1230,13 @@ function DashboardContent() {
   const [activeSettingsSubTab, setActiveSettingsSubTab] = useState(null);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
 
+  // GDPR & Privacy States
+  const [localCookieConsent, setLocalCookieConsent] = useState('declined');
+  const [cookieConsentSuccess, setCookieConsentSuccess] = useState('');
+  const [exportLoading, setExportLoading] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState('');
+  const [exportError, setExportError] = useState('');
+
   // Banner notification on return from Add Business
   const [successBanner, setSuccessBanner] = useState('');
   const [copied, setCopied] = useState(false);
@@ -4162,6 +4169,44 @@ function DashboardContent() {
       localStorage.removeItem('ubt_token');
       localStorage.removeItem('ubt_user');
       navigate('/register');
+    }
+  };
+
+  const handleSaveCookieConsent = () => {
+    localStorage.setItem('ubt_cookie_consent', localCookieConsent);
+    setCookieConsentSuccess('Cookie preferences updated successfully.');
+    setTimeout(() => setCookieConsentSuccess(''), 4000);
+  };
+
+  const handleExportData = async () => {
+    setExportLoading(true);
+    setExportSuccess('');
+    setExportError('');
+
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/export-data', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ubt_personal_data_${user?.fullName?.replace(/\s+/g, '_')?.toLowerCase() || 'profile'}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        setExportSuccess('Personal data exported successfully. Check your browser downloads.');
+      } else {
+        setExportError(data.message || 'Failed to export personal data.');
+      }
+    } catch (err) {
+      setExportError('Error exporting personal data. Please try again.');
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -9422,6 +9467,29 @@ function DashboardContent() {
                       <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-red-600 group-hover:translate-x-1.5 transition-all shrink-0 ml-4" />
                     </button>
 
+                    {/* Option 5: GDPR & Privacy Control */}
+                    <button
+                      onClick={() => {
+                        setActiveSettingsSubTab('privacy');
+                        // Load current consent status
+                        const consent = localStorage.getItem('ubt_cookie_consent') || 'declined';
+                        setLocalCookieConsent(consent);
+                      }}
+                      className="w-full text-left p-6 md:p-8 bg-white border border-slate-200/85 hover:border-emerald-500 rounded-[24px] hover:shadow-lg transition-all duration-300 flex items-center justify-between group cursor-pointer hover:-translate-y-1 relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
+                      <div className="flex items-start gap-4.5">
+                        <div className="p-3.5 rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 transition-colors shrink-0">
+                          <Lock className="h-6 w-6" />
+                        </div>
+                        <div className="flex flex-col justify-center">
+                          <h4 className="font-extrabold text-sm md:text-base text-[#001c41] font-sans group-hover:text-emerald-700 transition-colors leading-snug">Privacy & Data Portability</h4>
+                          <p className="text-xs text-slate-400 font-semibold mt-1.5 leading-relaxed">Manage your cookie preferences, revoke tracking consent, and export your personal data.</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1.5 transition-all shrink-0 ml-4" />
+                    </button>
+
                   </div>
                 </div>
               ) : (
@@ -9436,6 +9504,9 @@ function DashboardContent() {
                       setProfileError('');
                       setPwdSuccess('');
                       setPwdError('');
+                      setCookieConsentSuccess('');
+                      setExportSuccess('');
+                      setExportError('');
                     }}
                     className="self-start flex items-center gap-2 text-xs font-extrabold text-slate-500 hover:text-[#027244] transition-all cursor-pointer group py-2"
                   >
@@ -9719,6 +9790,109 @@ function DashboardContent() {
                         >
                           Delete Account & Clear Registrations
                         </button>
+                      </div>
+                    )}
+
+                    {/* SUBTAB 5: Privacy & GDPR Control */}
+                    {activeSettingsSubTab === 'privacy' && (
+                      <div className="w-full flex flex-col gap-6 animate-fadeIn text-left">
+                        <div className="flex flex-col border-b border-slate-100 pb-4">
+                          <h4 className="font-extrabold text-lg text-[#001c41] font-sans">Privacy & Data Portability</h4>
+                          <p className="text-xs text-slate-400 font-semibold mt-1">Manage your personal data preferences, cookies, and export portability</p>
+                        </div>
+
+                        {/* Section 1: Cookie Preference Manager */}
+                        <div className="flex flex-col gap-4 border-b border-slate-100 pb-6">
+                          <h5 className="font-extrabold text-sm text-slate-800">1. Cookie Preference Manager</h5>
+                          <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                            Under GDPR, you have the right to accept or reject non-essential tracking cookies and analytical trackers. Update your choice below:
+                          </p>
+
+                          <div className="flex flex-col gap-3 mt-2">
+                            <label className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-200/60 rounded-2xl cursor-pointer hover:bg-slate-100/50 transition-colors">
+                              <input
+                                type="radio"
+                                name="cookieConsent"
+                                value="accepted"
+                                checked={localCookieConsent === 'accepted'}
+                                onChange={() => setLocalCookieConsent('accepted')}
+                                className="h-4 w-4 text-[#027244] border-slate-300 focus:ring-[#027244] cursor-pointer"
+                              />
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-extrabold text-slate-800 text-xs">Accept All Cookies</span>
+                                <span className="text-[10px] text-slate-450 font-semibold">Enable personalization, dashboard preference cookies, and platform traffic analysis trackers.</span>
+                              </div>
+                            </label>
+
+                            <label className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-200/60 rounded-2xl cursor-pointer hover:bg-slate-100/50 transition-colors">
+                              <input
+                                type="radio"
+                                name="cookieConsent"
+                                value="declined"
+                                checked={localCookieConsent === 'declined'}
+                                onChange={() => setLocalCookieConsent('declined')}
+                                className="h-4 w-4 text-[#027244] border-slate-300 focus:ring-[#027244] cursor-pointer"
+                              />
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-extrabold text-slate-800 text-xs">Decline Tracking & Non-Essential Cookies</span>
+                                <span className="text-[10px] text-slate-450 font-semibold">Block non-essential trackers. Only strictly necessary security/session cookies will be stored in your browser.</span>
+                              </div>
+                            </label>
+                          </div>
+
+                          {cookieConsentSuccess && (
+                            <span className="text-xs font-bold text-emerald-600 flex items-center gap-1.5 mt-1">
+                              <ShieldCheck className="h-4 w-4" /> {cookieConsentSuccess}
+                            </span>
+                          )}
+
+                          <button
+                            onClick={handleSaveCookieConsent}
+                            className="self-start mt-2 py-3 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer border-none"
+                          >
+                            Save Cookie Preferences
+                          </button>
+                        </div>
+
+                        {/* Section 2: Data Portability (Export My Data) */}
+                        <div className="flex flex-col gap-4">
+                          <h5 className="font-extrabold text-sm text-slate-800">2. Right to Data Portability (Export Personal Data)</h5>
+                          <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                            Under GDPR Article 20, you can download a full archive of your personal profile details, registered business listings, blog postings, and community events in a structured, machine-readable JSON format:
+                          </p>
+
+                          {exportSuccess && (
+                            <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-xs rounded-2xl flex items-center gap-2">
+                              <ShieldCheck className="h-5 w-5 text-emerald-650 shrink-0" />
+                              <span>{exportSuccess}</span>
+                            </div>
+                          )}
+
+                          {exportError && (
+                            <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 font-bold text-xs rounded-2xl flex items-center gap-2">
+                              <AlertCircle className="h-5 w-5 text-red-650 shrink-0" />
+                              <span>{exportError}</span>
+                            </div>
+                          )}
+
+                          <button
+                            onClick={handleExportData}
+                            disabled={exportLoading}
+                            className="self-start py-3.5 px-6 border border-slate-200 hover:border-slate-350 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                          >
+                            {exportLoading ? (
+                              <>
+                                <RefreshCw className="h-4 w-4 animate-spin text-slate-500" />
+                                <span>Exporting Data Archive...</span>
+                              </>
+                            ) : (
+                              <>
+                                <ShieldCheck className="h-4 w-4 text-[#027244]" />
+                                <span>Export My Data Archive (JSON)</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -11880,6 +12054,9 @@ function DashboardContent() {
                     required
                     className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 resize-none leading-relaxed"
                   />
+                  <span className="text-[10px] text-slate-400 font-semibold mt-1">
+                    💡 <strong>Formatting tip:</strong> Wrap text in <code>**bold text**</code> or <code>&lt;b&gt;bold text&lt;/b&gt;</code> to make it bold.
+                  </span>
                 </div>
 
                 {editingBlogId && (

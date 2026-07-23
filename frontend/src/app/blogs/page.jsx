@@ -116,6 +116,14 @@ const mockBlogs = [
 export default function BlogsPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  const stripFormatting = (content) => {
+    if (!content) return '';
+    return content
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/<b>(.*?)<\/b>/g, '$1')
+      .replace(/<strong>(.*?)<\/strong>/g, '$1');
+  };
   
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -586,7 +594,7 @@ export default function BlogsPage() {
                           {blog.category || 'Local Guide'}
                         </span>
                         <h3 className="text-sm font-extrabold text-[#001c41] leading-snug line-clamp-2 hover:text-[#027244] transition-colors">{blog.title}</h3>
-                        <p className="text-xs text-slate-500 font-semibold line-clamp-3 leading-relaxed mt-1">{blog.content}</p>
+                        <p className="text-xs text-slate-500 font-semibold line-clamp-3 leading-relaxed mt-1">{stripFormatting(blog.content)}</p>
                       </div>
                       
                       <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-t border-slate-50 pt-3 mt-1">
@@ -737,7 +745,7 @@ export default function BlogsPage() {
                           </h3>
 
                           <p className="text-xs text-slate-500 font-semibold leading-relaxed line-clamp-2">
-                            {blog.content}
+                            {stripFormatting(blog.content)}
                           </p>
                         </div>
 
@@ -1110,6 +1118,9 @@ export default function BlogsPage() {
                     required
                     className="w-full border border-slate-200/70 p-3 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-600 bg-slate-50/20 resize-none leading-relaxed"
                   />
+                  <span className="text-[10px] text-slate-400 font-semibold mt-1">
+                    💡 <strong>Formatting tip:</strong> Wrap text in <code>**bold text**</code> or <code>&lt;b&gt;bold text&lt;/b&gt;</code> to make it bold.
+                  </span>
                 </div>
 
                 <div className="bg-amber-50 border border-amber-200/60 rounded-xl p-3.5 text-[10px] font-semibold text-slate-600 leading-relaxed text-left flex items-start gap-2.5">

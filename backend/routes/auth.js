@@ -6,6 +6,7 @@ const {
   getMe, 
   updateProfile, 
   deleteAccount,
+  exportData,
   googleLogin,
   forgotPassword,
   resetPassword,
@@ -53,6 +54,10 @@ router.put('/profile', protect, updateProfile);
 // @route   DELETE /api/auth/delete
 // @access  Private
 router.delete('/delete', protect, deleteAccount);
+
+// @route   GET /api/auth/export-data
+// @access  Private
+router.get('/export-data', protect, exportData);
 
 // Mock OTP verification endpoints (backward compatibility)
 router.post('/send-otp', (req, res) => {

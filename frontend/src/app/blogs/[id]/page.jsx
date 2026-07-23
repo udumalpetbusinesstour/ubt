@@ -60,6 +60,35 @@ export default function BlogDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const renderFormattedContent = (content) => {
+    if (!content) return null;
+    
+    const lines = content.split('\n');
+    return lines.map((line, index) => {
+      const parts = line.split(/(\*\*.*?\*\*|<b>.*?<\/b>|<strong>.*?<\/strong>)/g);
+      
+      const elements = parts.map((part, pIdx) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={pIdx} className="font-extrabold text-slate-900">{part.slice(2, -2)}</strong>;
+        }
+        if (part.startsWith('<b>') && part.endsWith('</b>')) {
+          return <strong key={pIdx} className="font-extrabold text-slate-900">{part.slice(3, -4)}</strong>;
+        }
+        if (part.startsWith('<strong>') && part.endsWith('</strong>')) {
+          return <strong key={pIdx} className="font-extrabold text-slate-900">{part.slice(8, -9)}</strong>;
+        }
+        return part;
+      });
+
+      return (
+        <span key={index}>
+          {elements}
+          {index < lines.length - 1 && <br />}
+        </span>
+      );
+    });
+  };
+
   // Inject parent listing into history stack on direct entry
   useEffect(() => {
     if (window.__spa_nav_count === 1) {
@@ -426,7 +455,7 @@ export default function BlogDetail() {
 
           {/* Content */}
           <div className="text-slate-600 text-xs md:text-sm font-medium leading-relaxed whitespace-pre-line flex flex-col gap-4 font-sans">
-            {blog.content}
+            {renderFormattedContent(blog.content)}
           </div>
 
           {/* 3. Interactions panel */}

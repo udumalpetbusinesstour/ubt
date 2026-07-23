@@ -400,19 +400,111 @@ const updateProfile = async (req, res, next) => {
 };
 
 /**
- * Delete account
+ * Delete account (GDPR Article 17: Right to Erasure)
  */
 const deleteAccount = async (req, res, next) => {
   try {
     const userId = req.user._id;
 
-    // Cascade delete associated listings, blogs, and events
+    // Find all businesses owned by this user
+    const userBusinesses = await Business.find({ ownerId: userId }).select('_id');
+    const businessIds = userBusinesses.map(b => b._id);
+
+    // Dynamic requires for cascade collections
+    const Review = require('../models/Review');
+    const Subscription = require('../models/Subscription');
+    const Payment = require('../models/Payment');
+    const Referral = require('../models/Referral');
+    const Redemption = require('../models/Redemption');
+    const Notification = require('../models/Notification');
+
+    // Cascade deletes associated with the user's businesses
+    if (businessIds.length > 0) {
+      await Review.deleteMany({ businessId: { $in: businessIds } });
+      await Event.deleteMany({ businessId: { $in: businessIds } });
+      await Blog.deleteMany({ businessId: { $in: businessIds } });
+      await Subscription.deleteMany({ businessId: { $in: businessIds } });
+      await Payment.deleteMany({ businessId: { $in: businessIds } });
+      await Business.deleteMany({ _id: { $in: businessIds } });
+    }
+
+    // Cascade deletes of user's directly owned blogs and events (where businessId might be empty)
+    await Blog.deleteMany({ $or: [{ author: userId }, { authorId: userId }] });
+    await Event.deleteMany({ $or: [{ ownerId: userId }, { authorId: userId }] });
+
+    // Cascade deletes of reviews and subscriptions directly linked to this user
+    await Review.deleteMany({ userId: userId });
+    await Subscription.deleteMany({ ownerId: userId });
+    await Referral.deleteMany({ $or: [{ referrerId: userId }, { referredUserId: userId }] });
+    await Redemption.deleteMany({ userId: userId });
+    await Notification.deleteMany({ userId: userId });
+
+    // Delete user's own business listings (just to be safe)
     await Business.deleteMany({ ownerId: userId });
-    await Blog.deleteMany({ author: userId });
-    await Event.deleteMany({ ownerId: userId });
+
+    // Finally delete the user account itself
     await User.deleteOne({ _id: userId });
 
-    return sendSuccess(res, 200, 'Your registration and all associated listings, events, and blogs have been permanently deleted.');
+    return sendSuccess(res, 200, 'Your registration and all associated listings, events, blogs, and payments have been permanently deleted.');
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Export personal data for portability (GDPR Article 20: Data Portability)
+ */
+const exportData = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+
+    // Fetch user profile info (excluding password)
+    const user = await User.findById(userId).select('-password');
+    if (!user) {
+      return sendError(res, 404, 'User not found');
+    }
+
+    // Fetch all owned businesses
+    const businesses = await Business.find({ ownerId: userId });
+    const businessIds = businesses.map(b => b._id);
+
+    // Dynamic requires for related collections
+    const Review = require('../models/Review');
+    const Subscription = require('../models/Subscription');
+    const Payment = require('../models/Payment');
+    const Referral = require('../models/Referral');
+    const Redemption = require('../models/Redemption');
+    const Notification = require('../models/Notification');
+
+    // Fetch user's reviews, blogs, events
+    const reviews = await Review.find({ userId: userId });
+    const blogs = await Blog.find({ $or: [{ author: userId }, { authorId: userId }] });
+    const events = await Event.find({ $or: [{ ownerId: userId }, { authorId: userId }] });
+    
+    // Fetch user's subscriptions and payments
+    const subscriptions = await Subscription.find({ ownerId: userId });
+    const payments = await Payment.find({ userId: userId });
+
+    // Fetch referrals and redemptions
+    const referrals = await Referral.find({ $or: [{ referrerId: userId }, { referredUserId: userId }] });
+    const redemptions = await Redemption.find({ userId: userId });
+    const notifications = await Notification.find({ userId: userId });
+
+    const exportedData = {
+      exportedAt: new Date().toISOString(),
+      userProfile: user,
+      businesses: businesses,
+      blogs: blogs,
+      events: events,
+      reviews: reviews,
+      subscriptions: subscriptions,
+      payments: payments,
+      referrals: referrals,
+      redemptions: redemptions,
+      notifications: notifications
+    };
+
+    return sendSuccess(res, 200, 'Personal data export successful', exportedData);
   } catch (err) {
     next(err);
   }
@@ -819,6 +911,7 @@ module.exports = {
   getMe,
   updateProfile,
   deleteAccount,
+  exportData,
   googleLogin,
   forgotPassword,
   resetPassword,

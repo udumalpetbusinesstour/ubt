@@ -3239,28 +3239,39 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                       <div className="flex flex-col gap-4">
                         {filteredBlogs.map(b => (
                           <div key={b._id} className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-5 flex flex-col gap-4">
-                            <div className="flex justify-between items-start gap-4">
-                              <div className="flex flex-col text-left font-sans">
-                                <span className="font-extrabold text-[#001c41] text-xs sm:text-[13px] leading-snug">{b.title}</span>
-                                <span className="text-[9.5px] text-slate-405 font-bold mt-1 block">
-                                  Author: {b.authorName} • Date: {new Date(b.createdAt).toLocaleDateString()} • Category: <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider">{b.category || 'Business Tips'}</span>
-                                </span>
-                                <a
-                                  href={`/${b.slug || b._id}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[#027244] hover:text-[#005934] hover:underline font-black text-[10.5px] mt-1.5 flex items-center gap-1 w-fit cursor-pointer leading-none"
-                                >
-                                  View Details →
-                                </a>
+                            <div className="flex gap-4 items-start">
+                              {/* Banner/Cover Image */}
+                              <div className="h-16 w-20 rounded-xl overflow-hidden border border-slate-200 shrink-0 bg-slate-50 select-none">
+                                <img 
+                                  src={(!b.coverImage || b.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : b.coverImage} 
+                                  className={`w-full h-full ${(!b.coverImage || b.coverImage.includes('unsplash.com')) ? 'object-contain bg-white p-1' : 'object-cover'}`} 
+                                  alt="Blog Cover" 
+                                />
                               </div>
-                              <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
-                                b.status === 'Approved' ? 'bg-emerald-50 border-emerald-250 text-emerald-700' : 'bg-amber-50 border-amber-250 text-amber-600 animate-pulse'
-                              }`}>
-                                {b.status}
-                              </span>
+
+                              <div className="flex-1 flex justify-between items-start gap-4">
+                                <div className="flex flex-col text-left font-sans min-w-0">
+                                  <span className="font-extrabold text-[#001c41] text-xs sm:text-[13px] leading-snug truncate">{b.title}</span>
+                                  <span className="text-[9.5px] text-slate-405 font-bold mt-1 block truncate">
+                                    Author: {b.authorName} • Date: {new Date(b.createdAt).toLocaleDateString()} • Category: <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider">{b.category || 'Business Tips'}</span>
+                                  </span>
+                                  <a
+                                    href={`/${b.slug || b._id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[#027244] hover:text-[#005934] hover:underline font-black text-[10.5px] mt-1.5 flex items-center gap-1 w-fit cursor-pointer leading-none"
+                                  >
+                                    View Details →
+                                  </a>
+                                </div>
+                                <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border shrink-0 ${
+                                  b.status === 'Approved' ? 'bg-emerald-50 border-emerald-250 text-emerald-700' : 'bg-amber-50 border-amber-250 text-amber-600 animate-pulse'
+                                }`}>
+                                  {b.status}
+                                </span>
+                              </div>
                             </div>
-                            <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-3xl text-justify">{b.content}</p>
+                            <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-3xl text-justify line-clamp-2">{b.content}</p>
                             
                             <div className="flex justify-end gap-2 border-t border-slate-200/50 pt-3">
                               <button 
@@ -3804,7 +3815,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                             </div>
                           </div>
 
-                          <p className="text-xs text-slate-550 font-semibold leading-relaxed line-clamp-3 text-justify">{b.content}</p>
+                          <p className="text-xs text-slate-550 font-semibold leading-relaxed line-clamp-2 text-justify">{b.content}</p>
 
                           <div className="flex justify-between items-center border-t border-slate-100 pt-3.5 gap-2">
                             <button 

@@ -770,9 +770,106 @@ const appendExpenseWeeklyTotal = async () => {
 };
 
 const syncSheetBusinessName = async (businessId, businessName) => {
-  // Sync logic is disabled since business IDs are no longer stored in the spreadsheet.
-  console.log(`[Google Sheets API] syncSheetBusinessName called for "${businessName}" (disabled)`);
-  return;
+  try {
+    if (!businessId || !businessName) return;
+
+    // Fetch paid payments for this business to know the dates and amounts
+    const Payment = require('../models/Payment');
+    const payments = await Payment.find({ businessId: businessId, status: 'Paid' });
+
+    if (payments.length === 0) {
+      console.log(`[Google Sheets API] No paid payments found for business ${businessId}. Skipping sheet name sync.`);
+      return;
+    }
+
+    let authConfig = {
+      scopes: [
+        'https://www.googleapis.com/auth/indexing',
+        'https://www.googleapis.com/auth/spreadsheets'
+      ]
+    };
+
+    if (process.env.GOOGLE_INDEXING_CREDENTIALS) {
+      try {
+        const credentials = JSON.parse(process.env.GOOGLE_INDEXING_CREDENTIALS);
+        authConfig.credentials = credentials;
+      } catch (jsonErr) {
+        console.error('[Google Sheets API] Failed to parse GOOGLE_INDEXING_CREDENTIALS:', jsonErr.message);
+      }
+    } else if (fs.existsSync(keyPath)) {
+      authConfig.keyFile = keyPath;
+    } else {
+      console.warn('[Google Sheets API] Google credentials not found. Skipping name sync.');
+      return;
+    }
+
+    const auth = new google.auth.GoogleAuth(authConfig);
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: 'v4', auth: authClient });
+    
+    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
+    if (!spreadsheetId) {
+      console.warn('[Google Sheets API] GOOGLE_SPREADSHEET_ID is not set.');
+      return;
+    }
+
+    const tabTitle = 'Income Tracker(new)';
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `'${tabTitle}'!A1:G500`
+    });
+
+    const rows = res.data.values || [];
+    let updatedCount = 0;
+
+    for (const p of payments) {
+      const pDate = new Date(p.createdAt || p.paymentDate);
+      // Format payment date to IST dd/mm/yyyy
+      const options = { timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric' };
+      const formatter = new Intl.DateTimeFormat('en-GB', options);
+      const localDateStr = formatter.format(pDate); // dd/mm/yyyy
+
+      const matchDates = (sheetDateStr) => {
+        if (!sheetDateStr) return false;
+        const normalize = d => d.split('/').map(Number).join('/');
+        try {
+          return normalize(sheetDateStr) === normalize(localDateStr);
+        } catch (e) {
+          return false;
+        }
+      };
+
+      for (let r = 0; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row || row.length < 2) continue;
+
+        const dateCol = (row[0] || '').trim();
+        const currentName = (row[1] || '').trim();
+        const amount = Number(row[2]) || 0; // Column C: Total Paid
+
+        if (matchDates(dateCol) && Math.abs(amount - p.amount) < 10) {
+          if (currentName.toLowerCase() === 'unknown business' || currentName === '') {
+            console.log(`[Google Sheets API] Syncing name: Replacing "${currentName}" with "${businessName}" at Row ${r + 1}`);
+            
+            const cellRange = `'${tabTitle}'!B${r + 1}`;
+            await sheets.spreadsheets.values.update({
+              spreadsheetId,
+              range: cellRange,
+              valueInputOption: 'USER_ENTERED',
+              requestBody: {
+                values: [[businessName]]
+              }
+            });
+            updatedCount++;
+          }
+        }
+      }
+    }
+
+    console.log(`[Google Sheets API] Completed name sync for "${businessName}". Updated ${updatedCount} rows.`);
+  } catch (err) {
+    console.error('[Google Sheets API] Error syncing sheet business name:', err.message);
+  }
 };
 
 module.exports = { appendToIncomeTracker, appendDailyTotal, appendExpenseWeeklyTotal, syncSheetBusinessName };
