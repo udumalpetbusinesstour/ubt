@@ -197,6 +197,31 @@ function BusinessesList({ forceFocus }) {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'All Categories');
   const [selectedLocality, setSelectedLocality] = useState(searchParams.get('locality') || 'All Localities');
   const [showHints, setShowHints] = useState(false);
+  const [suggestions, setSuggestions] = useState({ categories: [], businesses: [] });
+
+  // Debounced autocomplete suggestions API fetch
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSuggestions({ categories: [], businesses: [] });
+      return;
+    }
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/businesses/suggest?q=${encodeURIComponent(searchTerm)}`);
+        const data = await res.json();
+        if (data.success) {
+          setSuggestions({
+            categories: data.categories || [],
+            businesses: data.businesses || []
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching suggestions:', err);
+      }
+    }, 200);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
   
   // Sidebar checkbox states
   const [checkedCategories, setCheckedCategories] = useState({});
@@ -2901,39 +2926,72 @@ function BusinessesList({ forceFocus }) {
                   setShowHints(true);
                 }}
                 onFocus={() => setShowHints(true)}
-                onBlur={() => setTimeout(() => setShowHints(false), 200)}
+                onBlur={() => setTimeout(() => setShowHints(false), 250)}
                 className="w-full bg-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none"
               />
-              
-              {/* Category Hints / Suggestions Dropdown */}
-              {showHints && searchTerm.trim().length > 0 && (
-                <div className="absolute top-full left-0 w-full bg-white border border-slate-200 shadow-xl rounded-b-xl mt-1.5 z-40 max-h-60 overflow-y-auto text-left">
-                  {getCategoryHints().length > 0 ? (
-                    getCategoryHints().map((hint, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => {
-                          setSearchTerm(hint.name);
-                          const targetCategory = hint.type === 'category' ? hint.name : (hint.parent || 'All Categories');
-                          setSelectedCategory(targetCategory);
-                          setShowHints(false);
-                          triggerQueryUpdate(targetCategory, selectedLocality, undefined, undefined, undefined, hint.name);
-                        }}
-                        className="w-full px-4 py-2.5 text-left text-xs font-semibold text-slate-750 hover:bg-slate-50 border-b border-slate-50 flex items-center justify-between transition-colors cursor-pointer border-none bg-transparent"
-                      >
-                        <span className="flex items-center gap-2">
-                          <Grid className="h-3.5 w-3.5 text-emerald-600" />
-                          <span className="text-slate-800 font-extrabold">{hint.name}</span>
-                        </span>
-                        <span className="text-[10px] text-slate-400 uppercase tracking-widest font-black">
-                          {hint.type === 'category' ? 'Category' : `in ${hint.parent}`}
-                        </span>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="px-4 py-3 text-xs text-slate-400 font-bold">
-                      No matching categories found. Press search to query name.
+
+              {/* Category & Business Autocomplete Suggestions Dropdown */}
+              {showHints && (suggestions.categories.length > 0 || suggestions.businesses.length > 0) && (
+                <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white/95 backdrop-blur-md border border-slate-200/80 shadow-2xl rounded-2xl overflow-hidden z-50 max-h-80 overflow-y-auto animate-fadeIn text-left">
+                  
+                  {/* Categories section */}
+                  {suggestions.categories.length > 0 && (
+                    <div className="p-2 border-b border-slate-100">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-3 py-1.5 block">Categories</span>
+                      {suggestions.categories.map((cat, idx) => (
+                        <button
+                          key={`cat-${idx}`}
+                          type="button"
+                          onClick={() => {
+                            setSearchTerm(cat.name);
+                            setSelectedCategory(cat.parent || 'All Categories');
+                            setShowHints(false);
+                            triggerQueryUpdate(cat.parent || 'All Categories', selectedLocality, undefined, undefined, undefined, cat.name);
+                          }}
+                          className="w-full px-3 py-2 text-left hover:bg-slate-50 rounded-lg flex items-center gap-2 text-xs font-bold text-slate-700 transition-colors border-none bg-transparent cursor-pointer"
+                        >
+                          <Grid className="h-3.5 w-3.5 text-emerald-500" />
+                          <span>{cat.name}</span>
+                          <span className="text-[10px] text-slate-400 font-semibold ml-auto">{cat.parent || ''}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Businesses section */}
+                  {suggestions.businesses.length > 0 && (
+                    <div className="p-2">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-3 py-1.5 block">Businesses</span>
+                      {suggestions.businesses.map((biz, idx) => (
+                        <button
+                          key={`biz-${idx}`}
+                          type="button"
+                          onClick={() => {
+                            setShowHints(false);
+                            navigate(biz.slug ? `/${biz.slug}` : `/businesses/${biz.id}`);
+                          }}
+                          className="w-full px-3 py-2 text-left hover:bg-slate-50 rounded-lg flex items-center gap-2.5 text-xs font-bold text-slate-700 transition-colors border-none bg-transparent cursor-pointer"
+                        >
+                          {biz.logoUrl ? (
+                            <img 
+                              src={window.getImageUrl ? window.getImageUrl(biz.logoUrl) : biz.logoUrl} 
+                              alt={biz.name} 
+                              className="h-6 w-6 rounded-md object-cover border border-slate-200" 
+                            />
+                          ) : (
+                            <Store className="h-5.5 w-5.5 text-emerald-600 bg-emerald-50 p-1 rounded-md" />
+                          )}
+                          <div className="flex flex-col text-left">
+                            <span className="font-extrabold text-slate-800 flex items-center gap-1">
+                              {biz.name}
+                              {biz.isPremium && (
+                                <span className="text-[8px] bg-amber-500/10 text-amber-700 font-black px-1 py-0.5 rounded">PRO</span>
+                              )}
+                            </span>
+                            <span className="text-[9.5px] text-slate-400 font-bold">{biz.category}</span>
+                          </div>
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>

@@ -281,6 +281,32 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [locationTerm, setLocationTerm] = useState('');
   const [categoryTerm, setCategoryTerm] = useState('All Categories');
+  const [suggestions, setSuggestions] = useState({ categories: [], businesses: [] });
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Debounced autocomplete suggestions API fetch
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSuggestions({ categories: [], businesses: [] });
+      return;
+    }
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/businesses/suggest?q=${encodeURIComponent(searchTerm)}`);
+        const data = await res.json();
+        if (data.success) {
+          setSuggestions({
+            categories: data.categories || [],
+            businesses: data.businesses || []
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching suggestions:', err);
+      }
+    }, 200);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
 
   const [mapBiz, setMapBiz] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
@@ -1448,15 +1474,84 @@ export default function Home() {
 
             {/* Rich horizontal search bar */}
             <form onSubmit={handleSearchSubmit} className="mt-4 w-full bg-white border border-slate-200/80 rounded-2xl shadow-xl p-2 flex flex-col md:flex-row gap-2 max-w-3xl pointer-events-auto">
-              <div className="flex-1 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
+              <div className="flex-1 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100 relative">
                 <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
                 <input
                   type="text"
                   placeholder="What are you looking for?"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 250)}
                   className="w-full bg-transparent text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none"
                 />
+
+                {/* Glassmorphic Autocomplete suggestions dropdown */}
+                {showSuggestions && (suggestions.categories.length > 0 || suggestions.businesses.length > 0) && (
+                  <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white/95 backdrop-blur-md border border-slate-200/80 shadow-2xl rounded-2xl overflow-hidden z-50 max-h-80 overflow-y-auto animate-fadeIn text-left">
+                    
+                    {/* Categories section */}
+                    {suggestions.categories.length > 0 && (
+                      <div className="p-2 border-b border-slate-100">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-3 py-1.5 block">Categories</span>
+                        {suggestions.categories.map((cat, idx) => (
+                          <button
+                            key={`cat-${idx}`}
+                            type="button"
+                            onClick={() => {
+                              setSearchTerm(cat.name);
+                              setCategoryTerm(cat.parent || 'All Categories');
+                              setShowSuggestions(false);
+                              navigate(`/businesses?q=${encodeURIComponent(cat.name)}&category=${encodeURIComponent(cat.parent || 'All Categories')}`);
+                            }}
+                            className="w-full px-3 py-2 text-left hover:bg-slate-50 rounded-lg flex items-center gap-2 text-xs font-bold text-slate-700 transition-colors border-none bg-transparent cursor-pointer"
+                          >
+                            <Grid className="h-3.5 w-3.5 text-emerald-500" />
+                            <span>{cat.name}</span>
+                            <span className="text-[10px] text-slate-400 font-semibold ml-auto">{cat.parent || ''}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Businesses section */}
+                    {suggestions.businesses.length > 0 && (
+                      <div className="p-2">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-3 py-1.5 block">Businesses</span>
+                        {suggestions.businesses.map((biz, idx) => (
+                          <button
+                            key={`biz-${idx}`}
+                            type="button"
+                            onClick={() => {
+                              setShowSuggestions(false);
+                              navigate(biz.slug ? `/${biz.slug}` : `/businesses/${biz.id}`);
+                            }}
+                            className="w-full px-3 py-2 text-left hover:bg-slate-50 rounded-lg flex items-center gap-2.5 text-xs font-bold text-slate-700 transition-colors border-none bg-transparent cursor-pointer"
+                          >
+                            {biz.logoUrl ? (
+                              <img 
+                                src={window.getImageUrl ? window.getImageUrl(biz.logoUrl) : biz.logoUrl} 
+                                alt={biz.name} 
+                                className="h-6 w-6 rounded-md object-cover border border-slate-200" 
+                              />
+                            ) : (
+                              <Store className="h-5.5 w-5.5 text-emerald-600 bg-emerald-50 p-1 rounded-md" />
+                            )}
+                            <div className="flex flex-col text-left">
+                              <span className="font-extrabold text-slate-800 flex items-center gap-1">
+                                {biz.name}
+                                {biz.isPremium && (
+                                  <span className="text-[8px] bg-amber-500/10 text-amber-700 font-black px-1 py-0.5 rounded">PRO</span>
+                                )}
+                              </span>
+                              <span className="text-[9.5px] text-slate-400 font-bold">{biz.category}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="md:w-48 flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">

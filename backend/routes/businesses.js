@@ -745,6 +745,60 @@ router.post('/platform-stats/views/increment', async (req, res, next) => {
   }
 });
 
+// @desc    Get search suggestions (autocomplete) for categories and business listings
+// @route   GET /api/businesses/suggest
+// @access  Public
+router.get('/suggest', async (req, res, next) => {
+  try {
+    const { q } = req.query;
+    if (!q || !q.trim()) {
+      return res.json({ success: true, categories: [], businesses: [] });
+    }
+
+    const query = q.trim().toLowerCase();
+    
+    // 1. Fetch matching categories
+    const categories = await Category.find({
+      $or: [
+        { categoryName: { $regex: query, $options: 'i' } },
+        { parentCategory: { $regex: query, $options: 'i' } }
+      ]
+    }).limit(5);
+
+    // 2. Fetch matching businesses
+    const businesses = await Business.find({
+      status: 'Approved',
+      $or: [
+        { name: { $regex: query, $options: 'i' } },
+        { businessName: { $regex: query, $options: 'i' } },
+        { category: { $regex: query, $options: 'i' } }
+      ]
+    })
+    .select('name slug category logoUrl isPremium')
+    .limit(5);
+
+    res.json({
+      success: true,
+      categories: categories.map(c => ({
+        name: c.categoryName,
+        parent: c.parentCategory,
+        type: 'category'
+      })),
+      businesses: businesses.map(b => ({
+        id: b._id,
+        name: b.name,
+        slug: b.slug,
+        category: b.category,
+        logoUrl: b.logoUrl,
+        isPremium: b.isPremium,
+        type: 'business'
+      }))
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // @desc    Get all businesses with filters, search, and premium sorting
 // @route   GET /api/businesses
 // @access  Public
@@ -856,25 +910,79 @@ router.get('/', async (req, res) => {
     // Execute query
     let businesses = await Business.find(query).populate('ownerId', 'email phone mobileNumber');
 
-    // Fallback: If the initial query yielded 0 results, fall back to relaxed queries to return related/popular listings
+    // Fallback: If the initial query yielded 0 results, check for relaxed queries or typos to return listings
     if (businesses.length === 0) {
       if (q) {
-        // Fallback 1: Try searching by dropping the keyword 'q' but keeping category and other filters
-        const fallbackConditions = conditions.filter(cond => {
+        // Fallback 1: Try typo-tolerant fuzzy matching on the database candidate set
+        const baseConditions = conditions.filter(cond => {
           if (cond.$or && cond.$or.some(c => c.name)) {
             return false;
           }
           return true;
         });
 
-        let fallbackQuery = { ...query };
-        if (fallbackConditions.length > 0) {
-          fallbackQuery.$and = fallbackConditions;
+        let baseQuery = { ...query };
+        if (baseConditions.length > 0) {
+          baseQuery.$and = baseConditions;
         } else {
-          delete fallbackQuery.$and;
+          delete baseQuery.$and;
         }
 
-        businesses = await Business.find(fallbackQuery).populate('ownerId', 'email phone mobileNumber');
+        // Fetch candidate listings that match all other filters (category, location, etc.)
+        let candidateBusinesses = await Business.find(baseQuery).populate('ownerId', 'email phone mobileNumber');
+
+        const levenshteinDistance = (a, b) => {
+          const tmp = [];
+          let i, j;
+          for (i = 0; i <= a.length; i++) {
+            tmp.push([i]);
+          }
+          for (j = 1; j <= b.length; j++) {
+            tmp[0].push(j);
+          }
+          for (i = 1; i <= a.length; i++) {
+            for (j = 1; j <= b.length; j++) {
+              tmp[i][j] = Math.min(
+                tmp[i - 1][j] + 1,
+                tmp[i][j - 1] + 1,
+                tmp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+              );
+            }
+          }
+          return tmp[a.length][b.length];
+        };
+
+        const isTypoMatch = (searchStr, targetStr) => {
+          if (!searchStr || !targetStr) return false;
+          const searchWords = searchStr.toLowerCase().split(/\s+/).filter(Boolean);
+          const targetWords = targetStr.toLowerCase().split(/\s+/).filter(Boolean);
+          
+          return searchWords.some(sw => {
+            if (targetStr.toLowerCase().includes(sw)) return true;
+            return targetWords.some(tw => {
+              if (sw.length <= 4) return levenshteinDistance(sw, tw) <= 1;
+              if (sw.length <= 7) return levenshteinDistance(sw, tw) <= 2;
+              return levenshteinDistance(sw, tw) <= 3;
+            });
+          });
+        };
+
+        businesses = candidateBusinesses.filter(b => {
+          return (
+            isTypoMatch(q, b.name) ||
+            isTypoMatch(q, b.businessName) ||
+            isTypoMatch(q, b.description) ||
+            isTypoMatch(q, b.category) ||
+            isTypoMatch(q, b.type) ||
+            (b.services && b.services.some(s => isTypoMatch(q, s))) ||
+            (b.brands && b.brands.some(br => isTypoMatch(q, br)))
+          );
+        });
+
+        // Fallback 1.5: If fuzzy search still returns 0, try searching by dropping the keyword 'q' entirely
+        if (businesses.length === 0) {
+          businesses = await Business.find(baseQuery).populate('ownerId', 'email phone mobileNumber');
+        }
       }
 
       // Fallback 2: If we still have 0 results (e.g. category has no listings at all), show general active/approved listings
