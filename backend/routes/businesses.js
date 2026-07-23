@@ -1046,6 +1046,56 @@ router.get('/', async (req, res) => {
       return bayesianTerm + volumeBonus;
     };
 
+    const getRelevanceScore = (b, searchStr) => {
+      if (!searchStr) return 0;
+      const qLower = searchStr.toLowerCase().trim();
+      const nameLower = (b.name || b.businessName || '').toLowerCase();
+      const descLower = (b.description || '').toLowerCase();
+      const catLower = (b.category || '').toLowerCase();
+      const services = Array.isArray(b.services) ? b.services : [];
+      const brands = Array.isArray(b.brands) ? b.brands : [];
+
+      let score = 0;
+
+      // 1. Full/Exact name matches
+      if (nameLower === qLower) {
+        score += 200;
+      } else if (nameLower.includes(qLower)) {
+        score += 100;
+      }
+
+      // 2. Individual word matches
+      const queryWords = qLower.split(/\s+/).filter(Boolean);
+      queryWords.forEach(word => {
+        // Name matches
+        if (nameLower.split(/[^a-z0-9]/).includes(word)) {
+          score += 50; // Exact word match in name
+        } else if (nameLower.includes(word)) {
+          score += 20; // Partial word match in name
+        }
+
+        // Category matches
+        if (catLower.includes(word)) {
+          score += 15;
+        }
+
+        // Services / Brands matches
+        if (services.some(s => (s || '').toLowerCase().includes(word))) {
+          score += 10;
+        }
+        if (brands.some(br => (br || '').toLowerCase().includes(word))) {
+          score += 10;
+        }
+
+        // Description matches
+        if (descLower.includes(word)) {
+          score += 2;
+        }
+      });
+
+      return score;
+    };
+
     // Custom Sorting: 
     // If sort === 'views', sort by views count.
     // If sort === 'referrals', sort by referral count.
@@ -1059,6 +1109,15 @@ router.get('/', async (req, res) => {
       businesses.sort((a, b) => getBayesianScore(b) - getBayesianScore(a));
     } else {
       businesses.sort((a, b) => {
+        // Sort by search query relevance score first if query 'q' is provided
+        if (q) {
+          const relevanceA = getRelevanceScore(a, q);
+          const relevanceB = getRelevanceScore(b, q);
+          if (relevanceA !== relevanceB) {
+            return relevanceB - relevanceA;
+          }
+        }
+
         // Premium active vs others
         const aPremium = a.isPremium && a.subscriptionStatus === 'active';
         const bPremium = b.isPremium && b.subscriptionStatus === 'active';
