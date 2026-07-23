@@ -64,24 +64,32 @@ const rebuildSheetsTracker = async () => {
 
     console.log(`Loaded ${payments.length} payments to write to Google Sheets.`);
 
-    // 3. Group payments by local date string DD/MM/YYYY in Asia/Kolkata timezone
+    // 3. Group payments by local date string YYYY-MM-DD in Asia/Kolkata timezone
     const paymentsByDate = {};
     for (const p of payments) {
       const pDate = new Date(p.paidAt || p.paymentDate);
-      const localDateStr = pDate.toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' }); // "DD/MM/YYYY"
+      
+      // Extract local date components in Asia/Kolkata timezone
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+      const parts = formatter.formatToParts(pDate);
+      const month = parts.find(pt => pt.type === 'month').value;
+      const day = parts.find(pt => pt.type === 'day').value;
+      const year = ptIndex => parts.find(pt => pt.type === 'year').value;
+      
+      const localDateStr = `${parts.find(pt => pt.type === 'year').value}-${month}-${day}`; // "YYYY-MM-DD"
+      
       if (!paymentsByDate[localDateStr]) {
         paymentsByDate[localDateStr] = [];
       }
       paymentsByDate[localDateStr].push(p);
     }
 
-    const sortedDates = Object.keys(paymentsByDate).sort((a, b) => {
-      const parseDate = s => {
-        const [d, m, y] = s.split('/').map(Number);
-        return new Date(y, m - 1, d);
-      };
-      return parseDate(a) - parseDate(b);
-    });
+    const sortedDates = Object.keys(paymentsByDate).sort((a, b) => new Date(a) - new Date(b));
 
     const preparedRows = [];
     preparedRows.push(['July 2026']); // Row 2 Month Header
