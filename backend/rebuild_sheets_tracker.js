@@ -96,9 +96,6 @@ const rebuildSheetsTracker = async () => {
 
     const dailyTotalIndices = []; // To keep track of which row numbers represent daily totals for formatting (0-indexed)
 
-    // Current row counter starting after header (row 1 is columns list, row 2 is "July 2026", row 3 is index 2)
-    let currentRowIndex = 2; // 0-indexed index in preparedRows array
-
     for (const dateStr of sortedDates) {
       const datePayments = paymentsByDate[dateStr];
       
@@ -157,11 +154,11 @@ const rebuildSheetsTracker = async () => {
           eventPaid,
           addPaid
         ]);
-        currentRowIndex++;
       }
 
       // Add Daily Total row for the day
       const overallTotal = dailyMonthlySum + dailyYearlySum + dailyEventSum + dailyAddSum;
+      const idxInArray = preparedRows.length;
       preparedRows.push([
         dateStr,
         'Daily Total',
@@ -171,8 +168,7 @@ const rebuildSheetsTracker = async () => {
         dailyEventSum,
         dailyAddSum
       ]);
-      dailyTotalIndices.push(currentRowIndex);
-      currentRowIndex++;
+      dailyTotalIndices.push(idxInArray);
     }
 
     console.log(`Writing ${preparedRows.length} rows of chronological tracker data to sheets...`);
