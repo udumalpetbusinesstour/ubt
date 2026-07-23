@@ -1051,9 +1051,22 @@ router.get('/', async (req, res) => {
       const qLower = searchStr.toLowerCase().trim();
       const nameLower = (b.name || b.businessName || '').toLowerCase();
       const descLower = (b.description || '').toLowerCase();
-      const catLower = (b.category || '').toLowerCase();
       const services = Array.isArray(b.services) ? b.services : [];
       const brands = Array.isArray(b.brands) ? b.brands : [];
+
+      // Extract all categories, subcategories (type), custom category names, etc.
+      const listedCategories = [];
+      if (b.category) listedCategories.push(b.category.toLowerCase());
+      if (b.type) listedCategories.push(b.type.toLowerCase());
+      if (b.customCategoryName) listedCategories.push(b.customCategoryName.toLowerCase());
+      if (b.requestedParentCategory) listedCategories.push(b.requestedParentCategory.toLowerCase());
+      if (Array.isArray(b.categories)) {
+        b.categories.forEach(c => {
+          if (c.category) listedCategories.push(c.category.toLowerCase());
+          if (c.type) listedCategories.push(c.type.toLowerCase());
+          if (c.customCategoryName) listedCategories.push(c.customCategoryName.toLowerCase());
+        });
+      }
 
       let score = 0;
 
@@ -1064,7 +1077,14 @@ router.get('/', async (req, res) => {
         score += 100;
       }
 
-      // 2. Individual word matches
+      // 2. Direct exact or substring matches inside listed categories/subcategories
+      if (listedCategories.includes(qLower)) {
+        score += 150; // High priority boost for category searches
+      } else if (listedCategories.some(c => c.includes(qLower) || qLower.includes(c))) {
+        score += 80;
+      }
+
+      // 3. Individual word matches
       const queryWords = qLower.split(/\s+/).filter(Boolean);
       queryWords.forEach(word => {
         // Name matches
@@ -1074,9 +1094,11 @@ router.get('/', async (req, res) => {
           score += 20; // Partial word match in name
         }
 
-        // Category matches
-        if (catLower.includes(word)) {
-          score += 15;
+        // Listed categories word match
+        if (listedCategories.some(c => c.split(/[^a-z0-9]/).includes(word))) {
+          score += 30; // Word matches listed category name exactly
+        } else if (listedCategories.some(c => c.includes(word))) {
+          score += 15; // Word substring match in listed categories
         }
 
         // Services / Brands matches
