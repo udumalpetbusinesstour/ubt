@@ -445,7 +445,7 @@ export default function Navbar() {
                   <Facebook className="h-4 w-4" />
                 </a>
                 <a 
-                  href="https://www.instagram.com/udumalpet.co.in/" 
+                  href="https://www.instagram.com/udumalpet.business/" 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="h-9 w-9 rounded-xl border border-slate-200 hover:border-emerald-500 flex items-center justify-center hover:bg-[#027244] hover:text-white transition-all text-slate-500 bg-slate-50"
