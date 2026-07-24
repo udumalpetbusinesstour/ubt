@@ -878,29 +878,7 @@ function BusinessesList({ forceFocus }) {
   }, [dbCategories, dynamicAvailableCategories]);
 
   const handleCategoryClick = async (categoryName) => {
-    const parent = getParentCategory(categoryName);
-    
-    if (isCategoriesView) {
-      if (urlSlug) {
-        if (parent.toLowerCase() === categoryName.toLowerCase()) {
-          navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}`);
-        } else {
-          navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}&subcategory=${encodeURIComponent(categoryName)}`);
-        }
-      } else {
-        if (parent.toLowerCase() === categoryName.toLowerCase()) {
-          setSearchParams({ focus: 'categories', category: parent });
-        } else {
-          setSearchParams({ focus: 'categories', category: parent, subcategory: categoryName });
-        }
-      }
-    } else {
-      if (parent.toLowerCase() === categoryName.toLowerCase()) {
-        navigate(getCategorySlug(parent));
-      } else {
-        navigate(getCategorySlug(categoryName));
-      }
-    }
+    navigate(getCategorySlug(categoryName));
     
     // Background view increment
     try {
@@ -915,29 +893,7 @@ function BusinessesList({ forceFocus }) {
   };
 
   const handleHotCategoryClick = async (categoryName, parentCatName) => {
-    const parent = parentCatName || getParentCategory(categoryName);
-    
-    if (isCategoriesView) {
-      if (urlSlug) {
-        if (parent.toLowerCase() === categoryName.toLowerCase()) {
-          navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}`);
-        } else {
-          navigate(`/businesses?focus=categories&category=${encodeURIComponent(parent)}&subcategory=${encodeURIComponent(categoryName)}`);
-        }
-      } else {
-        if (parent.toLowerCase() === categoryName.toLowerCase()) {
-          setSearchParams({ focus: 'categories', category: parent });
-        } else {
-          setSearchParams({ focus: 'categories', category: parent, subcategory: categoryName });
-        }
-      }
-    } else {
-      if (parent.toLowerCase() === categoryName.toLowerCase()) {
-        navigate(getCategorySlug(parent));
-      } else {
-        navigate(getCategorySlug(categoryName));
-      }
-    }
+    navigate(getCategorySlug(categoryName));
     
     // Background view increment
     try {
@@ -1963,11 +1919,7 @@ function BusinessesList({ forceFocus }) {
                     <>
                       <button 
                         onClick={() => {
-                          if (urlSlug) {
-                            navigate(`/businesses?focus=categories&category=${encodeURIComponent(selectedCategoryInExplore)}`);
-                          } else {
-                            setSearchParams({ focus: 'categories', category: selectedCategoryInExplore });
-                          }
+                          navigate(getCategorySlug(selectedCategoryInExplore));
                         }} 
                         className="hover:text-emerald-450 transition-colors bg-transparent border-none p-0 cursor-pointer font-bold text-xs text-slate-300 hover:underline"
                       >
@@ -2112,11 +2064,7 @@ function BusinessesList({ forceFocus }) {
                                         body: JSON.stringify({ categoryName: cat.name })
                                       });
                                     } catch (e) {}
-                                    if (urlSlug) {
-                                      navigate(`/businesses?focus=categories&category=${encodeURIComponent(cat.name)}`);
-                                    } else {
-                                      setSearchParams({ focus: 'categories', category: cat.name });
-                                    }
+                                    navigate(getCategorySlug(cat.name));
                                   }}
                                   className="card-premium group rounded-3xl p-4 sm:p-6 cursor-pointer flex flex-col justify-between min-h-[7.5rem] sm:h-36 h-auto relative overflow-hidden bg-white border border-slate-200/65 hover:border-[#027244] transition-all"
                                 >
@@ -2200,11 +2148,7 @@ function BusinessesList({ forceFocus }) {
                         return (
                           <div 
                             onClick={() => {
-                              if (urlSlug) {
-                                navigate(`/businesses?focus=categories&category=${encodeURIComponent(selectedCategoryInExplore)}&subcategory=All`);
-                              } else {
-                                setSearchParams({ focus: 'categories', category: selectedCategoryInExplore, subcategory: 'All' });
-                              }
+                              navigate(getCategorySlug(selectedCategoryInExplore));
                             }}
                             className="bg-white border border-slate-200/60 rounded-2xl p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:border-emerald-100 hover:bg-emerald-50/30 transition-all duration-300 group"
                           >
@@ -2247,11 +2191,7 @@ function BusinessesList({ forceFocus }) {
                                } catch (err) {
                                  console.warn('Failed to increment category view:', err);
                                }
-                               if (urlSlug) {
-                                 navigate(`/businesses?focus=categories&category=${encodeURIComponent(selectedCategoryInExplore)}&subcategory=${encodeURIComponent(cat.categoryName)}`);
-                               } else {
-                                 setSearchParams({ focus: 'categories', category: selectedCategoryInExplore, subcategory: cat.categoryName });
-                               }
+                               navigate(getCategorySlug(cat.categoryName));
                              }}
                              className="bg-white border border-slate-200/60 rounded-2xl p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:border-emerald-100 hover:bg-emerald-50/30 transition-all duration-300 group"
                            >
@@ -2284,11 +2224,7 @@ function BusinessesList({ forceFocus }) {
                       <div className="flex items-center gap-3">
                         <button 
                           onClick={() => {
-                            if (urlSlug) {
-                              navigate(`/businesses?focus=categories&category=${encodeURIComponent(selectedCategoryInExplore)}`);
-                            } else {
-                              setSearchParams({ focus: 'categories', category: selectedCategoryInExplore });
-                            }
+                            navigate(getCategorySlug(selectedCategoryInExplore));
                           }}
                           className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#027244] bg-slate-100 hover:bg-emerald-50/50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                         >
