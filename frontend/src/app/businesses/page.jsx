@@ -349,7 +349,7 @@ function BusinessesList({ forceFocus }) {
   }, [urlSlug, dbCategories]);
 
   const focusParam = forceFocus || searchParams.get('focus');
-  const isCategoriesView = focusParam === 'categories' || !!resolvedFromSlug;
+  const isCategoriesView = focusParam === 'categories' || !!resolvedFromSlug || (!!urlSlug && urlSlug.toLowerCase().endsWith('-in-udumalpet'));
 
   const initialAnonForm = {
     name: '',
@@ -1786,6 +1786,15 @@ function BusinessesList({ forceFocus }) {
   }
 
   if (isCategoriesView) {
+    if (urlSlug && dbCategories.length === 0) {
+      return (
+        <div className="py-24 text-center text-slate-400 flex flex-col items-center justify-center gap-3">
+          <span className="h-8 w-8 animate-spin border-4 border-emerald-600 border-t-transparent rounded-full" />
+          <span className="text-xs font-bold text-slate-500">Loading category explorer...</span>
+        </div>
+      );
+    }
+
     const subcatHasApprovedListing = (subcatName) => {
       return allBusinesses.some(biz => {
         if (biz.status !== 'Approved') return false;
