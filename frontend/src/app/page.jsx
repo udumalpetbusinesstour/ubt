@@ -1463,13 +1463,13 @@ export default function Home() {
           <div className="lg:col-span-8 flex flex-col items-start text-left pointer-events-none">
             
             <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#001c41] tracking-tight leading-tight max-w-2xl font-sans pointer-events-auto">
-              Discover Trusted <br className="hidden sm:inline" />
+              Discover Featured <br className="hidden sm:inline" />
               Businesses in <br className="hidden sm:inline" />
               <span className="text-[#027244]">Udumalpet</span>
             </h1>
             
             <p className="mt-3 text-sm sm:text-[15px] md:text-[17px] text-slate-500 font-medium max-w-xl leading-relaxed pointer-events-auto">
-              A trusted local platform to discover, connect and grow with verified businesses in and around Udumalpet.
+              Discover featured businesses in Udumalpet. Find trusted shops, services, restaurants and professionals with reviews, contact details and offers.
             </p>
 
             {/* Rich horizontal search bar */}
