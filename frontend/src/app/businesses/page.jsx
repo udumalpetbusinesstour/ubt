@@ -966,32 +966,7 @@ function BusinessesList({ forceFocus }) {
     fetchDbCategories();
   }, []);
 
-  useEffect(() => {
-    if (dbCategories.length > 0) {
-      const catParam = searchParams.get('category');
-      const focusParam = searchParams.get('focus');
-      if (!catParam && !focusParam && !urlSlug) {
-        const excludeParents = ['public sector', 'governmental organisations', 'government organisations', 'governmental organisation', 'government organisation', 'others'];
-        
-        const sortedDbCats = [...dbCategories].sort((a, b) => (b.views || 0) - (a.views || 0));
-        const top10HotCats = sortedDbCats.slice(0, 10);
-        
-        const defaultTickedParents = [];
-        top10HotCats.forEach(cat => {
-          const parent = getParentCategory(cat.categoryName || '');
-          if (parent && parent.trim() !== '' && !excludeParents.includes(parent.toLowerCase())) {
-            if (!defaultTickedParents.includes(parent)) {
-              defaultTickedParents.push(parent);
-            }
-          }
-        });
 
-        if (defaultTickedParents.length > 0) {
-          navigate(`/businesses?category=${encodeURIComponent(defaultTickedParents.join(','))}`, { replace: true });
-        }
-      }
-    }
-  }, [dbCategories, searchParams, navigate]);
 
   useEffect(() => {
     const fetchAllCounts = async () => {
