@@ -63,10 +63,10 @@ router.get('/my-stats', protect, async (req, res, next) => {
         claimedBonuses: user.claimedBonuses || [],
         referralLink: (() => {
           if (!isSubscribed) return '';
-          let frontendOrigin = 'https://udumalpet.business';
+          let frontendOrigin = 'https://udumalpet.co.in';
           const host = req.get('host') || '';
           if (host.includes('staging')) {
-            frontendOrigin = 'https://staging.udumalpet.business';
+            frontendOrigin = 'https://staging.udumalpet.co.in';
           }
           if (req.headers.origin) {
             frontendOrigin = req.headers.origin;
