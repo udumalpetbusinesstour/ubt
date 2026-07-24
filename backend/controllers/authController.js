@@ -105,7 +105,7 @@ const registerUser = async (req, res, next) => {
       });
     }
 
-    const origin = req.get('origin') || 'https://udumalpet.co.in';
+    const origin = req.get('origin') || 'https://udumalpet.business';
     const redirectParam = req.query.redirect ? `&redirect=${encodeURIComponent(req.query.redirect)}` : '';
     const verifyLink = `${origin}/verify-email?email=${encodeURIComponent(email)}&token=${otp}${redirectParam}`;
 
@@ -188,7 +188,7 @@ const loginUser = async (req, res, next) => {
         user.emailVerificationOtpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
         await user.save();
 
-        const origin = req.get('origin') || 'https://udumalpet.co.in';
+        const origin = req.get('origin') || 'https://udumalpet.business';
         const redirectParam = req.query.redirect ? `&redirect=${encodeURIComponent(req.query.redirect)}` : '';
         const verifyLink = `${origin}/verify-email?email=${encodeURIComponent(user.email)}&token=${otp}${redirectParam}`;
 
@@ -678,17 +678,17 @@ const forgotPassword = async (req, res, next) => {
     }
 
     const requestHost = req.get('host') || '';
-    if (requestHost.includes('staging.udumalpet.co.in') || requestHost.includes('staging-api.udumalpet.co.in')) {
-      clientOrigin = 'https://staging.udumalpet.co.in';
-    } else if (requestHost.includes('udumalpet.co.in') || requestHost.includes('api.udumalpet.co.in')) {
-      clientOrigin = 'https://udumalpet.co.in';
+    if (requestHost.includes('staging.udumalpet.business') || requestHost.includes('staging-api.udumalpet.business')) {
+      clientOrigin = 'https://staging.udumalpet.business';
+    } else if (requestHost.includes('udumalpet.business') || requestHost.includes('api.udumalpet.business')) {
+      clientOrigin = 'https://udumalpet.business';
     }
 
     if (!clientOrigin || clientOrigin.includes('localhost') || clientOrigin.includes('127.0.0.1')) {
       if (requestHost.includes('staging')) {
-        clientOrigin = 'https://staging.udumalpet.co.in';
-      } else if (requestHost.includes('udumalpet') || requestHost.includes('co.in')) {
-        clientOrigin = 'https://udumalpet.co.in';
+        clientOrigin = 'https://staging.udumalpet.business';
+      } else if (requestHost.includes('udumalpet') || requestHost.includes('business')) {
+        clientOrigin = 'https://udumalpet.business';
       } else {
         clientOrigin = 'http://localhost:5173';
       }
@@ -855,7 +855,7 @@ const resendVerificationOtp = async (req, res, next) => {
     user.emailVerificationOtpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
-    const origin = req.get('origin') || 'https://udumalpet.co.in';
+    const origin = req.get('origin') || 'https://udumalpet.business';
     const redirectParam = req.query.redirect ? `&redirect=${encodeURIComponent(req.query.redirect)}` : '';
     const verifyLink = `${origin}/verify-email?email=${encodeURIComponent(user.email)}&token=${otp}${redirectParam}`;
 

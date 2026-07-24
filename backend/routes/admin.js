@@ -245,12 +245,12 @@ router.put('/businesses/:id/status', async (req, res, next) => {
 
     // Google Indexing API submission if the listing becomes Approved or Deindexed
     if (business.status === 'Approved') {
-      const targetUrl = `https://udumalpet.co.in/${business.slug || business._id}`;
+      const targetUrl = `https://udumalpet.business/${business.slug || business._id}`;
       submitToGoogleIndexing(targetUrl, 'URL_UPDATED').catch(err => {
         console.error('[Google Indexing API Async Error] Approval submission failed:', err);
       });
     } else if (['Suspended', 'Rejected', 'Hidden'].includes(business.status)) {
-      const targetUrl = `https://udumalpet.co.in/${business.slug || business._id}`;
+      const targetUrl = `https://udumalpet.business/${business.slug || business._id}`;
       submitToGoogleIndexing(targetUrl, 'URL_DELETED').catch(err => {
         console.error('[Google Indexing API Async Error] Deletion submission failed:', err);
       });
@@ -1030,7 +1030,7 @@ router.post('/business-edits/:id/approve', async (req, res, next) => {
 
     // Submit to Google Indexing API if it's approved
     if (business.status === 'Approved') {
-      const targetUrl = `https://udumalpet.co.in/${business.slug || business._id}`;
+      const targetUrl = `https://udumalpet.business/${business.slug || business._id}`;
       submitToGoogleIndexing(targetUrl, 'URL_UPDATED').catch(err => {
         console.error('[Google Indexing API Async Error] Business edits approval submission failed:', err);
       });
