@@ -142,7 +142,7 @@ export default function BusinessDetail({ idOverride, subtabOverride }) {
   useEffect(() => {
     if (params.subtab) {
       const normalizedSubtab = params.subtab.toLowerCase();
-      const validTabs = ['overview', 'menu', 'services', 'photos', 'reviews', 'offers', 'about', 'branches', 'map'];
+      const validTabs = ['overview', 'menu', 'services', 'photos', 'reviews', 'offers', 'about', 'branches', 'blogs', 'map'];
       if (validTabs.includes(normalizedSubtab)) {
         setActiveTab(normalizedSubtab);
       } else if (normalizedSubtab === 'menu-and-products' || normalizedSubtab === 'products') {
