@@ -31,13 +31,20 @@ function SlugRouteWrapper() {
   const { id, subtab, businessSlug } = useParams();
   const [routeType, setRouteType] = useState('loading'); // 'loading', 'category', 'event', 'blog', 'business'
 
-  // Determine if this is a blog or event route (either /:businessSlug/:id OR subtab is present but not a known subtab)
   const knownSubtabs = ['overview', 'menu', 'services', 'photos', 'reviews', 'offers', 'about', 'branches', 'blogs', 'map'];
-  const isBusinessSubtab = subtab && knownSubtabs.includes(subtab.toLowerCase());
-  const isBlogOrEventRoute = !!businessSlug || (!!subtab && !isBusinessSubtab);
+  
+  // If matched by /:businessSlug/:id (where both params exist), but the second segment (id) is a known business subtab:
+  // we actually want to treat businessSlug as the business ID, and id as the subtab.
+  const isSecondSegmentSubtab = !!businessSlug && id && knownSubtabs.includes(id.toLowerCase());
+  
+  const effectiveBusinessId = isSecondSegmentSubtab ? businessSlug : (businessSlug ? businessSlug : id);
+  const effectiveSubtab = isSecondSegmentSubtab ? id : (businessSlug ? undefined : subtab);
+  
+  const isBusinessSubtab = effectiveSubtab && knownSubtabs.includes(effectiveSubtab.toLowerCase());
+  const isBlogOrEventRoute = !isSecondSegmentSubtab && (!!businessSlug || (!!effectiveSubtab && !isBusinessSubtab));
 
   // The actual slug to look up in the database
-  const lookupSlug = isBlogOrEventRoute ? (businessSlug ? id : subtab) : id;
+  const lookupSlug = isBlogOrEventRoute ? (businessSlug ? id : subtab) : effectiveBusinessId;
   const lowerLookupSlug = (lookupSlug || '').toLowerCase();
 
   useEffect(() => {
@@ -100,7 +107,7 @@ function SlugRouteWrapper() {
     return <BlogDetail />;
   }
 
-  return <BusinessDetail />;
+  return <BusinessDetail idOverride={effectiveBusinessId} subtabOverride={effectiveSubtab} />;
 }
 
 function AppContent() {

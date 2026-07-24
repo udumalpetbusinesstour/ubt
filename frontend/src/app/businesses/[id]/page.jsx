@@ -105,8 +105,12 @@ const getTimingsSummaryString = (timings) => {
 
 const viewedBusinesses = new Set();
 
-export default function BusinessDetail() {
-  const params = useParams();
+export default function BusinessDetail({ idOverride, subtabOverride }) {
+  const routerParams = useParams();
+  const params = {
+    id: idOverride || routerParams.id,
+    subtab: subtabOverride || routerParams.subtab
+  };
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -1344,7 +1348,9 @@ Please confirm availability and delivery time.`;
         mockDetails.views = next;
         setBusiness(mockDetails);
         setReviews(mockDetails.googleReviews || []);
+        fetchBranches(mockDetails._id);
         fetchMenu(mockDetails._id);
+        fetchBlogs(mockDetails._id);
       } else {
         setError('Business details not found.');
       }
