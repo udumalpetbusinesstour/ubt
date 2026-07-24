@@ -6,10 +6,10 @@ import {
   Calendar, Sparkles, Grid, BookOpen, FileEdit, MessageSquare, Activity, Headset, ArrowLeft
 } from 'lucide-react';
 
-export default function Login() {
+export default function Login({ isPartnerFlow }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const fromParam = searchParams.get('from') || 'business';
+  const fromParam = isPartnerFlow ? 'partner' : (searchParams.get('from') || 'business');
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

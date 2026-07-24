@@ -6,10 +6,10 @@ import {
   Calendar, Sparkles, Grid, BookOpen, FileEdit, MessageSquare, Activity, ArrowLeft
 } from 'lucide-react';
 
-export default function Register() {
+export default function Register({ isPartnerFlow }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const fromParam = searchParams.get('from') || 'business';
+  const fromParam = isPartnerFlow ? 'partner' : (searchParams.get('from') || 'business');
   const flowParam = searchParams.get('flow') || 'general';
   const redirect = searchParams.get('redirect') || '';
   

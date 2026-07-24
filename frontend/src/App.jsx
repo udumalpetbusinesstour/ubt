@@ -180,13 +180,16 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/businesses" element={<BusinessesingsPage />} />
+          <Route path="/categories" element={<BusinessesingsPage forceFocus="categories" />} />
           <Route path="/businesses/:id/:subtab?" element={<BusinessDetail />} />
           <Route path="/add-business" element={<AddBusiness />} />
           <Route path="/admin/:tab?" element={<AdminDashboard />} />
           <Route path="/superadmin/:tab?" element={<SuperAdminDashboard />} />
           <Route path="/dashboard/:tab?" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/login-partner" element={<Login isPartnerFlow={true} />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/register-partner" element={<Register isPartnerFlow={true} />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/choose-plan" element={<ChoosePlan />} />

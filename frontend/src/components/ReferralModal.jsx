@@ -181,7 +181,7 @@ export default function ReferralModal({ isOpen, onClose }) {
                   <button
                     onClick={() => {
                       onClose();
-                      navigate('/register?from=partner');
+                      navigate('/register-partner');
                     }}
                     className="py-3 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-98 border-none"
                   >
@@ -190,7 +190,7 @@ export default function ReferralModal({ isOpen, onClose }) {
                   <button
                     onClick={() => {
                       onClose();
-                      navigate('/login?from=partner');
+                      navigate('/login-partner');
                     }}
                     className="py-3 px-6 bg-amber-400 hover:bg-amber-500 text-slate-900 font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-98 border-none"
                   >

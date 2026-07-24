@@ -34,8 +34,8 @@ export default function Navbar() {
     if (itemPath === '/about') {
       return pathname === '/about' || (pathname === '/businesses' && searchParams.get('focus') === 'about');
     }
-    if (itemPath === '/businesses?focus=categories') {
-      return pathname === '/businesses' && searchParams.get('focus') === 'categories';
+    if (itemPath === '/categories') {
+      return pathname === '/categories' || (pathname === '/businesses' && searchParams.get('focus') === 'categories');
     }
     if (itemPath === '/businesses?focus=contact') {
       return pathname === '/businesses' && searchParams.get('focus') === 'contact';
@@ -149,10 +149,10 @@ export default function Navbar() {
   const menuItems = [
     { name: 'Home', path: '/' },
     { name: 'Businesses', path: '/businesses' },
-    { name: 'Categories', path: '/businesses?focus=categories' },
+    { name: 'Categories', path: '/categories' },
     { name: 'Events', path: '/events' },
     { name: 'Blogs', path: '/blogs' },
-    { name: 'Partner with Us', path: user ? (user.role === 'partner' ? '/dashboard' : '/register?from=partner') : '/register?from=partner' },
+    { name: 'Partner with Us', path: user ? (user.role === 'partner' ? '/dashboard' : '/register-partner') : '/register-partner' },
   ];
 
   const isAuthPage = pathname === '/login' || pathname === '/register';

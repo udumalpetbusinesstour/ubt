@@ -71,7 +71,7 @@ const categoryStylesMap = {
 
 const getCategorySlug = (name) => {
   if (!name) return '/businesses';
-  if (name === 'More') return '/businesses?focus=categories';
+  if (name === 'More') return '/categories';
   
   let targetName = name;
   if (name === 'Hotels') targetName = 'Hotels & Lodges';
@@ -895,7 +895,7 @@ export default function Home() {
           <rect x="14" y="14" width="7" height="7" rx="1.5" fill="#027244" />
         </svg>
       ), 
-      path: '/businesses?focus=categories' 
+      path: '/categories' 
     }
   ]);
 
@@ -1102,7 +1102,7 @@ export default function Home() {
         name: 'More',
         icon: renderCategoryIcon('LayoutGrid', 'h-5.5 w-5.5 sm:h-7 sm:w-7 text-[#027244]'),
         bg: 'bg-emerald-50',
-        path: '/businesses?focus=categories'
+        path: '/categories'
       });
 
       setCategoriesList(sorted);
@@ -1682,7 +1682,7 @@ export default function Home() {
             <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight">Top Categories</h2>
             <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">Explore local businesses by specific industry</p>
           </div>
-          <Link to="/businesses?focus=categories" className="text-xs font-bold text-[#027244] hover:text-[#005934] flex items-center gap-1 shrink-0">
+          <Link to="/categories" className="text-xs font-bold text-[#027244] hover:text-[#005934] flex items-center gap-1 shrink-0">
             View All Categories <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -1704,7 +1704,7 @@ export default function Home() {
             {categoriesList.map((cat) => (
               <Link 
                 key={cat.name} 
-                to={cat.name === 'More' ? '/businesses?focus=categories' : `/businesses?category=${encodeURIComponent(cat.name)}`}
+                to={cat.name === 'More' ? '/categories' : `/businesses?category=${encodeURIComponent(cat.name)}`}
                 className="card-premium group rounded-2xl py-4.5 px-3 sm:py-6 sm:px-4 flex flex-col items-center justify-center gap-2.5 sm:gap-4 text-center cursor-pointer w-[130px] sm:w-[160px] shrink-0 snap-center sm:snap-start"
               >
                 <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full ${cat.bg || 'bg-emerald-50'} flex items-center justify-center select-none transition-transform duration-500 ease-out-expo group-hover:scale-110 shadow-2xs`}>

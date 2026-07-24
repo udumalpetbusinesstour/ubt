@@ -177,8 +177,40 @@ const staticData = [
 ];
 
 function BusinessesList({ forceFocus }) {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const [searchParams, rawSetSearchParams] = useSearchParams();
+  const rawNavigate = useNavigate();
+
+  const setSearchParams = (params) => {
+    if (window.location.pathname === '/categories' || forceFocus === 'categories') {
+      const nextParams = typeof params === 'function' ? params(searchParams) : { ...params };
+      delete nextParams.focus;
+      rawSetSearchParams(nextParams);
+    } else {
+      rawSetSearchParams(params);
+    }
+  };
+
+  const navigate = (to, options) => {
+    if (typeof to === 'string') {
+      let cleanTo = to;
+      cleanTo = cleanTo.replace('/businesses?focus=categories', '/categories');
+      if (cleanTo.startsWith('/categories&')) {
+        cleanTo = cleanTo.replace('/categories&', '/categories?');
+      }
+      if (cleanTo.includes('focus=categories')) {
+        cleanTo = cleanTo
+          .replace(/[\?&]focus=categories&?/g, (match) => {
+            if (match.startsWith('?')) return '?';
+            return '';
+          })
+          .replace(/\?$/, '');
+      }
+      rawNavigate(cleanTo, options);
+    } else {
+      rawNavigate(to, options);
+    }
+  };
+
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
@@ -1925,7 +1957,7 @@ function BusinessesList({ forceFocus }) {
               <span className="text-slate-505">&gt;</span>
               {selectedCategoryInExplore ? (
                 <>
-                  <Link to="/businesses?focus=categories" className="hover:text-emerald-450 transition-colors">Categories</Link>
+                  <Link to="/categories" className="hover:text-emerald-450 transition-colors">Categories</Link>
                   <span className="text-slate-505">&gt;</span>
                   {selectedSubcategoryInExplore && selectedSubcategoryInExplore !== 'All' ? (
                     <>

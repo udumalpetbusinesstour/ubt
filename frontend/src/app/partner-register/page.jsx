@@ -22,7 +22,7 @@ export default function PartnerRegister() {
     const storedUser = localStorage.getItem('ubt_user');
 
     if (!token || !storedUser) {
-      navigate('/login?from=partner');
+      navigate('/login-partner');
       return;
     }
 
@@ -45,7 +45,7 @@ export default function PartnerRegister() {
         setError('Your previous registration request was not approved by administration. Please review your details and resubmit.');
       }
     } catch (err) {
-      navigate('/login?from=partner');
+      navigate('/login-partner');
     }
   }, [navigate]);
 
