@@ -19,7 +19,7 @@ const isCrawler = (ua = '') => SOCIAL_BOT_REGEX.test(ua);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const SITE_NAME = 'Udumalpet Business Tour';
-const SITE_URL = process.env.FRONTEND_URL || 'https://udumalpetbusinesstour.com';
+const SITE_URL = process.env.FRONTEND_URL || 'https://udumalpet.business';
 const API_BASE_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 const DEFAULT_IMAGE = `${SITE_URL}/logo.jpg`;
 const DEFAULT_TITLE = 'Featured Business in Udumalpet | Local Business Directory';

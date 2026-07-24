@@ -208,8 +208,8 @@ export default function BusinessDetail({ idOverride, subtabOverride }) {
     const rawDesc = business.description || business.about || `${business.name} — ${business.category || ''} in Udumalpet.`;
     const desc = rawDesc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 160);
     const imageUrl = business.logoUrl
-      ? (business.logoUrl.startsWith('http') ? business.logoUrl : `http://localhost:5000${business.logoUrl}`)
-      : window.location.origin + '/logo.jpg';
+      ? window.getImageUrl(business.logoUrl)
+      : 'https://udumalpet.business/logo.jpg';
     const pageUrl = window.location.origin + '/' + (business.slug || business._id);
 
     // Update document title
