@@ -141,6 +141,10 @@ app.get('/', (req, res) => {
   });
 });
 
+// Dynamic OG meta tag proxy for social media crawlers (WhatsApp, Facebook, etc.)
+// Bot traffic to /<slug> is handled here with real business/blog/event data.
+app.use('/og', require('./routes/ogMeta'));
+
 // Centralized Exception & Validation Error Handler
 app.use(errorHandler);
 

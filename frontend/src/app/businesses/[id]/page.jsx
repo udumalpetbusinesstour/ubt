@@ -198,6 +198,51 @@ export default function BusinessDetail({ idOverride, subtabOverride }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Dynamically update page title and OG meta tags when business data loads
+  useEffect(() => {
+    if (!business) return;
+
+    const siteName = 'Udumalpet Business Tour';
+    const title = `${business.name} | ${siteName}`;
+    const rawDesc = business.description || business.about || `${business.name} — ${business.category || ''} in Udumalpet.`;
+    const desc = rawDesc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 160);
+    const imageUrl = business.logoUrl
+      ? (business.logoUrl.startsWith('http') ? business.logoUrl : `http://localhost:5000${business.logoUrl}`)
+      : window.location.origin + '/logo.jpg';
+    const pageUrl = window.location.origin + '/' + (business.slug || business._id);
+
+    // Update document title
+    document.title = title;
+
+    // Helper to set or create a meta tag
+    const setMeta = (attr, key, value) => {
+      let el = document.querySelector(`meta[${attr}="${key}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', value);
+    };
+
+    setMeta('name', 'description', desc);
+    setMeta('property', 'og:title', title);
+    setMeta('property', 'og:description', desc);
+    setMeta('property', 'og:image', imageUrl);
+    setMeta('property', 'og:url', pageUrl);
+    setMeta('property', 'og:type', 'business.business');
+    setMeta('property', 'og:site_name', siteName);
+    setMeta('name', 'twitter:title', title);
+    setMeta('name', 'twitter:description', desc);
+    setMeta('name', 'twitter:image', imageUrl);
+    setMeta('name', 'twitter:card', 'summary_large_image');
+
+    // Restore defaults on unmount
+    return () => {
+      document.title = 'Featured Business in Udumalpet | Local Business Directory';
+    };
+  }, [business]);
   const [currentUser, setCurrentUser] = useState(null);
 
   const displayGallery = business ? Array.from(new Set(business.galleryUrls || [])).filter(Boolean).map(url => window.getImageUrl(url)) : [];
