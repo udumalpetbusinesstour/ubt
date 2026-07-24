@@ -573,6 +573,7 @@ export default function Home() {
   const sponsoredAdsScrollRef = useRef(null);
 
   const isHoveringFeatured = useRef(false);
+  const isHoveringNewlyRegistered = useRef(false);
   const isHoveringSponsored = useRef(false);
   const isHoveringTopViewed = useRef(false);
 
@@ -604,6 +605,18 @@ export default function Home() {
       }
     }
   }, [featuredBusinesses]);
+
+  // Center Newly Registered Businesses middle copy on mount/load
+  useEffect(() => {
+    if (newlyRegisteredScrollRef.current && newlyRegisteredBusinesses && newlyRegisteredBusinesses.length > 1) {
+      const container = newlyRegisteredScrollRef.current;
+      const cards = container.children;
+      if (cards && cards.length === newlyRegisteredBusinesses.length * 3) {
+        const singleSetWidth = cards[newlyRegisteredBusinesses.length].offsetLeft - cards[0].offsetLeft;
+        container.scrollLeft = singleSetWidth;
+      }
+    }
+  }, [newlyRegisteredBusinesses]);
 
   // Center Sponsored Ads middle copy on mount/load
   useEffect(() => {
@@ -643,6 +656,33 @@ export default function Home() {
       };
     }
   }, [featuredBusinesses]);
+
+  // Infinite scroll listeners for Newly Registered Businesses
+  useEffect(() => {
+    const handleScrollEndNewlyRegistered = () => {
+      if (newlyRegisteredScrollRef.current && newlyRegisteredBusinesses && newlyRegisteredBusinesses.length > 1) {
+        handleInfiniteScroll(newlyRegisteredScrollRef.current, newlyRegisteredBusinesses.length);
+      }
+    };
+    
+    const container = newlyRegisteredScrollRef.current;
+    if (container) {
+      container.addEventListener('scrollend', handleScrollEndNewlyRegistered);
+      
+      let scrollTimeout;
+      const handleScrollFallback = () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(handleScrollEndNewlyRegistered, 150);
+      };
+      container.addEventListener('scroll', handleScrollFallback);
+      
+      return () => {
+        container.removeEventListener('scrollend', handleScrollEndNewlyRegistered);
+        container.removeEventListener('scroll', handleScrollFallback);
+        clearTimeout(scrollTimeout);
+      };
+    }
+  }, [newlyRegisteredBusinesses]);
 
   // Infinite scroll listeners for Sponsored Ads
   useEffect(() => {
@@ -719,6 +759,26 @@ export default function Home() {
     frameId = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frameId);
   }, [featuredBusinesses]);
+
+  // Continuous smooth marquee scroll for Newly Registered Businesses
+  useEffect(() => {
+    if (!newlyRegisteredBusinesses || newlyRegisteredBusinesses.length <= 1) return;
+    let frameId;
+    
+    const step = () => {
+      if (newlyRegisteredScrollRef.current) {
+        const container = newlyRegisteredScrollRef.current;
+        if (!isHoveringNewlyRegistered.current) {
+          container.scrollLeft += 0.7; // Constant slow marquee speed
+        }
+        handleInfiniteScroll(container, newlyRegisteredBusinesses.length);
+      }
+      frameId = requestAnimationFrame(step);
+    };
+    
+    frameId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frameId);
+  }, [newlyRegisteredBusinesses]);
 
   // Continuous smooth marquee scroll for Sponsored Ads
   useEffect(() => {
@@ -1965,9 +2025,14 @@ export default function Home() {
           {newlyRegisteredBusinesses && newlyRegisteredBusinesses.length > 0 ? (
             <div 
               ref={newlyRegisteredScrollRef}
-              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none w-full px-8 md:px-12 2xl:px-0"
+              onMouseEnter={() => { isHoveringNewlyRegistered.current = true; }}
+              onMouseLeave={() => { isHoveringNewlyRegistered.current = false; }}
+              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none w-full px-[calc(50vw-140px)] sm:px-[calc(50vw-160px)] md:px-12 2xl:px-0"
             >
-              {newlyRegisteredBusinesses.map((biz, index) => {
+              {(newlyRegisteredBusinesses && newlyRegisteredBusinesses.length > 1
+                ? [...newlyRegisteredBusinesses, ...newlyRegisteredBusinesses, ...newlyRegisteredBusinesses]
+                : newlyRegisteredBusinesses || []
+              ).map((biz, index) => {
                 const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
                 return (
                   <div 
@@ -1989,12 +2054,6 @@ export default function Home() {
                             filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
                           }}
                         />
-                      <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">
-                        <div className="bg-emerald-650 border border-emerald-700 text-white px-1.5 py-0.5 rounded-lg shadow-xs flex items-center gap-0.5">
-                          <Sparkles className="h-2.5 w-2.5 text-white fill-current" />
-                          <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider">New Arrival</span>
-                        </div>
-                      </div>
                     </div>
                     <div 
                       className={`p-5 flex-grow flex flex-col justify-between gap-3.5 bg-white`}
