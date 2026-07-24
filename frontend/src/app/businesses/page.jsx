@@ -278,6 +278,7 @@ function BusinessesList({ forceFocus }) {
   const [categoryCounts, setCategoryCounts] = useState({});
   const [categoriesSearchQuery, setCategoriesSearchQuery] = useState('');
   const [allBusinesses, setAllBusinesses] = useState([]);
+  const [allBusinessesLoading, setAllBusinessesLoading] = useState(true);
   const [selectedCategoryInExplore, setSelectedCategoryInExplore] = useState(searchParams.get('category') || null);
   const [selectedSubcategoryInExplore, setSelectedSubcategoryInExplore] = useState(searchParams.get('subcategory') || null);
   const [showTop7Only, setShowTop7Only] = useState(false);
@@ -958,6 +959,7 @@ function BusinessesList({ forceFocus }) {
 
   useEffect(() => {
     const fetchAllCounts = async () => {
+      setAllBusinessesLoading(true);
       try {
         const res = await fetch('http://localhost:5000/api/businesses');
         const data = await res.json();
@@ -967,6 +969,8 @@ function BusinessesList({ forceFocus }) {
       } catch (err) {
         console.warn('API error, empty counts.');
         setAllBusinesses([]);
+      } finally {
+        setAllBusinessesLoading(false);
       }
     };
     fetchAllCounts();
@@ -2249,7 +2253,20 @@ function BusinessesList({ forceFocus }) {
                       </p>
                     </div>
 
-                    {filteredExploreBusinesses.length === 0 ? (
+                    {allBusinessesLoading ? (
+                      <div className="flex flex-col gap-4">
+                        {[...Array(4)].map((_, i) => (
+                          <div key={i} className="card-premium rounded-3xl overflow-hidden flex flex-col md:flex-row animate-pulse bg-white border border-slate-200/60" style={{minHeight: '140px'}}>
+                            <div className="w-full md:w-48 h-36 md:h-auto bg-slate-100 shrink-0" />
+                            <div className="flex flex-col gap-3 p-4 flex-1 justify-center">
+                              <div className="h-4 bg-slate-200 rounded w-2/3" />
+                              <div className="h-3 bg-slate-100 rounded w-1/3" />
+                              <div className="h-3 bg-slate-100 rounded w-1/2" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : filteredExploreBusinesses.length === 0 ? (
                       <div className="bg-white border border-slate-200/60 rounded-3xl py-16 px-6 text-center shadow-sm flex flex-col items-center justify-center gap-4 text-slate-400">
                         <AlertCircle className="h-10 w-10 text-slate-400" />
                         <div>
