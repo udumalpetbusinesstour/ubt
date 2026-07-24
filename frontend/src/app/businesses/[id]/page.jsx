@@ -5,7 +5,7 @@ import {
   MapPin, Phone, Mail, Clock, ShieldCheck, HeartHandshake, Star, StarHalf, Share2, Heart, Award, 
   ArrowLeft, Send, CheckCircle2, MessageSquare, AlertCircle, RefreshCw, Calendar, Globe, Sparkles,
   Briefcase, Users, ChevronRight, Check, X, Facebook, Twitter, Edit3, Plus, Upload, Trash2, Instagram, Move, ImageIcon,
-  Utensils, Eye, Folder, Package, QrCode
+  Utensils, Eye, Folder, Package, QrCode, BookOpen
 } from 'lucide-react';
 
 
