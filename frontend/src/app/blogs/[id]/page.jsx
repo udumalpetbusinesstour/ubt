@@ -417,7 +417,7 @@ export default function BlogDetail() {
               </span>
             )}
             <Link 
-              to={`/profile/${blog.author || blog.authorId}`}
+              to={blog.businessId ? `/${blog.businessId.slug || blog.businessId._id}` : `/profile/${blog.author || blog.authorId}`}
               className="flex items-center gap-1.5 text-slate-700 hover:text-[#027244] transition-colors group cursor-pointer"
             >
               <div className="h-6.5 w-6.5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-extrabold text-[9.5px] uppercase select-none border border-blue-100 shadow-2xs group-hover:bg-[#027244]/10 group-hover:text-[#027244] group-hover:border-[#027244]/20 transition-all">

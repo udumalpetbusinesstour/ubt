@@ -226,8 +226,9 @@ export default function BlogsPage() {
   const handleShareClick = async (e, blog) => {
     e.preventDefault();
     e.stopPropagation();
-    const identifier = blog.slug || blog._id;
-    const shareUrl = `${window.location.origin}/${identifier}`;
+    const shareUrl = blog.businessId 
+      ? `${window.location.origin}/${blog.businessId.slug || blog.businessId._id}/${blog.slug || blog._id}`
+      : `${window.location.origin}/blogs/${blog.slug || blog._id}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -579,7 +580,7 @@ export default function BlogsPage() {
                 const readTime = Math.max(Math.ceil(words / 150), 1);
                 
                 return (
-                  <article key={blog._id} className="bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col cursor-pointer" onClick={() => navigate(`/${blog.slug || blog._id}`)}>
+                  <article key={blog._id} className="bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col cursor-pointer" onClick={() => navigate(blog.businessId ? `/${blog.businessId.slug || blog.businessId._id}/${blog.slug || blog._id}` : `/blogs/${blog.slug || blog._id}`)}>
                     <div className="h-48 overflow-hidden bg-slate-100">
                       <img 
                         src={(!blog.coverImage || blog.coverImage.includes('unsplash.com')) ? '/default_blog_cover.jpg' : window.getImageUrl(blog.coverImage)} 
@@ -708,7 +709,7 @@ export default function BlogsPage() {
                   const readTime = Math.max(Math.ceil(words / 150), 1);
 
                   return (
-                    <article key={blog._id} className="bg-white border border-slate-200/80 rounded-[24px] overflow-hidden p-5 shadow-2xs hover:shadow-sm transition-shadow flex flex-col md:flex-row gap-5 cursor-pointer group" onClick={() => navigate(`/${blog.slug || blog._id}`)}>
+                    <article key={blog._id} className="bg-white border border-slate-200/80 rounded-[24px] overflow-hidden p-5 shadow-2xs hover:shadow-sm transition-shadow flex flex-col md:flex-row gap-5 cursor-pointer group" onClick={() => navigate(blog.businessId ? `/${blog.businessId.slug || blog.businessId._id}/${blog.slug || blog._id}` : `/blogs/${blog.slug || blog._id}`)}>
                       
                       {/* Left side Image */}
                       <div className="w-full md:w-56 h-36 rounded-2xl overflow-hidden shrink-0 bg-slate-100 border border-slate-100 relative">
@@ -791,7 +792,7 @@ export default function BlogsPage() {
                             </button>
                             
                             <button 
-                              onClick={() => navigate(`/${blog.slug || blog._id}`)}
+                              onClick={() => navigate(blog.businessId ? `/${blog.businessId.slug || blog.businessId._id}/${blog.slug || blog._id}` : `/blogs/${blog.slug || blog._id}`)}
                               className="py-1 px-3 border border-[#027244] hover:bg-emerald-50 text-[#027244] text-[10px] font-black rounded-lg cursor-pointer transition-colors ml-1"
                             >
                               Read More

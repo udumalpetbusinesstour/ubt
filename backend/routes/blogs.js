@@ -10,7 +10,11 @@ const { protect, admin } = require('../middleware/auth');
 // @access  Public
 router.get('/', async (req, res) => {
   try {
-    const blogs = await Blog.find({ status: 'Approved' }).sort({ createdAt: -1 });
+    const query = { status: 'Approved' };
+    if (req.query.businessId) {
+      query.businessId = req.query.businessId;
+    }
+    const blogs = await Blog.find(query).populate('businessId').sort({ createdAt: -1 });
     // Only return approved comments to the public
     const sanitizedBlogs = blogs.map(blog => {
       const blogObj = blog.toObject();
@@ -72,20 +76,20 @@ router.get('/:id', async (req, res) => {
     let blog;
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
       blog = skipInc
-        ? await Blog.findById(req.params.id)
+        ? await Blog.findById(req.params.id).populate('businessId')
         : await Blog.findByIdAndUpdate(
             req.params.id,
             { $inc: { views: 1 } },
             { new: true }
-          );
+          ).populate('businessId');
     } else {
       blog = skipInc
-        ? await Blog.findOne({ slug: req.params.id.toLowerCase() })
+        ? await Blog.findOne({ slug: req.params.id.toLowerCase() }).populate('businessId')
         : await Blog.findOneAndUpdate(
             { slug: req.params.id.toLowerCase() },
             { $inc: { views: 1 } },
             { new: true }
-          );
+          ).populate('businessId');
     }
 
     if (!blog) {
@@ -115,6 +119,10 @@ router.post('/', protect, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide title and content' });
     }
 
+    const Business = require('../models/Business');
+    const userBusiness = await Business.findOne({ ownerId: req.user._id });
+    const businessId = userBusiness ? userBusiness._id : undefined;
+
     const blog = await Blog.create({
       title,
       content,
@@ -122,6 +130,7 @@ router.post('/', protect, async (req, res) => {
       category: category || 'Business Tips',
       author: req.user._id,
       authorName: req.user.fullName,
+      businessId,
       status: 'Pending Approval', // Needs approval from admin
     });
 

@@ -28,33 +28,47 @@ import PartnerRegister from './app/partner-register/page';
 import GlobalModalProvider from './components/GlobalModalProvider';
 
 function SlugRouteWrapper() {
-  const { id } = useParams();
-  const lowerId = (id || '').toLowerCase();
+  const { id, subtab, businessSlug } = useParams();
   const [routeType, setRouteType] = useState('loading'); // 'loading', 'category', 'event', 'blog', 'business'
 
+  // Determine if this is a blog or event route (either /:businessSlug/:id OR subtab is present but not a known subtab)
+  const knownSubtabs = ['overview', 'menu', 'services', 'photos', 'reviews', 'offers', 'about', 'branches', 'blogs', 'map'];
+  const isBusinessSubtab = subtab && knownSubtabs.includes(subtab.toLowerCase());
+  const isBlogOrEventRoute = !!businessSlug || (!!subtab && !isBusinessSubtab);
+
+  // The actual slug to look up in the database
+  const lookupSlug = isBlogOrEventRoute ? (businessSlug ? id : subtab) : id;
+  const lowerLookupSlug = (lookupSlug || '').toLowerCase();
+
   useEffect(() => {
-    // 1. Static/immediate check for categories ending in -in-udumalpet
-    if (lowerId.endsWith('-in-udumalpet')) {
+    // 1. Check if it is a category (only for single segment URLs)
+    if (!isBlogOrEventRoute && lowerLookupSlug.endsWith('-in-udumalpet')) {
       setRouteType('category');
       return;
     }
 
-    // 2. Fetch the lookup endpoint
+    // 2. Check if it is a standard business detail URL
+    if (!isBlogOrEventRoute) {
+      setRouteType('business');
+      return;
+    }
+
+    // 3. For blogs or events, fetch the lookup endpoint
     let active = true;
     const fetchType = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/slug-lookup/${encodeURIComponent(id)}`);
+        const res = await fetch(`http://localhost:5000/api/slug-lookup/${encodeURIComponent(lookupSlug)}`);
         const data = await res.json();
         if (active) {
           if (data.success) {
             setRouteType(data.type);
           } else {
-            setRouteType('business'); // Fallback
+            setRouteType('blog'); // Default fallback
           }
         }
       } catch (err) {
         if (active) {
-          setRouteType('business'); // Fallback
+          setRouteType('blog'); // Default fallback
         }
       }
     };
@@ -63,7 +77,7 @@ function SlugRouteWrapper() {
     return () => {
       active = false;
     };
-  }, [id, lowerId]);
+  }, [lookupSlug, lowerLookupSlug, isBlogOrEventRoute]);
 
   if (routeType === 'loading') {
     return (
@@ -183,6 +197,7 @@ function AppContent() {
           <Route path="/terms" element={<BusinessesingsPage forceFocus="terms" />} />
           <Route path="/refund-policy" element={<BusinessesingsPage forceFocus="refund" />} />
           <Route path="/business-guidelines" element={<BusinessesingsPage forceFocus="guidelines" />} />
+          <Route path="/:businessSlug/:id" element={<SlugRouteWrapper />} />
           <Route path="/:id/:subtab?" element={<SlugRouteWrapper />} />
         </Routes>
       </main>

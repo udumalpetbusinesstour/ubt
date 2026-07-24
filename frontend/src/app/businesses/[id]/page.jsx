@@ -260,6 +260,7 @@ Please confirm availability and delivery time.`;
   const [menuUrlsState, setMenuUrlsState] = useState([]);
   const [menuError, setMenuError] = useState('');
   const [menuItems, setMenuItems] = useState([]);
+  const [blogs, setBlogs] = useState([]);
   const [menuLoading, setMenuLoading] = useState(false);
   const [selectedItemImage, setSelectedItemImage] = useState(null);
 
@@ -671,6 +672,18 @@ Please confirm availability and delivery time.`;
     fetchBusinessDetails();
   }, [params.id]);
 
+  const fetchBlogs = async (businessId) => {
+    try {
+      const res = await fetch(`/api/blogs?businessId=${businessId}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setBlogs(data.data.filter(b => b.status === 'Approved'));
+      }
+    } catch (err) {
+      console.warn('Failed to load blogs from server:', err.message);
+    }
+  };
+
   const fetchBranches = async (businessId) => {
     try {
       const res = await fetch(`http://localhost:5000/api/branches/business/${businessId}`);
@@ -853,6 +866,7 @@ Please confirm availability and delivery time.`;
         setReviews(data.data.reviews || []);
         fetchBranches(data.data._id);
         fetchMenu(data.data._id);
+        fetchBlogs(data.data._id);
         window.dispatchEvent(new Event('platform-views-updated'));
       } else {
         throw new Error('Business details not found.');
@@ -2030,6 +2044,7 @@ Please confirm availability and delivery time.`;
               { id: 'offers', label: `Offers (${((business?.offers ? business.offers.filter(o => o.active !== false && o.active !== 'false').length : 0) + (business?.promotions ? business.promotions.filter(p => p.active !== false && p.active !== 'false').length : 0))})` },
               { id: 'about', label: 'About' },
               ...((branches.length > 0 || isOwner) ? [{ id: 'branches', label: branches.length > 0 ? `Branches (${branches.length + 1})` : 'Branches' }] : []),
+              ...(blogs.length > 0 ? [{ id: 'blogs', label: `Blogs (${blogs.length})` }] : []),
               { id: 'map', label: 'Location & Contact' }
             ].map((tab) => (
               <button
@@ -3464,6 +3479,46 @@ Please confirm availability and delivery time.`;
             </div>
           )}
 
+          {/* TAB: BLOGS */}
+          {activeTab === 'blogs' && (
+            <div className="flex flex-col gap-6 animate-fadeIn text-left">
+              <h3 className="text-xl font-extrabold text-slate-800 font-sans">Blogs by {business.name}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {blogs.map(blog => (
+                  <div key={blog._id} className="bg-white border border-slate-200/85 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                    <div>
+                      {blog.coverImage && (
+                        <div className="h-44 overflow-hidden bg-slate-100">
+                          <img 
+                            src={window.getImageUrl(blog.coverImage)} 
+                            alt={blog.title}
+                            className="w-full h-full object-cover border-b border-slate-100" 
+                          />
+                        </div>
+                      )}
+                      <div className="p-5 flex flex-col gap-2">
+                        <span className="text-[10px] font-black uppercase text-emerald-600 tracking-wider">{blog.category}</span>
+                        <Link 
+                          to={business ? `/${business.slug || business._id}/${blog.slug || blog._id}` : `/blogs/${blog._id}`} 
+                          className="font-extrabold text-slate-850 hover:text-emerald-700 text-sm leading-tight line-clamp-2"
+                        >
+                          {blog.title}
+                        </Link>
+                        <p className="text-xs text-slate-500 font-semibold leading-relaxed line-clamp-3 mt-1">
+                          {blog.content.replace(/<[^>]*>/g, ' ')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="px-5 pb-5 pt-3 border-t border-slate-100/60 flex items-center justify-between text-[11px] text-slate-400 font-bold">
+                      <span>{new Date(blog.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      <span>{blog.views || 0} views</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* TAB 7: LOCATION & CONTACT */}
           {activeTab === 'map' && (
             <div className="flex flex-col gap-4 animate-fadeIn text-left">
@@ -3917,6 +3972,9 @@ Please confirm availability and delivery time.`;
               </span>
               <span className="text-sm font-black mt-1 leading-none text-emerald-50 bg-transparent">
                 Total: ₹{Object.values(cart).reduce((sum, i) => sum + (i.offerPrice || i.price) * i.quantity, 0)}
+              </span>
+              <span className="text-[10.5px] font-bold text-white mt-1.5 leading-normal">
+                📦 பார்சல் மற்றும் டெலிவரி கட்டணங்கள் கூடுதலாக சேர்க்கப்படலாம்.
               </span>
             </div>
             

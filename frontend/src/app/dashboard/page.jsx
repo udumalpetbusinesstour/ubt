@@ -9292,7 +9292,7 @@ function DashboardContent() {
                           {/* Action footer */}
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-t border-slate-100 pt-3 gap-3">
                             <Link
-                              to={`/${blog.slug || blog._id}`}
+                              to={blog.businessId ? `/${(typeof blog.businessId === 'object' ? blog.businessId.slug || blog.businessId._id : blog.businessId) || (business ? business.slug || business._id : '')}/${blog.slug || blog._id}` : `/blogs/${blog.slug || blog._id}`}
                               className="text-[10px] font-extrabold text-[#027244] hover:text-[#005934] flex items-center gap-1 leading-none group cursor-pointer"
                             >
                               <Eye className="h-3.5 w-3.5 text-slate-400 shrink-0" /> View <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform shrink-0" />
