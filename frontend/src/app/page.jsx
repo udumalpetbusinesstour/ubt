@@ -501,6 +501,7 @@ export default function Home() {
     };
   }, [mapBiz, isMobile]);
   const [featuredBusinesses, setFeaturedBusinesses] = useState([]);
+  const [newlyRegisteredBusinesses, setNewlyRegisteredBusinesses] = useState([]);
   const [topViewedBusinesses, setTopViewedBusinesses] = useState([]);
   const [sponsoredAds, setSponsoredAds] = useState([]);
   const [activeAdIndex, setActiveAdIndex] = useState(0);
@@ -564,6 +565,7 @@ export default function Home() {
   const faqScrollRef = useRef(null);
   const categoryScrollRef = useRef(null);
   const featuredScrollRef = useRef(null);
+  const newlyRegisteredScrollRef = useRef(null);
   const testimonialScrollRef = useRef(null);
   const topViewedScrollRef = useRef(null);
   const howItWorksScrollRef = useRef(null);
@@ -936,6 +938,20 @@ export default function Home() {
         setFeaturedBusinesses([]);
       }
 
+      // 1a. Fetch top 10 newly registered businesses
+      try {
+        const res = await fetch('http://localhost:5000/api/businesses?sort=newest&limit=10');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setNewlyRegisteredBusinesses(data.data);
+        } else {
+          setNewlyRegisteredBusinesses([]);
+        }
+      } catch (err) {
+        console.warn('Backend server offline, setting mock newly registered businesses.');
+        setNewlyRegisteredBusinesses(mockFeatured.slice(0, 5));
+      }
+
       // 1b. Fetch top 10 contributor businesses (ranked by referrals)
       try {
         const res = await fetch('http://localhost:5000/api/businesses?sort=referrals&limit=10');
@@ -1211,6 +1227,17 @@ export default function Home() {
   const handleScrollFeatured = (direction) => {
     if (!featuredScrollRef.current) return;
     const container = featuredScrollRef.current;
+    const cards = container.children;
+    if (cards && cards.length > 0) {
+      const curIndex = getCurrentIndex(container);
+      const targetIndex = direction === 'left' ? curIndex - 1 : curIndex + 1;
+      centerCard(container, targetIndex);
+    }
+  };
+
+  const handleScrollNewlyRegistered = (direction) => {
+    if (!newlyRegisteredScrollRef.current) return;
+    const container = newlyRegisteredScrollRef.current;
     const cards = container.children;
     if (cards && cards.length > 0) {
       const curIndex = getCurrentIndex(container);
@@ -1910,6 +1937,172 @@ export default function Home() {
           )}
         </div>
   </section>
+
+      {/* 4.1 Newly Registered Businesses Section (With side chevrons!) */}
+      <section className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-6 md:py-12 flex flex-col gap-4 md:gap-8 relative">
+        <div className="flex flex-col xs:flex-row xs:justify-between xs:items-end gap-2 border-b border-slate-200/80 pb-3">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-[#001c41] tracking-tight">Newly Registered Businesses</h2>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">Our latest verified additions</p>
+          </div>
+          <Link to="/businesses?sort=newest" className="text-xs font-bold text-[#027244] hover:text-[#005934] flex items-center gap-1 shrink-0">
+            View All New <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <div className="mx-auto relative max-w-full w-fit">
+          {/* Scroll Left Button */}
+          {newlyRegisteredBusinesses && newlyRegisteredBusinesses.length > 1 && (
+            <button 
+              onClick={() => handleScrollNewlyRegistered('left')}
+              className="absolute left-2 md:left-4 2xl:-left-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+              aria-label="Scroll Newly Registered Left"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          )}
+
+          {newlyRegisteredBusinesses && newlyRegisteredBusinesses.length > 0 ? (
+            <div 
+              ref={newlyRegisteredScrollRef}
+              className="mx-auto flex overflow-x-auto gap-5 pb-4 scrollbar-none w-full px-8 md:px-12 2xl:px-0"
+            >
+              {newlyRegisteredBusinesses.map((biz, index) => {
+                const isSubscribed = biz.subscriptionStatus === 'active' || isGovernmentalOrPublic(biz);
+                return (
+                  <div 
+                    key={`${biz._id}-${index}`} 
+                    className="card-premium group rounded-2xl overflow-hidden flex flex-col cursor-pointer relative w-[280px] sm:w-[320px] shrink-0 snap-center"
+                    onClick={() => navigate(`/${biz.slug || biz._id}`)}
+                  >
+                     <div 
+                       onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
+                       className="w-full aspect-square overflow-hidden relative rounded-t-[15px] bg-slate-50 border-b border-slate-100 cursor-pointer"
+                     >
+                        <img 
+                          src={biz.logoUrl ? window.getImageUrl(biz.logoUrl) : '/default_business_cover.png'} 
+                          alt={biz.name}
+                          className={`h-full w-full transition-transform duration-700 ease-out-expo group-hover:scale-106 rounded-t-[15px] ${
+                            biz.logoUrl ? 'object-contain p-4 bg-white' : 'object-cover'
+                          }`}
+                          style={{
+                            filter: !isSubscribed ? 'blur(6px) grayscale(30%)' : 'none'
+                          }}
+                        />
+                      <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">
+                        <div className="bg-emerald-650 border border-emerald-700 text-white px-1.5 py-0.5 rounded-lg shadow-xs flex items-center gap-0.5">
+                          <Sparkles className="h-2.5 w-2.5 text-white fill-current" />
+                          <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider">New Arrival</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div 
+                      className={`p-5 flex-grow flex flex-col justify-between gap-3.5 bg-white`}
+                    >
+                      <div className="flex flex-col gap-1.5 text-left relative z-30">
+                        <h4 className="font-extrabold text-sm text-[#001c41] leading-tight transition-colors duration-300 group-hover:text-[#027244]">{biz.name}</h4>
+                        <div 
+                          className="flex flex-col gap-1.5"
+                          style={{
+                            filter: !isSubscribed ? 'blur-[4.5px] select-none pointer-events-none' : 'none'
+                          }}
+                        >
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{biz.category}</span>
+                          <a 
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(biz.address ? `${biz.name}, ${biz.address}` : `${biz.name}, ${biz.locality || ''}, Udumalpet`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => handleMapClick(e, biz._id)}
+                            className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold mt-1 hover:text-emerald-500 transition-colors cursor-pointer group"
+                            title="View on Google Maps"
+                          >
+                            <MapPin className="h-3.5 w-3.5 text-slate-400 group-hover:text-emerald-500 shrink-0" />
+                            <span className="group-hover:underline">{biz.locality}</span>
+                          </a>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between border-t border-slate-100 pt-3 relative z-30">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-0.5 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-lg text-amber-700 text-[10px] font-bold shrink-0">
+                            <span className="font-black text-amber-800 leading-none">{(biz.googleRating ?? 0).toFixed(1)}</span>
+                            <Star className="h-2.5 w-2.5 text-amber-500 fill-current" />
+                          </div>
+                          <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3">
+                            <a 
+                              href={`tel:${biz.phone}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="h-6 w-6 rounded-full bg-emerald-50 text-[#027244] border border-emerald-100/50 flex items-center justify-center hover:bg-emerald-100 transition-colors cursor-pointer"
+                              title={`Call ${biz.name}`}
+                            >
+                              <Phone className="h-3.5 w-3.5" />
+                            </a>
+                            <a 
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(biz.address ? `${biz.name}, ${biz.address}` : `${biz.name}, ${biz.locality || ''}, Udumalpet`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => handleMapClick(e, biz._id)}
+                              className="h-6 w-6 rounded-full bg-blue-50 text-blue-600 border border-blue-100/50 flex items-center justify-center hover:bg-blue-100 transition-colors cursor-pointer group"
+                              title="View on Google Maps"
+                            >
+                              <MapPin className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+                            </a>
+                          </div>
+                        </div>
+                        <Link 
+                          to={`/${biz.slug || biz._id}`}
+                          className="text-[10px] font-bold text-[#027244] hover:underline flex items-center gap-0.5"
+                        >
+                          View Details
+                        </Link>
+                      </div>
+                    </div>
+
+                    {!isSubscribed && (
+                      <div 
+                        onClick={(e) => { e.stopPropagation(); navigate(`/${biz.slug || biz._id}`); }}
+                        className="absolute inset-0 bg-transparent hover:bg-slate-900/5 z-20 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer p-4 text-center"
+                      >
+                        <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-2.5 flex flex-col items-center gap-1 shadow-lg max-w-[150px]">
+                          <svg className="h-4.5 w-4.5 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                          <span className="text-[9px] font-black uppercase tracking-widest text-white select-none">
+                            Profile Locked
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="w-full flex flex-col items-center justify-center py-12 px-4 bg-slate-50 border border-dashed border-slate-200 rounded-3xl max-w-xl mx-auto my-2 text-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center animate-pulse">
+                <AlertCircle className="h-6 w-6" />
+              </div>
+              <p className="text-base sm:text-lg font-extrabold text-[#001c41] tracking-tight">No listings yet</p>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold max-w-sm leading-relaxed mt-1">
+                List yours if you are a business owner!
+              </p>
+              <Link to="/add-business" className="py-2.5 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer mt-1">
+                Register Your Business
+              </Link>
+            </div>
+          )}
+
+          {/* Scroll Right Button */}
+          {newlyRegisteredBusinesses && newlyRegisteredBusinesses.length > 1 && (
+            <button 
+              onClick={() => handleScrollNewlyRegistered('right')}
+              className="absolute right-2 md:right-4 2xl:-left-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+              aria-label="Scroll Newly Registered Right"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+      </section>
 
       {/* 4.5 Sponsored Ads Auto-scrolling Banner Section */}
       <section className="mx-auto max-w-[1600px] w-full px-4 md:px-8 py-6 flex flex-col gap-4">

@@ -1129,6 +1129,8 @@ router.get('/', async (req, res) => {
       businesses.sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
     } else if (sort === 'reviews' || sort === 'rating') {
       businesses.sort((a, b) => getBayesianScore(b) - getBayesianScore(a));
+    } else if (sort === 'newest') {
+      businesses.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     } else {
       businesses.sort((a, b) => {
         // Sort by search query relevance score first if query 'q' is provided
