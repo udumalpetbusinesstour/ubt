@@ -1007,6 +1007,12 @@ function BusinessesList({ forceFocus }) {
     setCategoryCounts(counts);
   }, [allBusinesses, dbCategories]);
 
+  // 0. Sync searchTerm state from the ?q= URL param whenever navigation changes it
+  useEffect(() => {
+    const qFromUrl = searchParams.get('q') || '';
+    setSearchTerm(qFromUrl);
+  }, [searchParams]);
+
   // 1. Fetch businesses on searchParams change
   useEffect(() => {
     fetchBusinesses();
