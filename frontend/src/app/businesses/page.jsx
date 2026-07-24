@@ -966,7 +966,7 @@ function BusinessesList({ forceFocus }) {
         setSelectedSubcategoryInExplore(resolvedFromSlug.value);
       }
     } else {
-      const focusParam = searchParams.get('focus');
+      const focusParam = forceFocus || searchParams.get('focus');
       if (focusParam === 'categories') {
         const catParam = searchParams.get('category');
         const subParam = searchParams.get('subcategory');
@@ -978,7 +978,7 @@ function BusinessesList({ forceFocus }) {
       }
     }
     setExplorePage(1);
-  }, [searchParams, urlSlug, resolvedFromSlug]);
+  }, [searchParams, urlSlug, resolvedFromSlug, forceFocus]);
 
   useEffect(() => {
     const fetchDbCategories = async () => {
