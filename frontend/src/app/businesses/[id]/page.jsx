@@ -674,13 +674,43 @@ Please confirm availability and delivery time.`;
 
   const fetchBlogs = async (businessId) => {
     try {
+      if (businessId === 'UBT-10024' || String(businessId).startsWith('biz_')) {
+        throw new Error('Offline mock mode');
+      }
       const res = await fetch(`/api/blogs?businessId=${businessId}`);
       const data = await res.json();
       if (data.success && data.data) {
         setBlogs(data.data.filter(b => b.status === 'Approved'));
       }
     } catch (err) {
-      console.warn('Failed to load blogs from server:', err.message);
+      console.warn('Failed to load blogs from server, using offline mock blogs if mock business:', err.message);
+      const isMock = businessId === 'UBT-10024' || String(businessId).startsWith('biz_') || String(businessId).startsWith('biz-');
+      if (isMock) {
+        setBlogs([
+          {
+            _id: 'mock_blog_1',
+            title: 'How to Grow Your Retail Business in Udumalpet',
+            category: 'Business Tips',
+            content: 'Discover effective marketing strategies, local customer retention tips, and optimization ideas for small retail shops operating in Udumalpet and surrounding areas.',
+            coverImage: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80',
+            views: 45,
+            status: 'Approved',
+            createdAt: new Date().toISOString()
+          },
+          {
+            _id: 'mock_blog_2',
+            title: 'Top 5 Customer Retention Strategies for Store Owners',
+            category: 'Retail Secrets',
+            content: 'Retention is key to profitability. Learn how loyalty points, WhatsApp broadcasts, and customized festival greetings can boost your business growth by 50%.',
+            coverImage: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500&q=80',
+            views: 112,
+            status: 'Approved',
+            createdAt: new Date(Date.now() - 86400000 * 2).toISOString()
+          }
+        ]);
+      } else {
+        setBlogs([]);
+      }
     }
   };
 
@@ -2044,7 +2074,7 @@ Please confirm availability and delivery time.`;
               { id: 'offers', label: `Offers (${((business?.offers ? business.offers.filter(o => o.active !== false && o.active !== 'false').length : 0) + (business?.promotions ? business.promotions.filter(p => p.active !== false && p.active !== 'false').length : 0))})` },
               { id: 'about', label: 'About' },
               ...((branches.length > 0 || isOwner) ? [{ id: 'branches', label: branches.length > 0 ? `Branches (${branches.length + 1})` : 'Branches' }] : []),
-              ...(blogs.length > 0 ? [{ id: 'blogs', label: `Blogs (${blogs.length})` }] : []),
+              { id: 'blogs', label: `Blogs (${blogs.length})` },
               { id: 'map', label: 'Location & Contact' }
             ].map((tab) => (
               <button
@@ -3483,39 +3513,53 @@ Please confirm availability and delivery time.`;
           {activeTab === 'blogs' && (
             <div className="flex flex-col gap-6 animate-fadeIn text-left">
               <h3 className="text-xl font-extrabold text-slate-800 font-sans">Blogs by {business.name}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {blogs.map(blog => (
-                  <div key={blog._id} className="bg-white border border-slate-200/85 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-                    <div>
-                      {blog.coverImage && (
-                        <div className="h-44 overflow-hidden bg-slate-100">
-                          <img 
-                            src={window.getImageUrl(blog.coverImage)} 
-                            alt={blog.title}
-                            className="w-full h-full object-cover border-b border-slate-100" 
-                          />
+              {blogs.length === 0 ? (
+                <div className="py-16 bg-white border border-slate-100 shadow-3xs rounded-3xl text-center p-8 flex flex-col items-center gap-4 max-w-md mx-auto my-4 w-full">
+                  <div className="h-14 w-14 bg-slate-50 text-slate-400 border border-slate-100 rounded-2xl flex items-center justify-center">
+                    <BookOpen className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-slate-850 text-sm">No Blogs Published Yet</h3>
+                    <p className="text-xs text-slate-450 font-semibold leading-relaxed mt-1">
+                      This business hasn't published any blogs yet. Check back later for updates!
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {blogs.map(blog => (
+                    <div key={blog._id} className="bg-white border border-slate-200/85 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                      <div>
+                        {blog.coverImage && (
+                          <div className="h-44 overflow-hidden bg-slate-100">
+                            <img 
+                              src={window.getImageUrl(blog.coverImage)} 
+                              alt={blog.title}
+                              className="w-full h-full object-cover border-b border-slate-100" 
+                            />
+                          </div>
+                        )}
+                        <div className="p-5 flex flex-col gap-2">
+                          <span className="text-[10px] font-black uppercase text-emerald-600 tracking-wider">{blog.category}</span>
+                          <Link 
+                            to={business ? `/${business.slug || business._id}/${blog.slug || blog._id}` : `/blogs/${blog._id}`} 
+                            className="font-extrabold text-slate-850 hover:text-emerald-700 text-sm leading-tight line-clamp-2"
+                          >
+                            {blog.title}
+                          </Link>
+                          <p className="text-xs text-slate-500 font-semibold leading-relaxed line-clamp-3 mt-1">
+                            {blog.content.replace(/<[^>]*>/g, ' ')}
+                          </p>
                         </div>
-                      )}
-                      <div className="p-5 flex flex-col gap-2">
-                        <span className="text-[10px] font-black uppercase text-emerald-600 tracking-wider">{blog.category}</span>
-                        <Link 
-                          to={business ? `/${business.slug || business._id}/${blog.slug || blog._id}` : `/blogs/${blog._id}`} 
-                          className="font-extrabold text-slate-850 hover:text-emerald-700 text-sm leading-tight line-clamp-2"
-                        >
-                          {blog.title}
-                        </Link>
-                        <p className="text-xs text-slate-500 font-semibold leading-relaxed line-clamp-3 mt-1">
-                          {blog.content.replace(/<[^>]*>/g, ' ')}
-                        </p>
+                      </div>
+                      <div className="px-5 pb-5 pt-3 border-t border-slate-100/60 flex items-center justify-between text-[11px] text-slate-400 font-bold">
+                        <span>{new Date(blog.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                        <span>{blog.views || 0} views</span>
                       </div>
                     </div>
-                    <div className="px-5 pb-5 pt-3 border-t border-slate-100/60 flex items-center justify-between text-[11px] text-slate-400 font-bold">
-                      <span>{new Date(blog.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                      <span>{blog.views || 0} views</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
