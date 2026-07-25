@@ -155,26 +155,7 @@ export default function BusinessDetail({ idOverride, subtabOverride }) {
     }
   }, [params.subtab]);
 
-  // Auto scroll to tabs section on tab change
-  useEffect(() => {
-    // Avoid scrolling on initial load at the absolute top of the page (unless they came with a specific subtab in URL)
-    const isDirectTab = params.subtab && params.subtab.toLowerCase() !== 'overview';
-    const hasScrolled = window.scrollY > 10;
-    
-    if (activeTab && (hasScrolled || isDirectTab)) {
-      const timer = setTimeout(() => {
-        const el = document.getElementById('tabs-section');
-        if (el) {
-          const hasBanner = (business.status && business.status !== 'Approved') || (isExpired && (isOwner || isAdmin));
-          const yOffset = hasBanner ? -163 : -115; // offset for the sticky header + warning banner
-          const y = el.getBoundingClientRect().top + window.scrollY + yOffset;
-          
-          window.scrollTo({ top: y, behavior: 'smooth' });
-        }
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [activeTab, business.status, isExpired, isOwner, isAdmin, params.subtab]);
+  // Scroll handler moved down below variable declarations to prevent TDZ error
 
   const [activePhotoIndex, setActivePhotoIndex] = useState(null);
   const [touchPosition, setTouchPosition] = useState(null);
@@ -717,6 +698,38 @@ Please confirm availability and delivery time.`;
 
   const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState(null);
+
+  const isExpired = business?.subscriptionStatus === 'expired';
+  const isOwner = currentUser && business && (
+    (currentUser._id && business.ownerId && currentUser._id === business.ownerId) ||
+    (currentUser.id && business.ownerId && currentUser.id === business.ownerId) ||
+    (currentUser._id && business.owner && currentUser._id === business.owner) ||
+    (currentUser.id && business.owner && currentUser.id === business.owner) ||
+    (business._id && typeof business._id === 'string' && business._id.startsWith('biz_')) ||
+    (!business.ownerId && !business.owner)
+  );
+  const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin');
+
+  // Auto scroll to tabs section on tab change
+  useEffect(() => {
+    // Avoid scrolling on initial load at the absolute top of the page (unless they came with a specific subtab in URL)
+    const isDirectTab = params.subtab && params.subtab.toLowerCase() !== 'overview';
+    const hasScrolled = window.scrollY > 10;
+    
+    if (activeTab && (hasScrolled || isDirectTab)) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById('tabs-section');
+        if (el) {
+          const hasBanner = (business?.status && business.status !== 'Approved') || (isExpired && (isOwner || isAdmin));
+          const yOffset = hasBanner ? -163 : -115; // offset for the sticky header + warning banner
+          const y = el.getBoundingClientRect().top + window.scrollY + yOffset;
+          
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, business?.status, isExpired, isOwner, isAdmin, params.subtab]);
 
   // Edit Profile modal removed for read-only view
 
@@ -1701,17 +1714,7 @@ Please confirm availability and delivery time.`;
     );
   }
 
-  const isExpired = business.subscriptionStatus === 'expired';
-  const isOwner = currentUser && business && (
-    (currentUser._id && business.ownerId && currentUser._id === business.ownerId) ||
-    (currentUser.id && business.ownerId && currentUser.id === business.ownerId) ||
-    (currentUser._id && business.owner && currentUser._id === business.owner) ||
-    (currentUser.id && business.owner && currentUser.id === business.owner) ||
-    // Allow logged-in users to edit mock listings (starts with 'biz_') or owned-less listings for testing
-    (business._id && typeof business._id === 'string' && business._id.startsWith('biz_')) ||
-    (!business.ownerId && !business.owner)
-  );
-  const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin');
+  // isExpired, isOwner, and isAdmin declarations moved to the top of component to prevent TDZ error
 
   const remainingCount = Math.max(0, galleryCount - 5);
 
