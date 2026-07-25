@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useParams } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -126,7 +126,12 @@ function AppContent() {
     }
   }, []);
   
+  const lastFirstSegment = useRef('');
+
   useEffect(() => {
+    const segments = location.pathname.split('/').filter(Boolean);
+    const firstSegment = segments[0] || '';
+
     if (location.hash) {
       const id = location.hash.replace('#', '');
       const element = document.getElementById(id);
@@ -137,8 +142,13 @@ function AppContent() {
         return () => clearTimeout(timer);
       }
     } else {
-      window.scrollTo({ top: 0, behavior: 'instant' });
+      // Only scroll to top if the primary page section/first segment has changed
+      if (firstSegment !== lastFirstSegment.current) {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }
     }
+
+    lastFirstSegment.current = firstSegment;
   }, [location.pathname, location.hash]);
 
   // Track navigation count synchronously during render (before children mount and check it)
