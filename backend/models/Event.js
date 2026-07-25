@@ -74,8 +74,8 @@ const EventSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Pending Review', 'Approved', 'Rejected', 'pending', 'approved', 'rejected', 'Hidden', 'hidden'],
-    default: 'Pending Review',
+    enum: ['Pending Review', 'Approved', 'Rejected', 'pending', 'approved', 'rejected', 'Hidden', 'hidden', 'Draft', 'draft'],
+    default: 'Draft',
   },
   isCompleted: {
     type: Boolean,

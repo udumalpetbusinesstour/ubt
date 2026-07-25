@@ -34,7 +34,24 @@ router.get('/', async (req, res) => {
 // @access  Private
 router.get('/my-blogs', protect, async (req, res) => {
   try {
-    const blogs = await Blog.find({ author: req.user._id }).sort({ createdAt: -1 });
+    let query = { author: req.user._id };
+
+    // Admin session override check
+    const isAdmin = ['admin', 'superadmin'].includes(req.user.role);
+    if (isAdmin && req.query.businessId) {
+      const Business = require('../models/Business');
+      const targetBiz = await Business.findById(req.query.businessId);
+      if (targetBiz) {
+        query = {
+          $or: [
+            { author: targetBiz.ownerId },
+            { businessId: targetBiz._id }
+          ]
+        };
+      }
+    }
+
+    const blogs = await Blog.find(query).sort({ createdAt: -1 });
     res.json({ success: true, count: blogs.length, data: blogs });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

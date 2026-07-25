@@ -2950,7 +2950,10 @@ function DashboardContent() {
     if (!activeToken) return;
     setBlogsLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/blogs/my-blogs', {
+      const url = business && business._id
+        ? `http://localhost:5000/api/blogs/my-blogs?businessId=${business._id}`
+        : 'http://localhost:5000/api/blogs/my-blogs';
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${activeToken}` }
       });
       const data = await res.json();
@@ -3279,13 +3282,16 @@ function DashboardContent() {
     if (token && (activeTab === 'My Blogs' || activeTab === 'Dashboard' || activeTab === 'Settings')) {
       fetchUserBlogs();
     }
-  }, [token, activeTab]);
+  }, [token, activeTab, business?._id]);
 
   const fetchUserEvents = async () => {
     if (!token) return;
     setEventsLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/events/my-events', {
+      const url = business && business._id
+        ? `http://localhost:5000/api/events/my-events?businessId=${business._id}`
+        : 'http://localhost:5000/api/events/my-events';
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -3647,7 +3653,7 @@ function DashboardContent() {
     if (token && (activeTab === 'Events' || activeTab === 'Dashboard' || activeTab === 'Settings')) {
       fetchUserEvents();
     }
-  }, [token, activeTab]);
+  }, [token, activeTab, business?._id]);
 
   useEffect(() => {
     if (token && activeTab === 'Menu' && business) {

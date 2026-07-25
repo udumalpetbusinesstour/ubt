@@ -87,7 +87,23 @@ router.get('/check-subscription', protect, async (req, res) => {
 // @access  Private
 router.get('/my-events', protect, async (req, res) => {
   try {
-    const events = await Event.find({ ownerId: req.user._id }).populate('businessId').sort({ date: 1 });
+    let query = { ownerId: req.user._id };
+
+    // Admin session override check
+    const isAdmin = ['admin', 'superadmin'].includes(req.user.role);
+    if (isAdmin && req.query.businessId) {
+      const targetBiz = await Business.findById(req.query.businessId);
+      if (targetBiz) {
+        query = {
+          $or: [
+            { ownerId: targetBiz.ownerId },
+            { businessId: targetBiz._id }
+          ]
+        };
+      }
+    }
+
+    const events = await Event.find(query).populate('businessId').sort({ date: 1 });
     res.json({ success: true, count: events.length, data: events });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -182,30 +198,12 @@ router.post('/', protect, async (req, res) => {
       price: price !== undefined ? Number(price) : 0,
       paymentLink: paymentLink || '',
       duration: duration || '',
-      status: 'Pending Review',
+      status: 'Draft',
       isCompleted: false,
       paymentStatus: isPremium ? 'Free' : 'Pending',
       likes: [],
       comments: [],
     });
-
-    // Notify all admins and superadmins of new event submission
-    try {
-      const User = require('../models/User');
-      const Notification = require('../models/Notification');
-      const adminUsers = await User.find({ role: { $in: ['admin', 'superadmin'] } });
-      const notifications = adminUsers.map(adminUser => ({
-        userId: adminUser._id,
-        title: 'New Event Review Pending',
-        message: `A new event listing "${event.title}" has been submitted and is pending review.`,
-        type: 'approval_status'
-      }));
-      if (notifications.length > 0) {
-        await Notification.insertMany(notifications);
-      }
-    } catch (notifError) {
-      console.error('Failed to notify admins of new event creation:', notifError);
-    }
 
     res.status(201).json({ success: true, data: event });
   } catch (error) {
@@ -235,6 +233,8 @@ router.put('/:id', protect, async (req, res) => {
       title, category, date, endDate, organizer, duration 
     } = req.body;
 
+    const wasDraft = event.status === 'Draft';
+
     if (description !== undefined) event.description = description;
     if (venue !== undefined) event.venue = venue;
     if (phone !== undefined) event.phone = phone;
@@ -252,7 +252,32 @@ router.put('/:id', protect, async (req, res) => {
     if (organizer !== undefined) event.organizer = organizer;
     if (duration !== undefined) event.duration = duration;
 
+    // Transition status to Pending Review if completed and was Draft
+    if (event.isCompleted && wasDraft) {
+      event.status = 'Pending Review';
+    }
+
     await event.save();
+
+    // Notify admins only on first successful details completion transition
+    if (event.status === 'Pending Review' && wasDraft) {
+      try {
+        const User = require('../models/User');
+        const Notification = require('../models/Notification');
+        const adminUsers = await User.find({ role: { $in: ['admin', 'superadmin'] } });
+        const notifications = adminUsers.map(adminUser => ({
+          userId: adminUser._id,
+          title: 'New Event Review Pending',
+          message: `A new event listing "${event.title}" has been submitted and is pending review.`,
+          type: 'approval_status'
+        }));
+        if (notifications.length > 0) {
+          await Notification.insertMany(notifications);
+        }
+      } catch (notifError) {
+        console.error('Failed to notify admins of new event submission:', notifError);
+      }
+    }
 
     res.json({ success: true, data: event });
   } catch (error) {
