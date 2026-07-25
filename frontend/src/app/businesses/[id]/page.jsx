@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { 
@@ -155,20 +155,26 @@ export default function BusinessDetail({ idOverride, subtabOverride }) {
     }
   }, [params.subtab]);
 
-  // Auto scroll to menu section when activeTab is set to 'menu'
+  // Auto scroll to tabs section on tab change
   useEffect(() => {
-    if (activeTab === 'menu') {
+    // Avoid scrolling on initial load at the absolute top of the page (unless they came with a specific subtab in URL)
+    const isDirectTab = params.subtab && params.subtab.toLowerCase() !== 'overview';
+    const hasScrolled = window.scrollY > 10;
+    
+    if (activeTab && (hasScrolled || isDirectTab)) {
       const timer = setTimeout(() => {
-        const el = document.getElementById('menu-section');
+        const el = document.getElementById('tabs-section');
         if (el) {
-          const yOffset = -95; // Offset for the sticky header
-          const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          const hasBanner = (business.status && business.status !== 'Approved') || (isExpired && (isOwner || isAdmin));
+          const yOffset = hasBanner ? -163 : -115; // offset for the sticky header + warning banner
+          const y = el.getBoundingClientRect().top + window.scrollY + yOffset;
+          
           window.scrollTo({ top: y, behavior: 'smooth' });
         }
-      }, 300);
+      }, 100);
       return () => clearTimeout(timer);
     }
-  }, [activeTab]);
+  }, [activeTab, business.status, isExpired, isOwner, isAdmin, params.subtab]);
 
   const [activePhotoIndex, setActivePhotoIndex] = useState(null);
   const [touchPosition, setTouchPosition] = useState(null);
@@ -2112,11 +2118,14 @@ Please confirm availability and delivery time.`;
 
       {/* Tabs navigation bar */}
       {!isGovernmentalOrPublic(business) && (
-        <section className={`w-full bg-white border-b border-slate-200/80 sticky z-20 shadow-xs ${
-          ((business.status && business.status !== 'Approved') || (isExpired && (isOwner || isAdmin)))
-            ? 'top-[162px]'
-            : 'top-[114px]'
-        }`}>
+        <section 
+          id="tabs-section"
+          className={`w-full bg-white border-b border-slate-200/80 sticky z-20 shadow-xs ${
+            ((business.status && business.status !== 'Approved') || (isExpired && (isOwner || isAdmin)))
+              ? 'top-[162px]'
+              : 'top-[114px]'
+          }`}
+        >
           <div className="max-w-[1600px] mx-auto px-4 md:px-8 flex overflow-x-auto gap-8">
             {[
               { id: 'overview', label: 'Overview' },
