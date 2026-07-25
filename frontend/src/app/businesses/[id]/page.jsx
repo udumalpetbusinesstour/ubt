@@ -1815,7 +1815,7 @@ Please confirm availability and delivery time.`;
     <div className="w-full flex flex-col items-center font-sans bg-[#F8FAFC]">
       {/* Pending Verification Banner */}
       {business.status && business.status !== 'Approved' && (
-        <div className="w-full bg-amber-600 text-white font-extrabold text-xs py-3.5 px-4 text-center sticky top-[76px] z-30 shadow flex items-center justify-center gap-2">
+        <div className="w-full bg-amber-600 text-white font-extrabold text-xs py-3.5 px-4 text-center sticky top-[114px] z-30 shadow flex items-center justify-center gap-2">
           <AlertCircle className="h-4.5 w-4.5 animate-pulse" />
           <span>This business profile is currently in "{business.status}" status. It remains private to you until verified by administrators.</span>
         </div>
@@ -1823,7 +1823,7 @@ Please confirm availability and delivery time.`;
 
       {/* Expiry Warning Header Banner */}
       {isExpired && (isOwner || isAdmin) && (
-        <div className="w-full bg-red-600 text-white font-extrabold text-xs py-3.5 px-4 text-center sticky top-[76px] z-30 shadow flex items-center justify-center gap-2">
+        <div className="w-full bg-red-600 text-white font-extrabold text-xs py-3.5 px-4 text-center sticky top-[114px] z-30 shadow flex items-center justify-center gap-2">
           <AlertCircle className="h-4.5 w-4.5" />
           <span>Subscription expired. Renew to restore profile visibility and unlock contact buttons.</span>
           <Link to="/add-business?step=subscription" className="bg-white text-red-700 font-bold px-3 py-1 rounded ml-3.5 hover:bg-slate-100 transition-colors uppercase tracking-wide">
@@ -2112,7 +2112,11 @@ Please confirm availability and delivery time.`;
 
       {/* Tabs navigation bar */}
       {!isGovernmentalOrPublic(business) && (
-        <section className="w-full bg-white border-b border-slate-200/80 sticky top-[76px] z-20 shadow-xs">
+        <section className={`w-full bg-white border-b border-slate-200/80 sticky z-20 shadow-xs ${
+          ((business.status && business.status !== 'Approved') || (isExpired && (isOwner || isAdmin)))
+            ? 'top-[162px]'
+            : 'top-[114px]'
+        }`}>
           <div className="max-w-[1600px] mx-auto px-4 md:px-8 flex overflow-x-auto gap-8">
             {[
               { id: 'overview', label: 'Overview' },
