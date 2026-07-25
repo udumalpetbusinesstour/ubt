@@ -79,7 +79,7 @@ const buildOgHtml = ({ title, description, image, url, type = 'website' }) => {
 };
 
 // ── Catch-all OG Meta route to support /:slug, /blogs/:slug, /events/:slug ──
-router.get('/*', async (req, res) => {
+router.get('*', async (req, res) => {
   const ua = req.headers['user-agent'] || '';
   
   // Clean up double slashes and trailing slashes if any
