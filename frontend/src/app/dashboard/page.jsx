@@ -3276,7 +3276,7 @@ function DashboardContent() {
   };
 
   useEffect(() => {
-    if (token && activeTab === 'My Blogs') {
+    if (token && (activeTab === 'My Blogs' || activeTab === 'Dashboard' || activeTab === 'Settings')) {
       fetchUserBlogs();
     }
   }, [token, activeTab]);
@@ -3413,8 +3413,8 @@ function DashboardContent() {
         setCompleteEventLoading(false);
 
         if (price === 0) {
-          // Premium users don't need checkout screen, notify and submit for review
-          alert('Premium active! Event successfully registered and submitted for admin review.');
+          setCompleteEventStep(2);
+          setShowCompleteEventModal(true);
         } else {
           // Standard charge checkout
           setCompleteEventStep(1);
@@ -3476,7 +3476,8 @@ function DashboardContent() {
         setCompleteEventLoading(false);
 
         if (price === 0) {
-          alert('Mock Mode: Premium active! Event registered and submitted for review.');
+          setCompleteEventStep(2);
+          setShowCompleteEventModal(true);
         } else {
           setCompleteEventStep(1);
           setShowCompleteEventModal(true);
@@ -3643,14 +3644,7 @@ function DashboardContent() {
   }, [token, activeTab, user?.role]);
 
   useEffect(() => {
-    if (token && activeTab === 'Events') {
-      fetchUserEvents();
-    }
-  }, [token, activeTab]);
-
-  useEffect(() => {
-    if (token && activeTab === 'Settings') {
-      fetchUserBlogs();
+    if (token && (activeTab === 'Events' || activeTab === 'Dashboard' || activeTab === 'Settings')) {
       fetchUserEvents();
     }
   }, [token, activeTab]);
@@ -7717,7 +7711,7 @@ function DashboardContent() {
                         <div className="absolute top-3 right-3 shadow-2xs">
                           {(() => {
                             const statusLower = evt.status?.toLowerCase();
-                            const isExpired = new Date(evt.endDate || evt.date) < new Date();
+                            const isExpired = (() => { const d = new Date(evt.endDate || evt.date); d.setHours(23, 59, 59, 999); return d < new Date(); })();
                             return (
                               <div className="flex gap-1 items-center">
                                 {isExpired && (
@@ -7786,7 +7780,7 @@ function DashboardContent() {
                           )}
 
                           {/* If payment is verified/paid, show waiting for admin approval if not yet approved */}
-                          {evt.paymentStatus !== 'Pending' && (evt.status?.toLowerCase() === 'pending review' || evt.status?.toLowerCase() === 'pending') && (
+                          {evt.paymentStatus !== 'Pending' && evt.isCompleted && (evt.status?.toLowerCase() === 'pending review' || evt.status?.toLowerCase() === 'pending') && (
                             <button
                               disabled
                               className="w-full py-2 bg-slate-100 border border-slate-200 text-slate-400 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-not-allowed mt-1"
@@ -7795,8 +7789,8 @@ function DashboardContent() {
                             </button>
                           )}
 
-                          {/* If payment is verified, allow completing details only after admin approval */}
-                          {evt.paymentStatus !== 'Pending' && evt.status?.toLowerCase() === 'approved' && !evt.isCompleted && (
+                          {/* If payment is verified, allow completing details immediately */}
+                          {evt.paymentStatus !== 'Pending' && !evt.isCompleted && (
                             <button
                               onClick={() => handleOpenCompleteEvent(evt)}
                               className="w-full py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-1"
@@ -7805,7 +7799,7 @@ function DashboardContent() {
                             </button>
                           )}
 
-                          {evt.paymentStatus !== 'Pending' && evt.isCompleted && (
+                          {evt.paymentStatus !== 'Pending' && evt.isCompleted && evt.status?.toLowerCase() === 'approved' && (
                             <button
                               onClick={() => handleOpenCompleteEvent(evt)}
                               className="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-1"
@@ -9696,7 +9690,7 @@ function DashboardContent() {
                           ) : (
                             <div className="flex flex-col gap-2.5 max-h-56 overflow-y-auto pr-1">
                               {displayEvents.map(evt => {
-                                const isExpired = new Date(evt.endDate || evt.date) < new Date();
+                                const isExpired = (() => { const d = new Date(evt.endDate || evt.date); d.setHours(23, 59, 59, 999); return d < new Date(); })();
                                 return (
                                   <div key={evt._id} className="bg-slate-50/50 hover:bg-slate-50 border border-slate-200/80 p-4 rounded-2xl flex justify-between items-center gap-4 transition-all">
                                     <div className="flex flex-col min-w-0">

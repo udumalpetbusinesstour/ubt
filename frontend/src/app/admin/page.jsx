@@ -75,7 +75,7 @@ export default function AdminDashboard() {
   };
 
   const getEventSortWeight = (e) => {
-    const isExpired = new Date(e.endDate || e.date) < new Date();
+    const isExpired = (() => { const d = new Date(e.endDate || e.date); d.setHours(23, 59, 59, 999); return d < new Date(); })();
     if (isExpired) return 3; // Expired goes to bottom
     const statusLower = e.status?.toLowerCase();
     if (statusLower === 'pending review' || statusLower === 'pending approval' || statusLower === 'pending') return 0; // Top pending
@@ -3320,7 +3320,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                         {[...filteredEvents]
                           .sort((a, b) => getEventSortWeight(a) - getEventSortWeight(b) || new Date(a.date) - new Date(b.date))
                           .map(e => {
-                            const isExpired = new Date(e.endDate || e.date) < new Date();
+                            const isExpired = (() => { const d = new Date(e.endDate || e.date); d.setHours(23, 59, 59, 999); return d < new Date(); })();
                             return (
                               <div key={e._id} className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-5 flex flex-col gap-4">
                                 <div className="flex justify-between items-start gap-4">
@@ -3877,7 +3877,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                         .filter(e => e.status === 'Pending Review')
                         .sort((a, b) => getEventSortWeight(a) - getEventSortWeight(b) || new Date(a.date) - new Date(b.date))
                         .map(e => {
-                          const isExpired = new Date(e.endDate || e.date) < new Date();
+                          const isExpired = (() => { const d = new Date(e.endDate || e.date); d.setHours(23, 59, 59, 999); return d < new Date(); })();
                           return (
                             <div key={e._id} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col justify-between gap-5 hover:shadow-md transition-shadow">
                               <div className="flex flex-col gap-1 text-left min-w-0">
@@ -4450,7 +4450,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                     {[...filteredEvents]
                       .sort((a, b) => getEventSortWeight(a) - getEventSortWeight(b) || new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
                       .map(e => {
-                        const isExpired = new Date(e.endDate || e.date) < new Date();
+                        const isExpired = (() => { const d = new Date(e.endDate || e.date); d.setHours(23, 59, 59, 999); return d < new Date(); })();
                         return (
                           <div key={e._id} className="bg-white border border-slate-200 rounded-[20px] p-5 shadow-2xs flex flex-col gap-4 justify-between">
                             <div className="flex justify-between items-start gap-4">

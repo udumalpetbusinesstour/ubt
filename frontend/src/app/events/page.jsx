@@ -1760,7 +1760,7 @@ export default function EventsPage() {
                             <span className="text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 bg-emerald-50 border border-emerald-100 rounded-md text-[#027244]">
                               {evt.price === 0 ? 'FREE' : `₹${evt.price}`}
                             </span>
-                            {new Date(evt.endDate || evt.date) < new Date() && (
+                            {(() => { const d = new Date(evt.endDate || evt.date); d.setHours(23, 59, 59, 999); return d < new Date(); })() && (
                               <span className="text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 bg-red-50 border border-red-200 rounded-md text-red-700">
                                 Expired
                               </span>

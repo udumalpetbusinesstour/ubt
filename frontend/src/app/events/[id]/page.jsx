@@ -532,7 +532,7 @@ export default function EventDetail() {
               {event.views || 0} Views
             </span>
 
-            {new Date(event.endDate || event.date) < new Date() && (
+            {(() => { const d = new Date(event.endDate || event.date); d.setHours(23, 59, 59, 999); return d < new Date(); })() && (
               <span className="text-[9.5px] font-black uppercase tracking-wider px-2.5 py-0.5 bg-red-50 border border-red-200 rounded-md text-red-700 select-none">
                 Expired
               </span>
