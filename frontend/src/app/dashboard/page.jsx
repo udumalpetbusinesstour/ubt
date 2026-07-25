@@ -3404,6 +3404,15 @@ function DashboardContent() {
 
         // Initiate payment gateway or free waiver
         setCompleteEvent(createdEvent);
+        setCompleteEventTitle(createdEvent.title || '');
+        const standardCats = ['Sports', 'Festival', 'Business', 'Music', 'Education', 'Health'];
+        const isStandardCat = standardCats.includes(createdEvent.category);
+        setCompleteEventCategory(isStandardCat ? createdEvent.category : (createdEvent.category ? 'Others' : 'Sports'));
+        setCustomCompleteEventCategory(isStandardCat ? '' : (createdEvent.category || ''));
+        setCompleteEventDate(createdEvent.date ? String(createdEvent.date).split('T')[0] : '');
+        setCompleteEventEndDate(createdEvent.endDate ? String(createdEvent.endDate).split('T')[0] : '');
+        setCompleteEventOrganizer(createdEvent.organizer || '');
+        setCompleteEventDuration(createdEvent.duration || '');
         setCompleteEventPhone(createdEvent.phone || '');
         setCompleteEventVenue(createdEvent.venue || '');
         setCompleteEventDescription(createdEvent.description || '');
@@ -3467,6 +3476,15 @@ function DashboardContent() {
         setShowCreateEventModal(false);
 
         setCompleteEvent(mockEvt);
+        setCompleteEventTitle(mockEvt.title || '');
+        const mockStandardCats = ['Sports', 'Festival', 'Business', 'Music', 'Education', 'Health'];
+        const isMockStandardCat = mockStandardCats.includes(mockEvt.category);
+        setCompleteEventCategory(isMockStandardCat ? mockEvt.category : (mockEvt.category ? 'Others' : 'Sports'));
+        setCustomCompleteEventCategory(isMockStandardCat ? '' : (mockEvt.category || ''));
+        setCompleteEventDate(mockEvt.date ? String(mockEvt.date).split('T')[0] : '');
+        setCompleteEventEndDate(mockEvt.endDate ? String(mockEvt.endDate).split('T')[0] : '');
+        setCompleteEventOrganizer(mockEvt.organizer || '');
+        setCompleteEventDuration(mockEvt.duration || '');
         setCompleteEventPhone(mockEvt.phone || '');
         setCompleteEventVenue(mockEvt.venue || '');
         setCompleteEventDescription(mockEvt.description || '');
