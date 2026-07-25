@@ -198,6 +198,7 @@ router.post('/', protect, async (req, res) => {
       price: price !== undefined ? Number(price) : 0,
       paymentLink: paymentLink || '',
       duration: duration || '',
+      images: req.body.images || [],
       status: 'Draft',
       isCompleted: false,
       paymentStatus: isPremium ? 'Free' : 'Pending',
@@ -230,7 +231,8 @@ router.put('/:id', protect, async (req, res) => {
     const { 
       description, venue, phone, coverImageUrl, paymentLink, 
       isCompleted, paymentStatus, price, time, 
-      title, category, date, endDate, organizer, duration 
+      title, category, date, endDate, organizer, duration,
+      images
     } = req.body;
 
     const wasDraft = event.status === 'Draft';
@@ -251,6 +253,7 @@ router.put('/:id', protect, async (req, res) => {
     if (endDate !== undefined) event.endDate = new Date(endDate);
     if (organizer !== undefined) event.organizer = organizer;
     if (duration !== undefined) event.duration = duration;
+    if (images !== undefined) event.images = images;
 
     // Transition status to Pending Review if completed and was Draft
     if (event.isCompleted && wasDraft) {

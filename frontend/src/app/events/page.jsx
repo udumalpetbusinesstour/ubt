@@ -4,7 +4,7 @@ import {
   Search, Calendar, MapPin, User, Phone, ShieldCheck, Bookmark, Sparkles, 
   Clock, Grid, ChevronRight, AlertCircle, ArrowLeft, CheckCircle2, MessageSquare, 
   Plus, Lock, PlusCircle, Check, DollarSign, ExternalLink, Tag, Heart, Trash2, Send, X,
-  RefreshCw, Eye, Share2, Upload
+  RefreshCw, Eye, Share2, Upload, Image
 } from 'lucide-react';
 
 const availableCategories = [
@@ -58,6 +58,8 @@ export default function EventsPage() {
   const [evtPaymentLink, setEvtPaymentLink] = useState('');
   const [evtPhone, setEvtPhone] = useState('');
   const [evtCoverUrl, setEvtCoverUrl] = useState('');
+  const [evtImages, setEvtImages] = useState([]);
+  const [imagesUploading, setImagesUploading] = useState(false);
   const [evtPrice, setEvtPrice] = useState(0);
 
   // Submission / Loading states
@@ -699,6 +701,60 @@ export default function EventsPage() {
     }
   };
 
+  const handleMultipleImagesUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    if (evtImages.length + files.length > 5) {
+      setImageError('You can upload up to 5 images only.');
+      return;
+    }
+
+    for (const file of files) {
+      if (file.size > 5 * 1024 * 1024) {
+        setImageError(`File "${file.name}" is larger than 5MB.`);
+        return;
+      }
+    }
+
+    setImagesUploading(true);
+    setImageError('');
+
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      const uploadedUrls = [];
+
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const res = await fetch('http://localhost:5000/api/upload', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${activeToken}`
+          },
+          body: formData
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          uploadedUrls.push(data.url);
+        } else {
+          setImageError(data.message || 'Failed to upload one or more images.');
+        }
+      }
+
+      if (uploadedUrls.length > 0) {
+        setEvtImages(prev => [...prev, ...uploadedUrls].slice(0, 5));
+      }
+    } catch (err) {
+      console.error('Multiple upload error:', err);
+      setImageError('Network error uploading images.');
+    } finally {
+      setImagesUploading(false);
+    }
+  };
+
   // Successful payment transitions
   const handlePaymentProceed = () => {
     setWizardStep('info_stage_2');
@@ -730,6 +786,7 @@ export default function EventsPage() {
           paymentLink: evtPaymentLink,
           price: evtPrice,
           time: evtTime,
+          images: evtImages,
           isCompleted: true
         })
       });
@@ -756,7 +813,8 @@ export default function EventsPage() {
         phone: evtPhone,
         coverImageUrl: evtCoverUrl || getEventDefaultImage(evtCategory),
         paymentLink: evtPaymentLink,
-        price: evtPrice
+        price: evtPrice,
+        images: evtImages
       };
       setEvents([mockPush, ...events]);
       calculateCounts([mockPush, ...events]);
@@ -1276,6 +1334,7 @@ export default function EventsPage() {
                   setEvtOrganizer('');
                   setEvtPhone('');
                   setEvtCoverUrl('');
+                  setEvtImages([]);
                   setEvtPaymentLink('');
                   setEvtPrice(0);
                 }}
@@ -1526,6 +1585,66 @@ export default function EventsPage() {
                       onChange={(e) => setEvtCoverUrl(e.target.value)}
                       className="h-10 px-3 w-full border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] mt-1"
                     />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5 mt-2">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Event Gallery Images (Optional - Up to 5)</span>
+                  
+                  <div className="flex flex-col gap-4 border border-dashed border-slate-200 rounded-3xl p-5 bg-slate-50/50">
+                    {/* Selected Images Grid */}
+                    {evtImages.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 w-full">
+                        {evtImages.map((url, idx) => (
+                          <div key={idx} className="relative w-full h-20 rounded-xl overflow-hidden border bg-white select-none">
+                            <img src={window.getImageUrl ? window.getImageUrl(url) : url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setEvtImages(prev => prev.filter((_, i) => i !== idx))}
+                              className="absolute top-1 right-1 bg-red-600/90 text-white p-1 rounded-full hover:bg-red-700 transition-all cursor-pointer border-none flex items-center justify-center shadow-sm"
+                              title="Remove photo"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {imagesUploading ? (
+                      <div className="flex flex-col items-center justify-center gap-2 py-2">
+                        <RefreshCw className="h-5 w-5 animate-spin text-[#027244]" />
+                        <span className="text-xs font-semibold text-slate-500">Uploading gallery photos...</span>
+                      </div>
+                    ) : evtImages.length < 5 ? (
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <div className="h-8 w-8 bg-slate-100 text-slate-500 border border-slate-200 rounded-lg flex items-center justify-center shadow-3xs">
+                          <Image className="h-4 w-4" />
+                        </div>
+                        <div className="text-center flex flex-col items-center select-none">
+                          <span className="text-xs font-extrabold text-slate-700">Add up to {5 - evtImages.length} more images</span>
+                          <span className="text-[9.5px] text-slate-455 font-semibold mt-0.5">PNG, JPG, JPEG, WEBP (Max 5MB each)</span>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          id="event-gallery-upload-file"
+                          onChange={handleMultipleImagesUpload}
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor="event-gallery-upload-file"
+                          className="py-1.5 px-4 border border-slate-200 hover:border-slate-300 rounded-xl text-[10.5px] font-extrabold text-slate-655 hover:bg-white transition-all cursor-pointer shadow-3xs hover:shadow-2xs select-none"
+                        >
+                          Select Photos
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="text-center select-none py-1">
+                        <span className="text-xs font-bold text-emerald-600">Maximum of 5 images uploaded successfully!</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

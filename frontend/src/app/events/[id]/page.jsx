@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { 
-  ArrowLeft, Calendar, User, Heart, MessageSquare, Clock, Send, Trash2, RefreshCw, AlertCircle, Share2, CheckCircle, MapPin, Phone, ExternalLink, Bookmark, Eye
+  ArrowLeft, Calendar, User, Heart, MessageSquare, Clock, Send, Trash2, RefreshCw, AlertCircle, Share2, CheckCircle, MapPin, Phone, ExternalLink, Bookmark, Eye,
+  X, ChevronRight
 } from 'lucide-react';
 
 const mockEvents = [
@@ -281,6 +283,34 @@ export default function EventDetail() {
   const [loading, setLoading] = useState(true);
   const [likeLoading, setLikeLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+
+  const displayGallery = event?.images || [];
+  const [activePhotoIndex, setActivePhotoIndex] = useState(null);
+  const [touchPosition, setTouchPosition] = useState(null);
+
+  const openLightbox = (index, e) => {
+    if (e && typeof e.clientX === 'number' && typeof e.clientY === 'number') {
+      setTouchPosition({ x: e.clientX, y: e.clientY });
+    } else {
+      setTouchPosition(null);
+    }
+    setActivePhotoIndex(index);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (activePhotoIndex === null) return;
+      if (e.key === 'Escape') {
+        setActivePhotoIndex(null);
+      } else if (e.key === 'ArrowRight' && typeof activePhotoIndex === 'number') {
+        setActivePhotoIndex(prev => (prev < displayGallery.length - 1 ? prev + 1 : prev));
+      } else if (e.key === 'ArrowLeft' && typeof activePhotoIndex === 'number') {
+        setActivePhotoIndex(prev => (prev > 0 ? prev - 1 : prev));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activePhotoIndex, displayGallery]);
 
   // Auth Context
   const [user, setUser] = useState(null);
@@ -613,6 +643,27 @@ export default function EventDetail() {
             </a>
           )}
 
+          {/* Event Gallery */}
+          {event.images && event.images.length > 0 && (
+            <div className="flex flex-col gap-3 text-left mt-4 border-t border-slate-100 pt-5">
+              <span className="text-[10px] text-slate-405 font-bold uppercase tracking-wider leading-none">Event Gallery</span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mt-1">
+                {event.images.map((url, idx) => (
+                  <div 
+                    key={idx} 
+                    onClick={(e) => openLightbox(idx, e)}
+                    className="h-24 sm:h-28 rounded-xl bg-cover bg-center border border-slate-200 shadow-3xs relative overflow-hidden group hover:shadow-2xs transition-all cursor-pointer" 
+                    style={{ 
+                      backgroundImage: `url('${window.getImageUrl ? window.getImageUrl(url) : url}')` 
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/25 transition-colors" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Interactions panel */}
           <div className="flex items-center justify-between border-t border-slate-100 pt-6 mt-4 flex-wrap gap-4">
             <div className="flex items-center gap-4">
@@ -650,6 +701,94 @@ export default function EventDetail() {
 
 
       </div>
+
+      {activePhotoIndex !== null && createPortal(
+        <div 
+          className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-10 select-none animate-fadeIn"
+          onClick={() => setActivePhotoIndex(null)}
+        >
+          {/* Close Button */}
+          <button 
+            onClick={() => setActivePhotoIndex(null)}
+            className="absolute top-4 right-4 bg-slate-900/80 hover:bg-slate-900 text-white border border-white/10 h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 z-55"
+            title="Close (Esc)"
+          >
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
+          </button>
+
+          {/* Left Arrow Navigation (Desktop Only) */}
+          {typeof activePhotoIndex === 'number' && activePhotoIndex > 0 && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); setTouchPosition(null); setActivePhotoIndex(idx => idx - 1); }}
+              className="hidden md:flex absolute left-6 bg-slate-900/80 hover:bg-slate-900 text-white border border-white/10 h-12 w-12 rounded-full items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 z-55"
+              title="Previous (Left Arrow)"
+            >
+              <ChevronRight className="h-6 w-6 rotate-180" />
+            </button>
+          )}
+
+          {/* Right Arrow Navigation (Desktop Only) */}
+          {typeof activePhotoIndex === 'number' && activePhotoIndex < displayGallery.length - 1 && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); setTouchPosition(null); setActivePhotoIndex(idx => idx + 1); }}
+              className="hidden md:flex absolute right-6 bg-slate-900/80 hover:bg-slate-900 text-white border border-white/10 h-12 w-12 rounded-full items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 z-55"
+              title="Next (Right Arrow)"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
+          )}
+
+          {/* Zoom Wrapper */}
+          <div 
+            className="absolute inset-0 flex items-center justify-center p-4 sm:p-10 pointer-events-none animate-scaleUp"
+            style={touchPosition ? { transformOrigin: `${touchPosition.x}px ${touchPosition.y}px` } : undefined}
+          >
+            <div 
+              className="relative max-w-full max-h-[85vh] flex flex-col items-center gap-4 pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img 
+                src={window.getImageUrl ? window.getImageUrl(displayGallery[activePhotoIndex]) : displayGallery[activePhotoIndex]} 
+                alt={`Event Image view ${activePhotoIndex + 1}`}
+                className="max-w-full max-h-[75vh] sm:max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/10"
+              />
+
+              {/* Controls container */}
+              <div className="flex items-center gap-3 mt-1 select-none">
+                {/* Mobile Left Arrow */}
+                {typeof activePhotoIndex === 'number' && activePhotoIndex > 0 && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setTouchPosition(null); setActivePhotoIndex(idx => idx - 1); }}
+                    className="md:hidden bg-slate-900/90 text-white border border-white/10 h-10 w-10 rounded-full flex items-center justify-center hover:bg-slate-800 transition-all cursor-pointer shadow-md"
+                    title="Previous"
+                  >
+                    <ChevronRight className="h-5 w-5 rotate-180" />
+                  </button>
+                )}
+
+                {/* Counter / Label */}
+                {typeof activePhotoIndex === 'number' && (
+                  <div className="px-4 py-2 bg-slate-900/90 border border-white/10 rounded-full text-white text-xs font-extrabold font-mono tracking-wider shadow-md">
+                    {activePhotoIndex + 1} / {displayGallery.length}
+                  </div>
+                )}
+
+                {/* Mobile Right Arrow */}
+                {typeof activePhotoIndex === 'number' && activePhotoIndex < displayGallery.length - 1 && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setTouchPosition(null); setActivePhotoIndex(idx => idx + 1); }}
+                    className="md:hidden bg-slate-900/90 text-white border border-white/10 h-10 w-10 rounded-full flex items-center justify-center hover:bg-slate-800 transition-all cursor-pointer shadow-md"
+                    title="Next"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
     </div>
   );

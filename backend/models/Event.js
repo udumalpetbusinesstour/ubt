@@ -61,6 +61,10 @@ const EventSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  images: {
+    type: [String],
+    default: [],
+  },
   bannerImage: {
     type: String,
   },
