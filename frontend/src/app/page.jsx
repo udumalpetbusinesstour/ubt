@@ -2154,7 +2154,7 @@ export default function Home() {
           {newlyRegisteredBusinesses && newlyRegisteredBusinesses.length > 1 && (
             <button 
               onClick={() => handleScrollNewlyRegistered('right')}
-              className="absolute right-2 md:right-4 2xl:-left-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
+              className="absolute right-2 md:right-4 2xl:-right-12 top-1/2 -translate-y-1/2 z-10 h-8 w-8 md:h-10 md:w-10 flex items-center justify-center bg-transparent border-none shadow-none text-[#027244] hover:text-[#005934] cursor-pointer transition-all hover:scale-110 active:scale-90"
               aria-label="Scroll Newly Registered Right"
             >
               <ChevronRight className="h-5 w-5" />
