@@ -1419,16 +1419,35 @@ export default function EventsPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Registration Fee / Ticket Price (₹) *</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={evtPrice}
-                      onChange={(e) => setEvtPrice(Number(e.target.value))}
-                      placeholder="e.g. 0 for Free, 150 for Entry Ticket"
-                      required
-                      className="h-10 px-3 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244]"
-                    />
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Registration Fee / Ticket Price *</span>
+                    <div className="flex gap-2">
+                      <select
+                        value={evtPrice === 0 ? 'free' : (evtPrice === -1 ? 'varies' : 'paid')}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === 'free') setEvtPrice(0);
+                          else if (val === 'varies') setEvtPrice(-1);
+                          else setEvtPrice(99); // default paid
+                        }}
+                        className="h-10 px-3 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 cursor-pointer"
+                      >
+                        <option value="free">Free (₹0)</option>
+                        <option value="paid">Paid (₹)</option>
+                        <option value="varies">Depending on Category / Varies</option>
+                      </select>
+                      
+                      {(evtPrice !== 0 && evtPrice !== -1) && (
+                        <input
+                          type="number"
+                          min="1"
+                          value={evtPrice}
+                          onChange={(e) => setEvtPrice(Number(e.target.value))}
+                          placeholder="Price (₹)"
+                          required
+                          className="flex-1 h-10 px-3 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] animate-fadeIn"
+                        />
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Event Timings / Schedule *</span>
@@ -1758,7 +1777,7 @@ export default function EventsPage() {
                               </span>
                             )}
                             <span className="text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 bg-emerald-50 border border-emerald-100 rounded-md text-[#027244]">
-                              {evt.price === 0 ? 'FREE' : `₹${evt.price}`}
+                              {evt.price === 0 ? 'FREE' : (evt.price === -1 ? 'VARIES' : `₹${evt.price}`)}
                             </span>
                             {(() => { const d = new Date(evt.endDate || evt.date); d.setHours(23, 59, 59, 999); return d < new Date(); })() && (
                               <span className="text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 bg-red-50 border border-red-200 rounded-md text-red-700">

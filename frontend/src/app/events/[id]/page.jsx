@@ -524,7 +524,7 @@ export default function EventDetail() {
             )}
 
             <span className="text-[9.5px] font-black uppercase tracking-wider px-2.5 py-0.5 bg-emerald-50 border border-emerald-100 rounded-md text-[#027244] select-none">
-              {event.price === 0 ? 'FREE' : `₹${event.price}`}
+              {event.price === 0 ? 'FREE' : (event.price === -1 ? 'VARIES / DEPENDS ON CATEGORY' : `₹${event.price}`)}
             </span>
 
             <span className="text-[9.5px] font-black uppercase tracking-wider px-2.5 py-0.5 bg-slate-50 border border-slate-200 rounded-md text-slate-550 select-none flex items-center gap-1">
