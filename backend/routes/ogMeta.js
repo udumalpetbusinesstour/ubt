@@ -104,15 +104,25 @@ router.get('/*', async (req, res) => {
   const knownSubtabs = ['overview', 'menu', 'services', 'photos', 'reviews', 'offers', 'about', 'branches', 'blogs', 'map'];
   let lookupSlug = '';
 
-  if (pathParts.length >= 2) {
-    const secondPart = pathParts[1].toLowerCase();
-    if (knownSubtabs.includes(secondPart)) {
-      lookupSlug = pathParts[0]; // It's a business subtab like /legend-interior/reviews
+  if (pathParts.length >= 1) {
+    const firstPart = pathParts[0].toLowerCase();
+    
+    if (firstPart === 'businesses' && pathParts.length >= 2) {
+      lookupSlug = pathParts[1];
+    } else if (firstPart === 'blogs' && pathParts.length >= 2) {
+      lookupSlug = pathParts[1];
+    } else if (firstPart === 'events' && pathParts.length >= 2) {
+      lookupSlug = pathParts[1];
+    } else if (pathParts.length >= 2) {
+      const secondPart = pathParts[1].toLowerCase();
+      if (knownSubtabs.includes(secondPart)) {
+        lookupSlug = pathParts[0]; // It's a business subtab like /legend-interior/reviews
+      } else {
+        lookupSlug = pathParts[1]; // It's a blog/event or business subpath, e.g. /blogs/slug
+      }
     } else {
-      lookupSlug = pathParts[1]; // It's a blog/event or business subpath, e.g. /blogs/slug
+      lookupSlug = pathParts[0];
     }
-  } else {
-    lookupSlug = pathParts[0];
   }
 
   try {
