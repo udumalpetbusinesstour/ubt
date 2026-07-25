@@ -256,7 +256,34 @@ const moderateReview = async (req, res, next) => {
     }
 
     if (action === 'delete') {
+      const businessId = review.businessId;
       await Review.deleteOne({ _id: reviewId });
+
+      // Recalculate business rating and review counts to prevent orphaned metrics
+      const Business = require('../models/Business');
+      const business = await Business.findById(businessId);
+      if (business) {
+        const allReviews = await Review.find({ businessId });
+        const localCount = allReviews.length;
+        const localSum = allReviews.reduce((sum, r) => sum + r.rating, 0);
+
+        const rawGoogleReviewsCount = business.rawGoogleReviewsCount || 0;
+        const rawGoogleRating = business.rawGoogleRating || 0;
+
+        const totalCount = localCount + rawGoogleReviewsCount;
+        let newAvgRating = 0;
+        if (totalCount > 0) {
+          const googleWeight = rawGoogleRating * rawGoogleReviewsCount;
+          newAvgRating = (localSum + googleWeight) / totalCount;
+        } else {
+          newAvgRating = business.googlePlaceId ? (rawGoogleRating || 5.0) : 0.0;
+        }
+
+        business.googleRating = Number(newAvgRating.toFixed(1));
+        business.googleReviewsCount = totalCount;
+        await business.save();
+      }
+
       return sendSuccess(res, 200, 'Review permanently deleted');
     }
 

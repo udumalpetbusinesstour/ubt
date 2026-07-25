@@ -203,10 +203,6 @@ const BusinessSchema = new mongoose.Schema({
       createdAt: { type: Date, default: Date.now },
     },
   ],
-  instagramPosts: {
-    type: [String],
-    default: [],
-  },
   coordinates: {
     lat: { type: Number, default: 10.585 },
     lng: { type: Number, default: 77.251 },

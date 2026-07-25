@@ -3090,35 +3090,6 @@ Please confirm availability and delivery time.`;
                   )}
                 </div>
               )}
-
-              {/* Instagram posts embeds */}
-              {business?.instagramPosts && business.instagramPosts.length > 0 && (
-                <div className="flex flex-col gap-4 mt-6 pt-6 border-t border-slate-100">
-                  <h4 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <Instagram className="h-4.5 w-4.5 text-pink-600" /> Instagram Highlights
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {business.instagramPosts.map((url, idx) => {
-                      if (!url) return null;
-                      const cleanUrl = url.split('?')[0].replace(/\/$/, '');
-                      const embedUrl = `${cleanUrl}/embed/`;
-                      return (
-                        <div key={idx} className="relative w-full rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm bg-white h-[450px]">
-                          <iframe
-                            src={embedUrl}
-                            className="w-full h-full border-none"
-                            frameBorder="0"
-                            scrolling="no"
-                            allowTransparency="true"
-                            allow="encrypted-media"
-                            title={`Instagram Highlight ${idx + 1}`}
-                          ></iframe>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
