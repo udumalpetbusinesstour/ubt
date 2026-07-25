@@ -1872,11 +1872,19 @@ export default function EventsPage() {
                       onClick={() => navigate(evt.businessId ? `/${evt.businessId.slug || evt.businessId._id}/${evt.slug || evt._id}` : `/events/${evt.slug || evt._id}`)}
                     >
                       {/* Cover Image Container */}
-                      <div className="shrink-0 overflow-hidden relative h-40 w-full md:w-52 rounded-2xl bg-slate-50 border border-slate-100">
+                      <div className="shrink-0 overflow-hidden relative h-40 w-full md:w-52 rounded-2xl bg-slate-950 border border-slate-100 flex items-center justify-center">
+                        {/* Blurred Background */}
+                        <img 
+                          src={(!evt.coverImageUrl || evt.coverImageUrl.includes('unsplash.com')) ? getEventDefaultImage(evt.category) : window.getImageUrl(evt.coverImageUrl)} 
+                          alt="" 
+                          className="absolute inset-0 w-full h-full object-cover blur-sm opacity-30 scale-105 pointer-events-none"
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                        {/* Main contained image */}
                         <img 
                           src={(!evt.coverImageUrl || evt.coverImageUrl.includes('unsplash.com')) ? getEventDefaultImage(evt.category) : window.getImageUrl(evt.coverImageUrl)} 
                           alt={evt.title}
-                          className="w-full h-full object-cover"
+                          className="relative w-full h-full object-contain z-10"
                           onError={(e) => { e.target.onerror = null; e.target.src = getEventDefaultImage(evt.category); }}
                         />
                       </div>

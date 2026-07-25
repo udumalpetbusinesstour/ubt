@@ -526,14 +526,22 @@ export default function EventDetail() {
         </button>
 
         {/* Cover Landscape */}
-        <div className="w-full h-[320px] md:h-[420px] rounded-3xl overflow-hidden border border-slate-200/60 shadow-md relative select-none">
+        <div className="w-full h-[320px] md:h-[420px] rounded-3xl overflow-hidden border border-slate-200/60 shadow-md relative select-none bg-slate-950 flex items-center justify-center">
+          {/* Blurred Background */}
+          <img 
+            src={(!event.coverImageUrl || event.coverImageUrl.includes('unsplash.com')) ? '/default_event_cover.jpg' : window.getImageUrl(event.coverImageUrl)} 
+            alt="" 
+            className="absolute inset-0 w-full h-full object-cover blur-md opacity-35 scale-105 pointer-events-none"
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
+          {/* Main contained image */}
           <img 
             src={(!event.coverImageUrl || event.coverImageUrl.includes('unsplash.com')) ? '/default_event_cover.jpg' : window.getImageUrl(event.coverImageUrl)} 
             alt={event.title} 
-            className="w-full h-full object-cover"
+            className="relative w-full h-full object-contain z-10"
             onError={(e) => { e.target.onerror = null; e.target.src = '/default_event_cover.jpg'; }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 to-transparent pointer-events-none z-15" />
         </div>
 
         {/* Article Details Card */}
