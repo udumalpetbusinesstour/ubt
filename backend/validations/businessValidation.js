@@ -59,6 +59,7 @@ const businessSchema = Joi.object({
   tags: Joi.array().items(Joi.string().trim()).optional(),
   highlights: Joi.array().items(Joi.string().trim()).optional(),
   galleryImages: Joi.array().items(Joi.string().uri()).optional(),
+  instagramPosts: Joi.array().items(Joi.string().trim()).optional(),
   openingHours: Joi.object().optional(),
   customCategoryName: Joi.string().trim().allow('').optional(),
   requestedParentCategory: Joi.string().trim().allow('').optional(),

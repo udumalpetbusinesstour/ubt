@@ -782,6 +782,7 @@ function DashboardContent() {
     logoUrl: '',
     coverImageUrl: '',
     galleryUrls: '',
+    instagramPosts: '',
     timingsMon: '9:00 AM - 8:00 PM',
     timingsTue: '9:00 AM - 8:00 PM',
     timingsWed: '9:00 AM - 8:00 PM',
@@ -1835,6 +1836,7 @@ function DashboardContent() {
           logoUrl: userBiz.logoUrl || '',
           coverImageUrl: userBiz.coverImageUrl || '',
           galleryUrls: Array.isArray(userBiz.galleryUrls) ? userBiz.galleryUrls.join(', ') : '',
+          instagramPosts: Array.isArray(userBiz.instagramPosts) ? userBiz.instagramPosts.join(', ') : '',
           timingsMon: userBiz.timings?.Monday || '9:00 AM - 8:00 PM',
           timingsTue: userBiz.timings?.Tuesday || '9:00 AM - 8:00 PM',
           timingsWed: userBiz.timings?.Wednesday || '9:00 AM - 8:00 PM',
@@ -1948,6 +1950,7 @@ function DashboardContent() {
             logoUrl: userBiz.logoUrl || '',
             coverImageUrl: userBiz.coverImageUrl || '',
             galleryUrls: Array.isArray(userBiz.galleryUrls) ? userBiz.galleryUrls.join(', ') : '',
+            instagramPosts: Array.isArray(userBiz.instagramPosts) ? userBiz.instagramPosts.join(', ') : '',
             timingsMon: userBiz.timings?.Monday || '9:00 AM - 8:00 PM',
             timingsTue: userBiz.timings?.Tuesday || '9:00 AM - 8:00 PM',
             timingsWed: userBiz.timings?.Wednesday || '9:00 AM - 8:00 PM',
@@ -2220,6 +2223,7 @@ function DashboardContent() {
       logoUrl: targetBiz.logoUrl || '',
       coverImageUrl: targetBiz.coverImageUrl || '',
       galleryUrls: Array.isArray(targetBiz.galleryUrls) ? targetBiz.galleryUrls.join(', ') : '',
+      instagramPosts: Array.isArray(targetBiz.instagramPosts) ? targetBiz.instagramPosts.join(', ') : '',
       timingsMon: targetBiz.timings?.Monday || '9:00 AM - 8:00 PM',
       timingsTue: targetBiz.timings?.Tuesday || '9:00 AM - 8:00 PM',
       timingsWed: targetBiz.timings?.Wednesday || '9:00 AM - 8:00 PM',
@@ -8073,8 +8077,91 @@ function DashboardContent() {
                   </label>
                 )}
 
+                {/* INSTAGRAM HIGHLIGHTS EMBED SECTION */}
+                <div className="flex flex-col gap-4 border-t border-slate-100 pt-6">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <Instagram className="h-4 w-4 text-pink-600" /> Instagram Highlights (Optional - Max 5)
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-455">
+                      Showcase up to 5 Instagram posts or reels in your gallery. Paste the post link below and click Add.
+                    </span>
+                  </div>
+
+                  {/* Add URL Field */}
+                  {(() => {
+                    const currentInstaUrls = editFields.instagramPosts
+                      ? editFields.instagramPosts.split(',').map(s => s.trim()).filter(Boolean)
+                      : [];
+                    return (
+                      <div className="flex flex-col gap-3">
+                        {currentInstaUrls.length < 5 && (
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              id="new-insta-post-url"
+                              placeholder="e.g. https://www.instagram.com/p/C-abc123XYZ/"
+                              className="flex-1 border border-slate-200 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const inputEl = document.getElementById('new-insta-post-url');
+                                const val = inputEl?.value?.trim();
+                                if (!val) return;
+                                if (!val.includes('instagram.com/p/') && !val.includes('instagram.com/reel/') && !val.includes('instagram.com/tv/')) {
+                                  alert('Please enter a valid Instagram post or reel URL.');
+                                  return;
+                                }
+                                if (currentInstaUrls.includes(val)) {
+                                  alert('This URL is already added.');
+                                  return;
+                                }
+                                const updated = [...currentInstaUrls, val];
+                                setEditFields(prev => ({ ...prev, instagramPosts: updated.join(', ') }));
+                                if (inputEl) inputEl.value = '';
+                              }}
+                              className="py-2.5 px-4 bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center shrink-0"
+                            >
+                              Add Post
+                            </button>
+                          </div>
+                        )}
+
+                        {/* List of Added Posts */}
+                        {currentInstaUrls.length > 0 && (
+                          <div className="flex flex-col gap-2 bg-slate-50/50 border border-slate-100 rounded-2xl p-4">
+                            {currentInstaUrls.map((url, uIdx) => (
+                              <div key={uIdx} className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-xl border border-slate-100 shadow-3xs">
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                  <Instagram className="h-4 w-4 text-pink-500 shrink-0" />
+                                  <span className="text-[11px] font-semibold text-slate-600 truncate">{url}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = currentInstaUrls.filter((_, idx) => idx !== uIdx);
+                                    setEditFields(prev => ({ ...prev, instagramPosts: updated.join(', ') }));
+                                  }}
+                                  className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-lg transition-colors cursor-pointer border-none flex items-center justify-center"
+                                  title="Delete post link"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+
                 {/* Save changes note */}
-                {(editFields.logoUrl !== (business.logoUrl || '') || editFields.coverImageUrl !== (business.coverImageUrl || '') || editFields.galleryUrls !== (Array.isArray(business.galleryUrls) ? business.galleryUrls.join(', ') : (business.galleryUrls || ''))) && (
+                {(editFields.logoUrl !== (business.logoUrl || '') || 
+                  editFields.coverImageUrl !== (business.coverImageUrl || '') || 
+                  editFields.galleryUrls !== (Array.isArray(business.galleryUrls) ? business.galleryUrls.join(', ') : (business.galleryUrls || '')) ||
+                  editFields.instagramPosts !== (Array.isArray(business.instagramPosts) ? business.instagramPosts.join(', ') : (business.instagramPosts || ''))) && (
                   <div className="border-t border-slate-100 pt-4 flex items-center justify-between gap-4 bg-emerald-50/50 rounded-2xl px-4 py-3 border border-emerald-100">
                     <span className="text-[11px] font-extrabold text-emerald-700 flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-600" /> Changes detected — save to update your profile
@@ -8085,10 +8172,14 @@ function DashboardContent() {
                         const galleryArr = editFields.galleryUrls
                           ? editFields.galleryUrls.split(',').map(s => s.trim()).filter(Boolean)
                           : [];
+                        const instaArr = editFields.instagramPosts
+                          ? editFields.instagramPosts.split(',').map(s => s.trim()).filter(Boolean)
+                          : [];
                         await saveInlineFields({
                           logoUrl: editFields.logoUrl,
                           coverImageUrl: editFields.coverImageUrl,
                           galleryUrls: galleryArr,
+                          instagramPosts: instaArr,
                         });
                       }}
                       className="shrink-0 py-2.5 px-5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer flex items-center gap-1.5 transition-all"
