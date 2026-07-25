@@ -78,29 +78,56 @@ const buildOgHtml = ({ title, description, image, url, type = 'website' }) => {
 </html>`;
 };
 
-// ── Business slug route — /meta/:slug ─────────────────────────────────────────
-router.get('/:slug', async (req, res) => {
+// ── Catch-all OG Meta route to support /:slug, /blogs/:slug, /events/:slug ──
+router.get('/*', async (req, res) => {
   const ua = req.headers['user-agent'] || '';
-  const slug = req.params.slug;
+  
+  // Clean up double slashes and trailing slashes if any
+  const reqPath = req.path.replace(/\/+$/, '') || '/';
 
   // Always redirect non-bot traffic to the SPA immediately
   if (!isCrawler(ua)) {
-    return res.redirect(302, `${SITE_URL}/${slug}`);
+    return res.redirect(302, `${SITE_URL}${reqPath}`);
+  }
+
+  const pathParts = reqPath.split('/').filter(Boolean);
+  if (pathParts.length === 0) {
+    return res.send(buildOgHtml({
+      title: DEFAULT_TITLE,
+      description: DEFAULT_DESC,
+      image: DEFAULT_IMAGE,
+      url: SITE_URL
+    }));
+  }
+
+  // Determine lookup slug and page type context
+  const knownSubtabs = ['overview', 'menu', 'services', 'photos', 'reviews', 'offers', 'about', 'branches', 'blogs', 'map'];
+  let lookupSlug = '';
+
+  if (pathParts.length >= 2) {
+    const secondPart = pathParts[1].toLowerCase();
+    if (knownSubtabs.includes(secondPart)) {
+      lookupSlug = pathParts[0]; // It's a business subtab like /legend-interior/reviews
+    } else {
+      lookupSlug = pathParts[1]; // It's a blog/event or business subpath, e.g. /blogs/slug
+    }
+  } else {
+    lookupSlug = pathParts[0];
   }
 
   try {
     const mongoose = require('mongoose');
-    const isValidId = mongoose.isValidObjectId(slug);
-    const lowerSlug = slug.toLowerCase();
+    const isValidId = mongoose.isValidObjectId(lookupSlug);
+    const lowerSlug = lookupSlug.toLowerCase();
 
     // ── 1. Check Events ──────────────────────────────────────────────────────
     const Event = require('../models/Event');
     const event = isValidId
-      ? await Event.findById(slug).lean()
+      ? await Event.findById(lookupSlug).lean()
       : await Event.findOne({ slug: lowerSlug }).lean();
 
     if (event) {
-      const pageUrl = `${SITE_URL}/${event.slug || event._id}`;
+      const pageUrl = `${SITE_URL}${reqPath}`;
       const image = resolveImageUrl(event.coverImageUrl || event.bannerImage || '');
       const desc = stripHtml(event.description || `${event.title} — ${event.venue || ''}`).substring(0, 160);
 
@@ -116,13 +143,12 @@ router.get('/:slug', async (req, res) => {
     // ── 2. Check Blogs ───────────────────────────────────────────────────────
     const Blog = require('../models/Blog');
     const blog = isValidId
-      ? await Blog.findById(slug).lean()
+      ? await Blog.findById(lookupSlug).lean()
       : await Blog.findOne({ slug: lowerSlug }).lean();
 
     if (blog) {
-      const pageUrl = `${SITE_URL}/${blog.slug || blog._id}`;
+      const pageUrl = `${SITE_URL}${reqPath}`;
       const image = resolveImageUrl(blog.coverImage || blog.thumbnail || '');
-      // Strip HTML from blog content for a plain-text excerpt
       const rawText = stripHtml(blog.content || '');
       const desc = (rawText.substring(0, 160) + (rawText.length > 160 ? '…' : ''));
 
@@ -138,18 +164,14 @@ router.get('/:slug', async (req, res) => {
     // ── 3. Check Businesses ──────────────────────────────────────────────────
     const Business = require('../models/Business');
     const business = isValidId
-      ? await Business.findById(slug).lean()
+      ? await Business.findById(lookupSlug).lean()
       : await Business.findOne({ slug: lowerSlug }).lean();
 
     if (business) {
-      const pageUrl = `${SITE_URL}/${business.slug || business._id}`;
-
-      // Image priority: logo → cover image → default
+      const pageUrl = `${SITE_URL}${reqPath}`;
       const image = resolveImageUrl(
         business.logoUrl || business.coverImageUrl || ''
       );
-
-      // Description from business description / about field
       const rawDesc = business.description || business.about || `${business.name} — ${business.category || ''} in Udumalpet.`;
       const desc = (rawDesc.substring(0, 160) + (rawDesc.length > 160 ? '…' : ''));
 
@@ -162,12 +184,12 @@ router.get('/:slug', async (req, res) => {
       }));
     }
 
-    // ── 4. Not found — serve generic OG ─────────────────────────────────────
+    // ── 4. Not found — serve generic OG with current URL ─────────────────────
     return res.send(buildOgHtml({
       title: DEFAULT_TITLE,
       description: DEFAULT_DESC,
       image: DEFAULT_IMAGE,
-      url: `${SITE_URL}/${slug}`
+      url: `${SITE_URL}${reqPath}`
     }));
 
   } catch (err) {
@@ -176,7 +198,7 @@ router.get('/:slug', async (req, res) => {
       title: DEFAULT_TITLE,
       description: DEFAULT_DESC,
       image: DEFAULT_IMAGE,
-      url: SITE_URL
+      url: `${SITE_URL}${reqPath}`
     }));
   }
 });
