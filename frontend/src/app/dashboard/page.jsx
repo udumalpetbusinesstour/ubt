@@ -12678,7 +12678,7 @@ function DashboardContent() {
                           </div>
                           <div className="text-center flex flex-col items-center">
                             <span className="text-xs font-extrabold text-slate-700">Upload cover image</span>
-                            <span className="text-[10px] text-slate-455 font-bold mt-0.5">PNG, JPG, JPEG, WEBP (Max 5MB)</span>
+                            <span className="text-[10px] text-slate-455 font-bold mt-0.5">PNG, JPG, JPEG, WEBP (Max 5MB) • Recommended: 1200 x 630 px (16:9 ratio)</span>
                           </div>
                           <input
                             type="file"
