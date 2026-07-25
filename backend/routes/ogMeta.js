@@ -94,7 +94,7 @@ router.get('/:slug', async (req, res) => {
     const lowerSlug = slug.toLowerCase();
 
     // ── 1. Check Events ──────────────────────────────────────────────────────
-    const Event = require('./models/Event');
+    const Event = require('../models/Event');
     const event = isValidId
       ? await Event.findById(slug).lean()
       : await Event.findOne({ slug: lowerSlug }).lean();
@@ -114,7 +114,7 @@ router.get('/:slug', async (req, res) => {
     }
 
     // ── 2. Check Blogs ───────────────────────────────────────────────────────
-    const Blog = require('./models/Blog');
+    const Blog = require('../models/Blog');
     const blog = isValidId
       ? await Blog.findById(slug).lean()
       : await Blog.findOne({ slug: lowerSlug }).lean();
@@ -136,7 +136,7 @@ router.get('/:slug', async (req, res) => {
     }
 
     // ── 3. Check Businesses ──────────────────────────────────────────────────
-    const Business = require('./models/Business');
+    const Business = require('../models/Business');
     const business = isValidId
       ? await Business.findById(slug).lean()
       : await Business.findOne({ slug: lowerSlug }).lean();
