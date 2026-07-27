@@ -3033,14 +3033,31 @@ router.put('/:id', protect, async (req, res) => {
 
     // Geocoding and allowed area boundary validation on update
     if (req.body.address || req.body.pincode || req.body.coordinates || req.body.latitude || req.body.longitude) {
-      const checkAddress = req.body.address || business.address || '';
-      const checkLocality = req.body.locality || business.locality || '';
-      const checkPincode = req.body.pincode || business.pincode;
-      const checkLat = req.body.coordinates?.lat || req.body.latitude || business.coordinates?.lat || business.latitude;
-      const checkLng = req.body.coordinates?.lng || req.body.longitude || business.coordinates?.lng || business.longitude;
+      const checkAddress = req.body.address !== undefined ? req.body.address : (business.address || '');
+      const checkLocality = req.body.locality !== undefined ? req.body.locality : (business.locality || '');
+      const checkPincode = req.body.pincode !== undefined ? req.body.pincode : business.pincode;
+
+      const addressChanged = 
+        (req.body.address !== undefined && req.body.address !== business.address) ||
+        (req.body.locality !== undefined && req.body.locality !== business.locality) ||
+        (req.body.pincode !== undefined && req.body.pincode !== business.pincode);
+
+      let checkLat = req.body.coordinates?.lat || req.body.latitude;
+      let checkLng = req.body.coordinates?.lng || req.body.longitude;
+
+      // If the address text changed, ignore old coordinates to force geocoding for the new address
+      if (addressChanged && checkLat === (business.coordinates?.lat || business.latitude) && checkLng === (business.coordinates?.lng || business.longitude)) {
+        checkLat = undefined;
+        checkLng = undefined;
+      } else if (checkLat === undefined || checkLng === undefined) {
+        if (!addressChanged) {
+          checkLat = business.coordinates?.lat || business.latitude;
+          checkLng = business.coordinates?.lng || business.longitude;
+        }
+      }
 
       const geoValidation = await validateAddressAndBoundary(
-        `${checkAddress} ${checkLocality}`,
+        `${checkAddress} ${checkLocality}`.trim(),
         checkPincode,
         checkLat,
         checkLng
@@ -3058,6 +3075,15 @@ router.put('/:id', protect, async (req, res) => {
         lat: geoValidation.lat,
         lng: geoValidation.lng
       };
+
+      // Update Google Maps links to point to the new geocoded coordinates
+      const newMapUrl = `https://maps.google.com/?q=${geoValidation.lat},${geoValidation.lng}`;
+      if (!req.body.googleMapsLocation && (!business.googleMapsLocation || business.googleMapsLocation.includes('q='))) {
+        req.body.googleMapsLocation = newMapUrl;
+      }
+      if (!req.body.googleBusinessLink && (!business.googleBusinessLink || business.googleBusinessLink.includes('q='))) {
+        req.body.googleBusinessLink = newMapUrl;
+      }
     }
 
     // Fraud address verification on update (relaxed to allow free-form addresses)
