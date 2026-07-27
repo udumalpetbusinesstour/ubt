@@ -3037,19 +3037,22 @@ router.put('/:id', protect, async (req, res) => {
       const checkLocality = req.body.locality || business.locality || '';
       const checkPincode = req.body.pincode || business.pincode;
 
-      // IMPORTANT: If the address text itself changed, do NOT carry over the old stored
-      // coordinates — that would trick validateAddressAndBoundary into skipping geocoding
-      // (it only re-geocodes when coords look like fallback defaults). Instead, only use
-      // coordinates that were explicitly supplied in this request. This guarantees the map
-      // marker always reflects the new address after an edit.
+      // If the address text changed, we check if the coordinates passed in the body
+      // are identical to the old ones stored in the database. If they are, it means
+      // they are just stale coordinates carried over from the edit form, and we must
+      // ignore them (set checkLat/checkLng to null) to force geocoding.
       const addressChanged = req.body.address && req.body.address !== business.address;
-      const checkLat = addressChanged
-        ? (req.body.coordinates?.lat || req.body.latitude || null)
-        : (req.body.coordinates?.lat || req.body.latitude || business.coordinates?.lat || business.latitude);
-      const checkLng = addressChanged
-        ? (req.body.coordinates?.lng || req.body.longitude || null)
-        : (req.body.coordinates?.lng || req.body.longitude || business.coordinates?.lng || business.longitude);
+      const requestCoords = {
+        lat: req.body.coordinates?.lat || req.body.latitude || null,
+        lng: req.body.coordinates?.lng || req.body.longitude || null
+      };
 
+      const isStaleCoords = addressChanged &&
+        (requestCoords.lat === business.latitude || requestCoords.lat === business.coordinates?.lat) &&
+        (requestCoords.lng === business.longitude || requestCoords.lng === business.coordinates?.lng);
+
+      const checkLat = (addressChanged && isStaleCoords) ? null : (requestCoords.lat || business.coordinates?.lat || business.latitude);
+      const checkLng = (addressChanged && isStaleCoords) ? null : (requestCoords.lng || business.coordinates?.lng || business.longitude);
       const geoValidation = await validateAddressAndBoundary(
         `${checkAddress} ${checkLocality}`,
         checkPincode,
