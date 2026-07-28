@@ -457,7 +457,10 @@ function DashboardContent() {
       const autofillRes = await fetch('http://localhost:5000/api/businesses/google-autofill-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ link: verifyPlaceId })
+        body: JSON.stringify({ 
+          link: verifyPlaceId,
+          businessName: business.name
+        })
       });
       const autofillData = await autofillRes.json();
       if (!autofillData.success || !autofillData.data) {

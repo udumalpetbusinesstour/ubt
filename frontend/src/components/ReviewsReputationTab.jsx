@@ -77,7 +77,10 @@ export default function ReviewsReputationTab({
       const autofillRes = await fetch('http://localhost:5000/api/businesses/google-autofill', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ placeId: business.googlePlaceId })
+        body: JSON.stringify({ 
+          placeId: business.googlePlaceId,
+          businessName: business.name
+        })
       });
       const autofillData = await autofillRes.json();
       if (!autofillData.success || !autofillData.data) {
