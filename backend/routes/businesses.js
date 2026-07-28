@@ -653,7 +653,14 @@ const mockDetails = {
     longitude: 77.2472,
     pincode: "642126",
     locality: "Head Post Office",
-    googlePlaceId: "mock_addr_head_post_office"
+    googlePlaceId: "mock_addr_head_post_office",
+    googleRating: 4.6,
+    googleReviewsCount: 28,
+    googleReviews: [
+      { authorName: "Nisha Shankar", rating: 5, text: "Absolutely loved the quality and behavior. Very prompt and professional service!", createdAt: new Date() },
+      { authorName: "Karthik Raja", rating: 4, text: "Good service and neat maintenance. Highly recommended for local business directory listings.", createdAt: new Date() },
+      { authorName: "Ananya S", rating: 5, text: "Excellent customer response, clean workspace and great coordination.", createdAt: new Date() }
+    ]
   },
   mock_addr_bazaar_street: {
     name: "Bazaar Street",
@@ -662,7 +669,13 @@ const mockDetails = {
     longitude: 77.2495,
     pincode: "642126",
     locality: "Bazaar Street",
-    googlePlaceId: "mock_addr_bazaar_street"
+    googlePlaceId: "mock_addr_bazaar_street",
+    googleRating: 4.5,
+    googleReviewsCount: 42,
+    googleReviews: [
+      { authorName: "Mani K", rating: 5, text: "Very crowded but everything is available at best wholesale prices. Great market hub!", createdAt: new Date() },
+      { authorName: "Siddharth", rating: 4, text: "Excellent products, parking is a bit tight but shopping experience is very good.", createdAt: new Date() }
+    ]
   },
   mock_addr_coimbatore_road: {
     name: "Coimbatore Road",
@@ -671,7 +684,13 @@ const mockDetails = {
     longitude: 77.2398,
     pincode: "642128",
     locality: "coimbatore road",
-    googlePlaceId: "mock_addr_coimbatore_road"
+    googlePlaceId: "mock_addr_coimbatore_road",
+    googleRating: 4.8,
+    googleReviewsCount: 56,
+    googleReviews: [
+      { authorName: "Arun Prasath", rating: 5, text: "Prime location with premium services. Highly professional staff and great accessibility.", createdAt: new Date() },
+      { authorName: "Priyanka V", rating: 5, text: "Quick support, easy to navigate, and standard pricing structure.", createdAt: new Date() }
+    ]
   }
 };
 

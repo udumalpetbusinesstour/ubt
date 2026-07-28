@@ -5693,7 +5693,7 @@ function DashboardContent() {
             </div>
           )}
 
-          {business?.pendingEdits && (
+          {business?.pendingEdits?.data && Object.keys(business.pendingEdits.data).length > 0 && (
             <div className="bg-amber-50 border border-amber-250 text-amber-900 rounded-3xl p-5 shadow-sm flex items-start gap-4 animate-fadeIn text-left shrink-0">
               <Clock className="h-5.5 w-5.5 text-amber-600 shrink-0 mt-0.5" />
               <div className="flex-1 flex flex-col gap-0.5">
