@@ -100,7 +100,10 @@ export default function ReviewsReputationTab({
           googlePlaceId: googlePlace.googlePlaceId,
           googleRating: googlePlace.googleRating,
           googleReviewsCount: googlePlace.googleReviewsCount,
-          googleReviews: googlePlace.googleReviews
+          googleReviews: googlePlace.googleReviews,
+          address: googlePlace.address,
+          latitude: googlePlace.latitude,
+          longitude: googlePlace.longitude
         })
       });
       const syncData = await syncRes.json();
