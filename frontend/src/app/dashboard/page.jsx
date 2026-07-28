@@ -459,7 +459,8 @@ function DashboardContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           link: verifyPlaceId,
-          businessName: business.name
+          businessName: business.name,
+          businessAddress: business.address
         })
       });
       const autofillData = await autofillRes.json();

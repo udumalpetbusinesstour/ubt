@@ -79,7 +79,8 @@ export default function ReviewsReputationTab({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           placeId: business.googlePlaceId,
-          businessName: business.name
+          businessName: business.name,
+          businessAddress: business.address
         })
       });
       const autofillData = await autofillRes.json();
