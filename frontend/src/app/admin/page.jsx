@@ -1166,7 +1166,7 @@ export default function AdminDashboard() {
   };
 
   const clearApiLogs = async () => {
-    if (!window.confirm('Are you sure you want to clear all API logs? This action cannot be undone.')) {
+    if (!await window.confirm('Are you sure you want to clear all API logs? This action cannot be undone.')) {
       return;
     }
     try {
@@ -4201,7 +4201,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                             <div className="flex gap-2">
                               <button
                                 onClick={async () => {
-                                  if (window.confirm('Are you sure you want to REJECT these edits? The changes will be discarded.')) {
+                                  if (await window.confirm('Are you sure you want to REJECT these edits? The changes will be discarded.')) {
                                     try {
                                       const res = await fetch(`http://localhost:5000/api/admin/business-edits/${b._id}/reject`, {
                                         method: 'POST',
@@ -4228,7 +4228,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                               </button>
                               <button
                                 onClick={async () => {
-                                  if (window.confirm('Are you sure you want to APPROVE these edits? The changes will be applied immediately.')) {
+                                  if (await window.confirm('Are you sure you want to APPROVE these edits? The changes will be applied immediately.')) {
                                     try {
                                       const res = await fetch(`http://localhost:5000/api/admin/business-edits/${b._id}/approve`, {
                                         method: 'POST',

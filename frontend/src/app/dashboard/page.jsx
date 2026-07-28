@@ -75,14 +75,34 @@ const tabToSlug = (tabName) => {
 
 const slugToTab = (slug) => {
   if (!slug) return 'Dashboard';
+  const cleanSlug = slug.toLowerCase().trim();
+  if (cleanSlug === 'menu' || cleanSlug === 'products' || cleanSlug === 'menu-and-products') {
+    return 'Catalog';
+  }
   const displayTabs = [
-    'Dashboard', 'Business Details', 'Branches', 'Menu', 'Photos & Media',
+    'Dashboard', 'Business Details', 'Branches', 'Catalog', 'Photos & Media',
     'Reviews & Reputation', 'Leads & Enquiries', 'Subscription & Billing',
     'Offers & Promotions', 'Referral & Rewards', 'Events', 'My Blogs',
     'Settings', 'Help & Support', 'Queries'
   ];
-  const matchedDisplay = displayTabs.find(tab => tabToSlug(tab) === slug.toLowerCase());
+  const matchedDisplay = displayTabs.find(tab => tabToSlug(tab) === cleanSlug);
   return matchedDisplay || 'Dashboard';
+};
+
+const catalogLabelsMap = {
+  services: '🛠️ Service',
+  packages: '✈️ Holiday Package',
+  properties: '🏠 Property',
+  rooms: '🏨 Room / Stay',
+  courses: '🎓 Course / Class',
+  memberships: '💳 Membership Plan',
+  vehicles: '🚗 Vehicle Rental',
+  equipment: '⚙️ Rental Equipment',
+  inventory: '📦 Inventory Item',
+  pricelist: '📋 Price List Item',
+  menu: '🍔 Food Menu Item',
+  product: '🛍️ Retail Product',
+  custom: '⚙️ Custom Item'
 };
 
 function DashboardContent() {
@@ -106,7 +126,29 @@ function DashboardContent() {
 
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
-  const [business, setBusiness] = useState(null);
+  const [business, _setBusiness] = useState(null);
+  const setBusiness = (updatedBizOrFn) => {
+    _setBusiness(prev => {
+      const next = typeof updatedBizOrFn === 'function' ? updatedBizOrFn(prev) : updatedBizOrFn;
+      if (next && next._id) {
+        setAllBusinesses(allPrev => allPrev.map(b => b._id === next._id ? next : b));
+      }
+      return next;
+    });
+  };
+
+  // Catalog Configuration Toggle State
+  const [isConfiguringCatalog, setIsConfiguringCatalog] = useState(false);
+
+  useEffect(() => {
+    if (business) {
+      if (!business.catalogType) {
+        setIsConfiguringCatalog(true);
+      } else {
+        setIsConfiguringCatalog(false);
+      }
+    }
+  }, [business?.catalogType]);
 
   // Food Menu States
   const [menuItems, setMenuItems] = useState([]);
@@ -147,6 +189,36 @@ function DashboardContent() {
   const [customLabelInput, setCustomLabelInput] = useState('');
   const [currentFormType, setCurrentFormType] = useState('menu'); // 'menu' or 'product'
   const [menuItemBrand, setMenuItemBrand] = useState('');
+  const [menuSearchQuery, setMenuSearchQuery] = useState('');
+
+  // Dynamic Catalog States
+  const [catalogItems, setCatalogItems] = useState([]);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogError, setCatalogError] = useState('');
+  const [catalogDraggedItemIndex, setCatalogDraggedItemIndex] = useState(null);
+  const [catalogDraggedCategory, setCatalogDraggedCategory] = useState(null);
+  const [catalogDraggedCategoryIndex, setCatalogDraggedCategoryIndex] = useState(null);
+
+  // Catalog Item Modal States
+  const [showCatalogModal, setShowCatalogModal] = useState(false);
+  const [currentCatalogItem, setCurrentCatalogItem] = useState(null); 
+  const [catalogItemName, setCatalogItemName] = useState('');
+  const [catalogItemPrice, setCatalogItemPrice] = useState('');
+  const [catalogItemOfferPrice, setCatalogItemOfferPrice] = useState('');
+  const [catalogItemIsAvailable, setCatalogItemIsAvailable] = useState(true);
+  const [catalogItemDescription, setCatalogItemDescription] = useState('');
+  const [catalogItemCategory, setCatalogItemCategory] = useState('');
+  const [isCatalogCustomCategory, setIsCatalogCustomCategory] = useState(false);
+  const [catalogCustomCategoryName, setCatalogCustomCategoryName] = useState('');
+  const [catalogItemImageUrl, setCatalogItemImageUrl] = useState('');
+  const [catalogItemGalleryUrls, setCatalogItemGalleryUrls] = useState([]);
+  const [catalogItemImageUploading, setCatalogItemImageUploading] = useState(false);
+  const [catalogItemSubmitLoading, setCatalogItemSubmitLoading] = useState(false);
+  const [catalogItemError, setCatalogItemError] = useState('');
+  const [customFieldsSchema, setCustomFieldsSchema] = useState([]); 
+  const [newCustomFieldName, setNewCustomFieldName] = useState('');
+  const [catalogDynamicFields, setCatalogDynamicFields] = useState({});
+  const [catalogItemType, setCatalogItemType] = useState('services');
 
   const handleSaveMenuLabel = async (newLabel) => {
     const trimmed = (newLabel || '').trim();
@@ -165,6 +237,23 @@ function DashboardContent() {
       menuLabelSelected: true
     });
     setIsEditingSidebarLabel(false);
+  };
+
+  const handleSaveCatalogLabel = async (newLabel) => {
+    const trimmed = (newLabel || '').trim();
+    if (!trimmed) return;
+    await saveInlineFields({
+      catalogLabel: trimmed
+    });
+  };
+
+  const handleSaveCatalogLabelFromSidebar = async () => {
+    const trimmed = catalogSidebarLabelInput.trim();
+    if (!trimmed) return;
+    await saveInlineFields({
+      catalogLabel: trimmed
+    });
+    setIsEditingCatalogSidebarLabel(false);
   };
 
   useEffect(() => {
@@ -415,7 +504,11 @@ function DashboardContent() {
           googlePlaceId: googlePlace.googlePlaceId,
           googleRating: googlePlace.googleRating,
           googleReviewsCount: googlePlace.googleReviewsCount,
-          googleReviews: googlePlace.googleReviews
+          googleReviews: googlePlace.googleReviews,
+          googleBusinessLink: verifyPlaceId,
+          latitude: googlePlace.latitude,
+          longitude: googlePlace.longitude,
+          address: googlePlace.address
         })
       });
       const syncData = await syncRes.json();
@@ -613,10 +706,20 @@ function DashboardContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isEditingSidebarLabel, setIsEditingSidebarLabel] = useState(false);
   const [sidebarLabelInput, setSidebarLabelInput] = useState('');
+  const [isEditingCatalogSidebarLabel, setIsEditingCatalogSidebarLabel] = useState(false);
+  const [catalogSidebarLabelInput, setCatalogSidebarLabelInput] = useState('');
+
+  const [selectedTemplates, setSelectedTemplates] = useState([]);
 
   useEffect(() => {
     if (business) {
       setSidebarLabelInput(business.menuLabel || 'Menu');
+      setCatalogSidebarLabelInput(business.catalogLabel || 'Catalog');
+      if (business.catalogType) {
+        setSelectedTemplates(business.catalogType.split(',').map(s => s.trim()).filter(Boolean));
+      } else {
+        setSelectedTemplates([]);
+      }
     }
   }, [business]);
 
@@ -2453,6 +2556,32 @@ function DashboardContent() {
     }
   };
 
+  const fetchCatalog = async (authToken, businessId) => {
+    if (!businessId) return;
+    const activeToken = authToken || token || localStorage.getItem('ubt_token');
+    setCatalogLoading(true);
+    setCatalogError('');
+    try {
+      if (!activeToken || businessId === 'UBT-10024' || String(businessId).startsWith('biz_')) {
+        throw new Error('Offline mock mode');
+      }
+      const res = await fetch(`http://localhost:5000/api/catalog/${businessId}`, {
+        headers: { Authorization: `Bearer ${activeToken}` },
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setCatalogItems(data.data);
+      } else {
+        throw new Error(data.message || 'Failed to fetch catalog items');
+      }
+    } catch (err) {
+      console.warn('Using empty catalog due to error or mock:', err.message);
+      setCatalogItems([]);
+    } finally {
+      setCatalogLoading(false);
+    }
+  };
+
   const fetchMenu = async (authToken, businessId) => {
     if (!businessId) return;
     const activeToken = authToken || token || localStorage.getItem('ubt_token');
@@ -2651,6 +2780,320 @@ function DashboardContent() {
       resetMenuItemForm();
     } finally {
       setMenuItemSubmitLoading(false);
+    }
+  };
+
+  const resetCatalogItemForm = () => {
+    setCurrentCatalogItem(null);
+    setCatalogItemName('');
+    setCatalogItemPrice('');
+    setCatalogItemOfferPrice('');
+    setCatalogItemIsAvailable(true);
+    setCatalogItemDescription('');
+    setCatalogItemCategory('');
+    setIsCatalogCustomCategory(false);
+    setCatalogCustomCategoryName('');
+    setCatalogItemImageUrl('');
+    setCatalogItemGalleryUrls([]);
+    setCatalogDynamicFields({});
+    setCatalogItemError('');
+    const configuredTypes = business?.catalogType ? business.catalogType.split(',').map(s => s.trim()).filter(Boolean) : [];
+    setCatalogItemType(configuredTypes[0] || 'services');
+  };
+
+  const handleOpenCatalogModal = (item = null, forceType = null) => {
+    resetCatalogItemForm();
+    const configuredTypes = business?.catalogType ? business.catalogType.split(',').map(s => s.trim()).filter(Boolean) : [];
+    if (item) {
+      setCurrentCatalogItem(item);
+      setCatalogItemName(item.name || '');
+      setCatalogItemPrice(item.price !== undefined ? String(item.price) : '');
+      setCatalogItemOfferPrice(item.offerPrice !== undefined && item.offerPrice !== null ? String(item.offerPrice) : '');
+      setCatalogItemIsAvailable(item.isAvailable !== undefined ? item.isAvailable : true);
+      setCatalogItemDescription(item.description || '');
+      setCatalogItemCategory(item.category || '');
+      setIsCatalogCustomCategory(false);
+      setCatalogItemImageUrl(item.imageUrl || '');
+      setCatalogItemGalleryUrls(item.galleryUrls || []);
+      setCatalogDynamicFields(item.dynamicFields || {});
+      setCatalogItemType(item.catalogType || forceType || configuredTypes[0] || 'services');
+    } else {
+      setCatalogItemType(forceType || configuredTypes[0] || 'services');
+    }
+    setShowCatalogModal(true);
+  };
+
+  const handleCatalogSubmit = async (e) => {
+    e.preventDefault();
+    if (!catalogItemName || catalogItemPrice === '') {
+      setCatalogItemError('Item Name and Price are required.');
+      return;
+    }
+
+    setCatalogItemSubmitLoading(true);
+    setCatalogItemError('');
+
+    let finalCategory = catalogItemCategory;
+    if (isCatalogCustomCategory) {
+      finalCategory = catalogCustomCategoryName.trim();
+    }
+
+    const bodyData = {
+      name: catalogItemName,
+      price: Number(catalogItemPrice),
+      offerPrice: catalogItemOfferPrice !== '' && catalogItemOfferPrice !== null && catalogItemOfferPrice !== undefined ? Number(catalogItemOfferPrice) : null,
+      isAvailable: catalogItemIsAvailable,
+      description: catalogItemDescription || '',
+      imageUrl: catalogItemImageUrl || '',
+      galleryUrls: catalogItemGalleryUrls,
+      category: finalCategory || 'General',
+      catalogType: catalogItemType,
+      dynamicFields: catalogDynamicFields
+    };
+
+    const activeToken = token || localStorage.getItem('ubt_token');
+
+    try {
+      if (business._id === 'UBT-10024' || String(business._id).startsWith('biz_')) {
+        const updatedItem = {
+          _id: currentCatalogItem ? currentCatalogItem._id : `catalog_mock_${Date.now()}`,
+          businessId: business._id,
+          ...bodyData
+        };
+
+        if (currentCatalogItem) {
+          setCatalogItems(prev => prev.map(item => item._id === currentCatalogItem._id ? updatedItem : item));
+        } else {
+          setCatalogItems(prev => [updatedItem, ...prev]);
+        }
+        setShowCatalogModal(false);
+        resetCatalogItemForm();
+        return;
+      }
+
+      const url = currentCatalogItem
+        ? `http://localhost:5000/api/catalog/${currentCatalogItem._id}`
+        : `http://localhost:5000/api/catalog/${business._id}`;
+      const method = currentCatalogItem ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify(bodyData)
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        if (currentCatalogItem) {
+          setCatalogItems(prev => prev.map(item => item._id === currentCatalogItem._id ? data.data : item));
+        } else {
+          setCatalogItems(prev => [data.data, ...prev]);
+        }
+        setShowCatalogModal(false);
+        resetCatalogItemForm();
+      } else {
+        setCatalogItemError(data.message || 'Failed to save catalog item.');
+      }
+    } catch (err) {
+      console.error('Error submitting catalog item:', err);
+      setCatalogItemError('Connection error while saving catalog item.');
+    } finally {
+      setCatalogItemSubmitLoading(false);
+    }
+  };
+
+  const handleDeleteCatalogItem = async (itemId) => {
+    if (!await window.confirm('Are you sure you want to delete this catalog item?')) return;
+    
+    const activeToken = token || localStorage.getItem('ubt_token');
+    try {
+      if (business._id === 'UBT-10024' || String(business._id).startsWith('biz_')) {
+        setCatalogItems(prev => prev.filter(item => item._id !== itemId));
+        return;
+      }
+
+      const res = await fetch(`http://localhost:5000/api/catalog/${itemId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${activeToken}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCatalogItems(prev => prev.filter(item => item._id !== itemId));
+      } else {
+        alert(data.message || 'Failed to delete catalog item.');
+      }
+    } catch (err) {
+      alert('Network error. Failed to delete catalog item.');
+    }
+  };
+
+  const handleDuplicateCatalogItem = async (item) => {
+    const activeToken = token || localStorage.getItem('ubt_token');
+    const duplicatedData = {
+      ...item,
+      name: `${item.name} (Copy)`,
+      _id: undefined,
+      id: undefined,
+      createdAt: undefined,
+      updatedAt: undefined
+    };
+
+    try {
+      if (business._id === 'UBT-10024' || String(business._id).startsWith('biz_')) {
+        const newItem = {
+          ...duplicatedData,
+          _id: `catalog_mock_${Date.now()}`
+        };
+        setCatalogItems(prev => [newItem, ...prev]);
+        return;
+      }
+
+      const res = await fetch(`http://localhost:5000/api/catalog/${business._id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify(duplicatedData)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCatalogItems(prev => [data.data, ...prev]);
+      } else {
+        alert(data.message || 'Failed to duplicate item.');
+      }
+    } catch (err) {
+      alert('Network error. Failed to duplicate item.');
+    }
+  };
+
+  const handleCatalogDragStart = (e, index, category) => {
+    setCatalogDraggedItemIndex(index);
+    setCatalogDraggedCategory(category);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleCatalogDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleCatalogDrop = async (e, targetIndex, targetCategory) => {
+    e.preventDefault();
+    if (catalogDraggedItemIndex === null || catalogDraggedCategory !== targetCategory) return;
+    if (catalogDraggedItemIndex === targetIndex) return;
+
+    const itemsInCat = catalogItems.filter(item => (item.category || 'General') === targetCategory);
+    const otherItems = catalogItems.filter(item => (item.category || 'General') !== targetCategory);
+
+    const reorderedCatItems = [...itemsInCat];
+    const [movedItem] = reorderedCatItems.splice(catalogDraggedItemIndex, 1);
+    reorderedCatItems.splice(targetIndex, 0, movedItem);
+
+    const updatedCatItems = reorderedCatItems.map((item, idx) => ({
+      ...item,
+      order: idx
+    }));
+
+    const finalItems = [...updatedCatItems, ...otherItems];
+    setCatalogItems(finalItems);
+
+    setCatalogDraggedItemIndex(null);
+    setCatalogDraggedCategory(null);
+
+    const activeToken = token || localStorage.getItem('ubt_token');
+    if (business._id !== 'UBT-10024' && !String(business._id).startsWith('biz_')) {
+      const orders = updatedCatItems.map(item => ({
+        itemId: item._id,
+        order: item.order
+      }));
+      try {
+        await fetch(`http://localhost:5000/api/catalog/${business._id}/reorder`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${activeToken}`
+          },
+          body: JSON.stringify({ orders })
+        });
+      } catch (err) {
+        console.error('Failed to sync catalog reorder to server:', err);
+      }
+    }
+  };
+
+  const handleCatalogCategoryDragStart = (e, index) => {
+    setCatalogDraggedCategoryIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleCatalogCategoryDrop = async (e, targetIndex, categories) => {
+    e.preventDefault();
+    if (catalogDraggedCategoryIndex === null || catalogDraggedCategoryIndex === targetIndex) return;
+
+    const updatedCategories = [...categories];
+    const [movedCatName] = updatedCategories.splice(catalogDraggedCategoryIndex, 1);
+    updatedCategories.splice(targetIndex, 0, movedCatName);
+
+    const finalItems = catalogItems.map(item => {
+      const idx = updatedCategories.indexOf(item.category || 'General');
+      return {
+        ...item,
+        categoryOrder: idx !== -1 ? idx : 99
+      };
+    });
+
+    setCatalogItems(finalItems);
+    setCatalogDraggedCategoryIndex(null);
+
+    const activeToken = token || localStorage.getItem('ubt_token');
+    if (business._id !== 'UBT-10024' && !String(business._id).startsWith('biz_')) {
+      const orders = finalItems.map(item => ({
+        itemId: item._id,
+        update: { categoryOrder: item.categoryOrder }
+      }));
+      try {
+        await fetch(`http://localhost:5000/api/catalog/${business._id}/reorder`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${activeToken}`
+          },
+          body: JSON.stringify({ orders })
+        });
+      } catch (err) {
+        console.error('Failed to sync category order to server:', err);
+      }
+    }
+  };
+
+  const handleCatalogItemImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setCatalogItemImageUploading(true);
+    setCatalogItemError('');
+    try {
+      const compressed = await compressImage(file);
+      const formData = new FormData();
+      formData.append('image', compressed);
+      const activeToken = token || localStorage.getItem('ubt_token');
+      const res = await fetch('http://localhost:5000/api/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${activeToken}` },
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCatalogItemImageUrl(data.url);
+      } else {
+        setCatalogItemError(data.message || 'Image upload failed.');
+      }
+    } catch (err) {
+      setCatalogItemError('Image upload failed.');
+    } finally {
+      setCatalogItemImageUploading(false);
     }
   };
 
@@ -3678,6 +4121,12 @@ function DashboardContent() {
   useEffect(() => {
     if (token && activeTab === 'Menu' && business) {
       fetchMenu(token, business._id);
+    }
+  }, [token, activeTab, business]);
+
+  useEffect(() => {
+    if (token && activeTab === 'Catalog' && business) {
+      fetchCatalog(token, business._id);
     }
   }, [token, activeTab, business]);
 
@@ -4796,21 +5245,11 @@ function DashboardContent() {
       { label: 'Dashboard', icon: <Briefcase className="h-4 w-4" /> },
       { label: 'Business Details', icon: <Edit3 className="h-4 w-4" /> },
       { label: 'Branches', icon: <MapPin className="h-4 w-4" /> },
+
       {
-        label: 'Menu',
-        displayLabel: business?.menuLabelSelected
-          ? (business?.menuLabel || 'Menu')
-          : (isFoodRelated(business?.category, business?.customCategoryName) ? 'Menu / Products' : 'Products'),
-        icon: (() => {
-          const currentLabel = business?.menuLabelSelected
-            ? (business?.menuLabel || '')
-            : (isFoodRelated(business?.category, business?.customCategoryName) ? 'menu' : 'product');
-          const lower = currentLabel.toLowerCase();
-          if (lower.includes('product') || lower.includes('catalog') || lower.includes('good') || lower.includes('item') || lower.includes('service')) {
-            return <Package className="h-4 w-4" />;
-          }
-          return <Utensils className="h-4 w-4" />;
-        })()
+        label: 'Catalog',
+        displayLabel: business?.catalogLabel || 'Catalog',
+        icon: <Folder className="h-4 w-4" />
       },
       { label: 'Photos & Media', icon: <ImageIcon className="h-4 w-4" /> },
       { label: 'Reviews & Reputation', icon: <Star className="h-4 w-4" /> },
@@ -4978,6 +5417,43 @@ function DashboardContent() {
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
+                  ) : link.label === 'Catalog' && isEditingCatalogSidebarLabel ? (
+                    <div className="flex items-center gap-1.5 w-full min-w-0" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="text"
+                        value={catalogSidebarLabelInput}
+                        onChange={(e) => setCatalogSidebarLabelInput(e.target.value)}
+                        className="bg-slate-800 border border-slate-700 text-white rounded-lg py-0.5 px-2 text-[10px] font-bold w-[120px] focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        onKeyDown={async (e) => {
+                          if (e.key === 'Enter') {
+                            await handleSaveCatalogLabelFromSidebar();
+                          } else if (e.key === 'Escape') {
+                            setIsEditingCatalogSidebarLabel(false);
+                          }
+                        }}
+                        autoFocus
+                      />
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await handleSaveCatalogLabelFromSidebar();
+                        }}
+                        className="p-1 hover:bg-slate-700 text-emerald-400 rounded cursor-pointer border-none bg-transparent flex items-center justify-center shrink-0"
+                        title="Save"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsEditingCatalogSidebarLabel(false);
+                        }}
+                        className="p-1 hover:bg-slate-700 text-rose-400 rounded cursor-pointer border-none bg-transparent flex items-center justify-center shrink-0"
+                        title="Cancel"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   ) : (
                     <div className="flex items-center justify-between w-full group/menu min-w-0">
                       <span className="truncate">{link.displayLabel || link.label}</span>
@@ -4987,6 +5463,19 @@ function DashboardContent() {
                             e.stopPropagation();
                             setSidebarLabelInput(business?.menuLabel || 'Menu');
                             setIsEditingSidebarLabel(true);
+                          }}
+                          className="p-1 opacity-0 group-hover/menu:opacity-100 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition-opacity cursor-pointer border-none bg-transparent ml-2 shrink-0 flex items-center justify-center"
+                          title="Rename Tab"
+                        >
+                          <Edit3 className="h-3 w-3" />
+                        </button>
+                      )}
+                      {link.label === 'Catalog' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCatalogSidebarLabelInput(business?.catalogLabel || 'Catalog');
+                            setIsEditingCatalogSidebarLabel(true);
                           }}
                           className="p-1 opacity-0 group-hover/menu:opacity-100 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition-opacity cursor-pointer border-none bg-transparent ml-2 shrink-0 flex items-center justify-center"
                           title="Rename Tab"
@@ -9062,6 +9551,456 @@ function DashboardContent() {
           )}
 
           {/* ========================================================================= */}
+          {/* TAB: CATALOG DASHBOARD */}
+          {/* ========================================================================= */}
+          {activeTab === 'Catalog' && (
+            <div className="flex flex-col gap-6 text-left animate-fadeIn font-sans">
+              {/* Header card with dynamic label customization */}
+              <div className="bg-gradient-to-r from-white via-white to-emerald-50/15 border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex flex-col">
+                  <h3 className="font-extrabold text-[#001c41] text-base md:text-lg tracking-tight flex items-center gap-2">
+                    <Folder className="h-5.5 w-5.5 text-emerald-600" />
+                    <span>{business?.catalogLabel || 'Catalog'} Management</span>
+                    <button
+                      onClick={async () => {
+                        const newLabel = window.prompt(
+                          'Enter new catalog label (e.g. Services, Packages, Rooms, Courses):',
+                          business?.catalogLabel || 'Catalog'
+                        );
+                        if (newLabel !== null && newLabel.trim()) {
+                          await handleSaveCatalogLabel(newLabel.trim());
+                        }
+                      }}
+                      className="ml-2 py-1 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-[9px] rounded-lg cursor-pointer transition-colors"
+                    >
+                      Change Label
+                    </button>
+                  </h3>
+                  <span className="text-[11px] text-slate-455 font-semibold mt-1">
+                    Manage your {(business?.catalogLabel || 'Catalog').toLowerCase()} items, categories, fields, pricing, and availability.
+                  </span>
+                </div>
+
+                {business?.catalogType && (
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={() => {
+                        setSelectedTemplates(business?.catalogType ? business.catalogType.split(',').map(s => s.trim()).filter(Boolean) : []);
+                        setIsConfiguringCatalog(true);
+                      }}
+                      className="py-3 px-6 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-extrabold text-xs transition-all shadow-sm cursor-pointer"
+                    >
+                      Change Catalog / Add Template
+                    </button>
+                    {(business?.catalogType || '').split(',').map(s => s.trim()).filter(Boolean).map(t => {
+                      const cleanLabel = t === 'menu' ? 'Menu' : t === 'product' ? 'Product' : (catalogLabelsMap[t] || t).replace(/^[^a-zA-Z]*/, '').replace(/s$/, '');
+                      return (
+                        <button
+                          key={t}
+                          onClick={() => handleOpenCatalogModal(null, t)}
+                          className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-5 rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer border border-emerald-700/10 btn-active-press shrink-0"
+                        >
+                          <Plus className="h-4 w-4" /> Add {cleanLabel}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Check if catalogType is configured */}
+              {isConfiguringCatalog ? (
+                <div className="bg-white border border-slate-200 rounded-3xl p-8 md:p-12 shadow-sm text-center">
+                  <div className="max-w-2xl mx-auto flex flex-col items-center gap-6">
+                    <div className="h-14 w-14 bg-emerald-55/15 text-emerald-600 rounded-2xl flex items-center justify-center border border-emerald-100/50 shadow-inner">
+                      <Sparkles className="h-7 w-7" />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-slate-800 text-lg">Choose Your Catalog Templates</h4>
+                      <p className="text-xs text-slate-455 font-semibold leading-relaxed mt-2">
+                        Select one or more templates that fit your business offerings. You can add items in multiple formats (e.g. Services, Products, and Food Menu items) in the same catalog dashboard.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full mt-4">
+                      {[
+                        { type: 'services', label: 'Services', desc: 'Bookings & hours', icon: '🛠️' },
+                        { type: 'packages', label: 'Packages', desc: 'Trips & inclusions', icon: '✈️' },
+                        { type: 'properties', label: 'Properties', desc: 'Real Estate Rent/Sale', icon: '🏠' },
+                        { type: 'rooms', label: 'Rooms', desc: 'Hotels & stays', icon: '🏨' },
+                        { type: 'courses', label: 'Courses', desc: 'Batches & timing', icon: '🎓' },
+                        { type: 'memberships', label: 'Membership Plans', desc: 'Gym & pricing plans', icon: '💳' },
+                        { type: 'vehicles', label: 'Vehicles', desc: 'Car rentals & seating', icon: '🚗' },
+                        { type: 'equipment', label: 'Equipment', desc: 'Rentals & deposit', icon: '⚙️' },
+                        { type: 'inventory', label: 'Inventory', desc: 'Store items & stock', icon: '📦' },
+                        { type: 'pricelist', label: 'Price List', desc: 'Menu pricing & lists', icon: '📋' },
+                        { type: 'menu', label: 'Menu', desc: 'Food items & veg tags', icon: '🍔' },
+                        { type: 'product', label: 'Product', desc: 'Retail products & brands', icon: '🛍️' },
+                        { type: 'custom', label: 'Custom', desc: 'Define your own fields', icon: '⚙️' }
+                      ].map((tpl) => {
+                        const isSelected = selectedTemplates.includes(tpl.type);
+                        return (
+                          <div
+                            key={tpl.type}
+                            onClick={() => {
+                              setSelectedTemplates(prev => 
+                                prev.includes(tpl.type) 
+                                  ? prev.filter(t => t !== tpl.type) 
+                                  : [...prev, tpl.type]
+                              );
+                            }}
+                            className={`p-5 border rounded-2xl transition-all text-left flex flex-col gap-2.5 cursor-pointer shadow-3xs hover:shadow-2xs relative select-none ${
+                              isSelected 
+                                ? 'border-emerald-600 bg-emerald-50/20 ring-1 ring-emerald-600/30' 
+                                : 'border-slate-200 hover:border-slate-350 hover:bg-slate-50/30'
+                            }`}
+                          >
+                            {isSelected && (
+                              <div className="absolute top-3 right-3 h-5 w-5 bg-emerald-600 rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-xs">
+                                ✓
+                              </div>
+                            )}
+                            <span className="text-2xl w-fit">{tpl.icon}</span>
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-extrabold text-[#001c41] text-xs">{tpl.label}</span>
+                              <span className="text-[10px] text-slate-400 font-semibold leading-normal">{tpl.desc}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={async () => {
+                        if (selectedTemplates.length === 0) {
+                          alert('Please select at least one template.');
+                          return;
+                        }
+                        let customFields = [];
+                        if (selectedTemplates.includes('custom')) {
+                          const fieldsStr = window.prompt("Define your custom fields separated by comma (e.g. Venue, Catering, Decoration):", "Venue, Catering");
+                          if (fieldsStr === null) return;
+                          customFields = fieldsStr.split(',').map(s => s.trim()).filter(Boolean);
+                        }
+                        const templateDefaultLabels = {
+                          services: 'Services',
+                          packages: 'Packages',
+                          properties: 'Properties',
+                          rooms: 'Rooms',
+                          courses: 'Courses',
+                          memberships: 'Membership Plans',
+                          vehicles: 'Vehicles',
+                          equipment: 'Equipment',
+                          inventory: 'Inventory',
+                          pricelist: 'Price List',
+                          menu: 'Menu',
+                          product: 'Product',
+                          custom: 'Custom'
+                        };
+                        const newLabel = selectedTemplates.length === 1 
+                          ? (templateDefaultLabels[selectedTemplates[0]] || 'Catalog')
+                          : 'Catalog';
+                        await saveInlineFields({
+                          catalogType: selectedTemplates.join(','),
+                          catalogLabel: newLabel,
+                          catalogCustomFields: customFields
+                        });
+                        setIsConfiguringCatalog(false);
+                      }}
+                      className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-8 rounded-xl transition-all shadow-md cursor-pointer border border-emerald-700/10 btn-active-press select-none"
+                    >
+                      Save Catalog Configuration ({selectedTemplates.length} Selected)
+                    </button>
+                    {business?.catalogType && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTemplates(business.catalogType.split(',').map(s => s.trim()).filter(Boolean));
+                          setIsConfiguringCatalog(false);
+                        }}
+                        className="py-3 px-8 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-extrabold text-xs transition-all shadow-sm cursor-pointer ml-3"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Catalog search/filter row */}
+                  {catalogItems.length > 0 && (
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                      <div className="relative w-full sm:w-80">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <input
+                          type="text"
+                          placeholder={`Search ${(business.catalogLabel || 'Catalog').toLowerCase()}...`}
+                          value={menuSearchQuery} 
+                          onChange={(e) => setMenuSearchQuery(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        />
+                      </div>
+
+                      {/* Custom schema field manager for custom catalog type */}
+                      {catalogItemType === 'custom' && (
+                        <div className="flex flex-wrap gap-2 items-center w-full sm:w-auto">
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Custom Fields:</span>
+                          {Array.isArray(business.catalogCustomFields) && business.catalogCustomFields.map((fName, fIdx) => (
+                            <span key={fIdx} className="bg-slate-100 border border-slate-200/50 px-2 py-0.5 rounded text-[10px] font-bold text-slate-600 flex items-center gap-1.5">
+                              {fName}
+                              <button
+                                onClick={async () => {
+                                  if (await window.confirm(`Delete field "${fName}"? This will clear its data in items.`)) {
+                                    const nextFields = business.catalogCustomFields.filter(f => f !== fName);
+                                    await saveInlineFields({ catalogCustomFields: nextFields });
+                                  }
+                                }}
+                                className="text-rose-500 font-black cursor-pointer hover:text-rose-700 bg-transparent border-none text-[8px]"
+                              >
+                                ✕
+                              </button>
+                            </span>
+                          ))}
+                          <button
+                            onClick={async () => {
+                              const name = window.prompt("Enter new field name:");
+                              if (name && name.trim()) {
+                                const nextFields = [...(business.catalogCustomFields || []), name.trim()];
+                                await saveInlineFields({ catalogCustomFields: nextFields });
+                              }
+                            }}
+                            className="text-[10px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250/20 px-2 py-0.5 rounded font-black cursor-pointer"
+                          >
+                            + Add Field
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Catalog Items Grid */}
+                  {catalogLoading ? (
+                    <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-455 flex flex-col items-center gap-2.5 shadow-sm">
+                      <RefreshCw className="h-7 w-7 text-emerald-600 animate-spin" />
+                      <span className="text-xs font-bold font-sans">Synchronizing your catalog desk...</span>
+                    </div>
+                  ) : catalogItems.length === 0 ? (
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-12 text-center text-slate-455 flex flex-col items-center gap-4 shadow-sm max-w-md mx-auto my-6">
+                      <div className="h-14 w-14 bg-emerald-55/15 text-[#027244] rounded-2xl flex items-center justify-center border border-emerald-100/50 animate-pulse">
+                        <Folder className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-slate-800 text-sm">No Offerings Listed Yet</h4>
+                        <p className="text-xs text-slate-455 font-semibold leading-relaxed mt-1.5">
+                          Get started by listing your first catalog item so customers can view and enquire details.
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-3 justify-center mt-2">
+                        {(business?.catalogType || '').split(',').map(s => s.trim()).filter(Boolean).map(t => {
+                          const cleanLabel = t === 'menu' ? 'Menu' : t === 'product' ? 'Product' : (catalogLabelsMap[t] || t).replace(/^[^a-zA-Z]*/, '').replace(/s$/, '');
+                          return (
+                            <button
+                              key={t}
+                              onClick={() => handleOpenCatalogModal(null, t)}
+                              className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-2.5 px-6 rounded-xl shadow cursor-pointer flex items-center gap-1.5"
+                            >
+                              <Plus className="h-4 w-4" /> Add {cleanLabel}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-10">
+                      {(() => {
+                        const filtered = catalogItems
+                          .filter(item => {
+                            if (!menuSearchQuery) return true;
+                            return item.name.toLowerCase().includes(menuSearchQuery.toLowerCase()) || 
+                                   (item.category || '').toLowerCase().includes(menuSearchQuery.toLowerCase());
+                          })
+                          .sort((a, b) => {
+                            if ((a.categoryOrder ?? 0) !== (b.categoryOrder ?? 0)) {
+                              return (a.categoryOrder ?? 0) - (b.categoryOrder ?? 0);
+                            }
+                            return (a.order ?? 0) - (b.order ?? 0);
+                          });
+
+                        if (filtered.length === 0) {
+                          return (
+                            <div className="text-center py-10 bg-white border border-slate-200 rounded-3xl">
+                              <span className="text-xs text-slate-400 font-bold">No items match your search.</span>
+                            </div>
+                          );
+                        }
+
+                        const categories = [...new Set(filtered.map(item => item.category || 'General'))];
+
+                        return (
+                          <div className="flex flex-col gap-8">
+                            {categories.map((cat, idx) => {
+                              const itemsInCat = filtered.filter(item => (item.category || 'General') === cat);
+                              return (
+                                <div key={cat} className="flex flex-col gap-4 border border-slate-100/30 p-3 bg-slate-50/10 rounded-3xl">
+                                  <div
+                                    draggable="true"
+                                    onDragStart={(e) => handleCatalogCategoryDragStart(e, idx)}
+                                    onDragEnd={() => setCatalogDraggedCategoryIndex(null)}
+                                    onDragOver={handleCatalogDragOver}
+                                    onDrop={(e) => handleCatalogCategoryDrop(e, idx, categories)}
+                                    className="flex items-center gap-2 cursor-grab active:cursor-grabbing hover:bg-slate-55 px-2.5 py-1.5 rounded-xl w-fit transition-colors select-none border border-slate-200 shadow-3xs bg-white"
+                                    title="Drag to reorder category"
+                                  >
+                                    <h5 className="font-extrabold text-[#001c41] text-xs md:text-sm capitalize">{cat}</h5>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {itemsInCat.map((item, index) => {
+                                      const discountPercent = item.offerPrice
+                                        ? Math.round(((item.price - item.offerPrice) / item.price) * 100)
+                                        : 0;
+                                      const fields = item.dynamicFields || {};
+                                      return (
+                                        <div
+                                          key={item._id}
+                                          draggable="true"
+                                          onDragStart={(e) => handleCatalogDragStart(e, index, item.category || 'General')}
+                                          onDragEnd={() => { setCatalogDraggedItemIndex(null); setCatalogDraggedCategory(null); }}
+                                          onDragOver={handleCatalogDragOver}
+                                          onDrop={(e) => handleCatalogDrop(e, index, item.category || 'General')}
+                                          className={`card-premium rounded-3xl p-5 flex flex-col justify-between gap-4 bg-white border border-slate-200 transition-all duration-300 relative cursor-grab active:cursor-grabbing ${!item.isAvailable ? 'opacity-75 grayscale-[20%]' : ''}`}
+                                        >
+                                          <div className="flex justify-between items-start gap-3 w-full">
+                                            <div className="flex-1 flex flex-col gap-2.5 text-left min-w-0">
+                                              <div className="flex items-center gap-2">
+                                                <span className="text-[9px] bg-emerald-55/10 text-emerald-800 border border-emerald-200/50 font-extrabold px-2.5 py-0.5 rounded-full capitalize select-none shrink-0 flex items-center gap-1">
+                                                  {catalogLabelsMap[item.catalogType] || item.catalogType}
+                                                </span>
+                                              </div>
+
+                                              <div className="flex flex-col">
+                                                <h5 className="font-extrabold text-sm text-[#001c41] leading-snug">{item.name}</h5>
+                                                
+                                                {/* Dynamic Brief Representation on Dashboard Cards */}
+                                                <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1 text-[10px] text-slate-450 font-bold">
+                                                  {item.catalogType === 'services' && fields.duration && <span>⏱️ {fields.duration}</span>}
+                                                  {item.catalogType === 'packages' && fields.destination && <span>📍 {fields.destination}</span>}
+                                                  {item.catalogType === 'properties' && fields.propertyType && <span>🏠 {fields.propertyType} | {fields.saleRent}</span>}
+                                                  {item.catalogType === 'rooms' && fields.roomType && <span>🛏️ {fields.roomType}</span>}
+                                                  {item.catalogType === 'courses' && fields.mode && <span>🎓 {fields.mode}</span>}
+                                                  {item.catalogType === 'vehicles' && fields.vehicleType && <span>🚗 {fields.vehicleType}</span>}
+                                                  {item.catalogType === 'menu' && <span>{fields.isVeg !== false ? '🟢 Veg' : '🔴 Non-Veg'}</span>}
+                                                  {item.catalogType === 'product' && fields.brand && <span>🏷️ {fields.brand}</span>}
+                                                </div>
+
+                                                {item.description && (
+                                                  <p className="text-[10px] font-semibold text-slate-400 mt-1.5 leading-relaxed line-clamp-2">{item.description}</p>
+                                                )}
+                                              </div>
+                                            </div>
+
+                                            {item.imageUrl && (
+                                              <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center p-0.5 shadow-3xs">
+                                                <img src={window.getImageUrl(item.imageUrl)} alt={item.name} className="h-full w-full object-cover rounded-xl" />
+                                              </div>
+                                            )}
+                                          </div>
+
+                                          <div className="flex flex-col gap-3.5 border-t border-slate-100 pt-3.5 mt-2">
+                                            <div className="flex items-center justify-between gap-2">
+                                              <div className="flex flex-col text-left">
+                                                {item.offerPrice ? (
+                                                  <div className="flex flex-col">
+                                                    <div className="flex items-center gap-1.5">
+                                                      <span className="text-base font-extrabold text-slate-800">₹{item.offerPrice}</span>
+                                                      <span className="text-[9px] bg-rose-50 border border-rose-100 text-rose-600 font-extrabold px-1.5 py-0.5 rounded select-none">
+                                                        {discountPercent}% OFF
+                                                      </span>
+                                                    </div>
+                                                    <span className="text-[10px] text-slate-400 font-bold line-through">M.R.P: ₹{item.price}</span>
+                                                  </div>
+                                                ) : (
+                                                  <span className="text-base font-extrabold text-slate-800">
+                                                    {item.price > 0 ? `₹${item.price}` : 'Price on Request'}
+                                                  </span>
+                                                )}
+                                              </div>
+
+                                              <div className="flex items-center gap-1.5">
+                                                <button
+                                                  type="button"
+                                                  onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    const nextStatus = !item.isAvailable;
+                                                    // Instant local toggle
+                                                    setCatalogItems(prev => prev.map(o => o._id === item._id ? { ...o, isAvailable: nextStatus } : o));
+                                                    
+                                                    const activeToken = token || localStorage.getItem('ubt_token');
+                                                    if (business._id !== 'UBT-10024' && !String(business._id).startsWith('biz_')) {
+                                                      await fetch(`http://localhost:5000/api/catalog/${item._id}`, {
+                                                        method: 'PUT',
+                                                        headers: {
+                                                          'Content-Type': 'application/json',
+                                                          Authorization: `Bearer ${activeToken}`
+                                                        },
+                                                        body: JSON.stringify({ isAvailable: nextStatus })
+                                                      });
+                                                    }
+                                                  }}
+                                                  className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider select-none shrink-0 cursor-pointer border ${item.isAvailable
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-250/30 hover:bg-emerald-100'
+                                                    : 'bg-rose-50 text-rose-700 border-rose-250/30 hover:bg-rose-100'
+                                                    }`}
+                                                >
+                                                  {item.isAvailable ? 'Available' : 'Unavailable'}
+                                                </button>
+                                              </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                                              <button
+                                                type="button"
+                                                onClick={() => handleDuplicateCatalogItem(item)}
+                                                className="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-655 font-extrabold text-[10px] rounded-lg cursor-pointer flex items-center gap-1 transition-colors border-none shadow-3xs"
+                                                title="Duplicate"
+                                              >
+                                                Duplicate
+                                              </button>
+                                              <button
+                                                type="button"
+                                                onClick={() => handleOpenCatalogModal(item)}
+                                                className="py-1.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[10px] rounded-lg cursor-pointer flex items-center gap-1 transition-colors border-none shadow-3xs"
+                                              >
+                                                Edit
+                                              </button>
+                                              <button
+                                                type="button"
+                                                onClick={() => handleDeleteCatalogItem(item._id)}
+                                                className="py-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-655 font-extrabold text-[10px] rounded-lg cursor-pointer flex items-center justify-center transition-colors border-none shadow-3xs"
+                                                title="Delete"
+                                              >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ========================================================================= */}
           {/* TAB: BRANCHES DASHBOARD */}
           {/* ========================================================================= */}
           {activeTab === 'Branches' && (
@@ -12819,6 +13758,787 @@ function DashboardContent() {
               alt="Offering View"
               className="max-w-full max-h-[80vh] object-contain rounded-2xl border border-white/10 shadow-2xl"
             />
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Catalog Item Add/Edit Modal */}
+      {showCatalogModal && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-none z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="max-w-md w-full bg-white border border-slate-200 shadow-xl rounded-[24px] p-5 flex flex-col gap-3.5 animate-scaleUp text-left relative max-h-[90vh] overflow-y-auto font-sans">
+            
+            <button
+              onClick={() => {
+                setShowCatalogModal(false);
+                resetCatalogItemForm();
+              }}
+              className="absolute right-5 top-5 text-slate-400 hover:text-slate-655 h-7 w-7 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center cursor-pointer transition-colors z-10"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="flex flex-col gap-1">
+              <div className="h-9 w-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shadow-inner">
+                <Folder className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-black text-slate-800 tracking-tight mt-1">
+                {currentCatalogItem ? 'Edit' : 'Add'} {(() => {
+                  const label = catalogItemType === 'menu' ? 'Menu' : catalogItemType === 'product' ? 'Product' : (catalogLabelsMap[catalogItemType] || 'Catalog');
+                  return label.replace(/^[^a-zA-Z]*/, '').replace(/s$/, '');
+                })()} Item
+              </h3>
+            </div>
+
+            <form onSubmit={handleCatalogSubmit} className="flex flex-col gap-4">
+              {catalogItemError && (
+                <div className="p-3.5 bg-rose-50 border border-rose-100 text-rose-600 font-extrabold text-[11px] rounded-xl flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{catalogItemError}</span>
+                </div>
+              )}
+
+
+
+              {/* Item Name */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Item Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder={`e.g. ${(business?.catalogLabel || 'Catalog').includes('Service') ? 'AC Maintenance Service' : 'Premium Room'}`}
+                  value={catalogItemName}
+                  onChange={(e) => setCatalogItemName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+
+              {/* Price & Offer Price Row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Price (₹) *</label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    placeholder="e.g. 500"
+                    value={catalogItemPrice}
+                    onChange={(e) => setCatalogItemPrice(e.target.value)}
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Offer Price (₹)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Optional"
+                    value={catalogItemOfferPrice}
+                    onChange={(e) => setCatalogItemOfferPrice(e.target.value)}
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              {/* Category */}
+              <div className="flex flex-col gap-2 bg-slate-50/50 p-3 rounded-2xl border border-slate-150/40">
+                <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Category</label>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
+                      <input
+                        type="radio"
+                        checked={!isCatalogCustomCategory}
+                        onChange={() => setIsCatalogCustomCategory(false)}
+                        className="cursor-pointer"
+                      />
+                      Choose Existing
+                    </label>
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
+                      <input
+                        type="radio"
+                        checked={isCatalogCustomCategory}
+                        onChange={() => setIsCatalogCustomCategory(true)}
+                        className="cursor-pointer"
+                      />
+                      Add Custom
+                    </label>
+                  </div>
+
+                  {!isCatalogCustomCategory ? (
+                    <select
+                      value={catalogItemCategory}
+                      onChange={(e) => setCatalogItemCategory(e.target.value)}
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                    >
+                      <option value="">General</option>
+                      {[...new Set(catalogItems.map(item => item.category).filter(Boolean))].map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Enter new category name"
+                      value={catalogCustomCategoryName}
+                      onChange={(e) => setCatalogCustomCategoryName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Template Dynamic Fields Rendering */}
+              <div className="border-t border-slate-100 pt-3">
+                <h4 className="text-[10.5px] font-black text-slate-500 uppercase tracking-widest mb-3">Template Specific Fields ({catalogItemType})</h4>
+                
+                {catalogItemType === 'services' && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-black text-slate-600 uppercase">Duration (e.g. 1 hr, 30 mins)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 45 Mins"
+                        value={catalogDynamicFields.duration || ''}
+                        onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, duration: e.target.value }))}
+                        className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 text-xs font-extrabold text-slate-655 cursor-pointer mt-1 select-none">
+                      <input
+                        type="checkbox"
+                        checked={!!catalogDynamicFields.bookingRequired}
+                        onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, bookingRequired: e.target.checked }))}
+                        className="rounded cursor-pointer"
+                      />
+                      Prior Booking Required
+                    </label>
+                  </div>
+                )}
+
+                {catalogItemType === 'packages' && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-black text-slate-600 uppercase">Destination</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Udumalpet to Munnar"
+                        value={catalogDynamicFields.destination || ''}
+                        onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, destination: e.target.value }))}
+                        className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Duration</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 2 Days / 1 Night"
+                          value={catalogDynamicFields.duration || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, duration: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Price Per</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Per Person, Per Couple"
+                          value={catalogDynamicFields.pricePer || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, pricePer: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-black text-slate-600 uppercase">Package Type</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Honeymoon, Adventure"
+                        value={catalogDynamicFields.packageType || ''}
+                        onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, packageType: e.target.value }))}
+                        className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-black text-slate-600 uppercase">Inclusions</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Cab, Hotels, Food, Sightseeing"
+                        value={catalogDynamicFields.inclusions || ''}
+                        onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, inclusions: e.target.value }))}
+                        className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {catalogItemType === 'properties' && (
+                  <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Property Type</label>
+                        <select
+                          value={catalogDynamicFields.propertyType || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, propertyType: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-white"
+                        >
+                          <option value="">Select Type</option>
+                          <option value="Apartment">Apartment</option>
+                          <option value="House / Villa">House / Villa</option>
+                          <option value="Plot / Land">Plot / Land</option>
+                          <option value="Commercial Shop">Commercial Shop</option>
+                          <option value="Office Space">Office Space</option>
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Sale / Rent</label>
+                        <select
+                          value={catalogDynamicFields.saleRent || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, saleRent: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-white"
+                        >
+                          <option value="">Select Option</option>
+                          <option value="Sale">For Sale</option>
+                          <option value="Rent">For Rent</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Area (Sq.Ft / Cents)</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 1500 Sq.Ft"
+                          value={catalogDynamicFields.area || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, area: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Bedrooms</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 2, 3"
+                          value={catalogDynamicFields.bedrooms || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, bedrooms: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Bathrooms</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 2"
+                          value={catalogDynamicFields.bathrooms || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, bathrooms: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Furnishing</label>
+                        <select
+                          value={catalogDynamicFields.furnished || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, furnished: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-white"
+                        >
+                          <option value="">Select Furnishing</option>
+                          <option value="Fully Furnished">Fully Furnished</option>
+                          <option value="Semi Furnished">Semi Furnished</option>
+                          <option value="Unfurnished">Unfurnished</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Parking</label>
+                        <select
+                          value={catalogDynamicFields.parking || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, parking: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-white"
+                        >
+                          <option value="">Select Parking</option>
+                          <option value="Car & Bike">Car & Bike</option>
+                          <option value="Bike Only">Bike Only</option>
+                          <option value="None">None</option>
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Address / Locality</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Nehru Nagar, Udumalpet"
+                          value={catalogDynamicFields.address || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, address: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {catalogItemType === 'rooms' && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-black text-slate-600 uppercase">Room Type (e.g. Deluxe Double)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Suite, Standard Double"
+                        value={catalogDynamicFields.roomType || ''}
+                        onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, roomType: e.target.value }))}
+                        className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Occupancy</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 2 Adults, 1 Kid"
+                          value={catalogDynamicFields.occupancy || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, occupancy: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Facilities</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Free WiFi, AC, Geyser"
+                          value={catalogDynamicFields.facilities || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, facilities: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {catalogItemType === 'courses' && (
+                  <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Duration</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 3 Months"
+                          value={catalogDynamicFields.duration || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, duration: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Mode</label>
+                        <select
+                          value={catalogDynamicFields.mode || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, mode: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-white"
+                        >
+                          <option value="">Select Mode</option>
+                          <option value="Classroom">Classroom</option>
+                          <option value="Online">Online</option>
+                          <option value="Hybrid">Hybrid</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Batch Timing</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 6:00 PM - 8:00 PM"
+                          value={catalogDynamicFields.batchTiming || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, batchTiming: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Seats Available</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 20"
+                          value={catalogDynamicFields.seatsAvailable || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, seatsAvailable: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-black text-slate-600 uppercase">Enrollment Status</label>
+                      <select
+                        value={catalogDynamicFields.enrollmentStatus || ''}
+                        onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, enrollmentStatus: e.target.value }))}
+                        className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-white"
+                      >
+                        <option value="">Select Status</option>
+                        <option value="Admissions Open">Admissions Open</option>
+                        <option value="Admissions Closed">Admissions Closed</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {catalogItemType === 'memberships' && (
+                  <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Membership Type</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Monthly, Annual"
+                          value={catalogDynamicFields.membershipType || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, membershipType: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Validity</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 12 Months"
+                          value={catalogDynamicFields.validity || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, validity: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-black text-slate-600 uppercase">Benefits</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Free gym access, Personal Trainer"
+                        value={catalogDynamicFields.benefits || ''}
+                        onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, benefits: e.target.value }))}
+                        className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {catalogItemType === 'vehicles' && (
+                  <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Vehicle Type</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. SUV, Hatchback"
+                          value={catalogDynamicFields.vehicleType || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, vehicleType: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Seating Capacity</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 5, 7"
+                          value={catalogDynamicFields.seatingCapacity || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, seatingCapacity: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Price Type</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Per Day, Per Km"
+                          value={catalogDynamicFields.priceType || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, priceType: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">AC / Non AC</label>
+                        <select
+                          value={catalogDynamicFields.acType || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, acType: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-white"
+                        >
+                          <option value="">Select AC Option</option>
+                          <option value="AC">Air Conditioner (AC)</option>
+                          <option value="Non AC">Non Air Conditioner</option>
+                        </select>
+                      </div>
+                    </div>
+                    <label className="flex items-center gap-2 text-xs font-extrabold text-slate-655 cursor-pointer mt-1 select-none">
+                      <input
+                        type="checkbox"
+                        checked={!!catalogDynamicFields.driverIncluded}
+                        onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, driverIncluded: e.target.checked }))}
+                        className="rounded cursor-pointer"
+                      />
+                      Driver Included
+                    </label>
+                  </div>
+                )}
+
+                {catalogItemType === 'equipment' && (
+                  <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Rental Unit</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Per Day, Per Month"
+                          value={catalogDynamicFields.rentalUnit || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, rentalUnit: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Security Deposit (₹)</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 5000"
+                          value={catalogDynamicFields.deposit || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, deposit: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {catalogItemType === 'inventory' && (
+                  <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">SKU</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. PROD-1002"
+                          value={catalogDynamicFields.sku || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, sku: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">Brand</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Sony, Dell"
+                          value={catalogDynamicFields.brand || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, brand: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-black text-slate-600 uppercase">Stock Quantity</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 50"
+                        value={catalogDynamicFields.stockQuantity || ''}
+                        onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, stockQuantity: e.target.value }))}
+                        className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {catalogItemType === 'menu' && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-black text-slate-600 uppercase">Food Type</label>
+                    <div className="flex items-center gap-4 mt-1">
+                      <label className="flex items-center gap-1.5 text-xs font-extrabold text-slate-655 cursor-pointer select-none">
+                        <input
+                          type="radio"
+                          name="catalogMenuIsVeg"
+                          checked={catalogDynamicFields.isVeg !== false}
+                          onChange={() => setCatalogDynamicFields(prev => ({ ...prev, isVeg: true }))}
+                          className="cursor-pointer text-emerald-600 focus:ring-emerald-500"
+                        />
+                        🟢 Veg
+                      </label>
+                      <label className="flex items-center gap-1.5 text-xs font-extrabold text-slate-655 cursor-pointer select-none">
+                        <input
+                          type="radio"
+                          name="catalogMenuIsVeg"
+                          checked={catalogDynamicFields.isVeg === false}
+                          onChange={() => setCatalogDynamicFields(prev => ({ ...prev, isVeg: false }))}
+                          className="cursor-pointer text-rose-600 focus:ring-emerald-500"
+                        />
+                        🔴 Non-Veg
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {catalogItemType === 'product' && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-black text-slate-600 uppercase">Brand / Manufacturer</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Sony, Apple, Local Brand"
+                      value={catalogDynamicFields.brand || ''}
+                      onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, brand: e.target.value }))}
+                      className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                )}
+
+                {catalogItemType === 'custom' && Array.isArray(business.catalogCustomFields) && (
+                  <div className="flex flex-col gap-3">
+                    {business.catalogCustomFields.map((fName, fIdx) => (
+                      <div key={fIdx} className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black text-slate-600 uppercase">{fName}</label>
+                        <input
+                          type="text"
+                          placeholder={`Enter value for ${fName}`}
+                          value={catalogDynamicFields[fName] || ''}
+                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, [fName]: e.target.value }))}
+                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Item Description */}
+              <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-3">
+                <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Description</label>
+                <textarea
+                  rows="3"
+                  placeholder="Tell clients about the details of this item..."
+                  value={catalogItemDescription}
+                  onChange={(e) => setCatalogItemDescription(e.target.value)}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+
+              {/* Cover Image Upload */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Main Cover Image</label>
+                <div className="flex items-center gap-3">
+                  {catalogItemImageUrl ? (
+                    <div className="relative h-20 w-20 rounded-xl overflow-hidden border border-slate-200 shrink-0">
+                      <img src={window.getImageUrl(catalogItemImageUrl)} className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setCatalogItemImageUrl('')}
+                        className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full cursor-pointer shadow border-none text-[8px] flex items-center justify-center shrink-0"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="h-20 w-20 border-2 border-dashed border-slate-350 hover:border-emerald-500 rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer text-slate-400 hover:text-emerald-600 transition-colors bg-slate-50 shrink-0 select-none">
+                      <Upload className="h-5 w-5" />
+                      <span className="text-[9px] font-bold">Upload</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCatalogItemImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                  {catalogItemImageUploading && (
+                    <div className="flex items-center gap-1.5 text-slate-550 text-[10px] font-bold">
+                      <RefreshCw className="h-3.5 w-3.5 text-emerald-600 animate-spin" />
+                      Uploading cover...
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Gallery upload for Holiday Packages and Properties */}
+              {(catalogItemType === 'packages' || catalogItemType === 'properties') && (
+                <div className="flex flex-col gap-2 border-t border-slate-100 pt-3">
+                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Photo Gallery (Additional Images)</label>
+                  <div className="flex flex-wrap gap-3">
+                    {catalogItemGalleryUrls.map((url, uIdx) => (
+                      <div key={uIdx} className="relative h-16 w-16 rounded-xl overflow-hidden border border-slate-200 shrink-0">
+                        <img src={window.getImageUrl(url)} className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setCatalogItemGalleryUrls(prev => prev.filter(g => g !== url))}
+                          className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full cursor-pointer shadow border-none text-[8px] flex items-center justify-center shrink-0"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    <label className="h-16 w-16 border-2 border-dashed border-slate-350 hover:border-emerald-500 rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer text-slate-400 hover:text-emerald-600 transition-colors bg-slate-50 shrink-0 select-none">
+                      <Plus className="h-4.5 w-4.5" />
+                      <span className="text-[8px] font-bold">Add Photo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={async (e) => {
+                          const files = Array.from(e.target.files);
+                          if (files.length === 0) return;
+                          setCatalogItemImageUploading(true);
+                          try {
+                            const uploaded = [];
+                            for (let file of files) {
+                              const compressed = await compressImage(file);
+                              const formData = new FormData();
+                              formData.append('image', compressed);
+                              const activeToken = token || localStorage.getItem('ubt_token');
+                              const res = await fetch('http://localhost:5000/api/upload', {
+                                method: 'POST',
+                                headers: { Authorization: `Bearer ${activeToken}` },
+                                body: formData
+                              });
+                              const data = await res.json();
+                              if (data.success) {
+                                uploaded.push(data.url);
+                              }
+                            }
+                            setCatalogItemGalleryUrls(prev => [...prev, ...uploaded]);
+                          } catch (err) {
+                            setCatalogItemError('Gallery upload failed.');
+                          } finally {
+                            setCatalogItemImageUploading(false);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* Availability Status */}
+              <label className="flex items-center gap-2 text-xs font-extrabold text-slate-655 cursor-pointer mt-2 border-t border-slate-100 pt-3.5 font-bold">
+                <input
+                  type="checkbox"
+                  checked={catalogItemIsAvailable}
+                  onChange={(e) => setCatalogItemIsAvailable(e.target.checked)}
+                  className="rounded cursor-pointer h-4 w-4 text-emerald-600 border-slate-300 focus:ring-emerald-500"
+                />
+                Show item as Available & In-Stock immediately
+              </label>
+
+              {/* Submit Button */}
+              <div className="flex items-center justify-end gap-3 mt-4 border-t border-slate-100 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCatalogModal(false);
+                    resetCatalogItemForm();
+                  }}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 font-extrabold text-xs transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={catalogItemSubmitLoading}
+                  className="px-6 py-2.5 bg-[#027244] hover:bg-[#005934] text-white rounded-xl font-extrabold text-xs transition-all shadow-md shadow-emerald-955/10 cursor-pointer flex items-center gap-1.5 btn-active-press disabled:opacity-50"
+                >
+                  {catalogItemSubmitLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                  <span>Save Offering</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

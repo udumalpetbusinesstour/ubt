@@ -90,6 +90,7 @@ app.use('/api/newsletter', require('./routes/newsletter'));
 app.use('/api/update-subscribers', require('./routes/updateSubscribers'));
 app.use('/api/leads', require('./routes/leads'));
 app.use('/api/menu', require('./routes/menu'));
+app.use('/api/catalog', require('./routes/catalog'));
 app.use('/api/blood-donors', require('./routes/bloodDonors'));
 app.use('/api/blood-requests', require('./routes/bloodRequests'));
 

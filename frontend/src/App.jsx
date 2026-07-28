@@ -31,7 +31,7 @@ function SlugRouteWrapper() {
   const { id, subtab, businessSlug } = useParams();
   const [routeType, setRouteType] = useState('loading'); // 'loading', 'category', 'event', 'blog', 'business'
 
-  const knownSubtabs = ['overview', 'menu', 'services', 'photos', 'reviews', 'offers', 'about', 'branches', 'blogs', 'map'];
+  const knownSubtabs = ['overview', 'menu', 'catalog', 'services', 'photos', 'reviews', 'offers', 'about', 'branches', 'blogs', 'map'];
   
   // If matched by /:businessSlug/:id (where both params exist), but the second segment (id) is a known business subtab:
   // we actually want to treat businessSlug as the business ID, and id as the subtab.

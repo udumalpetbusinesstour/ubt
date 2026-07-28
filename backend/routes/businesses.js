@@ -2008,6 +2008,317 @@ router.post('/google-autofill', async (req, res) => {
 // @desc    Google Places Autofill by link
 // @route   POST /api/businesses/google-autofill-link
 // @access  Public
+const resolveGooglePlaceDetails = async (link) => {
+  if (!link) return null;
+  const originalLink = link.trim();
+  let targetLink = originalLink;
+  
+  // Follow short URL redirect with User-Agent to resolve standard Google Maps short links
+  if (targetLink.includes('goo.gl') || targetLink.includes('google.com') || targetLink.includes('google.co.in') || targetLink.includes('share.google')) {
+    try {
+      const response = await fetch(targetLink, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        },
+        redirect: 'follow'
+      });
+      targetLink = response.url;
+    } catch (redirectErr) {
+      console.warn('Redirect check failed:', redirectErr.message);
+    }
+  }
+
+  // 1. Attempt Place ID extraction
+  let placeId = '';
+  const match = targetLink.match(/ChIJ[a-zA-Z0-9_-]+/);
+  if (match) {
+    placeId = match[0];
+  } else {
+    try {
+      const urlObj = new URL(targetLink);
+      placeId = urlObj.searchParams.get('query_place_id') || '';
+    } catch (e) {}
+  }
+
+  // Attempt CID extraction
+  let cid = '';
+  const cidMatch = targetLink.match(/cid=(\d+)/) || originalLink.match(/cid=(\d+)/);
+  if (cidMatch) {
+    cid = cidMatch[1];
+  }
+
+  // Attempt Hexadecimal CID pair extraction
+  if (!cid) {
+    const hexMatch = targetLink.match(/0x[0-9a-fA-F]+:0x([0-9a-fA-F]+)/);
+    if (hexMatch) {
+      try {
+        cid = BigInt("0x" + hexMatch[1]).toString();
+      } catch (e) {
+        console.warn('Failed to parse hexadecimal CID:', e.message);
+      }
+    }
+  }
+
+  // 2. Try to extract Name from URL path
+  let extractedName = '';
+  const parseName = (urlStr) => {
+    const placeMatch = urlStr.match(/\/place\/([^/@?]+)/);
+    if (placeMatch) {
+      return decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+    }
+    const searchMatch = urlStr.match(/\/search\/([^/@?]+)/);
+    if (searchMatch) {
+      return decodeURIComponent(searchMatch[1].replace(/\+/g, ' '));
+    }
+    try {
+      const urlObj = new URL(urlStr);
+      const query = urlObj.searchParams.get('query') || urlObj.searchParams.get('q');
+      if (query) {
+        return query;
+      }
+    } catch (e) {}
+    return '';
+  };
+  try {
+    extractedName = parseName(targetLink) || parseName(originalLink);
+  } catch (e) {
+    console.warn('Failed to extract name from URL:', e);
+  }
+
+  // 3. Try to extract coordinates from URL
+  let extractedLat = null;
+  let extractedLng = null;
+  try {
+    const coordMatch = targetLink.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || originalLink.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (coordMatch) {
+      extractedLat = parseFloat(coordMatch[1]);
+      extractedLng = parseFloat(coordMatch[2]);
+    }
+  } catch (e) {
+    console.warn('Failed to extract coordinates from URL:', e);
+  }
+
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  const isMockKey = !apiKey || apiKey.includes('mockKeyId');
+
+  // Resolve name to Place ID via Text Search if API Key is real and we still don't have placeId or cid
+  if (!placeId && !cid && extractedName && apiKey && !isMockKey) {
+    try {
+      const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
+      const searchRes = await fetch(searchUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKey,
+          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress'
+        },
+        body: JSON.stringify({
+          textQuery: `${extractedName} Udumalpet`
+        })
+      });
+      const searchData = await searchRes.json();
+      if (searchData.places && searchData.places.length > 0) {
+        placeId = searchData.places[0].id;
+      }
+    } catch (err) {
+      console.warn('Text search fallback failed:', err.message);
+    }
+  }
+
+  // Try real fetch if API key is real and we have placeId or cid
+  if (!isMockKey && (placeId || cid) && !String(placeId).startsWith('mock_place_') && !String(placeId).startsWith('mock_addr_') && !mockDetails[placeId]) {
+    if (placeId) {
+      try {
+        const url = `https://places.googleapis.com/v1/places/${placeId}`;
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': apiKey,
+            'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,location,regularOpeningHours,rating,userRatingCount,reviews,addressComponents,types'
+          }
+        });
+        const result = await response.json();
+        if (!result.error) {
+          const lat = result.location?.latitude || extractedLat || 10.585;
+          const lng = result.location?.longitude || extractedLng || 77.251;
+
+          let pincode = '';
+          let locality = '';
+          if (result.addressComponents) {
+            for (const comp of result.addressComponents) {
+              if (comp.types && comp.types.includes('postal_code')) {
+                pincode = comp.longText;
+              }
+              if (comp.types && (comp.types.includes('sublocality') || comp.types.includes('neighborhood'))) {
+                locality = comp.longText;
+              } else if (!locality && comp.types && comp.types.includes('locality')) {
+                locality = comp.longText;
+              }
+            }
+          }
+
+          let address = result.formattedAddress || '';
+          if (!address || address.split(',').length < 3) {
+            try {
+              const legacyDetail = await fetchLegacyDetails(placeId, null, apiKey, extractedName, extractedLat, extractedLng);
+              if (legacyDetail && legacyDetail.address) {
+                address = legacyDetail.address;
+              }
+            } catch (e) {
+              console.warn('Failed to retrieve fallback legacy address:', e.message);
+            }
+          }
+
+          const cleanTimingStr = (str) => str.replace(/[\u2013\u2014\u2012\u2010]/g, '-').replace(/[\u202F\u00A0]/g, ' ').trim();
+
+          let hasGmbHours = false;
+          const timings = {
+            Monday: '',
+            Tuesday: '',
+            Wednesday: '',
+            Thursday: '',
+            Friday: '',
+            Saturday: '',
+            Sunday: '',
+          };
+
+          if (result.regularOpeningHours && result.regularOpeningHours.weekdayDescriptions) {
+            hasGmbHours = true;
+            for (const text of result.regularOpeningHours.weekdayDescriptions) {
+              const parts = text.split(': ');
+              if (parts.length >= 2) {
+                const day = parts[0];
+                const hours = cleanTimingStr(parts.slice(1).join(': '));
+                if (timings.hasOwnProperty(day)) {
+                  timings[day] = hours;
+                }
+              }
+            }
+          }
+
+          const finalTimings = hasGmbHours ? timings : null;
+
+          let googleReviews = (result.reviews || []).map(r => ({
+            authorName: r.authorAttribution?.displayName || 'A Google User',
+            rating: r.rating || 0,
+            text: r.text?.text || '',
+            createdAt: r.publishTime ? new Date(r.publishTime) : new Date(),
+          }));
+
+          let rating = result.rating || 0;
+          let reviewsCount = result.userRatingCount || 0;
+
+          if (googleReviews.length === 0 || !rating || !reviewsCount) {
+            try {
+              const legacyUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&key=${apiKey}`;
+              const legacyResp = await fetch(legacyUrl);
+              const legacyData = await legacyResp.json();
+              if (legacyData.status === 'OK' && legacyData.result) {
+                if (legacyData.result.reviews && googleReviews.length === 0) {
+                  googleReviews = legacyData.result.reviews.slice(0, 5).map(r => ({
+                    authorName: r.author_name || 'A Google User',
+                    rating: r.rating || 0,
+                    text: r.text || '',
+                    createdAt: new Date(r.time * 1000),
+                  }));
+                }
+                if (legacyData.result.rating && !rating) {
+                  rating = legacyData.result.rating;
+                }
+                if (legacyData.result.user_ratings_total && !reviewsCount) {
+                  reviewsCount = legacyData.result.user_ratings_total;
+                }
+              }
+            } catch (e) {}
+          }
+
+          let email = '';
+          if (result.websiteUri) {
+            email = await scrapeEmail(result.websiteUri);
+            if (!email) {
+              try {
+                const urlObj = new URL(result.websiteUri);
+                const host = urlObj.hostname.replace('www.', '');
+                email = `info@${host}`;
+              } catch (e) {}
+            }
+          }
+
+          return {
+            name: result.displayName?.text || extractedName || '',
+            address: address,
+            phone: result.nationalPhoneNumber || '',
+            website: result.websiteUri || '',
+            email,
+            latitude: lat,
+            longitude: lng,
+            googlePlaceId: placeId,
+            googleRating: rating,
+            googleReviewsCount: reviewsCount,
+            googleReviews,
+            timings: finalTimings,
+            openingHours: finalTimings,
+            pincode,
+            locality
+          };
+        }
+      } catch (err) {
+        console.warn('New Places Details API link call failed, trying legacy:', err.message);
+      }
+    }
+
+    try {
+      const legacyDetail = await fetchLegacyDetails(placeId, cid, apiKey, extractedName, extractedLat, extractedLng);
+      if (legacyDetail) {
+        return legacyDetail;
+      }
+    } catch (err) {
+      console.warn('Legacy Places Details API link call failed:', err.message);
+    }
+  }
+
+  // If we couldn't parse/retrieve standard Google Place details, fallback to mock details or closest coordinates match
+  const hasMockMatch = isMockKey || (placeId && (mockDetails[placeId] || String(placeId).startsWith('mock_place_') || String(placeId).startsWith('mock_addr_')));
+  if (hasMockMatch || (extractedLat && extractedLng)) {
+    let baseDetail = placeId ? mockDetails[placeId] : null;
+    if (!baseDetail && extractedLat && extractedLng) {
+      // Find closest mock by coordinates
+      let closestKey = null;
+      let closestDist = Infinity;
+      for (const [key, val] of Object.entries(mockDetails)) {
+        const dist = Math.abs(val.latitude - extractedLat) + Math.abs(val.longitude - extractedLng);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestKey = key;
+        }
+      }
+      if (closestKey && closestDist < 0.005) {
+        baseDetail = mockDetails[closestKey];
+      }
+    }
+    if (!baseDetail) {
+      const lowerId = String(placeId || '').toLowerCase();
+      const lowerName = String(extractedName || '').toLowerCase();
+      if (lowerId.includes('taluk') || lowerId.includes('office') || lowerId.includes('gov') || lowerId.includes('police') || lowerId.includes('municipality') ||
+          lowerName.includes('taluk') || lowerName.includes('office') || lowerName.includes('gov') || lowerName.includes('police') || lowerName.includes('municipality')) {
+        baseDetail = mockDetails['mock_place_udumalaipettai_taluk_office'];
+      } else {
+        baseDetail = mockDetails['mock_place_rk_electricals'];
+      }
+    }
+    return {
+      logoUrl: "",
+      coverImageUrl: "",
+      galleryUrls: [],
+      ...baseDetail
+    };
+  }
+
+  return null;
+};
+
 router.post('/google-autofill-link', async (req, res) => {
   const link = req.body.link || req.body.url;
   if (!link) {
@@ -2015,294 +2326,10 @@ router.post('/google-autofill-link', async (req, res) => {
   }
 
   try {
-    const originalLink = link.trim();
-    let targetLink = originalLink;
-    
-    // Follow short URL redirect with User-Agent to resolve standard Google Maps short links
-    if (targetLink.includes('goo.gl') || targetLink.includes('google.com') || targetLink.includes('google.co.in') || targetLink.includes('share.google')) {
-      try {
-        const response = await fetch(targetLink, {
-          method: 'GET',
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-          },
-          redirect: 'follow'
-        });
-        targetLink = response.url;
-      } catch (redirectErr) {
-        console.warn('Redirect check failed:', redirectErr.message);
-      }
+    const details = await resolveGooglePlaceDetails(link);
+    if (details) {
+      return res.json({ success: true, data: details });
     }
-
-    // 1. Attempt Place ID extraction
-    let placeId = '';
-    const match = targetLink.match(/ChIJ[a-zA-Z0-9_-]+/);
-    if (match) {
-      placeId = match[0];
-    } else {
-      try {
-        const urlObj = new URL(targetLink);
-        placeId = urlObj.searchParams.get('query_place_id') || '';
-      } catch (e) {}
-    }
-
-    // Attempt CID extraction (common in Google My Business profile/review links)
-    let cid = '';
-    const cidMatch = targetLink.match(/cid=(\d+)/) || originalLink.match(/cid=(\d+)/);
-    if (cidMatch) {
-      cid = cidMatch[1];
-    }
-
-    // 2. Try to extract Name from URL path (check targetLink and originalLink)
-    let extractedName = '';
-    const parseName = (urlStr) => {
-      const placeMatch = urlStr.match(/\/place\/([^/@?]+)/);
-      if (placeMatch) {
-        return decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
-      }
-      const searchMatch = urlStr.match(/\/search\/([^/@?]+)/);
-      if (searchMatch) {
-        return decodeURIComponent(searchMatch[1].replace(/\+/g, ' '));
-      }
-      try {
-        const urlObj = new URL(urlStr);
-        const query = urlObj.searchParams.get('query') || urlObj.searchParams.get('q');
-        if (query) {
-          return query;
-        }
-      } catch (e) {}
-      return '';
-    };
-    try {
-      extractedName = parseName(targetLink) || parseName(originalLink);
-    } catch (e) {
-      console.warn('Failed to extract name from URL:', e);
-    }
-
-    // 3. Try to extract coordinates from URL (e.g. @10.5878,77.2465)
-    let extractedLat = null;
-    let extractedLng = null;
-    try {
-      const coordMatch = targetLink.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || originalLink.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (coordMatch) {
-        extractedLat = parseFloat(coordMatch[1]);
-        extractedLng = parseFloat(coordMatch[2]);
-      }
-    } catch (e) {
-      console.warn('Failed to extract coordinates from URL:', e);
-    }
-
-    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-    const isMockKey = !apiKey || apiKey.includes('mockKeyId');
-
-    // Resolve name to Place ID via Text Search if API Key is real and we still don't have placeId or cid
-    if (!placeId && !cid && extractedName && apiKey && !isMockKey) {
-      try {
-        const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
-        const searchRes = await fetch(searchUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Goog-Api-Key': apiKey,
-            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress'
-          },
-          body: JSON.stringify({
-            textQuery: `${extractedName} Udumalpet`
-          })
-        });
-        const searchData = await searchRes.json();
-        if (searchData.places && searchData.places.length > 0) {
-          placeId = searchData.places[0].id;
-        }
-      } catch (err) {
-        console.warn('Text search fallback failed:', err.message);
-      }
-    }
-
-    // Try real fetch if API key is real and we have placeId or cid
-    if (!isMockKey && (placeId || cid) && !String(placeId).startsWith('mock_place_') && !String(placeId).startsWith('mock_addr_') && !mockDetails[placeId]) {
-      // 1. Try New Places API first (only works if we have placeId)
-      if (placeId) {
-        try {
-          const url = `https://places.googleapis.com/v1/places/${placeId}`;
-          const response = await fetch(url, {
-            method: 'GET',
-                  headers: {
-              'Content-Type': 'application/json',
-              'X-Goog-Api-Key': apiKey,
-              'X-Goog-FieldMask': 'id,displayName,formattedAddress,nationalPhoneNumber,websiteUri,location,regularOpeningHours,rating,userRatingCount,reviews,addressComponents,types'
-            }
-          });
-          const result = await response.json();
-          if (result.error) {
-            throw new Error(result.error.message || 'Places API New returned an error');
-          }
-
-          if (!result.error) {
-            const lat = result.location?.latitude || extractedLat || 10.585;
-            const lng = result.location?.longitude || extractedLng || 77.251;
-
-            let pincode = '';
-            let locality = '';
-            if (result.addressComponents) {
-              for (const comp of result.addressComponents) {
-                if (comp.types && comp.types.includes('postal_code')) {
-                  pincode = comp.longText;
-                }
-                if (comp.types && (comp.types.includes('sublocality') || comp.types.includes('neighborhood'))) {
-                  locality = comp.longText;
-                } else if (!locality && comp.types && comp.types.includes('locality')) {
-                  locality = comp.longText;
-                }
-              }
-            }
-
-            let address = result.formattedAddress || '';
-            if (!address || address.split(',').length < 3) {
-              try {
-                const legacyDetail = await fetchLegacyDetails(placeId, null, apiKey, extractedName, extractedLat, extractedLng);
-                if (legacyDetail && legacyDetail.address) {
-                  address = legacyDetail.address;
-                }
-              } catch (e) {
-                console.warn('Failed to retrieve fallback legacy address:', e.message);
-              }
-            }
-
-            const cleanTimingStr = (str) => str.replace(/[\u2013\u2014\u2012\u2010]/g, '-').replace(/[\u202F\u00A0]/g, ' ').trim();
-
-            let hasGmbHours = false;
-            const timings = {
-              Monday: '',
-              Tuesday: '',
-              Wednesday: '',
-              Thursday: '',
-              Friday: '',
-              Saturday: '',
-              Sunday: '',
-            };
-
-            if (result.regularOpeningHours && result.regularOpeningHours.weekdayDescriptions) {
-              hasGmbHours = true;
-              for (const text of result.regularOpeningHours.weekdayDescriptions) {
-                const parts = text.split(': ');
-                if (parts.length >= 2) {
-                  const day = parts[0];
-                  const hours = cleanTimingStr(parts.slice(1).join(': '));
-                  if (timings.hasOwnProperty(day)) {
-                    timings[day] = hours;
-                  }
-                }
-              }
-            }
-
-            const finalTimings = hasGmbHours ? timings : null;
-
-            let googleReviews = (result.reviews || []).map(r => ({
-              authorName: r.authorAttribution?.displayName || 'A Google User',
-              rating: r.rating || 0,
-              text: r.text?.text || '',
-              createdAt: r.publishTime ? new Date(r.publishTime) : new Date(),
-            }));
-
-            let rating = result.rating || 0;
-            let reviewsCount = result.userRatingCount || 0;
-
-            if (googleReviews.length === 0 || !rating || !reviewsCount) {
-              try {
-                const legacyUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&key=${apiKey}`;
-                const legacyResp = await fetch(legacyUrl);
-                const legacyData = await legacyResp.json();
-                if (legacyData.status === 'OK' && legacyData.result) {
-                  if (legacyData.result.reviews && googleReviews.length === 0) {
-                    googleReviews = legacyData.result.reviews.slice(0, 5).map(r => ({
-                      authorName: r.author_name || 'A Google User',
-                      rating: r.rating || 0,
-                      text: r.text || '',
-                      createdAt: new Date(r.time * 1000),
-                    }));
-                  }
-                  if (legacyData.result.rating && !rating) {
-                    rating = legacyData.result.rating;
-                  }
-                  if (legacyData.result.user_ratings_total && !reviewsCount) {
-                    reviewsCount = legacyData.result.user_ratings_total;
-                  }
-                }
-              } catch (e) {}
-            }
-
-            let email = '';
-            if (result.websiteUri) {
-              email = await scrapeEmail(result.websiteUri);
-              if (!email) {
-                try {
-                  const urlObj = new URL(result.websiteUri);
-                  const host = urlObj.hostname.replace('www.', '');
-                  email = `info@${host}`;
-                } catch (e) {}
-              }
-            }
-
-            const detail = {
-              name: result.displayName?.text || extractedName || '',
-              address: address,
-              phone: result.nationalPhoneNumber || '',
-              website: result.websiteUri || '',
-              email,
-              latitude: lat,
-              longitude: lng,
-              googlePlaceId: placeId,
-              googleRating: rating,
-              googleReviewsCount: reviewsCount,
-              googleReviews,
-              timings: finalTimings,
-              openingHours: finalTimings,
-              pincode,
-              locality
-            };
-
-            return res.json({ success: true, data: detail });
-          }
-        } catch (err) {
-          console.warn('New Places Details API link call failed, trying legacy:', err.message);
-        }
-      }
-
-      // 2. Try legacy Places Details API (works with placeId or cid)
-      try {
-        const legacyDetail = await fetchLegacyDetails(placeId, cid, apiKey, extractedName, extractedLat, extractedLng);
-        if (legacyDetail) {
-          return res.json({ success: true, data: legacyDetail });
-        }
-      } catch (err) {
-        console.warn('Legacy Places Details API link call failed:', err.message);
-      }
-    }
-
-    // Default mock fallbacks - only triggers if it is explicitly a mock environment or a mock Place ID.
-    // If it's a real API key and we couldn't parse a valid Place ID / CID or failed to fetch, return error.
-    if (isMockKey || (placeId && (mockDetails[placeId] || String(placeId).startsWith('mock_place_') || String(placeId).startsWith('mock_addr_')))) {
-      let baseDetail = mockDetails[placeId];
-      if (!baseDetail) {
-        const lowerId = String(placeId || '').toLowerCase();
-        const lowerName = String(extractedName || '').toLowerCase();
-        if (lowerId.includes('taluk') || lowerId.includes('office') || lowerId.includes('gov') || lowerId.includes('police') || lowerId.includes('municipality') ||
-            lowerName.includes('taluk') || lowerName.includes('office') || lowerName.includes('gov') || lowerName.includes('police') || lowerName.includes('municipality')) {
-          baseDetail = mockDetails['mock_place_udumalaipettai_taluk_office'];
-        } else {
-          baseDetail = mockDetails['mock_place_rk_electricals'];
-        }
-      }
-      const detail = {
-        logoUrl: "",
-        coverImageUrl: "",
-        galleryUrls: [],
-        ...baseDetail
-      };
-      return res.json({ success: true, data: detail });
-    }
-
     res.status(404).json({ success: false, message: 'Google Place details not found' });
   } catch (error) {
     console.error('Autofill by link error:', error);
@@ -2311,9 +2338,6 @@ router.post('/google-autofill-link', async (req, res) => {
 });
 
 
-// @desc    Validate Address and Boundaries
-// @route   POST /api/businesses/validate-address
-// @access  Public
 router.post('/validate-address', async (req, res) => {
   const { address, locality, pincode, latitude, longitude } = req.body;
 
@@ -3010,26 +3034,96 @@ router.put('/:id', protect, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Business not found' });
     }
 
+    // Autofetch details if Google Business Link is added or updated later
+    const linkChanged = req.body.googleBusinessLink && req.body.googleBusinessLink.trim() !== (business.googleBusinessLink || '').trim();
+    if (linkChanged) {
+      console.log(`[GOOGLE SYNC LINK] Google Business Link changed/added: ${req.body.googleBusinessLink}`);
+      try {
+        const googlePlace = await resolveGooglePlaceDetails(req.body.googleBusinessLink);
+        if (googlePlace) {
+          console.log(`[GOOGLE SYNC LINK] Google place details fetched successfully. Rating: ${googlePlace.googleRating}, Reviews: ${googlePlace.googleReviewsCount}`);
+          
+          req.body.googlePlaceId = googlePlace.googlePlaceId;
+          req.body.rawGoogleRating = googlePlace.googleRating;
+          req.body.rawGoogleReviewsCount = googlePlace.googleReviewsCount;
+          
+          const allLocalReviews = await Review.find({ businessId: business._id });
+          const localCount = allLocalReviews.length;
+          const localSum = allLocalReviews.reduce((sum, r) => sum + r.rating, 0);
+
+          const rawGoogleReviewsCount = Number(googlePlace.googleReviewsCount || 0);
+          const rawGoogleRating = Number(googlePlace.googleRating || 0);
+
+          const combinedReviewsCount = localCount + rawGoogleReviewsCount;
+          let combinedRating = rawGoogleRating;
+          if (combinedReviewsCount > 0) {
+            const googleWeight = rawGoogleRating * rawGoogleReviewsCount;
+            combinedRating = (localSum + googleWeight) / combinedReviewsCount;
+          }
+
+          req.body.googleRating = Number(combinedRating.toFixed(1));
+          req.body.googleReviewsCount = combinedReviewsCount;
+          req.body.isAddressVerified = true;
+          req.body.googleLinked = true;
+          
+          if (googlePlace.googleReviews && googlePlace.googleReviews.length) {
+            req.body.googleReviews = googlePlace.googleReviews;
+          }
+          if (googlePlace.timings) {
+            req.body.timings = googlePlace.timings;
+          }
+          
+          req.body.latitude = googlePlace.latitude;
+          req.body.longitude = googlePlace.longitude;
+          req.body.coordinates = { lat: googlePlace.latitude, lng: googlePlace.longitude };
+          if (googlePlace.address) {
+            req.body.address = googlePlace.address;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to autofetch Google place details from link on PUT:', err);
+      }
+    }
+
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
     // Verify owner, admin, or superadmin
     if (business.ownerId.toString() !== req.user._id.toString() && req.user.role !== 'admin' && req.user.role !== 'superadmin') {
       return res.status(403).json({ success: false, message: 'Not authorized to update this listing' });
     }
 
-    // Immediately save menuLabel and menuLabelSelected configurations (bypassing administrative review)
-    let menuSettingsUpdated = false;
+    // Immediately save menu/catalog label and configurations (bypassing administrative review)
+    let settingsUpdated = false;
     if (req.body.menuLabel !== undefined) {
       business.menuLabel = req.body.menuLabel;
-      menuSettingsUpdated = true;
+      settingsUpdated = true;
     }
     if (req.body.menuLabelSelected !== undefined) {
       business.menuLabelSelected = Boolean(req.body.menuLabelSelected);
-      menuSettingsUpdated = true;
+      settingsUpdated = true;
     }
-    if (menuSettingsUpdated) {
+    if (req.body.catalogLabel !== undefined) {
+      business.catalogLabel = req.body.catalogLabel;
+      settingsUpdated = true;
+    }
+    if (req.body.catalogType !== undefined) {
+      business.catalogType = req.body.catalogType;
+      settingsUpdated = true;
+    }
+    if (req.body.catalogCustomFields !== undefined) {
+      business.catalogCustomFields = req.body.catalogCustomFields;
+      settingsUpdated = true;
+    }
+    if (settingsUpdated) {
       await business.save({ validateBeforeSave: false });
     }
     delete req.body.menuLabel;
     delete req.body.menuLabelSelected;
+    delete req.body.catalogLabel;
+    delete req.body.catalogType;
+    delete req.body.catalogCustomFields;
 
     // Geocoding and allowed area boundary validation on update
     if (req.body.address || req.body.pincode || req.body.coordinates || req.body.latitude || req.body.longitude) {

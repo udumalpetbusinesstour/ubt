@@ -242,7 +242,7 @@ const getBusinessById = async (req, res, next) => {
  */
 const syncGoogleBusiness = async (req, res, next) => {
   try {
-    const { googlePlaceId, googleRating, googleReviewsCount, googleReviews, timings } = req.body;
+    const { googlePlaceId, googleRating, googleReviewsCount, googleReviews, timings, googleBusinessLink, latitude, longitude, address } = req.body;
     
     const business = await Business.findById(req.params.id);
     if (!business) {
@@ -276,6 +276,18 @@ const syncGoogleBusiness = async (req, res, next) => {
     business.googleReviewsCount = combinedReviewsCount;
     business.isAddressVerified = true;
     business.googleLinked = true;
+    
+    if (googleBusinessLink) {
+      business.googleBusinessLink = googleBusinessLink;
+    }
+    if (latitude !== undefined && longitude !== undefined && latitude !== null && longitude !== null) {
+      business.coordinates = { lat: Number(latitude), lng: Number(longitude) };
+      business.latitude = Number(latitude);
+      business.longitude = Number(longitude);
+    }
+    if (address) {
+      business.address = address;
+    }
     
     if (googleReviews && googleReviews.length) {
       business.googleReviews = googleReviews;

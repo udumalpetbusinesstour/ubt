@@ -344,6 +344,20 @@ const BusinessSchema = new mongoose.Schema({
     menuLabelSelected: {
       type: Boolean,
       default: false
+    },
+    catalogLabel: {
+      type: String,
+      trim: true,
+      default: 'Catalog'
+    },
+    catalogType: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    catalogCustomFields: {
+      type: mongoose.Schema.Types.Mixed,
+      default: []
     }
 }, {
   timestamps: true

@@ -136,13 +136,47 @@ export default function BusinessDetail({ idOverride, subtabOverride }) {
     }
   }, [params.id, params.subtab, navigate]);
 
-  const [activeTab, setActiveTab] = useState('overview'); // overview | services | photos | reviews | offers | about | map
+  const [activeTab, setActiveTab] = useState('overview'); // overview | catalog | services | photos | reviews | offers | about | map
+  const [selectedCatalogItems, setSelectedCatalogItems] = useState([]);
+
+  const handleSendCatalogBulkWhatsApp = () => {
+    if (selectedCatalogItems.length === 0) return;
+    trackClick('whatsapp');
+    let number = business.whatsapp || business.phone || '';
+    let cleanNum = number.replace(/[^0-9]/g, '');
+    cleanNum = cleanNum.replace(/^0+/, '');
+    if (cleanNum.length === 10) {
+      cleanNum = '91' + cleanNum;
+    }
+    
+    let text = `Hello! I would like to enquire about/order the following items from "${business.name}" via Udumalpet Business Tour (UBT):\n\n`;
+    selectedCatalogItems.forEach((entry, index) => {
+      const item = entry.item;
+      const qty = entry.quantity || 1;
+      const fields = item.dynamicFields || {};
+      let detail = '';
+      if (item.catalogType === 'menu') {
+        detail = ` (${fields.isVeg !== false ? 'Veg' : 'Non-Veg'})`;
+      } else if (item.catalogType === 'product' && fields.brand) {
+        detail = ` (Brand: ${fields.brand})`;
+      } else if (item.catalogType === 'services' && fields.duration) {
+        detail = ` (${fields.duration})`;
+      }
+      
+      const pricePerItem = item.offerPrice || item.price || 0;
+      const totalPrice = pricePerItem * qty;
+      text += `${index + 1}. [Qty: ${qty}x] ${item.name}${detail} - ₹${totalPrice} (₹${pricePerItem} each)\n`;
+    });
+    
+    text += `\nPlease confirm availability and total price. Thank you!`;
+    window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(text)}`);
+  };
 
   // Synchronize activeTab state with URL subtab parameter
   useEffect(() => {
     if (params.subtab) {
       const normalizedSubtab = params.subtab.toLowerCase();
-      const validTabs = ['overview', 'menu', 'services', 'photos', 'reviews', 'offers', 'about', 'branches', 'blogs', 'map'];
+      const validTabs = ['overview', 'menu', 'catalog', 'services', 'photos', 'reviews', 'offers', 'about', 'branches', 'blogs', 'map'];
       if (validTabs.includes(normalizedSubtab)) {
         setActiveTab(normalizedSubtab);
       } else if (normalizedSubtab === 'menu-and-products' || normalizedSubtab === 'products') {
@@ -173,8 +207,12 @@ export default function BusinessDetail({ idOverride, subtabOverride }) {
     const tabParam = searchParams.get('tab');
     if (tabParam) {
       const lower = tabParam.toLowerCase();
-      if (lower === 'menu' || lower === 'products' || lower === 'catalog' || lower === 'goods' || lower === 'services') {
+      if (lower === 'menu' || lower === 'products' || lower === 'goods') {
         setActiveTab('menu');
+      } else if (lower === 'catalog') {
+        setActiveTab('catalog');
+      } else if (lower === 'services') {
+        setActiveTab('services');
       } else {
         setActiveTab(tabParam);
       }
@@ -299,6 +337,10 @@ Please confirm availability and delivery time.`;
   const [blogs, setBlogs] = useState([]);
   const [menuLoading, setMenuLoading] = useState(false);
   const [selectedItemImage, setSelectedItemImage] = useState(null);
+  
+  const [catalogItems, setCatalogItems] = useState([]);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogError, setCatalogError] = useState('');
 
   // Verification states
   const [showVerifyModal, setShowVerifyModal] = useState(false);
@@ -945,6 +987,29 @@ Please confirm availability and delivery time.`;
     }
   };
 
+  const fetchCatalog = async (businessId) => {
+    if (!businessId) return;
+    setCatalogLoading(true);
+    setCatalogError('');
+    try {
+      if (businessId === 'UBT-10024' || String(businessId).startsWith('biz_') || String(businessId).startsWith('biz-')) {
+        throw new Error('Offline mock mode');
+      }
+      const res = await fetch(`http://localhost:5000/api/catalog/${businessId}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setCatalogItems(data.data);
+      } else {
+        throw new Error(data.message || 'Failed to fetch catalog items');
+      }
+    } catch (err) {
+      console.warn('Using empty catalog due to error or mock business id:', err.message);
+      setCatalogItems([]);
+    } finally {
+      setCatalogLoading(false);
+    }
+  };
+
   const fetchBusinessDetails = async () => {
     setLoading(true);
     const hasBeenViewed = viewedBusinesses.has(params.id);
@@ -964,6 +1029,7 @@ Please confirm availability and delivery time.`;
         setReviews(data.data.reviews || []);
         fetchBranches(data.data._id);
         fetchMenu(data.data._id);
+        fetchCatalog(data.data._id);
         fetchBlogs(data.data._id);
         window.dispatchEvent(new Event('platform-views-updated'));
       } else {
@@ -1414,6 +1480,7 @@ Please confirm availability and delivery time.`;
         setReviews(mockDetails.googleReviews || []);
         fetchBranches(mockDetails._id);
         fetchMenu(mockDetails._id);
+        fetchCatalog(mockDetails._id);
         fetchBlogs(mockDetails._id);
       } else {
         setError('Business details not found.');
@@ -1665,6 +1732,58 @@ Price: ₹${item.offerPrice || item.price}
 Dietary: ${item.isVeg ? 'Veg 🌱' : 'Non-Veg 🍗'}
 
 Please confirm availability and delivery time.`;
+    window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(text)}`);
+  };
+
+  const handleCatalogWhatsAppOrder = (item) => {
+    trackClick('whatsapp');
+    let number = business.whatsapp || business.phone || '';
+    let cleanNum = number.replace(/[^0-9]/g, '');
+    cleanNum = cleanNum.replace(/^0+/, '');
+    if (cleanNum.length === 10) {
+      cleanNum = '91' + cleanNum;
+    }
+    
+    let text = `Hello! I am interested in "${item.name}" from "${business.name}" via Udumalpet Business Tour (UBT).\n\n`;
+    if (item.offerPrice || item.price) {
+      text += `Price: ₹${item.offerPrice || item.price}\n`;
+    }
+    
+    const fields = item.dynamicFields || {};
+    if (item.catalogType === 'services') {
+      if (fields.duration) text += `Duration: ${fields.duration}\n`;
+      if (fields.bookingRequired) text += `Booking: Required\n`;
+    } else if (item.catalogType === 'packages') {
+      if (fields.destination) text += `Destination: ${fields.destination}\n`;
+      if (fields.duration) text += `Duration: ${fields.duration}\n`;
+      if (fields.packageType) text += `Package Type: ${fields.packageType}\n`;
+    } else if (item.catalogType === 'properties') {
+      if (fields.propertyType) text += `Property Type: ${fields.propertyType}\n`;
+      if (fields.saleRent) text += `Option: For ${fields.saleRent}\n`;
+      if (fields.area) text += `Area: ${fields.area}\n`;
+    } else if (item.catalogType === 'rooms') {
+      if (fields.roomType) text += `Room Type: ${fields.roomType}\n`;
+      if (fields.occupancy) text += `Occupancy: ${fields.occupancy}\n`;
+    } else if (item.catalogType === 'courses') {
+      if (fields.duration) text += `Duration: ${fields.duration}\n`;
+      if (fields.mode) text += `Mode: ${fields.mode}\n`;
+      if (fields.batchTiming) text += `Timing: ${fields.batchTiming}\n`;
+    } else if (item.catalogType === 'vehicles') {
+      if (fields.vehicleType) text += `Vehicle Type: ${fields.vehicleType}\n`;
+      if (fields.seatingCapacity) text += `Seating Capacity: ${fields.seatingCapacity}\n`;
+      if (fields.acType) text += `AC Status: ${fields.acType}\n`;
+    } else if (item.catalogType === 'equipment') {
+      if (fields.rentalUnit) text += `Rental Unit: ${fields.rentalUnit}\n`;
+    } else if (item.catalogType === 'inventory') {
+      if (fields.brand) text += `Brand: ${fields.brand}\n`;
+      if (fields.sku) text += `SKU: ${fields.sku}\n`;
+    } else if (item.catalogType === 'menu') {
+      text += `Type: ${fields.isVeg !== false ? 'Veg' : 'Non-Veg'}\n`;
+    } else if (item.catalogType === 'product') {
+      if (fields.brand) text += `Brand: ${fields.brand}\n`;
+    }
+    
+    text += `\nPlease provide more details or confirm availability.`;
     window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(text)}`);
   };
 
@@ -2134,6 +2253,9 @@ Please confirm availability and delivery time.`;
               { id: 'overview', label: 'Overview' },
               ...(menuItems.length > 0 ? [
                 { id: 'menu', label: `${business?.menuLabelSelected ? (business?.menuLabel || 'Menu') : (isFoodRelated(business?.category, business?.customCategoryName) ? 'Menu' : 'Products')} (${menuItems.length})` }
+              ] : []),
+              ...(catalogItems.length > 0 ? [
+                { id: 'catalog', label: `${business?.catalogLabel || 'Catalog'} (${catalogItems.length})` }
               ] : []),
               { id: 'services', label: 'Services' },
               { id: 'photos', label: `Photos (${galleryCount})` },
@@ -2990,6 +3112,312 @@ Please confirm availability and delivery time.`;
                     );
                   })()}
 
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'catalog' && (
+            <div id="catalog-section" className="flex flex-col gap-6 animate-fadeIn text-left">
+              <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-3.5 gap-3">
+                <div>
+                  <h3 className="text-xl font-extrabold text-slate-800 font-sans flex items-center gap-2">
+                    <Folder className="h-5.5 w-5.5 text-emerald-600" />
+                    <span>{business?.catalogLabel || 'Catalog'}</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 font-semibold mt-1">
+                    Explore offerings from {business.name} and check details.
+                  </p>
+                </div>
+
+                <button 
+                  onClick={() => setShowQrModal(true)}
+                  className="px-4 py-2 border border-emerald-600/10 hover:border-emerald-600/30 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-700 hover:text-emerald-800 rounded-xl font-bold text-xs flex items-center gap-2 cursor-pointer transition-all shadow-3xs shrink-0 self-start md:self-center"
+                >
+                  <QrCode className="h-4 w-4" />
+                  <span>View Catalog QR</span>
+                </button>
+              </div>
+
+              {catalogLoading ? (
+                <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
+                  <RefreshCw className="h-7 w-7 text-emerald-600 animate-spin" />
+                  <span className="text-xs font-bold font-sans">Loading catalog...</span>
+                </div>
+              ) : catalogItems.length === 0 ? (
+                <div className="py-20 text-center border-2 border-dashed border-slate-200 rounded-3xl p-8 flex flex-col items-center gap-3 bg-slate-50/50">
+                  <Folder className="h-10 w-10 text-slate-300" />
+                  <h4 className="font-extrabold text-slate-700 text-sm">No Catalog Items Listed</h4>
+                  <p className="text-xs text-slate-455 max-w-sm">
+                    This business hasn't listed any items under their catalog yet. Check back soon or contact them directly.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-10">
+                  {Object.entries(
+                    catalogItems.reduce((groups, item) => {
+                      const cat = item.category || 'General';
+                      if (!groups[cat]) groups[cat] = [];
+                      groups[cat].push(item);
+                      return groups;
+                    }, {})
+                  ).map(([categoryName, items]) => (
+                    <div key={categoryName} className="flex flex-col gap-4">
+                      <div className="flex items-center gap-3 pl-1">
+                        <h5 className="font-extrabold text-slate-700 text-xs md:text-sm border-l-4 border-emerald-600 pl-3 capitalize">{categoryName}</h5>
+                        <span className="bg-slate-100 text-slate-655 text-[9px] font-black uppercase tracking-wider py-0.5 px-2 rounded-full">
+                          {items.length} {items.length === 1 ? 'item' : 'items'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pl-1">
+                        {items.map((item) => {
+                          const discountPercent = item.offerPrice 
+                            ? Math.round(((item.price - item.offerPrice) / item.price) * 100)
+                            : 0;
+                          const fields = item.dynamicFields || {};
+                          return (
+                            <div 
+                              key={item._id} 
+                              className={`bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between gap-4 shadow-2xs relative transition-all duration-300 ${
+                                !item.isAvailable ? 'opacity-65 grayscale-[30%]' : 'hover:border-slate-350 hover:shadow-xs'
+                              }`}
+                            >
+                              <div className="flex justify-between items-start gap-3 w-full">
+                                <div className="flex-1 flex flex-col gap-2.5 text-left min-w-0">
+
+
+                                  <div className="flex flex-col">
+                                    <h5 className="font-extrabold text-sm text-[#001c41] leading-snug">{item.name}</h5>
+                                    
+                                    {/* Template Specific Fields */}
+                                    <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2 text-[10.5px] text-slate-500 font-bold">
+                                      {item.catalogType === 'services' && (
+                                        <>
+                                          {fields.duration && <span>⏱️ {fields.duration}</span>}
+                                          {fields.bookingRequired === true && <span className="text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">Booking Required</span>}
+                                        </>
+                                      )}
+                                      {item.catalogType === 'packages' && (
+                                        <>
+                                          {fields.destination && <span>📍 {fields.destination}</span>}
+                                          {fields.duration && <span>⏱️ {fields.duration}</span>}
+                                          {fields.packageType && <span>🏷️ {fields.packageType}</span>}
+                                          {fields.pricePer && <span className="text-slate-450">({fields.pricePer})</span>}
+                                          {fields.inclusions && <div className="w-full text-slate-400 mt-1 font-semibold text-[10px]">Inclusions: {fields.inclusions}</div>}
+                                        </>
+                                      )}
+                                      {item.catalogType === 'properties' && (
+                                        <>
+                                          {fields.propertyType && <span>🏠 {fields.propertyType}</span>}
+                                          {fields.saleRent && <span className="text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded font-black uppercase text-[8px]">{fields.saleRent}</span>}
+                                          {fields.area && <span>📏 {fields.area}</span>}
+                                          {(fields.bedrooms || fields.bathrooms) && (
+                                            <span>🛏️ {fields.bedrooms || 0} BHK | 🚿 {fields.bathrooms || 0} Bath</span>
+                                          )}
+                                          {fields.furnished && <span>🛋️ {fields.furnished}</span>}
+                                          {fields.parking && <span>🚗 {fields.parking}</span>}
+                                          {fields.address && <div className="w-full text-[10px] text-slate-400 mt-1 leading-normal">📍 {fields.address}</div>}
+                                        </>
+                                      )}
+                                      {item.catalogType === 'rooms' && (
+                                        <>
+                                          {fields.roomType && <span>🛏️ {fields.roomType}</span>}
+                                          {fields.occupancy && <span>👥 Max {fields.occupancy}</span>}
+                                          {fields.facilities && <div className="w-full text-[10px] text-slate-400 mt-1">Facilities: {fields.facilities}</div>}
+                                        </>
+                                      )}
+                                      {item.catalogType === 'courses' && (
+                                        <>
+                                          {fields.duration && <span>⏱️ {fields.duration}</span>}
+                                          {fields.mode && <span className="bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded text-[8px] font-black uppercase">{fields.mode}</span>}
+                                          {fields.batchTiming && <span>⏰ {fields.batchTiming}</span>}
+                                          {fields.seatsAvailable && <span className="text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">Seats: {fields.seatsAvailable} Left</span>}
+                                          {fields.enrollmentStatus && <span className="text-emerald-600 font-extrabold ml-1">{fields.enrollmentStatus}</span>}
+                                        </>
+                                      )}
+                                      {item.catalogType === 'memberships' && (
+                                        <>
+                                          {fields.membershipType && <span>🏷️ {fields.membershipType}</span>}
+                                          {fields.validity && <span>⏱️ {fields.validity}</span>}
+                                          {fields.benefits && <div className="w-full text-[10px] text-slate-400 mt-1">Benefits: {fields.benefits}</div>}
+                                        </>
+                                      )}
+                                      {item.catalogType === 'vehicles' && (
+                                        <>
+                                          {fields.vehicleType && <span>🚗 {fields.vehicleType}</span>}
+                                          {fields.seatingCapacity && <span>👥 {fields.seatingCapacity} Seater</span>}
+                                          {fields.priceType && <span className="text-slate-455">({fields.priceType})</span>}
+                                          {fields.acType && <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[8px]">{fields.acType}</span>}
+                                          {fields.driverIncluded === true && <span className="text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">Driver Included</span>}
+                                        </>
+                                      )}
+                                      {item.catalogType === 'equipment' && (
+                                        <>
+                                          {fields.rentalUnit && <span className="text-slate-455">({fields.rentalUnit})</span>}
+                                          {fields.deposit && <span>💰 Deposit: ₹{fields.deposit}</span>}
+                                        </>
+                                      )}
+                                      {item.catalogType === 'inventory' && (
+                                        <>
+                                          {fields.brand && <span>🏷️ {fields.brand}</span>}
+                                          {fields.sku && <span>SKU: {fields.sku}</span>}
+                                          {fields.stockQuantity !== undefined && (
+                                            <span className={Number(fields.stockQuantity) > 0 ? "text-emerald-600" : "text-rose-600"}>
+                                              Stock: {fields.stockQuantity} qty
+                                            </span>
+                                          )}
+                                        </>
+                                      )}
+                                      {item.catalogType === 'menu' && (
+                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                          <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider select-none shrink-0 border ${
+                                            fields.isVeg !== false 
+                                              ? 'bg-emerald-50 text-emerald-700 border-emerald-250/20' 
+                                              : 'bg-rose-50 text-rose-700 border-rose-250/20'
+                                          }`}>
+                                            {fields.isVeg !== false ? 'Veg' : 'Non-Veg'}
+                                          </span>
+                                        </div>
+                                      )}
+                                      {item.catalogType === 'product' && fields.brand && (
+                                        <span>🏷️ Brand: {fields.brand}</span>
+                                      )}
+                                      {item.catalogType === 'custom' && business.catalogCustomFields && (
+                                        <div className="w-full grid grid-cols-2 gap-2 mt-1 pt-1.5 border-t border-slate-550/20">
+                                          {Array.isArray(business.catalogCustomFields) && business.catalogCustomFields.map((fName, fIdx) => {
+                                            const val = fields[fName];
+                                            if (val === undefined || val === null || val === '') return null;
+                                            return (
+                                              <div key={fIdx} className="flex flex-col text-[9.5px]">
+                                                <span className="text-slate-400 font-bold uppercase tracking-wider text-[8px]">{fName}</span>
+                                                <span className="text-slate-700 font-extrabold mt-0.5">
+                                                  {typeof val === 'boolean' ? (val ? 'Yes' : 'No') : String(val)}
+                                                </span>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {item.description && (
+                                      <p className="text-[10.5px] font-semibold text-slate-455 mt-2.5 leading-relaxed">{item.description}</p>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {item.imageUrl && (
+                                  <div 
+                                    onClick={() => setSelectedItemImage(window.getImageUrl(item.imageUrl))}
+                                    className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden shrink-0 cursor-pointer shadow-3xs hover:scale-105 transition-transform flex items-center justify-center p-0.5"
+                                  >
+                                    <img src={window.getImageUrl(item.imageUrl)} alt={item.name} className="h-full w-full object-cover rounded-xl" />
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex items-center justify-between border-t border-slate-100 pt-3.5 mt-1">
+                                <div className="flex flex-col text-left">
+                                  {item.offerPrice ? (
+                                    <div className="flex flex-col">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-base font-extrabold text-slate-800">₹{item.offerPrice}</span>
+                                        <span className="text-[9px] bg-rose-50 border border-rose-100 text-rose-600 font-extrabold px-1.5 py-0.5 rounded select-none">
+                                          {discountPercent}% OFF
+                                        </span>
+                                      </div>
+                                      <span className="text-[10px] text-slate-400 font-bold line-through">M.R.P: ₹{item.price}</span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-base font-extrabold text-slate-800">
+                                      {item.price > 0 ? `₹${item.price}` : 'Price on Request'}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider select-none shrink-0 ${
+                                    item.isAvailable 
+                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-250/20' 
+                                      : 'bg-rose-50 text-rose-700 border border-rose-250/20'
+                                  }`}>
+                                    {item.isAvailable ? 'Available' : 'Unavailable'}
+                                  </span>
+                                  {item.isAvailable && (
+                                    <>
+                                      {(() => {
+                                        const cartEntry = selectedCatalogItems.find(i => i.item?._id === item._id);
+                                        const qty = cartEntry ? cartEntry.quantity : 0;
+                                        if (qty === 0) {
+                                          return (
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedCatalogItems(prev => [...prev, { item, quantity: 1 }]);
+                                              }}
+                                              className="bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-655 font-extrabold text-[10px] py-1.5 px-3 rounded-lg flex items-center gap-1 transition-all border cursor-pointer active:scale-95 shrink-0"
+                                            >
+                                              <Plus className="h-3 w-3" />
+                                              <span>Select</span>
+                                            </button>
+                                          );
+                                        }
+                                        return (
+                                          <div 
+                                            onClick={(e) => e.stopPropagation()} 
+                                            className="bg-emerald-50 border border-emerald-300 text-emerald-700 font-extrabold text-[10px] py-0.5 px-1.5 rounded-lg flex items-center gap-2 transition-all shrink-0 select-none"
+                                          >
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setSelectedCatalogItems(prev => {
+                                                  const existing = prev.find(i => i.item?._id === item._id);
+                                                  if (existing && existing.quantity > 1) {
+                                                    return prev.map(i => i.item?._id === item._id ? { ...i, quantity: i.quantity - 1 } : i);
+                                                  } else {
+                                                    return prev.filter(i => i.item?._id !== item._id);
+                                                  }
+                                                });
+                                              }}
+                                              className="h-5 w-5 bg-emerald-600/10 hover:bg-emerald-600/20 active:scale-90 text-emerald-800 rounded flex items-center justify-center font-black cursor-pointer border-none text-[11px] leading-none"
+                                            >
+                                              -
+                                            </button>
+                                            <span className="min-w-[12px] text-center font-black text-emerald-850 text-xs leading-none">{qty}</span>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setSelectedCatalogItems(prev => 
+                                                  prev.map(i => i.item?._id === item._id ? { ...i, quantity: i.quantity + 1 } : i)
+                                                );
+                                              }}
+                                              className="h-5 w-5 bg-emerald-600/10 hover:bg-emerald-600/20 active:scale-90 text-emerald-800 rounded flex items-center justify-center font-black cursor-pointer border-none text-[11px] leading-none"
+                                            >
+                                              +
+                                            </button>
+                                          </div>
+                                        );
+                                      })()}
+                                      <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); handleCatalogWhatsAppOrder(item); }}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1.5 px-3.5 rounded-lg flex items-center gap-1.5 transition-all shadow-3xs cursor-pointer active:scale-95 shrink-0"
+                                      >
+                                        <MessageSquare className="h-3 w-3" />
+                                        <span>Enquire</span>
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -4232,6 +4660,36 @@ Please confirm availability and delivery time.`;
                 )}
               </div>
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
+      {/* Sticky Bottom Catalog Enquiry Cart Bar */}
+      {selectedCatalogItems.length > 0 && typeof window !== 'undefined' && createPortal(
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 backdrop-blur-md border border-slate-800 text-white rounded-2xl py-3 px-5 shadow-2xl flex items-center justify-between gap-6 max-w-sm sm:max-w-md w-[calc(100%-2rem)] animate-slideUp">
+          <div className="flex flex-col text-left">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Catalog Order</span>
+            <span className="text-xs font-extrabold">
+              {(() => {
+                const totalItemsCount = selectedCatalogItems.reduce((acc, entry) => acc + (entry.quantity || 1), 0);
+                return `${totalItemsCount} ${totalItemsCount === 1 ? 'item' : 'items'}`;
+              })()} selected
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedCatalogItems([])}
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg font-bold text-[10px] transition-colors cursor-pointer"
+            >
+              Clear
+            </button>
+            <button
+              onClick={handleSendCatalogBulkWhatsApp}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1.5 px-4 rounded-lg flex items-center gap-1.5 transition-all shadow-md cursor-pointer active:scale-95"
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span>Send WhatsApp Enquiry</span>
+            </button>
           </div>
         </div>,
         document.body
