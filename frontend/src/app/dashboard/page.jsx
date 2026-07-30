@@ -9,7 +9,7 @@ import {
   RefreshCw, Star, StarHalf, CreditCard, ChevronRight, ChevronLeft, ArrowLeft, Activity, PhoneCall,
   MessageSquare, MessageCircle, Plus, CheckCircle, Info, Bell, ExternalLink, Globe,
   Copy, Check, Share2, Gift, Upload, HelpCircle, Briefcase, Mail, Settings, Menu, X, Trash2, Search, Lock,
-  FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin, LogOut, Facebook, Instagram, Phone, Users, Move, Utensils, Folder, Package, GripVertical
+  FileEdit, BookOpen, Heart, Eye, Calendar, Clock, MapPin, LogOut, Facebook, Instagram, Phone, Users, Move, Utensils, Folder, Package, GripVertical, Nfc
 } from 'lucide-react';
 
 
@@ -83,7 +83,7 @@ const slugToTab = (slug) => {
     'Dashboard', 'Business Details', 'Branches', 'Catalog', 'Photos & Media',
     'Reviews & Reputation', 'Leads & Enquiries', 'Subscription & Billing',
     'Offers & Promotions', 'Referral & Rewards', 'Events', 'My Blogs',
-    'Settings', 'Help & Support', 'Queries'
+    'Settings', 'Help & Support', 'Queries', 'NFC Card'
   ];
   const matchedDisplay = displayTabs.find(tab => tabToSlug(tab) === cleanSlug);
   return matchedDisplay || 'Dashboard';
@@ -139,6 +139,21 @@ function DashboardContent() {
 
   // Catalog Configuration Toggle State
   const [isConfiguringCatalog, setIsConfiguringCatalog] = useState(false);
+
+  // NFC Card request states
+  const [nfcFormName, setNfcFormName] = useState('');
+  const [nfcFormAddress, setNfcFormAddress] = useState('');
+  const [nfcFormContact, setNfcFormContact] = useState('');
+  const [nfcSubmitting, setNfcSubmitting] = useState(false);
+  const [nfcPaymentLoading, setNfcPaymentLoading] = useState(false);
+
+  useEffect(() => {
+    if (business) {
+      setNfcFormName(prev => prev || business.name || '');
+      setNfcFormAddress(prev => prev || business.address || business.locality || '');
+      setNfcFormContact(prev => prev || business.contactNumber || user?.phone || '');
+    }
+  }, [business, user]);
 
   useEffect(() => {
     if (business) {
@@ -1675,10 +1690,150 @@ function DashboardContent() {
       if (data.success) {
         setMyPayments(data.data);
       }
-    } catch (err) {
-      console.error('Error fetching payment history:', err);
     } finally {
       setMyPaymentsLoading(false);
+    }
+  };
+
+  const handleNfcPaymentInit = async () => {
+    const activeToken = token || localStorage.getItem('ubt_token');
+    if (!activeToken || !business) return;
+
+    setNfcPaymentLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/payments/create-nfc-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ businessId: business._id })
+      });
+      const orderData = await res.json();
+
+      if (!orderData.success) {
+        alert(orderData.message || 'Failed to initialize NFC Card order.');
+        setNfcPaymentLoading(false);
+        return;
+      }
+
+      const isRazorpayScriptLoaded = () => {
+        return new Promise((resolve) => {
+          if (window.Razorpay) {
+            resolve(true);
+            return;
+          }
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.body.appendChild(script);
+        });
+      };
+
+      await isRazorpayScriptLoaded();
+
+      const options = {
+        key: orderData.keyId,
+        name: 'Udumalpet Business Tour',
+        description: 'Purchase NFC Digital Business Card',
+        amount: orderData.amount,
+        currency: orderData.currency,
+        order_id: orderData.orderId,
+        handler: async function (response) {
+          try {
+            const verifyRes = await fetch('http://localhost:5000/api/payments/verify-nfc-payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${activeToken}`,
+              },
+              body: JSON.stringify({
+                businessId: business._id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              alert('Payment Successful! Now, configure your card configuration request details below.');
+              fetchMyPayments();
+            } else {
+              alert(verifyData.message || 'Payment verification failed.');
+            }
+          } catch (err) {
+            console.error('Error verifying payment:', err);
+            alert('Error verifying payment status.');
+          } finally {
+            setNfcPaymentLoading(false);
+          }
+        },
+        prefill: {
+          name: user?.fullName || user?.name || '',
+          email: user?.email || '',
+          contact: user?.phone || ''
+        },
+        theme: {
+          color: '#001c41'
+        },
+        modal: {
+          ondismiss: function () {
+            setNfcPaymentLoading(false);
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error('NFC Payment Init Error:', error);
+      alert('Failed to start payment checkout.');
+      setNfcPaymentLoading(false);
+    }
+  };
+
+  const handleNfcRequestSubmit = async (paymentId) => {
+    if (!nfcFormName.trim() || !nfcFormAddress.trim() || !nfcFormContact.trim()) {
+      alert('Please fill out all configuration fields.');
+      return;
+    }
+
+    const activeToken = token || localStorage.getItem('ubt_token');
+    if (!activeToken || !paymentId) return;
+
+    setNfcSubmitting(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/payments/submit-nfc-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({
+          paymentId,
+          cardName: nfcFormName,
+          deliveryAddress: nfcFormAddress,
+          contactNumber: nfcFormContact
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('NFC Card Request submitted successfully! Redirecting you to WhatsApp to confirm delivery details.');
+        fetchMyPayments();
+
+        const profileUrl = `${window.location.origin}/businesses/${business?.slug || business?._id}`;
+        const waMessage = `Hello UBT Support! I have successfully paid ₹249 for an NFC Digital Business Card.\n\n*Card Custom Name*: ${nfcFormName}\n*Delivery Address*: ${nfcFormAddress}\n*Contact Number*: ${nfcFormContact}\n\n*Business Profile link*:\n${profileUrl}`;
+        const encodedMsg = encodeURIComponent(waMessage);
+        window.open(`https://wa.me/918925728260?text=${encodedMsg}`, '_blank');
+      } else {
+        alert(data.message || 'Failed to submit card configuration.');
+      }
+    } catch (err) {
+      console.error('Error submitting NFC request:', err);
+      alert('An error occurred while submitting your card configuration.');
+    } finally {
+      setNfcSubmitting(false);
     }
   };
 
@@ -1738,7 +1893,7 @@ function DashboardContent() {
 
   useEffect(() => {
     const activeToken = token || localStorage.getItem('ubt_token');
-    if (activeToken && activeTab === 'Subscription & Billing') {
+    if (activeToken && (activeTab === 'Subscription & Billing' || activeTab === 'NFC Card')) {
       fetchMyPayments();
     }
   }, [token, activeTab]);
@@ -5264,7 +5419,8 @@ function DashboardContent() {
       },
       { label: 'Subscription & Billing', icon: <CreditCard className="h-4 w-4" /> },
       { label: 'Offers & Promotions', icon: <Sparkles className="h-4 w-4" /> },
-      { label: 'Referral & Rewards', icon: <Gift className="h-4 w-4" /> }
+      { label: 'Referral & Rewards', icon: <Gift className="h-4 w-4" /> },
+      { label: 'NFC Card', icon: <Nfc className="h-4 w-4" /> }
     ] : [
       { label: 'Dashboard', icon: <Briefcase className="h-4 w-4" /> }
     ]),
@@ -11377,6 +11533,244 @@ function DashboardContent() {
             </div>
           )}
 
+          {activeTab === 'NFC Card' && (() => {
+            const paidNfcPayment = (myPayments || []).find(p => p.isNfcCard && (p.status === 'Paid' || p.paymentStatus === 'Paid'));
+
+            return (
+              <div className="flex flex-col gap-8 animate-fadeIn text-left font-sans text-[#001c41]">
+                {/* Premium Hero Banner */}
+                <div className="bg-gradient-to-r from-[#001c41] via-[#0b2b5c] to-[#027244] rounded-[32px] p-8 text-white relative overflow-hidden shadow flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-800">
+                  <div className="absolute inset-0 bg-slate-900/10 pointer-events-none" />
+                  <div className="flex flex-col gap-2.5 max-w-xl z-10 text-left">
+                    <span className="bg-white/10 border border-white/20 text-emerald-300 font-extrabold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full w-fit">
+                      Premium Networking
+                    </span>
+                    <h2 className="text-3xl font-black tracking-tight leading-tight font-sans">
+                      NFC Digital Business Card
+                    </h2>
+                    <p className="text-xs md:text-sm text-slate-200 font-medium leading-relaxed mt-1">
+                      Upgrade your business networking with our custom smart cards. Tap on any smartphone to instantly share your digital business profile and collect reviews.
+                    </p>
+                  </div>
+
+                  {/* Pricing Badge */}
+                  <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-5 flex flex-col items-center justify-center shrink-0 min-w-[210px] z-10 shadow-md">
+                    <Nfc className="h-7 w-7 text-emerald-300 mb-1.5 animate-pulse" />
+                    <span className="text-[9px] uppercase font-black text-slate-350 tracking-wider">One-Time Payment</span>
+                    <span className="text-3xl font-black mt-1 text-emerald-300">
+                      ₹249
+                    </span>
+                    <span className="text-[9px] font-extrabold text-slate-350 mt-1 uppercase tracking-wider">
+                      Lifetime Validity
+                    </span>
+                  </div>
+                </div>
+
+                {/* Main Content Area */}
+                {!paidNfcPayment ? (
+                  /* STEP 1: PAYMENT VIEW */
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+                    {/* Custom Smart Card Mockup */}
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center gap-6 text-center">
+                      <h3 className="font-extrabold text-xs sm:text-sm text-slate-700 select-none">Custom Smart Card Preview</h3>
+                      
+                      <div 
+                        onClick={() => {
+                          const lookup = business?.slug || business?._id;
+                          if (lookup) {
+                            window.open(`${window.location.origin}/businesses/${lookup}`, '_blank');
+                          }
+                        }}
+                        title="Click to preview your live profile!"
+                        className="w-[320px] h-[190px] rounded-2xl bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-800 text-white p-5 flex flex-col justify-between shadow-2xl relative overflow-hidden select-none border border-slate-700/50 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                      >
+                        <div className="absolute top-0 right-0 w-[180px] h-[180px] bg-[#027244]/15 rounded-full blur-2xl pointer-events-none" />
+                        
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-2">
+                            <div className="h-7 w-7 bg-emerald-50 rounded-lg flex items-center justify-center font-black text-white text-xs">
+                              UBT
+                            </div>
+                            <span className="text-[10px] font-black tracking-widest text-slate-300 uppercase">Smart Card</span>
+                          </div>
+                          <Nfc className="h-5 w-5 text-slate-400" />
+                        </div>
+
+                        <div className="flex flex-col text-left">
+                          <span className="text-[13px] font-black tracking-wide truncate max-w-[260px] text-emerald-300 uppercase">
+                            {business?.name || "Your Business Name"}
+                          </span>
+                          <span className="text-[9px] font-extrabold text-slate-400 mt-1 uppercase tracking-wider">
+                            {business?.type || "Category"}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between items-end border-t border-slate-800/80 pt-2.5">
+                          <div className="flex flex-col text-left">
+                            <span className="text-[7.5px] font-bold uppercase tracking-widest text-slate-500">Linked Profile Link</span>
+                            <span className="text-[9px] font-bold text-slate-400 tracking-tight">
+                              udumalpet.business/{business?.slug || 'profile'}
+                        </span>
+                          </div>
+                          <span className="text-[8px] font-black uppercase bg-emerald-950 border border-emerald-800/50 text-emerald-400 px-2 py-0.5 rounded-md tracking-wider">
+                            Tap To Scan
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-slate-450 font-semibold max-w-xs leading-relaxed">
+                        *Design is customizable with your branding logo. Ready to use out of the box with zero configuration!
+                      </p>
+                    </div>
+
+                    {/* Features & Checkout Option */}
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 sm:p-8 flex flex-col justify-between gap-6 text-left">
+                      <div className="flex flex-col gap-5">
+                        <h3 className="font-extrabold text-[#001c41] text-base tracking-tight font-sans">Why get a UBT NFC Smart Card?</h3>
+                        
+                        <div className="flex flex-col gap-4">
+                          {[
+                            { title: 'Instant Tap to Connect', desc: 'No apps required. Customers just touch their NFC phone to the card and your listing profile opens immediately.' },
+                            { title: 'Boost Customer Reviews', desc: 'Direct customers right to your review tab in one second, multiplying your high-rated business feedback.' },
+                            { title: 'Premium Matte Build', desc: 'Sleek, high-quality material designed to fit perfectly in your wallet and look professional on counters.' },
+                            { title: 'Integrated QR Code Backup', desc: 'Includes a custom QR code on the back so older smartphones without NFC can easily scan too.' }
+                          ].map((item, idx) => (
+                            <div key={idx} className="flex gap-3 items-start text-xs font-semibold text-slate-655">
+                              <CheckCircle className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-black text-slate-800">{item.title}</span>
+                                <span className="text-[11px] text-slate-500 font-medium mt-0.5 leading-relaxed">{item.desc}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="border-t border-slate-100 pt-5 mt-2 flex flex-col gap-4">
+                        <button
+                          onClick={handleNfcPaymentInit}
+                          disabled={nfcPaymentLoading}
+                          className="w-full py-3 bg-[#027244] hover:bg-[#005934] disabled:bg-slate-400 text-white font-extrabold text-xs sm:text-[13px] rounded-2xl cursor-pointer shadow-md shadow-emerald-800/10 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] font-sans"
+                        >
+                          <CreditCard className="h-5 w-5 shrink-0" />
+                          {nfcPaymentLoading ? 'Initializing Checkout...' : 'Pay ₹249 & Request NFC Card'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : !paidNfcPayment.nfcRequestSubmitted ? (
+                  /* STEP 2: CONFIGURATION REQUEST FORM (AFTER PAYMENT) */
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 sm:p-8 max-w-2xl mx-auto w-full text-left flex flex-col gap-6">
+                    <div className="flex flex-col gap-1 border-b border-slate-100 pb-4">
+                      <span className="text-emerald-600 text-xs font-black uppercase tracking-wider">Payment Verified!</span>
+                      <h3 className="font-extrabold text-[#001c41] text-xl font-sans">NFC Card Configuration Details</h3>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5 leading-normal">
+                        Your payment of ₹249 has been received. Please submit the details to be printed and shipped.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <label className="block text-xs font-black uppercase text-slate-555 mb-1.5 tracking-wider">Name to print on Card</label>
+                        <input
+                          type="text"
+                          value={nfcFormName}
+                          onChange={(e) => setNfcFormName(e.target.value)}
+                          placeholder="e.g. SRS Electricals"
+                          className="w-full border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 bg-slate-50/50"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black uppercase text-slate-555 mb-1.5 tracking-wider">Shipping Delivery Address</label>
+                        <textarea
+                          rows="3"
+                          value={nfcFormAddress}
+                          onChange={(e) => setNfcFormAddress(e.target.value)}
+                          placeholder="Complete Address with Pincode"
+                          className="w-full border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 bg-slate-50/50"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black uppercase text-slate-555 mb-1.5 tracking-wider">Contact Number (For Courier)</label>
+                        <input
+                          type="text"
+                          value={nfcFormContact}
+                          onChange={(e) => setNfcFormContact(e.target.value)}
+                          placeholder="10-digit mobile number"
+                          className="w-full border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 bg-slate-50/50"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleNfcRequestSubmit(paidNfcPayment._id)}
+                      disabled={nfcSubmitting}
+                      className="w-full py-3 bg-[#027244] hover:bg-[#005934] disabled:bg-slate-400 text-white font-extrabold text-xs sm:text-[13px] rounded-2xl cursor-pointer shadow-md shadow-emerald-800/10 flex items-center justify-center gap-2 transition-all font-sans"
+                    >
+                      <CheckCircle className="h-5 w-5 shrink-0" />
+                      {nfcSubmitting ? 'Submitting Details...' : 'Submit & Connect via WhatsApp'}
+                    </button>
+                  </div>
+                ) : (
+                  /* STEP 3: ORDER COMPLETED SUCCESS BANNER */
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 sm:p-8 max-w-2xl mx-auto w-full text-center flex flex-col items-center gap-6">
+                    <div className="h-16 w-16 bg-emerald-50 rounded-full border border-emerald-100 flex items-center justify-center text-emerald-600 text-3xl font-bold mb-2 animate-bounce">
+                      ✓
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <h3 className="font-extrabold text-[#001c41] text-xl font-sans">NFC Card Order Confirmed!</h3>
+                      <p className="text-xs text-slate-500 font-medium max-w-md leading-relaxed mx-auto">
+                        Your custom digital business card is currently being configured and will be dispatched to your address shortly.
+                      </p>
+                    </div>
+
+                    <div className="w-full bg-slate-50 border border-slate-200/60 p-5 rounded-2xl text-left flex flex-col gap-3.5 text-xs text-slate-650 font-semibold max-w-md mx-auto">
+                      <div className="flex justify-between items-center border-b border-slate-200/40 pb-2">
+                        <span className="text-[10px] uppercase font-black text-slate-450 tracking-wider">Order Status</span>
+                        <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border ${
+                          paidNfcPayment.nfcCardStatus === 'Delivered'
+                            ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
+                            : paidNfcPayment.nfcCardStatus === 'Shipped'
+                              ? 'bg-blue-50 border-blue-200 text-blue-650'
+                              : 'bg-amber-50 border-amber-250 text-amber-600'
+                        }`}>
+                          {paidNfcPayment.nfcCardStatus || 'Pending'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center border-b border-slate-200/40 pb-2">
+                        <span className="text-[10px] uppercase font-black text-slate-450 tracking-wider">Card Name</span>
+                        <span className="font-bold text-slate-800">{paidNfcPayment.nfcCardName}</span>
+                      </div>
+                      <div className="flex justify-between items-start border-b border-slate-200/40 pb-2">
+                        <span className="text-[10px] uppercase font-black text-slate-450 tracking-wider shrink-0 mr-4">Delivery Address</span>
+                        <span className="font-bold text-slate-800 text-right leading-tight">{paidNfcPayment.nfcDeliveryAddress}</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-1">
+                        <span className="text-[10px] uppercase font-black text-slate-450 tracking-wider">Contact Phone</span>
+                        <span className="font-bold text-slate-800">{paidNfcPayment.nfcContactNumber}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        const profileUrl = `${window.location.origin}/businesses/${business?.slug || business?._id}`;
+                        const waMessage = `Hello UBT Support! I am checking on my NFC smart card delivery status.\n\n*Card Name*: ${paidNfcPayment.nfcCardName}\n*Business Link*: ${profileUrl}`;
+                        const encodedMsg = encodeURIComponent(waMessage);
+                        window.open(`https://wa.me/918925728260?text=${encodedMsg}`, '_blank');
+                      }}
+                      className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs font-sans mt-2"
+                    >
+                      <MessageCircle className="h-4.5 w-4.5 text-slate-500" />
+                      Contact Support on WhatsApp
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           {activeTab === 'Subscription & Billing' && (
             <div className="flex flex-col gap-8 animate-fadeIn text-left font-sans text-[#001c41]">
 
@@ -12525,16 +12919,16 @@ function DashboardContent() {
                 )}
               </div>
 
-              <div className="px-6 md:px-8 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between shrink-0 rounded-b-[32px]">
+              <div className="px-4 xs:px-6 md:px-8 py-3.5 sm:py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between shrink-0 rounded-b-[32px]">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="py-3 px-5 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 font-extrabold text-[11px] rounded-xl cursor-pointer uppercase tracking-wide transition-colors"
+                  className="py-2.5 sm:py-3 px-3.5 xs:px-5 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 font-extrabold text-[10px] xs:text-[11px] rounded-xl cursor-pointer uppercase tracking-wide transition-colors"
                 >
                   Cancel
                 </button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 xs:gap-2">
                   <button
                     type="button"
                     disabled={editTab === 'general'}
@@ -12543,7 +12937,7 @@ function DashboardContent() {
                       const idx = tabs.indexOf(editTab);
                       if (idx > 0) setEditTab(tabs[idx - 1]);
                     }}
-                    className="py-3 px-4 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-[11px] rounded-xl cursor-pointer uppercase tracking-wide transition-all flex items-center gap-1"
+                    className="py-2.5 sm:py-3 px-2.5 xs:px-4 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-[10px] xs:text-[11px] rounded-xl cursor-pointer uppercase tracking-wide transition-all flex items-center gap-0.5 xs:gap-1"
                   >
                     <ChevronLeft className="h-3.5 w-3.5" /> Back
                   </button>
@@ -12556,16 +12950,16 @@ function DashboardContent() {
                       const idx = tabs.indexOf(editTab);
                       if (idx < tabs.length - 1) setEditTab(tabs[idx + 1]);
                     }}
-                    className="py-3 px-4 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-[11px] rounded-xl cursor-pointer uppercase tracking-wide transition-all flex items-center gap-1"
+                    className="py-2.5 sm:py-3 px-2.5 xs:px-4 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-[10px] xs:text-[11px] rounded-xl cursor-pointer uppercase tracking-wide transition-all flex items-center gap-0.5 xs:gap-1"
                   >
                     Next <ChevronRight className="h-3.5 w-3.5" />
                   </button>
 
                   <button
                     type="submit"
-                    className="py-3 px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[11px] rounded-xl cursor-pointer shadow-md shadow-emerald-800/10 uppercase tracking-wide transition-colors"
+                    className="py-2.5 sm:py-3 px-3.5 xs:px-6 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[10px] xs:text-[11px] rounded-xl cursor-pointer shadow-md shadow-emerald-800/10 uppercase tracking-wide transition-colors"
                   >
-                    Save Details
+                    Save <span className="hidden xs:inline">Details</span>
                   </button>
                 </div>
               </div>

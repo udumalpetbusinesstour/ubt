@@ -6,7 +6,7 @@ import {
   MessageSquare, CreditCard as CardIcon, Bell, BarChart3, Settings, LogOut, Search, User, Users,
   MapPin, ChevronRight, ChevronDown, Landmark, Trash2, Mail, Globe, Award, ShieldAlert, CheckCircle2,
   Clock, Plus, Filter, ShieldCheck as ShieldOk, Activity, Cpu, Database, Terminal, Gift, Smile,
-  Upload, Heart, Copy, XCircle, Edit3, Sparkles
+  Upload, Heart, Copy, XCircle, Edit3, Sparkles, Nfc, ExternalLink
 } from 'lucide-react';
 import BloodDonorsTab from '../../components/BloodDonorsTab';
 
@@ -123,7 +123,8 @@ export default function AdminDashboard() {
       'Dashboard', 'Businesses', 'Signups', 'Category Management', 'Pending Approvals',
       'Business Edits', 'Partners', 'Blogs', 'Events', 'Reviews',
       'Testimonials', 'Sponsored Ads', 'Subscriptions', 'Notifications',
-      'Queries', 'Referral Moderation', 'Blood Donors', 'Newsletter Subscribers', 'ApiLogs'
+      'Queries', 'Referral Moderation', 'Blood Donors', 'Newsletter Subscribers', 'ApiLogs',
+      'Non-Payment', 'NFC Orders'
     ];
     const matchedDisplay = displayTabs.find(tab => adminTabToSlug(tab) === slug.toLowerCase());
     return matchedDisplay || 'Dashboard';
@@ -195,6 +196,19 @@ export default function AdminDashboard() {
   const [resolutionTargetCatMap, setResolutionTargetCatMap] = useState({});
   const [resolutionCustomSubcatMap, setResolutionCustomSubcatMap] = useState({});
   const [resolutionParentCatMap, setResolutionParentCatMap] = useState({});
+
+  const isNonPaymentBiz = (b) => {
+    if (!b) return false;
+    const isApproved = b.status && b.status.toLowerCase().trim() === 'approved';
+    if (isApproved) return false;
+
+    const hasPaid = b.isPaid || 
+      b.subscriptionStatus === 'active' || 
+      b.isPremium || 
+      subscriptions.some(s => s.businessId === b._id && (s.paymentStatus === 'Paid' || s.status === 'active'));
+    
+    return !hasPaid;
+  };
 
   // Preset Category creation state variables
   const [presetTypeMode, setPresetTypeMode] = useState('main'); // 'main' or 'sub'
@@ -2157,6 +2171,30 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
     }
   };
 
+  const handleUpdateNfcStatus = async (paymentId, newStatus) => {
+    try {
+      const activeToken = token || localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/payments/admin/nfc/${paymentId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`NFC status updated to "${newStatus}"!`, 'success');
+        loadPlatformRealData(true);
+      } else {
+        alert(data.message || 'Failed to update NFC status.');
+      }
+    } catch (err) {
+      console.error('Error updating NFC status:', err);
+      alert('An error occurred while updating the status.');
+    }
+  };
+
   const handleManualSubscription = async (bizId) => {
     try {
       const res = await fetch(`http://localhost:5000/api/admin/businesses/${bizId}/activate-subscription`, {
@@ -2596,6 +2634,8 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
               { id: 'Signups', label: 'Signups', icon: <User className="h-5 w-5" /> },
               { id: 'Category Management', label: 'Categories', icon: <Grid className="h-5 w-5" /> },
               { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" /> },
+              { id: 'Non-Payment', label: 'Non Payment', icon: <XCircle className="h-5 w-5" />, badge: businesses.filter(b => isNonPaymentBiz(b)).length },
+              { id: 'NFC Orders', label: 'NFC Orders', icon: <Nfc className="h-5 w-5" />, badge: payments.filter(p => p.isNfcCard && p.nfcCardStatus === 'Pending').length },
               { id: 'Business Edits', label: 'Business Edits', icon: <Edit3 className="h-5 w-5" /> },
               { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-5 w-5" /> },
               { id: 'Blogs', label: 'Blogs Moderation', icon: <BookOpen className="h-5 w-5" /> },
@@ -2614,14 +2654,23 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeTab === item.id 
                     ? 'bg-[#027244] text-white shadow-md shadow-emerald-950/15' 
                     : 'text-slate-400 hover:bg-slate-900/40 hover:text-white'
                 }`}
               >
-                {item.icon}
-                {!sidebarCollapsed && <span>{item.label}</span>}
+                <div className="flex items-center gap-3.5">
+                  {item.icon}
+                  {!sidebarCollapsed && <span>{item.label}</span>}
+                </div>
+                {!sidebarCollapsed && item.badge > 0 && (
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black ${
+                    activeTab === item.id ? 'bg-white text-[#027244]' : 'bg-rose-600 text-white'
+                  }`}>
+                    {item.badge}
+                  </span>
+                )}
               </button>
             ))}
           </nav>
@@ -2677,6 +2726,8 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                   { id: 'Signups', label: 'Signups', icon: <User className="h-5 w-5" /> },
                   { id: 'Category Management', label: 'Categories', icon: <Grid className="h-5 w-5" /> },
                   { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" /> },
+                  { id: 'Non-Payment', label: 'Non Payment', icon: <XCircle className="h-5 w-5" />, badge: businesses.filter(b => isNonPaymentBiz(b)).length },
+                  { id: 'NFC Orders', label: 'NFC Orders', icon: <Nfc className="h-5 w-5" />, badge: payments.filter(p => p.isNfcCard && p.nfcCardStatus === 'Pending').length },
                   { id: 'Business Edits', label: 'Business Edits', icon: <Edit3 className="h-5 w-5" /> },
                   { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-5 w-5" /> },
                   { id: 'Blogs', label: 'Blogs Moderation', icon: <BookOpen className="h-5 w-5" /> },
@@ -2698,14 +2749,23 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                       setMobileMenuOpen(false);
                       setActiveTab(item.id);
                     }}
-                    className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left w-full ${
+                    className={`flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left w-full ${
                       activeTab === item.id 
                         ? 'bg-[#027244] text-white shadow-md shadow-emerald-950/15' 
                         : 'text-slate-400 hover:bg-slate-900/40 hover:text-white'
                     }`}
                   >
-                    {item.icon}
-                    <span>{item.label}</span>
+                    <div className="flex items-center gap-3.5">
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </div>
+                    {item.badge > 0 && (
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-black ${
+                        activeTab === item.id ? 'bg-white text-[#027244]' : 'bg-rose-600 text-white'
+                      }`}>
+                        {item.badge}
+                      </span>
+                    )}
                   </button>
                 ))}
               </nav>
@@ -3649,7 +3709,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                             : 'text-slate-500 hover:text-slate-800'
                         }`}
                       >
-                        Businesses ({businesses.filter(b => b.status === 'Pending Verification' || b.status === 'Under Review').length})
+                        Businesses ({businesses.filter(b => (b.status === 'Pending Verification' || b.status === 'Under Review') && !isNonPaymentBiz(b)).length})
                       </button>
                       <button
                         onClick={() => setPendingSubTab('Blogs')}
@@ -3707,7 +3767,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                   {/* Sub-tab view: Businesses */}
                   {pendingSubTab === 'Businesses' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {businesses.filter(b => b.status === 'Pending Verification' || b.status === 'Under Review').map(b => (
+                      {businesses.filter(b => (b.status === 'Pending Verification' || b.status === 'Under Review') && !isNonPaymentBiz(b)).map(b => (
                         <div key={b._id} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-5 flex flex-col justify-between gap-5 hover:shadow-md transition-shadow">
                           <div className="flex gap-4">
                             <a 
@@ -4157,6 +4217,426 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                   )}
                 </div>
               )}
+
+              {/* TAB: NON-PAYMENT BUSINESSES LIST */}
+              {activeTab === 'Non-Payment' && (
+                <div className="flex flex-col gap-6 text-left animate-fadeIn">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex flex-col">
+                      <h3 className="font-extrabold text-[#001c41] text-base font-sans">Non-Payment Registrations</h3>
+                      <span className="text-[10.5px] text-slate-450 font-semibold mt-0.5">Audit, approve manually, or remove listings that have not completed payment after 3 days</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200/80 shadow-xs rounded-[28px] overflow-hidden">
+                    {/* Mobile Cards View (< md) */}
+                    <div className="flex flex-col gap-3.5 md:hidden p-4">
+                      {businesses.filter(isNonPaymentBiz).filter(b => {
+                        const query = searchQuery.toLowerCase();
+                        return (b.name || '').toLowerCase().includes(query) || 
+                          (b.ownerName && b.ownerName.toLowerCase().includes(query)) ||
+                          (b.locality && b.locality.toLowerCase().includes(query));
+                      }).map(b => (
+                        <div key={b._id} className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 flex flex-col gap-3 text-left transition-all hover:bg-slate-50">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0 border border-slate-200 shadow-2xs flex items-center justify-center bg-gradient-to-br from-rose-500 to-red-650 text-white font-extrabold text-xs uppercase select-none">
+                                <img 
+                                  src={b.logoUrl ? window.getImageUrl(b.logoUrl) : '/default_business_cover.png'} 
+                                  className={`h-full w-full ${b.logoUrl ? 'object-contain p-1 bg-white' : 'object-cover'}`} 
+                                  alt={b.name} 
+                                />
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-extrabold text-slate-800 text-sm leading-tight break-words">
+                                  {b.name}
+                                </span>
+                                <span className="text-[11px] text-slate-500 font-medium mt-0.5">
+                                  Owner: {b.ownerName || 'N/A'}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border shrink-0 bg-red-50 border-red-200 text-red-650">
+                              Unpaid
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-xs py-2 px-3 bg-white rounded-xl border border-slate-200/60 font-medium text-slate-600">
+                            <div>
+                              <span className="text-[9.5px] text-slate-400 block font-extrabold uppercase tracking-wider">Category / Locality</span>
+                              <span className="font-bold text-slate-800">{b.type || 'N/A'}</span>
+                              <span className="text-[10.5px] text-slate-500 block">{b.locality || 'N/A'}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9.5px] text-slate-400 block font-extrabold uppercase tracking-wider">Age / Registered</span>
+                              <span className="font-bold text-rose-655 block">{Math.floor((Date.now() - new Date(b.createdAt).getTime()) / (24 * 60 * 60 * 1000))} Days Unpaid</span>
+                              <span className="text-[10.5px] text-slate-500 block">{new Date(b.createdAt).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-end gap-2 border-t border-slate-200/60 pt-2.5 flex-wrap">
+                            <button
+                              onClick={() => { setSelectedBiz(b); setShowBizModal(true); }}
+                              className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-extrabold cursor-pointer shadow-2xs"
+                            >
+                              Vet details
+                            </button>
+                            <button
+                              onClick={async () => { if (await handleAction(b._id, 'approve')) showToast('Listing approved manually!', 'success'); }}
+                              className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-xs font-extrabold cursor-pointer shadow-2xs"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={async () => { if (await handleAction(b._id, 'reject')) showToast('Listing rejected.', 'error'); }}
+                              className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-xs font-extrabold cursor-pointer shadow-2xs"
+                            >
+                              Reject
+                            </button>
+                            <button
+                              onClick={() => handleDeleteBusiness(b._id)}
+                              className="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-extrabold cursor-pointer transition-colors shadow-2xs"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      {businesses.filter(isNonPaymentBiz).length === 0 && (
+                        <div className="p-8 text-center text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl">
+                          No non-payment business listings found.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Desktop Table View (>= md) */}
+                    <div className="hidden md:block touch-scroll-x border border-slate-200 rounded-2xl">
+                      <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                        <thead className="bg-slate-50 border-b border-slate-200 uppercase text-[9px] font-black text-slate-450 tracking-wider">
+                          <tr>
+                            <th className="p-4.5">Business Profile</th>
+                            <th className="p-4.5">Category / Locality</th>
+                            <th className="p-4.5">Registered</th>
+                            <th className="p-4.5">Age (Unpaid)</th>
+                            <th className="p-4.5">Status</th>
+                            <th className="p-4.5 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-medium">
+                          {businesses.filter(isNonPaymentBiz).filter(b => {
+                            const query = searchQuery.toLowerCase();
+                            return (b.name || '').toLowerCase().includes(query) || 
+                              (b.ownerName && b.ownerName.toLowerCase().includes(query)) ||
+                              (b.locality && b.locality.toLowerCase().includes(query));
+                          }).map(b => (
+                            <tr key={b._id} className="hover:bg-slate-50/50 transition-colors">
+                              <td className="p-4.5 flex items-center gap-3.5">
+                                <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0 border border-slate-200 relative shadow-2xs flex items-center justify-center bg-gradient-to-br from-rose-500 to-red-655 text-white font-extrabold text-xs uppercase select-none">
+                                  <img 
+                                    src={b.logoUrl ? window.getImageUrl(b.logoUrl) : '/default_business_cover.png'} 
+                                    className={`h-full w-full ${b.logoUrl ? 'object-contain p-1 bg-white' : 'object-cover'}`} 
+                                    alt={b.name} 
+                                  />
+                                </div>
+                                <div className="flex flex-col text-left min-w-0">
+                                  <span className="font-extrabold text-slate-800 text-xs sm:text-[13px] leading-normal whitespace-normal break-words max-w-[250px] sm:max-w-[320px] line-clamp-3">
+                                    {b.name}
+                                  </span>
+                                  <span className="text-[10px] text-slate-405 font-semibold mt-1 font-sans">
+                                    Owner: {b.ownerName}
+                                  </span>
+                                  <a
+                                    href={`/businesses/${b.slug || b._id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[#027244] hover:text-[#005934] hover:underline font-black text-[10.5px] mt-1.5 flex items-center gap-1 w-fit cursor-pointer leading-none"
+                                  >
+                                    View Profile →
+                                  </a>
+                                </div>
+                              </td>
+                              <td className="p-4.5">
+                                <div className="flex flex-col text-left">
+                                  <span className="font-bold text-slate-705 text-xs">{b.type}</span>
+                                  <span className="text-[10px] text-slate-400 mt-1 font-semibold">{b.locality}</span>
+                                </div>
+                              </td>
+                              <td className="p-4.5 font-bold text-slate-500">
+                                {new Date(b.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </td>
+                              <td className="p-4.5 font-bold text-rose-655">
+                                {Math.floor((Date.now() - new Date(b.createdAt).getTime()) / (24 * 60 * 60 * 1000))} Days
+                              </td>
+                              <td className="p-4.5">
+                                <span className="px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border shrink-0 bg-red-50 border-red-200 text-red-650">
+                                  Unpaid
+                                </span>
+                              </td>
+                              <td className="p-4.5 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    onClick={() => { setSelectedBiz(b); setShowBizModal(true); }}
+                                    className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
+                                  >
+                                    Vet details
+                                  </button>
+                                  <button
+                                    onClick={async () => { if (await handleAction(b._id, 'approve')) showToast('Listing approved manually!', 'success'); }}
+                                    className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={async () => { if (await handleAction(b._id, 'reject')) showToast('Listing rejected.', 'error'); }}
+                                    className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
+                                  >
+                                    Reject
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteBusiness(b._id)}
+                                    className="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10.5px] font-extrabold cursor-pointer transition-colors shadow-2xs"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                          {businesses.filter(isNonPaymentBiz).length === 0 && (
+                            <tr>
+                              <td colSpan="6" className="p-8 text-center text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl">
+                                No non-payment business listings found.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: NFC CARD ORDERS TRACKER */}
+              {activeTab === 'NFC Orders' && (() => {
+                const nfcPayments = (payments || []).filter(p => p.isNfcCard && (p.status === 'Paid' || p.paymentStatus === 'Paid'));
+                const totalNfcRevenue = nfcPayments.reduce((sum, p) => sum + (p.amount || 249), 0);
+                const pendingShipments = nfcPayments.filter(p => p.nfcCardStatus === 'Pending').length;
+                const completedShipments = nfcPayments.filter(p => p.nfcCardStatus === 'Delivered').length;
+
+                return (
+                  <div className="flex flex-col gap-6 text-left animate-fadeIn font-sans text-slate-800">
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div className="flex flex-col">
+                        <h3 className="font-extrabold text-[#001c41] text-base font-sans">NFC Digital Card Orders</h3>
+                        <span className="text-[10.5px] text-slate-450 font-semibold mt-0.5">Track smart card custom configurations, verify transactions, and manage delivery status</span>
+                      </div>
+                    </div>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="bg-white border border-slate-200/80 shadow-2xs rounded-3xl p-5 flex items-center gap-4">
+                        <div className="h-10 w-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-lg shrink-0">
+                          <Nfc className="h-5 w-5" />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">Total Orders</span>
+                          <span className="text-xl font-black text-slate-800 mt-0.5">{nfcPayments.length}</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white border border-slate-200/80 shadow-2xs rounded-3xl p-5 flex items-center gap-4">
+                        <div className="h-10 w-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-lg shrink-0">
+                          <Landmark className="h-5 w-5" />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">Total Revenue</span>
+                          <span className="text-xl font-black text-slate-800 mt-0.5">₹{totalNfcRevenue}</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white border border-slate-200/80 shadow-2xs rounded-3xl p-5 flex items-center gap-4">
+                        <div className="h-10 w-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-lg shrink-0">
+                          <Clock className="h-5 w-5 animate-pulse" />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">Pending Shipments</span>
+                          <span className="text-xl font-black text-slate-800 mt-0.5">{pendingShipments}</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white border border-slate-200/80 shadow-2xs rounded-3xl p-5 flex items-center gap-4">
+                        <div className="h-10 w-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-lg shrink-0">
+                          <CheckCircle2 className="h-5 w-5" />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">Delivered</span>
+                          <span className="text-xl font-black text-slate-800 mt-0.5">{completedShipments}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-slate-200/80 shadow-xs rounded-[28px] overflow-hidden">
+                      {/* Mobile Cards View (< md) */}
+                      <div className="flex flex-col gap-3.5 md:hidden p-4">
+                        {nfcPayments.filter(p => {
+                          const query = searchQuery.toLowerCase();
+                          const matchedBiz = businesses.find(b => b._id === p.businessId);
+                          return (matchedBiz?.name || '').toLowerCase().includes(query) ||
+                            (p.nfcCardName || '').toLowerCase().includes(query) ||
+                            (p.nfcContactNumber || '').toLowerCase().includes(query);
+                        }).map(p => {
+                          const matchedBiz = businesses.find(b => b._id === p.businessId);
+
+                          return (
+                            <div key={p._id} className="bg-slate-50/85 border border-slate-200 rounded-2xl p-4 flex flex-col gap-3 text-left transition-all hover:bg-slate-50">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex flex-col min-w-0">
+                                  <span className="font-extrabold text-slate-800 text-xs truncate uppercase">
+                                    {p.nfcCardName || 'No Name Configured'}
+                                  </span>
+                                  <span className="text-[10px] text-slate-450 font-bold truncate mt-0.5">
+                                    Merchant: {matchedBiz ? matchedBiz.name : 'Unknown Business'}
+                                  </span>
+                                </div>
+                                <span className={`px-2.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide border ${
+                                  p.nfcCardStatus === 'Delivered'
+                                    ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
+                                    : p.nfcCardStatus === 'Shipped'
+                                      ? 'bg-blue-50 border-blue-200 text-blue-655'
+                                      : 'bg-amber-50 border-amber-250 text-amber-600'
+                                }`}>
+                                  {p.nfcCardStatus || 'Pending'}
+                                </span>
+                              </div>
+
+                              <div className="border-t border-slate-200/50 pt-2 flex flex-col gap-1.5 text-[11px] text-slate-500 font-semibold">
+                                <p><span className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-0.5">Shipping Address:</span> {p.nfcDeliveryAddress || 'Not Provided'}</p>
+                                <p><span className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-0.5 mt-1">Contact Phone:</span> {p.nfcContactNumber || 'Not Provided'}</p>
+                                <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-250/20 text-[10px] font-mono text-slate-400">
+                                  <span>ID: {p.razorpayPaymentId || p.paymentId}</span>
+                                  <span className="font-bold text-slate-655">₹{p.amount || 249}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex gap-1.5 mt-1 border-t border-slate-200/40 pt-3">
+                                {['Pending', 'Shipped', 'Delivered'].map(statusOption => (
+                                  <button
+                                    key={statusOption}
+                                    onClick={() => handleUpdateNfcStatus(p._id, statusOption)}
+                                    className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider cursor-pointer border transition-colors ${
+                                      p.nfcCardStatus === statusOption
+                                        ? 'bg-[#001c41] border-[#001c41] text-white'
+                                        : 'bg-white border-slate-200 text-slate-555 hover:bg-slate-50'
+                                    }`}
+                                  >
+                                    {statusOption}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {nfcPayments.length === 0 && (
+                          <div className="p-8 text-center text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl">
+                            No NFC Card requests found.
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Desktop Table View (>= md) */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full border-collapse text-left text-xs font-semibold text-slate-650">
+                          <thead className="bg-slate-50 border-b border-slate-250/80 uppercase text-[9px] font-black text-slate-400 tracking-wider">
+                            <tr>
+                              <th className="p-4">Business & Profile Link</th>
+                              <th className="p-4">Card Printed Name</th>
+                              <th className="p-4">Delivery details</th>
+                              <th className="p-4">Payment details</th>
+                              <th className="p-4">Shipping Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 font-medium">
+                            {nfcPayments.filter(p => {
+                              const query = searchQuery.toLowerCase();
+                              const matchedBiz = businesses.find(b => b._id === p.businessId);
+                              return (matchedBiz?.name || '').toLowerCase().includes(query) ||
+                                (p.nfcCardName || '').toLowerCase().includes(query) ||
+                                (p.nfcContactNumber || '').toLowerCase().includes(query);
+                            }).map(p => {
+                              const matchedBiz = businesses.find(b => b._id === p.businessId);
+                              const profileUrl = matchedBiz ? `/businesses/${matchedBiz.slug || matchedBiz._id}` : null;
+
+                              return (
+                                <tr key={p._id} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="p-4 min-w-[200px]">
+                                    <div className="flex flex-col">
+                                      <span className="font-extrabold text-slate-800 text-xs sm:text-[13px]">{matchedBiz ? matchedBiz.name : 'Unknown Business'}</span>
+                                      {profileUrl ? (
+                                        <Link to={profileUrl} target="_blank" className="text-[10px] text-emerald-600 font-bold hover:underline mt-0.5 flex items-center gap-1">
+                                          View Profile <ExternalLink className="h-3 w-3" />
+                                        </Link>
+                                      ) : (
+                                        <span className="text-[10px] text-slate-450">No Profile Link Available</span>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="p-4">
+                                    <span className="font-extrabold text-slate-800 text-xs uppercase bg-slate-100 border border-slate-200/60 px-2.5 py-1 rounded-lg">
+                                      {p.nfcCardName || 'Pending details'}
+                                    </span>
+                                  </td>
+                                  <td className="p-4 max-w-[280px]">
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="text-[11px] text-slate-655 font-bold leading-normal">{p.nfcDeliveryAddress || 'Not submitted yet'}</span>
+                                      <span className="text-[10px] text-slate-450 font-semibold">Contact: {p.nfcContactNumber || 'N/A'}</span>
+                                    </div>
+                                  </td>
+                                  <td className="p-4">
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="font-extrabold text-slate-800">₹{p.amount || 249}</span>
+                                      <span className="text-[9.5px] text-slate-400 font-mono">Pay ID: {p.razorpayPaymentId || p.paymentId}</span>
+                                      <span className="text-[9px] text-slate-450">
+                                        {new Date(p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="p-4">
+                                    <div className="flex items-center gap-2">
+                                      <select
+                                        value={p.nfcCardStatus || 'Pending'}
+                                        onChange={(e) => handleUpdateNfcStatus(p._id, e.target.value)}
+                                        className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border cursor-pointer focus:outline-none focus:ring-1 focus:ring-slate-400/20 ${
+                                          p.nfcCardStatus === 'Delivered'
+                                            ? 'bg-emerald-50 border-emerald-250 text-emerald-700'
+                                            : p.nfcCardStatus === 'Shipped'
+                                              ? 'bg-blue-50 border-blue-200 text-blue-655'
+                                              : 'bg-amber-50 border-amber-250 text-amber-600'
+                                        }`}
+                                      >
+                                        <option value="Pending">Pending</option>
+                                        <option value="Shipped">Shipped</option>
+                                        <option value="Delivered">Delivered</option>
+                                      </select>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                            {nfcPayments.length === 0 && (
+                              <tr>
+                                <td colSpan="5" className="p-8 text-center text-slate-400 text-xs font-bold bg-slate-50">
+                                  No NFC Card requests found.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* TAB: BUSINESS EDITS MODERATION */}
               {activeTab === 'Business Edits' && (
                 <div className="flex flex-col gap-6 text-left">

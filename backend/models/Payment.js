@@ -63,6 +63,28 @@ const PaymentSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  isNfcCard: {
+    type: Boolean,
+    default: false,
+  },
+  nfcCardStatus: {
+    type: String,
+    enum: ['Pending', 'Shipped', 'Delivered'],
+    default: 'Pending',
+  },
+  nfcCardName: {
+    type: String,
+  },
+  nfcDeliveryAddress: {
+    type: String,
+  },
+  nfcContactNumber: {
+    type: String,
+  },
+  nfcRequestSubmitted: {
+    type: Boolean,
+    default: false,
+  },
   offerId: {
     type: String,
   },

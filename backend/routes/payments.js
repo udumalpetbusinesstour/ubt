@@ -1526,4 +1526,168 @@ router.post('/verify-sponsored-ad-payment', protect, async (req, res) => {
   }
 });
 
+// @route   POST /api/payments/create-nfc-order
+// @access  Private
+router.post('/create-nfc-order', protect, async (req, res) => {
+  try {
+    const { businessId } = req.body;
+    if (!businessId) {
+      return res.status(400).json({ success: false, message: 'Business ID is required' });
+    }
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ success: false, message: 'Business not found' });
+    }
+
+    const amount = 249;
+    const amountInPaise = amount * 100;
+
+    const options = {
+      amount: amountInPaise,
+      currency: 'INR',
+      receipt: `nfc_${businessId}_${Date.now()}`,
+      payment_capture: 1
+    };
+
+    if (!razorpay) {
+      return res.status(500).json({ success: false, message: 'Razorpay client is not initialized.' });
+    }
+
+    const order = await razorpay.orders.create(options);
+
+    res.json({
+      success: true,
+      keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_mockKeyId12345',
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency
+    });
+  } catch (error) {
+    console.error('[Create NFC Order Error]:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @route   POST /api/payments/verify-nfc-payment
+// @access  Private
+router.post('/verify-nfc-payment', protect, async (req, res) => {
+  try {
+    const {
+      businessId,
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature
+    } = req.body;
+
+    if (!businessId || !razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+      return res.status(400).json({ success: false, message: 'Missing parameters for verification' });
+    }
+
+    // Verify signature
+    const hmac = crypto.createHmac('sha256', (process.env.RAZORPAY_KEY_SECRET || 'rzp_test_mockSecret12345').trim().replace(/['"]/g, ''));
+    hmac.update(razorpayOrderId + '|' + razorpayPaymentId);
+    const generatedSignature = hmac.digest('hex');
+
+    if (generatedSignature !== razorpaySignature) {
+      return res.status(400).json({ success: false, message: 'Payment verification failed (Signature Mismatch)' });
+    }
+
+    // Check if this payment already exists
+    let payment = await Payment.findOne({ razorpayPaymentId });
+    if (!payment) {
+      payment = new Payment({
+        userId: req.user._id,
+        businessId,
+        amount: 249,
+        razorpayOrderId,
+        razorpayPaymentId,
+        paymentMethod: 'Razorpay/UPI',
+        status: 'Paid',
+        paymentStatus: 'Paid',
+        isNfcCard: true,
+        nfcCardStatus: 'Pending',
+        nfcRequestSubmitted: false
+      });
+      await payment.save();
+    }
+
+    res.json({
+      success: true,
+      message: 'NFC Card Payment verified! Please configure your card details.',
+      payment
+    });
+  } catch (error) {
+    console.error('[Verify NFC Payment Error]:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @route   POST /api/payments/submit-nfc-request
+// @access  Private
+router.post('/submit-nfc-request', protect, async (req, res) => {
+  try {
+    const { paymentId, cardName, deliveryAddress, contactNumber } = req.body;
+    if (!paymentId || !cardName || !deliveryAddress || !contactNumber) {
+      return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
+
+    const payment = await Payment.findById(paymentId);
+    if (!payment) {
+      return res.status(404).json({ success: false, message: 'Payment record not found' });
+    }
+
+    if (!payment.isNfcCard) {
+      return res.status(400).json({ success: false, message: 'This payment record is not for an NFC Card' });
+    }
+
+    payment.nfcCardName = cardName;
+    payment.nfcDeliveryAddress = deliveryAddress;
+    payment.nfcContactNumber = contactNumber;
+    payment.nfcRequestSubmitted = true;
+    await payment.save();
+
+    res.json({
+      success: true,
+      message: 'NFC Card configuration details submitted successfully!',
+      payment
+    });
+  } catch (error) {
+    console.error('[Submit NFC Request Error]:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @route   PUT /api/payments/admin/nfc/:paymentId/status
+// @access  Private/Admin
+router.put('/admin/nfc/:paymentId/status', protect, admin, async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!['Pending', 'Shipped', 'Delivered'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+
+    const payment = await Payment.findById(req.params.paymentId);
+    if (!payment) {
+      return res.status(404).json({ success: false, message: 'Payment record not found' });
+    }
+
+    if (!payment.isNfcCard) {
+      return res.status(400).json({ success: false, message: 'This payment record is not for an NFC Card' });
+    }
+
+    payment.nfcCardStatus = status;
+    await payment.save();
+
+    res.json({
+      success: true,
+      message: `NFC Card order status updated to "${status}" successfully!`,
+      payment
+    });
+  } catch (error) {
+    console.error('[Admin Update NFC Status Error]:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
