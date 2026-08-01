@@ -1483,7 +1483,7 @@ export default function EventsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Registration Fee / Ticket Price *</span>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2">
                       <select
                         value={evtPrice === 0 ? 'free' : (evtPrice === -1 ? 'varies' : 'paid')}
                         onChange={(e) => {
@@ -1492,7 +1492,7 @@ export default function EventsPage() {
                           else if (val === 'varies') setEvtPrice(-1);
                           else setEvtPrice(''); // default paid is empty to prompt user entry
                         }}
-                        className="h-10 px-3 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 cursor-pointer"
+                        className="w-full h-10 px-3 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 cursor-pointer"
                       >
                         <option value="free">Free (₹0)</option>
                         <option value="paid">Paid (₹)</option>
@@ -1510,7 +1510,7 @@ export default function EventsPage() {
                           }}
                           placeholder="Price (₹)"
                           required
-                          className="flex-1 h-10 px-3 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] animate-fadeIn"
+                          className="w-full h-10 px-3 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] animate-fadeIn"
                         />
                       )}
                     </div>
