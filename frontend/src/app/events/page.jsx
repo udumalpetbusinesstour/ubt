@@ -86,7 +86,7 @@ export default function EventsPage() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterCategory, setFilterCategory] = useState('All Categories');
   const [filterDate, setFilterDate] = useState('');
-  const [sortBy, setSortBy] = useState('Date (Latest)');
+  const [sortBy, setSortBy] = useState('Date (Soonest)');
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -765,6 +765,10 @@ export default function EventsPage() {
     e.preventDefault();
     if (!evtDescription || !evtVenue || !evtPhone) {
       setErrorMsg('Description, Location, and Contact phone details are required');
+      return;
+    }
+    if (evtPrice === '') {
+      setErrorMsg('Please specify a ticket amount/registration fee');
       return;
     }
     setErrorMsg('');
@@ -1486,7 +1490,7 @@ export default function EventsPage() {
                           const val = e.target.value;
                           if (val === 'free') setEvtPrice(0);
                           else if (val === 'varies') setEvtPrice(-1);
-                          else setEvtPrice(99); // default paid
+                          else setEvtPrice(''); // default paid is empty to prompt user entry
                         }}
                         className="h-10 px-3 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 cursor-pointer"
                       >
@@ -1500,7 +1504,10 @@ export default function EventsPage() {
                           type="number"
                           min="1"
                           value={evtPrice}
-                          onChange={(e) => setEvtPrice(Number(e.target.value))}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setEvtPrice(val === '' ? '' : Number(val));
+                          }}
                           placeholder="Price (₹)"
                           required
                           className="flex-1 h-10 px-3 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#027244] animate-fadeIn"
