@@ -4748,6 +4748,10 @@ function DashboardContent() {
       setCompleteEventError('Title, Category, Dates, Organizer, Venue, Phone, and Description are required.');
       return;
     }
+    if (completeEventPrice === '') {
+      setCompleteEventError('Please specify a ticket amount/registration fee.');
+      return;
+    }
 
     setCompleteEventLoading(true);
     setCompleteEventError('');
@@ -13932,16 +13936,16 @@ function DashboardContent() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Registration Fee / Ticket Price *</label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2">
                       <select
                         value={completeEventPrice === 0 ? 'free' : (completeEventPrice === -1 ? 'varies' : 'paid')}
                         onChange={(e) => {
                           const val = e.target.value;
                           if (val === 'free') setCompleteEventPrice(0);
                           else if (val === 'varies') setCompleteEventPrice(-1);
-                          else setCompleteEventPrice(99); // default paid
+                          else setCompleteEventPrice(''); // default paid is empty to prompt user entry
                         }}
-                        className="border border-slate-200/70 p-2.5 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 cursor-pointer"
+                        className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 cursor-pointer"
                       >
                         <option value="free">Free (₹0)</option>
                         <option value="paid">Paid (₹)</option>
@@ -13953,10 +13957,13 @@ function DashboardContent() {
                           type="number"
                           min="1"
                           value={completeEventPrice}
-                          onChange={(e) => setCompleteEventPrice(Number(e.target.value))}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCompleteEventPrice(val === '' ? '' : Number(val));
+                          }}
                           placeholder="Price (₹)"
                           required
-                          className="flex-1 border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 animate-fadeIn"
+                          className="w-full border border-slate-200/70 p-2.5 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#027244] bg-slate-50/20 animate-fadeIn"
                         />
                       )}
                     </div>

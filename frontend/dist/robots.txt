@@ -1,4 +1,48 @@
+# ==================================================================
+# robots.txt for https://udumalpet.business
+# Production Configuration
+# ==================================================================
+
 User-agent: *
 Allow: /
 
+# --------------------------------------------------
+# Block private/admin areas
+# --------------------------------------------------
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /logout
+Disallow: /profile/
+Disallow: /settings/
+
+# --------------------------------------------------
+# Block duplicate search/filter URLs
+# --------------------------------------------------
+Disallow: /search
+Disallow: /*?q=
+Disallow: /*?search=
+Disallow: /*?filter=
+Disallow: /*?sort=
+Disallow: /*?page=
+Disallow: /*?session=
+Disallow: /*?token=
+Disallow: /*?utm_
+Disallow: /*?fbclid=
+Disallow: /*?gclid=
+
+# --------------------------------------------------
+# Allow all public pages
+# --------------------------------------------------
+Allow: /businesses
+Allow: /categories
+Allow: /events
+Allow: /blog
+Allow: /blood-donors
+
+# --------------------------------------------------
+# XML Sitemap
+# --------------------------------------------------
 Sitemap: https://udumalpet.business/sitemap.xml
