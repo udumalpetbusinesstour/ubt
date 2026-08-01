@@ -159,6 +159,14 @@ const initializeServer = async () => {
     const { syncAllApprovedCategories } = require('./utils/categoryHelper');
     await syncAllApprovedCategories();
 
+    // 6.2. Run dynamic XML sitemap compiler on server boot
+    try {
+      const { generateSitemap } = require('./utils/generateSitemap');
+      await generateSitemap();
+    } catch (sitemapErr) {
+      console.error('[Boot] Dynamic sitemap compilation failed:', sitemapErr.message);
+    }
+
     // 6.5. System self-repair: Align branch ownerIds with parent ownerIds
     try {
       console.log('[Boot] Auditing and fixing branch owner associations...');

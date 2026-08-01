@@ -2308,6 +2308,7 @@ function BusinessesList({ forceFocus }) {
                                 <img 
                                   src={biz.logoUrl ? window.getImageUrl(biz.logoUrl) : '/default_business_cover.png'} 
                                   alt={biz.name}
+                                  loading="lazy"
                                   className={`h-full w-full transition-transform duration-750 ease-out-expo group-hover:scale-105 ${
                                     biz.logoUrl ? 'object-contain p-4 bg-white' : 'object-cover'
                                   }`}
@@ -3186,6 +3187,7 @@ function BusinessesList({ forceFocus }) {
                       <img 
                         src={biz.logoUrl ? window.getImageUrl(biz.logoUrl) : '/default_business_cover.png'} 
                         alt={biz.name}
+                        loading="lazy"
                         className={`h-full w-full transition-transform duration-750 ease-out-expo group-hover:scale-105 ${
                           biz.logoUrl ? 'object-contain p-4 bg-white' : 'object-cover'
                         }`}

@@ -25,6 +25,7 @@ import UpdatePopup from './components/UpdatePopup';
 import CookieConsent from './components/CookieConsent';
 import BloodDonorsPage from './app/blood-donors/page';
 import PartnerRegister from './app/partner-register/page';
+import SitemapPage from './app/sitemap/page';
 import GlobalModalProvider from './components/GlobalModalProvider';
 
 function SlugRouteWrapper() {
@@ -126,6 +127,16 @@ function AppContent() {
     }
   }, []);
   
+  // Update canonical tag dynamically
+  useEffect(() => {
+    const link = document.querySelector("link[rel='canonical']") || document.createElement("link");
+    link.setAttribute("rel", "canonical");
+    link.setAttribute("href", `https://udumalpet.business${location.pathname}`);
+    if (!document.querySelector("link[rel='canonical']")) {
+      document.head.appendChild(link);
+    }
+  }, [location.pathname]);
+
   const lastFirstSegment = useRef('');
 
   useEffect(() => {
@@ -211,6 +222,7 @@ function AppContent() {
           <Route path="/profile/:id" element={<UserProfile />} />
           <Route path="/blood-donors" element={<BloodDonorsPage />} />
           <Route path="/partner-register" element={<PartnerRegister />} />
+          <Route path="/sitemap" element={<SitemapPage />} />
           <Route path="/privacy-policy" element={<BusinessesingsPage forceFocus="privacy" />} />
           <Route path="/privacy" element={<BusinessesingsPage forceFocus="privacy" />} />
           <Route path="/terms-of-service" element={<BusinessesingsPage forceFocus="terms" />} />
