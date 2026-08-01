@@ -69,7 +69,7 @@ export default function SuperAdminDashboard() {
       'Events Moderation', 'Blogs Moderation', 'Notifications', 'Reviews Moderation',
       'Sponsored Ads', 'Referrals', 'Support Tickets', 'Blood Donors',
       'Newsletter Subscribers', 'Signups', 'Partners', 'Admin Management',
-      'Subscriptions', 'Revenue', 'Platform Settings', 'System Logs',
+      'Subscriptions', 'Revenue', 'NFC Card Requests', 'Platform Settings', 'System Logs',
       'Access Control', 'Profile Settings', 'Analytics'
     ];
     const matchedDisplay = displayTabs.find(tab => superadminTabToSlug(tab) === slug.toLowerCase());
@@ -322,7 +322,7 @@ export default function SuperAdminDashboard() {
   const [revenueAnalytics, setRevenueAnalytics] = useState(null);
   const [revenueLoading, setRevenueLoading] = useState(false);
   const [eventUploading, setEventUploading] = useState(false);
-  const [revenueGraphType, setRevenueGraphType] = useState('total'); // total | subscription | event | ad
+  const [revenueGraphType, setRevenueGraphType] = useState('total'); // total | subscription | event | ad | nfc
 
   // System activities logs
   const [systemLogs, setSystemLogs] = useState([]);
@@ -351,6 +351,25 @@ export default function SuperAdminDashboard() {
   const [referralsLoading, setReferralsLoading] = useState(false);
   const [referralsError, setReferralsError] = useState('');
   const [referralFilter, setReferralFilter] = useState('All'); // All | Pending | Completed | Rejected
+
+  // NFC Card Requests states
+  const [nfcRequests, setNfcRequests] = useState([]);
+  const [nfcRequestsLoading, setNfcRequestsLoading] = useState(false);
+  const [nfcRequestsError, setNfcRequestsError] = useState('');
+  const [nfcFilter, setNfcFilter] = useState('All'); // All | Pending | Shipped | Delivered
+  const [nfcSearchQuery, setNfcSearchQuery] = useState('');
+  // Revenue tab filtering states
+  const [dateFilterMode, setDateFilterMode] = useState('overall'); // overall | custom
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [transactionTypeFilter, setTransactionTypeFilter] = useState('All'); // All | subscription | ad | event | nfc
+  const [transactionSearchQuery, setTransactionSearchQuery] = useState('');
+  const [showSubscriptionDetailsModal, setShowSubscriptionDetailsModal] = useState(false);
+  const [modalDateSortDir, setModalDateSortDir] = useState('desc'); // desc | asc
+  const [subTabPlanFilter, setSubTabPlanFilter] = useState('All'); // All | Monthly | Yearly
+  const [subTabAutopayFilter, setSubTabAutopayFilter] = useState('All'); // All | ON | OFF
+  const [subTabSortField, setSubTabSortField] = useState('createdAt'); // businessName | planType | amount | expiryDate | autoRenew | createdAt
+  const [subTabSortDir, setSubTabSortDir] = useState('desc'); // desc | asc
 
   // Compile dynamic activity logs
   const activityLogs = useMemo(() => {
@@ -462,6 +481,8 @@ export default function SuperAdminDashboard() {
   const [showBizModal, setShowBizModal] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [showPartnerModal, setShowPartnerModal] = useState(false);
+  const [whatsappMsgModalOpen, setWhatsappMsgModalOpen] = useState(false);
+  const [whatsappMsgText, setWhatsappMsgText] = useState('');
 
   // New Category Vetting States
   const [selectedPresetForAssign, setSelectedPresetForAssign] = useState('');
@@ -569,6 +590,54 @@ export default function SuperAdminDashboard() {
       setSubscribers([]);
     } finally {
       setSubscribersLoading(false);
+    }
+  };
+
+  const fetchNfcRequests = async () => {
+    setNfcRequestsLoading(true);
+    setNfcRequestsError('');
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      const res = await fetch('http://localhost:5000/api/payments/admin/nfc-requests', {
+        headers: {
+          'Authorization': `Bearer ${activeToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNfcRequests(data.requests || []);
+      } else {
+        throw new Error(data.message || 'Failed to fetch NFC Card requests.');
+      }
+    } catch (err) {
+      console.warn('API error, empty NFC Card requests.', err);
+      setNfcRequests([]);
+    } finally {
+      setNfcRequestsLoading(false);
+    }
+  };
+
+  const updateNfcStatus = async (paymentId, status) => {
+    try {
+      const activeToken = localStorage.getItem('ubt_token');
+      const res = await fetch(`http://localhost:5000/api/payments/admin/nfc/${paymentId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ status })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`NFC status updated to "${status}" successfully!`, 'success');
+        setNfcRequests(prev => prev.map(req => req._id === paymentId ? { ...req, nfcCardStatus: status } : req));
+      } else {
+        showToast(data.message || 'Failed to update NFC status', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Error updating NFC status', 'error');
     }
   };
 
@@ -839,11 +908,15 @@ const handlePartnerAction = async (partnerId, action) => {
     }
   };
 
-  const fetchRevenueAnalytics = async () => {
+  const fetchRevenueAnalytics = async (start = '', end = '') => {
     setRevenueLoading(true);
     try {
       const headers = { 'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` };
-      const res = await fetch('http://localhost:5000/api/superadmin/analytics', { headers });
+      let url = 'http://localhost:5000/api/superadmin/analytics';
+      if (start && end) {
+        url += `?startDate=${start}&endDate=${end}`;
+      }
+      const res = await fetch(url, { headers });
       const data = await res.json();
       if (data.success) {
         setRevenueAnalytics(data.data);
@@ -1108,6 +1181,9 @@ const handlePartnerAction = async (partnerId, action) => {
     }
     if (activeTab === 'Newsletter Subscribers') {
       fetchNewsletterSubscribers();
+    }
+    if (activeTab === 'NFC Card Requests') {
+      fetchNfcRequests();
     }
   }, [activeTab]);
 
@@ -2224,7 +2300,60 @@ const handlePartnerAction = async (partnerId, action) => {
   const dateFilteredBlogs = blogs.filter(b => matchesDateFilter(b.createdAt));
   const dateFilteredEvents = events.filter(e => matchesDateFilter(e.createdAt || e.date));
   const dateFilteredReviews = reviews.filter(r => matchesDateFilter(r.createdAt));
-  const dateFilteredSubscriptions = subscriptions.filter(s => matchesDateFilter(s.createdAt));
+  const dateFilteredSubscriptions = useMemo(() => {
+    let result = (subscriptions || []).filter(s => {
+      // 1. Date range filter
+      if (!matchesDateFilter(s.createdAt)) return false;
+
+      // 2. Plan Type filter
+      if (subTabPlanFilter === 'Monthly') {
+        const isMonthly = s.planType?.toLowerCase()?.includes('monthly') || s.amount < 500;
+        if (!isMonthly) return false;
+      }
+      if (subTabPlanFilter === 'Yearly') {
+        const isYearly = s.planType?.toLowerCase()?.includes('yearly') || s.amount >= 500;
+        if (!isYearly) return false;
+      }
+
+      // 3. Autopay filter
+      if (subTabAutopayFilter === 'ON' && !s.autoRenew) return false;
+      if (subTabAutopayFilter === 'OFF' && s.autoRenew) return false;
+
+      return true;
+    });
+
+    // 4. Sorting
+    result.sort((a, b) => {
+      let valA = a[subTabSortField];
+      let valB = b[subTabSortField];
+
+      if (subTabSortField === 'planType') {
+        valA = a.planType || '';
+        valB = b.planType || '';
+      } else if (subTabSortField === 'expiryDate') {
+        valA = a.expiryDate ? new Date(a.expiryDate).getTime() : 0;
+        valB = b.expiryDate ? new Date(b.expiryDate).getTime() : 0;
+      } else if (subTabSortField === 'amount') {
+        valA = a.amount || 0;
+        valB = b.amount || 0;
+      } else if (subTabSortField === 'autoRenew') {
+        valA = a.autoRenew ? 1 : 0;
+        valB = b.autoRenew ? 1 : 0;
+      } else if (subTabSortField === 'businessName') {
+        valA = (a.businessName || '').toLowerCase();
+        valB = (b.businessName || '').toLowerCase();
+      } else {
+        valA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        valB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      }
+
+      if (valA < valB) return subTabSortDir === 'asc' ? -1 : 1;
+      if (valA > valB) return subTabSortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return result;
+  }, [subscriptions, subTabPlanFilter, subTabAutopayFilter, subTabSortField, subTabSortDir, matchesDateFilter]);
   const dateFilteredMerchants = merchants.filter(m => matchesDateFilter(m.createdAt));
   const dateFilteredRegularUsers = regularUsers.filter(r => matchesDateFilter(r.createdAt));
   const dateFilteredSignups = signups.filter(u => matchesDateFilter(u.createdAt));
@@ -2447,22 +2576,23 @@ const handlePartnerAction = async (partnerId, action) => {
       items: [
         { id: 'Businesses', label: 'Businesses', icon: <Store className="h-4.5 w-4.5" /> },
         { id: 'Category Management', label: 'Categories', icon: <Grid className="h-4.5 w-4.5" /> },
-        { id: 'Events Moderation', label: 'Events', icon: <Calendar className="h-4.5 w-4.5" /> },
-        { id: 'Blogs Moderation', label: 'Blog Posts', icon: <BookOpen className="h-4.5 w-4.5" /> },
+        { id: 'Events Moderation', label: 'Events', icon: <Calendar className="h-4.5 w-4.5" />, badge: events.filter(e => e.status === 'Pending Review' || e.status === 'Pending Verification').length },
+        { id: 'Blogs Moderation', label: 'Blog Posts', icon: <BookOpen className="h-4.5 w-4.5" />, badge: blogs.filter(b => b.status === 'Pending Review' || b.status === 'Pending Verification' || b.status === 'Pending Approval').length },
         { id: 'Notifications', label: 'Offers & Promotions', icon: <Award className="h-4.5 w-4.5" /> },
         { id: 'Reviews Moderation', label: 'Reviews', icon: <MessageSquare className="h-4.5 w-4.5" /> },
         { id: 'Sponsored Ads', label: 'Ads Moderation', icon: <Sparkles className="h-4.5 w-4.5" /> },
         { id: 'Referrals', label: 'Referrals', icon: <Gift className="h-4.5 w-4.5" /> },
         { id: 'Support Tickets', label: 'Leads / Enquiries', icon: <FileText className="h-4.5 w-4.5" /> },
         { id: 'Blood Donors', label: 'Blood Donors', icon: <Heart className="h-4.5 w-4.5" /> },
-        { id: 'Newsletter Subscribers', label: 'Newsletter', icon: <Mail className="h-4.5 w-4.5" /> }
+        { id: 'Newsletter Subscribers', label: 'Newsletter', icon: <Mail className="h-4.5 w-4.5" /> },
+        { id: 'NFC Card Requests', label: 'NFC Card Requests', icon: <Cpu className="h-4.5 w-4.5" />, badge: nfcRequests.filter(r => r.nfcCardStatus === 'Pending').length }
       ]
     },
     {
       group: 'USER MANAGEMENT',
       items: [
         { id: 'Signups', label: 'Signups', icon: <User className="h-4.5 w-4.5" /> },
-        { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-4.5 w-4.5" /> },
+        { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-4.5 w-4.5" />, badge: partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length },
         { id: 'Admin Management', label: 'Admins', icon: <Shield className="h-4.5 w-4.5" /> }
       ]
     },
@@ -2514,6 +2644,7 @@ const handlePartnerAction = async (partnerId, action) => {
       if (revenueGraphType === 'subscription') val = matched?.subscriptionTotal || 0;
       if (revenueGraphType === 'event') val = matched?.eventTotal || 0;
       if (revenueGraphType === 'ad') val = matched?.adTotal || 0;
+      if (revenueGraphType === 'nfc') val = matched?.nfcTotal || 0;
       return {
         label: `${m.label} (${formatAmountShort(val)})`,
         val
@@ -2524,6 +2655,58 @@ const handlePartnerAction = async (partnerId, action) => {
   const monthlyRevData = getMonthlyRevenueData();
   const maxRevVal = Math.max(...monthlyRevData.map(d => d.val), 1);
   const revYs = monthlyRevData.map(d => 180 - (d.val / maxRevVal) * 150);
+
+  const filteredNfcRequests = useMemo(() => {
+    return (nfcRequests || []).filter(req => {
+      if (nfcFilter !== 'All' && req.nfcCardStatus !== nfcFilter) {
+        return false;
+      }
+      if (nfcSearchQuery) {
+        const query = nfcSearchQuery.toLowerCase().trim();
+        const userName = (req.userId?.fullName || req.userId?.name || '').toLowerCase();
+        const userEmail = (req.userId?.email || '').toLowerCase();
+        const bizName = (req.businessId?.name || '').toLowerCase();
+        const cardName = (req.nfcCardName || '').toLowerCase();
+        const address = (req.nfcDeliveryAddress || '').toLowerCase();
+        const phone = (req.nfcContactNumber || '').toLowerCase();
+        return userName.includes(query) || userEmail.includes(query) || bizName.includes(query) || cardName.includes(query) || address.includes(query) || phone.includes(query);
+      }
+      return true;
+    });
+  }, [nfcRequests, nfcFilter, nfcSearchQuery]);
+
+  const filteredTransactions = useMemo(() => {
+    const source = revenueAnalytics?.allPayments || [];
+    return source.filter(p => {
+      const hasEventId = p.eventId || p.isEvent;
+      const hasAdId = p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion';
+      const isNfc = p.isNfcCard === true;
+      const isSubscription = !hasEventId && !hasAdId && !isNfc;
+
+      if (transactionTypeFilter === 'subscription' && !isSubscription) return false;
+      if (transactionTypeFilter === 'ad' && !hasAdId) return false;
+      if (transactionTypeFilter === 'event' && !hasEventId) return false;
+      if (transactionTypeFilter === 'nfc' && !isNfc) return false;
+
+      if (transactionSearchQuery) {
+        const query = transactionSearchQuery.toLowerCase().trim();
+        const userName = (p.userId?.fullName || p.userId?.name || '').toLowerCase();
+        const userEmail = (p.userId?.email || '').toLowerCase();
+        const bizName = (p.isNfcCard
+          ? `nfc smart card: ${p.nfcCardName || 'pending config'}`
+          : p.businessId?.name 
+            ? `${p.businessId.name}${p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion' ? ' sponsored ad' : ''}`
+            : ((p.eventId || p.isEvent) ? 'event posting fee' : 'platform payment')
+        ).toLowerCase();
+        const orderId = (p.orderId || p.razorpayOrderId || '').toLowerCase();
+        const paymentId = (p.paymentId || p.razorpayPaymentId || '').toLowerCase();
+
+        return userName.includes(query) || userEmail.includes(query) || bizName.includes(query) || orderId.includes(query) || paymentId.includes(query);
+      }
+
+      return true;
+    });
+  }, [revenueAnalytics, transactionTypeFilter, transactionSearchQuery]);
 
   const getPlanRatioData = () => {
     const plansInfo = [
@@ -2543,8 +2726,89 @@ const handlePartnerAction = async (partnerId, action) => {
     });
   };
 
+  const getOneTimeSalesBreakdown = () => {
+    const eventVal = revenueAnalytics?.eventRevenue || 0;
+    const adVal = revenueAnalytics?.adRevenue || 0;
+    const nfcVal = revenueAnalytics?.nfcRevenue || 0;
+    const total = eventVal + adVal + nfcVal || 1;
+
+    const eventPct = Math.round((eventVal / total) * 100);
+    const adPct = Math.round((adVal / total) * 100);
+    const nfcPct = 100 - eventPct - adPct;
+
+    return [
+      { name: 'Event Postings', val: eventVal, percentage: eventPct, color: '#3B82F6', strokeDasharray: `${eventPct} ${100 - eventPct}` },
+      { name: 'Sponsored Ads', val: adVal, percentage: adPct, color: '#8B5CF6', strokeDasharray: `${adPct} ${100 - adPct}` },
+      { name: 'NFC Smart Cards', val: nfcVal, percentage: nfcPct, color: '#EC4899', strokeDasharray: `${nfcPct} ${100 - nfcPct}` }
+    ];
+  };
+
   const planRatioData = getPlanRatioData();
   const maxPlanRatioVal = Math.max(...planRatioData.map(d => d.val), 1);
+  const oneTimeSegments = getOneTimeSalesBreakdown();
+  const oneTimeTotal = (revenueAnalytics?.eventRevenue || 0) + (revenueAnalytics?.adRevenue || 0) + (revenueAnalytics?.nfcRevenue || 0);
+
+  const subscriptionBreakdown = useMemo(() => {
+    const source = revenueAnalytics?.allPayments || [];
+    const subPayments = source.filter(p => {
+      const hasEventId = p.eventId || p.isEvent;
+      const hasAdId = p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion';
+      const isNfc = p.isNfcCard === true;
+      return !hasEventId && !hasAdId && !isNfc;
+    });
+
+    const paymentsBySubId = {};
+    subPayments.forEach(p => {
+      if (p.razorpaySubscriptionId) {
+        if (!paymentsBySubId[p.razorpaySubscriptionId]) {
+          paymentsBySubId[p.razorpaySubscriptionId] = [];
+        }
+        paymentsBySubId[p.razorpaySubscriptionId].push(p);
+      }
+    });
+
+    Object.keys(paymentsBySubId).forEach(sid => {
+      paymentsBySubId[sid].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    });
+
+    let monthly = { totalCount: 0, newCount: 0, autopayCount: 0, newRevenue: 0, autopayRevenue: 0, totalRevenue: 0 };
+    let yearly = { totalCount: 0, newCount: 0, autopayCount: 0, newRevenue: 0, autopayRevenue: 0, totalRevenue: 0 };
+
+    subPayments.forEach(p => {
+      const subPlanType = p.subscriptionId?.planType || (p.amount < 500 ? 'monthly' : 'yearly');
+      let isAutopay = false;
+      if (p.razorpaySubscriptionId && paymentsBySubId[p.razorpaySubscriptionId]) {
+        const firstPayment = paymentsBySubId[p.razorpaySubscriptionId][0];
+        if (firstPayment && firstPayment._id !== p._id && new Date(firstPayment.createdAt).getTime() < new Date(p.createdAt).getTime()) {
+          isAutopay = true;
+        }
+      }
+
+      if (subPlanType === 'yearly' || p.amount >= 500) {
+        yearly.totalCount++;
+        yearly.totalRevenue += p.amount;
+        if (isAutopay) {
+          yearly.autopayCount++;
+          yearly.autopayRevenue += p.amount;
+        } else {
+          yearly.newCount++;
+          yearly.newRevenue += p.amount;
+        }
+      } else {
+        monthly.totalCount++;
+        monthly.totalRevenue += p.amount;
+        if (isAutopay) {
+          monthly.autopayCount++;
+          monthly.autopayRevenue += p.amount;
+        } else {
+          monthly.newCount++;
+          monthly.newRevenue += p.amount;
+        }
+      }
+    });
+
+    return { monthly, yearly, paymentsBySubId };
+  }, [revenueAnalytics]);
 
   return (
     <div className={`w-full h-screen flex font-sans text-left transition-colors duration-300 overflow-hidden ${
@@ -2610,7 +2874,7 @@ const handlePartnerAction = async (partnerId, action) => {
                         }
                       }
                     }}
-                    className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer group hover:shadow-[0_0_15px_rgba(2,114,68,0.15)] relative w-full ${
+                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer group hover:shadow-[0_0_15px_rgba(2,114,68,0.15)] relative w-full ${
                       (item.subtab ? (activeTab === item.id && platformSubTab === item.subtab) : (activeTab === item.id))
                         ? 'bg-[#027244] text-white shadow-md shadow-[#013520]/15' 
                         : item.id === 'Logout'
@@ -2618,16 +2882,27 @@ const handlePartnerAction = async (partnerId, action) => {
                           : 'text-slate-400 hover:bg-slate-900/40 hover:text-white'
                     }`}
                   >
-                    <div className={`transition-transform duration-300 group-hover:scale-110 ${
-                      (item.subtab ? (activeTab === item.id && platformSubTab === item.subtab) : (activeTab === item.id))
-                        ? 'text-white' 
-                        : item.id === 'Logout'
-                          ? 'text-rose-455 group-hover:text-rose-350'
-                          : 'text-slate-500 group-hover:text-emerald-450'
-                    }`}>
-                      {item.icon}
+                    <div className="flex items-center gap-3.5">
+                      <div className={`transition-transform duration-300 group-hover:scale-110 ${
+                        (item.subtab ? (activeTab === item.id && platformSubTab === item.subtab) : (activeTab === item.id))
+                          ? 'text-white' 
+                          : item.id === 'Logout'
+                            ? 'text-rose-455 group-hover:text-rose-350'
+                            : 'text-slate-500 group-hover:text-emerald-450'
+                      }`}>
+                        {item.icon}
+                      </div>
+                      {!sidebarCollapsed && <span>{item.label}</span>}
                     </div>
-                    {!sidebarCollapsed && <span>{item.label}</span>}
+                    {!sidebarCollapsed && item.badge > 0 && (
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-black shrink-0 ${
+                        (item.subtab ? (activeTab === item.id && platformSubTab === item.subtab) : (activeTab === item.id))
+                          ? 'bg-white text-[#027244]' 
+                          : 'bg-rose-600 text-white'
+                      }`}>
+                        {item.badge}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -2711,7 +2986,7 @@ const handlePartnerAction = async (partnerId, action) => {
                             }
                           }
                         }}
-                        className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer text-left w-full ${
+                        className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer text-left w-full ${
                           (item.subtab ? (activeTab === item.id && platformSubTab === item.subtab) : (activeTab === item.id))
                             ? 'bg-[#027244] text-white shadow-md shadow-[#013520]/15'
                             : item.id === 'Logout'
@@ -2719,8 +2994,19 @@ const handlePartnerAction = async (partnerId, action) => {
                               : 'text-slate-400 hover:bg-slate-900/40 hover:text-white'
                         }`}
                       >
-                        <div className="shrink-0">{item.icon}</div>
-                        <span>{item.label}</span>
+                        <div className="flex items-center gap-3">
+                          <div className="shrink-0">{item.icon}</div>
+                          <span>{item.label}</span>
+                        </div>
+                        {item.badge > 0 && (
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black shrink-0 ${
+                            (item.subtab ? (activeTab === item.id && platformSubTab === item.subtab) : (activeTab === item.id))
+                              ? 'bg-white text-[#027244]' 
+                              : 'bg-rose-600 text-white'
+                          }`}>
+                            {item.badge}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -5567,31 +5853,129 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* TAB 9: SUBSCRIPTIONS */}
               {activeTab === 'Subscriptions' && (
                 <div className="flex flex-col gap-6 text-left animate-fadeIn">
-                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 overflow-x-auto w-full max-w-full ${
+                  <div className={`border shadow-xs rounded-[28px] p-5 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center font-sans ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
-                    <h3 className="font-extrabold text-base leading-tight font-sans">Active & Expired Premium Subscriptions</h3>
-                    <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Overview of active premium subscription logs, renewal dates, and billing metrics.</span>
+                    <div className="flex flex-col text-left">
+                      <h3 className="font-extrabold text-base leading-tight font-sans">Active & Expired Premium Subscriptions</h3>
+                      <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Overview of active premium subscription logs, renewal dates, and billing metrics.</span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto mt-2 md:mt-0 font-sans">
+                      {/* Plan Filter */}
+                      <div className="flex flex-col text-left">
+                        <span className="text-[8px] font-black uppercase tracking-wider text-slate-400 mb-1">Plan Category</span>
+                        <select
+                          value={subTabPlanFilter}
+                          onChange={(e) => setSubTabPlanFilter(e.target.value)}
+                          className={`text-[10.5px] rounded-lg px-2.5 py-1.5 outline-none font-bold border transition-colors ${
+                            themeMode === 'dark' 
+                              ? 'bg-slate-950 border-slate-800 text-white focus:border-slate-700' 
+                              : 'bg-slate-55 border-slate-200 text-slate-850 focus:border-slate-350'
+                          }`}
+                        >
+                          <option value="All">All Plans</option>
+                          <option value="Monthly">Monthly Plan (₹99)</option>
+                          <option value="Yearly">Yearly Plan (₹999)</option>
+                        </select>
+                      </div>
+
+                      {/* Autopay Filter */}
+                      <div className="flex flex-col text-left">
+                        <span className="text-[8px] font-black uppercase tracking-wider text-slate-400 mb-1">Autopay Status</span>
+                        <select
+                          value={subTabAutopayFilter}
+                          onChange={(e) => setSubTabAutopayFilter(e.target.value)}
+                          className={`text-[10.5px] rounded-lg px-2.5 py-1.5 outline-none font-bold border transition-colors ${
+                            themeMode === 'dark' 
+                              ? 'bg-slate-950 border-slate-800 text-white focus:border-slate-700' 
+                              : 'bg-slate-55 border-slate-200 text-slate-850 focus:border-slate-350'
+                          }`}
+                        >
+                          <option value="All">All Autopay</option>
+                          <option value="ON">Autopay: ON</option>
+                          <option value="OFF">Autopay: OFF</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
-
-
 
                   <div className={`overflow-x-auto border rounded-[28px] ${
                     themeMode === 'dark' ? 'bg-slate-900/20 border-slate-800' : 'bg-white border-slate-200'
                   }`}>
                     <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
                       <thead className={`uppercase text-[9px] font-black tracking-wider border-b ${
-                        themeMode === 'dark' ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-450'
+                        themeMode === 'dark' ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-slate-55 border-slate-200 text-slate-450'
                       }`}>
                         <tr>
-                          <th className="p-4.5">Business Name</th>
-                          <th className="p-4.5">Plan Purchased</th>
-                          <th className="p-4.5">Sales Amount</th>
-                          <th className="p-4.5">Billing Expiry</th>
-                          <th className="p-4.5">Autopay</th>
-                          <th className="p-4.5">Next Autopay</th>
-                          <th className="p-4.5">Status</th>
-                          <th className="p-4.5 text-right">Actions</th>
+                          <th 
+                            onClick={() => {
+                              if (subTabSortField === 'businessName') {
+                                setSubTabSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSubTabSortField('businessName');
+                                setSubTabSortDir('asc');
+                              }
+                            }}
+                            className="p-4.5 cursor-pointer select-none hover:text-blue-500 transition-colors font-black"
+                          >
+                            Business Name {subTabSortField === 'businessName' ? (subTabSortDir === 'asc' ? '▲' : '▼') : ''}
+                          </th>
+                          <th 
+                            onClick={() => {
+                              if (subTabSortField === 'planType') {
+                                setSubTabSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSubTabSortField('planType');
+                                setSubTabSortDir('asc');
+                              }
+                            }}
+                            className="p-4.5 cursor-pointer select-none hover:text-blue-500 transition-colors font-black"
+                          >
+                            Plan Purchased {subTabSortField === 'planType' ? (subTabSortDir === 'asc' ? '▲' : '▼') : ''}
+                          </th>
+                          <th 
+                            onClick={() => {
+                              if (subTabSortField === 'amount') {
+                                setSubTabSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSubTabSortField('amount');
+                                setSubTabSortDir('desc');
+                              }
+                            }}
+                            className="p-4.5 cursor-pointer select-none hover:text-blue-500 transition-colors font-black"
+                          >
+                            Sales Amount {subTabSortField === 'amount' ? (subTabSortDir === 'asc' ? '▲' : '▼') : ''}
+                          </th>
+                          <th 
+                            onClick={() => {
+                              if (subTabSortField === 'expiryDate') {
+                                setSubTabSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSubTabSortField('expiryDate');
+                                setSubTabSortDir('desc');
+                              }
+                            }}
+                            className="p-4.5 cursor-pointer select-none hover:text-blue-500 transition-colors font-black"
+                          >
+                            Billing Expiry {subTabSortField === 'expiryDate' ? (subTabSortDir === 'asc' ? '▲' : '▼') : ''}
+                          </th>
+                          <th 
+                            onClick={() => {
+                              if (subTabSortField === 'autoRenew') {
+                                setSubTabSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSubTabSortField('autoRenew');
+                                setSubTabSortDir('desc');
+                              }
+                            }}
+                            className="p-4.5 cursor-pointer select-none hover:text-blue-500 transition-colors font-black"
+                          >
+                            Autopay {subTabSortField === 'autoRenew' ? (subTabSortDir === 'asc' ? '▲' : '▼') : ''}
+                          </th>
+                          <th className="p-4.5 font-black">Next Autopay</th>
+                          <th className="p-4.5 font-black">Status</th>
+                          <th className="p-4.5 text-right font-black">Actions</th>
                         </tr>
                       </thead>
                       <tbody className={`divide-y font-medium ${themeMode === 'dark' ? 'divide-slate-800' : 'divide-slate-100'}`}>
@@ -5604,7 +5988,9 @@ const handlePartnerAction = async (partnerId, action) => {
                               {s.planType ? (s.planType.toLowerCase().endsWith('plan') ? s.planType.replace(/\b\w/g, c => c.toUpperCase()) : s.planType.replace(/\b\w/g, c => c.toUpperCase()) + ' Plan') : 'Custom Plan'}
                             </td>
                             <td className={`p-4.5 font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>₹{s.amount}</td>
-                            <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{new Date(s.expiryDate).toLocaleDateString()}</td>
+                            <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                              {s.expiryDate && !isNaN(new Date(s.expiryDate).getTime()) ? new Date(s.expiryDate).toLocaleDateString() : 'N/A'}
+                            </td>
                             <td className="p-4.5">
                               <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
                                 s.autoRenew 
@@ -5615,7 +6001,7 @@ const handlePartnerAction = async (partnerId, action) => {
                               </span>
                             </td>
                             <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                              {s.autoRenew && s.nextAutopayDate ? new Date(s.nextAutopayDate).toLocaleDateString() : 'N/A'}
+                              {s.autoRenew && s.nextAutopayDate && !isNaN(new Date(s.nextAutopayDate).getTime()) ? new Date(s.nextAutopayDate).toLocaleDateString() : 'N/A'}
                             </td>
                             <td className="p-4.5">
                               <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
@@ -5659,9 +6045,15 @@ const handlePartnerAction = async (partnerId, action) => {
               {/* TAB 10: REVENUE */}
               {activeTab === 'Revenue' && (
                 <div className="flex flex-col gap-8 text-left animate-fadeIn font-sans">
-                  
+                  {/* Revenue Page Title & Header */}
+                  <div className="flex flex-col text-left mb-2">
+                    <span className="font-extrabold text-[10px] uppercase tracking-wider text-slate-455">Financial Reports</span>
+                    <h2 className="text-2xl font-black mt-0.5">Revenue Analytics Dashboard</h2>
+                    <p className="text-xs text-slate-400 font-semibold mt-1">Monitor daily transaction flows, subscription renewals, event postings, ad promotions, and NFC cards telemetry.</p>
+                  </div>
+
                   {/* Top Stats Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
                     <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                     }`}>
@@ -5669,12 +6061,30 @@ const handlePartnerAction = async (partnerId, action) => {
                       <h3 className="text-2xl font-black mt-2">₹{revenueAnalytics?.totalRevenue?.toLocaleString('en-IN') || 0}</h3>
                       <span className="text-[10.5px] text-slate-550 font-semibold mt-1">Direct merchant sales</span>
                     </div>
-                    <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
-                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
-                    }`}>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-sans">Subscription Earnings</span>
-                      <h3 className="text-2xl font-black text-emerald-600 mt-2">₹{revenueAnalytics?.subscriptionRevenue?.toLocaleString('en-IN') || 0}</h3>
-                      <span className="text-[10.5px] text-slate-550 font-semibold mt-1">Monthly/Yearly premium plans</span>
+                    <div 
+                      onClick={() => setShowSubscriptionDetailsModal(true)}
+                      className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between cursor-pointer group hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ${
+                        themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white hover:bg-slate-900/60' : 'bg-white border-slate-200 text-[#001c41] hover:shadow-md'
+                      }`}
+                    >
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-sans">Subscription Earnings</span>
+                        <h3 className="text-2xl font-black text-emerald-600 mt-2">₹{revenueAnalytics?.subscriptionRevenue?.toLocaleString('en-IN') || 0}</h3>
+                      </div>
+                      <div className="flex flex-col gap-1 mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[10px] font-bold text-slate-400 font-sans">
+                        <div className="flex justify-between">
+                          <span>New Reg:</span>
+                          <span className={`${themeMode === 'dark' ? 'text-emerald-400' : 'text-emerald-600'} font-extrabold`}>
+                            ₹{revenueAnalytics?.subscriptionRevenueNew?.toLocaleString('en-IN') || 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Autopay:</span>
+                          <span className={`${themeMode === 'dark' ? 'text-blue-400' : 'text-blue-600'} font-extrabold`}>
+                            ₹{revenueAnalytics?.subscriptionRevenueAutopay?.toLocaleString('en-IN') || 0}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                     <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
@@ -5693,6 +6103,13 @@ const handlePartnerAction = async (partnerId, action) => {
                     <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                     }`}>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-sans">NFC Cards Revenue</span>
+                      <h3 className="text-2xl font-black text-rose-500 mt-2">₹{revenueAnalytics?.nfcRevenue?.toLocaleString('en-IN') || 0}</h3>
+                      <span className="text-[10.5px] text-slate-550 font-semibold mt-1">₹249 per NFC card sales</span>
+                    </div>
+                    <div className={`border shadow-xs rounded-[24px] p-6 flex flex-col justify-between ${
+                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                    }`}>
                       <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-sans">Referral Discounts</span>
                       <h3 className="text-2xl font-black text-orange-600 mt-2">₹{revenueAnalytics?.referralDiscountTotal?.toLocaleString('en-IN') || 0}</h3>
                       <span className="text-[10.5px] text-slate-550 font-semibold mt-1">Points redeemed at checkout</span>
@@ -5706,15 +6123,15 @@ const handlePartnerAction = async (partnerId, action) => {
                     <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Monthly income growth, plan split distributions, and transaction records.</span>
                   </div>
 
-                   <div className="w-full font-sans">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full font-sans">
                     {/* SVG Premium Chart */}
-                    <div className={`border rounded-[28px] p-4 sm:p-6 shadow-sm flex flex-col gap-6 font-sans ${
+                    <div className={`lg:col-span-8 border rounded-[28px] p-4 sm:p-6 shadow-sm flex flex-col gap-6 font-sans ${
                       themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                     }`}>
                       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                         <span className="font-extrabold text-xs uppercase tracking-wider text-slate-400">Monthly Revenue Graph (₹)</span>
                         <div className="flex flex-wrap gap-1.5 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-fit border border-slate-200 dark:border-slate-800">
-                          {['total', 'subscription', 'event', 'ad'].map(type => (
+                          {['total', 'subscription', 'event', 'ad', 'nfc'].map(type => (
                             <button
                               key={type}
                               onClick={() => setRevenueGraphType(type)}
@@ -5724,7 +6141,7 @@ const handlePartnerAction = async (partnerId, action) => {
                                   : 'bg-transparent text-slate-400 hover:text-slate-650'
                               }`}
                             >
-                              {type === 'ad' ? 'ads' : type}
+                              {type === 'ad' ? 'ads' : type === 'nfc' ? 'nfc card' : type}
                             </button>
                           ))}
                         </div>
@@ -5753,13 +6170,108 @@ const handlePartnerAction = async (partnerId, action) => {
                         </div>
                       </div>
                     </div>
+
+                    {/* Donut Chart: One-time Sales Distribution */}
+                    <div className={`lg:col-span-4 border rounded-[28px] p-4 sm:p-6 shadow-sm flex flex-col justify-between h-auto ${
+                      themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                    }`}>
+                      <div className={`flex justify-between items-center pb-2 border-b ${themeMode === 'dark' ? 'border-slate-800/30' : 'border-slate-100'}`}>
+                        <span className="text-xs font-black uppercase tracking-widest text-slate-400">One-time Sales Split</span>
+                      </div>
+                      
+                      <div className="flex-1 flex flex-col items-center justify-center gap-6 py-6">
+                        {/* Donut SVG */}
+                        <div className="relative h-32 w-32 shrink-0 flex items-center justify-center">
+                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="15.915" fill="none" stroke={themeMode === 'dark' ? '#1E293B' : '#f1f5f9'} strokeWidth="3" />
+                            {(() => {
+                              let accumulatedOffset = 0;
+                              return oneTimeSegments.map((seg, idx) => {
+                                const strokeDashoffset = -accumulatedOffset;
+                                accumulatedOffset += seg.percentage;
+                                return (
+                                  <circle 
+                                    key={idx}
+                                    cx="18" 
+                                    cy="18" 
+                                    r="15.915" 
+                                    fill="none" 
+                                    stroke={seg.color} 
+                                    strokeWidth="3" 
+                                    strokeDasharray={seg.strokeDasharray} 
+                                    strokeDashoffset={strokeDashoffset} 
+                                  />
+                                );
+                              });
+                            })()}
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className={`text-xs font-black leading-none ${themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}`}>₹{oneTimeTotal.toLocaleString('en-IN')}</span>
+                            <span className="text-[7px] font-bold text-slate-500 mt-1 uppercase tracking-wider">One-time</span>
+                          </div>
+                        </div>
+
+                        {/* Donut Legend */}
+                        <div className="w-full flex flex-col gap-2">
+                          {oneTimeSegments.map((leg, idx) => (
+                            <div key={idx} className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                              <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: leg.color }} />
+                                <span>{leg.name}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className={themeMode === 'dark' ? 'text-white' : 'text-[#001c41]'}>₹{leg.val.toLocaleString('en-IN')}</span>
+                                <span className="text-[9px] text-slate-550 font-black">({leg.percentage}%)</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Transaction Logs Table */}
                   <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-4 font-sans ${
                     themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
                   }`}>
-                    <h3 className="font-extrabold text-sm uppercase tracking-wider text-slate-450">Recent Platform Transactions</h3>
+                     <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                      <h3 className="font-extrabold text-sm uppercase tracking-wider text-slate-450">All Platform Transactions</h3>
+                      
+                      <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                        {/* Search Input */}
+                        <div className={`flex items-center border rounded-xl px-3 py-1.5 w-full sm:w-64 shrink-0 ${
+                          themeMode === 'dark' ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                        }`}>
+                          <Search className="h-4 w-4 text-slate-400 shrink-0 mr-2" />
+                          <input
+                            type="text"
+                            placeholder="Search by merchant, business, ID..."
+                            value={transactionSearchQuery}
+                            onChange={(e) => setTransactionSearchQuery(e.target.value)}
+                            className={`w-full bg-transparent text-xs font-semibold focus:outline-none border-none ${
+                              themeMode === 'dark' ? 'text-slate-200' : 'text-slate-700'
+                            }`}
+                          />
+                        </div>
+
+                        {/* Filter Dropdown */}
+                        <select
+                          value={transactionTypeFilter}
+                          onChange={(e) => setTransactionTypeFilter(e.target.value)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-extrabold cursor-pointer border select-none transition-colors outline-none w-fit ${
+                            themeMode === 'dark' 
+                              ? 'bg-slate-900 border-slate-800 text-white' 
+                              : 'bg-white border-slate-200 text-slate-800'
+                          }`}
+                        >
+                          <option value="All">All Transactions</option>
+                          <option value="subscription">Business Subscriptions</option>
+                          <option value="ad">Sponsored Ads</option>
+                          <option value="event">Event Postings</option>
+                          <option value="nfc">NFC Card Sales</option>
+                        </select>
+                      </div>
+                    </div>
                     <div className="overflow-x-auto border border-slate-200/60 rounded-2xl">
                       <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-650">
                         <thead className={`uppercase text-[9px] font-black tracking-wider border-b ${
@@ -5775,12 +6287,14 @@ const handlePartnerAction = async (partnerId, action) => {
                           </tr>
                         </thead>
                         <tbody className={`divide-y font-medium ${themeMode === 'dark' ? 'divide-slate-800' : 'divide-slate-100'}`}>
-                          {revenueAnalytics?.paymentsLog?.map(p => {
+                          {filteredTransactions.map(p => {
                             const userName = p.userId?.fullName || p.userId?.name || 'Unknown';
                             const userEmail = p.userId?.email || '';
-                            const bizName = p.businessId?.name 
-                              ? `${p.businessId.name}${p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion' ? ' (Sponsored Ad)' : ''}`
-                              : ((p.eventId || p.isEvent) ? 'Event Posting Fee' : 'Platform Payment');
+                            const bizName = p.isNfcCard
+                              ? `NFC Smart Card: ${p.nfcCardName || 'Pending Config'}`
+                              : p.businessId?.name 
+                                ? `${p.businessId.name}${p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion' ? ' (Sponsored Ad)' : ''}`
+                                : ((p.eventId || p.isEvent) ? 'Event Posting Fee' : 'Platform Payment');
                             const isPaid = p.paymentStatus === 'Paid' || p.status === 'Paid' || p.status === 'captured';
 
                             return (
@@ -5817,10 +6331,10 @@ const handlePartnerAction = async (partnerId, action) => {
                               </tr>
                             );
                           })}
-                          {(!revenueAnalytics?.paymentsLog || revenueAnalytics.paymentsLog.length === 0) && (
+                          {filteredTransactions.length === 0 && (
                             <tr>
                               <td colSpan="6" className="p-8 text-center text-slate-400 text-xs font-bold leading-normal">
-                                No recent platform transaction logs found.
+                                No matching platform transaction logs found.
                               </td>
                             </tr>
                           )}
@@ -5829,6 +6343,165 @@ const handlePartnerAction = async (partnerId, action) => {
                     </div>
                   </div>
 
+                </div>
+              )}
+
+              {/* TAB: NFC Card Requests */}
+              {activeTab === 'NFC Card Requests' && (
+                <div className="flex flex-col gap-6 text-left animate-fadeIn font-sans">
+                  {/* Header Dashboard Banner */}
+                  <div className={`border shadow-xs rounded-[28px] p-4 sm:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
+                    themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                  }`}>
+                    <div className="flex flex-col text-left font-sans">
+                      <h3 className="font-extrabold text-base leading-tight font-sans">NFC Card Configuration Requests</h3>
+                      <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Review physical NFC smart business cards configuration details, delivery addresses, and update shipment status.</span>
+                    </div>
+
+                    {/* Filter controls */}
+                    <div className={`w-full sm:w-auto p-1 rounded-xl flex items-center shrink-0 border overflow-x-auto whitespace-nowrap scrollbar-thin ${
+                      themeMode === 'dark' ? 'bg-slate-950 border-slate-800' : 'bg-slate-100/60 border-slate-200/30'
+                    }`}>
+                      {['All', 'Pending', 'Shipped', 'Delivered'].map(status => (
+                        <button
+                          key={status}
+                          onClick={() => setNfcFilter(status)}
+                          className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                            nfcFilter === status
+                              ? 'bg-[#027244] text-white shadow-sm shadow-emerald-950/15'
+                              : themeMode === 'dark'
+                                ? 'text-slate-400 hover:text-white'
+                                : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          {status === 'All' ? 'All Orders' : status}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Summary Metric Stats cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 font-sans">
+                    {[
+                      { label: 'Total Requests', value: nfcRequests.length, color: 'text-blue-500' },
+                      { label: 'Pending Delivery', value: nfcRequests.filter(r => r.nfcCardStatus === 'Pending').length, color: 'text-amber-600' },
+                      { label: 'Shipped Orders', value: nfcRequests.filter(r => r.nfcCardStatus === 'Shipped').length, color: 'text-purple-500' },
+                      { label: 'Delivered Cards', value: nfcRequests.filter(r => r.nfcCardStatus === 'Delivered').length, color: 'text-emerald-500' }
+                    ].map((stat, idx) => (
+                      <div key={idx} className={`border rounded-[20px] p-5 shadow-2xs text-left flex flex-col gap-1.5 ${
+                        themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                      }`}>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{stat.label}</span>
+                        <span className={`text-2xl font-black ${stat.color}`}>{stat.value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Search bar */}
+                  <div className={`border shadow-xs rounded-[28px] p-5 flex flex-col sm:flex-row gap-4 justify-between items-center font-sans ${
+                    themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                  }`}>
+                    <div className={`w-full sm:max-w-md border rounded-xl px-3 py-2 flex items-center gap-2 ${
+                      themeMode === 'dark' ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                    }`}>
+                      <Search className="h-4 w-4 text-slate-400 shrink-0" />
+                      <input
+                        type="text"
+                        placeholder="Search by merchant, card name, address, or phone..."
+                        value={nfcSearchQuery}
+                        onChange={(e) => setNfcSearchQuery(e.target.value)}
+                        className="bg-transparent border-none outline-none text-xs w-full font-sans font-semibold placeholder:text-slate-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Requests Table */}
+                  <div className={`border rounded-[28px] p-6 shadow-sm flex flex-col gap-4 font-sans ${
+                    themeMode === 'dark' ? 'bg-slate-900/40 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                  }`}>
+                    <div className="overflow-x-auto border border-slate-200/60 rounded-2xl">
+                      <table className="min-w-[1000px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                        <thead className={`uppercase text-[9px] font-black tracking-wider border-b ${
+                          themeMode === 'dark' ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-450'
+                        }`}>
+                          <tr>
+                            <th className="p-4.5">Order Date</th>
+                            <th className="p-4.5">Merchant</th>
+                            <th className="p-4.5">Business Details</th>
+                            <th className="p-4.5">NFC Card Name</th>
+                            <th className="p-4.5">Delivery Details</th>
+                            <th className="p-4.5">Status</th>
+                            <th className="p-4.5 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className={`divide-y font-medium ${themeMode === 'dark' ? 'divide-slate-800' : 'divide-slate-100'}`}>
+                          {filteredNfcRequests.map(req => {
+                            const userName = req.userId?.fullName || req.userId?.name || 'Unknown';
+                            const userEmail = req.userId?.email || '';
+                            const bizName = req.businessId?.name || 'N/A';
+                            const dateStr = req.createdAt ? new Date(req.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
+                            
+                            return (
+                              <tr key={req._id} className={themeMode === 'dark' ? 'hover:bg-slate-900/30' : 'hover:bg-slate-50/50'}>
+                                <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{dateStr}</td>
+                                <td className="p-4.5 flex flex-col text-left">
+                                  <span className={`font-extrabold text-xs sm:text-[13px] ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>{userName}</span>
+                                  {userEmail && <span className="text-[10px] text-slate-400 font-semibold mt-0.5">{userEmail}</span>}
+                                </td>
+                                <td className="p-4.5 text-left">
+                                  <span className={themeMode === 'dark' ? 'text-slate-355' : 'text-slate-700'}>{bizName}</span>
+                                </td>
+                                <td className="p-4.5 text-left">
+                                  <span className={`font-extrabold ${themeMode === 'dark' ? 'text-emerald-455' : 'text-emerald-700'}`}>
+                                    {req.nfcCardName || 'Pending Config'}
+                                  </span>
+                                </td>
+                                <td className="p-4.5 text-left font-sans">
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className={themeMode === 'dark' ? 'text-slate-355' : 'text-slate-700'}>Addr: {req.nfcDeliveryAddress || 'N/A'}</span>
+                                    <span className="text-slate-450 text-[10px]">Ph: {req.nfcContactNumber || 'N/A'}</span>
+                                  </div>
+                                </td>
+                                <td className="p-4.5">
+                                  <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
+                                    req.nfcCardStatus === 'Delivered'
+                                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-450'
+                                      : req.nfcCardStatus === 'Shipped'
+                                        ? 'bg-blue-500/10 border-blue-500/20 text-blue-450'
+                                        : 'bg-amber-500/10 border-amber-500/20 text-amber-550'
+                                  }`}>
+                                    {req.nfcCardStatus || 'Pending'}
+                                  </span>
+                                </td>
+                                <td className="p-4.5 text-right">
+                                  <select
+                                    value={req.nfcCardStatus || 'Pending'}
+                                    onChange={(e) => updateNfcStatus(req._id, e.target.value)}
+                                    className={`px-2.5 py-1.5 rounded-xl text-[10px] font-extrabold cursor-pointer border select-none transition-colors outline-none ${
+                                      themeMode === 'dark' 
+                                        ? 'bg-slate-900 border-slate-800 text-white' 
+                                        : 'bg-white border-slate-200 text-slate-800'
+                                    }`}
+                                  >
+                                    <option value="Pending">Pending</option>
+                                    <option value="Shipped">Shipped</option>
+                                    <option value="Delivered">Delivered</option>
+                                  </select>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                          {filteredNfcRequests.length === 0 && (
+                            <tr>
+                              <td colSpan="7" className="p-8 text-center text-slate-400 text-xs font-bold leading-normal">
+                                {nfcRequestsLoading ? 'Loading NFC smart card requests...' : 'No matching NFC smart card requests found.'}
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -8599,6 +9272,22 @@ const handlePartnerAction = async (partnerId, action) => {
                     ) : (
                       <span className="text-[10px] text-slate-400 font-semibold">No Referral Link</span>
                     )}
+                    <button
+                      onClick={() => {
+                        const defaultMsg = `Hello ${selectedPartner.fullName || selectedPartner.name || 'Partner'},\n\nCongratulations! Your partner application has been approved by the administrator.\n\nYou can now log in to the UBT Partner Portal to access your unique referral link, invite merchants, and track your reward points.\n\nThank you,\nThe Udumalpet Business Tour Team`;
+                        setWhatsappMsgText(defaultMsg);
+                        setWhatsappMsgModalOpen(true);
+                      }}
+                      className={`border px-2.5 py-0.5 rounded text-[10px] font-extrabold flex items-center gap-1 cursor-pointer transition-all ${
+                        themeMode === 'dark'
+                          ? 'bg-blue-950/20 border-blue-900/30 text-blue-400 hover:bg-blue-950/30'
+                          : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100'
+                      }`}
+                      title="Open WhatsApp message dialog modal"
+                    >
+                      <Mail className="h-3 w-3" />
+                      <span>Send Approved Msg</span>
+                    </button>
                     <span className="text-[#027244]">
                       {selectedPartner.referralPoints || 0} Points (₹{selectedPartner.referralPoints || 0})
                     </span>
@@ -8820,6 +9509,108 @@ const handlePartnerAction = async (partnerId, action) => {
                 }`}
               >
                 Close Profile
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* WHATSAPP APPROVED MESSAGE DIALOG MODAL */}
+      {whatsappMsgModalOpen && selectedPartner && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fadeIn">
+          <div className={`w-full max-w-xl border shadow-2xl rounded-[28px] overflow-hidden flex flex-col max-h-[85vh] ${
+            themeMode === 'dark' ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'
+          }`}>
+            
+            {/* Modal Header */}
+            <div className={`p-5 border-b flex items-center justify-between shrink-0 ${
+              themeMode === 'dark' ? 'border-slate-800' : 'border-slate-150'
+            }`}>
+              <div className="flex flex-col text-left">
+                <h3 className={`font-extrabold text-base font-sans ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>Send WhatsApp Approval Message</h3>
+                <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Send a direct message to {selectedPartner.fullName || selectedPartner.name}</span>
+              </div>
+              <button 
+                onClick={() => setWhatsappMsgModalOpen(false)}
+                className={`h-8 w-8 rounded-full border flex items-center justify-center transition-colors cursor-pointer ${
+                  themeMode === 'dark' ? 'border-slate-850 hover:bg-slate-800 text-slate-400' : 'border-slate-200 hover:bg-slate-50 text-slate-555'
+                }`}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto flex flex-col gap-4 text-left font-sans">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Recipient Phone</label>
+                <input 
+                  type="text"
+                  readOnly
+                  value={selectedPartner.phone || selectedPartner.mobileNumber || 'No Phone Number Registered'}
+                  className={`w-full border rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none ${
+                    themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-305' : 'bg-slate-50 border-slate-200 text-slate-600'
+                  }`}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Message Body</label>
+                <textarea
+                  rows={6}
+                  value={whatsappMsgText}
+                  onChange={(e) => setWhatsappMsgText(e.target.value)}
+                  className={`w-full border rounded-xl p-3.5 text-xs font-semibold focus:ring-1 focus:ring-[#027244] focus:outline-none leading-relaxed ${
+                    themeMode === 'dark' ? 'bg-[#0b0f19] border-slate-800 text-slate-200' : 'bg-white border-slate-200 text-slate-700'
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className={`p-4 sm:p-5 border-t flex items-center justify-end gap-3 shrink-0 ${
+              themeMode === 'dark' ? 'bg-[#0b0f19] border-slate-800' : 'bg-slate-50 border-slate-150'
+            }`}>
+              <button 
+                onClick={() => setWhatsappMsgModalOpen(false)}
+                className={`px-4 py-2 font-extrabold text-xs rounded-xl cursor-pointer transition-all ${
+                  themeMode === 'dark' ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-200 hover:bg-slate-350 text-slate-700'
+                }`}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={async () => {
+                  try {
+                    // 1. Send DB/Email approval message in background
+                    const activeToken = localStorage.getItem('ubt_token');
+                    const partnerId = selectedPartner.id || selectedPartner._id;
+                    fetch(`http://localhost:5000/api/admin/partners/${partnerId}/send-approval-message`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${activeToken}`
+                      }
+                    }).catch(err => console.error('Error background trigger:', err));
+
+                    // 2. Open WhatsApp link with prefilled text
+                    let phone = selectedPartner.phone || selectedPartner.mobileNumber || '';
+                    phone = phone.replace(/\D/g, '');
+                    if (phone.length === 10) {
+                      phone = '91' + phone;
+                    }
+                    const encodedText = encodeURIComponent(whatsappMsgText);
+                    const whatsappUrl = `https://wa.me/${phone}?text=${encodedText}`;
+                    window.open(whatsappUrl, '_blank');
+
+                    setWhatsappMsgModalOpen(false);
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer transition-all shadow-xs"
+              >
+                Send via WhatsApp
               </button>
             </div>
 
@@ -10391,7 +11182,7 @@ const handlePartnerAction = async (partnerId, action) => {
                   <div className="flex flex-col gap-0.5 border p-3 rounded-2xl dark:border-slate-800 bg-slate-50/10">
                     <span>Mandate Expiry / Next Renewal</span>
                     <span className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                      {selectedTx.expiryDate ? new Date(selectedTx.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
+                      {selectedTx.expiryDate && !isNaN(new Date(selectedTx.expiryDate).getTime()) ? new Date(selectedTx.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
                     </span>
                   </div>
                 </div>
@@ -10733,6 +11524,198 @@ const handlePartnerAction = async (partnerId, action) => {
                 Confirm
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subscription Breakdown Details Modal */}
+      {showSubscriptionDetailsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Glassmorphic backdrop */}
+          <div 
+            onClick={() => setShowSubscriptionDetailsModal(false)}
+            className="absolute inset-0 bg-slate-950/60 backdrop-blur-md transition-opacity duration-300"
+          />
+
+          {/* Modal Content container */}
+          <div className={`relative w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-[32px] border p-6 md:p-8 shadow-2xl transition-all duration-300 transform scale-100 ${
+            themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+          }`}>
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowSubscriptionDetailsModal(false)}
+              className={`absolute top-5 right-5 p-2 rounded-full border transition-all duration-200 ${
+                themeMode === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-slate-400' : 'border-slate-100 hover:bg-slate-100 text-slate-650'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Title & Filter Bar inside Modal */}
+            <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center mb-6 font-sans">
+              <div className="flex flex-col text-left">
+                <span className="font-extrabold text-[10px] uppercase tracking-wider text-slate-455">Detailed Analytics</span>
+                <h2 className="text-2xl font-black mt-1">Subscription Plans Breakdown</h2>
+                <p className="text-xs text-slate-400 font-semibold mt-1">
+                  Active timeframe: <span className="text-emerald-500 font-black">
+                    {startDate && endDate 
+                      ? `${new Date(startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} - ${new Date(endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                      : 'Overall (All-time)'}
+                  </span>
+                </p>
+              </div>
+
+              {/* Date Filters inside Modal */}
+              <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto mt-2 lg:mt-0">
+                <div className={`p-1 rounded-xl flex items-center border shrink-0 ${
+                  themeMode === 'dark' ? 'bg-slate-950 border-slate-800' : 'bg-slate-100/60 border-slate-200/30'
+                }`}>
+                  {[
+                    { id: 'overall', label: 'Overall' },
+                    { id: 'custom', label: 'Custom Range' }
+                  ].map(mode => (
+                    <button
+                      key={mode.id}
+                      type="button"
+                      onClick={() => {
+                        setDateFilterMode(mode.id);
+                        if (mode.id === 'overall') {
+                          setStartDate('');
+                          setEndDate('');
+                          fetchRevenueAnalytics('', '');
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all cursor-pointer border-none ${
+                        dateFilterMode === mode.id
+                          ? 'bg-[#027244] text-white shadow-sm'
+                          : themeMode === 'dark'
+                            ? 'text-slate-400 hover:text-white bg-transparent'
+                            : 'text-slate-555 hover:text-slate-800 bg-transparent'
+                      }`}
+                    >
+                      {mode.label}
+                    </button>
+                  ))}
+                </div>
+
+                {dateFilterMode === 'custom' && (
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-semibold outline-none border ${
+                        themeMode === 'dark' 
+                          ? 'bg-slate-900 border-slate-800 text-white' 
+                          : 'bg-slate-50 border-slate-250 text-slate-850'
+                      }`}
+                    />
+                    <span className="text-slate-400 text-[10px] font-bold">to</span>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-semibold outline-none border ${
+                        themeMode === 'dark' 
+                          ? 'bg-slate-900 border-slate-800 text-white' 
+                          : 'bg-slate-50 border-slate-250 text-slate-850'
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (startDate && endDate) {
+                          fetchRevenueAnalytics(startDate, endDate);
+                        } else {
+                          alert('Please select both start and end dates');
+                        }
+                      }}
+                      className="bg-[#027244] hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-[10px] font-black cursor-pointer border-none"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Split Plans Grid (Monthly vs Yearly) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 font-sans">
+              {/* Monthly Plan Card */}
+              <div className={`border rounded-[24px] p-6 flex flex-col justify-between ${
+                themeMode === 'dark' ? 'bg-slate-950/40 border-slate-800/80' : 'bg-slate-50/50 border-slate-200/60'
+              }`}>
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-sm font-black text-blue-500 bg-blue-500/10 px-3 py-1 rounded-full uppercase tracking-wider text-[10px]">Monthly Plan (₹99)</span>
+                  <span className={`text-xs font-bold text-slate-400`}>Total Sales: <span className="font-black text-emerald-500">₹{subscriptionBreakdown.monthly.totalRevenue.toLocaleString('en-IN')}</span></span>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3 text-center my-4">
+                  <div className="flex flex-col">
+                    <span className="text-2xl font-black">{subscriptionBreakdown.monthly.totalCount}</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">Total Count</span>
+                  </div>
+                  <div className="flex flex-col border-x border-slate-200 dark:border-slate-800">
+                    <span className="text-2xl font-black text-indigo-500">{subscriptionBreakdown.monthly.newCount}</span>
+                    <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider mt-1">New Reg</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-2xl font-black text-rose-500">{subscriptionBreakdown.monthly.autopayCount}</span>
+                    <span className="text-[9px] font-bold text-rose-455 uppercase tracking-wider mt-1">Autopay</span>
+                  </div>
+                </div>
+
+                <div className={`border-t pt-4 mt-2 flex flex-col gap-2 text-xs font-bold text-slate-400 ${themeMode === 'dark' ? 'border-slate-850' : 'border-slate-200/50'}`}>
+                  <div className="flex justify-between">
+                    <span>New Reg Revenue:</span>
+                    <span className={themeMode === 'dark' ? 'text-white font-black' : 'text-slate-800 font-black'}>₹{subscriptionBreakdown.monthly.newRevenue.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Autopay Revenue:</span>
+                    <span className={themeMode === 'dark' ? 'text-white font-black' : 'text-slate-800 font-black'}>₹{subscriptionBreakdown.monthly.autopayRevenue.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Yearly Plan Card */}
+              <div className={`border rounded-[24px] p-6 flex flex-col justify-between ${
+                themeMode === 'dark' ? 'bg-slate-950/40 border-slate-800/80' : 'bg-slate-50/50 border-slate-200/60'
+              }`}>
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-sm font-black text-purple-500 bg-purple-500/10 px-3 py-1 rounded-full uppercase tracking-wider text-[10px]">Yearly Plan (₹999)</span>
+                  <span className={`text-xs font-bold text-slate-400`}>Total Sales: <span className="font-black text-emerald-500">₹{subscriptionBreakdown.yearly.totalRevenue.toLocaleString('en-IN')}</span></span>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3 text-center my-4">
+                  <div className="flex flex-col">
+                    <span className="text-2xl font-black">{subscriptionBreakdown.yearly.totalCount}</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">Total Count</span>
+                  </div>
+                  <div className="flex flex-col border-x border-slate-200 dark:border-slate-800">
+                    <span className="text-2xl font-black text-indigo-500">{subscriptionBreakdown.yearly.newCount}</span>
+                    <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider mt-1">New Reg</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-2xl font-black text-rose-500">{subscriptionBreakdown.yearly.autopayCount}</span>
+                    <span className="text-[9px] font-bold text-rose-455 uppercase tracking-wider mt-1">Autopay</span>
+                  </div>
+                </div>
+
+                <div className={`border-t pt-4 mt-2 flex flex-col gap-2 text-xs font-bold text-slate-400 ${themeMode === 'dark' ? 'border-slate-850' : 'border-slate-200/50'}`}>
+                  <div className="flex justify-between">
+                    <span>New Reg Revenue:</span>
+                    <span className={themeMode === 'dark' ? 'text-white font-black' : 'text-slate-800 font-black'}>₹{subscriptionBreakdown.yearly.newRevenue.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Autopay Revenue:</span>
+                    <span className={themeMode === 'dark' ? 'text-white font-black' : 'text-slate-800 font-black'}>₹{subscriptionBreakdown.yearly.autopayRevenue.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       )}

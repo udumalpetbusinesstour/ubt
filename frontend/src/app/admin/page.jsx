@@ -221,6 +221,8 @@ export default function AdminDashboard() {
   const [showBizModal, setShowBizModal] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [showPartnerModal, setShowPartnerModal] = useState(false);
+  const [whatsappMsgModalOpen, setWhatsappMsgModalOpen] = useState(false);
+  const [whatsappMsgText, setWhatsappMsgText] = useState('');
   const [isFoundingMemberCheck, setIsFoundingMemberCheck] = useState(false);
   const [modalCatQuery, setModalCatQuery] = useState('');
   const [showModalCatDropdown, setShowModalCatDropdown] = useState(false);
@@ -2633,15 +2635,15 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
               { id: 'Businesses', label: 'Businesses', icon: <Store className="h-5 w-5" /> },
               { id: 'Signups', label: 'Signups', icon: <User className="h-5 w-5" /> },
               { id: 'Category Management', label: 'Categories', icon: <Grid className="h-5 w-5" /> },
-              { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" /> },
+              { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" />, badge: (businesses.filter(b => (b.status === 'Pending Verification' || b.status === 'Under Review') && !isNonPaymentBiz(b)).length + blogs.filter(b => b.status === 'Pending Approval' || b.status === 'Needs Revision').length + events.filter(e => e.status === 'Pending Review' || e.status === 'Pending Verification').length + appTestimonials.filter(t => t.status === 'Pending').length + pendingCategories.length + partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length) },
               { id: 'Non-Payment', label: 'Non Payment', icon: <XCircle className="h-5 w-5" />, badge: businesses.filter(b => isNonPaymentBiz(b)).length },
               { id: 'NFC Orders', label: 'NFC Orders', icon: <Nfc className="h-5 w-5" />, badge: payments.filter(p => p.isNfcCard && p.nfcCardStatus === 'Pending').length },
-              { id: 'Business Edits', label: 'Business Edits', icon: <Edit3 className="h-5 w-5" /> },
-              { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-5 w-5" /> },
-              { id: 'Blogs', label: 'Blogs Moderation', icon: <BookOpen className="h-5 w-5" /> },
-              { id: 'Events', label: 'Events Moderation', icon: <Calendar className="h-5 w-5" /> },
+              { id: 'Business Edits', label: 'Business Edits', icon: <Edit3 className="h-5 w-5" />, badge: pendingBusinessEdits.length },
+              { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-5 w-5" />, badge: partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length },
+              { id: 'Blogs', label: 'Blogs Moderation', icon: <BookOpen className="h-5 w-5" />, badge: blogs.filter(b => b.status === 'Pending Approval' || b.status === 'Needs Revision').length },
+              { id: 'Events', label: 'Events Moderation', icon: <Calendar className="h-5 w-5" />, badge: events.filter(e => e.status === 'Pending Review' || e.status === 'Pending Verification').length },
               { id: 'Reviews', label: 'Reviews Feed', icon: <MessageSquare className="h-5 w-5" /> },
-              { id: 'Testimonials', label: 'Testimonials Moderation', icon: <Smile className="h-5 w-5" /> },
+              { id: 'Testimonials', label: 'Testimonials Moderation', icon: <Smile className="h-5 w-5" />, badge: appTestimonials.filter(t => t.status === 'Pending').length },
               { id: 'Sponsored Ads', label: 'Ads Moderation', icon: <Sparkles className="h-5 w-5" /> },
               { id: 'Subscriptions', label: 'Subscriptions', icon: <CardIcon className="h-5 w-5" /> },
               { id: 'Notifications', label: 'Notifications Hub', icon: <Bell className="h-5 w-5" /> },
@@ -2725,15 +2727,15 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                   { id: 'Businesses', label: 'Businesses', icon: <Store className="h-5 w-5" /> },
                   { id: 'Signups', label: 'Signups', icon: <User className="h-5 w-5" /> },
                   { id: 'Category Management', label: 'Categories', icon: <Grid className="h-5 w-5" /> },
-                  { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" /> },
+                  { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" />, badge: (businesses.filter(b => (b.status === 'Pending Verification' || b.status === 'Under Review') && !isNonPaymentBiz(b)).length + blogs.filter(b => b.status === 'Pending Approval' || b.status === 'Needs Revision').length + events.filter(e => e.status === 'Pending Review' || e.status === 'Pending Verification').length + appTestimonials.filter(t => t.status === 'Pending').length + pendingCategories.length + partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length) },
                   { id: 'Non-Payment', label: 'Non Payment', icon: <XCircle className="h-5 w-5" />, badge: businesses.filter(b => isNonPaymentBiz(b)).length },
                   { id: 'NFC Orders', label: 'NFC Orders', icon: <Nfc className="h-5 w-5" />, badge: payments.filter(p => p.isNfcCard && p.nfcCardStatus === 'Pending').length },
-                  { id: 'Business Edits', label: 'Business Edits', icon: <Edit3 className="h-5 w-5" /> },
-                  { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-5 w-5" /> },
-                  { id: 'Blogs', label: 'Blogs Moderation', icon: <BookOpen className="h-5 w-5" /> },
-                  { id: 'Events', label: 'Events Moderation', icon: <Calendar className="h-5 w-5" /> },
+                  { id: 'Business Edits', label: 'Business Edits', icon: <Edit3 className="h-5 w-5" />, badge: pendingBusinessEdits.length },
+                  { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-5 w-5" />, badge: partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length },
+                  { id: 'Blogs', label: 'Blogs Moderation', icon: <BookOpen className="h-5 w-5" />, badge: blogs.filter(b => b.status === 'Pending Approval' || b.status === 'Needs Revision').length },
+                  { id: 'Events', label: 'Events Moderation', icon: <Calendar className="h-5 w-5" />, badge: events.filter(e => e.status === 'Pending Review' || e.status === 'Pending Verification').length },
                   { id: 'Reviews', label: 'Reviews Feed', icon: <MessageSquare className="h-5 w-5" /> },
-                  { id: 'Testimonials', label: 'Testimonials Moderation', icon: <Smile className="h-5 w-5" /> },
+                  { id: 'Testimonials', label: 'Testimonials Moderation', icon: <Smile className="h-5 w-5" />, badge: appTestimonials.filter(t => t.status === 'Pending').length },
                   { id: 'Sponsored Ads', label: 'Ads Moderation', icon: <Sparkles className="h-5 w-5" /> },
                   { id: 'Subscriptions', label: 'Subscriptions', icon: <CardIcon className="h-5 w-5" /> },
                   { id: 'Notifications', label: 'Notifications Hub', icon: <Bell className="h-5 w-5" /> },
@@ -2923,7 +2925,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                       <div className="flex flex-col gap-1 text-left">
                         <span className="text-[10px] text-amber-600 font-black uppercase tracking-wider">Pending Approvals</span>
                         <span className="text-3xl font-black text-amber-700 mt-2 leading-none">
-                          {businesses.filter(b => b.status === 'Pending Verification' || b.status === 'Under Review').length +
+                          {businesses.filter(b => (b.status === 'Pending Verification' || b.status === 'Under Review') && !isNonPaymentBiz(b)).length +
                            blogs.filter(b => b.status === 'Pending Approval' || b.status === 'Needs Revision').length +
                            events.filter(e => e.status === 'Pending Review' || e.status === 'Pending Verification').length +
                            appTestimonials.filter(t => t.status === 'Pending').length +
@@ -5911,6 +5913,17 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                                               <span className="px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 select-none">
                                                 Approved
                                               </span>
+                                              <button
+                                                onClick={() => handleToggleManualVerification(partner._id, !partner.isManualVerificationDone)}
+                                                className={`px-2 py-1 border font-black text-[9px] rounded-lg transition-colors shadow-2xs cursor-pointer ${
+                                                  partner.isManualVerificationDone
+                                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-transparent'
+                                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                                                }`}
+                                                title={partner.isManualVerificationDone ? 'Revoke Manual Verification' : 'Mark as Manually Verified'}
+                                              >
+                                                {partner.isManualVerificationDone ? '✓ Verified' : 'Manual Verify'}
+                                              </button>
                                               <button
                                                 onClick={() => handleToggleGoldStatus(partner._id)}
                                                 className={`px-2 py-1 border font-black text-[9px] rounded-lg cursor-pointer transition-colors shadow-2xs ${
@@ -8966,6 +8979,18 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                     ) : (
                       <span className="text-[10px] text-slate-400 font-semibold">No Referral Link</span>
                     )}
+                    <button
+                      onClick={() => {
+                        const defaultMsg = `Hello ${selectedPartner.fullName || selectedPartner.name || 'Partner'},\n\nCongratulations! Your partner application has been approved by the administrator.\n\nYou can now log in to the UBT Partner Portal to access your unique referral link, invite merchants, and track your reward points.\n\nThank you,\nThe Udumalpet Business Tour Team`;
+                        setWhatsappMsgText(defaultMsg);
+                        setWhatsappMsgModalOpen(true);
+                      }}
+                      className="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2.5 py-0.5 rounded text-[10px] font-extrabold flex items-center gap-1 cursor-pointer transition-all"
+                      title="Open WhatsApp message dialog modal"
+                    >
+                      <Mail className="h-3 w-3" />
+                      <span>Send Approved Msg</span>
+                    </button>
                     <span className="text-[#027244]">
                       {selectedPartner.referralPoints || 0} Points (₹{selectedPartner.referralPoints || 0})
                     </span>
@@ -9265,6 +9290,94 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
         </div>
         );
       })()}
+
+      {/* WHATSAPP APPROVED MESSAGE DIALOG MODAL */}
+      {whatsappMsgModalOpen && selectedPartner && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fadeIn">
+          <div className="w-full max-w-xl bg-white border border-slate-200 shadow-2xl rounded-[28px] overflow-hidden flex flex-col max-h-[85vh]">
+            
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-150 flex items-center justify-between shrink-0">
+              <div className="flex flex-col text-left">
+                <h3 className="font-extrabold text-slate-800 text-sm font-sans">Send WhatsApp Approval Message</h3>
+                <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Send a direct message to {selectedPartner.fullName || selectedPartner.name}</span>
+              </div>
+              <button 
+                onClick={() => setWhatsappMsgModalOpen(false)}
+                className="h-8 w-8 rounded-full border border-slate-200 hover:bg-slate-50 text-slate-550 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto flex flex-col gap-4 text-left font-sans">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Recipient Phone</label>
+                <input 
+                  type="text"
+                  readOnly
+                  value={selectedPartner.phone || selectedPartner.mobileNumber || 'No Phone Number Registered'}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-600 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Message Body</label>
+                <textarea
+                  rows={6}
+                  value={whatsappMsgText}
+                  onChange={(e) => setWhatsappMsgText(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-xs font-semibold text-slate-700 focus:ring-1 focus:ring-[#027244] focus:outline-none leading-relaxed"
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 sm:p-5 border-t border-slate-150 bg-slate-50 flex items-center justify-end gap-3 shrink-0">
+              <button 
+                onClick={() => setWhatsappMsgModalOpen(false)}
+                className="px-4 py-2 bg-slate-200 hover:bg-slate-355 text-slate-700 font-extrabold text-xs rounded-xl cursor-pointer transition-all"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={async () => {
+                  try {
+                    // 1. Send DB/Email approval message in background
+                    const activeToken = localStorage.getItem('ubt_token');
+                    const partnerId = selectedPartner.id || selectedPartner._id;
+                    fetch(`http://localhost:5000/api/admin/partners/${partnerId}/send-approval-message`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${activeToken}`
+                      }
+                    }).catch(err => console.error('Error background trigger:', err));
+
+                    // 2. Open WhatsApp link with prefilled text
+                    let phone = selectedPartner.phone || selectedPartner.mobileNumber || '';
+                    phone = phone.replace(/\D/g, '');
+                    if (phone.length === 10) {
+                      phone = '91' + phone;
+                    }
+                    const encodedText = encodeURIComponent(whatsappMsgText);
+                    const whatsappUrl = `https://wa.me/${phone}?text=${encodedText}`;
+                    window.open(whatsappUrl, '_blank');
+
+                    setWhatsappMsgModalOpen(false);
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                className="px-4.5 py-2 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs rounded-xl cursor-pointer transition-all shadow-xs"
+              >
+                Send via WhatsApp
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
 
       {/* 4. REPLY TO QUERY MODAL */}

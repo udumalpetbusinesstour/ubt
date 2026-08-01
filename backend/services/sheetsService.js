@@ -87,13 +87,13 @@ const checkAndAppendMonthHeader = async (sheets, spreadsheetId, targetTab, local
         valueInputOption: 'RAW',
         resource: {
           values: [
-            [currentMonthHeader, '', '', '', '', '', '']
+            [currentMonthHeader, '', '', '', '', '', '', '']
           ]
         }
       });
 
       const updatedRange = appendResponse.data.updates.updatedRange;
-      const match = updatedRange.match(/A(\d+):G\d+/);
+      const match = updatedRange.match(/A(\d+):H\d+/);
       if (match) {
         const rowIndex = parseInt(match[1]) - 1;
         const meta = await sheets.spreadsheets.get({ spreadsheetId });
@@ -111,7 +111,7 @@ const checkAndAppendMonthHeader = async (sheets, spreadsheetId, targetTab, local
                       startRowIndex: rowIndex,
                       endRowIndex: rowIndex + 1,
                       startColumnIndex: 0,
-                      endColumnIndex: 7
+                      endColumnIndex: 8
                     },
                     cell: {
                       userEnteredFormat: {
@@ -141,7 +141,7 @@ const checkAndAppendMonthHeader = async (sheets, spreadsheetId, targetTab, local
                       startRowIndex: rowIndex,
                       endRowIndex: rowIndex + 1,
                       startColumnIndex: 0,
-                      endColumnIndex: 7
+                      endColumnIndex: 8
                     },
                     mergeType: 'MERGE_ALL'
                   }
@@ -160,7 +160,7 @@ const checkAndAppendMonthHeader = async (sheets, spreadsheetId, targetTab, local
 /**
  * Append transaction data to the Income Tracker Google Sheet
  */
-const appendToIncomeTracker = async ({ paymentId, businessId, businessName, monthlyPaid = 0, yearlyPaid = 0, eventPaid = 0, addPaid = 0, sheetName = '' }) => {
+const appendToIncomeTracker = async ({ paymentId, businessId, businessName, monthlyPaid = 0, yearlyPaid = 0, eventPaid = 0, addPaid = 0, nfcPaid = 0, sheetName = '' }) => {
   try {
     if (paymentId) {
       const Payment = require('../models/Payment');
@@ -259,19 +259,46 @@ const appendToIncomeTracker = async ({ paymentId, businessId, businessName, mont
       console.warn('[Google Sheets API] Could not fetch sheets list metadata, using fallback range:', metaErr.message);
     }
 
-    const range = `${targetTab}!A:G`;
+    // Ensure the header row includes 'NFC Card' in column H
+    try {
+      const headerResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `${targetTab}!A1:H1`
+      });
+      const headerValues = headerResponse.data.values ? headerResponse.data.values[0] : [];
+      if (!headerValues || headerValues.length < 8 || headerValues[7] !== 'NFC Card') {
+        const expectedHeaders = ['Date', 'Name of Business', 'Total', 'Monthly', 'Yearly Plan', 'Event', 'Add', 'NFC Card'];
+        const newHeaders = [...expectedHeaders];
+        for (let i = 0; i < headerValues.length; i++) {
+          if (headerValues[i]) newHeaders[i] = headerValues[i];
+        }
+        await sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: `${targetTab}!A1:H1`,
+          valueInputOption: 'USER_ENTERED',
+          resource: {
+            values: [newHeaders]
+          }
+        });
+        console.log(`[Google Sheets API] Updated header row to include NFC Card column in sheet "${targetTab}".`);
+      }
+    } catch (headerErr) {
+      console.warn('[Google Sheets API] Error checking or updating headers:', headerErr.message);
+    }
+
+    const range = `${targetTab}!A:H`;
     const localDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
     const year = localDate.getFullYear();
     const month = String(localDate.getMonth() + 1).padStart(2, '0');
     const day = String(localDate.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`;
 
-    const totalPaid = monthlyPaid + yearlyPaid + eventPaid + addPaid;
+    const totalPaid = monthlyPaid + yearlyPaid + eventPaid + addPaid + nfcPaid;
 
     // Automated month header insertion check
     await checkAndAppendMonthHeader(sheets, spreadsheetId, targetTab, localDate);
 
-    console.log(`[Google Sheets API] Appending transaction for: ${finalBusinessName} (M: ${monthlyPaid}, Y: ${yearlyPaid}, E: ${eventPaid}, A: ${addPaid}, Total: ${totalPaid})`);
+    console.log(`[Google Sheets API] Appending transaction for: ${finalBusinessName} (M: ${monthlyPaid}, Y: ${yearlyPaid}, E: ${eventPaid}, A: ${addPaid}, N: ${nfcPaid}, Total: ${totalPaid})`);
 
     const response = await sheets.spreadsheets.values.append({
       spreadsheetId,
@@ -286,7 +313,8 @@ const appendToIncomeTracker = async ({ paymentId, businessId, businessName, mont
             monthlyPaid,
             yearlyPaid,
             eventPaid,
-            addPaid
+            addPaid,
+            nfcPaid
           ]
         ]
       }
@@ -313,7 +341,7 @@ const appendToIncomeTracker = async ({ paymentId, businessId, businessName, mont
                       startRowIndex: rowIndex,
                       endRowIndex: rowIndex + 1,
                       startColumnIndex: 0,
-                      endColumnIndex: 7
+                      endColumnIndex: 8
                     },
                     cell: {
                       userEnteredFormat: {
@@ -365,14 +393,44 @@ const appendToIncomeTracker = async ({ paymentId, businessId, businessName, mont
 };
 
 const appendDailyTotalForTab = async (sheets, spreadsheetId, targetTab, paymentsList, localDate, dateStr) => {
+  // Ensure the header row includes 'NFC Card' in column H
+  try {
+    const headerResponse = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${targetTab}!A1:H1`
+    });
+    const headerValues = headerResponse.data.values ? headerResponse.data.values[0] : [];
+    if (!headerValues || headerValues.length < 8 || headerValues[7] !== 'NFC Card') {
+      const expectedHeaders = ['Date', 'Name of Business', 'Total', 'Monthly', 'Yearly Plan', 'Event', 'Add', 'NFC Card'];
+      const newHeaders = [...expectedHeaders];
+      for (let i = 0; i < headerValues.length; i++) {
+        if (headerValues[i]) newHeaders[i] = headerValues[i];
+      }
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${targetTab}!A1:H1`,
+        valueInputOption: 'USER_ENTERED',
+        resource: {
+          values: [newHeaders]
+        }
+      });
+      console.log(`[Google Sheets API] Updated headers for Daily Total sheet "${targetTab}".`);
+    }
+  } catch (headerErr) {
+    console.warn('[Google Sheets API] Error checking headers for Daily Total:', headerErr.message);
+  }
+
   let monthlySum = 0;
   let yearlySum = 0;
   let eventSum = 0;
   let addSum = 0;
+  let nfcSum = 0;
 
   for (const payment of paymentsList) {
     const amt = payment.amount || 0;
-    if (payment.isSponsoredAd || payment.promotionId) {
+    if (payment.isNfcCard === true) {
+      nfcSum += amt;
+    } else if (payment.isSponsoredAd || payment.promotionId) {
       addSum += amt;
     } else if (payment.eventId) {
       eventSum += amt;
@@ -394,9 +452,9 @@ const appendDailyTotalForTab = async (sheets, spreadsheetId, targetTab, payments
   // Automated month header insertion check
   await checkAndAppendMonthHeader(sheets, spreadsheetId, targetTab, localDate);
 
-  console.log(`[Google Sheets API] Appending Daily Total to sheet "${targetTab}": [M: ${monthlySum}, Y: ${yearlySum}, E: ${eventSum}, A: ${addSum}]`);
+  console.log(`[Google Sheets API] Appending Daily Total to sheet "${targetTab}": [M: ${monthlySum}, Y: ${yearlySum}, E: ${eventSum}, A: ${addSum}, N: ${nfcSum}]`);
 
-   const overallTotal = monthlySum + yearlySum + eventSum + addSum;
+   const overallTotal = monthlySum + yearlySum + eventSum + addSum + nfcSum;
 
   // Append row
   const response = await sheets.spreadsheets.values.append({
@@ -412,7 +470,8 @@ const appendDailyTotalForTab = async (sheets, spreadsheetId, targetTab, payments
           monthlySum,
           yearlySum,
           eventSum,
-          addSum
+          addSum,
+          nfcSum
         ]
       ]
     }
@@ -420,7 +479,7 @@ const appendDailyTotalForTab = async (sheets, spreadsheetId, targetTab, payments
 
   // Format the daily total row (Grey background, bold text)
   const updatedRange = response.data.updates.updatedRange;
-  const match = updatedRange.match(/A(\d+):G\d+/);
+  const match = updatedRange.match(/A(\d+):H\d+/);
   if (match) {
     const rowIndex = parseInt(match[1]) - 1; // 0-indexed row
     const meta = await sheets.spreadsheets.get({ spreadsheetId });
@@ -438,7 +497,7 @@ const appendDailyTotalForTab = async (sheets, spreadsheetId, targetTab, payments
                   startRowIndex: rowIndex,
                   endRowIndex: rowIndex + 1,
                   startColumnIndex: 0,
-                  endColumnIndex: 7
+                  endColumnIndex: 8
                 },
                 cell: {
                   userEnteredFormat: {

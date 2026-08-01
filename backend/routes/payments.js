@@ -509,23 +509,67 @@ router.post('/verify-payment', protect, async (req, res) => {
       });
     }
 
-    // Create Payment record
-    const payment = await Payment.create({
-      userId: req.user._id,
-      businessId: business._id,
-      subscriptionId: subscription._id,
-      orderId: razorpayOrderId || razorpaySubscriptionId,
-      paymentId: subscription.razorpayPaymentId,
-      razorpayOrderId: razorpayOrderId || undefined,
-      razorpaySubscriptionId: razorpaySubscriptionId || undefined,
-      razorpayPaymentId: subscription.razorpayPaymentId,
-      amount: finalAmount,
-      paymentMethod: 'UPI',
-      status: 'Paid',
-      paymentStatus: 'Paid',
-      paymentDate: new Date(),
-      paidAt: new Date(),
-    });
+    // Create Payment record if it doesn't already exist (idempotency check)
+    let payment = null;
+    const paymentCheckQuery = [];
+    if (subscription.razorpayPaymentId) {
+      paymentCheckQuery.push({ razorpayPaymentId: subscription.razorpayPaymentId });
+      paymentCheckQuery.push({ paymentId: subscription.razorpayPaymentId });
+    }
+    if (razorpaySubscriptionId) {
+      paymentCheckQuery.push({
+        razorpaySubscriptionId: razorpaySubscriptionId,
+        amount: finalAmount,
+        createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) }
+      });
+    }
+
+    if (paymentCheckQuery.length > 0) {
+      payment = await Payment.findOne({ $or: paymentCheckQuery });
+    }
+
+    if (!payment) {
+      payment = await Payment.create({
+        userId: req.user._id,
+        businessId: business._id,
+        subscriptionId: subscription._id,
+        orderId: razorpayOrderId || razorpaySubscriptionId,
+        paymentId: subscription.razorpayPaymentId,
+        razorpayOrderId: razorpayOrderId || undefined,
+        razorpaySubscriptionId: razorpaySubscriptionId || undefined,
+        razorpayPaymentId: subscription.razorpayPaymentId,
+        amount: finalAmount,
+        paymentMethod: 'UPI',
+        status: 'Paid',
+        paymentStatus: 'Paid',
+        paymentDate: new Date(),
+        paidAt: new Date(),
+      });
+      console.log(`[PAYMENT] Created new payment record: ${payment._id}`);
+
+      // Append to Google Sheets Income Tracker (only for new payments!)
+      try {
+        const { appendToIncomeTracker } = require('../services/sheetsService');
+        await appendToIncomeTracker({
+          paymentId: payment._id,
+          businessId: business._id,
+          businessName: business.name || business.businessName || 'Unknown Business',
+          monthlyPaid: (planType.toLowerCase().includes('monthly') && !isPublicSector && !isAdminUser) ? finalAmount : 0,
+          yearlyPaid: (planType.toLowerCase().includes('yearly') && !isPublicSector && !isAdminUser) ? finalAmount : 0,
+          eventPaid: 0,
+          addPaid: 0,
+          sheetName: 'Income Tracker New'
+        });
+      } catch (sheetErr) {
+        console.error('[Google Sheets API] Error triggering sheets update:', sheetErr.message);
+      }
+    } else {
+      console.log(`[PAYMENT] Payment record already exists, skipping creation: ${payment._id}`);
+      if (!payment.subscriptionId) {
+        payment.subscriptionId = subscription._id;
+        await payment.save();
+      }
+    }
 
     // Update Business status immediately
     business.subscriptionStatus = 'active';
@@ -536,23 +580,6 @@ router.post('/verify-payment', protect, async (req, res) => {
     // Trigger referral point award check for the owner of the referral code
     const { checkAndCompleteReferralByBusiness } = require('../utils/referralHelper');
     await checkAndCompleteReferralByBusiness(business._id);
-
-    // Append to Google Sheets Income Tracker
-    try {
-      const { appendToIncomeTracker } = require('../services/sheetsService');
-      await appendToIncomeTracker({
-        paymentId: payment._id,
-        businessId: business._id,
-        businessName: business.name || business.businessName || 'Unknown Business',
-        monthlyPaid: (planType.toLowerCase().includes('monthly') && !isPublicSector && !isAdminUser) ? finalAmount : 0,
-        yearlyPaid: (planType.toLowerCase().includes('yearly') && !isPublicSector && !isAdminUser) ? finalAmount : 0,
-        eventPaid: 0,
-        addPaid: 0,
-        sheetName: 'Income Tracker New'
-      });
-    } catch (sheetErr) {
-      console.error('[Google Sheets API] Error triggering sheets update:', sheetErr.message);
-    }
 
     // Trigger Zoho Books background invoice & payment sync
     if (payment && payment._id) {
@@ -1610,6 +1637,26 @@ router.post('/verify-nfc-payment', protect, async (req, res) => {
         nfcRequestSubmitted: false
       });
       await payment.save();
+
+      // Sync NFC payment to Google Sheets
+      try {
+        const { appendToIncomeTracker } = require('../services/sheetsService');
+        const Business = require('../models/Business');
+        const business = await Business.findById(businessId);
+        await appendToIncomeTracker({
+          paymentId: payment._id,
+          businessId,
+          businessName: business ? (business.name || business.businessName) : 'Unknown Business',
+          monthlyPaid: 0,
+          yearlyPaid: 0,
+          eventPaid: 0,
+          addPaid: 0,
+          nfcPaid: 249,
+          sheetName: 'Income Tracker New'
+        });
+      } catch (sheetErr) {
+        console.error('[Google Sheets API] Error triggering sheets update for NFC Card:', sheetErr.message);
+      }
     }
 
     res.json({
@@ -1686,6 +1733,25 @@ router.put('/admin/nfc/:paymentId/status', protect, admin, async (req, res) => {
     });
   } catch (error) {
     console.error('[Admin Update NFC Status Error]:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @route   GET /api/payments/admin/nfc-requests
+// @access  Private/Admin
+router.get('/admin/nfc-requests', protect, admin, async (req, res) => {
+  try {
+    const requests = await Payment.find({ isNfcCard: true })
+      .populate('userId', 'fullName name email phone mobileNumber')
+      .populate('businessId', 'name address')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      requests
+    });
+  } catch (error) {
+    console.error('[Get NFC Requests Error]:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });

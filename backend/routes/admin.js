@@ -673,6 +673,32 @@ router.post('/partners/approve', async (req, res, next) => {
       partner.partnerStatus = 'approved';
       partner.partnerApprovedAt = new Date();
       partner.role = 'partner';
+
+      // Create in-app Notification
+      await Notification.create({
+        userId: partner._id,
+        title: 'Partner Application Approved',
+        message: `Congratulations! Your partner application has been approved. You can now access your partner portal and start earning rewards.`,
+        type: 'approval_status'
+      });
+
+      // Send email notification
+      try {
+        const { sendEmail } = require('../utils/emailHelper');
+        await sendEmail({
+          to: partner.email,
+          subject: 'Partner Application Approved - Udumalpet Business Tour',
+          text: `Hello ${partner.fullName || partner.name},\n\nCongratulations! Your partner application has been approved by the administrator.\n\nYou can now log in to the UBT Partner Portal to access your unique referral link, invite merchants, and track your reward points.\n\nThank you,\nThe Udumalpet Business Tour Team`,
+          html: `
+            <h3>Hello ${partner.fullName || partner.name},</h3>
+            <p>Congratulations! Your partner application has been approved by the administrator.</p>
+            <p>You can now log in to the <strong>UBT Partner Portal</strong> to access your unique referral link, invite merchants, and track your reward points.</p>
+            <p>Thank you,<br/>The Udumalpet Business Tour Team</p>
+          `
+        });
+      } catch (mailErr) {
+        console.error('Error sending partner approval email:', mailErr);
+      }
     } else if (action === 'reject') {
       const { rejectionReason } = req.body;
       partner.isPartnerApproved = false;
@@ -686,6 +712,48 @@ router.post('/partners/approve', async (req, res, next) => {
     }
     await partner.save();
     res.json({ success: true, message: `Partner registration ${action}d successfully.`, data: partner });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Send approval email/notification to a partner manually
+// @route   POST /api/admin/partners/:id/send-approval-message
+// @access  Private/Admin
+router.post('/partners/:id/send-approval-message', async (req, res, next) => {
+  try {
+    const partner = await User.findById(req.params.id);
+    if (!partner) {
+      return res.status(404).json({ success: false, message: 'Partner not found' });
+    }
+
+    // Create in-app Notification
+    await Notification.create({
+      userId: partner._id,
+      title: 'Partner Application Approved',
+      message: `Congratulations! Your partner application has been approved. You can now access your partner portal and start earning rewards.`,
+      type: 'approval_status'
+    });
+
+    // Send email notification
+    try {
+      const { sendEmail } = require('../utils/emailHelper');
+      await sendEmail({
+        to: partner.email,
+        subject: 'Partner Application Approved - Udumalpet Business Tour',
+        text: `Hello ${partner.fullName || partner.name},\n\nCongratulations! Your partner application has been approved by the administrator.\n\nYou can now log in to the UBT Partner Portal to access your unique referral link, invite merchants, and track your reward points.\n\nThank you,\nThe Udumalpet Business Tour Team`,
+        html: `
+          <h3>Hello ${partner.fullName || partner.name},</h3>
+          <p>Congratulations! Your partner application has been approved by the administrator.</p>
+          <p>You can now log in to the <strong>UBT Partner Portal</strong> to access your unique referral link, invite merchants, and track your reward points.</p>
+          <p>Thank you,<br/>The Udumalpet Business Tour Team</p>
+        `
+      });
+    } catch (mailErr) {
+      console.error('Error sending partner approval email:', mailErr);
+    }
+
+    res.json({ success: true, message: 'Approval message sent successfully to partner.' });
   } catch (error) {
     next(error);
   }

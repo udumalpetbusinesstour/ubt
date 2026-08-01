@@ -124,23 +124,80 @@ const deployPlan = async (req, res, next) => {
  */
 const getRevenueAnalytics = async (req, res, next) => {
   try {
-    const payments = await Payment.find({})
+    const { startDate, endDate } = req.query;
+    
+    let paymentFilter = {};
+    let subscriptionFilter = {};
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      paymentFilter.createdAt = { $gte: start, $lte: end };
+      subscriptionFilter.createdAt = { $gte: start, $lte: end };
+    }
+
+    const payments = await Payment.find(paymentFilter)
       .populate('userId', 'name fullName email')
       .populate('businessId', 'name')
       .populate('eventId', 'title')
+      .populate('subscriptionId', 'planName planId planType status')
       .sort({ createdAt: -1 });
 
     const paidPayments = payments.filter(p => p.paymentStatus === 'Paid' || p.status === 'Paid' || p.status === 'captured');
 
     const totalRevenue = paidPayments.reduce((sum, p) => sum + p.amount, 0);
 
-    const subscriptionRevenue = paidPayments
-      .filter(p => {
-        const hasEventId = p.eventId || p.populated('eventId');
-        const hasAdId = p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion';
-        return !hasEventId && !hasAdId;
-      })
-      .reduce((sum, p) => sum + p.amount, 0);
+    const subscriptionPayments = paidPayments.filter(p => {
+      const hasEventId = p.eventId || p.populated('eventId');
+      const hasAdId = p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion';
+      const isNfc = p.isNfcCard === true;
+      return !hasEventId && !hasAdId && !isNfc;
+    });
+
+    const subscriptionRevenue = subscriptionPayments.reduce((sum, p) => sum + p.amount, 0);
+
+    let subscriptionRevenueNew = 0;
+    let subscriptionRevenueAutopay = 0;
+
+    const subIds = [...new Set(subscriptionPayments.map(p => p.razorpaySubscriptionId).filter(Boolean))];
+
+    // Find all older payments for these subscriptions in a single query
+    const olderPaymentsMap = {};
+    if (subIds.length > 0) {
+      const olderPayments = await Payment.find({
+        razorpaySubscriptionId: { $in: subIds },
+        $or: [
+          { paymentStatus: 'Paid' },
+          { status: 'Paid' },
+          { status: 'captured' }
+        ]
+      }).select('razorpaySubscriptionId createdAt amount').lean();
+
+      // Group older payments by subscription ID
+      for (const op of olderPayments) {
+        if (!olderPaymentsMap[op.razorpaySubscriptionId]) {
+          olderPaymentsMap[op.razorpaySubscriptionId] = [];
+        }
+        olderPaymentsMap[op.razorpaySubscriptionId].push(op);
+      }
+    }
+
+    for (const p of subscriptionPayments) {
+      if (p.razorpaySubscriptionId && olderPaymentsMap[p.razorpaySubscriptionId]) {
+        // Check in memory if any payment has a createdAt date strictly earlier than p.createdAt
+        const hasOlder = olderPaymentsMap[p.razorpaySubscriptionId].some(
+          op => new Date(op.createdAt).getTime() < new Date(p.createdAt).getTime()
+        );
+        if (hasOlder) {
+          subscriptionRevenueAutopay += p.amount;
+        } else {
+          subscriptionRevenueNew += p.amount;
+        }
+      } else {
+        subscriptionRevenueNew += p.amount;
+      }
+    }
 
     const eventRevenue = paidPayments
       .filter(p => p.eventId || p.populated('eventId'))
@@ -150,17 +207,29 @@ const getRevenueAnalytics = async (req, res, next) => {
       .filter(p => p.isSponsoredAd || p.planType === 'Sponsored Ad Promotion')
       .reduce((sum, p) => sum + p.amount, 0);
 
+    const nfcRevenue = paidPayments
+      .filter(p => p.isNfcCard === true)
+      .reduce((sum, p) => sum + p.amount, 0);
+
     // Group paid payments by month
+    const matchStage = {
+      $match: {
+        $or: [
+          { paymentStatus: 'Paid' },
+          { status: 'Paid' },
+          { status: 'captured' }
+        ]
+      }
+    };
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      matchStage.$match.createdAt = { $gte: start, $lte: end };
+    }
+
     const monthlyRevenue = await Payment.aggregate([
-      {
-        $match: {
-          $or: [
-            { paymentStatus: 'Paid' },
-            { status: 'Paid' },
-            { status: 'captured' }
-          ]
-        }
-      },
+      matchStage,
       {
         $group: {
           _id: {
@@ -175,7 +244,8 @@ const getRevenueAnalytics = async (req, res, next) => {
                   $and: [
                     { $eq: [{ $ifNull: ['$eventId', null] }, null] },
                     { $eq: [{ $ifNull: ['$isSponsoredAd', false] }, false] },
-                    { $ne: [{ $ifNull: ['$planType', ''] }, 'Sponsored Ad Promotion'] }
+                    { $ne: [{ $ifNull: ['$planType', ''] }, 'Sponsored Ad Promotion'] },
+                    { $eq: [{ $ifNull: ['$isNfcCard', false] }, false] }
                   ]
                 },
                 '$amount',
@@ -197,6 +267,9 @@ const getRevenueAnalytics = async (req, res, next) => {
               '$amount',
               0
             ]}
+          },
+          nfcTotal: {
+            $sum: { $cond: [{ $eq: [{ $ifNull: ['$isNfcCard', false] }, true] }, '$amount', 0] }
           }
         }
       },
@@ -204,20 +277,47 @@ const getRevenueAnalytics = async (req, res, next) => {
     ]);
 
     // Dynamic stats mapping
+    const planMatchStage = { $match: { status: 'active' } };
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      planMatchStage.$match.createdAt = { $gte: start, $lte: end };
+    }
+
     const planCounts = await Subscription.aggregate([
-      { $match: { status: 'active' } },
+      planMatchStage,
       { $group: { _id: '$planName', count: { $sum: 1 }, totalSales: { $sum: '$amountPaid' } } }
     ]);
 
-    const activeSubscriptions = await Subscription.countDocuments({ status: 'active' });
-    const expiredSubscriptions = await Subscription.countDocuments({ status: 'expired' });
-    const pendingSubscriptions = await Subscription.countDocuments({ status: 'pending' });
+    let subDocFilter = { status: 'active' };
+    let expiredSubDocFilter = { status: 'expired' };
+    let pendingSubDocFilter = { status: 'pending' };
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      subDocFilter.createdAt = { $gte: start, $lte: end };
+      expiredSubDocFilter.createdAt = { $gte: start, $lte: end };
+      pendingSubDocFilter.createdAt = { $gte: start, $lte: end };
+    }
+
+    const activeSubscriptions = await Subscription.countDocuments(subDocFilter);
+    const expiredSubscriptions = await Subscription.countDocuments(expiredSubDocFilter);
+    const pendingSubscriptions = await Subscription.countDocuments(pendingSubDocFilter);
     const totalListedBusinesses = await Business.countDocuments();
 
     // Get referral credits applied
-    const referralDiscountStats = await Subscription.aggregate([
-      { $group: { _id: null, totalDiscount: { $sum: '$referralDiscount' } } }
-    ]);
+    const referralDiscountPipeline = [];
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      referralDiscountPipeline.push({ $match: { createdAt: { $gte: start, $lte: end } } });
+    }
+    referralDiscountPipeline.push({ $group: { _id: null, totalDiscount: { $sum: '$referralDiscount' } } });
+
+    const referralDiscountStats = await Subscription.aggregate(referralDiscountPipeline);
     const referralDiscountTotal = referralDiscountStats[0]?.totalDiscount || 0;
 
     const mappedPayments = payments.map(p => {
@@ -232,8 +332,11 @@ const getRevenueAnalytics = async (req, res, next) => {
     return sendSuccess(res, 200, 'Platform revenue telemetry compiled successfully', {
       totalRevenue,
       subscriptionRevenue,
+      subscriptionRevenueNew,
+      subscriptionRevenueAutopay,
       eventRevenue,
       adRevenue,
+      nfcRevenue,
       activeSubscriptions,
       expiredSubscriptions,
       pendingSubscriptions,
