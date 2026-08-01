@@ -829,10 +829,11 @@ export default function EventsPage() {
   };
 
   // Filter listings
-  const filteredEvents = events.filter(e => {
+  let filteredEvents = events.filter(e => {
     const keywordMatch = !searchKeyword || 
       e.title.toLowerCase().includes(searchKeyword.toLowerCase()) ||
       e.description.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+      e.organizer.toLowerCase().includes(searchKeyword.toLowerCase()) ||
       e.venue.toLowerCase().includes(searchKeyword.toLowerCase());
 
     const catMatch = filterCategory === 'All Categories' || e.category === filterCategory;
@@ -847,12 +848,27 @@ export default function EventsPage() {
     return keywordMatch && catMatch && dateMatch;
   });
 
+  // Helper to determine if event is expired
+  const isEventExpired = (evt) => {
+    const d = new Date(evt.endDate || evt.date);
+    d.setHours(23, 59, 59, 999);
+    return d < new Date();
+  };
+
+  // Separate into upcoming and expired
+  const upcomingEvents = filteredEvents.filter(e => !isEventExpired(e));
+  const expiredEvents = filteredEvents.filter(e => isEventExpired(e));
+
   // Sorting list based on selection
   if (sortBy === 'Date (Soonest)') {
-    filteredEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+    upcomingEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+    expiredEvents.sort((a, b) => new Date(b.date) - new Date(a.date)); // Latest expired first
   } else if (sortBy === 'Date (Latest)') {
-    filteredEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
+    upcomingEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
+    expiredEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
   }
+
+  filteredEvents = [...upcomingEvents, ...expiredEvents];
 
   const eventsPerPage = 6;
   const totalEventPages = Math.ceil(filteredEvents.length / eventsPerPage);
