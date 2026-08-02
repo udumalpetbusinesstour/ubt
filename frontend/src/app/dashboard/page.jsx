@@ -141,7 +141,7 @@ function DashboardContent() {
   const [isConfiguringCatalog, setIsConfiguringCatalog] = useState(false);
   const [showCustomCatalogModal, setShowCustomCatalogModal] = useState(false);
   const [customCatalogName, setCustomCatalogName] = useState('Custom');
-  const [customCatalogFields, setCustomCatalogFields] = useState(['Brand', 'Model']);
+  const [customCatalogFields, setCustomCatalogFields] = useState(['Venue', 'Catering']);
   const [customCatalogPhotosEnabled, setCustomCatalogPhotosEnabled] = useState(true);
   const [currentCustomCatalogId, setCurrentCustomCatalogId] = useState(null);
 
@@ -3062,13 +3062,8 @@ function DashboardContent() {
   const handleCatalogSubmit = async (e) => {
     e.preventDefault();
     const isCustom = catalogItemType === 'custom' || catalogItemType.startsWith('custom_');
-    
-    if (!catalogItemName) {
-      setCatalogItemError('Item Name is required.');
-      return;
-    }
-    if (!isCustom && catalogItemPrice === '') {
-      setCatalogItemError('Item Name and Price are required.');
+    if (!catalogItemName || (!isCustom && catalogItemPrice === '')) {
+      setCatalogItemError(isCustom ? 'Item Name is required.' : 'Item Name and Price are required.');
       return;
     }
 
@@ -3081,11 +3076,11 @@ function DashboardContent() {
     }
 
     const bodyData = {
-      name: catalogItemName.trim(),
+      name: catalogItemName,
       price: catalogItemPrice === '' ? 0 : Number(catalogItemPrice),
       offerPrice: catalogItemOfferPrice !== '' && catalogItemOfferPrice !== null && catalogItemOfferPrice !== undefined ? Number(catalogItemOfferPrice) : null,
       isAvailable: catalogItemIsAvailable,
-      description: isCustom ? '' : (catalogItemDescription || ''),
+      description: catalogItemDescription || '',
       imageUrl: catalogItemImageUrl || '',
       galleryUrls: catalogItemGalleryUrls,
       category: finalCategory || 'General',
@@ -9868,7 +9863,7 @@ function DashboardContent() {
                         onClick={() => {
                           setCurrentCustomCatalogId('custom');
                           setCustomCatalogName(business?.catalogLabel || 'Custom');
-                          setCustomCatalogFields(Array.isArray(business?.catalogCustomFields) ? [...business.catalogCustomFields] : ['Brand', 'Model']);
+                          setCustomCatalogFields(Array.isArray(business?.catalogCustomFields) ? [...business.catalogCustomFields] : ['Venue', 'Catering']);
                           setCustomCatalogPhotosEnabled(business?.catalogCustomFieldsPhotosEnabled !== false);
                           setShowCustomCatalogModal(true);
                         }}
@@ -9881,21 +9876,16 @@ function DashboardContent() {
 
                     {(business?.catalogType || '').split(',').map(s => s.trim()).filter(Boolean).map(t => {
                       let cleanLabel = t;
-                      let isCustomType = false;
                       if (t === 'menu') cleanLabel = 'Menu';
                       else if (t === 'product') cleanLabel = 'Product';
-                      else if (t === 'custom') {
-                        cleanLabel = business?.catalogLabel || 'Custom';
-                        isCustomType = true;
-                      } else if (t.startsWith('custom_')) {
+                      else if (t.startsWith('custom_')) {
                         const customConfig = Array.isArray(business?.customCatalogs) && business.customCatalogs.find(c => c.id === t);
-                        cleanLabel = customConfig ? customConfig.name : 'Custom';
-                        isCustomType = true;
+                        cleanLabel = customConfig ? customConfig.name : 'Custom Item';
                       } else {
                         cleanLabel = (catalogLabelsMap[t] || t).replace(/^[^a-zA-Z]*/, '').replace(/s$/, '');
                       }
                       
-                      const displayAddLabel = isCustomType ? cleanLabel : (cleanLabel.toLowerCase().endsWith('item') ? cleanLabel : `${cleanLabel} Item`);
+                      const displayAddLabel = cleanLabel.toLowerCase().endsWith('item') ? cleanLabel : `${cleanLabel} Item`;
                       return (
                         <button
                           key={t}
@@ -9956,7 +9946,7 @@ function DashboardContent() {
                               onClick={() => {
                                 setCurrentCustomCatalogId(null);
                                 setCustomCatalogName('Custom Catalog');
-                                setCustomCatalogFields(['Brand', 'Model']);
+                                setCustomCatalogFields(['Venue', 'Catering']);
                                 setCustomCatalogPhotosEnabled(true);
                                 setShowCustomCatalogModal(true);
                               }}
@@ -10132,7 +10122,7 @@ function DashboardContent() {
                             } else {
                               setCurrentCustomCatalogId('custom');
                               setCustomCatalogName(business?.catalogLabel || 'Custom');
-                              setCustomCatalogFields(Array.isArray(business?.catalogCustomFields) ? [...business.catalogCustomFields] : ['Brand', 'Model']);
+                              setCustomCatalogFields(Array.isArray(business?.catalogCustomFields) ? [...business.catalogCustomFields] : ['Venue', 'Catering']);
                               setCustomCatalogPhotosEnabled(business?.catalogCustomFieldsPhotosEnabled !== false);
                               setShowCustomCatalogModal(true);
                             }
@@ -10265,12 +10255,12 @@ function DashboardContent() {
                                                   {item.catalogType === 'menu' && <span>{fields.isVeg !== false ? '🟢 Veg' : '🔴 Non-Veg'}</span>}
                                                   {item.catalogType === 'product' && fields.brand && <span>🏷️ {fields.brand}</span>}
                                                   {(item.catalogType === 'custom' || item.catalogType.startsWith('custom_')) && (
-                                                     <div className="flex flex-wrap gap-x-2 gap-y-1">
-                                                       {Object.entries(fields).map(([k, v]) => (
-                                                         v && <span key={k} className="bg-slate-50 border border-slate-150/40 px-1.5 py-0.5 rounded text-slate-500 font-semibold">{k}: {v}</span>
-                                                       ))}
-                                                     </div>
-                                                   )}
+                                                    <div className="flex flex-wrap gap-x-2 gap-y-1">
+                                                      {Object.entries(fields).map(([k, v]) => (
+                                                        v && <span key={k} className="bg-slate-50 border border-slate-150/40 px-1.5 py-0.5 rounded text-slate-500 font-semibold">{k}: {v}</span>
+                                                      ))}
+                                                    </div>
+                                                  )}
                                                 </div>
 
                                                 {item.description && (
@@ -14475,53 +14465,55 @@ function DashboardContent() {
                 </div>
               )}
 
-              {/* Category */}
-              <div className="flex flex-col gap-2 bg-slate-50/50 p-3 rounded-2xl border border-slate-150/40">
-                <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Category</label>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
-                      <input
-                        type="radio"
-                        checked={!isCatalogCustomCategory}
-                        onChange={() => setIsCatalogCustomCategory(false)}
-                        className="cursor-pointer"
-                      />
-                      Choose Existing
-                    </label>
-                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
-                      <input
-                        type="radio"
-                        checked={isCatalogCustomCategory}
-                        onChange={() => setIsCatalogCustomCategory(true)}
-                        className="cursor-pointer"
-                      />
-                      Add Custom
-                    </label>
-                  </div>
+              {/* Category (hidden for custom catalogs) */}
+              {!(catalogItemType === 'custom' || catalogItemType.startsWith('custom_')) && (
+                <div className="flex flex-col gap-2 bg-slate-50/50 p-3 rounded-2xl border border-slate-150/40">
+                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Category</label>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
+                        <input
+                          type="radio"
+                          checked={!isCatalogCustomCategory}
+                          onChange={() => setIsCatalogCustomCategory(false)}
+                          className="cursor-pointer"
+                        />
+                        Choose Existing
+                      </label>
+                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
+                        <input
+                          type="radio"
+                          checked={isCatalogCustomCategory}
+                          onChange={() => setIsCatalogCustomCategory(true)}
+                          className="cursor-pointer"
+                        />
+                        Add Custom
+                      </label>
+                    </div>
 
-                  {!isCatalogCustomCategory ? (
-                    <select
-                      value={catalogItemCategory}
-                      onChange={(e) => setCatalogItemCategory(e.target.value)}
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-                    >
-                      <option value="">General</option>
-                      {[...new Set(catalogItems.map(item => item.category).filter(Boolean))].map((cat) => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      placeholder="Enter new category name"
-                      value={catalogCustomCategoryName}
-                      onChange={(e) => setCatalogCustomCategoryName(e.target.value)}
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                  )}
+                    {!isCatalogCustomCategory ? (
+                      <select
+                        value={catalogItemCategory}
+                        onChange={(e) => setCatalogItemCategory(e.target.value)}
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                      >
+                        <option value="">General</option>
+                        {[...new Set(catalogItems.map(item => item.category).filter(Boolean))].map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="Enter new category name"
+                        value={catalogCustomCategoryName}
+                        onChange={(e) => setCatalogCustomCategoryName(e.target.value)}
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Template Dynamic Fields Rendering */}
               <div className="border-t border-slate-100 pt-3">
@@ -15060,19 +15052,17 @@ function DashboardContent() {
                 })()}
               </div>
 
-              {/* Item Description (hidden for custom catalogs) */}
-              {!(catalogItemType === 'custom' || catalogItemType.startsWith('custom_')) && (
-                <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-3">
-                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Description</label>
-                  <textarea
-                    rows="3"
-                    placeholder="Tell clients about the details of this item..."
-                    value={catalogItemDescription}
-                    onChange={(e) => setCatalogItemDescription(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  />
-                </div>
-              )}
+              {/* Item Description */}
+              <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-3">
+                <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Description</label>
+                <textarea
+                  rows="3"
+                  placeholder="Tell clients about the details of this item..."
+                  value={catalogItemDescription}
+                  onChange={(e) => setCatalogItemDescription(e.target.value)}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
 
               {/* Cover Image Upload */}
               {(() => {
