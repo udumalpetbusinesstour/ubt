@@ -3410,7 +3410,7 @@ Please confirm availability and delivery time.`;
                                           </div>
                                         );
                                       })()}
-                                      <button
+                                          <button
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); handleCatalogWhatsAppOrder(item); }}
                                         className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1.5 px-3.5 rounded-lg flex items-center gap-1.5 transition-all shadow-3xs cursor-pointer active:scale-95 shrink-0"
@@ -3421,6 +3421,12 @@ Please confirm availability and delivery time.`;
                                     </>
                                   )}
                                 </div>
+                              </div>
+                              {/* Visual hint that card is clickable / links to landing page */}
+                              <div className="flex items-center justify-center pt-2 border-t border-slate-100 mt-1">
+                                <span className="text-[9.5px] font-extrabold text-emerald-600 uppercase tracking-wider flex items-center gap-1 select-none">
+                                  View Full Details →
+                                </span>
                               </div>
                             </div>
                           );
