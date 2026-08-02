@@ -15245,7 +15245,12 @@ function DashboardContent() {
 
             {/* Custom Fields List */}
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-slate-550 uppercase tracking-wider">Custom Fields</label>
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[10px] font-black text-slate-550 uppercase tracking-wider">Custom Fields</label>
+                <span className="text-[10px] text-slate-400 font-bold leading-normal">
+                  Note: Name, Price, Offer Price, and Category are default fields and do not need to be added here.
+                </span>
+              </div>
               
               <div className="flex flex-col gap-2.5 max-h-52 overflow-y-auto pr-1">
                 {customCatalogFields.map((field, index) => (
