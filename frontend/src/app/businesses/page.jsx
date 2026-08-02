@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useNavigate, Link, useParams } from 'react-router-dom';
+import { buildUploadUrl } from '@/utils/imageCompression';
 import { 
   Search, MapPin, Grid, List, Star, ShieldCheck, HeartHandshake, PhoneCall, 
   Filter, RefreshCw, AlertCircle, Sparkles, Folder, Check, ArrowRight, ArrowLeft, 
@@ -506,7 +507,7 @@ function BusinessesList({ forceFocus }) {
     formData.append('image', file);
 
     try {
-      const res = await fetch('http://localhost:5000/api/upload/public', {
+      const res = await fetch(buildUploadUrl(`${anonForm.name || 'business'} cover udumalpet`, true), {
         method: 'POST',
         body: formData
       });

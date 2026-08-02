@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { buildUploadUrl } from '@/utils/imageCompression';
 import { 
   Search, Calendar, MapPin, User, Phone, ShieldCheck, Bookmark, Sparkles, 
   Clock, Grid, ChevronRight, AlertCircle, ArrowLeft, CheckCircle2, MessageSquare, 
@@ -679,7 +680,7 @@ export default function EventsPage() {
 
     try {
       const activeToken = localStorage.getItem('ubt_token');
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(buildUploadUrl(`${evtTitle || 'event'} cover udumalpet`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${activeToken}`
@@ -728,7 +729,7 @@ export default function EventsPage() {
         const formData = new FormData();
         formData.append('image', file);
 
-        const res = await fetch('http://localhost:5000/api/upload', {
+        const res = await fetch(buildUploadUrl(`${evtTitle || 'event'} gallery udumalpet`), {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${activeToken}`

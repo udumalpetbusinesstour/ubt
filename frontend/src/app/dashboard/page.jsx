@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, Link, useParams } from 'react-router-dom'
 import MockGoogleMaps from '@/components/MockGoogleMaps';
 import LeadsEnquiriesTab from '@/components/LeadsEnquiriesTab';
 import ReviewsReputationTab from '@/components/ReviewsReputationTab';
-import { compressImage } from '@/utils/imageCompression';
+import { compressImage, buildUploadUrl } from '@/utils/imageCompression';
 import {
   ShieldCheck, Sparkles, AlertTriangle, AlertCircle, Edit3, Image as ImageIcon,
   RefreshCw, Star, StarHalf, CreditCard, ChevronRight, ChevronLeft, ArrowLeft, Activity, PhoneCall,
@@ -1184,7 +1184,7 @@ function DashboardContent() {
       const formData = new FormData();
       formData.append('image', compressedFile);
 
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(buildUploadUrl(`${menuItemName || 'menu-item'} ${business?.name || ''} udumalpet`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${activeToken}`
@@ -1227,7 +1227,7 @@ function DashboardContent() {
         const formData = new FormData();
         formData.append('image', compressedFile);
 
-        const res = await fetch('http://localhost:5000/api/upload', {
+        const res = await fetch(buildUploadUrl(`${editFields?.name || business?.name || 'business'} ${targetField === 'logoUrl' ? 'logo' : 'cover'} udumalpet`), {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${activeToken}`
@@ -1263,7 +1263,7 @@ function DashboardContent() {
           const formData = new FormData();
           formData.append('image', compressedFile);
 
-          const res = await fetch('http://localhost:5000/api/upload', {
+          const res = await fetch(buildUploadUrl(`${editFields?.name || business?.name || 'business'} gallery udumalpet`), {
             method: 'POST',
             headers: {
               Authorization: `Bearer ${activeToken}`
@@ -1306,7 +1306,7 @@ function DashboardContent() {
       const formData = new FormData();
       formData.append('image', compressedFile);
       const activeToken = token || localStorage.getItem('ubt_token');
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(buildUploadUrl(`${business?.name || 'business'} logo udumalpet`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${activeToken}`
@@ -1342,7 +1342,7 @@ function DashboardContent() {
       const formData = new FormData();
       formData.append('image', compressedFile);
       const activeToken = token || localStorage.getItem('ubt_token');
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(buildUploadUrl(`${business?.name || 'business'} cover udumalpet`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${activeToken}`
@@ -1530,7 +1530,7 @@ function DashboardContent() {
       const formData = new FormData();
       formData.append('image', compressedFile);
 
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(buildUploadUrl(`${business?.name || 'business'} offer banner udumalpet`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token || localStorage.getItem('ubt_token')}`
@@ -1569,7 +1569,7 @@ function DashboardContent() {
       const formData = new FormData();
       formData.append('image', compressedFile);
 
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(buildUploadUrl(`${business?.name || 'business'} offer banner udumalpet`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token || localStorage.getItem('ubt_token')}`
@@ -3316,7 +3316,7 @@ function DashboardContent() {
       const formData = new FormData();
       formData.append('image', compressed);
       const activeToken = token || localStorage.getItem('ubt_token');
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(buildUploadUrl(`${catalogItemName || 'catalog-item'} ${business?.name || ''} udumalpet`), {
         method: 'POST',
         headers: { Authorization: `Bearer ${activeToken}` },
         body: formData
@@ -3805,7 +3805,7 @@ function DashboardContent() {
     formData.append('image', file);
 
     try {
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(buildUploadUrl(`${blogTitle || 'blog'} ${business?.name || ''} udumalpet cover`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -4580,7 +4580,7 @@ function DashboardContent() {
 
     try {
       const activeToken = token || localStorage.getItem('ubt_token');
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(buildUploadUrl(`${completeEvent?.name || 'event'} ${business?.name || ''} udumalpet cover`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${activeToken}`
@@ -4631,7 +4631,7 @@ function DashboardContent() {
         const formData = new FormData();
         formData.append('image', file);
 
-        const res = await fetch('http://localhost:5000/api/upload', {
+        const res = await fetch(buildUploadUrl(`${completeEvent?.name || 'event'} ${business?.name || ''} udumalpet gallery`), {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${activeToken}`
@@ -5105,7 +5105,7 @@ function DashboardContent() {
       const formData = new FormData();
       formData.append('image', file);
       try {
-        const res = await fetch('http://localhost:5000/api/upload', {
+        const res = await fetch(buildUploadUrl(`${business?.name || 'business'} photo gallery udumalpet`), {
           method: 'POST',
           headers: { Authorization: `Bearer ${activeToken}` },
           body: formData
@@ -15201,7 +15201,7 @@ function DashboardContent() {
                                 const formData = new FormData();
                                 formData.append('image', compressed);
                                 const activeToken = token || localStorage.getItem('ubt_token');
-                                const res = await fetch('http://localhost:5000/api/upload', {
+                                const res = await fetch(buildUploadUrl(`${catalogItemName || 'catalog-item'} ${business?.name || ''} gallery udumalpet`), {
                                   method: 'POST',
                                   headers: { Authorization: `Bearer ${activeToken}` },
                                   body: formData

@@ -3,7 +3,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { ShieldCheck, ArrowLeft, ArrowRight, Upload, Sparkles, CheckCircle2, ChevronRight, Eye, RefreshCw, AlertCircle, AlertTriangle, Lock, Briefcase, Lightbulb, Headset, Phone, Mail, Clock, Search, BookOpen, ChevronDown } from 'lucide-react';
 import MockGoogleMaps from '@/components/MockGoogleMaps';
 import ChoosePlan from '../choose-plan/page';
-import { compressImage } from '@/utils/imageCompression';
+import { compressImage, buildUploadUrl } from '@/utils/imageCompression';
 
 const steps = [
   { id: 1, name: 'Choose Plan', shortName: 'Plan' },
@@ -1229,13 +1229,13 @@ export default function AddBusiness() {
     return () => clearTimeout(timer);
   }, [formData.address, formData.locality, formData.pincode, formData.coordinates?.lat, formData.coordinates?.lng, currentStep]);
 
-  const uploadFileToServer = async (file) => {
+  const uploadFileToServer = async (file, context = '') => {
     // Always read from localStorage at call time — avoids stale closure captures
     const activeToken = localStorage.getItem('ubt_token');
     if (!activeToken) throw new Error('Not logged in. Please log in and try again.');
     const fd = new FormData();
     fd.append('image', file);
-    const res = await fetch('http://localhost:5000/api/upload', {
+    const res = await fetch(buildUploadUrl(context), {
       method: 'POST',
       headers: { Authorization: `Bearer ${activeToken}` },
       body: fd,
@@ -1263,7 +1263,7 @@ export default function AddBusiness() {
       setUploadingLogo(true);
       try {
         const compressedFile = await compressImage(file, 500, 500, 0.8, true);
-        const url = await uploadFileToServer(compressedFile);
+        const url = await uploadFileToServer(compressedFile, `${formData.name || 'business'} logo udumalpet`);
         const updated = { ...formData, logoUrl: url };
         setFormData(updated);
         saveDraft(updated);
@@ -1286,7 +1286,7 @@ export default function AddBusiness() {
       setUploadingCover(true);
       try {
         const compressedFile = await compressImage(file, 1200, 800);
-        const url = await uploadFileToServer(compressedFile);
+        const url = await uploadFileToServer(compressedFile, `${formData.name || 'business'} cover udumalpet`);
         const updated = { ...formData, coverImageUrl: url };
         setFormData(updated);
         saveDraft(updated);

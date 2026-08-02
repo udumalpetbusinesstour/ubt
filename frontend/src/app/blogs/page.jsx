@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { buildUploadUrl } from '@/utils/imageCompression';
 import { 
   BookOpen, Search, Plus, Calendar, User, Heart, MessageSquare, Clock, X, CheckCircle, 
   AlertCircle, ArrowLeft, RefreshCw, Share2, Upload, Trash2, Briefcase, MapPin, 
@@ -262,7 +263,7 @@ export default function BlogsPage() {
     formData.append('image', file);
 
     try {
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(buildUploadUrl(`${title || 'blog'} cover udumalpet`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`

@@ -100,3 +100,52 @@ export const compressImage = (file, maxWidth, maxHeight, quality = 0.8, forceSqu
     reader.onerror = (err) => resolve(file); // Fallback to original file
   });
 };
+
+/**
+ * Returns the backend API base URL.
+ * In production (PROD Vite build) uses window.location.origin (Nginx same-origin proxy).
+ * In dev falls back to localhost:5000.
+ */
+export const getApiBase = () => {
+  return import.meta.env.VITE_API_URL ||
+    (import.meta.env.PROD && typeof window !== 'undefined'
+      ? window.location.origin
+      : 'http://localhost:5000');
+};
+
+/**
+ * Slugifies a string into a URL-safe, SEO-friendly filename fragment.
+ * e.g. "Volkswagen POLO" → "volkswagen-polo"
+ */
+export const slugifyContext = (str) => {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/--+/g, '-')
+    .slice(0, 80);
+};
+
+/**
+ * Builds the full upload endpoint URL with an SEO-friendly ?context= query param.
+ * The backend reads this param to name the saved file meaningfully for Google Images SEO.
+ *
+ * @param {string} context  Human-readable label e.g. "Volkswagen POLO cover udumalpet"
+ * @param {boolean} [isPublic=false]  Use the public (no-auth) upload endpoint
+ * @returns {string} Full URL with context slug appended as query param
+ *
+ * Examples:
+ *   buildUploadUrl("Volkswagen POLO logo udumalpet")
+ *   → "https://udumalpet.business/api/upload?context=volkswagen-polo-logo-udumalpet"
+ *
+ *   buildUploadUrl("Diwali Sale 2024 banner", false)
+ *   → "https://udumalpet.business/api/upload?context=diwali-sale-2024-banner"
+ */
+export const buildUploadUrl = (context, isPublic = false) => {
+  const base = getApiBase();
+  const endpoint = isPublic ? `${base}/api/upload/public` : `${base}/api/upload`;
+  const slug = slugifyContext(context);
+  return slug ? `${endpoint}?context=${encodeURIComponent(slug)}` : endpoint;
+};

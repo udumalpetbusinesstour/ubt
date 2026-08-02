@@ -7,6 +7,7 @@ import {
   Briefcase, Users, ChevronRight, Check, X, Facebook, Twitter, Edit3, Plus, Upload, Trash2, Instagram, Move, ImageIcon,
   Utensils, Eye, Folder, Package, QrCode, BookOpen
 } from 'lucide-react';
+import { buildUploadUrl } from '@/utils/imageCompression';
 
 
 const isFoodRelated = (category, customCategoryName) => {
@@ -417,7 +418,7 @@ Please confirm availability and delivery time.`;
       formData.append('image', file);
 
       try {
-        const res = await fetch('http://localhost:5000/api/upload', {
+        const res = await fetch(buildUploadUrl(`${menuItemName || 'menu-item'} ${business?.name || ''} image udumalpet`), {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`
@@ -644,7 +645,7 @@ Please confirm availability and delivery time.`;
       formData.append('image', file);
 
       try {
-        const res = await fetch('http://localhost:5000/api/upload', {
+        const res = await fetch(buildUploadUrl(`${business?.name || 'business'} gallery photo udumalpet`), {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`

@@ -5,6 +5,29 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const path = require('path');
 
+// ──────────────────────────────────────────────────────────────
+// Slug helper — converts context string to a clean filename base
+// e.g. "Volkswagen POLO for sale in Udumalpet" → "volkswagen-polo-for-sale-in-udumalpet"
+// ──────────────────────────────────────────────────────────────
+const slugifyContext = (str) => {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/--+/g, '-')
+    .slice(0, 80); // cap length
+};
+
+// Build a meaningful filename from context query param + timestamp
+const buildFilename = (req, file) => {
+  const context = slugifyContext(req.query.context || '');
+  const uniqueSuffix = Date.now();
+  const ext = '.jpg'; // Always JPEG after client-side compression
+  return context ? `${context}-${uniqueSuffix}${ext}` : `image-${uniqueSuffix}${ext}`;
+};
+
 // Configure S3 client if credentials are present
 let s3Client = null;
 let s3Storage = null;
@@ -23,8 +46,7 @@ if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_ACCESS_KEY_ID !== 'YOUR_AWS
     bucket: process.env.AWS_BUCKET_NAME,
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: function (req, file, cb) {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      cb(null, 'uploads/' + file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+      cb(null, 'uploads/' + buildFilename(req, file));
     }
   });
 }
@@ -39,10 +61,15 @@ cloudinary.config({
 // 1. Cloudinary Premium Storage Engine
 const cloudinaryStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'ubt_gallery',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'gif', 'svg', 'heic', 'heif', 'bmp', 'tiff'],
-    transformation: [{ width: 1200, height: 800, crop: 'limit' }]
+  params: (req, file) => {
+    const context = slugifyContext(req.query.context || '');
+    const publicId = context ? `${context}-${Date.now()}` : `ubt-image-${Date.now()}`;
+    return {
+      folder: 'ubt_gallery',
+      public_id: publicId,
+      allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'gif', 'svg', 'heic', 'heif', 'bmp', 'tiff'],
+      transformation: [{ width: 1200, height: 800, crop: 'limit' }]
+    };
   }
 });
 
@@ -52,8 +79,7 @@ const localDiskStorage = multer.diskStorage({
     cb(null, path.join(__dirname, '../uploads/'));
   },
   filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    cb(null, buildFilename(req, file));
   }
 });
 

@@ -10,6 +10,7 @@ import {
   Utensils, Dumbbell, Plane, GraduationCap, Camera, Leaf, Building, Coins, ShoppingBag, Wrench, Gift, Heart,
   Copy, XCircle, Edit3, Upload
 } from 'lucide-react';
+import { buildUploadUrl } from '@/utils/imageCompression';
 import BloodDonorsTab from '../../components/BloodDonorsTab';
 
 const isBizDraft = (b) => {
@@ -1722,7 +1723,7 @@ const handlePartnerAction = async (partnerId, action) => {
       formData.append('image', directAdFile);
 
       const token = localStorage.getItem('ubt_token');
-      const uploadRes = await fetch('http://localhost:5000/api/upload', {
+      const uploadRes = await fetch(buildUploadUrl('udumalpet business tour direct ad banner'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -2205,7 +2206,7 @@ const handlePartnerAction = async (partnerId, action) => {
     formData.append('image', file);
 
     try {
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(buildUploadUrl(`${editingEvent?.name || editingEvent?.title || 'event'} cover udumalpet`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('ubt_token')}`

@@ -9,6 +9,7 @@ import {
   Upload, Heart, Copy, XCircle, Edit3, Sparkles, Nfc, ExternalLink
 } from 'lucide-react';
 import BloodDonorsTab from '../../components/BloodDonorsTab';
+import { buildUploadUrl } from '@/utils/imageCompression';
 
 const isBizDraft = (b) => {
   if (!b) return false;
@@ -389,7 +390,7 @@ export default function AdminDashboard() {
     formData.append('image', file);
 
     try {
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(buildUploadUrl(`${selectedBiz?.name || 'business'} logo udumalpet`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('ubt_token')}`
@@ -425,7 +426,7 @@ export default function AdminDashboard() {
     formData.append('image', file);
 
     try {
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(buildUploadUrl(`${selectedBiz?.name || 'business'} cover udumalpet`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('ubt_token')}`
@@ -464,7 +465,7 @@ export default function AdminDashboard() {
       formData.append('image', file);
 
       try {
-        const res = await fetch('http://localhost:5000/api/upload', {
+        const res = await fetch(buildUploadUrl(`${selectedBiz?.name || 'business'} gallery udumalpet`), {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${localStorage.getItem('ubt_token')}`
@@ -1737,7 +1738,7 @@ export default function AdminDashboard() {
       formData.append('image', directAdFile);
 
       const token = localStorage.getItem('ubt_token');
-      const uploadRes = await fetch('http://localhost:5000/api/upload', {
+      const uploadRes = await fetch(buildUploadUrl('udumalpet business tour direct ad banner'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
