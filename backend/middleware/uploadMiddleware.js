@@ -20,9 +20,9 @@ const slugifyContext = (str) => {
     .slice(0, 80); // cap length
 };
 
-// Build a meaningful filename from context query param + timestamp
+// Build a meaningful filename from context query param / header + timestamp
 const buildFilename = (req, file) => {
-  const context = slugifyContext(req.query.context || '');
+  const context = slugifyContext(req.query.context || req.headers['x-context'] || '');
   const uniqueSuffix = Date.now();
   const ext = '.jpg'; // Always JPEG after client-side compression
   return context ? `${context}-${uniqueSuffix}${ext}` : `image-${uniqueSuffix}${ext}`;
@@ -62,7 +62,7 @@ cloudinary.config({
 const cloudinaryStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: (req, file) => {
-    const context = slugifyContext(req.query.context || '');
+    const context = slugifyContext(req.query.context || req.headers['x-context'] || '');
     const publicId = context ? `${context}-${Date.now()}` : `ubt-image-${Date.now()}`;
     return {
       folder: 'ubt_gallery',

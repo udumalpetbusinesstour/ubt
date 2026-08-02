@@ -94,20 +94,60 @@ if (typeof window !== 'undefined') {
   };
 }
 
-if (API_URL !== 'http://localhost:5000') {
-  const originalFetch = window.fetch;
-  window.fetch = async function (input, init) {
+const originalFetch = window.fetch;
+window.fetch = async function (input, init) {
+  let urlStr = '';
+  if (typeof input === 'string') {
+    urlStr = input;
+  } else if (input instanceof URL) {
+    urlStr = input.href;
+  } else if (input && typeof input === 'object' && input.url) {
+    urlStr = input.url;
+  }
+
+  // 1. Replace base URL if local API URL is used in production/staging environments
+  if (API_URL !== 'http://localhost:5000') {
     if (typeof input === 'string' && input.startsWith('http://localhost:5000')) {
       input = input.replace('http://localhost:5000', API_URL);
+      urlStr = input;
     } else if (input instanceof URL && input.href.startsWith('http://localhost:5000')) {
       input = new URL(input.href.replace('http://localhost:5000', API_URL));
+      urlStr = input.href;
     } else if (input && typeof input === 'object' && input.url && input.url.startsWith('http://localhost:5000')) {
       const newUrl = input.url.replace('http://localhost:5000', API_URL);
       input = new Request(newUrl, input);
+      urlStr = newUrl;
     }
-    return originalFetch(input, init);
-  };
-}
+  }
+
+  // 2. Intercept upload requests and inject X-Context header if context query parameter is present
+  if (urlStr.includes('/api/upload') && urlStr.includes('context=')) {
+    try {
+      const parsedUrl = new URL(urlStr, window.location.origin);
+      const contextVal = parsedUrl.searchParams.get('context');
+      if (contextVal) {
+        init = init || {};
+        init.headers = init.headers || {};
+        
+        if (init.headers instanceof Headers) {
+          init.headers.set('X-Context', contextVal);
+        } else if (Array.isArray(init.headers)) {
+          const hasCtx = init.headers.some(([k]) => k.toLowerCase() === 'x-context');
+          if (!hasCtx) {
+            init.headers.push(['X-Context', contextVal]);
+          }
+        } else {
+          init.headers['X-Context'] = contextVal;
+        }
+      }
+    } catch (e) {
+      console.warn('[Fetch Interceptor] Failed to extract context query:', e);
+    }
+  }
+
+  return originalFetch(input, init);
+};
+
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
