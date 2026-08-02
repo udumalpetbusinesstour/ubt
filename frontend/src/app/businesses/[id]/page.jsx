@@ -3283,10 +3283,9 @@ Please confirm availability and delivery time.`;
                                       {item.catalogType === 'product' && fields.brand && (
                                         <span>🏷️ Brand: {fields.brand}</span>
                                       )}
-                                      {item.catalogType === 'custom' && business.catalogCustomFields && (
-                                        <div className="w-full grid grid-cols-2 gap-2 mt-1 pt-1.5 border-t border-slate-550/20">
-                                          {Array.isArray(business.catalogCustomFields) && business.catalogCustomFields.map((fName, fIdx) => {
-                                            const val = fields[fName];
+                                      {(item.catalogType === 'custom' || item.catalogType.startsWith('custom_')) && (
+                                        <div className="w-full grid grid-cols-2 gap-2 mt-1 pt-1.5 border-t border-slate-100">
+                                          {Object.entries(fields).map(([fName, val], fIdx) => {
                                             if (val === undefined || val === null || val === '') return null;
                                             return (
                                               <div key={fIdx} className="flex flex-col text-[9.5px]">

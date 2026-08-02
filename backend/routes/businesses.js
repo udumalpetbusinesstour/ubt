@@ -2985,6 +2985,10 @@ router.put('/:id', protect, async (req, res) => {
       business.catalogCustomFieldsPhotosEnabled = Boolean(req.body.catalogCustomFieldsPhotosEnabled);
       settingsUpdated = true;
     }
+    if (req.body.customCatalogs !== undefined) {
+      business.customCatalogs = req.body.customCatalogs;
+      settingsUpdated = true;
+    }
     if (settingsUpdated) {
       await business.save({ validateBeforeSave: false });
     }
@@ -2994,6 +2998,7 @@ router.put('/:id', protect, async (req, res) => {
     delete req.body.catalogType;
     delete req.body.catalogCustomFields;
     delete req.body.catalogCustomFieldsPhotosEnabled;
+    delete req.body.customCatalogs;
 
     // Geocoding and allowed area boundary validation on update
     if (req.body.address || req.body.pincode || req.body.coordinates || req.body.latitude || req.body.longitude) {

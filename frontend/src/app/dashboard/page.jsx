@@ -143,6 +143,7 @@ function DashboardContent() {
   const [customCatalogName, setCustomCatalogName] = useState('Custom');
   const [customCatalogFields, setCustomCatalogFields] = useState(['Venue', 'Catering']);
   const [customCatalogPhotosEnabled, setCustomCatalogPhotosEnabled] = useState(true);
+  const [currentCustomCatalogId, setCurrentCustomCatalogId] = useState(null);
 
   const handleSaveCustomCatalogConfig = async () => {
     const cleanedFields = customCatalogFields.map(f => f.trim()).filter(Boolean);
@@ -155,15 +156,65 @@ function DashboardContent() {
       return;
     }
 
+    const targetId = currentCustomCatalogId || `custom_${Date.now()}`;
+    const oldCatalogs = Array.isArray(business?.customCatalogs) ? business.customCatalogs : [];
+    
+    const exists = oldCatalogs.some(c => c.id === targetId);
+    let newCatalogs = [];
+    if (exists) {
+      newCatalogs = oldCatalogs.map(c => c.id === targetId ? {
+        ...c,
+        name: customCatalogName.trim(),
+        fields: cleanedFields,
+        photosEnabled: customCatalogPhotosEnabled
+      } : c);
+    } else {
+      newCatalogs = [...oldCatalogs, {
+        id: targetId,
+        name: customCatalogName.trim(),
+        fields: cleanedFields,
+        photosEnabled: customCatalogPhotosEnabled
+      }];
+    }
+
+    let nextSelected = [...selectedTemplates];
+    if (!nextSelected.includes(targetId)) {
+      nextSelected.push(targetId);
+      setSelectedTemplates(nextSelected);
+    }
+
+    const templateDefaultLabels = {
+      services: 'Services',
+      packages: 'Packages',
+      properties: 'Properties',
+      rooms: 'Rooms',
+      courses: 'Courses',
+      memberships: 'Membership Plans',
+      vehicles: 'Vehicles',
+      equipment: 'Equipment',
+      inventory: 'Inventory',
+      pricelist: 'Price List',
+      menu: 'Menu',
+      product: 'Product'
+    };
+
+    let newLabel = 'Catalog';
+    if (nextSelected.length === 1) {
+      const single = nextSelected[0];
+      if (single.startsWith('custom_')) {
+        newLabel = customCatalogName.trim();
+      } else {
+        newLabel = templateDefaultLabels[single] || 'Catalog';
+      }
+    }
+
     await saveInlineFields({
-      catalogType: selectedTemplates.join(','),
-      catalogLabel: customCatalogName.trim(),
-      catalogCustomFields: cleanedFields,
-      catalogCustomFieldsPhotosEnabled: customCatalogPhotosEnabled
+      catalogType: nextSelected.join(','),
+      catalogLabel: newLabel,
+      customCatalogs: newCatalogs
     });
 
     setShowCustomCatalogModal(false);
-    setIsConfiguringCatalog(false);
   };
 
   // NFC Card request states
@@ -9783,14 +9834,24 @@ function DashboardContent() {
                       Change Catalog / Add Template
                     </button>
                     {(business?.catalogType || '').split(',').map(s => s.trim()).filter(Boolean).map(t => {
-                      const cleanLabel = t === 'menu' ? 'Menu' : t === 'product' ? 'Product' : (catalogLabelsMap[t] || t).replace(/^[^a-zA-Z]*/, '').replace(/s$/, '');
+                      let cleanLabel = t;
+                      if (t === 'menu') cleanLabel = 'Menu';
+                      else if (t === 'product') cleanLabel = 'Product';
+                      else if (t.startsWith('custom_')) {
+                        const customConfig = Array.isArray(business?.customCatalogs) && business.customCatalogs.find(c => c.id === t);
+                        cleanLabel = customConfig ? customConfig.name : 'Custom Item';
+                      } else {
+                        cleanLabel = (catalogLabelsMap[t] || t).replace(/^[^a-zA-Z]*/, '').replace(/s$/, '');
+                      }
+                      
+                      const displayAddLabel = cleanLabel.toLowerCase().endsWith('item') ? cleanLabel : `${cleanLabel} Item`;
                       return (
                         <button
                           key={t}
                           onClick={() => handleOpenCatalogModal(null, t)}
                           className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-5 rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer border border-emerald-700/10 btn-active-press shrink-0"
                         >
-                          <Plus className="h-4 w-4" /> Add {cleanLabel}
+                          <Plus className="h-4 w-4" /> Add {displayAddLabel}
                         </button>
                       );
                     })}
@@ -9808,7 +9869,7 @@ function DashboardContent() {
                     <div>
                       <h4 className="font-extrabold text-slate-800 text-lg">Choose Your Catalog Templates</h4>
                       <p className="text-xs text-slate-455 font-semibold leading-relaxed mt-2">
-                        Select one or more templates that fit your business offerings. You can add items in multiple formats (e.g. Services, Products, and Food Menu items) in the same catalog dashboard.
+                        Select one or more templates that fit your business offerings. You can add items in multiple formats in the same catalog dashboard.
                       </p>
                     </div>
 
@@ -9826,9 +9887,39 @@ function DashboardContent() {
                         { type: 'pricelist', label: 'Price List', desc: 'Menu pricing & lists', icon: '📋' },
                         { type: 'menu', label: 'Menu', desc: 'Food items & veg tags', icon: '🍔' },
                         { type: 'product', label: 'Product', desc: 'Retail products & brands', icon: '🛍️' },
-                        { type: 'custom', label: 'Custom', desc: 'Define your own fields', icon: '⚙️' }
+                        ...(Array.isArray(business?.customCatalogs) ? business.customCatalogs.map(c => ({
+                          type: c.id,
+                          label: c.name,
+                          desc: `${c.fields.length} Custom Fields`,
+                          icon: '⚙️',
+                          isCustom: true
+                        })) : []),
+                        { type: 'new_custom', label: 'Add Custom Catalog', desc: 'Create custom template', icon: '➕', isNewCustom: true }
                       ].map((tpl) => {
                         const isSelected = selectedTemplates.includes(tpl.type);
+                        
+                        if (tpl.isNewCustom) {
+                          return (
+                            <div
+                              key={tpl.type}
+                              onClick={() => {
+                                setCurrentCustomCatalogId(null);
+                                setCustomCatalogName('Custom Catalog');
+                                setCustomCatalogFields(['Venue', 'Catering']);
+                                setCustomCatalogPhotosEnabled(true);
+                                setShowCustomCatalogModal(true);
+                              }}
+                              className="p-5 border border-dashed border-slate-350 hover:border-emerald-500 hover:bg-emerald-50/5 rounded-2xl transition-all text-left flex flex-col gap-2.5 cursor-pointer shadow-3xs"
+                            >
+                              <span className="text-2xl w-fit text-emerald-600">{tpl.icon}</span>
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-extrabold text-emerald-700 text-xs">{tpl.label}</span>
+                                <span className="text-[10px] text-slate-400 font-semibold leading-normal">{tpl.desc}</span>
+                              </div>
+                            </div>
+                          );
+                        }
+
                         return (
                           <div
                             key={tpl.type}
@@ -9850,6 +9941,49 @@ function DashboardContent() {
                                 ✓
                               </div>
                             )}
+                            
+                            {tpl.isCustom && (
+                              <div className="absolute bottom-3 right-3 flex items-center gap-1.5 z-10">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const config = business.customCatalogs.find(c => c.id === tpl.type);
+                                    if (config) {
+                                      setCurrentCustomCatalogId(config.id);
+                                      setCustomCatalogName(config.name);
+                                      setCustomCatalogFields([...(config.fields || [])]);
+                                      setCustomCatalogPhotosEnabled(config.photosEnabled !== false);
+                                      setShowCustomCatalogModal(true);
+                                    }
+                                  }}
+                                  className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-[#001c41] transition-colors border-none bg-transparent cursor-pointer"
+                                  title="Edit Catalog Design"
+                                >
+                                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm(`Are you sure you want to delete custom catalog "${tpl.label}"?`)) {
+                                      const nextCatalogs = business.customCatalogs.filter(c => c.id !== tpl.type);
+                                      const nextSelected = selectedTemplates.filter(t => t !== tpl.type);
+                                      setSelectedTemplates(nextSelected);
+                                      await saveInlineFields({
+                                        customCatalogs: nextCatalogs,
+                                        catalogType: nextSelected.join(',')
+                                      });
+                                    }
+                                  }}
+                                  className="p-1.5 hover:bg-rose-50 rounded-lg text-rose-450 hover:text-rose-600 transition-colors border-none bg-transparent cursor-pointer"
+                                  title="Delete Catalog"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            )}
+
                             <span className="text-2xl w-fit">{tpl.icon}</span>
                             <div className="flex flex-col gap-0.5">
                               <span className="font-extrabold text-[#001c41] text-xs">{tpl.label}</span>
@@ -9859,47 +9993,42 @@ function DashboardContent() {
                         );
                       })}
                     </div>
-
+ 
                     <button
                       onClick={async () => {
                         if (selectedTemplates.length === 0) {
                           alert('Please select at least one template.');
                           return;
                         }
-                        if (selectedTemplates.includes('custom')) {
-                          setCustomCatalogName(business?.catalogLabel && business.catalogLabel !== 'Catalog' ? business.catalogLabel : 'Custom');
-                          setCustomCatalogFields(
-                            Array.isArray(business?.catalogCustomFields) && business.catalogCustomFields.length > 0 
-                              ? [...business.catalogCustomFields] 
-                              : ['Venue', 'Catering']
-                          );
-                          setCustomCatalogPhotosEnabled(business?.catalogCustomFieldsPhotosEnabled !== false);
-                          setShowCustomCatalogModal(true);
-                        } else {
-                          const templateDefaultLabels = {
-                            services: 'Services',
-                            packages: 'Packages',
-                            properties: 'Properties',
-                            rooms: 'Rooms',
-                            courses: 'Courses',
-                            memberships: 'Membership Plans',
-                            vehicles: 'Vehicles',
-                            equipment: 'Equipment',
-                            inventory: 'Inventory',
-                            pricelist: 'Price List',
-                            menu: 'Menu',
-                            product: 'Product',
-                            custom: 'Custom'
-                          };
-                          const newLabel = selectedTemplates.length === 1 
-                            ? (templateDefaultLabels[selectedTemplates[0]] || 'Catalog')
-                            : 'Catalog';
-                          await saveInlineFields({
-                            catalogType: selectedTemplates.join(','),
-                            catalogLabel: newLabel
-                          });
-                          setIsConfiguringCatalog(false);
+                        const templateDefaultLabels = {
+                          services: 'Services',
+                          packages: 'Packages',
+                          properties: 'Properties',
+                          rooms: 'Rooms',
+                          courses: 'Courses',
+                          memberships: 'Membership Plans',
+                          vehicles: 'Vehicles',
+                          equipment: 'Equipment',
+                          inventory: 'Inventory',
+                          pricelist: 'Price List',
+                          menu: 'Menu',
+                          product: 'Product'
+                        };
+                        let newLabel = 'Catalog';
+                        if (selectedTemplates.length === 1) {
+                          const single = selectedTemplates[0];
+                          if (single.startsWith('custom_')) {
+                            const config = Array.isArray(business?.customCatalogs) && business.customCatalogs.find(c => c.id === single);
+                            newLabel = config ? config.name : 'Catalog';
+                          } else {
+                            newLabel = templateDefaultLabels[single] || 'Catalog';
+                          }
                         }
+                        await saveInlineFields({
+                          catalogType: selectedTemplates.join(','),
+                          catalogLabel: newLabel
+                        });
+                        setIsConfiguringCatalog(false);
                       }}
                       className="bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-xs py-3 px-8 rounded-xl transition-all shadow-md cursor-pointer border border-emerald-700/10 btn-active-press select-none"
                     >
@@ -9936,38 +10065,31 @@ function DashboardContent() {
                       </div>
 
                       {/* Custom schema field manager for custom catalog type */}
-                      {catalogItemType === 'custom' && (
-                        <div className="flex flex-wrap gap-2 items-center w-full sm:w-auto">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Custom Fields:</span>
-                          {Array.isArray(business.catalogCustomFields) && business.catalogCustomFields.map((fName, fIdx) => (
-                            <span key={fIdx} className="bg-slate-100 border border-slate-200/50 px-2 py-0.5 rounded text-[10px] font-bold text-slate-600 flex items-center gap-1.5">
-                              {fName}
-                              <button
-                                onClick={async () => {
-                                  if (await window.confirm(`Delete field "${fName}"? This will clear its data in items.`)) {
-                                    const nextFields = business.catalogCustomFields.filter(f => f !== fName);
-                                    await saveInlineFields({ catalogCustomFields: nextFields });
-                                  }
-                                }}
-                                className="text-rose-500 font-black cursor-pointer hover:text-rose-700 bg-transparent border-none text-[8px]"
-                              >
-                                ✕
-                              </button>
-                            </span>
-                          ))}
-                          <button
-                            onClick={async () => {
-                              const name = window.prompt("Enter new field name:");
-                              if (name && name.trim()) {
-                                const nextFields = [...(business.catalogCustomFields || []), name.trim()];
-                                await saveInlineFields({ catalogCustomFields: nextFields });
+                      {(catalogItemType === 'custom' || catalogItemType.startsWith('custom_')) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (catalogItemType.startsWith('custom_')) {
+                              const config = Array.isArray(business?.customCatalogs) && business.customCatalogs.find(c => c.id === catalogItemType);
+                              if (config) {
+                                setCurrentCustomCatalogId(config.id);
+                                setCustomCatalogName(config.name);
+                                setCustomCatalogFields([...(config.fields || [])]);
+                                setCustomCatalogPhotosEnabled(config.photosEnabled !== false);
+                                setShowCustomCatalogModal(true);
                               }
-                            }}
-                            className="text-[10px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250/20 px-2 py-0.5 rounded font-black cursor-pointer"
-                          >
-                            + Add Field
-                          </button>
-                        </div>
+                            } else {
+                              setCurrentCustomCatalogId('custom');
+                              setCustomCatalogName(business?.catalogLabel || 'Custom');
+                              setCustomCatalogFields(Array.isArray(business?.catalogCustomFields) ? [...business.catalogCustomFields] : ['Venue', 'Catering']);
+                              setCustomCatalogPhotosEnabled(business?.catalogCustomFieldsPhotosEnabled !== false);
+                              setShowCustomCatalogModal(true);
+                            }
+                          }}
+                          className="text-[10px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250/20 px-3.5 py-2.5 rounded-xl font-black cursor-pointer flex items-center gap-1.5 transition-colors"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" /> Edit Catalog Design
+                        </button>
                       )}
                     </div>
                   )}
@@ -10068,7 +10190,13 @@ function DashboardContent() {
                                             <div className="flex-1 flex flex-col gap-2.5 text-left min-w-0">
                                               <div className="flex items-center gap-2">
                                                 <span className="text-[9px] bg-emerald-55/10 text-emerald-800 border border-emerald-200/50 font-extrabold px-2.5 py-0.5 rounded-full capitalize select-none shrink-0 flex items-center gap-1">
-                                                  {catalogLabelsMap[item.catalogType] || item.catalogType}
+                                                  {(() => {
+                                                    if (item.catalogType.startsWith('custom_')) {
+                                                      const config = Array.isArray(business?.customCatalogs) && business.customCatalogs.find(c => c.id === item.catalogType);
+                                                      return config ? config.name : 'Custom Item';
+                                                    }
+                                                    return catalogLabelsMap[item.catalogType] || item.catalogType;
+                                                  })()}
                                                 </span>
                                               </div>
 
@@ -10085,6 +10213,13 @@ function DashboardContent() {
                                                   {item.catalogType === 'vehicles' && fields.vehicleType && <span>🚗 {fields.vehicleType}</span>}
                                                   {item.catalogType === 'menu' && <span>{fields.isVeg !== false ? '🟢 Veg' : '🔴 Non-Veg'}</span>}
                                                   {item.catalogType === 'product' && fields.brand && <span>🏷️ {fields.brand}</span>}
+                                                  {(item.catalogType === 'custom' || item.catalogType.startsWith('custom_')) && (
+                                                    <div className="flex flex-wrap gap-x-2 gap-y-1">
+                                                      {Object.entries(fields).map(([k, v]) => (
+                                                        v && <span key={k} className="bg-slate-50 border border-slate-150/40 px-1.5 py-0.5 rounded text-slate-500 font-semibold">{k}: {v}</span>
+                                                      ))}
+                                                    </div>
+                                                  )}
                                                 </div>
 
                                                 {item.description && (
@@ -14217,10 +14352,21 @@ function DashboardContent() {
                 <Folder className="h-5 w-5" />
               </div>
               <h3 className="text-lg font-black text-slate-800 tracking-tight mt-1">
-                {currentCatalogItem ? 'Edit' : 'Add'} {(() => {
-                  const label = catalogItemType === 'menu' ? 'Menu' : catalogItemType === 'product' ? 'Product' : (catalogLabelsMap[catalogItemType] || 'Catalog');
-                  return label.replace(/^[^a-zA-Z]*/, '').replace(/s$/, '');
-                })()} Item
+                {(() => {
+                  const action = currentCatalogItem ? 'Edit' : 'Add';
+                  let label = 'Catalog';
+                  if (catalogItemType === 'menu') label = 'Menu';
+                  else if (catalogItemType === 'product') label = 'Product';
+                  else if (catalogItemType.startsWith('custom_')) {
+                    const config = Array.isArray(business?.customCatalogs) && business.customCatalogs.find(c => c.id === catalogItemType);
+                    label = config ? config.name : 'Custom Item';
+                  } else {
+                    label = (catalogLabelsMap[catalogItemType] || 'Catalog').replace(/^[^a-zA-Z]*/, '').replace(/s$/, '');
+                  }
+                  
+                  const displayModalTitle = label.toLowerCase().endsWith('item') ? label : `${label} Item`;
+                  return `${action} ${displayModalTitle}`;
+                })()}
               </h3>
             </div>
 
@@ -14815,23 +14961,48 @@ function DashboardContent() {
                     />
                   </div>
                 )}
+                {(() => {
+                  const isCustom = catalogItemType === 'custom' || catalogItemType.startsWith('custom_');
+                  if (!isCustom) return null;
 
-                {catalogItemType === 'custom' && Array.isArray(business.catalogCustomFields) && (
-                  <div className="flex flex-col gap-3">
-                    {business.catalogCustomFields.map((fName, fIdx) => (
-                      <div key={fIdx} className="flex flex-col gap-1.5">
-                        <label className="text-[10px] font-black text-slate-600 uppercase">{fName}</label>
-                        <input
-                          type="text"
-                          placeholder={`Enter value for ${fName}`}
-                          value={catalogDynamicFields[fName] || ''}
-                          onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, [fName]: e.target.value }))}
-                          className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  let fieldsToRender = [];
+                  if (catalogItemType.startsWith('custom_')) {
+                    const config = Array.isArray(business?.customCatalogs) && business.customCatalogs.find(c => c.id === catalogItemType);
+                    if (config) {
+                      fieldsToRender = [...(config.fields || [])];
+                    }
+                  } else {
+                    fieldsToRender = Array.isArray(business?.catalogCustomFields) ? [...business.catalogCustomFields] : [];
+                  }
+
+                  // Self-healing merge to protect historical data
+                  if (currentCatalogItem && currentCatalogItem.dynamicFields) {
+                    Object.keys(currentCatalogItem.dynamicFields).forEach(key => {
+                      if (!fieldsToRender.includes(key)) {
+                        fieldsToRender.push(key);
+                      }
+                    });
+                  }
+
+                  if (fieldsToRender.length === 0) return null;
+
+                  return (
+                    <div className="flex flex-col gap-3">
+                      {fieldsToRender.map((fName, fIdx) => (
+                        <div key={fIdx} className="flex flex-col gap-1.5">
+                          <label className="text-[10px] font-black text-slate-600 uppercase">{fName}</label>
+                          <input
+                            type="text"
+                            placeholder={`Enter value for ${fName}`}
+                            value={catalogDynamicFields[fName] || ''}
+                            onChange={(e) => setCatalogDynamicFields(prev => ({ ...prev, [fName]: e.target.value }))}
+                            className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Item Description */}
@@ -14847,42 +15018,56 @@ function DashboardContent() {
               </div>
 
               {/* Cover Image Upload */}
-              {!(catalogItemType === 'custom' && business?.catalogCustomFieldsPhotosEnabled === false) && (
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Main Cover Image</label>
-                  <div className="flex items-center gap-3">
-                    {catalogItemImageUrl ? (
-                      <div className="relative h-20 w-20 rounded-xl overflow-hidden border border-slate-200 shrink-0">
-                        <img src={window.getImageUrl(catalogItemImageUrl)} className="h-full w-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => setCatalogItemImageUrl('')}
-                          className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full cursor-pointer shadow border-none text-[8px] flex items-center justify-center shrink-0"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="h-20 w-20 border-2 border-dashed border-slate-350 hover:border-emerald-500 rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer text-slate-400 hover:text-emerald-600 transition-colors bg-slate-50 shrink-0 select-none">
-                        <Upload className="h-5 w-5" />
-                        <span className="text-[9px] font-bold">Upload</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleCatalogItemImageUpload}
-                          className="hidden"
-                        />
-                      </label>
-                    )}
-                    {catalogItemImageUploading && (
-                      <div className="flex items-center gap-1.5 text-slate-550 text-[10px] font-bold">
-                        <RefreshCw className="h-3.5 w-3.5 text-emerald-600 animate-spin" />
-                        Uploading cover...
-                      </div>
-                    )}
+              {(() => {
+                let photosEnabled = true;
+                if (catalogItemType.startsWith('custom_')) {
+                  const config = Array.isArray(business?.customCatalogs) && business.customCatalogs.find(c => c.id === catalogItemType);
+                  if (config) {
+                    photosEnabled = config.photosEnabled !== false;
+                  }
+                } else if (catalogItemType === 'custom') {
+                  photosEnabled = business?.catalogCustomFieldsPhotosEnabled !== false;
+                }
+                
+                if (!photosEnabled) return null;
+
+                return (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Main Cover Image</label>
+                    <div className="flex items-center gap-3">
+                      {catalogItemImageUrl ? (
+                        <div className="relative h-20 w-20 rounded-xl overflow-hidden border border-slate-200 shrink-0">
+                          <img src={window.getImageUrl(catalogItemImageUrl)} className="h-full w-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setCatalogItemImageUrl('')}
+                            className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full cursor-pointer shadow border-none text-[8px] flex items-center justify-center shrink-0"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="h-20 w-20 border-2 border-dashed border-slate-350 hover:border-emerald-500 rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer text-slate-400 hover:text-emerald-600 transition-colors bg-slate-50 shrink-0 select-none">
+                          <Upload className="h-5 w-5" />
+                          <span className="text-[9px] font-bold">Upload</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleCatalogItemImageUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                      {catalogItemImageUploading && (
+                        <div className="flex items-center gap-1.5 text-slate-550 text-[10px] font-bold">
+                          <RefreshCw className="h-3.5 w-3.5 text-emerald-600 animate-spin" />
+                          Uploading cover...
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Gallery upload for Holiday Packages and Properties */}
               {(catalogItemType === 'packages' || catalogItemType === 'properties') && (

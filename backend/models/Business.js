@@ -362,6 +362,10 @@ const BusinessSchema = new mongoose.Schema({
     catalogCustomFieldsPhotosEnabled: {
       type: Boolean,
       default: true
+    },
+    customCatalogs: {
+      type: mongoose.Schema.Types.Mixed,
+      default: []
     }
 }, {
   timestamps: true
