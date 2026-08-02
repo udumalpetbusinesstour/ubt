@@ -3061,8 +3061,9 @@ function DashboardContent() {
 
   const handleCatalogSubmit = async (e) => {
     e.preventDefault();
-    if (!catalogItemName || catalogItemPrice === '') {
-      setCatalogItemError('Item Name and Price are required.');
+    const isCustom = catalogItemType === 'custom' || catalogItemType.startsWith('custom_');
+    if (!catalogItemName || (!isCustom && catalogItemPrice === '')) {
+      setCatalogItemError(isCustom ? 'Item Name is required.' : 'Item Name and Price are required.');
       return;
     }
 
@@ -3076,7 +3077,7 @@ function DashboardContent() {
 
     const bodyData = {
       name: catalogItemName,
-      price: Number(catalogItemPrice),
+      price: catalogItemPrice === '' ? 0 : Number(catalogItemPrice),
       offerPrice: catalogItemOfferPrice !== '' && catalogItemOfferPrice !== null && catalogItemOfferPrice !== undefined ? Number(catalogItemOfferPrice) : null,
       isAvailable: catalogItemIsAvailable,
       description: catalogItemDescription || '',
@@ -9829,10 +9830,50 @@ function DashboardContent() {
                         setSelectedTemplates(business?.catalogType ? business.catalogType.split(',').map(s => s.trim()).filter(Boolean) : []);
                         setIsConfiguringCatalog(true);
                       }}
-                      className="py-3 px-6 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-extrabold text-xs transition-all shadow-sm cursor-pointer"
+                      className="py-3 px-6 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-655 font-extrabold text-xs transition-all shadow-sm cursor-pointer bg-white"
                     >
                       Change Catalog / Add Template
                     </button>
+
+                    {/* Edit Design buttons for active custom catalogs */}
+                    {Array.isArray(business?.customCatalogs) && business.customCatalogs
+                      .filter(c => (business.catalogType || '').split(',').map(s => s.trim()).includes(c.id))
+                      .map(c => (
+                        <button
+                          key={`edit_${c.id}`}
+                          type="button"
+                          onClick={() => {
+                            setCurrentCustomCatalogId(c.id);
+                            setCustomCatalogName(c.name);
+                            setCustomCatalogFields([...(c.fields || [])]);
+                            setCustomCatalogPhotosEnabled(c.photosEnabled !== false);
+                            setShowCustomCatalogModal(true);
+                          }}
+                          className="py-3 px-5 rounded-xl border border-emerald-200 hover:bg-emerald-50 text-emerald-700 font-extrabold text-xs transition-colors cursor-pointer flex items-center gap-1.5 shrink-0 bg-white"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                          Design: {c.name}
+                        </button>
+                      ))}
+
+                    {/* Legacy Custom Design button */}
+                    {(business?.catalogType || '').split(',').map(s => s.trim()).includes('custom') && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrentCustomCatalogId('custom');
+                          setCustomCatalogName(business?.catalogLabel || 'Custom');
+                          setCustomCatalogFields(Array.isArray(business?.catalogCustomFields) ? [...business.catalogCustomFields] : ['Venue', 'Catering']);
+                          setCustomCatalogPhotosEnabled(business?.catalogCustomFieldsPhotosEnabled !== false);
+                          setShowCustomCatalogModal(true);
+                        }}
+                        className="py-3 px-5 rounded-xl border border-emerald-200 hover:bg-emerald-50 text-emerald-700 font-extrabold text-xs transition-colors cursor-pointer flex items-center gap-1.5 shrink-0 bg-white"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Design: {business.catalogLabel || 'Custom'}
+                      </button>
+                    )}
+
                     {(business?.catalogType || '').split(',').map(s => s.trim()).filter(Boolean).map(t => {
                       let cleanLabel = t;
                       if (t === 'menu') cleanLabel = 'Menu';
@@ -14396,11 +14437,13 @@ function DashboardContent() {
               {/* Price & Offer Price Row */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Price (₹) *</label>
+                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">
+                    Price (₹) {(catalogItemType === 'custom' || catalogItemType.startsWith('custom_')) ? '(Optional)' : '*'}
+                  </label>
                   <input
                     type="number"
                     min="0"
-                    required
+                    required={!(catalogItemType === 'custom' || catalogItemType.startsWith('custom_'))}
                     placeholder="e.g. 500"
                     value={catalogItemPrice}
                     onChange={(e) => setCatalogItemPrice(e.target.value)}
