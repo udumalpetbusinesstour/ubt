@@ -9881,16 +9881,21 @@ function DashboardContent() {
 
                     {(business?.catalogType || '').split(',').map(s => s.trim()).filter(Boolean).map(t => {
                       let cleanLabel = t;
+                      let isCustomType = false;
                       if (t === 'menu') cleanLabel = 'Menu';
                       else if (t === 'product') cleanLabel = 'Product';
-                      else if (t.startsWith('custom_')) {
+                      else if (t === 'custom') {
+                        cleanLabel = business?.catalogLabel || 'Custom';
+                        isCustomType = true;
+                      } else if (t.startsWith('custom_')) {
                         const customConfig = Array.isArray(business?.customCatalogs) && business.customCatalogs.find(c => c.id === t);
-                        cleanLabel = customConfig ? customConfig.name : 'Custom Item';
+                        cleanLabel = customConfig ? customConfig.name : 'Custom';
+                        isCustomType = true;
                       } else {
                         cleanLabel = (catalogLabelsMap[t] || t).replace(/^[^a-zA-Z]*/, '').replace(/s$/, '');
                       }
                       
-                      const displayAddLabel = cleanLabel.toLowerCase().endsWith('item') ? cleanLabel : `${cleanLabel} Item`;
+                      const displayAddLabel = isCustomType ? cleanLabel : (cleanLabel.toLowerCase().endsWith('item') ? cleanLabel : `${cleanLabel} Item`);
                       return (
                         <button
                           key={t}
