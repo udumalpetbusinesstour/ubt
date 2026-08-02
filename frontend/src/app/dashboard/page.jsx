@@ -10005,17 +10005,20 @@ function DashboardContent() {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={async (e) => {
+                                  onClick={(e) => {
                                     e.stopPropagation();
-                                    if (window.confirm(`Are you sure you want to delete custom catalog "${tpl.label}"?`)) {
-                                      const nextCatalogs = business.customCatalogs.filter(c => c.id !== tpl.type);
-                                      const nextSelected = selectedTemplates.filter(t => t !== tpl.type);
-                                      setSelectedTemplates(nextSelected);
-                                      await saveInlineFields({
-                                        customCatalogs: nextCatalogs,
-                                        catalogType: nextSelected.join(',')
-                                      });
-                                    }
+                                    e.preventDefault();
+                                    setTimeout(async () => {
+                                      if (window.confirm(`Are you sure you want to delete custom catalog "${tpl.label}"?`)) {
+                                        const nextCatalogs = business.customCatalogs.filter(c => c.id !== tpl.type);
+                                        const nextSelected = selectedTemplates.filter(t => t !== tpl.type);
+                                        setSelectedTemplates(nextSelected);
+                                        await saveInlineFields({
+                                          customCatalogs: nextCatalogs,
+                                          catalogType: nextSelected.join(',')
+                                        });
+                                      }
+                                    }, 0);
                                   }}
                                   className="p-1.5 hover:bg-rose-50 rounded-lg text-rose-450 hover:text-rose-600 transition-colors border-none bg-transparent cursor-pointer"
                                   title="Delete Catalog"
