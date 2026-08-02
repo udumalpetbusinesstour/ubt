@@ -10279,20 +10279,22 @@ function DashboardContent() {
                                           <div className="flex flex-col gap-3.5 border-t border-slate-100 pt-3.5 mt-2">
                                             <div className="flex items-center justify-between gap-2">
                                               <div className="flex flex-col text-left">
-                                                {item.offerPrice ? (
-                                                  <div className="flex flex-col">
-                                                    <div className="flex items-center gap-1.5">
-                                                      <span className="text-base font-extrabold text-slate-800">₹{item.offerPrice}</span>
-                                                      <span className="text-[9px] bg-rose-50 border border-rose-100 text-rose-600 font-extrabold px-1.5 py-0.5 rounded select-none">
-                                                        {discountPercent}% OFF
-                                                      </span>
+                                                {!(item.catalogType === 'custom' || item.catalogType.startsWith('custom_')) && (
+                                                  item.offerPrice ? (
+                                                    <div className="flex flex-col">
+                                                      <div className="flex items-center gap-1.5">
+                                                        <span className="text-base font-extrabold text-slate-800">₹{item.offerPrice}</span>
+                                                        <span className="text-[9px] bg-rose-50 border border-rose-100 text-rose-600 font-extrabold px-1.5 py-0.5 rounded select-none">
+                                                          {discountPercent}% OFF
+                                                        </span>
+                                                      </div>
+                                                      <span className="text-[10px] text-slate-400 font-bold line-through">M.R.P: ₹{item.price}</span>
                                                     </div>
-                                                    <span className="text-[10px] text-slate-400 font-bold line-through">M.R.P: ₹{item.price}</span>
-                                                  </div>
-                                                ) : (
-                                                  <span className="text-base font-extrabold text-slate-800">
-                                                    {item.price > 0 ? `₹${item.price}` : 'Price on Request'}
-                                                  </span>
+                                                  ) : (
+                                                    <span className="text-base font-extrabold text-slate-800">
+                                                      {item.price > 0 ? `₹${item.price}` : 'Price on Request'}
+                                                    </span>
+                                                  )
                                                 )}
                                               </div>
 
@@ -14434,82 +14436,84 @@ function DashboardContent() {
                 />
               </div>
 
-              {/* Price & Offer Price Row */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">
-                    Price (₹) {(catalogItemType === 'custom' || catalogItemType.startsWith('custom_')) ? '(Optional)' : '*'}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    required={!(catalogItemType === 'custom' || catalogItemType.startsWith('custom_'))}
-                    placeholder="e.g. 500"
-                    value={catalogItemPrice}
-                    onChange={(e) => setCatalogItemPrice(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Offer Price (₹)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Optional"
-                    value={catalogItemOfferPrice}
-                    onChange={(e) => setCatalogItemOfferPrice(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  />
-                </div>
-              </div>
-
-              {/* Category */}
-              <div className="flex flex-col gap-2 bg-slate-50/50 p-3 rounded-2xl border border-slate-150/40">
-                <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Category</label>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
-                      <input
-                        type="radio"
-                        checked={!isCatalogCustomCategory}
-                        onChange={() => setIsCatalogCustomCategory(false)}
-                        className="cursor-pointer"
-                      />
-                      Choose Existing
-                    </label>
-                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
-                      <input
-                        type="radio"
-                        checked={isCatalogCustomCategory}
-                        onChange={() => setIsCatalogCustomCategory(true)}
-                        className="cursor-pointer"
-                      />
-                      Add Custom
-                    </label>
-                  </div>
-
-                  {!isCatalogCustomCategory ? (
-                    <select
-                      value={catalogItemCategory}
-                      onChange={(e) => setCatalogItemCategory(e.target.value)}
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-                    >
-                      <option value="">General</option>
-                      {[...new Set(catalogItems.map(item => item.category).filter(Boolean))].map((cat) => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                  ) : (
+              {/* Price & Offer Price Row (hidden for custom catalogs) */}
+              {!(catalogItemType === 'custom' || catalogItemType.startsWith('custom_')) && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Price (₹) *</label>
                     <input
-                      type="text"
-                      placeholder="Enter new category name"
-                      value={catalogCustomCategoryName}
-                      onChange={(e) => setCatalogCustomCategoryName(e.target.value)}
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      type="number"
+                      min="0"
+                      required
+                      placeholder="e.g. 500"
+                      value={catalogItemPrice}
+                      onChange={(e) => setCatalogItemPrice(e.target.value)}
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     />
-                  )}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Offer Price (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Optional"
+                      value={catalogItemOfferPrice}
+                      onChange={(e) => setCatalogItemOfferPrice(e.target.value)}
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Category (hidden for custom catalogs) */}
+              {!(catalogItemType === 'custom' || catalogItemType.startsWith('custom_')) && (
+                <div className="flex flex-col gap-2 bg-slate-50/50 p-3 rounded-2xl border border-slate-150/40">
+                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Category</label>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
+                        <input
+                          type="radio"
+                          checked={!isCatalogCustomCategory}
+                          onChange={() => setIsCatalogCustomCategory(false)}
+                          className="cursor-pointer"
+                        />
+                        Choose Existing
+                      </label>
+                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
+                        <input
+                          type="radio"
+                          checked={isCatalogCustomCategory}
+                          onChange={() => setIsCatalogCustomCategory(true)}
+                          className="cursor-pointer"
+                        />
+                        Add Custom
+                      </label>
+                    </div>
+
+                    {!isCatalogCustomCategory ? (
+                      <select
+                        value={catalogItemCategory}
+                        onChange={(e) => setCatalogItemCategory(e.target.value)}
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                      >
+                        <option value="">General</option>
+                        {[...new Set(catalogItems.map(item => item.category).filter(Boolean))].map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="Enter new category name"
+                        value={catalogCustomCategoryName}
+                        onChange={(e) => setCatalogCustomCategoryName(e.target.value)}
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Template Dynamic Fields Rendering */}
               <div className="border-t border-slate-100 pt-3">
