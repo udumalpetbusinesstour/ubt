@@ -41,6 +41,18 @@ export default function ItemDetail() {
   const [activeImage, setActiveImage] = useState('');
   const [shareSuccess, setShareSuccess] = useState(false);
 
+  // Helper to upsert a meta tag by property or name attribute
+  const setMetaTag = (attr, key, content) => {
+    if (!content) return;
+    let el = document.querySelector(`meta[${attr}="${key}"]`);
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute(attr, key);
+      document.head.appendChild(el);
+    }
+    el.setAttribute('content', content);
+  };
+
   useEffect(() => {
     const fetchItem = async () => {
       setLoading(true);
@@ -50,9 +62,36 @@ export default function ItemDetail() {
         const res = await fetch(`${backendBase}/api/catalog/landing/${slug}`);
         const data = await res.json();
         if (data.success) {
-          setItem(data.data);
-          setActiveImage(data.data.imageUrl || '');
-          document.title = `${data.data.name} for sale in Udumalpet | Udumalpet Business Tour`;
+          const d = data.data;
+          setItem(d);
+          setActiveImage(d.imageUrl || '');
+
+          const itemTitle = `${d.name} for sale in Udumalpet`;
+          const displayPrice = d.offerPrice || d.price;
+          const priceText = displayPrice > 0 ? `₹${displayPrice}` : 'Price on Request';
+          const seller = d.businessId?.name || 'Local Seller';
+          const desc = `${d.name} available for ${priceText} in Udumalpet. Listed by ${seller} on Udumalpet Business Tour. Contact seller directly.`;
+          const ogImage = resolveImageUrl(d.imageUrl);
+          const ogUrl = window.location.href;
+
+          document.title = `${itemTitle} | Udumalpet Business Tour`;
+
+          // Open Graph tags (WhatsApp, Facebook, LinkedIn previews)
+          setMetaTag('property', 'og:type',        'product');
+          setMetaTag('property', 'og:title',       itemTitle);
+          setMetaTag('property', 'og:description', desc);
+          setMetaTag('property', 'og:image',       ogImage);
+          setMetaTag('property', 'og:url',         ogUrl);
+          setMetaTag('property', 'og:site_name',   'Udumalpet Business Tour');
+
+          // Twitter Card tags
+          setMetaTag('name', 'twitter:card',        'summary_large_image');
+          setMetaTag('name', 'twitter:title',       itemTitle);
+          setMetaTag('name', 'twitter:description', desc);
+          setMetaTag('name', 'twitter:image',       ogImage);
+
+          // Standard description
+          setMetaTag('name', 'description', desc);
         } else {
           setError(data.message || 'Failed to load catalog item.');
         }
@@ -64,6 +103,14 @@ export default function ItemDetail() {
     };
 
     if (slug) fetchItem();
+
+    // Clean up injected meta tags on unmount so other pages aren't affected
+    return () => {
+      const ogKeys = ['og:type', 'og:title', 'og:description', 'og:image', 'og:url', 'og:site_name'];
+      ogKeys.forEach(k => document.querySelector(`meta[property="${k}"]`)?.remove());
+      const twitterKeys = ['twitter:card', 'twitter:title', 'twitter:description', 'twitter:image'];
+      twitterKeys.forEach(k => document.querySelector(`meta[name="${k}"]`)?.remove());
+    };
   }, [slug]);
 
   const handleShare = async () => {
@@ -280,6 +327,15 @@ export default function ItemDetail() {
                   Call Seller · {business.phone}
                 </a>
               )}
+              {/* Share button — visible below CTAs */}
+              <button
+                id="item-share-inline-button"
+                onClick={handleShare}
+                className="w-full py-3 border border-dashed border-slate-300 hover:border-emerald-500 text-slate-500 hover:text-emerald-700 bg-transparent rounded-2xl font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
+              >
+                <Share2 className="h-3.5 w-3.5" />
+                {shareSuccess ? '✓ Link Copied to Clipboard!' : 'Share this Listing'}
+              </button>
             </div>
           </div>
         </div>
