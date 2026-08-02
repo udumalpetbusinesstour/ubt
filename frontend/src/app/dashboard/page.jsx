@@ -141,7 +141,7 @@ function DashboardContent() {
   const [isConfiguringCatalog, setIsConfiguringCatalog] = useState(false);
   const [showCustomCatalogModal, setShowCustomCatalogModal] = useState(false);
   const [customCatalogName, setCustomCatalogName] = useState('Custom');
-  const [customCatalogFields, setCustomCatalogFields] = useState(['Name', 'Category']);
+  const [customCatalogFields, setCustomCatalogFields] = useState(['Brand', 'Model']);
   const [customCatalogPhotosEnabled, setCustomCatalogPhotosEnabled] = useState(true);
   const [currentCustomCatalogId, setCurrentCustomCatalogId] = useState(null);
 
@@ -3063,67 +3063,25 @@ function DashboardContent() {
     e.preventDefault();
     const isCustom = catalogItemType === 'custom' || catalogItemType.startsWith('custom_');
     
-    let resolvedItemName = catalogItemName;
-    let resolvedCategory = catalogItemCategory;
-
-    if (isCustom) {
-      // Find case-insensitive "Name" field in catalogDynamicFields
-      const nameKey = Object.keys(catalogDynamicFields).find(k => k.toLowerCase() === 'name');
-      if (nameKey && catalogDynamicFields[nameKey]) {
-        resolvedItemName = catalogDynamicFields[nameKey].trim();
-      } else {
-        // Fallback to first custom field
-        let firstField = '';
-        if (catalogItemType.startsWith('custom_')) {
-          const config = Array.isArray(business?.customCatalogs) && business.customCatalogs.find(c => c.id === catalogItemType);
-          if (config && Array.isArray(config.fields) && config.fields.length > 0) {
-            firstField = config.fields[0];
-          }
-        } else {
-          if (Array.isArray(business?.catalogCustomFields) && business.catalogCustomFields.length > 0) {
-            firstField = business.catalogCustomFields[0];
-          }
-        }
-        if (firstField && catalogDynamicFields[firstField]) {
-          resolvedItemName = catalogDynamicFields[firstField].trim();
-        } else {
-          resolvedItemName = '';
-        }
-      }
-
-      if (!resolvedItemName) {
-        setCatalogItemError('Name is required.');
-        return;
-      }
-
-      // Find case-insensitive "Category" field in catalogDynamicFields
-      const categoryKey = Object.keys(catalogDynamicFields).find(k => k.toLowerCase() === 'category');
-      if (categoryKey && catalogDynamicFields[categoryKey]) {
-        resolvedCategory = catalogDynamicFields[categoryKey].trim();
-      } else {
-        resolvedCategory = 'General';
-      }
-    } else {
-      if (!catalogItemName) {
-        setCatalogItemError('Item Name is required.');
-        return;
-      }
-      if (catalogItemPrice === '') {
-        setCatalogItemError('Item Name and Price are required.');
-        return;
-      }
+    if (!catalogItemName) {
+      setCatalogItemError('Item Name is required.');
+      return;
+    }
+    if (!isCustom && catalogItemPrice === '') {
+      setCatalogItemError('Item Name and Price are required.');
+      return;
     }
 
     setCatalogItemSubmitLoading(true);
     setCatalogItemError('');
 
-    let finalCategory = resolvedCategory;
-    if (!isCustom && isCatalogCustomCategory) {
+    let finalCategory = catalogItemCategory;
+    if (isCatalogCustomCategory) {
       finalCategory = catalogCustomCategoryName.trim();
     }
 
     const bodyData = {
-      name: resolvedItemName.trim(),
+      name: catalogItemName.trim(),
       price: catalogItemPrice === '' ? 0 : Number(catalogItemPrice),
       offerPrice: catalogItemOfferPrice !== '' && catalogItemOfferPrice !== null && catalogItemOfferPrice !== undefined ? Number(catalogItemOfferPrice) : null,
       isAvailable: catalogItemIsAvailable,
@@ -9910,7 +9868,7 @@ function DashboardContent() {
                         onClick={() => {
                           setCurrentCustomCatalogId('custom');
                           setCustomCatalogName(business?.catalogLabel || 'Custom');
-                          setCustomCatalogFields(Array.isArray(business?.catalogCustomFields) ? [...business.catalogCustomFields] : ['Name', 'Category']);
+                          setCustomCatalogFields(Array.isArray(business?.catalogCustomFields) ? [...business.catalogCustomFields] : ['Brand', 'Model']);
                           setCustomCatalogPhotosEnabled(business?.catalogCustomFieldsPhotosEnabled !== false);
                           setShowCustomCatalogModal(true);
                         }}
@@ -9998,7 +9956,7 @@ function DashboardContent() {
                               onClick={() => {
                                 setCurrentCustomCatalogId(null);
                                 setCustomCatalogName('Custom Catalog');
-                                setCustomCatalogFields(['Name', 'Category']);
+                                setCustomCatalogFields(['Brand', 'Model']);
                                 setCustomCatalogPhotosEnabled(true);
                                 setShowCustomCatalogModal(true);
                               }}
@@ -10174,7 +10132,7 @@ function DashboardContent() {
                             } else {
                               setCurrentCustomCatalogId('custom');
                               setCustomCatalogName(business?.catalogLabel || 'Custom');
-                              setCustomCatalogFields(Array.isArray(business?.catalogCustomFields) ? [...business.catalogCustomFields] : ['Name', 'Category']);
+                              setCustomCatalogFields(Array.isArray(business?.catalogCustomFields) ? [...business.catalogCustomFields] : ['Brand', 'Model']);
                               setCustomCatalogPhotosEnabled(business?.catalogCustomFieldsPhotosEnabled !== false);
                               setShowCustomCatalogModal(true);
                             }
@@ -14475,20 +14433,18 @@ function DashboardContent() {
 
 
 
-              {/* Item Name (hidden for custom catalogs) */}
-              {!(catalogItemType === 'custom' || catalogItemType.startsWith('custom_')) && (
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Item Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder={`e.g. ${(business?.catalogLabel || 'Catalog').includes('Service') ? 'AC Maintenance Service' : 'Premium Room'}`}
-                    value={catalogItemName}
-                    onChange={(e) => setCatalogItemName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  />
-                </div>
-              )}
+              {/* Item Name */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Item Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder={`e.g. ${(business?.catalogLabel || 'Catalog').includes('Service') ? 'AC Maintenance Service' : 'Premium Room'}`}
+                  value={catalogItemName}
+                  onChange={(e) => setCatalogItemName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
 
               {/* Price & Offer Price Row (hidden for custom catalogs) */}
               {!(catalogItemType === 'custom' || catalogItemType.startsWith('custom_')) && (
@@ -14519,55 +14475,53 @@ function DashboardContent() {
                 </div>
               )}
 
-              {/* Category (hidden for custom catalogs) */}
-              {!(catalogItemType === 'custom' || catalogItemType.startsWith('custom_')) && (
-                <div className="flex flex-col gap-2 bg-slate-50/50 p-3 rounded-2xl border border-slate-150/40">
-                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Category</label>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
-                        <input
-                          type="radio"
-                          checked={!isCatalogCustomCategory}
-                          onChange={() => setIsCatalogCustomCategory(false)}
-                          className="cursor-pointer"
-                        />
-                        Choose Existing
-                      </label>
-                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
-                        <input
-                          type="radio"
-                          checked={isCatalogCustomCategory}
-                          onChange={() => setIsCatalogCustomCategory(true)}
-                          className="cursor-pointer"
-                        />
-                        Add Custom
-                      </label>
-                    </div>
-
-                    {!isCatalogCustomCategory ? (
-                      <select
-                        value={catalogItemCategory}
-                        onChange={(e) => setCatalogItemCategory(e.target.value)}
-                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-                      >
-                        <option value="">General</option>
-                        {[...new Set(catalogItems.map(item => item.category).filter(Boolean))].map((cat) => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
-                    ) : (
+              {/* Category */}
+              <div className="flex flex-col gap-2 bg-slate-50/50 p-3 rounded-2xl border border-slate-150/40">
+                <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Category</label>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
                       <input
-                        type="text"
-                        placeholder="Enter new category name"
-                        value={catalogCustomCategoryName}
-                        onChange={(e) => setCatalogCustomCategoryName(e.target.value)}
-                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        type="radio"
+                        checked={!isCatalogCustomCategory}
+                        onChange={() => setIsCatalogCustomCategory(false)}
+                        className="cursor-pointer"
                       />
-                    )}
+                      Choose Existing
+                    </label>
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
+                      <input
+                        type="radio"
+                        checked={isCatalogCustomCategory}
+                        onChange={() => setIsCatalogCustomCategory(true)}
+                        className="cursor-pointer"
+                      />
+                      Add Custom
+                    </label>
                   </div>
+
+                  {!isCatalogCustomCategory ? (
+                    <select
+                      value={catalogItemCategory}
+                      onChange={(e) => setCatalogItemCategory(e.target.value)}
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                    >
+                      <option value="">General</option>
+                      {[...new Set(catalogItems.map(item => item.category).filter(Boolean))].map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Enter new category name"
+                      value={catalogCustomCategoryName}
+                      onChange={(e) => setCatalogCustomCategoryName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Template Dynamic Fields Rendering */}
               <div className="border-t border-slate-100 pt-3">
