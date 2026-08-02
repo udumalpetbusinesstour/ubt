@@ -3063,8 +3063,12 @@ function DashboardContent() {
     e.preventDefault();
     const isCustom = catalogItemType === 'custom' || catalogItemType.startsWith('custom_');
     
-    if (!catalogItemName || (!isCustom && catalogItemPrice === '')) {
-      setCatalogItemError(isCustom ? 'Item Name is required.' : 'Item Name and Price are required.');
+    if (!catalogItemName) {
+      setCatalogItemError('Item Name is required.');
+      return;
+    }
+    if (!isCustom && catalogItemPrice === '') {
+      setCatalogItemError('Item Name and Price are required.');
       return;
     }
 
@@ -10256,12 +10260,12 @@ function DashboardContent() {
                                                   {item.catalogType === 'menu' && <span>{fields.isVeg !== false ? '🟢 Veg' : '🔴 Non-Veg'}</span>}
                                                   {item.catalogType === 'product' && fields.brand && <span>🏷️ {fields.brand}</span>}
                                                   {(item.catalogType === 'custom' || item.catalogType.startsWith('custom_')) && (
-                                                    <div className="flex flex-wrap gap-x-2 gap-y-1">
-                                                      {Object.entries(fields).map(([k, v]) => (
-                                                        v && <span key={k} className="bg-slate-50 border border-slate-150/40 px-1.5 py-0.5 rounded text-slate-500 font-semibold">{k}: {v}</span>
-                                                      ))}
-                                                    </div>
-                                                  )}
+                                                     <div className="flex flex-wrap gap-x-2 gap-y-1">
+                                                       {Object.entries(fields).map(([k, v]) => (
+                                                         v && <span key={k} className="bg-slate-50 border border-slate-150/40 px-1.5 py-0.5 rounded text-slate-500 font-semibold">{k}: {v}</span>
+                                                       ))}
+                                                     </div>
+                                                   )}
                                                 </div>
 
                                                 {item.description && (
