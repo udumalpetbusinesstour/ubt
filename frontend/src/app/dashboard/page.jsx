@@ -14475,55 +14475,53 @@ function DashboardContent() {
                 </div>
               )}
 
-              {/* Category (hidden for custom catalogs) */}
-              {!(catalogItemType === 'custom' || catalogItemType.startsWith('custom_')) && (
-                <div className="flex flex-col gap-2 bg-slate-50/50 p-3 rounded-2xl border border-slate-150/40">
-                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Category</label>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
-                        <input
-                          type="radio"
-                          checked={!isCatalogCustomCategory}
-                          onChange={() => setIsCatalogCustomCategory(false)}
-                          className="cursor-pointer"
-                        />
-                        Choose Existing
-                      </label>
-                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
-                        <input
-                          type="radio"
-                          checked={isCatalogCustomCategory}
-                          onChange={() => setIsCatalogCustomCategory(true)}
-                          className="cursor-pointer"
-                        />
-                        Add Custom
-                      </label>
-                    </div>
-
-                    {!isCatalogCustomCategory ? (
-                      <select
-                        value={catalogItemCategory}
-                        onChange={(e) => setCatalogItemCategory(e.target.value)}
-                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-                      >
-                        <option value="">General</option>
-                        {[...new Set(catalogItems.map(item => item.category).filter(Boolean))].map((cat) => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
-                    ) : (
+              {/* Category */}
+              <div className="flex flex-col gap-2 bg-slate-50/50 p-3 rounded-2xl border border-slate-150/40">
+                <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Category</label>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
                       <input
-                        type="text"
-                        placeholder="Enter new category name"
-                        value={catalogCustomCategoryName}
-                        onChange={(e) => setCatalogCustomCategoryName(e.target.value)}
-                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        type="radio"
+                        checked={!isCatalogCustomCategory}
+                        onChange={() => setIsCatalogCustomCategory(false)}
+                        className="cursor-pointer"
                       />
-                    )}
+                      Choose Existing
+                    </label>
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 cursor-pointer select-none">
+                      <input
+                        type="radio"
+                        checked={isCatalogCustomCategory}
+                        onChange={() => setIsCatalogCustomCategory(true)}
+                        className="cursor-pointer"
+                      />
+                      Add Custom
+                    </label>
                   </div>
+
+                  {!isCatalogCustomCategory ? (
+                    <select
+                      value={catalogItemCategory}
+                      onChange={(e) => setCatalogItemCategory(e.target.value)}
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                    >
+                      <option value="">General</option>
+                      {[...new Set(catalogItems.map(item => item.category).filter(Boolean))].map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Enter new category name"
+                      value={catalogCustomCategoryName}
+                      onChange={(e) => setCatalogCustomCategoryName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Template Dynamic Fields Rendering */}
               <div className="border-t border-slate-100 pt-3">
