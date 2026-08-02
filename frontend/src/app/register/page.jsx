@@ -43,6 +43,12 @@ export default function Register({ isPartnerFlow }) {
       return;
     }
 
+    const cleanMobileNumber = mobileNumber.replace(/[^\d+]/g, '');
+    if (!/^\+?[0-9]{10,15}$/.test(cleanMobileNumber)) {
+      setError('Please enter a valid mobile number (10-15 digits).');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
       return;
@@ -65,8 +71,8 @@ export default function Register({ isPartnerFlow }) {
         body: JSON.stringify({ 
           name: fullName, 
           fullName, 
-          phone: mobileNumber, 
-          mobileNumber, 
+          phone: cleanMobileNumber, 
+          mobileNumber: cleanMobileNumber, 
           email, 
           password,
           role: fromParam === 'partner' ? 'partner' : 'owner',

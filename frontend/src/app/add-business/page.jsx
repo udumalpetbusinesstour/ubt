@@ -1479,18 +1479,25 @@ export default function AddBusiness() {
         setError('Phone Number is mandatory.');
         return false;
       }
-      if (!/^[0-9+\-\s]{7,15}$/.test(formData.phone.trim())) {
-        setError('Please enter a valid Phone Number (7-15 digits).');
+      const cleanPhone = formData.phone.replace(/[^\d+]/g, '');
+      if (!/^\+?[0-9]{10,15}$/.test(cleanPhone)) {
+        setError('Please enter a valid Phone Number (10-15 digits).');
         return false;
       }
       if (!formData.whatsapp || !formData.whatsapp.trim()) {
         setError('WhatsApp Number is mandatory.');
         return false;
       }
-      if (!/^[0-9+\-\s]{7,15}$/.test(formData.whatsapp.trim())) {
-        setError('Please enter a valid WhatsApp Number (7-15 digits).');
+      const cleanWhatsapp = formData.whatsapp.replace(/[^\d+]/g, '');
+      if (!/^\+?[0-9]{10,15}$/.test(cleanWhatsapp)) {
+        setError('Please enter a valid WhatsApp Number (10-15 digits).');
         return false;
       }
+
+      // Update state with cleaned numbers to avoid submission issues
+      formData.phone = cleanPhone;
+      formData.whatsapp = cleanWhatsapp;
+      setFormData(prev => ({ ...prev, phone: cleanPhone, whatsapp: cleanWhatsapp }));
       if (!formData.email || !formData.email.trim()) {
         setError('Email Address is mandatory.');
         return false;

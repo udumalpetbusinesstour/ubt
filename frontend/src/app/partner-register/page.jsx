@@ -66,6 +66,11 @@ export default function PartnerRegister() {
       setError('Mobile number is required');
       return;
     }
+    const cleanMobileNumber = mobileNumber.replace(/[^\d+]/g, '');
+    if (!/^\+?[0-9]{10,15}$/.test(cleanMobileNumber)) {
+      setError('Please enter a valid Mobile Number (10-15 digits).');
+      return;
+    }
     if (aadhaarNumber.trim() && aadhaarNumber.trim().replace(/\s/g, '').length !== 12) {
       setError('Please provide a valid 12-digit Aadhaar Number');
       return;
@@ -87,7 +92,7 @@ export default function PartnerRegister() {
         body: JSON.stringify({
           fullName,
           email,
-          mobileNumber,
+          mobileNumber: cleanMobileNumber,
           aadhaarNumber: aadhaarNumber.trim().replace(/\s/g, ''),
           address: address.trim(),
           isPartnerRegistered: true, // Complete onboarding!
