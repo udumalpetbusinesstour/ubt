@@ -3328,26 +3328,26 @@ Please confirm availability and delivery time.`;
                                 )}
                               </div>
 
-                              <div className="flex items-center justify-between border-t border-slate-100 pt-3.5 mt-1">
-                                <div className="flex flex-col text-left">
-                                  {item.offerPrice ? (
-                                    <div className="flex flex-col">
-                                      <div className="flex items-center gap-1.5">
-                                        <span className="text-base font-extrabold text-slate-800">₹{item.offerPrice}</span>
-                                        <span className="text-[9px] bg-rose-50 border border-rose-100 text-rose-600 font-extrabold px-1.5 py-0.5 rounded select-none">
-                                          {discountPercent}% OFF
-                                        </span>
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 pt-3.5 mt-1">
+                                <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+                                  <div className="flex flex-col text-left">
+                                    {item.offerPrice ? (
+                                      <div className="flex flex-col">
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="text-base font-extrabold text-slate-800">₹{item.offerPrice}</span>
+                                          <span className="text-[9px] bg-rose-50 border border-rose-100 text-rose-600 font-extrabold px-1.5 py-0.5 rounded select-none">
+                                            {discountPercent}% OFF
+                                          </span>
+                                        </div>
+                                        <span className="text-[10px] text-slate-400 font-bold line-through">M.R.P: ₹{item.price}</span>
                                       </div>
-                                      <span className="text-[10px] text-slate-400 font-bold line-through">M.R.P: ₹{item.price}</span>
-                                    </div>
-                                  ) : (
-                                    <span className="text-base font-extrabold text-slate-800">
-                                      {item.price > 0 ? `₹${item.price}` : 'Price on Request'}
-                                    </span>
-                                  )}
-                                </div>
+                                    ) : (
+                                      <span className="text-base font-extrabold text-slate-800">
+                                        {item.price > 0 ? `₹${item.price}` : 'Price on Request'}
+                                      </span>
+                                    )}
+                                  </div>
 
-                                <div className="flex items-center gap-2">
                                   <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider select-none shrink-0 ${
                                     item.isAvailable 
                                       ? 'bg-emerald-50 text-emerald-700 border border-emerald-250/20' 
@@ -3355,6 +3355,9 @@ Please confirm availability and delivery time.`;
                                   }`}>
                                     {item.isAvailable ? 'Available' : 'Unavailable'}
                                   </span>
+                                </div>
+
+                                <div className="flex items-center gap-2 justify-end w-full sm:w-auto shrink-0">
                                   {item.isAvailable && (
                                     <>
                                       {(() => {
@@ -3411,7 +3414,7 @@ Please confirm availability and delivery time.`;
                                           </div>
                                         );
                                       })()}
-                                          <button
+                                      <button
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); handleCatalogWhatsAppOrder(item); }}
                                         className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1.5 px-3.5 rounded-lg flex items-center gap-1.5 transition-all shadow-3xs cursor-pointer active:scale-95 shrink-0"

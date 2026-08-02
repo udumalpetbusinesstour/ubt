@@ -15183,7 +15183,7 @@ function DashboardContent() {
                           </button>
                         </div>
                       ))}
-                      <label className="h-16 w-16 border-2 border-dashed border-slate-350 hover:border-emerald-500 rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer text-slate-400 hover:text-emerald-600 transition-colors bg-slate-50 shrink-0 select-none">
+                      <label className="h-20 w-20 border-2 border-dashed border-slate-350 hover:border-emerald-500 rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer text-slate-400 hover:text-emerald-600 transition-colors bg-slate-50 shrink-0 select-none">
                         <Plus className="h-4.5 w-4.5" />
                         <span className="text-[8px] font-bold">Add Photo</span>
                         <input
