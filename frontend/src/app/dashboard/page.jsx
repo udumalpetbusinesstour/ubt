@@ -15132,13 +15132,51 @@ function DashboardContent() {
                 return (
                   <div className="flex flex-col gap-2 border-t border-slate-100 pt-3">
                     <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Photo Gallery (Additional Images)</label>
+                    <p className="text-[9px] text-slate-400 font-semibold italic mb-1">Drag thumbnails to reorder · First image shows first in gallery</p>
                     <div className="flex flex-wrap gap-3">
                       {catalogItemGalleryUrls.map((url, uIdx) => (
-                        <div key={uIdx} className="relative h-16 w-16 rounded-xl overflow-hidden border border-slate-200 shrink-0">
-                          <img src={window.getImageUrl(url)} className="h-full w-full object-cover" />
+                        <div
+                          key={url + uIdx}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.effectAllowed = 'move';
+                            e.dataTransfer.setData('text/plain', String(uIdx));
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = 'move';
+                            e.currentTarget.style.opacity = '0.5';
+                            e.currentTarget.style.borderColor = '#10b981';
+                          }}
+                          onDragLeave={(e) => {
+                            e.currentTarget.style.opacity = '1';
+                            e.currentTarget.style.borderColor = '';
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.currentTarget.style.opacity = '1';
+                            e.currentTarget.style.borderColor = '';
+                            const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                            const toIdx = uIdx;
+                            if (fromIdx === toIdx) return;
+                            setCatalogItemGalleryUrls(prev => {
+                              const updated = [...prev];
+                              const [moved] = updated.splice(fromIdx, 1);
+                              updated.splice(toIdx, 0, moved);
+                              return updated;
+                            });
+                          }}
+                          className="relative h-20 w-20 rounded-xl overflow-hidden border-2 border-slate-200 shrink-0 cursor-grab active:cursor-grabbing select-none shadow-sm"
+                          style={{ transition: 'opacity 0.15s, border-color 0.15s' }}
+                          title="Drag to reorder"
+                        >
+                          <img src={window.getImageUrl(url)} className="h-full w-full object-cover pointer-events-none" />
+                          <span className="absolute bottom-1 left-1 bg-black/55 text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded-md leading-none pointer-events-none">
+                            {uIdx + 1}
+                          </span>
                           <button
                             type="button"
-                            onClick={() => setCatalogItemGalleryUrls(prev => prev.filter(g => g !== url))}
+                            onClick={() => setCatalogItemGalleryUrls(prev => prev.filter((_, i) => i !== uIdx))}
                             className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full cursor-pointer shadow border-none text-[8px] flex items-center justify-center shrink-0"
                           >
                             ✕

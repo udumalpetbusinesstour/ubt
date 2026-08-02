@@ -3367,10 +3367,10 @@ Please confirm availability and delivery time.`;
                                                 e.stopPropagation();
                                                 setSelectedCatalogItems(prev => [...prev, { item, quantity: 1 }]);
                                               }}
-                                              className="bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-655 font-extrabold text-[10px] py-1.5 px-3 rounded-lg flex items-center gap-1 transition-all border cursor-pointer active:scale-95 shrink-0"
+                                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1.5 px-3 rounded-lg flex items-center gap-1 transition-all cursor-pointer active:scale-95 shrink-0 shadow-sm"
                                             >
                                               <Plus className="h-3 w-3" />
-                                              <span>Select</span>
+                                              <span>Add to Cart</span>
                                             </button>
                                           );
                                         }
@@ -3422,10 +3422,17 @@ Please confirm availability and delivery time.`;
                                   )}
                                 </div>
                               </div>
-                              {/* Visual hint that card is clickable / links to landing page */}
-                              <div className="flex items-center justify-center pt-2 border-t border-slate-100 mt-1">
-                                <span className="text-[9.5px] font-extrabold text-emerald-600 uppercase tracking-wider flex items-center gap-1 select-none">
-                                  View Full Details →
+                              {/* Footer row: View details link */}
+                              <div
+                                className="flex items-center justify-between pt-2 border-t border-slate-100 mt-1"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <span className="text-[9px] text-slate-400 font-semibold italic">Tap card to view full details</span>
+                                <span
+                                  onClick={() => navigate(`/items/${slugifyItemName(item.name)}-for-sale-in-udumalpet`)}
+                                  className="text-[9.5px] font-extrabold text-emerald-600 uppercase tracking-wider flex items-center gap-1 select-none cursor-pointer hover:text-emerald-700"
+                                >
+                                  View Details →
                                 </span>
                               </div>
                             </div>
