@@ -1,0 +1,81 @@
+GENERALIZED CATEGORIES MAPPING (12 Categories)
+==============================================
+
+Based on the 41 overall categories found in the application (from categories.csv), we have grouped and generalized them into the following 12 main categories. This mapping covers every existing category.
+
+1. Retail, Shopping & Fashion
+-----------------------------
+- Baby & Kids Stores
+- Books & Stationery
+- Clothing & Fashion
+- Jewellery Shops
+- Shops & Retail Stores
+
+2. Food, Grocery & Hospitality
+------------------------------
+- Grocery & Food Stores
+- Hotels & Lodges
+- Restaurants & Food
+
+3. Healthcare, Wellness & Fitness
+---------------------------------
+- Beauty Salons & Spa
+- Doctors & Healthcare
+- Pet & Veterinary Services
+- Sports & Fitness
+
+4. Building, Real Estate & Home Improvement
+-------------------------------------------
+- Builders & Contractors
+- Building Materials
+- Furniture & Home Decor
+- Real Estate
+
+5. Professional, Business & Financial Services
+----------------------------------------------
+- Business Services
+- Finance & Insurance
+- Legal & Document Services
+- Security Services
+
+6. Technology, Media & Communications
+-------------------------------------
+- Electronics & Mobiles
+- IT & Digital Services
+- Internet & Telecom
+- Photography & Video
+- Printing & Advertising
+
+7. Education & Coaching
+-----------------------
+- Schools & Colleges
+- Training & Coaching
+
+8. Automotive, Logistics & Travel
+---------------------------------
+- Automobile Services
+- Packers & Movers
+- Travel & Transport
+
+9. Home, Repair & Utilities
+---------------------------
+- Electrical & Solar
+- Home Services
+- Rental Services
+- Repair Services
+- Water & Environmental Services
+
+10. Agriculture & Farming
+-------------------------
+- Agriculture & Farming
+
+11. Industrial & Manufacturing
+------------------------------
+- Manufacturers & Industries
+
+12. Community, Social & Event Services
+--------------------------------------
+- NGOs & Social Services
+- Personal Services
+- Religious Services
+- Wedding & Event Services

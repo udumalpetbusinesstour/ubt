@@ -15115,64 +15115,78 @@ function DashboardContent() {
                 );
               })()}
 
-              {/* Gallery upload for Holiday Packages and Properties */}
-              {(catalogItemType === 'packages' || catalogItemType === 'properties') && (
-                <div className="flex flex-col gap-2 border-t border-slate-100 pt-3">
-                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Photo Gallery (Additional Images)</label>
-                  <div className="flex flex-wrap gap-3">
-                    {catalogItemGalleryUrls.map((url, uIdx) => (
-                      <div key={uIdx} className="relative h-16 w-16 rounded-xl overflow-hidden border border-slate-200 shrink-0">
-                        <img src={window.getImageUrl(url)} className="h-full w-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => setCatalogItemGalleryUrls(prev => prev.filter(g => g !== url))}
-                          className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full cursor-pointer shadow border-none text-[8px] flex items-center justify-center shrink-0"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                    <label className="h-16 w-16 border-2 border-dashed border-slate-350 hover:border-emerald-500 rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer text-slate-400 hover:text-emerald-600 transition-colors bg-slate-50 shrink-0 select-none">
-                      <Plus className="h-4.5 w-4.5" />
-                      <span className="text-[8px] font-bold">Add Photo</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={async (e) => {
-                          const files = Array.from(e.target.files);
-                          if (files.length === 0) return;
-                          setCatalogItemImageUploading(true);
-                          try {
-                            const uploaded = [];
-                            for (let file of files) {
-                              const compressed = await compressImage(file);
-                              const formData = new FormData();
-                              formData.append('image', compressed);
-                              const activeToken = token || localStorage.getItem('ubt_token');
-                              const res = await fetch('http://localhost:5000/api/upload', {
-                                method: 'POST',
-                                headers: { Authorization: `Bearer ${activeToken}` },
-                                body: formData
-                              });
-                              const data = await res.json();
-                              if (data.success) {
-                                uploaded.push(data.url);
+              {/* Gallery upload for Holiday Packages, Properties, and Custom Catalogs (if photosEnabled) */}
+              {(() => {
+                let showGallery = catalogItemType === 'packages' || catalogItemType === 'properties';
+                if (catalogItemType.startsWith('custom_')) {
+                  const config = Array.isArray(business?.customCatalogs) && business.customCatalogs.find(c => c.id === catalogItemType);
+                  if (config) {
+                    showGallery = config.photosEnabled !== false;
+                  }
+                } else if (catalogItemType === 'custom') {
+                  showGallery = business?.catalogCustomFieldsPhotosEnabled !== false;
+                }
+                
+                if (!showGallery) return null;
+
+                return (
+                  <div className="flex flex-col gap-2 border-t border-slate-100 pt-3">
+                    <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Photo Gallery (Additional Images)</label>
+                    <div className="flex flex-wrap gap-3">
+                      {catalogItemGalleryUrls.map((url, uIdx) => (
+                        <div key={uIdx} className="relative h-16 w-16 rounded-xl overflow-hidden border border-slate-200 shrink-0">
+                          <img src={window.getImageUrl(url)} className="h-full w-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setCatalogItemGalleryUrls(prev => prev.filter(g => g !== url))}
+                            className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full cursor-pointer shadow border-none text-[8px] flex items-center justify-center shrink-0"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                      <label className="h-16 w-16 border-2 border-dashed border-slate-350 hover:border-emerald-500 rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer text-slate-400 hover:text-emerald-600 transition-colors bg-slate-50 shrink-0 select-none">
+                        <Plus className="h-4.5 w-4.5" />
+                        <span className="text-[8px] font-bold">Add Photo</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={async (e) => {
+                            const files = Array.from(e.target.files);
+                            if (files.length === 0) return;
+                            setCatalogItemImageUploading(true);
+                            try {
+                              const uploaded = [];
+                              for (let file of files) {
+                                const compressed = await compressImage(file);
+                                const formData = new FormData();
+                                formData.append('image', compressed);
+                                const activeToken = token || localStorage.getItem('ubt_token');
+                                const res = await fetch('http://localhost:5000/api/upload', {
+                                  method: 'POST',
+                                  headers: { Authorization: `Bearer ${activeToken}` },
+                                  body: formData
+                                });
+                                const data = await res.json();
+                                if (data.success) {
+                                  uploaded.push(data.url);
+                                }
                               }
+                              setCatalogItemGalleryUrls(prev => [...prev, ...uploaded]);
+                            } catch (err) {
+                              setCatalogItemError('Gallery upload failed.');
+                            } finally {
+                              setCatalogItemImageUploading(false);
                             }
-                            setCatalogItemGalleryUrls(prev => [...prev, ...uploaded]);
-                          } catch (err) {
-                            setCatalogItemError('Gallery upload failed.');
-                          } finally {
-                            setCatalogItemImageUploading(false);
-                          }
-                        }}
-                        className="hidden"
-                      />
-                    </label>
+                          }}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Availability Status */}
               <label className="flex items-center gap-2 text-xs font-extrabold text-slate-655 cursor-pointer mt-2 border-t border-slate-100 pt-3.5 font-bold">

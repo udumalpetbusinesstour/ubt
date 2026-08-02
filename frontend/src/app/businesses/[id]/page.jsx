@@ -105,6 +105,16 @@ const getTimingsSummaryString = (timings) => {
 
 const viewedBusinesses = new Set();
 
+const slugifyItemName = (name) => {
+  return (name || '')
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/--+/g, '-');
+};
+
 export default function BusinessDetail({ idOverride, subtabOverride }) {
   const routerParams = useParams();
   const params = {
@@ -3179,8 +3189,9 @@ Please confirm availability and delivery time.`;
                           return (
                             <div 
                               key={item._id} 
-                              className={`bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between gap-4 shadow-2xs relative transition-all duration-300 ${
-                                !item.isAvailable ? 'opacity-65 grayscale-[30%]' : 'hover:border-slate-350 hover:shadow-xs'
+                              onClick={() => navigate(`/items/${slugifyItemName(item.name)}-for-sale-in-udumalpet`)}
+                              className={`bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between gap-4 shadow-2xs relative transition-all duration-300 cursor-pointer ${
+                                !item.isAvailable ? 'opacity-65 grayscale-[30%]' : 'hover:border-emerald-400/50 hover:shadow-md hover:shadow-emerald-900/5'
                               }`}
                             >
                               <div className="flex justify-between items-start gap-3 w-full">
@@ -3308,7 +3319,7 @@ Please confirm availability and delivery time.`;
 
                                 {item.imageUrl && (
                                   <div 
-                                    onClick={() => setSelectedItemImage(window.getImageUrl(item.imageUrl))}
+                                    onClick={(e) => { e.stopPropagation(); setSelectedItemImage(window.getImageUrl(item.imageUrl)); }}
                                     className="h-16 w-16 md:h-20 md:w-20 rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden shrink-0 cursor-pointer shadow-3xs hover:scale-105 transition-transform flex items-center justify-center p-0.5"
                                   >
                                     <img src={window.getImageUrl(item.imageUrl)} alt={item.name} className="h-full w-full object-cover rounded-xl" />

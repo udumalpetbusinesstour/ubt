@@ -164,4 +164,53 @@ router.put('/:businessId/reorder', protect, async (req, res) => {
   }
 });
 
+// @desc    Fetch catalog item by its slug
+// @route   GET /api/catalog/landing/:slug
+// @access  Public
+router.get('/landing/:slug', async (req, res) => {
+  try {
+    const slug = req.params.slug;
+    
+    // Parse slug to extract name search query
+    const cleanName = slug
+      .replace(/-for-sale-in-udumalpet$/i, '')
+      .replace(/-for-sale-in-udmalpet$/i, '')
+      .replace(/-/g, ' ');
+
+    // Find items matching cleanName keywords
+    const regexQuery = cleanName.split(/\s+/).filter(Boolean).map(term => `(?=.*${term})`).join('');
+    const items = await Catalog.find({ 
+      name: { $regex: new RegExp(regexQuery || cleanName, 'i') } 
+    }).populate('businessId');
+
+    const slugifyHelper = (text) => {
+      return text
+        .toString()
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-');
+    };
+
+    let exactItem = items.find(item => {
+      const itemSlug = slugifyHelper(item.name) + '-for-sale-in-udumalpet';
+      const altSlug = slugifyHelper(item.name) + '-for-sale-in-udmalpet';
+      return itemSlug === slug || altSlug === slug;
+    });
+
+    if (!exactItem && items.length > 0) {
+      exactItem = items[0];
+    }
+
+    if (!exactItem) {
+      return res.status(404).json({ success: false, message: 'Catalog item not found' });
+    }
+
+    res.json({ success: true, data: exactItem });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;

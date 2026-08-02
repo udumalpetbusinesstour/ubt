@@ -27,6 +27,7 @@ import BloodDonorsPage from './app/blood-donors/page';
 import PartnerRegister from './app/partner-register/page';
 import SitemapPage from './app/sitemap/page';
 import GlobalModalProvider from './components/GlobalModalProvider';
+import ItemDetail from './app/items/[slug]/page';
 
 function SlugRouteWrapper() {
   const { id, subtab, businessSlug } = useParams();
@@ -49,7 +50,13 @@ function SlugRouteWrapper() {
   const lowerLookupSlug = (lookupSlug || '').toLowerCase();
 
   useEffect(() => {
-    // 1. Check if it is a category (only for single segment URLs)
+    // 1. Check if it is a catalog item slug like "name-for-sale-in-udumalpet"
+    if (!isBlogOrEventRoute && (lowerLookupSlug.endsWith('-for-sale-in-udumalpet') || lowerLookupSlug.endsWith('-for-sale-in-udmalpet'))) {
+      setRouteType('catalogItem');
+      return;
+    }
+
+    // 2. Check if it is a category (only for single segment URLs)
     if (!isBlogOrEventRoute && lowerLookupSlug.endsWith('-in-udumalpet')) {
       setRouteType('category');
       return;
@@ -94,6 +101,10 @@ function SlugRouteWrapper() {
         <span className="text-xs font-bold">Loading...</span>
       </div>
     );
+  }
+
+  if (routeType === 'catalogItem') {
+    return <ItemDetail />;
   }
 
   if (routeType === 'category') {
@@ -223,6 +234,7 @@ function AppContent() {
           <Route path="/blood-donors" element={<BloodDonorsPage />} />
           <Route path="/partner-register" element={<PartnerRegister />} />
           <Route path="/sitemap" element={<SitemapPage />} />
+          <Route path="/items/:slug" element={<ItemDetail />} />
           <Route path="/privacy-policy" element={<BusinessesingsPage forceFocus="privacy" />} />
           <Route path="/privacy" element={<BusinessesingsPage forceFocus="privacy" />} />
           <Route path="/terms-of-service" element={<BusinessesingsPage forceFocus="terms" />} />
