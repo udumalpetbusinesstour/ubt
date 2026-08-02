@@ -3063,35 +3063,9 @@ function DashboardContent() {
     e.preventDefault();
     const isCustom = catalogItemType === 'custom' || catalogItemType.startsWith('custom_');
     
-    let resolvedItemName = catalogItemName;
-    if (isCustom) {
-      let firstField = '';
-      if (catalogItemType.startsWith('custom_')) {
-        const config = Array.isArray(business?.customCatalogs) && business.customCatalogs.find(c => c.id === catalogItemType);
-        if (config && Array.isArray(config.fields) && config.fields.length > 0) {
-          firstField = config.fields[0];
-        }
-      } else {
-        if (Array.isArray(business?.catalogCustomFields) && business.catalogCustomFields.length > 0) {
-          firstField = business.catalogCustomFields[0];
-        }
-      }
-      
-      if (firstField && catalogDynamicFields[firstField]) {
-        resolvedItemName = catalogDynamicFields[firstField].trim();
-      } else {
-        resolvedItemName = '';
-      }
-
-      if (!resolvedItemName) {
-        setCatalogItemError(firstField ? `The first field "${firstField}" is required.` : 'A value is required.');
-        return;
-      }
-    } else {
-      if (!catalogItemName || catalogItemPrice === '') {
-        setCatalogItemError('Item Name and Price are required.');
-        return;
-      }
+    if (!catalogItemName || (!isCustom && catalogItemPrice === '')) {
+      setCatalogItemError(isCustom ? 'Item Name is required.' : 'Item Name and Price are required.');
+      return;
     }
 
     setCatalogItemSubmitLoading(true);
@@ -3103,7 +3077,7 @@ function DashboardContent() {
     }
 
     const bodyData = {
-      name: resolvedItemName,
+      name: catalogItemName.trim(),
       price: catalogItemPrice === '' ? 0 : Number(catalogItemPrice),
       offerPrice: catalogItemOfferPrice !== '' && catalogItemOfferPrice !== null && catalogItemOfferPrice !== undefined ? Number(catalogItemOfferPrice) : null,
       isAvailable: catalogItemIsAvailable,
@@ -10281,28 +10255,13 @@ function DashboardContent() {
                                                   {item.catalogType === 'vehicles' && fields.vehicleType && <span>🚗 {fields.vehicleType}</span>}
                                                   {item.catalogType === 'menu' && <span>{fields.isVeg !== false ? '🟢 Veg' : '🔴 Non-Veg'}</span>}
                                                   {item.catalogType === 'product' && fields.brand && <span>🏷️ {fields.brand}</span>}
-                                                  {(item.catalogType === 'custom' || item.catalogType.startsWith('custom_')) && (() => {
-                                                     let firstField = '';
-                                                     if (item.catalogType.startsWith('custom_')) {
-                                                       const config = Array.isArray(business?.customCatalogs) && business.customCatalogs.find(c => c.id === item.catalogType);
-                                                       if (config && Array.isArray(config.fields) && config.fields.length > 0) {
-                                                         firstField = config.fields[0];
-                                                       }
-                                                     } else {
-                                                       if (Array.isArray(business?.catalogCustomFields) && business.catalogCustomFields.length > 0) {
-                                                         firstField = business.catalogCustomFields[0];
-                                                       }
-                                                     }
-                                                     return (
-                                                       <div className="flex flex-wrap gap-x-2 gap-y-1">
-                                                         {Object.entries(fields)
-                                                           .filter(([k]) => k !== firstField)
-                                                           .map(([k, v]) => (
-                                                             v && <span key={k} className="bg-slate-50 border border-slate-150/40 px-1.5 py-0.5 rounded text-slate-500 font-semibold">{k}: {v}</span>
-                                                           ))}
-                                                       </div>
-                                                     );
-                                                   })()}
+                                                  {(item.catalogType === 'custom' || item.catalogType.startsWith('custom_')) && (
+                                                    <div className="flex flex-wrap gap-x-2 gap-y-1">
+                                                      {Object.entries(fields).map(([k, v]) => (
+                                                        v && <span key={k} className="bg-slate-50 border border-slate-150/40 px-1.5 py-0.5 rounded text-slate-500 font-semibold">{k}: {v}</span>
+                                                      ))}
+                                                    </div>
+                                                  )}
                                                 </div>
 
                                                 {item.description && (
@@ -14465,20 +14424,18 @@ function DashboardContent() {
 
 
 
-              {/* Item Name (hidden for custom catalogs) */}
-              {!(catalogItemType === 'custom' || catalogItemType.startsWith('custom_')) && (
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Item Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder={`e.g. ${(business?.catalogLabel || 'Catalog').includes('Service') ? 'AC Maintenance Service' : 'Premium Room'}`}
-                    value={catalogItemName}
-                    onChange={(e) => setCatalogItemName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  />
-                </div>
-              )}
+              {/* Item Name */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black text-[#001c41] uppercase tracking-wider">Item Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder={`e.g. ${(business?.catalogLabel || 'Catalog').includes('Service') ? 'AC Maintenance Service' : 'Premium Room'}`}
+                  value={catalogItemName}
+                  onChange={(e) => setCatalogItemName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
 
               {/* Price & Offer Price Row (hidden for custom catalogs) */}
               {!(catalogItemType === 'custom' || catalogItemType.startsWith('custom_')) && (

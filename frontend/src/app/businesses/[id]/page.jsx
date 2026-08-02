@@ -3283,36 +3283,21 @@ Please confirm availability and delivery time.`;
                                       {item.catalogType === 'product' && fields.brand && (
                                         <span>🏷️ Brand: {fields.brand}</span>
                                       )}
-                                      {(item.catalogType === 'custom' || item.catalogType.startsWith('custom_')) && (() => {
-                                        let firstField = '';
-                                        if (item.catalogType.startsWith('custom_')) {
-                                          const config = Array.isArray(business?.customCatalogs) && business.customCatalogs.find(c => c.id === item.catalogType);
-                                          if (config && Array.isArray(config.fields) && config.fields.length > 0) {
-                                            firstField = config.fields[0];
-                                          }
-                                        } else {
-                                          if (Array.isArray(business?.catalogCustomFields) && business.catalogCustomFields.length > 0) {
-                                            firstField = business.catalogCustomFields[0];
-                                          }
-                                        }
-                                        return (
-                                          <div className="w-full grid grid-cols-2 gap-2 mt-1 pt-1.5 border-t border-slate-100">
-                                            {Object.entries(fields)
-                                              .filter(([fName]) => fName !== firstField)
-                                              .map(([fName, val], fIdx) => {
-                                                if (val === undefined || val === null || val === '') return null;
-                                                return (
-                                                  <div key={fIdx} className="flex flex-col text-[9.5px]">
-                                                    <span className="text-slate-400 font-bold uppercase tracking-wider text-[8px]">{fName}</span>
-                                                    <span className="text-slate-700 font-extrabold mt-0.5">
-                                                      {typeof val === 'boolean' ? (val ? 'Yes' : 'No') : String(val)}
-                                                    </span>
-                                                  </div>
-                                                );
-                                              })}
-                                          </div>
-                                        );
-                                      })()}
+                                      {(item.catalogType === 'custom' || item.catalogType.startsWith('custom_')) && (
+                                        <div className="w-full grid grid-cols-2 gap-2 mt-1 pt-1.5 border-t border-slate-100">
+                                          {Object.entries(fields).map(([fName, val], fIdx) => {
+                                            if (val === undefined || val === null || val === '') return null;
+                                            return (
+                                              <div key={fIdx} className="flex flex-col text-[9.5px]">
+                                                <span className="text-slate-400 font-bold uppercase tracking-wider text-[8px]">{fName}</span>
+                                                <span className="text-slate-700 font-extrabold mt-0.5">
+                                                  {typeof val === 'boolean' ? (val ? 'Yes' : 'No') : String(val)}
+                                                </span>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
                                     </div>
 
                                     {item.description && (
