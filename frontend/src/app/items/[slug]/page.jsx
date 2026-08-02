@@ -5,12 +5,14 @@ import {
   Tag, ShieldCheck, HeartHandshake, RefreshCw, AlertCircle, Info 
 } from 'lucide-react';
 
+// Matches the same API URL resolution logic used in main.jsx
 const getApiUrl = () => {
-  let localApiUrl = 'http://localhost:5000';
-  if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    localApiUrl = `${window.location.protocol}//${window.location.hostname}:5000`;
-  }
-  return (typeof import_meta_env !== 'undefined' ? import_meta_env.VITE_API_URL : null) || localApiUrl;
+  // In production Vite build, use window.location.origin (same-origin Nginx deployment)
+  // In dev, fall back to localhost:5000
+  return import.meta.env.VITE_API_URL || 
+    (import.meta.env.PROD && typeof window !== 'undefined'
+      ? window.location.origin
+      : 'http://localhost:5000');
 };
 
 const resolveImageUrl = (url) => {
