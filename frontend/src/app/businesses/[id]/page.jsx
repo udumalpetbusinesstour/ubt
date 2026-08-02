@@ -3318,22 +3318,20 @@ Please confirm availability and delivery time.`;
 
                               <div className="flex items-center justify-between border-t border-slate-100 pt-3.5 mt-1">
                                 <div className="flex flex-col text-left">
-                                  {!(item.catalogType === 'custom' || item.catalogType.startsWith('custom_')) && (
-                                    item.offerPrice ? (
-                                      <div className="flex flex-col">
-                                        <div className="flex items-center gap-1.5">
-                                          <span className="text-base font-extrabold text-slate-800">₹{item.offerPrice}</span>
-                                          <span className="text-[9px] bg-rose-50 border border-rose-100 text-rose-600 font-extrabold px-1.5 py-0.5 rounded select-none">
-                                            {discountPercent}% OFF
-                                          </span>
-                                        </div>
-                                        <span className="text-[10px] text-slate-400 font-bold line-through">M.R.P: ₹{item.price}</span>
+                                  {item.offerPrice ? (
+                                    <div className="flex flex-col">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-base font-extrabold text-slate-800">₹{item.offerPrice}</span>
+                                        <span className="text-[9px] bg-rose-50 border border-rose-100 text-rose-600 font-extrabold px-1.5 py-0.5 rounded select-none">
+                                          {discountPercent}% OFF
+                                        </span>
                                       </div>
-                                    ) : (
-                                      <span className="text-base font-extrabold text-slate-800">
-                                        {item.price > 0 ? `₹${item.price}` : 'Price on Request'}
-                                      </span>
-                                    )
+                                      <span className="text-[10px] text-slate-400 font-bold line-through">M.R.P: ₹{item.price}</span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-base font-extrabold text-slate-800">
+                                      {item.price > 0 ? `₹${item.price}` : 'Price on Request'}
+                                    </span>
                                   )}
                                 </div>
 
