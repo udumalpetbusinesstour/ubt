@@ -1902,7 +1902,7 @@ function DashboardContent() {
         const profileUrl = `${window.location.origin}/businesses/${business?.slug || business?._id}`;
         const waMessage = `Hello UBT Support! I have successfully paid ₹249 for an NFC Digital Business Card.\n\n*Card Custom Name*: ${nfcFormName}\n*Delivery Address*: ${nfcFormAddress}\n*Contact Number*: ${nfcFormContact}\n\n*Business Profile link*:\n${profileUrl}`;
         const encodedMsg = encodeURIComponent(waMessage);
-        window.open(`https://wa.me/918925728260?text=${encodedMsg}`, '_blank');
+        window.open(`https://wa.me/918925238260?text=${encodedMsg}`, '_blank');
       } else {
         alert(data.message || 'Failed to submit card configuration.');
       }
@@ -5495,9 +5495,7 @@ function DashboardContent() {
       { label: 'Photos & Media', icon: <ImageIcon className="h-4 w-4" /> },
       { label: 'Reviews & Reputation', icon: <Star className="h-4 w-4" /> },
       {
-        label: 'Leads & Enquiries', icon: <Mail className="h-4 w-4" />, badge: (leadsList || []).filter(l => {
-          return l.status !== 'Rectified';
-        }).length
+        label: 'Leads & Enquiries', icon: <Mail className="h-4 w-4" />
       },
       { label: 'Subscription & Billing', icon: <CreditCard className="h-4 w-4" /> },
       { label: 'Offers & Promotions', icon: <Sparkles className="h-4 w-4" /> },
@@ -5777,8 +5775,8 @@ function DashboardContent() {
             <p className="text-[10px] text-slate-400 font-semibold leading-normal">
               Our support team is here to help you.
             </p>
-            <a href="tel:+918925728260" className="text-xs text-emerald-400 hover:text-emerald-300 font-extrabold flex items-center gap-1 transition-colors mt-0.5">
-              +91 89257 28260
+            <a href="tel:+918925238260" className="text-xs text-emerald-400 hover:text-emerald-300 font-extrabold flex items-center gap-1 transition-colors mt-0.5">
+              +91 89252 38260
             </a>
           </div>
 
@@ -6058,7 +6056,7 @@ function DashboardContent() {
                       </p>
                     </div>
                   </div>
-                  <a href="tel:+918925728260" className="bg-red-650 hover:bg-red-700 text-white font-extrabold text-[10.5px] py-2 px-5 rounded-xl transition-all shadow-sm shrink-0 uppercase tracking-wide">
+                  <a href="tel:+918925238260" className="bg-red-650 hover:bg-red-700 text-white font-extrabold text-[10.5px] py-2 px-5 rounded-xl transition-all shadow-sm shrink-0 uppercase tracking-wide">
                     Helpline Support
                   </a>
                 </div>
@@ -6546,7 +6544,7 @@ function DashboardContent() {
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-700 font-medium mt-0.5 pt-1 border-t border-amber-100">
                             <span className="flex items-center gap-1">
                               <Phone className="h-3 w-3 text-emerald-600 shrink-0" />
-                              <b>Phone / WhatsApp:</b> +91 89257 28260
+                              <b>Phone / WhatsApp:</b> +91 89252 38260
                             </span>
                             <span className="flex items-center gap-1">
                               <Mail className="h-3 w-3 text-emerald-600 shrink-0" />
@@ -7199,10 +7197,10 @@ function DashboardContent() {
 
                     {/* Card B.2: Google Reviews Connected / Not Linked */}
                     {(() => {
-                      const isGoogleLinked = !!(business?.googlePlaceId || business?.googleBusinessLink || (business?.googleRating && business?.googleRating > 0));
+                      const isGoogleLinked = !!(business?.googlePlaceId || business?.googleBusinessLink || business?.googleLinked);
                       const profileUrl = typeof window !== 'undefined' ? `${window.location.origin}/${business?.slug || business?._id || ''}` : '';
                       const waMsg = `Hi UBT Team, I want to request Google My Business profile creation & linking for my business: ${business?.name || ''}\nProfile Link: ${profileUrl}`;
-                      const waUrl = `https://api.whatsapp.com/send?phone=918925728260&text=${encodeURIComponent(waMsg)}`;
+                      const waUrl = `https://api.whatsapp.com/send?phone=918925238260&text=${encodeURIComponent(waMsg)}`;
 
                       if (isGoogleLinked) {
                         return (
@@ -7266,20 +7264,36 @@ function DashboardContent() {
                                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Not Linked
                               </span>
                             </div>
-                            <p className="text-slate-650 text-xs font-semibold leading-relaxed">
-                              Google Business Profile is not linked.
+                            <p className="text-slate-655 text-xs font-semibold leading-relaxed">
+                              Link your Google Business Profile to build trust, or request a new profile creation.
                             </p>
                           </div>
 
-                          <a
-                            href={waUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="w-full py-3 px-4 bg-[#027244] hover:bg-[#005934] text-white text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm shadow-emerald-700/20 cursor-pointer"
-                          >
-                            <MessageCircle className="h-4 w-4 fill-current text-white" />
-                            <span>Click here to create one</span>
-                          </a>
+                          <div className="flex flex-col gap-2">
+                            <button
+                              onClick={() => setShowVerifyModal(true)}
+                              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm shadow-blue-700/20 cursor-pointer border-none"
+                            >
+                              <ExternalLink className="h-4 w-4 text-white" />
+                              <span>Link Existing Profile</span>
+                            </button>
+
+                            <div className="relative flex py-1 items-center">
+                              <div className="flex-grow border-t border-slate-200"></div>
+                              <span className="flex-shrink mx-3 text-slate-400 text-[10px] font-bold uppercase select-none">Or</span>
+                              <div className="flex-grow border-t border-slate-200"></div>
+                            </div>
+
+                            <a
+                              href={waUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="w-full py-3 px-4 bg-[#027244] hover:bg-[#005934] text-white text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm shadow-emerald-700/20 cursor-pointer text-center"
+                            >
+                              <MessageCircle className="h-4 w-4 fill-current text-white" />
+                              <span>Get Google My Business</span>
+                            </a>
+                          </div>
                         </div>
                       );
                     })()}
@@ -11971,7 +11985,7 @@ function DashboardContent() {
                         const profileUrl = `${window.location.origin}/businesses/${business?.slug || business?._id}`;
                         const waMessage = `Hello UBT Support! I am checking on my NFC smart card delivery status.\n\n*Card Name*: ${paidNfcPayment.nfcCardName}\n*Business Link*: ${profileUrl}`;
                         const encodedMsg = encodeURIComponent(waMessage);
-                        window.open(`https://wa.me/918925728260?text=${encodedMsg}`, '_blank');
+                        window.open(`https://wa.me/918925238260?text=${encodedMsg}`, '_blank');
                       }}
                       className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs font-sans mt-2"
                     >

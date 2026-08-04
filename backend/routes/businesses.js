@@ -516,7 +516,7 @@ const mockDetails = {
   mock_place_cn_technologies: {
     name: "Control N - CN Technologies Private Limited",
     address: "Sippi Opticals, 0, Katcheri St, opposite Udumalaipettai, Udumalpet Main Town, Tamil Nadu - 642126",
-    phone: "+91 89257 28260",
+    phone: "+91 89252 38260",
     website: "https://controln.in",
     email: "contact@controln.in",
     latitude: 10.585,

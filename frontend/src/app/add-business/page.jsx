@@ -3516,7 +3516,7 @@ export default function AddBusiness() {
               <div className="flex flex-col gap-3.5 mt-2">
                 <div className="flex items-center gap-3">
                   <Phone className="h-[18px] w-[18px] text-[#ea580c] shrink-0" />
-                  <a href="tel:+918925728260" className="text-slate-700 font-bold text-xs hover:text-[#027244] transition-colors">+91 89257 28260</a>
+                  <a href="tel:+918925238260" className="text-slate-700 font-bold text-xs hover:text-[#027244] transition-colors">+91 89252 38260</a>
                 </div>
                 
                 <div className="flex items-center gap-3">

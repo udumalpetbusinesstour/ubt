@@ -912,7 +912,7 @@ export default function AdminDashboard() {
           _id: 'partner1',
           fullName: 'Harish Mithra',
           email: 'harishmitharamalingam@gmail.com',
-          phone: '+91 89257 28260',
+          phone: '+91 89252 38260',
           role: 'partner',
           aadhaarNumber: '123456789012',
           address: 'Gandhi Nagar, Udumalpet',
@@ -1912,7 +1912,7 @@ https://udumalpet.business/${businessSlug}
 📞 *ஏதாவது உதவி வேண்டுமா?*
 Profile Update செய்வது, Photos சேர்ப்பது அல்லது வேறு ஏதேனும் உதவி தேவைப்பட்டால், எங்களின் *Official WhatsApp Support-ஐ* தொடர்பு கொள்ளுங்கள்.
 
-📱 *+91 89257 28260*
+📱 *+91 89252 38260*
 
 ❤️ *உங்கள் ஆதரவுக்கு மனமார்ந்த நன்றி!*
 
@@ -1938,7 +1938,7 @@ ${referralLink}
 📞 *ஏதாவது உதவி வேண்டுமா?*
 Profile Update செய்வது, Photos சேர்ப்பது அல்லது வேறு ஏதேனும் உதவி தேவைப்பட்டால், எங்களின் *Official WhatsApp Support-ஐ* தொடர்பு கொள்ளுங்கள்.
 
-📱 *+91 89257 28260*
+📱 *+91 89252 38260*
 
 ❤️ *உங்கள் ஆதரவுக்கு மனமார்ந்த நன்றி!*
 
@@ -2044,7 +2044,7 @@ https://udumalpet.business/${businessSlug}
 📞 *ஏதாவது உதவி வேண்டுமா?*
 Profile Update செய்வது, Photos சேர்ப்பது அல்லது வேறு ஏதேனும் உதவி தேவைப்பட்டால், எங்களின் *Official WhatsApp Support-ஐ* தொடர்பு கொள்ளுங்கள்.
 
-📱 *+91 89257 28260*
+📱 *+91 89252 38260*
 
 ❤️ *உங்கள் ஆதரவுக்கு மனமார்ந்த நன்றி!*
 
@@ -2070,7 +2070,7 @@ ${referralLink}
 📞 *ஏதாவது உதவி வேண்டுமா?*
 Profile Update செய்வது, Photos சேர்ப்பது அல்லது வேறு ஏதேனும் உதவி தேவைப்பட்டால், எங்களின் *Official WhatsApp Support-ஐ* தொடர்பு கொள்ளுங்கள்.
 
-📱 *+91 89257 28260*
+📱 *+91 89252 38260*
 
 ❤️ *உங்கள் ஆதரவுக்கு மனமார்ந்த நன்றி!*
 

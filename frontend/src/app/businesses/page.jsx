@@ -1775,7 +1775,7 @@ function BusinessesList({ forceFocus }) {
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[10px] font-extrabold text-slate-450 uppercase leading-none">Call Us</span>
-                  <a href="tel:+918925728260" className="text-xs text-slate-800 font-extrabold hover:underline mt-1 leading-normal">+91 89257 28260</a>
+                  <a href="tel:+918925238260" className="text-xs text-slate-800 font-extrabold hover:underline mt-1 leading-normal">+91 89252 38260</a>
                 </div>
               </div>
 
