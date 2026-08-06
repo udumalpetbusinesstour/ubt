@@ -1830,7 +1830,7 @@ const handlePartnerAction = async (partnerId, action) => {
   };
 
   const handleCancelManualSubscription = async (subId) => {
-    if (!window.confirm("Are you sure you want to cancel this manual extension? This will mark the subscription as expired and set the business's expiry date to yesterday, disabling premium features immediately.")) {
+    if (!await window.confirm("Are you sure you want to cancel this manual extension? This will mark the subscription as expired and set the business's expiry date to yesterday, disabling premium features immediately.")) {
       return;
     }
     try {
