@@ -1829,6 +1829,32 @@ const handlePartnerAction = async (partnerId, action) => {
     }
   };
 
+  const handleCancelManualSubscription = async (subId) => {
+    if (!window.confirm("Are you sure you want to cancel this manual extension? This will mark the subscription as expired and set the business's expiry date to yesterday, disabling premium features immediately.")) {
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5000/api/superadmin/subscriptions/${subId}/status`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('ubt_token')}` 
+        },
+        body: JSON.stringify({ status: 'expired' })
+      });
+      if (res.ok) {
+        showToast('Manual subscription extension cancelled successfully.', 'success');
+        loadPlatformRealData(true);
+      } else {
+        const errData = await res.json();
+        alert(errData.message || 'Failed to cancel manual subscription.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error connecting to server to cancel subscription.');
+    }
+  };
+
   const handleDirectExtendSubscription = async (e) => {
     e.preventDefault();
     if (!directExtendBizId.trim()) {
@@ -6056,6 +6082,14 @@ const handlePartnerAction = async (partnerId, action) => {
                                 >
                                   Extend
                                 </button>
+                                {s.isManual && s.paymentStatus !== 'Expired' && (
+                                  <button
+                                    onClick={() => handleCancelManualSubscription(s._id)}
+                                    className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500 border border-red-500/20 text-red-550 hover:text-white rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>

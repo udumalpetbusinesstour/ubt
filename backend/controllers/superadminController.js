@@ -1280,6 +1280,7 @@ const getSubscriptions = async (req, res, next) => {
         _id: s._id,
         businessName: s.businessId ? s.businessId.name : 'Unknown Listing',
         planType: s.plan || s.planType || 'Custom',
+        isManual: s.planType === 'manual' || (s.plan && s.plan.toLowerCase().includes('manual')) || (s.planType && s.planType.toLowerCase().includes('manual')),
         amount: s.amount || 0,
         startDate: s.startDate || s.createdAt,
         endDate: s.endDate || expiry,
@@ -1310,12 +1311,18 @@ const updateSubscriptionStatus = async (req, res, next) => {
 
     // Sync with corresponding Business premium flag
     if (subscription.businessId) {
+      const updateData = { 
+        subscriptionStatus: status,
+        isPremium: status === 'active'
+      };
+      if (status === 'expired') {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        updateData.subscriptionExpiry = yesterday;
+      }
       await Business.updateOne(
         { _id: subscription.businessId },
-        { 
-          subscriptionStatus: status,
-          isPremium: status === 'active'
-        }
+        { $set: updateData }
       );
     }
 
