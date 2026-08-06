@@ -2692,7 +2692,6 @@ const handlePartnerAction = async (partnerId, action) => {
       const isSubscription = !hasEventId && !hasAdId && !isNfc;
 
       if (transactionTypeFilter === 'subscription' && !isSubscription) return false;
-      if (transactionTypeFilter === 'failed_autopay' && !(isSubscription && p.amount === 0)) return false;
       if (transactionTypeFilter === 'ad' && !hasAdId) return false;
       if (transactionTypeFilter === 'event' && !hasEventId) return false;
       if (transactionTypeFilter === 'nfc' && !isNfc) return false;
@@ -2716,27 +2715,6 @@ const handlePartnerAction = async (partnerId, action) => {
       return true;
     });
   }, [revenueAnalytics, transactionTypeFilter, transactionSearchQuery]);
-
-  const handleSendWhatsAppReminder = (p) => {
-    const ownerName = p.userId?.fullName || p.userId?.name || 'Merchant';
-    const phoneRaw = p.userId?.phone || p.userId?.mobileNumber || '';
-    
-    let waPhone = phoneRaw.replace(/[^0-9]/g, '');
-    if (waPhone.length === 10) {
-      waPhone = '91' + waPhone;
-    }
-
-    const bizName = p.businessId?.name || 'your business listing';
-    const category = p.businessId?.category || 'Premium Listing';
-    const locality = p.businessId?.locality || 'Udumalpet';
-
-    const msg = `Dear *${ownerName}*,\n\nThis is a friendly reminder that the premium subscription for your listing *"${bizName}"* (${category} - ${locality}) on Udumalpet Business (UBT) has expired.\n\n⚠️ *Current Status:* Cancelled / Hidden from public view (no active subscription)\n\nTo reactivate and restore your listing visibility, please log in to your dashboard and complete the renewal:\n👉 https://udumalpet.business/dashboard\n\nFor any queries, feel free to contact the UBT support team.\n\nBest regards,\n*Udumalpet Business Billing Team*`;
-    
-    const encodedMsg = encodeURIComponent(msg);
-    const waLink = `https://wa.me/${waPhone}?text=${encodedMsg}`;
-    
-    window.open(waLink, '_blank');
-  };
 
   const getPlanRatioData = () => {
     const plansInfo = [
@@ -6386,7 +6364,6 @@ const handlePartnerAction = async (partnerId, action) => {
                         >
                           <option value="All">All Transactions</option>
                           <option value="subscription">Business Subscriptions</option>
-                          <option value="failed_autopay">Failed Autopay (Amount ₹0)</option>
                           <option value="ad">Sponsored Ads</option>
                           <option value="event">Event Postings</option>
                           <option value="nfc">NFC Card Sales</option>
@@ -6405,7 +6382,6 @@ const handlePartnerAction = async (partnerId, action) => {
                             <th className="p-4">Order & Payment IDs</th>
                             <th className="p-4">Amount</th>
                             <th className="p-4">Status</th>
-                            <th className="p-4 text-right">Actions</th>
                           </tr>
                         </thead>
                         <tbody className={`divide-y font-medium ${themeMode === 'dark' ? 'divide-slate-800' : 'divide-slate-100'}`}>
@@ -6449,16 +6425,6 @@ const handlePartnerAction = async (partnerId, action) => {
                                   }`}>
                                     {isPaid ? 'Paid' : 'Failed'}
                                   </span>
-                                </td>
-                                <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
-                                  {p.amount === 0 && (
-                                    <button
-                                      onClick={() => handleSendWhatsAppReminder(p)}
-                                      className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[9.5px] rounded-lg cursor-pointer border-none shadow-xs"
-                                    >
-                                      Send Reminder
-                                    </button>
-                                  )}
                                 </td>
                               </tr>
                             );
