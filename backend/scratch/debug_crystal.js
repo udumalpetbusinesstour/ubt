@@ -3,6 +3,7 @@ dotenv.config();
 const mongoose = require('mongoose');
 const connectDB = require('../config/db');
 const Business = require('../models/Business');
+const User = require('../models/User');
 const Subscription = require('../models/Subscription');
 
 const debug = async () => {
