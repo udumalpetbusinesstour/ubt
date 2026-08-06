@@ -1950,6 +1950,28 @@ Please confirm availability and delivery time.`;
     ? (business?.menuLabel?.toLowerCase()?.includes('product') || business?.menuLabel?.toLowerCase()?.includes('catalog') || business?.menuLabel?.toLowerCase()?.includes('good'))
     : !isFoodRelated(business?.category, business?.customCategoryName));
 
+  if (isExpired && !isOwner && !isAdmin) {
+    return (
+      <div className="w-full min-h-[70vh] flex flex-col items-center justify-center font-sans bg-[#F8FAFC] px-4 py-20 text-center">
+        <div className="max-w-md bg-white p-8 rounded-2xl border border-slate-200 shadow-md">
+          <AlertCircle className="h-14 w-14 text-rose-500 mx-auto mb-4 animate-bounce" />
+          <h2 className="text-xl font-extrabold text-slate-800 mb-2">Listing Temporarily Hidden</h2>
+          <p className="text-sm text-slate-600 leading-relaxed mb-6">
+            The subscription for this business listing has expired, and it has been hidden from public search and views.
+          </p>
+          <div className="flex flex-col gap-2.5">
+            <Link to="/businesses" className="w-full bg-[#027244] hover:bg-[#005934] text-white font-extrabold py-3 px-4 rounded-xl transition-colors text-xs uppercase tracking-wider text-center">
+              Browse Other Businesses
+            </Link>
+            <Link to="/login" className="text-slate-500 hover:text-slate-700 text-xs font-semibold hover:underline">
+              Are you the owner? Log in to renew
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full flex flex-col items-center font-sans bg-[#F8FAFC]">
       {/* Pending Verification Banner */}

@@ -570,7 +570,7 @@ router.post('/businesses/:id/send-reminder', async (req, res, next) => {
     }
 
     const customMessage = req.body.message;
-    const reminderMessage = customMessage || `Friendly reminder: Please renew your subscription for "${business.name}" to maintain premium visibility and access.`;
+    const reminderMessage = customMessage || `Friendly reminder: Please renew your subscription for "${business.name}" to prevent listing cancellation/hiding.`;
 
     // Send in-app notification
     await Notification.create({
@@ -588,7 +588,7 @@ router.post('/businesses/:id/send-reminder', async (req, res, next) => {
       
       const emailText = customMessage
         ? `Hello ${ownerName},\n\n${customMessage}\n\nBest regards,\nUBT Billing Audit Team`
-        : `Hello ${ownerName},\n\nThis is a friendly reminder that your premium listing subscription for "${business.name}" is currently inactive, expired, or about to expire.\n\nPlease log in to your UBT merchant dashboard and renew your subscription to maintain priority search ranking, verified badge status, and premium lead access.\n\nBest regards,\nUBT Billing Audit Team`;
+        : `Hello ${ownerName},\n\nThis is a friendly reminder that your premium listing subscription for "${business.name}" is currently inactive, expired, or about to expire. If no subscription is active, your listing will be cancelled and hidden from public view.\n\nPlease log in to your UBT merchant dashboard and renew your subscription today to reactivate your listing and prevent cancellation.\n\nBest regards,\nUBT Billing Audit Team`;
 
       try {
         await sendEmail({

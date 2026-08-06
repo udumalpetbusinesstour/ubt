@@ -2262,7 +2262,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
   const handleSendReminder = async (bizId) => {
     const businessObj = businesses.find(b => b._id === bizId);
     const businessName = businessObj ? businessObj.name : '';
-    const defaultMsg = `Friendly reminder: Please renew your subscription for "${businessName}" to maintain premium visibility and access.`;
+    const defaultMsg = `Friendly reminder: Please renew your subscription for "${businessName}" to prevent listing cancellation and hiding.`;
     const customMessage = await window.prompt("Enter customized reminder text (leave empty to send default message):", defaultMsg);
     
     if (customMessage === null) return;

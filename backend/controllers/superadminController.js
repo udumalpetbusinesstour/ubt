@@ -138,8 +138,8 @@ const getRevenueAnalytics = async (req, res, next) => {
     }
 
     const payments = await Payment.find(paymentFilter)
-      .populate('userId', 'name fullName email')
-      .populate('businessId', 'name')
+      .populate('userId', 'name fullName email phone mobileNumber')
+      .populate('businessId', 'name category locality slug')
       .populate('eventId', 'title')
       .populate('subscriptionId', 'planName planId planType status')
       .sort({ createdAt: -1 });
@@ -1281,6 +1281,8 @@ const getSubscriptions = async (req, res, next) => {
         businessName: s.businessId ? s.businessId.name : 'Unknown Listing',
         planType: s.plan || s.planType || 'Custom',
         amount: s.amount || 0,
+        startDate: s.startDate || s.createdAt,
+        endDate: s.endDate || expiry,
         expiryDate: expiry,
         paymentStatus: computedStatus,
         autoRenew: s.autoRenew === true,

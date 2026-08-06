@@ -813,6 +813,7 @@ router.get('/', async (req, res) => {
       query.status = { $in: ['Approved', 'Pending Verification', 'Under Review'] };
     } else {
       query.status = 'Approved';
+      query.subscriptionStatus = { $ne: 'expired' };
     }
 
     const conditions = [];

@@ -958,6 +958,7 @@ const handlePartnerAction = async (partnerId, action) => {
         return;
       }
       fetchDashboardStatsOnly(fromDate, toDate);
+      fetchRevenueAnalytics(fromDate, toDate);
     }
   }, [fromDate, toDate]);
 
@@ -2331,6 +2332,12 @@ const handlePartnerAction = async (partnerId, action) => {
       if (subTabSortField === 'planType') {
         valA = a.planType || '';
         valB = b.planType || '';
+      } else if (subTabSortField === 'startDate') {
+        valA = a.startDate ? new Date(a.startDate).getTime() : 0;
+        valB = b.startDate ? new Date(b.startDate).getTime() : 0;
+      } else if (subTabSortField === 'endDate') {
+        valA = a.endDate ? new Date(a.endDate).getTime() : 0;
+        valB = b.endDate ? new Date(b.endDate).getTime() : 0;
       } else if (subTabSortField === 'expiryDate') {
         valA = a.expiryDate ? new Date(a.expiryDate).getTime() : 0;
         valB = b.expiryDate ? new Date(b.expiryDate).getTime() : 0;
@@ -2685,6 +2692,7 @@ const handlePartnerAction = async (partnerId, action) => {
       const isSubscription = !hasEventId && !hasAdId && !isNfc;
 
       if (transactionTypeFilter === 'subscription' && !isSubscription) return false;
+      if (transactionTypeFilter === 'failed_autopay' && !(isSubscription && p.amount === 0)) return false;
       if (transactionTypeFilter === 'ad' && !hasAdId) return false;
       if (transactionTypeFilter === 'event' && !hasEventId) return false;
       if (transactionTypeFilter === 'nfc' && !isNfc) return false;
@@ -2708,6 +2716,27 @@ const handlePartnerAction = async (partnerId, action) => {
       return true;
     });
   }, [revenueAnalytics, transactionTypeFilter, transactionSearchQuery]);
+
+  const handleSendWhatsAppReminder = (p) => {
+    const ownerName = p.userId?.fullName || p.userId?.name || 'Merchant';
+    const phoneRaw = p.userId?.phone || p.userId?.mobileNumber || '';
+    
+    let waPhone = phoneRaw.replace(/[^0-9]/g, '');
+    if (waPhone.length === 10) {
+      waPhone = '91' + waPhone;
+    }
+
+    const bizName = p.businessId?.name || 'your business listing';
+    const category = p.businessId?.category || 'Premium Listing';
+    const locality = p.businessId?.locality || 'Udumalpet';
+
+    const msg = `Dear *${ownerName}*,\n\nThis is a friendly reminder that the premium subscription for your listing *"${bizName}"* (${category} - ${locality}) on Udumalpet Business (UBT) has expired.\n\n⚠️ *Current Status:* Cancelled / Hidden from public view (no active subscription)\n\nTo reactivate and restore your listing visibility, please log in to your dashboard and complete the renewal:\n👉 https://udumalpet.business/dashboard\n\nFor any queries, feel free to contact the UBT support team.\n\nBest regards,\n*Udumalpet Business Billing Team*`;
+    
+    const encodedMsg = encodeURIComponent(msg);
+    const waLink = `https://wa.me/${waPhone}?text=${encodedMsg}`;
+    
+    window.open(waLink, '_blank');
+  };
 
   const getPlanRatioData = () => {
     const plansInfo = [
@@ -5950,16 +5979,29 @@ const handlePartnerAction = async (partnerId, action) => {
                           </th>
                           <th 
                             onClick={() => {
-                              if (subTabSortField === 'expiryDate') {
+                              if (subTabSortField === 'startDate') {
                                 setSubTabSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
                               } else {
-                                setSubTabSortField('expiryDate');
+                                setSubTabSortField('startDate');
                                 setSubTabSortDir('desc');
                               }
                             }}
                             className="p-4.5 cursor-pointer select-none hover:text-blue-500 transition-colors font-black"
                           >
-                            Billing Expiry {subTabSortField === 'expiryDate' ? (subTabSortDir === 'asc' ? '▲' : '▼') : ''}
+                            Start Date {subTabSortField === 'startDate' ? (subTabSortDir === 'asc' ? '▲' : '▼') : ''}
+                          </th>
+                          <th 
+                            onClick={() => {
+                              if (subTabSortField === 'endDate') {
+                                setSubTabSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSubTabSortField('endDate');
+                                setSubTabSortDir('desc');
+                              }
+                            }}
+                            className="p-4.5 cursor-pointer select-none hover:text-blue-500 transition-colors font-black"
+                          >
+                            End Date {subTabSortField === 'endDate' ? (subTabSortDir === 'asc' ? '▲' : '▼') : ''}
                           </th>
                           <th 
                             onClick={() => {
@@ -5990,7 +6032,10 @@ const handlePartnerAction = async (partnerId, action) => {
                             </td>
                             <td className={`p-4.5 font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>₹{s.amount}</td>
                             <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                              {s.expiryDate && !isNaN(new Date(s.expiryDate).getTime()) ? new Date(s.expiryDate).toLocaleDateString() : 'N/A'}
+                              {s.startDate && !isNaN(new Date(s.startDate).getTime()) ? new Date(s.startDate).toLocaleDateString() : 'N/A'}
+                            </td>
+                            <td className={`p-4.5 ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                              {s.endDate && !isNaN(new Date(s.endDate).getTime()) ? new Date(s.endDate).toLocaleDateString() : 'N/A'}
                             </td>
                             <td className="p-4.5">
                               <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
@@ -6047,10 +6092,84 @@ const handlePartnerAction = async (partnerId, action) => {
               {activeTab === 'Revenue' && (
                 <div className="flex flex-col gap-8 text-left animate-fadeIn font-sans">
                   {/* Revenue Page Title & Header */}
-                  <div className="flex flex-col text-left mb-2">
-                    <span className="font-extrabold text-[10px] uppercase tracking-wider text-slate-455">Financial Reports</span>
-                    <h2 className="text-2xl font-black mt-0.5">Revenue Analytics Dashboard</h2>
-                    <p className="text-xs text-slate-400 font-semibold mt-1">Monitor daily transaction flows, subscription renewals, event postings, ad promotions, and NFC cards telemetry.</p>
+                  <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4 ${themeMode === 'dark' ? 'border-slate-800/40' : 'border-slate-200'}`}>
+                    <div className="flex flex-col text-left">
+                      <span className="font-extrabold text-[10px] uppercase tracking-wider text-slate-455">Financial Reports</span>
+                      <h2 className="text-2xl font-black mt-0.5">Revenue Analytics Dashboard</h2>
+                      <p className="text-xs text-slate-400 font-semibold mt-1">Monitor daily transaction flows, subscription renewals, event postings, ad promotions, and NFC cards telemetry.</p>
+                    </div>
+
+                    {/* Interactive Datepicker Dropdown */}
+                    <div className="relative">
+                      <button 
+                        onClick={() => setShowDatePicker(!showDatePicker)}
+                        className={`flex items-center gap-2 rounded-xl px-3 py-1.5 shadow-sm text-xs font-bold w-fit shrink-0 cursor-pointer border hover:opacity-90 transition-all ${
+                          themeMode === 'dark' ? 'bg-slate-900/60 border-slate-800 text-slate-400 hover:bg-slate-800/40' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        <Calendar className="h-4 w-4 text-slate-400" />
+                        <span>{getDateRangeLabel()}</span>
+                      </button>
+
+                      {showDatePicker && (
+                        <div className={`absolute right-0 mt-2 z-30 shadow-xl rounded-2xl p-4 w-72 text-left animate-fadeIn border ${
+                          themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-[#001c41]'
+                        }`}>
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="font-extrabold text-[10px] uppercase tracking-wider text-slate-400">Date Filters</span>
+                            <button 
+                              onClick={() => { setFromDate(''); setToDate(''); setShowDatePicker(false); }}
+                              className="text-[10px] font-black text-emerald-600 hover:text-emerald-500 transition-colors uppercase tracking-widest cursor-pointer border-none bg-transparent"
+                            >
+                              All Time
+                            </button>
+                          </div>
+
+                          <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">From Date</label>
+                              <input 
+                                type="date"
+                                value={fromDate}
+                                onChange={(e) => setFromDate(e.target.value)}
+                                className={`border rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-emerald-500 ${
+                                  themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-55 border-slate-200 text-slate-700'
+                                }`}
+                              />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">To Date</label>
+                              <input 
+                                type="date"
+                                value={toDate}
+                                onChange={(e) => setToDate(e.target.value)}
+                                className={`border rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-emerald-500 ${
+                                  themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-55 border-slate-200 text-slate-700'
+                                }`}
+                              />
+                            </div>
+
+                            <div className="flex gap-2 mt-2 pt-2 border-t border-slate-850/20">
+                              <button 
+                                onClick={() => setShowDatePicker(false)}
+                                className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-650 text-white font-extrabold text-[10px] rounded-lg transition-colors cursor-pointer text-center uppercase tracking-widest border-none shadow-xs"
+                              >
+                                Apply Filter
+                              </button>
+                              <button 
+                                onClick={() => { setFromDate(''); setToDate(''); setShowDatePicker(false); }}
+                                className={`flex-1 py-2 border font-extrabold text-[10px] rounded-lg transition-colors cursor-pointer text-center uppercase tracking-widest ${
+                                  themeMode === 'dark' ? 'border-slate-800 hover:bg-slate-800/40 text-slate-400' : 'border-slate-200 hover:bg-slate-100 text-slate-550'
+                                }`}
+                              >
+                                Clear
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Top Stats Cards */}
@@ -6267,6 +6386,7 @@ const handlePartnerAction = async (partnerId, action) => {
                         >
                           <option value="All">All Transactions</option>
                           <option value="subscription">Business Subscriptions</option>
+                          <option value="failed_autopay">Failed Autopay (Amount ₹0)</option>
                           <option value="ad">Sponsored Ads</option>
                           <option value="event">Event Postings</option>
                           <option value="nfc">NFC Card Sales</option>
@@ -6285,6 +6405,7 @@ const handlePartnerAction = async (partnerId, action) => {
                             <th className="p-4">Order & Payment IDs</th>
                             <th className="p-4">Amount</th>
                             <th className="p-4">Status</th>
+                            <th className="p-4 text-right">Actions</th>
                           </tr>
                         </thead>
                         <tbody className={`divide-y font-medium ${themeMode === 'dark' ? 'divide-slate-800' : 'divide-slate-100'}`}>
@@ -6328,6 +6449,16 @@ const handlePartnerAction = async (partnerId, action) => {
                                   }`}>
                                     {isPaid ? 'Paid' : 'Failed'}
                                   </span>
+                                </td>
+                                <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
+                                  {p.amount === 0 && (
+                                    <button
+                                      onClick={() => handleSendWhatsAppReminder(p)}
+                                      className="px-2.5 py-1.5 bg-[#027244] hover:bg-[#005934] text-white font-extrabold text-[9.5px] rounded-lg cursor-pointer border-none shadow-xs"
+                                    >
+                                      Send Reminder
+                                    </button>
+                                  )}
                                 </td>
                               </tr>
                             );

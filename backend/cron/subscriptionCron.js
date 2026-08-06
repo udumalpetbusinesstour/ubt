@@ -53,99 +53,121 @@ const runExpiryAudit = async () => {
     let warningCount = 0;
 
     for (const biz of activePremiumBiz) {
-      const expiryDate = new Date(biz.subscriptionExpiry);
-      const diffMs = expiryDate.getTime() - now.getTime();
-      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      try {
+        const expiryDate = new Date(biz.subscriptionExpiry);
+        const diffMs = expiryDate.getTime() - now.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
-      if (diffDays <= 0) {
-        // subscription expired: update metadata
-        biz.subscriptionStatus = 'expired';
-        biz.isPremium = false;
-        
-        // Expiry features: disable whatsapp visibility & blur profile flag
-        biz.whatsapp = ''; // Clear whatsapp contact link
-        biz.featured = false; // Turn off featured badges
-        
-        await biz.save();
-        expiredCount++;
+        if (diffDays <= 0) {
+          // subscription expired: update metadata
+          biz.subscriptionStatus = 'expired';
+          biz.isPremium = false;
+          
+          // Expiry features: disable whatsapp visibility & blur profile flag
+          biz.whatsapp = ''; // Clear whatsapp contact link
+          biz.featured = false; // Turn off featured badges
+          
+          await biz.save();
+          expiredCount++;
 
-        // Send expired notification alert
-        await Notification.create({
-          userId: biz.ownerId ? (biz.ownerId._id || biz.ownerId) : null,
-          businessId: biz._id,
-          title: 'Subscription Package Expired',
-          message: `Your premium UBT listing "${biz.name}" has expired. WhatsApp links are disabled and your profile is de-boosted. Please renew today to restore.`,
-          type: 'expired'
-        });
+          // Sync active subscriptions to expired status
+          await Subscription.updateMany(
+            { businessId: biz._id, status: 'active' },
+            { $set: { status: 'expired' } }
+          );
 
-        if (biz.ownerId && biz.ownerId.email) {
-          const ownerName = biz.ownerId.fullName || biz.ownerId.name || 'Merchant';
-          try {
-            await sendEmail({
-              to: biz.ownerId.email,
-              subject: `UBT Premium Subscription Expired: "${biz.name}"`,
-              text: `Hello ${ownerName},\n\nYour premium UBT listing "${biz.name}" has expired. WhatsApp contact buttons have been disabled and your profile has been de-boosted.\n\nPlease log in to your dashboard and renew your subscription today to restore full search placement and contact visibility.\n\nBest regards,\nUBT Billing Desk`
-            });
-          } catch (err) {
-            console.error('[SMTP] Failed to send subscription expired email:', err.message);
-          }
-        }
+          // Send expired notification alert
+          if (biz.ownerId) {
+            try {
+              await Notification.create({
+                userId: biz.ownerId._id || biz.ownerId,
+                businessId: biz._id,
+                title: 'Subscription Package Expired: Listing Cancelled',
+                message: `Your premium UBT listing "${biz.name}" has expired. Since there is no active subscription, your listing has been cancelled/hidden. Please renew today to reactivate your listing.`,
+                type: 'expired'
+              });
+            } catch (notifErr) {
+              console.error(`[Cron Expired Error] Failed to create notification for "${biz.name}":`, notifErr.message);
+            }
 
-        console.log(`[Cron Expired] Business directory listing "${biz.name}" has been marked as expired.`);
-      } else if (diffDays <= 5) {
-        // Expiry warning within 5 days (Avoid daily spamming by checking last 24 hours warnings)
-        const previousWarning = await Notification.findOne({
-          userId: biz.ownerId,
-          businessId: biz._id,
-          type: 'expiry_warning',
-          createdAt: { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) }
-        });
-
-        if (!previousWarning) {
-          warningCount++;
-          const daysRemaining = Math.ceil(diffDays);
-
-          // Find active subscription for this business to check autoRenew / autopay status
-          const activeSub = await Subscription.findOne({
-            businessId: biz._id,
-            status: 'active'
-          }).sort({ endDate: -1 });
-
-          const isAutopayOn = activeSub && activeSub.autoRenew === true;
-
-          // DO NOT disturb members who have Autopay turned ON
-          if (!isAutopayOn) {
-            warningCount++;
-
-            // Autopay is OFF: Send Urgent Manual Renewal Email & Notification
-            await Notification.create({
-              userId: biz.ownerId ? (biz.ownerId._id || biz.ownerId) : null,
-              businessId: biz._id,
-              title: 'UBT Subscription Expiring Soon',
-              message: `Your premium UBT subscription for "${biz.name}" will expire in ${daysRemaining} days. Renew today to maintain visibility!`,
-              type: 'expiry_warning'
-            });
-
-            if (biz.ownerId && biz.ownerId.email) {
+            if (biz.ownerId.email) {
               const ownerName = biz.ownerId.fullName || biz.ownerId.name || 'Merchant';
               try {
                 await sendEmail({
                   to: biz.ownerId.email,
-                  subject: `Renew Today: Your UBT Subscription for "${biz.name}" expires in ${daysRemaining} days`,
-                  text: `Hello ${ownerName},\n\nYour premium UBT subscription for "${biz.name}" will expire in ${daysRemaining} days.\n\nSince Autopay is turned off, please log in and renew today to maintain your premium search placement, contact options, and page analytics.\n\nBest regards,\nUBT Billing Desk`
+                  subject: `UBT Listing Cancelled: "${biz.name}" (Subscription Expired)`,
+                  text: `Hello ${ownerName},\n\nYour premium UBT listing "${biz.name}" has expired. Since there is no active subscription, your listing has been cancelled and hidden from public view.\n\nPlease log in to your dashboard and renew your subscription today to reactivate and restore your listing.\n\nBest regards,\nUBT Billing Desk`
                 });
               } catch (err) {
-                console.error('[SMTP] Failed to send subscription warning email:', err.message);
+                console.error('[SMTP] Failed to send subscription expired email:', err.message);
               }
             }
-
-            console.log(`[Cron Warning] Dispatched 5-day warning email to "${biz.name}" (Autopay: OFF). ${daysRemaining} days left.`);
           } else {
-            console.log(`[Cron Skip] Skipped warning email for "${biz.name}" because Autopay is turned ON.`);
+            console.warn(`[Cron Expired Warning] Business "${biz.name}" has no owner associated. Skipping notification & email.`);
           }
 
-          console.log(`[Cron Warning] dispatched warning notification to "${biz.name}". Autopay: ${isAutopayOn ? 'ON' : 'OFF'}. ${daysRemaining} days left.`);
+          console.log(`[Cron Expired] Business directory listing "${biz.name}" has been marked as expired.`);
+        } else if (biz.ownerId && diffDays <= 5) {
+          // Expiry warning within 5 days (Avoid daily spamming by checking last 24 hours warnings)
+          const previousWarning = await Notification.findOne({
+            userId: biz.ownerId._id || biz.ownerId,
+            businessId: biz._id,
+            type: 'expiry_warning',
+            createdAt: { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) }
+          });
+
+          if (!previousWarning) {
+            warningCount++;
+            const daysRemaining = Math.ceil(diffDays);
+
+            // Find active subscription for this business to check autoRenew / autopay status
+            const activeSub = await Subscription.findOne({
+              businessId: biz._id,
+              status: 'active'
+            }).sort({ endDate: -1 });
+
+            const isAutopayOn = activeSub && activeSub.autoRenew === true;
+
+            // DO NOT disturb members who have Autopay turned ON
+            if (!isAutopayOn) {
+              warningCount++;
+
+              // Autopay is OFF: Send Urgent Manual Renewal Email & Notification
+              try {
+                await Notification.create({
+                  userId: biz.ownerId._id || biz.ownerId,
+                  businessId: biz._id,
+                  title: 'UBT Listing Cancellation Notice',
+                  message: `Your premium UBT subscription for "${biz.name}" will expire in ${daysRemaining} days. Renew today to prevent listing cancellation/hiding!`,
+                  type: 'expiry_warning'
+                });
+              } catch (notifErr) {
+                console.error(`[Cron Warning Error] Failed to create notification for "${biz.name}":`, notifErr.message);
+              }
+
+              if (biz.ownerId.email) {
+                const ownerName = biz.ownerId.fullName || biz.ownerId.name || 'Merchant';
+                try {
+                  await sendEmail({
+                    to: biz.ownerId.email,
+                    subject: `Action Required: Your UBT Listing for "${biz.name}" will be Cancelled in ${daysRemaining} days`,
+                    text: `Hello ${ownerName},\n\nYour premium UBT subscription for "${biz.name}" will expire in ${daysRemaining} days. Since Autopay is turned off, if there is no active subscription renewal, your listing will be cancelled and hidden from public view.\n\nPlease log in to your dashboard and renew today to keep your listing active and visible.\n\nBest regards,\nUBT Billing Desk`
+                  });
+                } catch (err) {
+                  console.error('[SMTP] Failed to send subscription warning email:', err.message);
+                }
+              }
+
+              console.log(`[Cron Warning] Dispatched 5-day warning email to "${biz.name}" (Autopay: OFF). ${daysRemaining} days left.`);
+            } else {
+              console.log(`[Cron Skip] Skipped warning email for "${biz.name}" because Autopay is turned ON.`);
+            }
+
+            console.log(`[Cron Warning] dispatched warning notification to "${biz.name}". Autopay: ${isAutopayOn ? 'ON' : 'OFF'}. ${daysRemaining} days left.`);
+          }
         }
+      } catch (bizErr) {
+        console.error(`Error auditing business "${biz.name}" (${biz._id}):`, bizErr);
       }
     }
 
