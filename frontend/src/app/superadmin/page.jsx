@@ -6065,7 +6065,8 @@ const handlePartnerAction = async (partnerId, action) => {
                             <td className="p-4.5 text-right" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center justify-end gap-2">
                                 <button
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     const biz = businesses.find(b => b.name === s.businessName);
                                     if (biz) {
                                       setSelectedBizForExtend(biz);
@@ -6084,8 +6085,11 @@ const handlePartnerAction = async (partnerId, action) => {
                                 </button>
                                 {s.isManual && s.paymentStatus !== 'Expired' && (
                                   <button
-                                    onClick={() => handleCancelManualSubscription(s._id)}
-                                    className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500 border border-red-500/20 text-red-550 hover:text-white rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCancelManualSubscription(s._id);
+                                    }}
+                                    className="px-3 py-1.5 bg-red-500/10 hover:bg-red-550 border border-red-500/20 text-red-550 hover:text-white rounded-xl font-extrabold text-[10px] cursor-pointer transition-colors"
                                   >
                                     Cancel
                                   </button>
