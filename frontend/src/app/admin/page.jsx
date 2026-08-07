@@ -2259,7 +2259,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
     }
   };
 
-  const handleSendReminder = async (bizId) => {
+  const handleSendReminder = (bizId) => {
     const businessObj = businesses.find(b => b._id === bizId);
     if (!businessObj) {
       alert('Business not found.');
@@ -2269,21 +2269,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
     const ownerName = businessObj.ownerName || 'Merchant';
     const messageText = `Hello *${ownerName}*,\n\nFriendly reminder: Please renew your listing subscription for *${businessName}* on Udumalpet Business Tour (UBT) to prevent listing cancellation and preserve public visibility.\n\nYou can renew by logging in at: https://udumalpet.business/login\n\nThank you,\nUBT Admin Team`;
 
-    // Call backend API (in-app notification, email, DB record)
-    try {
-      await fetch(`http://localhost:5000/api/admin/businesses/${bizId}/send-reminder`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token || localStorage.getItem('ubt_token')}`
-        },
-        body: JSON.stringify({ message: messageText })
-      });
-    } catch (err) {
-      console.error('Failed to trigger backend reminder API:', err);
-    }
-
-    // Launch WhatsApp draft
+    // 1. Launch WhatsApp draft synchronously so browser popup blocker does NOT block it!
     const rawPhone = businessObj.whatsapp || businessObj.phone || (businessObj.ownerId ? (businessObj.ownerId.phone || businessObj.ownerId.mobileNumber) : '');
     if (rawPhone) {
       const cleanedPhone = String(rawPhone).replace(/[^\d]/g, '');
@@ -2298,6 +2284,18 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
     } else {
       alert('No WhatsApp/phone number found for this business or its owner to open WhatsApp draft.');
     }
+
+    // 2. Call backend API (in-app notification, email, DB record) in background
+    fetch(`http://localhost:5000/api/admin/businesses/${bizId}/send-reminder`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token || localStorage.getItem('ubt_token')}`
+      },
+      body: JSON.stringify({ message: messageText })
+    }).catch(err => {
+      console.error('Failed to trigger backend reminder API:', err);
+    });
   };
 
   const handleBroadcast = async () => {
@@ -5393,7 +5391,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                     <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl p-4.5 flex flex-col text-left">
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Plans</span>
                       <span className="text-xl font-black text-emerald-600 mt-1.5">
-                        {subscriptions.filter(s => s.status === 'active').length} Active
+                        {subscriptions.filter(s => s.status === 'active' || ((s.status === 'expired' || s.status === 'active') && (s.expiryDate || s.endDate) && new Date(s.expiryDate || s.endDate) > new Date())).length} Active
                       </span>
                     </div>
                     <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl p-4.5 flex flex-col text-left">
@@ -5595,7 +5593,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                                   const ownerName = sub.ownerId?.fullName || sub.ownerId?.name || 'Unknown';
                                   const ownerEmail = sub.ownerId?.email || '';
                                   const bizName = sub.businessId?.name || sub.businessId?.businessName || 'N/A';
-                                  const isActive = sub.status === 'active';
+                                  const isActive = sub.status === 'active' || ((sub.status === 'expired' || sub.status === 'active') && (sub.expiryDate || sub.endDate) && new Date(sub.expiryDate || sub.endDate) > new Date());
                                   const isPending = sub.status === 'pending';
                                   
                                   return (
@@ -5622,7 +5620,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                                               ? 'bg-amber-50 border-amber-250 text-amber-600'
                                               : 'bg-rose-50 border-rose-250 text-rose-700'
                                         }`}>
-                                          {sub.status}
+                                          {isActive ? 'active' : sub.status}
                                         </span>
                                       </td>
                                     </tr>
