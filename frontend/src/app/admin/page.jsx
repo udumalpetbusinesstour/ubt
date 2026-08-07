@@ -2266,10 +2266,8 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
       return;
     }
     const businessName = businessObj.name || '';
-    const defaultMsg = `Friendly reminder: Please renew your subscription for "${businessName}" to prevent listing cancellation and hiding.`;
-    const customMessage = await window.prompt("Enter customized reminder text (leave empty to send default message):", defaultMsg);
-    
-    if (customMessage === null) return;
+    const ownerName = businessObj.ownerName || 'Merchant';
+    const messageText = `Hello *${ownerName}*,\n\nFriendly reminder: Please renew your listing subscription for *${businessName}* on Udumalpet Business Tour (UBT) to prevent listing cancellation and preserve public visibility.\n\nYou can renew by logging in at: https://udumalpet.business/login\n\nThank you,\nUBT Admin Team`;
 
     // Call backend API (in-app notification, email, DB record)
     try {
@@ -2279,7 +2277,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token || localStorage.getItem('ubt_token')}`
         },
-        body: JSON.stringify({ message: customMessage || defaultMsg })
+        body: JSON.stringify({ message: messageText })
       });
     } catch (err) {
       console.error('Failed to trigger backend reminder API:', err);
@@ -2295,7 +2293,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
       } else if (cleanedPhone.startsWith('0') && cleanedPhone.length === 11) {
         finalPhone = '91' + cleanedPhone.substring(1);
       }
-      const whatsappUrl = `https://api.whatsapp.com/send?phone=${finalPhone}&text=${encodeURIComponent(customMessage || defaultMsg)}`;
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=${finalPhone}&text=${encodeURIComponent(messageText)}`;
       window.open(whatsappUrl, '_blank');
     } else {
       alert('No WhatsApp/phone number found for this business or its owner to open WhatsApp draft.');
