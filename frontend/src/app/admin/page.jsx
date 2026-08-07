@@ -125,7 +125,7 @@ export default function AdminDashboard() {
       'Business Edits', 'Partners', 'Blogs', 'Events', 'Reviews',
       'Testimonials', 'Sponsored Ads', 'Subscriptions', 'Notifications',
       'Queries', 'Referral Moderation', 'Blood Donors', 'Newsletter Subscribers', 'ApiLogs',
-      'Non-Payment', 'NFC Orders'
+      'Non-Payment', 'NFC Orders', 'Expired-Billing'
     ];
     const matchedDisplay = displayTabs.find(tab => adminTabToSlug(tab) === slug.toLowerCase());
     return matchedDisplay || 'Dashboard';
@@ -2261,29 +2261,44 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
 
   const handleSendReminder = async (bizId) => {
     const businessObj = businesses.find(b => b._id === bizId);
-    const businessName = businessObj ? businessObj.name : '';
+    if (!businessObj) {
+      alert('Business not found.');
+      return;
+    }
+    const businessName = businessObj.name || '';
     const defaultMsg = `Friendly reminder: Please renew your subscription for "${businessName}" to prevent listing cancellation and hiding.`;
     const customMessage = await window.prompt("Enter customized reminder text (leave empty to send default message):", defaultMsg);
     
     if (customMessage === null) return;
 
+    // Call backend API (in-app notification, email, DB record)
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/businesses/${bizId}/send-reminder`, {
+      await fetch(`http://localhost:5000/api/admin/businesses/${bizId}/send-reminder`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token || localStorage.getItem('ubt_token')}`
         },
-        body: JSON.stringify({ message: customMessage })
+        body: JSON.stringify({ message: customMessage || defaultMsg })
       });
-      const data = await res.json();
-      if (data.success) {
-        alert('Subscription reminder sent successfully!');
-      } else {
-        alert(data.message || 'Failed to send subscription reminder.');
-      }
     } catch (err) {
-      alert('Subscription reminder successfully sent (offline simulation)!');
+      console.error('Failed to trigger backend reminder API:', err);
+    }
+
+    // Launch WhatsApp draft
+    const rawPhone = businessObj.whatsapp || businessObj.phone || (businessObj.ownerId ? (businessObj.ownerId.phone || businessObj.ownerId.mobileNumber) : '');
+    if (rawPhone) {
+      const cleanedPhone = String(rawPhone).replace(/[^\d]/g, '');
+      let finalPhone = cleanedPhone;
+      if (cleanedPhone.length === 10) {
+        finalPhone = '91' + cleanedPhone;
+      } else if (cleanedPhone.startsWith('0') && cleanedPhone.length === 11) {
+        finalPhone = '91' + cleanedPhone.substring(1);
+      }
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=${finalPhone}&text=${encodeURIComponent(customMessage || defaultMsg)}`;
+      window.open(whatsappUrl, '_blank');
+    } else {
+      alert('No WhatsApp/phone number found for this business or its owner to open WhatsApp draft.');
     }
   };
 
@@ -2638,6 +2653,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
               { id: 'Category Management', label: 'Categories', icon: <Grid className="h-5 w-5" /> },
               { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" />, badge: (businesses.filter(b => (b.status === 'Pending Verification' || b.status === 'Under Review') && !isNonPaymentBiz(b)).length + blogs.filter(b => b.status === 'Pending Approval' || b.status === 'Needs Revision').length + events.filter(e => e.status === 'Pending Review' || e.status === 'Pending Verification').length + appTestimonials.filter(t => t.status === 'Pending').length + pendingCategories.length + partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length) },
               { id: 'Non-Payment', label: 'Non Payment', icon: <XCircle className="h-5 w-5" />, badge: businesses.filter(b => isNonPaymentBiz(b)).length },
+              { id: 'Expired-Billing', label: 'Expired Billing', icon: <AlertCircle className="h-5 w-5" />, badge: businesses.filter(b => !b.parentBusinessId && b.status === 'Approved' && b.subscriptionStatus !== 'active').length },
               { id: 'NFC Orders', label: 'NFC Orders', icon: <Nfc className="h-5 w-5" />, badge: payments.filter(p => p.isNfcCard && p.nfcCardStatus === 'Pending').length },
               { id: 'Business Edits', label: 'Business Edits', icon: <Edit3 className="h-5 w-5" />, badge: pendingBusinessEdits.length },
               { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-5 w-5" />, badge: partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length },
@@ -2730,6 +2746,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                   { id: 'Category Management', label: 'Categories', icon: <Grid className="h-5 w-5" /> },
                   { id: 'Pending Approvals', label: 'Pending Approvals', icon: <ShieldAlert className="h-5 w-5" />, badge: (businesses.filter(b => (b.status === 'Pending Verification' || b.status === 'Under Review') && !isNonPaymentBiz(b)).length + blogs.filter(b => b.status === 'Pending Approval' || b.status === 'Needs Revision').length + events.filter(e => e.status === 'Pending Review' || e.status === 'Pending Verification').length + appTestimonials.filter(t => t.status === 'Pending').length + pendingCategories.length + partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length) },
                   { id: 'Non-Payment', label: 'Non Payment', icon: <XCircle className="h-5 w-5" />, badge: businesses.filter(b => isNonPaymentBiz(b)).length },
+                  { id: 'Expired-Billing', label: 'Expired Billing', icon: <AlertCircle className="h-5 w-5" />, badge: businesses.filter(b => !b.parentBusinessId && b.status === 'Approved' && b.subscriptionStatus !== 'active').length },
                   { id: 'NFC Orders', label: 'NFC Orders', icon: <Nfc className="h-5 w-5" />, badge: payments.filter(p => p.isNfcCard && p.nfcCardStatus === 'Pending').length },
                   { id: 'Business Edits', label: 'Business Edits', icon: <Edit3 className="h-5 w-5" />, badge: pendingBusinessEdits.length },
                   { id: 'Partners', label: 'Partners Portal', icon: <Users className="h-5 w-5" />, badge: partners.filter(p => p.isPartnerRegistered && !p.isPartnerApproved).length },
@@ -2922,7 +2939,10 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                   {/* Overview Cards matching the UBT UI layout */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* Card 1: Pending Approvals */}
-                    <div className="bg-amber-50/30 border border-amber-200/70 p-5 rounded-[22px] shadow-2xs flex justify-between items-center transition-all hover:-translate-y-0.5 hover:shadow">
+                    <div 
+                      onClick={() => setActiveTab('Pending Approvals')}
+                      className="bg-amber-50/30 border border-amber-200/70 p-5 rounded-[22px] shadow-2xs flex justify-between items-center transition-all hover:-translate-y-0.5 hover:shadow cursor-pointer"
+                    >
                       <div className="flex flex-col gap-1 text-left">
                         <span className="text-[10px] text-amber-600 font-black uppercase tracking-wider">Pending Approvals</span>
                         <span className="text-3xl font-black text-amber-700 mt-2 leading-none">
@@ -2940,7 +2960,10 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                     </div>
 
                     {/* Card 2: Active Premium */}
-                    <div className="bg-emerald-50/30 border border-emerald-250/70 p-5 rounded-[22px] shadow-2xs flex justify-between items-center transition-all hover:-translate-y-0.5 hover:shadow">
+                    <div 
+                      onClick={() => setActiveTab('Subscriptions')}
+                      className="bg-emerald-50/30 border border-emerald-250/70 p-5 rounded-[22px] shadow-2xs flex justify-between items-center transition-all hover:-translate-y-0.5 hover:shadow cursor-pointer"
+                    >
                       <div className="flex flex-col gap-1 text-left">
                         <span className="text-[10px] text-emerald-700 font-black uppercase tracking-wider">Active Premium</span>
                         <div className="flex flex-col gap-1 mt-2">
@@ -2960,7 +2983,10 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                     </div>
 
                     {/* Card 3: Expired Billing */}
-                    <div className="bg-red-50/30 border border-red-200/80 p-5 rounded-[22px] shadow-2xs flex justify-between items-center transition-all hover:-translate-y-0.5 hover:shadow">
+                    <div 
+                      onClick={() => setActiveTab('Expired-Billing')}
+                      className="bg-red-50/30 border border-red-200/80 p-5 rounded-[22px] shadow-2xs flex justify-between items-center transition-all hover:-translate-y-0.5 hover:shadow cursor-pointer"
+                    >
                       <div className="flex flex-col gap-1 text-left">
                         <span className="text-[10px] text-red-650 font-black uppercase tracking-wider">Expired Billing</span>
                         <span className="text-3xl font-black text-red-700 mt-2 leading-none">
@@ -4409,6 +4435,212 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                             <tr>
                               <td colSpan="6" className="p-8 text-center text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl">
                                 No non-payment business listings found.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: EXPIRED BILLING BUSINESSES LIST */}
+              {activeTab === 'Expired-Billing' && (
+                <div className="flex flex-col gap-6 text-left animate-fadeIn">
+                  <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex flex-col">
+                      <h3 className="font-extrabold text-[#001c41] text-base font-sans">Expired Billing Businesses</h3>
+                      <span className="text-[10.5px] text-slate-450 font-semibold mt-0.5">Audit, renew manually, or send WhatsApp renewal reminders to approved listings whose subscription has expired</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200/80 shadow-xs rounded-[28px] overflow-hidden">
+                    {/* Mobile Cards View (< md) */}
+                    <div className="flex flex-col gap-3.5 md:hidden p-4">
+                      {businesses.filter(b => !b.parentBusinessId && b.status === 'Approved' && b.subscriptionStatus !== 'active').filter(b => {
+                        const query = searchQuery.toLowerCase();
+                        return (b.name || '').toLowerCase().includes(query) || 
+                          (b.ownerName && b.ownerName.toLowerCase().includes(query)) ||
+                          (b.locality && b.locality.toLowerCase().includes(query));
+                      }).map(b => {
+                        const getDaysExpired = (biz) => {
+                          if (!biz.subscriptionExpiry) return 'N/A';
+                          const diffDays = Math.floor((new Date() - new Date(biz.subscriptionExpiry)) / (1000 * 60 * 60 * 24));
+                          if (diffDays <= 0) return '0 days';
+                          return `${diffDays} days`;
+                        };
+                        return (
+                          <div key={b._id} className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 flex flex-col gap-3 text-left transition-all hover:bg-slate-50">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0 border border-slate-200 shadow-2xs flex items-center justify-center bg-gradient-to-br from-rose-500 to-red-655 text-white font-extrabold text-xs uppercase select-none">
+                                  <img 
+                                    src={b.logoUrl ? window.getImageUrl(b.logoUrl) : '/default_business_cover.png'} 
+                                    className={`h-full w-full ${b.logoUrl ? 'object-contain p-1 bg-white' : 'object-cover'}`} 
+                                    alt={b.name} 
+                                  />
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                  <span className="font-extrabold text-slate-800 text-sm leading-tight break-words">
+                                    {b.name}
+                                  </span>
+                                  <span className="text-[11px] text-slate-500 font-medium mt-0.5">
+                                    Owner: {b.ownerName || 'N/A'}
+                                  </span>
+                                </div>
+                              </div>
+                              <span className="px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border shrink-0 bg-red-50 border-red-200 text-red-650">
+                                Expired
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs py-2 px-3 bg-white rounded-xl border border-slate-200/60 font-medium text-slate-600">
+                              <div>
+                                <span className="text-[9.5px] text-slate-400 block font-extrabold uppercase tracking-wider">Category / Locality</span>
+                                <span className="font-bold text-slate-800">{b.type || 'N/A'}</span>
+                                <span className="text-[10.5px] text-slate-500 block">{b.locality || 'N/A'}</span>
+                              </div>
+                              <div>
+                                <span className="text-[9.5px] text-slate-400 block font-extrabold uppercase tracking-wider">Expired Since</span>
+                                <span className="font-bold text-rose-655 block">{getDaysExpired(b)}</span>
+                                <span className="text-[10.5px] text-slate-500 block">{b.subscriptionExpiry ? new Date(b.subscriptionExpiry).toLocaleDateString() : 'N/A'}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-end gap-2 border-t border-slate-200/60 pt-2.5 flex-wrap">
+                              <button
+                                onClick={() => { setSelectedBiz(b); setShowBizModal(true); }}
+                                className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-extrabold cursor-pointer shadow-2xs"
+                              >
+                                Vet details
+                              </button>
+                              {user?.role === 'superadmin' && (
+                                <button 
+                                  onClick={() => handleManualSubscription(b._id)}
+                                  className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-lg cursor-pointer shadow-2xs border-none"
+                                >
+                                  Activate 30 Days
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleSendReminder(b._id)}
+                                className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-lg cursor-pointer shadow-2xs border-none"
+                              >
+                                Send Reminder
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {businesses.filter(b => !b.parentBusinessId && b.status === 'Approved' && b.subscriptionStatus !== 'active').length === 0 && (
+                        <div className="p-8 text-center text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl">
+                          No expired billing business listings found.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Desktop Table View (>= md) */}
+                    <div className="hidden md:block touch-scroll-x border border-slate-200 rounded-2xl">
+                      <table className="min-w-[900px] w-full border-collapse text-left text-xs font-semibold text-slate-600">
+                        <thead className="bg-slate-50 border-b border-slate-200 uppercase text-[9px] font-black text-slate-450 tracking-wider">
+                          <tr>
+                            <th className="p-4.5">Business Profile</th>
+                            <th className="p-4.5">Category / Locality</th>
+                            <th className="p-4.5">Expiry Date</th>
+                            <th className="p-4.5">Days Expired</th>
+                            <th className="p-4.5">Status</th>
+                            <th className="p-4.5 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-medium">
+                          {businesses.filter(b => !b.parentBusinessId && b.status === 'Approved' && b.subscriptionStatus !== 'active').filter(b => {
+                            const query = searchQuery.toLowerCase();
+                            return (b.name || '').toLowerCase().includes(query) || 
+                              (b.ownerName && b.ownerName.toLowerCase().includes(query)) ||
+                              (b.locality && b.locality.toLowerCase().includes(query));
+                          }).map(b => {
+                            const getDaysExpired = (biz) => {
+                              if (!biz.subscriptionExpiry) return 'N/A';
+                              const diffDays = Math.floor((new Date() - new Date(biz.subscriptionExpiry)) / (1000 * 60 * 60 * 24));
+                              if (diffDays <= 0) return '0 days';
+                              return `${diffDays} days`;
+                            };
+                            return (
+                              <tr key={b._id} className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-4.5 flex items-center gap-3.5">
+                                  <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0 border border-slate-200 relative shadow-2xs flex items-center justify-center bg-gradient-to-br from-rose-500 to-red-655 text-white font-extrabold text-xs uppercase select-none">
+                                    <img 
+                                      src={b.logoUrl ? window.getImageUrl(b.logoUrl) : '/default_business_cover.png'} 
+                                      className={`h-full w-full ${b.logoUrl ? 'object-contain p-1 bg-white' : 'object-cover'}`} 
+                                      alt={b.name} 
+                                    />
+                                  </div>
+                                  <div className="flex flex-col text-left min-w-0">
+                                    <span className="font-extrabold text-slate-800 text-xs sm:text-[13px] leading-normal whitespace-normal break-words max-w-[250px] sm:max-w-[320px] line-clamp-3">
+                                      {b.name}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400 font-semibold mt-1 font-sans">
+                                      Owner: {b.ownerName}
+                                    </span>
+                                    <a
+                                      href={`/businesses/${b.slug || b._id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[#027244] hover:text-[#005934] hover:underline font-black text-[10.5px] mt-1.5 flex items-center gap-1 w-fit cursor-pointer leading-none"
+                                    >
+                                      View Profile →
+                                    </a>
+                                  </div>
+                                </td>
+                                <td className="p-4.5">
+                                  <div className="flex flex-col text-left">
+                                    <span className="font-bold text-slate-705 text-xs">{b.type}</span>
+                                    <span className="text-[10px] text-slate-400 mt-1 font-semibold">{b.locality}</span>
+                                  </div>
+                                </td>
+                                <td className="p-4.5 font-bold text-slate-500">
+                                  {b.subscriptionExpiry ? new Date(b.subscriptionExpiry).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
+                                </td>
+                                <td className="p-4.5 font-bold text-rose-655">
+                                  {getDaysExpired(b)}
+                                </td>
+                                <td className="p-4.5">
+                                  <span className="px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wide border shrink-0 bg-red-50 border-red-200 text-red-650">
+                                    Expired
+                                  </span>
+                                </td>
+                                <td className="p-4.5 text-right">
+                                  <div className="flex items-center justify-end gap-2">
+                                    <button
+                                      onClick={() => { setSelectedBiz(b); setShowBizModal(true); }}
+                                      className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[10.5px] font-extrabold cursor-pointer shadow-2xs"
+                                    >
+                                      Vet details
+                                    </button>
+                                    {user?.role === 'superadmin' && (
+                                      <button 
+                                        onClick={() => handleManualSubscription(b._id)}
+                                        className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10.5px] rounded-lg cursor-pointer shadow-2xs border-none"
+                                      >
+                                        Activate 30 Days
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => handleSendReminder(b._id)}
+                                      className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[10.5px] rounded-lg cursor-pointer shadow-2xs border-none"
+                                    >
+                                      Send Reminder
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                          {businesses.filter(b => !b.parentBusinessId && b.status === 'Approved' && b.subscriptionStatus !== 'active').length === 0 && (
+                            <tr>
+                              <td colSpan="6" className="p-8 text-center text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl">
+                                No expired billing business listings found.
                               </td>
                             </tr>
                           )}
