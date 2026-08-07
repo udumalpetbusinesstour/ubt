@@ -357,9 +357,38 @@ router.put('/businesses/:id/premium', async (req, res, next) => {
       const expiry = new Date();
       expiry.setDate(expiry.getDate() + 365);
       business.subscriptionExpiry = expiry;
+
+      // Create a manual subscription record so history and sync states remain correct!
+      try {
+        await Subscription.create({
+          ownerId: business.ownerId || business.userId,
+          userId: business.ownerId || business.userId,
+          businessId: business._id,
+          plan: 'Yearly Manual Extend',
+          planName: 'Yearly Manual Extend',
+          amount: 0,
+          amountPaid: 0,
+          startDate: new Date(),
+          endDate: business.subscriptionExpiry,
+          expiryDate: business.subscriptionExpiry,
+          status: 'active'
+        });
+      } catch (subCreateErr) {
+        console.error('Error creating manual subscription record:', subCreateErr);
+      }
     } else {
       business.subscriptionStatus = 'none';
       business.subscriptionExpiry = null;
+
+      // Mark active subscriptions as expired
+      try {
+        await Subscription.updateMany(
+          { businessId: business._id, status: 'active' },
+          { $set: { status: 'expired' } }
+        );
+      } catch (subUpdateErr) {
+        console.error('Error updating active subscriptions to expired:', subUpdateErr);
+      }
     }
 
     await business.save();
@@ -468,6 +497,25 @@ router.put('/businesses/:id/activate-subscription', async (req, res, next) => {
     business.isPremium = true;
     await business.save({ validateBeforeSave: false });
 
+    // Create a manual subscription record so history and sync states remain correct!
+    try {
+      await Subscription.create({
+        ownerId: business.ownerId || business.userId,
+        userId: business.ownerId || business.userId,
+        businessId: business._id,
+        plan: 'Monthly Manual Extend',
+        planName: 'Monthly Manual Extend',
+        amount: 0,
+        amountPaid: 0,
+        startDate: new Date(),
+        endDate: business.subscriptionExpiry,
+        expiryDate: business.subscriptionExpiry,
+        status: 'active'
+      });
+    } catch (subCreateErr) {
+      console.error('Error creating manual subscription record:', subCreateErr);
+    }
+
     // Cascade to branches
     try {
       await Business.updateMany(
@@ -533,6 +581,16 @@ router.put('/businesses/:id/suspend-subscription', async (req, res, next) => {
       business.subscriptionStatus = 'suspended';
       business.isPremium = false;
       await business.save({ validateBeforeSave: false });
+
+      // Mark active subscriptions as expired
+      try {
+        await Subscription.updateMany(
+          { businessId: business._id, status: 'active' },
+          { $set: { status: 'expired' } }
+        );
+      } catch (subUpdateErr) {
+        console.error('Error updating active subscriptions to expired:', subUpdateErr);
+      }
 
       // Cascade to branches
       try {
