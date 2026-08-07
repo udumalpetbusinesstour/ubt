@@ -125,7 +125,40 @@ function SlugRouteWrapper() {
 function AppContent() {
   const location = useLocation();
   const [isReferralModalOpen, setIsReferralModalOpen] = useState(false);
-  
+  const [customDomainBiz, setCustomDomainBiz] = useState(null);
+  const [customDomainLoading, setCustomDomainLoading] = useState(true);
+
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    const isMainDomain = hostname === 'udumalpet.business' || 
+                         hostname === 'www.udumalpet.business' || 
+                         hostname === 'localhost' || 
+                         hostname === '127.0.0.1';
+
+    // Allow testing via query parameter, e.g. localhost:3000/?custom_domain=controln.in
+    const urlParams = new URLSearchParams(window.location.search);
+    const testDomain = urlParams.get('custom_domain');
+    const activeDomain = (!isMainDomain) ? hostname : testDomain;
+
+    if (activeDomain) {
+      (async () => {
+        try {
+          const res = await fetch(`http://localhost:5000/api/businesses/by-domain/${encodeURIComponent(activeDomain)}`);
+          const data = await res.json();
+          if (data.success && data.data) {
+            setCustomDomainBiz(data.data);
+          }
+        } catch (err) {
+          console.error('Error checking custom domain:', err);
+        } finally {
+          setCustomDomainLoading(false);
+        }
+      })();
+    } else {
+      setCustomDomainLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     const handleOpenModal = () => setIsReferralModalOpen(true);
     window.addEventListener('open-referral-modal', handleOpenModal);
@@ -204,6 +237,30 @@ function AppContent() {
     }
     return pathname;
   };
+
+  if (customDomainLoading) {
+    return (
+      <div className="py-24 text-center text-slate-400 flex flex-col items-center justify-center gap-3 min-h-screen bg-[#F8FAFC]">
+        <span className="h-8 w-8 animate-spin border-4 border-emerald-600 border-t-transparent rounded-full" />
+        <span className="text-xs font-bold text-slate-500 font-sans animate-pulse">Resolving custom domain...</span>
+      </div>
+    );
+  }
+
+  if (customDomainBiz) {
+    const segments = location.pathname.split('/').filter(Boolean);
+    const activeSubtab = segments[0];
+
+    return (
+      <div className="w-full min-h-screen flex flex-col justify-between bg-[#F8FAFC]">
+        <main className="flex-grow animate-page-entrance">
+          <BusinessDetail idOverride={customDomainBiz.slug || customDomainBiz._id} subtabOverride={activeSubtab} />
+        </main>
+        <ReferralModal isOpen={isReferralModalOpen} onClose={() => setIsReferralModalOpen(false)} />
+        <CookieConsent />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen flex flex-col justify-between bg-[#F8FAFC]">

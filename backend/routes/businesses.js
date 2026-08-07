@@ -3391,4 +3391,38 @@ router.post('/:id/like', async (req, res) => {
   }
 });
 
+// @route   GET /api/businesses/by-domain/:domain
+// @desc    Get business details matching a custom domain from its website field
+// @access  Public
+router.get('/by-domain/:domain', async (req, res) => {
+  try {
+    const rawDomain = req.params.domain.toLowerCase().trim();
+    const cleanDomain = rawDomain.replace(/^www\./i, '');
+
+    const businesses = await Business.find({
+      status: 'Approved',
+      website: { $exists: true, $ne: '' }
+    });
+
+    const match = businesses.find(b => {
+      const web = b.website.toLowerCase().trim();
+      const cleanWeb = web
+        .replace(/^(https?:\/\/)?(www\.)?/i, '')
+        .split('/')[0]
+        .split('?')[0];
+      
+      return cleanWeb === cleanDomain;
+    });
+
+    if (!match) {
+      return res.status(404).json({ success: false, message: 'No business found matching this domain' });
+    }
+
+    res.json({ success: true, data: match });
+  } catch (err) {
+    console.error('Error fetching business by domain:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;
