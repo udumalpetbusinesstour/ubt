@@ -5541,17 +5541,19 @@ function DashboardContent() {
                 <div className="flex flex-col overflow-hidden flex-grow text-left">
                   <h4 className="font-extrabold text-white text-xs leading-snug truncate">{business.name}</h4>
                   <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                    {isGmbVerified ? (
-                      <span className="bg-emerald-950/80 text-emerald-400 border border-emerald-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-1 shrink-0">
-                        <svg className="h-2.5 w-2.5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z" fill="currentColor" />
-                          <path d="m9 12 2 2 4-4" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg> UDT Verified
-                      </span>
-                    ) : business.status === 'Approved' ? (
-                      <span className="bg-blue-950/80 text-blue-400 border border-blue-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
-                        <Check className="h-2.5 w-2.5" /> Approved
-                      </span>
+                    {business.status === 'Approved' ? (
+                      isGmbVerified ? (
+                        <span className="bg-emerald-950/80 text-emerald-400 border border-emerald-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-1 shrink-0">
+                          <svg className="h-2.5 w-2.5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z" fill="currentColor" />
+                            <path d="m9 12 2 2 4-4" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg> UDT Verified
+                        </span>
+                      ) : (
+                        <span className="bg-blue-950/80 text-blue-400 border border-blue-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
+                          <Check className="h-2.5 w-2.5" /> Approved
+                        </span>
+                      )
                     ) : business.status === 'Under Review' ? (
                       <span className="bg-blue-950/80 text-blue-400 border border-blue-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0 animate-pulse">
                         <AlertCircle className="h-2.5 w-2.5" /> Under Review
@@ -5565,7 +5567,7 @@ function DashboardContent() {
                         <AlertCircle className="h-2.5 w-2.5" /> Rejected
                       </span>
                     ) : (
-                      <span className="bg-amber-950/80 text-amber-400 border border-amber-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0">
+                      <span className="bg-amber-950/80 text-amber-400 border border-amber-900/60 px-1.5 py-0.5 rounded text-[8.5px] font-extrabold inline-flex items-center gap-0.5 shrink-0 animate-pulse">
                         <AlertCircle className="h-2.5 w-2.5" /> Pending Verification
                       </span>
                     )}
@@ -6967,35 +6969,52 @@ function DashboardContent() {
 
                 {/* Listing Status */}
                 <div className="card-premium p-3 sm:p-4.5 rounded-2xl flex items-center gap-2 sm:gap-3.5 bg-white w-[180px] sm:w-[200px] shrink-0 snap-start">
-                  <div className={`h-10.5 w-10.5 rounded-xl flex items-center justify-center shrink-0 ${isGmbVerified ? 'bg-emerald-50 text-emerald-600' :
-                    business.status === 'Approved' ? 'bg-blue-50 text-blue-600' :
-                      business.status === 'Under Review' ? 'bg-blue-50 text-blue-600 animate-pulse' :
-                        business.status === 'Suspended' ? 'bg-red-50 text-red-650' :
-                          business.status === 'Rejected' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-500'
-                    }`}>
-                    {isGmbVerified ? (
-                      <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z" fill="currentColor" />
-                        <path d="m9 12 2 2 4-4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    ) : business.status === 'Approved' ? (
-                      <Check className="h-5 w-5" />
+                  <div className={`h-10.5 w-10.5 rounded-xl flex items-center justify-center shrink-0 ${
+                    business.status === 'Approved'
+                      ? (isGmbVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600')
+                      : business.status === 'Under Review'
+                        ? 'bg-blue-50 text-blue-600 animate-pulse'
+                        : business.status === 'Suspended'
+                          ? 'bg-red-50 text-red-650'
+                          : business.status === 'Rejected'
+                            ? 'bg-rose-50 text-rose-600'
+                            : 'bg-amber-50 text-amber-550 animate-pulse'
+                  }`}>
+                    {business.status === 'Approved' ? (
+                      isGmbVerified ? (
+                        <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z" fill="currentColor" />
+                          <path d="m9 12 2 2 4-4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      ) : (
+                        <Check className="h-5 w-5" />
+                      )
                     ) : (
                       <AlertCircle className="h-5 w-5" />
                     )}
                   </div>
                   <div className="flex flex-col text-left overflow-hidden min-w-0">
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Status</span>
-                    <span className={`text-[12.5px] font-extrabold leading-none mt-1.5 truncate ${isGmbVerified ? 'text-[#027244]' :
-                      business.status === 'Approved' ? 'text-blue-650' :
-                        business.status === 'Under Review' ? 'text-blue-650' :
-                          business.status === 'Suspended' ? 'text-red-650' :
-                            business.status === 'Rejected' ? 'text-rose-600' : 'text-amber-550'
-                      }`}>
-                      {isGmbVerified ? 'Verified' :
-                        business.status === 'Approved' ? 'Approved' : business.status === 'Under Review' ? 'In Review' :
-                          business.status === 'Suspended' ? 'Suspended' :
-                            business.status === 'Rejected' ? 'Rejected' : 'Pending'}
+                    <span className={`text-[12.5px] font-extrabold leading-none mt-1.5 truncate ${
+                      business.status === 'Approved'
+                        ? (isGmbVerified ? 'text-[#027244]' : 'text-blue-650')
+                        : business.status === 'Under Review'
+                          ? 'text-blue-650'
+                          : business.status === 'Suspended'
+                            ? 'text-red-650'
+                            : business.status === 'Rejected'
+                              ? 'text-rose-600'
+                              : 'text-amber-550'
+                    }`}>
+                      {business.status === 'Approved'
+                        ? (isGmbVerified ? 'Verified' : 'Approved')
+                        : business.status === 'Under Review'
+                          ? 'In Review'
+                          : business.status === 'Suspended'
+                            ? 'Suspended'
+                            : business.status === 'Rejected'
+                              ? 'Rejected'
+                              : 'Pending'}
                     </span>
                   </div>
                 </div>
