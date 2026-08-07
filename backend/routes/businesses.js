@@ -813,7 +813,10 @@ router.get('/', async (req, res) => {
       query.status = { $in: ['Approved', 'Pending Verification', 'Under Review'] };
     } else {
       query.status = 'Approved';
-      query.subscriptionStatus = { $ne: 'expired' };
+      query.$or = [
+        { subscriptionStatus: { $ne: 'expired' } },
+        { parentBusinessId: { $ne: null } }
+      ];
     }
 
     const conditions = [];
@@ -1024,6 +1027,11 @@ router.get('/', async (req, res) => {
       return bObj;
     }));
     businesses = businessesWithCounts;
+
+    // Filter out expired businesses (including branch listings that inherited expired status from their parents)
+    if (req.query.includePending !== 'true') {
+      businesses = businesses.filter(b => b.subscriptionStatus !== 'expired');
+    }
 
     // Calculate Bayesian Average score helper
     let totalRatingSum = 0;
