@@ -1449,7 +1449,23 @@ export default function AdminDashboard() {
       const storedToken = localStorage.getItem('ubt_token');
       const headers = { 'Authorization': `Bearer ${storedToken}` };
 
-      // 1. Fetch businesses
+      // 1. Fetch admin subscriptions first so we can sync business statuses client-side
+      let allSubs = [];
+      try {
+        const subRes = await fetch('http://localhost:5000/api/subscriptions/admin/all', { headers });
+        const subData = await subRes.json();
+        if (subData.success) {
+          allSubs = subData.data;
+          setSubscriptions(allSubs);
+        } else {
+          setSubscriptions([]);
+        }
+      } catch (subErr) {
+        console.error('Error loading admin subscriptions:', subErr);
+        setSubscriptions([]);
+      }
+
+      // 2. Fetch businesses
       const bizRes = await fetch('http://localhost:5000/api/admin/businesses', { headers });
       const bizData = await bizRes.json();
       let activeBiz = [];
@@ -1463,6 +1479,35 @@ export default function AdminDashboard() {
           googleRating: b.googleRating || 0,
           googleReviewsCount: b.googleReviewsCount || 0
         }));
+
+        // Client-side synchronization: if the latest subscription is expired or refunded, mark the business subscriptionStatus as expired!
+        if (allSubs && allSubs.length > 0) {
+          activeBiz = activeBiz.map(b => {
+            const bizSubs = allSubs.filter(s => {
+              const sBizId = s.businessId?._id || s.businessId;
+              return sBizId === b._id || (b.parentBusinessId && sBizId === (b.parentBusinessId._id || b.parentBusinessId));
+            });
+            if (bizSubs.length > 0) {
+              const sortedSubs = [...bizSubs].sort((x, y) => new Date(y.createdAt || 0) - new Date(x.createdAt || 0));
+              const latestSub = sortedSubs[0];
+              if (latestSub.status === 'expired' || latestSub.status === 'refunded') {
+                return {
+                  ...b,
+                  subscriptionStatus: 'expired',
+                  isPremium: false
+                };
+              } else if (latestSub.status === 'active') {
+                return {
+                  ...b,
+                  subscriptionStatus: 'active',
+                  isPremium: true
+                };
+              }
+            }
+            return b;
+          });
+        }
+
         setBusinesses(activeBiz);
       }
 
@@ -1526,19 +1571,7 @@ export default function AdminDashboard() {
         setReviews([]);
       }
       
-      // Fetch admin subscriptions
-      try {
-        const subRes = await fetch('http://localhost:5000/api/subscriptions/admin/all', { headers });
-        const subData = await subRes.json();
-        if (subData.success) {
-          setSubscriptions(subData.data);
-        } else {
-          setSubscriptions([]);
-        }
-      } catch (subErr) {
-        console.error('Error loading admin subscriptions:', subErr);
-        setSubscriptions([]);
-      }
+      // Subscriptions fetched at the beginning
 
       // Fetch admin payments
       try {
@@ -5377,36 +5410,49 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
               )}
 
               {/* TAB: SUBSCRIPTIONS */}
-              {activeTab === 'Subscriptions' && (
-                <div className="flex flex-col gap-8 text-left animate-fadeIn">
-                  
-                  {/* Statistics Widgets Row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4.5">
-                    <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl p-4.5 flex flex-col text-left">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Subscriptions</span>
-                      <span className="text-xl font-black text-[#001c41] mt-1.5">
-                        {subscriptions.filter(sub => sub.status === 'active' || sub.status === 'expired' || sub.status === 'refunded').length} Records
-                      </span>
+              {activeTab === 'Subscriptions' && (() => {
+                const validSubs = subscriptions.filter(sub => sub.status === 'active' || sub.status === 'expired' || sub.status === 'refunded');
+                const latestSubsMap = {};
+                validSubs.forEach(sub => {
+                  const bizId = sub.businessId?._id || sub.businessId;
+                  if (!bizId) return;
+                  const existing = latestSubsMap[bizId];
+                  if (!existing || new Date(sub.createdAt || 0) > new Date(existing.createdAt || 0)) {
+                    latestSubsMap[bizId] = sub;
+                  }
+                });
+                const uniqueSubs = Object.values(latestSubsMap);
+
+                return (
+                  <div className="flex flex-col gap-8 text-left animate-fadeIn">
+                    
+                    {/* Statistics Widgets Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4.5">
+                      <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl p-4.5 flex flex-col text-left">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Subscriptions</span>
+                        <span className="text-xl font-black text-[#001c41] mt-1.5">
+                          {uniqueSubs.length} Records
+                        </span>
+                      </div>
+                      <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl p-4.5 flex flex-col text-left">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Plans</span>
+                        <span className="text-xl font-black text-emerald-600 mt-1.5">
+                          {uniqueSubs.filter(s => s.status === 'active').length} Active
+                        </span>
+                      </div>
+                      <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl p-4.5 flex flex-col text-left">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-sans">Admin Revenue</span>
+                        <span className="text-xl font-black text-[#001c41] mt-1.5">
+                          ₹{payments.reduce((acc, p) => p.paymentStatus === 'Paid' || p.status === 'Paid' || p.status === 'captured' ? acc + p.amount : acc, 0)}
+                        </span>
+                      </div>
+                      <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl p-4.5 flex flex-col text-left">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-sans">Points Discounted</span>
+                        <span className="text-xl font-black text-orange-650 mt-1.5">
+                          ₹{subscriptions.reduce((acc, s) => acc + (s.referralDiscount || 0), 0)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl p-4.5 flex flex-col text-left">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Plans</span>
-                      <span className="text-xl font-black text-emerald-600 mt-1.5">
-                        {subscriptions.filter(s => s.status === 'active' || ((s.status === 'expired' || s.status === 'active') && (s.expiryDate || s.endDate) && new Date(s.expiryDate || s.endDate) > new Date())).length} Active
-                      </span>
-                    </div>
-                    <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl p-4.5 flex flex-col text-left">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-sans">Admin Revenue</span>
-                      <span className="text-xl font-black text-[#001c41] mt-1.5">
-                        ₹{payments.reduce((acc, p) => p.paymentStatus === 'Paid' || p.status === 'Paid' || p.status === 'captured' ? acc + p.amount : acc, 0)}
-                      </span>
-                    </div>
-                    <div className="bg-white border border-slate-200/80 shadow-xs rounded-2xl p-4.5 flex flex-col text-left">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-sans">Points Discounted</span>
-                      <span className="text-xl font-black text-orange-650 mt-1.5">
-                        ₹{subscriptions.reduce((acc, s) => acc + (s.referralDiscount || 0), 0)}
-                      </span>
-                    </div>
-                  </div>
 
                   <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-4 sm:p-6 overflow-x-auto w-full max-w-full">
                     <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
@@ -5579,8 +5625,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                             </thead>
                             <tbody className="divide-y divide-slate-100 font-medium">
                               {(() => {
-                                const validSubs = subscriptions.filter(sub => sub.status === 'active' || sub.status === 'expired' || sub.status === 'refunded');
-                                if (validSubs.length === 0) {
+                                if (uniqueSubs.length === 0) {
                                   return (
                                     <tr>
                                       <td colSpan="7" className="p-8 text-center text-slate-400 text-xs font-bold leading-normal">
@@ -5589,7 +5634,7 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                                     </tr>
                                   );
                                 }
-                                return validSubs.map(sub => {
+                                return uniqueSubs.map(sub => {
                                   const ownerName = sub.ownerId?.fullName || sub.ownerId?.name || 'Unknown';
                                   const ownerEmail = sub.ownerId?.email || '';
                                   const bizName = sub.businessId?.name || sub.businessId?.businessName || 'N/A';
@@ -5705,7 +5750,8 @@ Profile Update செய்வது, Photos சேர்ப்பது அல�
                     </div>
                   </div>
                 </div>
-              )}
+              );
+            })()}
 
               {/* TAB: NOTIFICATIONS HUB */}
               {activeTab === 'Notifications' && (
