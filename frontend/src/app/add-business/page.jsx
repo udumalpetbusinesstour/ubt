@@ -1310,7 +1310,8 @@ export default function AddBusiness() {
       setUploadingGallery(true);
       try {
         const compressedFiles = await Promise.all(files.map(f => compressImage(f, 1200, 800)));
-        const urls = await Promise.all(compressedFiles.map(f => uploadFileToServer(f)));
+        const galleryCtx = `${formData.name || 'business'} ${formData.categories?.[0] || formData.category || ''} photo gallery udumalpet`.trim();
+        const urls = await Promise.all(compressedFiles.map(f => uploadFileToServer(f, galleryCtx)));
         const updated = { ...formData, galleryUrls: [...(formData.galleryUrls || []), ...urls] };
         setFormData(updated);
         saveDraft(updated);
@@ -1351,7 +1352,8 @@ export default function AddBusiness() {
       setUploadingBranchLogo(true);
       try {
         const compressedFile = await compressImage(file, 500, 500, 0.8, true);
-        const url = await uploadFileToServer(compressedFile);
+        const branchLogoCtx = `${branchForm.name || formData.name || 'business'} ${branchForm.category || ''} branch logo udumalpet`.trim();
+        const url = await uploadFileToServer(compressedFile, branchLogoCtx);
         const updated = { ...branchForm, logoUrl: url };
         updateBranchStateAndDraft(updated);
       } catch (err) {
@@ -1373,7 +1375,8 @@ export default function AddBusiness() {
       setUploadingBranchCover(true);
       try {
         const compressedFile = await compressImage(file, 1200, 800);
-        const url = await uploadFileToServer(compressedFile);
+        const branchCoverCtx = `${branchForm.name || formData.name || 'business'} ${branchForm.category || ''} branch cover udumalpet`.trim();
+        const url = await uploadFileToServer(compressedFile, branchCoverCtx);
         const updated = { ...branchForm, coverImageUrl: url };
         updateBranchStateAndDraft(updated);
       } catch (err) {
@@ -1396,7 +1399,8 @@ export default function AddBusiness() {
       setUploadingBranchGallery(true);
       try {
         const compressedFiles = await Promise.all(files.map(f => compressImage(f, 1200, 800)));
-        const urls = await Promise.all(compressedFiles.map(f => uploadFileToServer(f)));
+        const branchGalleryCtx = `${branchForm.name || formData.name || 'business'} ${branchForm.category || ''} branch gallery udumalpet`.trim();
+        const urls = await Promise.all(compressedFiles.map(f => uploadFileToServer(f, branchGalleryCtx)));
         const updated = { ...branchForm, galleryUrls: [...(branchForm.galleryUrls || []), ...urls] };
         updateBranchStateAndDraft(updated);
       } catch (err) {
