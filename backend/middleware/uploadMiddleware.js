@@ -46,7 +46,8 @@ if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_ACCESS_KEY_ID !== 'YOUR_AWS
     bucket: process.env.AWS_BUCKET_NAME,
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: function (req, file, cb) {
-      cb(null, 'uploads/' + buildFilename(req, file));
+      const folderPrefix = process.env.S3_FOLDER_PREFIX || 'uploads/';
+      cb(null, folderPrefix + buildFilename(req, file));
     }
   });
 }
